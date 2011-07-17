@@ -87,6 +87,9 @@
     <Compile Include="Startup\WindowsServiceHost.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Util\StringExtensions.cs" />
+    <Compile Include="Util\DateTimeExtensions.cs" />
+    <Compile Include="Util\TimeSpanExtensions.cs" />
     <Compile Include="Util\Guard.cs" />
     <Compile Include="Util\NumericExtensions.cs" />
   </ItemGroup>
