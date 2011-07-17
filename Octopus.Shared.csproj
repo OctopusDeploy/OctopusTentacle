@@ -87,6 +87,8 @@
     <Compile Include="Startup\WindowsServiceHost.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Util\Guard.cs" />
+    <Compile Include="Util\NumericExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
