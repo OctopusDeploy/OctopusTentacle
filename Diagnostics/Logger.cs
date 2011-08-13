@@ -13,6 +13,7 @@ namespace Octopus.Shared.Diagnostics
             @"<log4net>
   <root>
     <level value='DEBUG' />
+    <appender-ref ref='TraceAppender' />
     <appender-ref ref='ConsoleAppender' />
     <appender-ref ref='EventLogAppender' />
   </root>
@@ -20,6 +21,13 @@ namespace Octopus.Shared.Diagnostics
   <logger name='Octopus'>
     <level value='DEBUG' />
   </logger>
+ 
+  <!-- For unit tests -->
+  <appender name='TraceAppender' type='log4net.Appender.TraceAppender'>
+    <layout type='log4net.Layout.PatternLayout'>
+      <conversionPattern value='%message%newline' />
+    </layout>
+  </appender>
 
   <appender name='ConsoleAppender' type='log4net.Appender.ColoredConsoleAppender'>
     <mapping>
