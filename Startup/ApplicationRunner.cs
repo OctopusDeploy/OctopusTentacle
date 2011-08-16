@@ -4,6 +4,7 @@ using System.Configuration.Install;
 using System.Linq;
 using System.Security.Principal;
 using System.ServiceProcess;
+using System.Threading;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup
@@ -225,15 +226,19 @@ namespace Octopus.Shared.Startup
             if (ServiceIsInstalled())
             {
                 Console.WriteLine("Service is already installed");
-            }
-            else
-            {
-                ManagedInstallerClass.InstallHelper(new[] {application.GetType().Assembly.Location});
+                StopService();
 
-                var startController = new ServiceController(applicationDisplayName);
-                startController.Start();
-                Console.WriteLine("Service installed successfully");
+                ManagedInstallerClass.InstallHelper(new[] { "/u", application.GetType().Assembly.Location });
+
+                Thread.Sleep(1000);
             }
+
+            ManagedInstallerClass.InstallHelper(new[] {application.GetType().Assembly.Location});
+
+            var startController = new ServiceController(applicationDisplayName);
+            startController.Start();
+            
+            Console.WriteLine("Service installed successfully");
         }
     }
 }
