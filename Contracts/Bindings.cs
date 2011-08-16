@@ -8,12 +8,12 @@ namespace Octopus.Shared.Contracts
         public static WSHttpBinding CreateDefault()
         {
             var binding = new WSHttpBinding();
-            binding.CloseTimeout = TimeSpan.FromSeconds(60);
+            binding.CloseTimeout = TimeSpan.FromSeconds(200);
             binding.HostNameComparisonMode = HostNameComparisonMode.WeakWildcard;
             binding.MaxReceivedMessageSize = 1024*1024*1024;
             binding.MaxBufferPoolSize = 64*1024*1024;
             binding.MessageEncoding = WSMessageEncoding.Text;
-            binding.OpenTimeout = TimeSpan.FromSeconds(60);
+            binding.OpenTimeout = TimeSpan.FromSeconds(200);
             binding.ReaderQuotas.MaxArrayLength = 128*1024;
             binding.ReaderQuotas.MaxStringContentLength = 10*1024*1024;
             binding.ReceiveTimeout = TimeSpan.FromMinutes(20);
@@ -22,7 +22,7 @@ namespace Octopus.Shared.Contracts
             binding.ReliableSession.Ordered = true;
             binding.Security.Mode = SecurityMode.Message;
             binding.Security.Message.ClientCredentialType = MessageCredentialType.Certificate;
-            binding.SendTimeout = TimeSpan.FromSeconds(10);
+            binding.SendTimeout = TimeSpan.FromSeconds(60);
             return binding;
         }
     }
