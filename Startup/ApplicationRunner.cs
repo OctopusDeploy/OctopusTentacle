@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Configuration.Install;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.ServiceProcess;
 using System.Threading;
@@ -226,19 +227,57 @@ namespace Octopus.Shared.Startup
             if (ServiceIsInstalled())
             {
                 Console.WriteLine("Service is already installed");
+                
                 StopService();
 
-                ManagedInstallerClass.InstallHelper(new[] { "/u", application.GetType().Assembly.Location });
+                using (var startController = new ServiceController(applicationDisplayName))
+                {
+                    ChangeServiceConfig(startController.ServiceHandle,
+                        ServiceNoChange,
+                        ServiceNoChange,
+                        ServiceNoChange,
+                        application.GetType().Assembly.Location.Replace("file:///", ""),
+                        null,
+                        IntPtr.Zero,
+                        null,
+                        null,
+                        null,
+                        null);
 
-                Thread.Sleep(1000);
+                    Thread.Sleep(100);
+
+                    startController.Start();
+                }
+                return;
             }
 
             ManagedInstallerClass.InstallHelper(new[] {application.GetType().Assembly.Location});
 
-            var startController = new ServiceController(applicationDisplayName);
-            startController.Start();
-            
+            Thread.Sleep(1000);
+
+            using (var startController = new ServiceController(applicationDisplayName))
+            {
+                startController.Start();
+            }
+
             Console.WriteLine("Service installed successfully");
         }
+
+        private const uint ServiceNoChange = 0xffffffff;
+
+        [DllImport("Advapi32.dll", EntryPoint = "ChangeServiceConfigW", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
+        internal static extern bool ChangeServiceConfig(
+            SafeHandle hService,
+            uint dwServiceType,
+            uint dwStartType,
+            uint dwErrorControl,
+            [In] string lpBinaryPathName,
+            [In] string lpLoadOrderGroup,
+            IntPtr lpdwTagId,
+            [In] string lpDependencies,
+            [In] string lpServiceStartName,
+            [In] string lpPassWord,
+            [In] string lpDisplayName
+        );
     }
 }
