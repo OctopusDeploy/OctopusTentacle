@@ -2,23 +2,38 @@
 
 public static class DateTimeExtensions
 {
-    public static string NormalFormat(this DateTime? time)
+    /// <summary>
+    /// Returns the date and time formatted as, for example, 'Thursday, 18 August 2011 3:46 PM'.
+    /// </summary>
+    /// <param name="dateAndTime">The date and time.</param>
+    /// <returns>The formatted date and time.</returns>
+    public static string NormalFormatDateAndTime(this DateTime? dateAndTime)
     {
-        return time == null ? "" : NormalFormat(time.Value);
+        return dateAndTime == null ? "" : NormalFormatDateAndTime(dateAndTime.Value);
     }
 
-    public static string NormalFormat(this DateTime time)
+    /// <summary>
+    /// Returns the date and time formatted as, for example, 'Thursday, 18 August 2011 3:46 PM'.
+    /// </summary>
+    /// <param name="dateAndTime">The date and time.</param>
+    /// <returns>The formatted date and time.</returns>
+    public static string NormalFormatDateAndTime(this DateTime dateAndTime)
     {
-        time = time.ToLocalTime();
-        return time.ToString("f");
+        dateAndTime = dateAndTime.ToLocalTime();
+        return dateAndTime.ToString("f");
     }
 
-    public static string ShortFormat(this DateTime time)
+    /// <summary>
+    /// Returns the date formatted as, for example, '18 August' or '18 August 2009' for prior years.
+    /// </summary>
+    /// <param name="date">The date to format.</param>
+    /// <returns></returns>
+    public static string ShortFormatDate(this DateTime date)
     {
-        time = time.ToLocalTime();
-        if (time.Year == DateTime.Today.Year)
-            return time.ToString("m");
+        date = date.ToLocalTime();
+        if (date.Year == DateTime.Today.Year)
+            return date.ToString("m");
 
-        return time.ToString("m") + time.ToString(" yyyy");
+        return date.ToString("m") + date.ToString(" yyyy");
     }
 }
