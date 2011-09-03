@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Autofac;
-using Autofac.Integration.Mef;
 using log4net;
 using log4net.Appender;
 
@@ -18,7 +17,7 @@ namespace Octopus.Shared.Diagnostics
 
         protected override void Load(ContainerBuilder builder)
         {
-            builder.Register(BuildLog).As<ILog>().SingleInstance().Exported(x => x.As<ILog>());
+            builder.Register(BuildLog).As<ILog>().SingleInstance();
         }
 
         object BuildLog(IComponentContext componentContext)
