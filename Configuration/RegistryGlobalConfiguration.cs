@@ -28,6 +28,8 @@ namespace Octopus.Shared.Configuration
             }
 
             octopusKey.SetValue(name, value);
+            octopusKey.Flush();
+            octopusKey.Close();
         }
     }
 }
