@@ -70,7 +70,6 @@
     <Compile Include="Contracts\IHealthService.cs" />
     <Compile Include="Contracts\IJobService.cs" />
     <Compile Include="Contracts\IPackageUpload.cs" />
-    <Compile Include="Contracts\JobServiceStatus.cs" />
     <Compile Include="Contracts\JobState.cs" />
     <Compile Include="Contracts\JobStatus.cs" />
     <Compile Include="Contracts\JobSummary.cs" />
