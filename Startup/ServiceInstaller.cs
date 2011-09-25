@@ -47,7 +47,7 @@ namespace Octopus.Shared.Startup
                         ServiceNoChange,
                         ServiceNoChange,
                         ServiceNoChange,
-                        assemblyContainingInstaller.Location.Replace("file:///", ""),
+                        assemblyContainingInstaller.FullLocalPath(),
                         null,
                         IntPtr.Zero,
                         null,
@@ -62,7 +62,7 @@ namespace Octopus.Shared.Startup
                 return;
             }
 
-            ManagedInstallerClass.InstallHelper(new[] { assemblyContainingInstaller.Location.Replace("file:///", "") });
+            ManagedInstallerClass.InstallHelper(new[] { assemblyContainingInstaller.FullLocalPath() });
 
             Thread.Sleep(1000);
 
