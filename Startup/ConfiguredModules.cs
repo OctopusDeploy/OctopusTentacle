@@ -27,7 +27,10 @@ namespace Octopus.Shared.Startup
                 var propertyName = parts[1];
                 var value = settings[setting];
 
-                var module = modules.First(x => x.GetType().Name == moduleName + "Module");
+                var module = modules.FirstOrDefault(x => x.GetType().Name == moduleName + "Module");
+				if (module == null)
+					continue;
+				
                 var property = module.GetType().GetProperty(propertyName);
                 if (property == null)
                 {
