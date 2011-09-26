@@ -22,20 +22,27 @@ namespace Octopus.Shared.Startup
 
             foreach (var setting in keys)
             {
+                if (string.IsNullOrEmpty(setting))
+                    continue;
+
                 var parts = setting.Split('.');
+                if (parts.Length != 2)
+                    continue;
+
                 var moduleName = parts[0];
                 var propertyName = parts[1];
                 var value = settings[setting];
 
                 var module = modules.FirstOrDefault(x => x.GetType().Name == moduleName + "Module");
-				if (module == null)
-					continue;
-				
+                if (module == null)
+                    continue;
+
                 var property = module.GetType().GetProperty(propertyName);
                 if (property == null)
                 {
                     throw new ConfigurationException(string.Format("Invalid configuration key: {0}", setting));
                 }
+                
                 property.SetValue(module, Convert.ChangeType(value, property.PropertyType), null);
             }
 
