@@ -47,9 +47,9 @@ namespace Octopus.Shared.Startup
 
                 var property = module.GetType().GetProperty(propertyName);
                 if (property == null)
-                {
-                    throw new ConfigurationException(string.Format("Invalid configuration key: {0}", setting));
-                }
+                    // Don't throw - it's possible they have a custom setting in machine.config from a third party that happens to start
+                    // with the name of one of our modules. Crazier things have happened.
+                    continue;
                 
                 property.SetValue(module, Convert.ChangeType(value, property.PropertyType), null);
             }
