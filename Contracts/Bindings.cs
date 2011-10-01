@@ -5,9 +5,9 @@ namespace Octopus.Shared.Contracts
 {
     public class Bindings
     {
-        public static NetTcpBinding CreateDefault()
+        public static WSHttpBinding CreateDefault()
         {
-            var binding = new NetTcpBinding();
+            var binding = new WSHttpBinding();
             binding.CloseTimeout = TimeSpan.FromSeconds(200);
             binding.HostNameComparisonMode = HostNameComparisonMode.WeakWildcard;
             binding.MaxReceivedMessageSize = 1024*1024*1024;

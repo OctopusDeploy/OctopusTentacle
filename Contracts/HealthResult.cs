@@ -14,8 +14,5 @@ namespace Octopus.Shared.Contracts
     
         [DataMember]
         public string Version { get; set; }
-        
-        [DataMember]
-        public PackageMetadata[] InstalledPackages { get; set; }
     }
 }
