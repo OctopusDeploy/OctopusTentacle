@@ -8,12 +8,12 @@ namespace Octopus.Shared.Startup
 {
     public class WindowsServiceHost : ServiceBase
     {
-        readonly IApplication application;
+        readonly Action execute;
         Thread workerThread;
 
-        public WindowsServiceHost(IApplication application)
+        public WindowsServiceHost(Action execute)
         {
-            this.application = application;
+            this.execute = execute;
         }
 
         public void Start()
@@ -37,7 +37,7 @@ namespace Octopus.Shared.Startup
         {
             try
             {
-                application.Run();
+                execute();
             }
             catch (Exception ex)
             {

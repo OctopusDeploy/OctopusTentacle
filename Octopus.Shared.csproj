@@ -66,9 +66,10 @@
     <Compile Include="Configuration\RegistryGlobalConfiguration.cs" />
     <Compile Include="Contracts\Bindings.cs" />
     <Compile Include="Contracts\DeploymentRequest.cs" />
+    <Compile Include="Contracts\HealthResult.cs" />
+    <Compile Include="Contracts\IHealthService.cs" />
     <Compile Include="Contracts\IJobService.cs" />
     <Compile Include="Contracts\IPackageUpload.cs" />
-    <Compile Include="Contracts\JobServiceStatus.cs" />
     <Compile Include="Contracts\JobState.cs" />
     <Compile Include="Contracts\JobStatus.cs" />
     <Compile Include="Contracts\JobSummary.cs" />
@@ -87,12 +88,13 @@
     <Compile Include="Security\CertificateValidator.cs" />
     <Compile Include="Security\ICertificateStore.cs" />
     <Compile Include="Security\SecurityModule.cs" />
-    <Compile Include="Startup\ApplicationRunner.cs" />
+    <Compile Include="Startup\RuntimeModel.cs" />
+    <Compile Include="Startup\ServiceInstaller.cs" />
     <Compile Include="Startup\ConfiguredModules.cs" />
-    <Compile Include="Startup\IApplication.cs" />
     <Compile Include="Startup\WindowsServiceHost.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Util\DateTimeExtensions.cs" />
     <Compile Include="Util\TimeSpanExtensions.cs" />
