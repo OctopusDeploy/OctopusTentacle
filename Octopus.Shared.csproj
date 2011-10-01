@@ -94,7 +94,13 @@
     <Compile Include="Startup\WindowsServiceHost.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Time\FixedClock.cs" />
+    <Compile Include="Time\ISleep.cs" />
+    <Compile Include="Time\Sleep.cs" />
+    <Compile Include="Time\SystemClock.cs" />
+    <Compile Include="Time\TimeModule.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
+    <Compile Include="Time\IClock.cs" />
     <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Util\DateTimeExtensions.cs" />
     <Compile Include="Util\TimeSpanExtensions.cs" />
