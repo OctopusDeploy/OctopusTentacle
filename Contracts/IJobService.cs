@@ -3,20 +3,20 @@ using System.ServiceModel;
 
 namespace Octopus.Shared.Contracts
 {
-    [ServiceContract(Namespace = "http://schemas.octopusdeploy.com/deployment/v1/jobs", Name = "Jobs")]
+    [ServiceContract(Namespace = "http://schemas.octopusdeploy.com/deployment/v1/jobs", Name = "Jobs", SessionMode = SessionMode.Required)]
     [Suffix("Jobs")]
     public interface IJobService
     {
-        [OperationContract]
+        [OperationContract(IsInitiating = true)]
         JobTicket DeployPackage(DeploymentRequest manifest);
 
-        [OperationContract]
+        [OperationContract(IsInitiating = true)]
         JobTicket Restart();
 
         [OperationContract]
         JobStatus CheckStatus(JobTicket ticket);
 
-        [OperationContract]
+        [OperationContract(IsTerminating = true)]
         void CompleteJob(JobTicket ticket);
     }
 }
