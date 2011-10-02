@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -8,7 +9,10 @@ public static class AssemblyExtensions
 {
     public static string FullLocalPath(this Assembly assembly)
     {
-        return assembly.Location.Replace("file:///", "");
+        var codeBase = assembly.CodeBase;
+        var uri = new UriBuilder(codeBase);
+        var root = Uri.UnescapeDataString(uri.Path);
+        return root;
     }
 
     public static string GetFileVersion(this Assembly assembly)
