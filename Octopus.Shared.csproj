@@ -83,7 +83,7 @@
     <Compile Include="Contracts\HealthResult.cs" />
     <Compile Include="Contracts\IHealthService.cs" />
     <Compile Include="Contracts\IJobService.cs" />
-    <Compile Include="Contracts\IPackageUpload.cs" />
+    <Compile Include="Contracts\IPackageService.cs" />
     <Compile Include="Contracts\JobState.cs" />
     <Compile Include="Contracts\JobStatus.cs" />
     <Compile Include="Contracts\JobSummary.cs" />
@@ -91,6 +91,7 @@
     <Compile Include="Contracts\PackageExistance.cs" />
     <Compile Include="Contracts\PackageMetadata.cs" />
     <Compile Include="Contracts\SpecialVariableNames.cs" />
+    <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Contracts\Variable.cs" />
     <Compile Include="Diagnostics\CaptureLogAppender.cs" />
     <Compile Include="Diagnostics\Logger.cs" />

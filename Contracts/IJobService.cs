@@ -3,7 +3,8 @@ using System.ServiceModel;
 
 namespace Octopus.Shared.Contracts
 {
-    [ServiceContract(Namespace = "http://schemas.octopusdeploy.com/deployment/v1", Name = "Jobs")]
+    [ServiceContract(Namespace = "http://schemas.octopusdeploy.com/deployment/v1/jobs", Name = "Jobs")]
+    [Suffix("Jobs")]
     public interface IJobService
     {
         [OperationContract]
