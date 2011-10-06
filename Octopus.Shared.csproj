@@ -93,6 +93,7 @@
     <Compile Include="Startup\WindowsServiceHost.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Util\FeedPing.cs" />
     <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Util\DateTimeExtensions.cs" />
     <Compile Include="Util\TimeSpanExtensions.cs" />
