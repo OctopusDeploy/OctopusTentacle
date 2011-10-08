@@ -30,6 +30,20 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TentacleInstaller|AnyCPU'">
+    <OutputPath>bin\TentacleInstaller\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Release\Octopus.Shared.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Autofac, Version=2.5.2.830, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -61,14 +75,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Solution Items\SolutionInfo.cs">
+      <Link>Properties\SolutionInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Solution Items\VersionInfo.cs">
+      <Link>Properties\VersionInfo.cs</Link>
+    </Compile>
     <Compile Include="Configuration\ConfigurationModule.cs" />
     <Compile Include="Configuration\IGlobalConfiguration.cs" />
     <Compile Include="Configuration\RegistryGlobalConfiguration.cs" />
     <Compile Include="Contracts\Bindings.cs" />
     <Compile Include="Contracts\DeploymentRequest.cs" />
+    <Compile Include="Contracts\HealthResult.cs" />
+    <Compile Include="Contracts\IHealthService.cs" />
     <Compile Include="Contracts\IJobService.cs" />
-    <Compile Include="Contracts\IPackageUpload.cs" />
-    <Compile Include="Contracts\JobServiceStatus.cs" />
+    <Compile Include="Contracts\IPackageService.cs" />
     <Compile Include="Contracts\JobState.cs" />
     <Compile Include="Contracts\JobStatus.cs" />
     <Compile Include="Contracts\JobSummary.cs" />
@@ -76,6 +97,7 @@
     <Compile Include="Contracts\PackageExistance.cs" />
     <Compile Include="Contracts\PackageMetadata.cs" />
     <Compile Include="Contracts\SpecialVariableNames.cs" />
+    <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Contracts\Variable.cs" />
     <Compile Include="Diagnostics\CaptureLogAppender.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
@@ -87,13 +109,20 @@
     <Compile Include="Security\CertificateValidator.cs" />
     <Compile Include="Security\ICertificateStore.cs" />
     <Compile Include="Security\SecurityModule.cs" />
-    <Compile Include="Startup\ApplicationRunner.cs" />
+    <Compile Include="Startup\RuntimeModel.cs" />
+    <Compile Include="Startup\ServiceInstaller.cs" />
     <Compile Include="Startup\ConfiguredModules.cs" />
-    <Compile Include="Startup\IApplication.cs" />
     <Compile Include="Startup\WindowsServiceHost.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Time\FixedClock.cs" />
     <Compile Include="Util\FeedPing.cs" />
+    <Compile Include="Time\ISleep.cs" />
+    <Compile Include="Time\Sleep.cs" />
+    <Compile Include="Time\SystemClock.cs" />
+    <Compile Include="Time\TimeModule.cs" />
+    <Compile Include="Util\AssemblyExtensions.cs" />
+    <Compile Include="Time\IClock.cs" />
     <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Util\DateTimeExtensions.cs" />
     <Compile Include="Util\TimeSpanExtensions.cs" />

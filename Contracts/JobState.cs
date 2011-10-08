@@ -9,6 +9,7 @@ namespace Octopus.Shared.Contracts
         [EnumMember] Queued,
         [EnumMember] Executing,
         [EnumMember] Success,
-        [EnumMember] Error
+        [EnumMember] Error,
+        [EnumMember] NotFound
     }
 }
