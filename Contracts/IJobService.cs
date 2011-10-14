@@ -10,9 +10,6 @@ namespace Octopus.Shared.Contracts
         [OperationContract(IsInitiating = true)]
         JobTicket DeployPackage(DeploymentRequest manifest);
 
-        [OperationContract(IsInitiating = true)]
-        JobTicket Restart();
-
         [OperationContract]
         JobStatus CheckStatus(JobTicket ticket);
 
