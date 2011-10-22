@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using Autofac;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup
 {
@@ -20,13 +19,6 @@ namespace Octopus.Shared.Startup
         {
             var settings = ConfigurationManager.AppSettings;
             var keys = settings.AllKeys;
-
-            var log = Logger.Default;
-            log.Debug("The following appSettings are defined:");
-            foreach (var key in keys)
-            {
-                log.Debug("- " + key);
-            }
 
             foreach (var setting in keys)
             {

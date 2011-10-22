@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup
@@ -9,8 +11,10 @@ namespace Octopus.Shared.Startup
     /// </summary>
     public class ServiceOrConsole
     {
-        public static void Run(string name, Action execute)
+        public static void Run(Action execute, bool waitForExit)
         {
+            var name = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullLocalPath());
+
             if (Environment.UserInteractive)
             {
                 try
@@ -22,21 +26,25 @@ namespace Octopus.Shared.Startup
                     Console.WriteLine();
                     Console.ResetColor();
 
-                    Console.Title = name + " - Starting...";
+                    Console.Title = name + " - Running";
 
                     execute();
 
-                    Console.Title = name + " - Running";
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("Server is running");
-                    Console.WriteLine();
-                    Console.ResetColor();
-                    Console.ReadLine();
+                    if (waitForExit)
+                    {
+                        Console.Title = name + " - Running";
+                        
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("Running. Press <enter> to shut down...");
+                        Console.ResetColor();
+                        
+                        Console.ReadLine();
 
-                    Console.Title = name + " - Shutting down...";
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("Server is shutting down...");
-                    Console.WriteLine();
+                        Console.Title = name + " - Shutting down...";
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine();
+                    }
+
                     Console.ResetColor();
                 }
                 catch (Exception ex)
