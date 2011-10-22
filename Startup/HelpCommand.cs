@@ -78,7 +78,7 @@ namespace Octopus.Shared.Startup
             Console.WriteLine("Where <command> is one of: ");
             Console.WriteLine();
 
-            foreach (var possible in commands.List())
+            foreach (var possible in commands.List().OrderBy(x => x.Name))
             {
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine("  " + possible.Name.PadRight(15, ' '));
