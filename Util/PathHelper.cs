@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Octopus.Shared.Util
 {
-    public static class PathUtility
+    public static class PathHelper
     {
         public static string MakeRelativePathAbsolute(string path)
         {

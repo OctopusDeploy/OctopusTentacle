@@ -7,10 +7,7 @@ namespace Octopus.Shared.Contracts
     public class JobStatus
     {
         [DataMember]
-        public string JobName { get; set; }
-
-        [DataMember]
-        public JobState State { get; set; }
+        public JobQueueState State { get; set; }
 
         [DataMember]
         public JobTicket Ticket { get; set; }
