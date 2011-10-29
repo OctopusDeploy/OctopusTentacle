@@ -16,6 +16,7 @@ namespace Octopus.Shared.Diagnostics
     <appender-ref ref='TraceAppender' />
     <appender-ref ref='ConsoleAppender' />
     <appender-ref ref='EventLogAppender' />
+    <appender-ref ref='LogTapAppender' />
   </root>
 
   <logger name='Octopus'>
@@ -29,6 +30,10 @@ namespace Octopus.Shared.Diagnostics
     </layout>
   </appender>
 
+  <!-- For redirecting job and task logs -->
+  <appender name='LogTapAppender' type='Octopus.Shared.Diagnostics.LogTapAppender' />
+
+  <!-- When running interactively -->
   <appender name='ConsoleAppender' type='log4net.Appender.ColoredConsoleAppender'>
     <mapping>
       <level value='ERROR' />

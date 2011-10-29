@@ -25,8 +25,6 @@ namespace Octopus.Shared.Diagnostics
             var log = Logger.Default;
             log.SetLevel(Level);
 
-            log.AddAppender(new LogTapAppender());
-
             foreach (var appender in componentContext.Resolve<IEnumerable<IAppender>>())
             {
                 log.AddAppender(appender);
