@@ -12,6 +12,7 @@ public static class AssemblyExtensions
         var codeBase = assembly.CodeBase;
         var uri = new UriBuilder(codeBase);
         var root = Uri.UnescapeDataString(uri.Path);
+        root = root.Replace("/", "\\");
         return root;
     }
 
