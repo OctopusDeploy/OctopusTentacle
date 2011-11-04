@@ -519,12 +519,6 @@ namespace Octopus.Shared.Startup
             this.localizer = localizer;
         }
 
-        public OptionSet WaitForExit()
-        {
-            waitForExit = true;
-            return this;
-        }
-
         Converter<string, string> localizer;
 
         public Converter<string, string> MessageLocalizer

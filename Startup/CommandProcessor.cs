@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ServiceProcess;
 using log4net;
 
 namespace Octopus.Shared.Startup
@@ -36,7 +37,7 @@ namespace Octopus.Shared.Startup
                 var options = command.Options;
                 options.Parse(args);
 
-                ServiceOrConsole.Run(command.Execute, options.ShouldWaitForExit);
+                command.Execute();
             }
             catch (Exception ex)
             {
