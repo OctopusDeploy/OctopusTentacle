@@ -120,10 +120,11 @@
     <Compile Include="Startup\ICommandLocator.cs" />
     <Compile Include="Startup\ICommandMetadata.cs" />
     <Compile Include="Startup\ICommandProcessor.cs" />
+    <Compile Include="Startup\IHost.cs" />
     <Compile Include="Startup\IServiceInstaller.cs" />
     <Compile Include="Startup\Options.cs" />
     <Compile Include="Startup\ServiceOptions.cs" />
-    <Compile Include="Startup\ServiceOrConsole.cs" />
+    <Compile Include="Startup\Host.cs" />
     <Compile Include="Startup\ServiceInstaller.cs" />
     <Compile Include="Startup\ConfiguredModules.cs" />
     <Compile Include="Startup\WindowsServiceHost.cs">

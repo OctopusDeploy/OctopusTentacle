@@ -9,12 +9,60 @@ namespace Octopus.Shared.Startup
     /// Runs an application interactively or as a service, depending on how the 
     /// process is launched.
     /// </summary>
-    public class ServiceOrConsole
+    public class Host : IHost
     {
-        public static void RunConsole(Action execute, bool waitForExit)
+        public void RunConsole(Action execute)
+        {
+            InternalRunConsole(execute, false);
+        }
+
+        public void RunConsoleWithPause(Action execute)
+        {
+            InternalRunConsole(execute, true);
+        }
+
+        public void RunServiceOrConsole(Action execute)
+        {
+            InternalRunServiceOrConsole(execute, false);
+        }
+
+        public void RunServiceOrConsoleWithPause(Action execute)
+        {
+            InternalRunServiceOrConsole(execute, true);
+        }
+
+        public void RunService(Action execute)
         {
             var name = GetName();
-            
+
+            Logger.Default.Info("Starting server " + name + " Windows Service");
+
+            try
+            {
+                new WindowsServiceHost(execute).Start();
+            }
+            catch (Exception ex)
+            {
+                Logger.Default.Error(ex);
+            }
+        }
+
+        void InternalRunServiceOrConsole(Action execute, bool pause)
+        {
+            if (Environment.UserInteractive)
+            {
+                InternalRunConsole(execute, pause);
+            }
+            else
+            {
+                RunService(execute);
+            }
+        }
+
+        static void InternalRunConsole(Action execute, bool waitForExit)
+        {
+            var name = GetName();
+
             try
             {
                 Console.ForegroundColor = ConsoleColor.Green;
@@ -55,34 +103,6 @@ namespace Octopus.Shared.Startup
                 Console.WriteLine("Press any key to exit...");
                 Console.ReadKey();
                 Environment.Exit(-1);
-            }
-        }
-
-        public static void RunMostAppropriate(Action execute, bool waitForExit)
-        {
-            var name = GetName();
-
-            if (Environment.UserInteractive)
-            {
-                RunConsole(execute, waitForExit);
-            }
-            else
-            {
-                RunService(execute, name);
-            }
-        }
-
-        public static void RunService(Action execute, string name)
-        {
-            Logger.Default.Info("Starting server " + name + " Windows Service");
-
-            try
-            {
-                new WindowsServiceHost(execute).Start();
-            }
-            catch (Exception ex)
-            {
-                Logger.Default.Error(ex);
             }
         }
 

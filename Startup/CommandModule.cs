@@ -13,6 +13,7 @@ namespace Octopus.Shared.Startup
             builder.RegisterType<CommandProcessor>().As<ICommandProcessor>();
             builder.RegisterType<CommandLocator>().As<ICommandLocator>();
             builder.RegisterType<ServiceInstaller>().As<IServiceInstaller>();
+            builder.RegisterType<Host>().As<IHost>();
         }
     }
 }
