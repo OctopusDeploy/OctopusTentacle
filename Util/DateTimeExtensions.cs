@@ -32,8 +32,19 @@ public static class DateTimeExtensions
     {
         date = date.ToLocalTime();
         if (date.Year == DateTime.Today.Year)
-            return date.ToString("m");
+            return date.ToString("d MMMM");
 
-        return date.ToString("m") + date.ToString(" yyyy");
+        return date.ToString("d MMMM") + date.ToString(" yyyy");
+    }
+
+    /// <summary>
+    /// Returns the date formatted as, for example, '18 August' or '18 August 2009' for prior years.
+    /// </summary>
+    /// <param name="date">The date to format.</param>
+    /// <returns></returns>
+    public static string ShortFormatTime(this DateTime date)
+    {
+        date = date.ToLocalTime();
+        return date.ToShortTimeString();
     }
 }
