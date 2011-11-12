@@ -10,10 +10,11 @@ namespace Octopus.Shared.Contracts
         public static readonly string PackageName = "OctopusPackageName";
         public static readonly string PackageVersion = "OctopusPackageVersion";
         public static readonly string PackageNameAndVersion = "OctopusPackageNameAndVersion";
+        public static readonly string ProjectName = "OctopusProjectName";
         
         // Defaulted by Tentacle, but overridable by user
         public static readonly string PackageDirectoryPath = "OctopusPackageDirectoryPath";
         public static readonly string PurgePackageDirectoryBeforeCopy = "OctopusPurgePackageDirectoryBeforeCopy";
-        public static readonly string WebSiteName = "OctopusWebSiteName";     
+        public static readonly string WebSiteName = "OctopusWebSiteName";
     }
 }
