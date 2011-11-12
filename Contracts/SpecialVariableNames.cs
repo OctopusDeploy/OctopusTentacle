@@ -4,8 +4,10 @@ namespace Octopus.Shared.Contracts
 {
     public static class SpecialVariables
     {
+        // Set by Octopus
         public static readonly string EnvironmentName = "OctopusEnvironmentName";
-        public static readonly string PackageName = "OctopusPackageName";
+        
+        public static readonly string PackageName = "OctopusPackageName"; 
         public static readonly string PackageVersion = "OctopusPackageVersion";
         public static readonly string PackageNameAndVersion = "OctopusPackageNameAndVersion";
         public static readonly string DateTimeToday = "OctopusDateTimeToday";
