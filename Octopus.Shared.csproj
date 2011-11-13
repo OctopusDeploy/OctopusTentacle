@@ -131,7 +131,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Time\FixedClock.cs" />
-    <Compile Include="Util\FeedPing.cs" />
     <Compile Include="Time\ISleep.cs" />
     <Compile Include="Time\Sleep.cs" />
     <Compile Include="Time\SystemClock.cs" />
