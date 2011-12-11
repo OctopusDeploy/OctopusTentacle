@@ -15,7 +15,7 @@ namespace Octopus.Shared.Contracts
             binding.MessageEncoding = WSMessageEncoding.Text;
             binding.OpenTimeout = TimeSpan.FromSeconds(200);
             binding.ReaderQuotas.MaxArrayLength = 128*1024;
-            binding.ReaderQuotas.MaxStringContentLength = 10*1024*1024;
+            binding.ReaderQuotas.MaxStringContentLength = 100*1024*1024;
             binding.ReceiveTimeout = TimeSpan.FromMinutes(20);
             binding.ReliableSession.Enabled = true;
             binding.ReliableSession.InactivityTimeout = TimeSpan.FromSeconds(60);
