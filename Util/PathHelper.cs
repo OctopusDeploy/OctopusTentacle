@@ -17,6 +17,8 @@ namespace Octopus.Shared.Util
                 path = Path.Combine(root, path);
             }
 
+            path = Path.GetFullPath(path);
+
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
