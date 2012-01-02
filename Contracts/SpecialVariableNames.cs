@@ -18,6 +18,6 @@ namespace Octopus.Shared.Contracts
         public static readonly string PackageDirectoryPath = "OctopusPackageDirectoryPath";
         public static readonly string PurgePackageDirectoryBeforeCopy = "OctopusPurgePackageDirectoryBeforeCopy";
         public static readonly string WebSiteName = "OctopusWebSiteName";
-        public static readonly string NotAWebSite = "OctopusNoWebSite";
+        public static readonly string NotAWebSite = "OctopusNotAWebSite";
     }
 }
