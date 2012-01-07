@@ -121,6 +121,11 @@ namespace Octopus.Shared.Activities
                     log.Error(cancel.Message);
                     state.ChangeStatus(ActivityStatus.Failed, cancel);
                 }
+                catch (ActivityFailedException failed)
+                {
+                    log.Error(failed.Message);
+                    state.ChangeStatus(ActivityStatus.Failed, failed);
+                }
                 catch (Exception ex)
                 {
                     log.Error(ex);
