@@ -122,7 +122,6 @@
     <Compile Include="Security\CertificateValidator.cs" />
     <Compile Include="Security\ICertificateStore.cs" />
     <Compile Include="Security\SecurityModule.cs" />
-    <Compile Include="SemanticVersion.cs" />
     <Compile Include="Startup\AutofacExtensions.cs" />
     <Compile Include="Startup\CommandLocator.cs" />
     <Compile Include="Startup\CommandProcessor.cs" />
