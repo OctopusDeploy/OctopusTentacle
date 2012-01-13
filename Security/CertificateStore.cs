@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Shared.Configuration;
@@ -45,14 +46,28 @@ namespace Octopus.Shared.Security
 
         public IEnumerable<X509Certificate2> FindCertificates(string certificateFullName)
         {
+            var results = new List<X509Certificate2>();
+
             var encoded = configuration.Get("Cert-" + certificateFullName);
             if (string.IsNullOrWhiteSpace(encoded))
-                yield break;
+                return results;
 
             var exported = Convert.FromBase64String(encoded);
 
-            var certificate = new X509Certificate2(exported, (string) null, X509KeyStorageFlags.Exportable);
-            yield return certificate;
+            var file = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllBytes(file, exported);
+
+                var certificate = new X509Certificate2(file, (string) null, X509KeyStorageFlags.Exportable);
+                results.Add(certificate);
+            }
+            finally
+            {
+                File.Delete(file);
+            }
+                
+            return results;
         }
 
         public X509Certificate2 FindCertificate(string certificateFullName)
