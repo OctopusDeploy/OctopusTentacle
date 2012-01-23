@@ -54,7 +54,7 @@ namespace Octopus.Shared.Security
 
             var exported = Convert.FromBase64String(encoded);
 
-            var file = Path.GetTempFileName();
+            var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
             try
             {
                 File.WriteAllBytes(file, exported);
