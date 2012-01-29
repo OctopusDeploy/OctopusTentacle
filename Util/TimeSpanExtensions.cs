@@ -4,7 +4,6 @@ public static class TimeSpanExtensions
 {
     public static string FriendlyTime(this TimeSpan time)
     {
-        if (time.TotalSeconds < 2) return "now";
         if (time.TotalMinutes < 1) return time.TotalSeconds.ToString("n0") + " seconds";
         if (time.TotalHours < 1) return time.TotalMinutes.ToString("n0") + " minutes";
         if (time.TotalDays < 1) return time.TotalHours.ToString("n0") + " hours";
