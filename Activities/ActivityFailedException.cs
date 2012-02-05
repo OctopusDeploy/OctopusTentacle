@@ -7,7 +7,6 @@ namespace Octopus.Shared.Activities
         public ActivityFailedException(string message)
             : base(message)
         {
-
         }
     }
 }

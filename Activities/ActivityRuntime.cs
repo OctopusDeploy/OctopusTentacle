@@ -38,7 +38,7 @@ namespace Octopus.Shared.Activities
 
             if (state.Error != null)
             {
-                throw new AggregateException("A child activity failed.", state.Error);
+                throw new ChildActivityFailedException("A child activity failed, see below for details", state.Error);
             }
 
             return state;
@@ -52,7 +52,7 @@ namespace Octopus.Shared.Activities
             var errors = batch.Activities.Select(s => s.Error).Where(s => s != null).ToArray();
             if (errors.Length > 0)
             {
-                throw new AggregateException("One or more child activities failed", errors);
+                throw new ChildActivityFailedException("One or more child activities failed", errors);
             }
             
             return batch;
@@ -120,6 +120,11 @@ namespace Octopus.Shared.Activities
                 {
                     log.Error(cancel.Message);
                     state.ChangeStatus(ActivityStatus.Failed, cancel);
+                }
+                catch (ChildActivityFailedException child)
+                {
+                    log.Error(child.Message);
+                    state.ChangeStatus(ActivityStatus.Failed, child);
                 }
                 catch (ActivityFailedException failed)
                 {
