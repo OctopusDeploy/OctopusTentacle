@@ -13,6 +13,7 @@ namespace Octopus.Shared.Contracts
         public static readonly string ProjectName = "OctopusProjectName";
         public static readonly string ForcePackageRedeployment = "OctopusForcePackageRedeployment";
         public static readonly string TaskId = "OctopusTaskId";
+        public static readonly string ReleaseNumber = "OctopusReleaseNumber";
         
         // Defaulted by Tentacle, but overridable by user
         public static readonly string PackageDirectoryPath = "OctopusPackageDirectoryPath";

@@ -13,15 +13,13 @@ namespace Octopus.Shared.Activities
     {
         readonly ActivityState parentState;
         readonly CancellationTokenSource cancellation;
+        readonly ILog log;
 
-        public ActivityRuntime() : this(null, new CancellationTokenSource())
-        {
-        }
-
-        private ActivityRuntime(ActivityState parentState, CancellationTokenSource cancellation)
+        private ActivityRuntime(ActivityState parentState, CancellationTokenSource cancellation, ILog log)
         {
             this.parentState = parentState;
             this.cancellation = cancellation;
+            this.log = log;
         }
 
         public CancellationTokenSource Cancellation
@@ -43,11 +41,42 @@ namespace Octopus.Shared.Activities
                 var state = ConfigureChildActivity(activity, log);
                 var task = activity.Execute();
                 state.Attach(task);
-                await task;
+                try
+                {
+                    await task;                    
+                }
+                catch (Exception ex)
+                {
+                    HandleError(ex);
+                    throw;
+                }
             }
         }
 
-        ActivityState ConfigureChildActivity(object activity, StringBuilder log)
+        void HandleError(Exception exception)
+        {
+            if (exception is TaskCanceledException)
+            {
+                log.Error("The task was cancelled.");
+            }
+            if (exception is ActivityFailedException)
+            {
+                log.Error(exception.Message);
+            }
+            else if (exception is AggregateException)
+            {
+                foreach (var item in ((AggregateException)exception).InnerExceptions)
+                {
+                    HandleError(item);
+                }
+            }
+            else
+            {
+                log.Error(exception);
+            }
+        }
+
+        ActivityState ConfigureChildActivity(object activity, StringBuilder logOutput)
         {
             var name = activity.ToString();
             var named = activity as IHaveName;
@@ -56,11 +85,11 @@ namespace Octopus.Shared.Activities
                 name = named.Name;
             }
 
-            var childState = new ActivityState(name, log);
+            var childState = new ActivityState(name, logOutput);
             var runtimeAware = activity as IRuntimeAware;
             if (runtimeAware != null)
             {
-                runtimeAware.Runtime = new ActivityRuntime(childState, cancellation);
+                runtimeAware.Runtime = new ActivityRuntime(childState, cancellation, log);
             }
 
             if (parentState != null)
@@ -71,19 +100,26 @@ namespace Octopus.Shared.Activities
             return childState;
         }
 
-        public static IActivityState BeginExecute(IActivity activity)
+        public static IActivityState BeginExecute(IActivity activity, ILog log)
         {
-            return BeginExecute(activity, null);
+            return BeginExecute(activity, null, log);
         }
 
-        public static IActivityState BeginExecute(IActivity activity, CancellationTokenSource cancellation)
+        public static IActivityState BeginExecute(IActivity activity, CancellationTokenSource cancellation, ILog log)
         {
-            var runtime = new ActivityRuntime(null, cancellation ?? new CancellationTokenSource());
-            var log = new StringBuilder();
-            using (LogTapper.CaptureTo(log))
+            var runtime = new ActivityRuntime(null, cancellation ?? new CancellationTokenSource(), log);
+            var logOutput = new StringBuilder();
+            
+            using (LogTapper.CaptureTo(logOutput))
             {
-                var state = runtime.ConfigureChildActivity(activity, log);
-                var task = activity.Execute();
+                var state = runtime.ConfigureChildActivity(activity, logOutput);
+                var task = Task.Factory.StartNew(() =>
+                {
+                    // Force the activity to run on at least one thread
+                    var childTask = activity.Execute();
+                    childTask.Wait();
+                });
+
                 state.Attach(task);
                 return state;
             }

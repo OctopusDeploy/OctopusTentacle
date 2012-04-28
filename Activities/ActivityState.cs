@@ -35,7 +35,7 @@ namespace Octopus.Shared.Activities
                     return ActivityStatus.Pending;
                 }
 
-                if (task.IsFaulted || task.IsCanceled) return ActivityStatus.Failed;
+                if (task.IsFaulted || task.IsCanceled || task.Exception != null) return ActivityStatus.Failed;
                 return task.IsCompleted ? ActivityStatus.Success : ActivityStatus.Running;
             }
         }
