@@ -726,7 +726,7 @@ namespace Octopus.Shared.Startup
 			bool process = true;
 			OptionContext c = CreateOptionContext ();
 			c.OptionIndex = -1;
-			var def = GetOptionForName ("<>");
+			var def = this["<>"];
 			var unprocessed = 
 				from argument in arguments
 				where ++c.OptionIndex >= 0 && (process || def != null)
@@ -770,8 +770,6 @@ namespace Octopus.Shared.Startup
 
         private readonly Regex ValueOption = new Regex(
             @"^(?<flag>--|-|/)(?<name>[^:=]+)((?<sep>[:=])(?<value>.*))?$");
-
-        bool waitForExit;
 
         protected bool GetOptionParts(string argument, out string flag, out string name, out string sep, out string value)
         {
@@ -833,11 +831,6 @@ namespace Octopus.Shared.Startup
                 return true;
 
             return false;
-        }
-
-        public bool ShouldWaitForExit
-        {
-            get { return waitForExit; }
         }
 
         private void ParseValue(string option, OptionContext c)
