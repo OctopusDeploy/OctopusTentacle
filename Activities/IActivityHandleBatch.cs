@@ -5,7 +5,7 @@ namespace Octopus.Shared.Activities
 {
     public interface IActivityHandleBatch
     {
-        ReadOnlyCollection<IActivityHandle> Activities { get; }
+        ReadOnlyCollection<IActivityState> Activities { get; }
         void WaitForCompletion(); 
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Shared.Diagnostics;
@@ -10,20 +11,17 @@ namespace Octopus.Shared.Activities
 {
     public class ActivityRuntime : IActivityRuntime
     {
-        readonly ActivityHandle parentHandle;
+        readonly ActivityState parentState;
         readonly CancellationTokenSource cancellation;
-        readonly ILog log;
 
-        public ActivityRuntime(ILog log)
-            : this (null, new CancellationTokenSource(), log)
+        public ActivityRuntime() : this(null, new CancellationTokenSource())
         {
         }
 
-        private ActivityRuntime(ActivityHandle parentHandle, CancellationTokenSource cancellation, ILog log)
+        private ActivityRuntime(ActivityState parentState, CancellationTokenSource cancellation)
         {
-            this.parentHandle = parentHandle;
+            this.parentState = parentState;
             this.cancellation = cancellation;
-            this.log = log;
         }
 
         public CancellationTokenSource Cancellation
@@ -31,49 +29,25 @@ namespace Octopus.Shared.Activities
             get { return cancellation; }
         }
 
-        public IActivityHandle Execute(IActivity activity)
+        public Task ExecuteChildren(IEnumerable<IActivity> activities)
         {
-            var state = BeginExecute(activity);
-            state.WaitForComplete();
-
-            if (state.Error != null)
-            {
-                throw new ChildActivityFailedException("A child activity failed, see below for details", state.Error);
-            }
-
-            return state;
+            var tasks = activities.Select(ExecuteChild);
+            return TaskEx.WhenAll(tasks);
         }
 
-        public IActivityHandleBatch Execute(IEnumerable<IActivity> activities)
+        public async Task ExecuteChild(IActivity activity)
         {
-            var batch = BeginExecute(activities);
-            batch.WaitForCompletion();
-
-            var errors = batch.Activities.Select(s => s.Error).Where(s => s != null).ToArray();
-            if (errors.Length > 0)
+            var log = new StringBuilder();
+            using (LogTapper.CaptureTo(log))
             {
-                throw new ChildActivityFailedException("One or more child activities failed", errors);
+                var state = ConfigureChildActivity(activity, log);
+                var task = activity.Execute();
+                state.Attach(task);
+                await task;
             }
-            
-            return batch;
         }
 
-        public IActivityHandleBatch BeginExecute(IEnumerable<IActivity> activitiesToRun)
-        {
-            var activities = activitiesToRun.ToList();
-            if (activities.Count == 0)
-                return null;
-
-            var states = new IActivityHandle[activities.Count];
-            for (var i = 0; i < activities.Count; i++)
-            {
-                states[i] = BeginExecute(activities[i]);
-            }
-
-            return new ActivityHandleBatch(states);
-        }
-
-        public IActivityHandle BeginExecute(IActivity activity)
+        ActivityState ConfigureChildActivity(object activity, StringBuilder log)
         {
             var name = activity.ToString();
             var named = activity as IHaveName;
@@ -82,60 +56,36 @@ namespace Octopus.Shared.Activities
                 name = named.Name;
             }
 
-            var childState = new ActivityHandle(name);
-            
-            var spawnable = activity as ISpawnChildActivities;
-            if (spawnable != null)
+            var childState = new ActivityState(name, log);
+            var runtimeAware = activity as IRuntimeAware;
+            if (runtimeAware != null)
             {
-                spawnable.Runtime = new ActivityRuntime(childState, cancellation, log);
+                runtimeAware.Runtime = new ActivityRuntime(childState, cancellation);
             }
 
-            if (parentHandle != null)
+            if (parentState != null)
             {
-                parentHandle.AddChild(childState);
+                parentState.AddChild(childState);
             }
-
-            ThreadPool.QueueUserWorkItem(RunTaskOnBackgroundThread, Tuple.Create(childState, activity));
 
             return childState;
         }
 
-        private void RunTaskOnBackgroundThread(object arguments)
+        public static IActivityState BeginExecute(IActivity activity)
         {
-            var info = (Tuple<ActivityHandle, IActivity>) arguments;
-            var state = info.Item1;
-            var activity = info.Item2;
+            return BeginExecute(activity, null);
+        }
 
-            using (LogTapper.CaptureTo(state.Log))
+        public static IActivityState BeginExecute(IActivity activity, CancellationTokenSource cancellation)
+        {
+            var runtime = new ActivityRuntime(null, cancellation ?? new CancellationTokenSource());
+            var log = new StringBuilder();
+            using (LogTapper.CaptureTo(log))
             {
-                try
-                {
-                    state.ChangeStatus(ActivityStatus.Running);
-
-                    activity.Execute();
-
-                    state.ChangeStatus(ActivityStatus.Success);
-                }
-                catch (TaskCanceledException cancel)
-                {
-                    log.Error(cancel.Message);
-                    state.ChangeStatus(ActivityStatus.Failed, cancel);
-                }
-                catch (ChildActivityFailedException child)
-                {
-                    log.Error(child.Message);
-                    state.ChangeStatus(ActivityStatus.Failed, child);
-                }
-                catch (ActivityFailedException failed)
-                {
-                    log.Error(failed.Message);
-                    state.ChangeStatus(ActivityStatus.Failed, failed);
-                }
-                catch (Exception ex)
-                {
-                    log.Error(ex);
-                    state.ChangeStatus(ActivityStatus.Failed, ex);
-                }
+                var state = runtime.ConfigureChildActivity(activity, log);
+                var task = activity.Execute();
+                state.Attach(task);
+                return state;
             }
         }
     }

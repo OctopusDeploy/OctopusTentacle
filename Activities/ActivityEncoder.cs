@@ -8,7 +8,7 @@ namespace Octopus.Shared.Activities
 {
     public class ActivityEncoder
     {
-        public static string RenderLog(IActivityHandle handle)
+        public static string RenderLog(IActivityState state)
         {
             using (var text = new StringWriter())
             using (var xmlWriter = new XmlTextWriter(text))
@@ -18,7 +18,7 @@ namespace Octopus.Shared.Activities
                 xmlWriter.Indentation = 2;
 
                 var serializer = new XmlSerializer(typeof (ActivityElement));
-                serializer.Serialize(xmlWriter, BuildTree(handle));
+                serializer.Serialize(xmlWriter, BuildTree(state));
 
                 return text.ToString();
             }
@@ -52,23 +52,23 @@ namespace Octopus.Shared.Activities
             }
         }
 
-        static ActivityElement BuildTree(IActivityHandle handle)
+        static ActivityElement BuildTree(IActivityState state)
         {
             var element = new ActivityElement();
-            element.Name = handle.Name;
-            element.Status = handle.Status;
+            element.Name = state.Name;
+            element.Status = state.Status;
             
-            if (handle.Log != null)
+            if (state.Log != null)
             {
-                element.Log = handle.Log.ToString();
+                element.Log = state.Log.ToString();
             }
 
-            if (handle.Error != null)
+            if (state.Error != null)
             {
-                element.Error = handle.Error.ToString();
+                element.Error = state.Error.ToString();
             }
             
-            element.Children = handle.Children.AsParallel().Select(BuildTree).ToArray();
+            element.Children = state.Children.AsParallel().Select(BuildTree).ToArray();
             
             return element;
         }

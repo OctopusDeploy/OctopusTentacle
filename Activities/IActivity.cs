@@ -1,9 +1,15 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Octopus.Shared.Activities
 {
     public interface IActivity
     {
-        void Execute();
+        Task Execute();
+    }
+
+    public interface IRuntimeAware
+    {
+        IActivityRuntime Runtime { get; set; }
     }
 }

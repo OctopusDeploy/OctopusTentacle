@@ -3,18 +3,18 @@ using System.Threading.Tasks;
 
 namespace Octopus.Shared.Activities
 {
-    public abstract class Activity : IActivity, ISpawnChildActivities, IHaveName
+    public abstract class Activity : IActivity, IRuntimeAware, IHaveName
     {
         protected Activity()
         {
             Name = GetType().Name;
         }
 
-        protected IActivityRuntime Runtime { get; private set; }
-
         public string Name { get; set; }
 
-        protected abstract void Execute();
+        protected IActivityRuntime Runtime { get; private set; }
+        
+        protected abstract Task Execute();
 
         protected void EnsureNotCancelled()
         {
@@ -26,15 +26,15 @@ namespace Octopus.Shared.Activities
                 throw new TaskCanceledException("The activity was cancelled by the user.");
         }
 
-        void IActivity.Execute()
-        {
-            Execute();
-        }
-
-        IActivityRuntime ISpawnChildActivities.Runtime
+        IActivityRuntime IRuntimeAware.Runtime
         {
             get { return Runtime; }
             set { Runtime = value; }
+        }
+
+        Task IActivity.Execute()
+        {
+            return Execute();
         }
     }
 }

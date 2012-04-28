@@ -5,21 +5,21 @@ namespace Octopus.Shared.Activities
 {
     public class ActivityHandleBatch : IActivityHandleBatch
     {
-        readonly IActivityHandle[] activityHandles;
+        readonly IActivityState[] activityStates;
 
-        public ActivityHandleBatch(IActivityHandle[] activityHandles)
+        public ActivityHandleBatch(IActivityState[] activityStates)
         {
-            this.activityHandles = activityHandles;
+            this.activityStates = activityStates;
         }
 
-        public ReadOnlyCollection<IActivityHandle> Activities
+        public ReadOnlyCollection<IActivityState> Activities
         {
-            get { return Array.AsReadOnly(activityHandles); }
+            get { return Array.AsReadOnly(activityStates); }
         } 
 
         public void WaitForCompletion()
         {
-            foreach (var child in activityHandles)
+            foreach (var child in activityStates)
             {
                 child.WaitForComplete();
             }
