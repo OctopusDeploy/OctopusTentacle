@@ -43,7 +43,7 @@ namespace Octopus.Shared.Startup
             }
             catch (Exception ex)
             {
-                Logger.Default.Error(ex);
+                Logger.Default.Fatal(ex);
             }
         }
 
@@ -95,7 +95,7 @@ namespace Octopus.Shared.Startup
             }
             catch (Exception ex)
             {
-                Logger.Default.Error(ex);
+                Logger.Default.Fatal(ex);
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("Unhandled exception:");
                 Console.ResetColor();

@@ -57,7 +57,7 @@ namespace Octopus.Shared.Activities
         {
             if (exception is TaskCanceledException)
             {
-                log.Error("The task was cancelled.");
+                log.Error("The task was canceled.");
             }
             if (exception is ActivityFailedException)
             {

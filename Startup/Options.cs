@@ -537,7 +537,6 @@ namespace Octopus.Shared.Startup
             throw new InvalidOperationException("Option has no names!");
         }
 
-        [Obsolete("Use KeyedCollection.this[string]")]
         protected Option GetOptionForName(string option)
         {
             if (option == null)
@@ -726,7 +725,7 @@ namespace Octopus.Shared.Startup
 			bool process = true;
 			OptionContext c = CreateOptionContext ();
 			c.OptionIndex = -1;
-			var def = this["<>"];
+            var def = GetOptionForName("<>");
 			var unprocessed = 
 				from argument in arguments
 				where ++c.OptionIndex >= 0 && (process || def != null)

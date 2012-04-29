@@ -16,14 +16,14 @@ namespace Octopus.Shared.Activities
         
         protected abstract Task Execute();
 
-        protected void EnsureNotCancelled()
+        protected void EnsureNotCanceled()
         {
             var runtime = Runtime;
             if (runtime == null)
                 return;
 
             if (runtime.Cancellation.IsCancellationRequested)
-                throw new TaskCanceledException("The activity was cancelled by the user.");
+                throw new TaskCanceledException("The activity was canceled by the user.");
         }
 
         IActivityRuntime IRuntimeAware.Runtime
