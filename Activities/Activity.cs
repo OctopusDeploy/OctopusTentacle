@@ -11,6 +11,7 @@ namespace Octopus.Shared.Activities
         }
 
         public string Name { get; set; }
+        public string Tag { get; set; }
 
         protected IActivityRuntime Runtime { get; private set; }
         

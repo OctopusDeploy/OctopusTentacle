@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace Octopus.Shared.Activities
@@ -9,6 +8,9 @@ namespace Octopus.Shared.Activities
     {
         [XmlAttribute("name")]
         public string Name { get; set; }
+
+        [XmlAttribute("tag")]
+        public string Tag { get; set; }
         
         [XmlAttribute("status")]
         public ActivityStatus Status { get; set; }
@@ -22,7 +24,22 @@ namespace Octopus.Shared.Activities
         [XmlElement("activity")]
         public ActivityElement[] Children { get; set; }
 
-        [XmlIgnore]
+        [XmlAttribute("id")]
         public int Id { get; set; }
+
+        public ActivityStatus? GetStatusForTag(string tag)
+        {
+            var has = string.Equals(Tag, tag, StringComparison.InvariantCultureIgnoreCase);
+            if (has) return Status;
+
+            if (Children == null) return null;
+            foreach (var child in Children)
+            {
+                var status = child.GetStatusForTag(tag);
+                if (status != null) return status;
+            }
+
+            return null;
+        }
     }
 }

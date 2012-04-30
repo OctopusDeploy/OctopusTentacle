@@ -7,6 +7,7 @@ namespace Octopus.Shared.Activities
     public interface IActivityState
     {
         string Name { get; }
+        string Tag { get; }
         ActivityStatus Status { get; }
         StringBuilder Log { get; }
         Exception Error { get; }

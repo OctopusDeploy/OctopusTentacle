@@ -41,6 +41,7 @@ namespace Octopus.Shared.Activities
                 var state = ConfigureChildActivity(activity, log);
                 var task = activity.Execute();
                 state.Attach(task);
+
                 try
                 {
                     await task;                    
@@ -79,13 +80,15 @@ namespace Octopus.Shared.Activities
         ActivityState ConfigureChildActivity(object activity, StringBuilder logOutput)
         {
             var name = activity.ToString();
+            var tag = string.Empty;
             var named = activity as IHaveName;
             if (named != null)
             {
                 name = named.Name;
+                tag = named.Tag;
             }
 
-            var childState = new ActivityState(name, logOutput);
+            var childState = new ActivityState(name, tag, logOutput);
             var runtimeAware = activity as IRuntimeAware;
             if (runtimeAware != null)
             {

@@ -16,15 +16,18 @@ namespace Octopus.Shared.Activities
         readonly object sync = new object();
         Task task;
         
-        public ActivityState(string name, StringBuilder log)
+        public ActivityState(string name, string tag, StringBuilder log)
         {
             Guard.ArgumentNotNull(name, "name");
             Guard.ArgumentNotNull(log, "log");
             this.log = log;
             Name = name;
+            Tag = tag;
         }
 
         public string Name { get; private set; }
+
+        public string Tag { get; private set; }
 
         public ActivityStatus Status
         {

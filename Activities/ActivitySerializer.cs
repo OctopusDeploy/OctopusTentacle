@@ -1,17 +1,19 @@
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 
 namespace Octopus.Shared.Activities
 {
-    public class ActivityEncoder
+    public class ActivitySerializer
     {
-        public static string RenderLog(IActivityState state)
+        public static void Serialize(IActivityState state, Stream output)
         {
-            using (var text = new StringWriter())
-            using (var xmlWriter = new XmlTextWriter(text))
+            using (var gzip = new GZipStream(output, CompressionMode.Compress, true))
+            using (var writer = new StreamWriter(gzip))
+            using (var xmlWriter = new XmlTextWriter(writer))
             {
                 xmlWriter.Formatting = Formatting.Indented;
                 xmlWriter.IndentChar = ' ';
@@ -19,14 +21,13 @@ namespace Octopus.Shared.Activities
 
                 var serializer = new XmlSerializer(typeof (ActivityElement));
                 serializer.Serialize(xmlWriter, BuildTree(state));
-
-                return text.ToString();
             }
         }
 
-        public static ActivityElement Decode(string output)
+        public static ActivityElement Deserialize(Stream serialized)
         {
-            using (var text = new StringReader(output))
+            using (var gzip = new GZipStream(serialized, CompressionMode.Decompress))
+            using (var text = new StreamReader(gzip))
             using (var xmlTextReader = new XmlTextReader(text))
             {
                 var serializer = new XmlSerializer(typeof(ActivityElement));
@@ -57,6 +58,7 @@ namespace Octopus.Shared.Activities
             var element = new ActivityElement();
             element.Name = state.Name;
             element.Status = state.Status;
+            element.Tag = state.Tag;
             
             if (state.Log != null)
             {

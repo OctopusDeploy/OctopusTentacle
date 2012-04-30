@@ -88,7 +88,7 @@
     </Compile>
     <Compile Include="Activities\Activity.cs" />
     <Compile Include="Activities\ActivityElement.cs" />
-    <Compile Include="Activities\ActivityEncoder.cs" />
+    <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityFailedException.cs" />
     <Compile Include="Activities\ActivityHandleBatch.cs" />
     <Compile Include="Activities\ActivityRuntime.cs" />
