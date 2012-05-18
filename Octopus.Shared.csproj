@@ -157,6 +157,8 @@
     <Compile Include="Time\TimeModule.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Time\IClock.cs" />
+    <Compile Include="Util\OctopusPhysicalFileSystem.cs" />
+    <Compile Include="Util\IOctopusFileSystem.cs" />
     <Compile Include="Util\PathHelper.cs" />
     <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Util\DateTimeExtensions.cs" />
