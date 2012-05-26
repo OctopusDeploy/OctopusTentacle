@@ -23,6 +23,12 @@ namespace Octopus.Shared.Startup
 
         protected override void OnStart(string[] args)
         {
+            // Sometimes a server might be under load after rebooting, or virus scanners might be busy.
+            // A service will usually fail to start after 30 seconds, so by requesting additional time 
+            // we can be more likely to start up successfully. Also, 120 seconds seems to be about the 
+            // maximum time we can ask for.
+            RequestAdditionalTime(120000);
+
             if (args.Length > 0 && args[0].ToLowerInvariant().Contains("debug"))
             {
                 Debugger.Launch();
