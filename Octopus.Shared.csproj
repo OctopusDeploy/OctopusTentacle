@@ -105,6 +105,7 @@
     <Compile Include="Configuration\ConfigurationModule.cs" />
     <Compile Include="Configuration\IGlobalConfiguration.cs" />
     <Compile Include="Configuration\RegistryGlobalConfiguration.cs" />
+    <Compile Include="Configuration\WellKnownConfigurationSettings.cs" />
     <Compile Include="Contracts\Bindings.cs" />
     <Compile Include="Contracts\DeploymentRequest.cs" />
     <Compile Include="Contracts\HealthResult.cs" />
