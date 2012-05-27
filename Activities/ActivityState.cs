@@ -14,18 +14,19 @@ namespace Octopus.Shared.Activities
         readonly StringBuilder log;
         readonly List<ActivityState> children = new List<ActivityState>();
         readonly object sync = new object();
+        readonly Func<string> name; 
         Task task;
         
-        public ActivityState(string name, string tag, StringBuilder log)
+        public ActivityState(Func<string> name, string tag, StringBuilder log)
         {
             Guard.ArgumentNotNull(name, "name");
             Guard.ArgumentNotNull(log, "log");
             this.log = log;
-            Name = name;
+            this.name = name;
             Tag = tag;
         }
 
-        public string Name { get; private set; }
+        public string Name { get { return name(); } }
 
         public string Tag { get; private set; }
 

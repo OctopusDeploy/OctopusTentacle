@@ -79,13 +79,17 @@ namespace Octopus.Shared.Activities
 
         ActivityState ConfigureChildActivity(object activity, StringBuilder logOutput)
         {
-            var name = activity.ToString();
+            Func<string> name;
             var tag = string.Empty;
             var named = activity as IHaveName;
             if (named != null)
             {
-                name = named.Name;
+                name = () => named.Name;
                 tag = named.Tag;
+            }
+            else
+            {
+                name = activity.ToString;
             }
 
             var childState = new ActivityState(name, tag, logOutput);
