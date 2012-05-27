@@ -8,6 +8,7 @@ namespace Octopus.Shared.Security
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<CertificateStore>().As<ICertificateStore>();
+            builder.RegisterType<CertificateGenerator>().As<ICertificateGenerator>();
         }
     }
 }
