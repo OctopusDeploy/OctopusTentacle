@@ -14,6 +14,10 @@ namespace Octopus.Shared.Configuration
         /// </summary>
         public static string TrustedOctopusThumbprints = "Tentacle.Security.TrustedOctopusThumbprints";
 
+        public static string CheckForUpgrades = "Octopus.Upgrades.AllowChecking";
+        
+        public static string IncludeUsageStatistics = "Octopus.Upgrades.IncludeStatistics";
+
         public static string[] GetTrustedOctopusThumbprints(this IGlobalConfiguration globalConfiguration)
         {
             var value = globalConfiguration.Get(TrustedOctopusThumbprints);
@@ -28,6 +32,41 @@ namespace Octopus.Shared.Configuration
         public static void SetTrustedOctopusThumbprints(this IGlobalConfiguration globalConfiguration, string[] thumbprints)
         {
             globalConfiguration.Set(TrustedOctopusThumbprints, string.Join(",", thumbprints));
+        }
+
+        public static bool IsCheckForUpgradesEnabled(this IGlobalConfiguration globalConfiguration)
+        {
+            return GetBool(globalConfiguration, CheckForUpgrades, true);
+        }
+
+        public static bool IsIncludeUsageStatisticsEnabled(this IGlobalConfiguration globalConfiguration)
+        {
+            return GetBool(globalConfiguration, IncludeUsageStatistics, true);
+        }
+
+        public static void SetCheckForUpgradesEnabled(this IGlobalConfiguration globalConfiguration, bool value)
+        {
+            globalConfiguration.Set(CheckForUpgrades, value.ToString());
+        }
+
+        public static void SetIncludeUsageStatisticsEnabled(this IGlobalConfiguration globalConfiguration, bool value)
+        {
+            globalConfiguration.Set(IncludeUsageStatistics, value.ToString());
+        }
+
+        static bool GetBool(IGlobalConfiguration configuration, string name, bool defaultValue)
+        {
+            var value = configuration.Get(name);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                bool result;
+                if (bool.TryParse(value, out result))
+                {
+                    return result;
+                }
+            }
+
+            return defaultValue;
         }
     }
 }
