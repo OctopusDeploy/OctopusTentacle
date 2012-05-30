@@ -7,7 +7,11 @@ namespace Octopus.Shared.Configuration
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<RegistryGlobalConfiguration>().As<IGlobalConfiguration>();
+            base.Load(builder);
+
+            builder.RegisterType<WindowsRegistry>().As<IWindowsRegistry>();
+            builder.RegisterType<OctopusConfiguration>().As<IOctopusConfiguration>();
+            builder.RegisterType<TentacleConfiguration>().As<ITentacleConfiguration>();
         }
     }
 }
