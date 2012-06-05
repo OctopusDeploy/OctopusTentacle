@@ -62,7 +62,7 @@ namespace Octopus.Shared.Activities
             
             if (state.Log != null)
             {
-                element.Log = state.Log.ToString();
+                element.Log = state.Log.GetLog();
             }
 
             if (state.Error != null)

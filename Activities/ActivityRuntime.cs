@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Util;
 using log4net;
 
 namespace Octopus.Shared.Activities
@@ -13,9 +14,9 @@ namespace Octopus.Shared.Activities
     {
         readonly ActivityState parentState;
         readonly CancellationTokenSource cancellation;
-        readonly ILog log;
+        readonly IActivityLog log;
 
-        private ActivityRuntime(ActivityState parentState, CancellationTokenSource cancellation, ILog log)
+        private ActivityRuntime(ActivityState parentState, CancellationTokenSource cancellation, IActivityLog log)
         {
             this.parentState = parentState;
             this.cancellation = cancellation;
@@ -35,41 +36,31 @@ namespace Octopus.Shared.Activities
 
         public async Task ExecuteChild(IActivity activity)
         {
-            var log = new StringBuilder();
-            using (LogTapper.CaptureTo(log))
-            {
-                var state = ConfigureChildActivity(activity, log);
-                var task = activity.Execute();
-                state.Attach(task);
+            var state = ConfigureChildActivity(activity);
+            var task = activity.Execute();
+            state.Attach(task);
 
-                try
-                {
-                    await task;                    
-                }
-                catch (Exception ex)
-                {
-                    HandleError(ex);
-                    throw;
-                }
+            try
+            {
+                await task;                    
+            }
+            catch (Exception ex)
+            {
+                HandleError(ex);
+                throw;
             }
         }
 
         void HandleError(Exception exception)
         {
+            exception = exception.GetRootError();
             if (exception is TaskCanceledException)
             {
                 log.Error("The task was canceled.");
             }
-            if (exception is ActivityFailedException)
+            else if (exception is ActivityFailedException)
             {
                 log.Error(exception.Message);
-            }
-            else if (exception is AggregateException)
-            {
-                foreach (var item in ((AggregateException)exception).InnerExceptions)
-                {
-                    HandleError(item);
-                }
             }
             else
             {
@@ -77,7 +68,7 @@ namespace Octopus.Shared.Activities
             }
         }
 
-        ActivityState ConfigureChildActivity(object activity, StringBuilder logOutput)
+        ActivityState ConfigureChildActivity(object activity)
         {
             Func<string> name;
             var tag = string.Empty;
@@ -92,11 +83,12 @@ namespace Octopus.Shared.Activities
                 name = activity.ToString;
             }
 
-            var childState = new ActivityState(name, tag, logOutput);
+            var childState = new ActivityState(name, tag);
             var runtimeAware = activity as IRuntimeAware;
             if (runtimeAware != null)
             {
                 runtimeAware.Runtime = new ActivityRuntime(childState, cancellation, log);
+                runtimeAware.Log = childState.Log;
             }
 
             if (parentState != null)
@@ -107,19 +99,19 @@ namespace Octopus.Shared.Activities
             return childState;
         }
 
-        public static IActivityState BeginExecute(IActivity activity, ILog log)
+        public static IActivityState BeginExecute(IActivity activity)
         {
-            return BeginExecute(activity, null, log);
+            return BeginExecute(activity, null);
         }
 
-        public static IActivityState BeginExecute(IActivity activity, CancellationTokenSource cancellation, ILog log)
+        public static IActivityState BeginExecute(IActivity activity, CancellationTokenSource cancellation)
         {
-            var runtime = new ActivityRuntime(null, cancellation ?? new CancellationTokenSource(), log);
+            var runtime = new ActivityRuntime(null, cancellation ?? new CancellationTokenSource(), new NullActivityLog(Logger.Default));
             var logOutput = new StringBuilder();
             
             using (LogTapper.CaptureTo(logOutput))
             {
-                var state = runtime.ConfigureChildActivity(activity, logOutput);
+                var state = runtime.ConfigureChildActivity(activity);
                 var task = Task.Factory.StartNew(() =>
                 {
                     // Force the activity to run on at least one thread

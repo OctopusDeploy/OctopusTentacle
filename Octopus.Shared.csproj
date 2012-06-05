@@ -90,11 +90,13 @@
     </Compile>
     <Compile Include="Activities\Activity.cs" />
     <Compile Include="Activities\ActivityElement.cs" />
+    <Compile Include="Activities\ActivityLog.cs" />
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityFailedException.cs" />
     <Compile Include="Activities\ActivityHandleBatch.cs" />
     <Compile Include="Activities\ActivityRuntime.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
+    <Compile Include="Activities\IActivityLog.cs" />
     <Compile Include="Activities\IActivityState.cs" />
     <Compile Include="Activities\ActivityState.cs" />
     <Compile Include="Activities\ChildActivityFailedException.cs" />
@@ -102,6 +104,7 @@
     <Compile Include="Activities\IActivityHandleBatch.cs" />
     <Compile Include="Activities\IActivityRuntime.cs" />
     <Compile Include="Activities\IHaveName.cs" />
+    <Compile Include="Activities\NullActivityLog.cs" />
     <Compile Include="Configuration\ConfigurationModule.cs" />
     <Compile Include="Configuration\OctopusConfiguration.cs" />
     <Compile Include="Configuration\IOctopusConfiguration.cs" />
@@ -172,6 +175,7 @@
     <Compile Include="Time\TimeModule.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Time\IClock.cs" />
+    <Compile Include="Util\ExceptionExtensions.cs" />
     <Compile Include="Util\OctopusPhysicalFileSystem.cs" />
     <Compile Include="Util\IOctopusFileSystem.cs" />
     <Compile Include="Util\PathHelper.cs" />

@@ -10,6 +10,7 @@ namespace Octopus.Shared.Activities
 
     public interface IRuntimeAware
     {
+        IActivityLog Log { get; set; }
         IActivityRuntime Runtime { get; set; }
     }
 }

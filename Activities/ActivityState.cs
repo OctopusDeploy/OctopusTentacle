@@ -2,26 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Octopus.Shared.Activities
 {
     public class ActivityState : IActivityState
     {
-        readonly StringBuilder log;
         readonly List<ActivityState> children = new List<ActivityState>();
         readonly object sync = new object();
-        readonly Func<string> name; 
+        readonly Func<string> name;
+        readonly IActivityLog log = new ActivityLog();
         Task task;
         
-        public ActivityState(Func<string> name, string tag, StringBuilder log)
+        public ActivityState(Func<string> name, string tag)
         {
             Guard.ArgumentNotNull(name, "name");
-            Guard.ArgumentNotNull(log, "log");
-            this.log = log;
             this.name = name;
             Tag = tag;
         }
@@ -44,8 +40,12 @@ namespace Octopus.Shared.Activities
             }
         }
 
+        public IActivityLog Log
+        {
+            get { return log; }
+        }
+
         public Exception Error { get { return task == null ? null : task.Exception; } }
-        public StringBuilder Log { get { return log; } }
 
         public void AddChild(ActivityState state)
         {

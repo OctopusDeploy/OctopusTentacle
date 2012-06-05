@@ -9,7 +9,7 @@ namespace Octopus.Shared.Activities
         string Name { get; }
         string Tag { get; }
         ActivityStatus Status { get; }
-        StringBuilder Log { get; }
+        IActivityLog Log { get; }
         Exception Error { get; }
         ReadOnlyCollection<IActivityState> Children { get; }
         bool IsComplete { get; }
