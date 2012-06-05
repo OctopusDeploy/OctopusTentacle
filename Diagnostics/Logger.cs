@@ -58,7 +58,7 @@ namespace Octopus.Shared.Diagnostics
 
   <appender name='EventLogAppender' type='log4net.Appender.EventLogAppender'>
     <filter type='log4net.Filter.LevelRangeFilter'>
-      <levelMin value='WARN' />
+      <levelMin value='INFO' />
       <levelMax value='FATAL' />
     </filter>
     <param name='LogName' value='Application' />

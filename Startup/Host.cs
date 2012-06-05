@@ -11,35 +11,35 @@ namespace Octopus.Shared.Startup
     /// </summary>
     public class Host : IHost
     {
-        public void RunConsole(Action execute)
+        public void RunConsole(Action execute, Action shutdown)
         {
-            InternalRunConsole(execute, false);
+            InternalRunConsole(execute, shutdown, false);
         }
 
-        public void RunConsoleWithPause(Action execute)
+        public void RunConsoleWithPause(Action execute, Action shutdown)
         {
-            InternalRunConsole(execute, true);
+            InternalRunConsole(execute, shutdown, true);
         }
 
-        public void RunServiceOrConsole(Action execute)
+        public void RunServiceOrConsole(Action execute, Action shutdown)
         {
-            InternalRunServiceOrConsole(execute, false);
+            InternalRunServiceOrConsole(execute, shutdown, false);
         }
 
-        public void RunServiceOrConsoleWithPause(Action execute)
+        public void RunServiceOrConsoleWithPause(Action execute, Action shutdown)
         {
-            InternalRunServiceOrConsole(execute, true);
+            InternalRunServiceOrConsole(execute, shutdown, true);
         }
 
-        public void RunService(Action execute)
+        public void RunService(Action execute, Action shutdown)
         {
             var name = GetName();
 
-            Logger.Default.Info("Starting server " + name + " Windows Service");
+            Logger.Default.Info("Starting " + name + " Windows Service");
 
             try
             {
-                new WindowsServiceHost(execute).Start();
+                new WindowsServiceHost(execute, LogAndShutdown(name, shutdown)).Start();
             }
             catch (Exception ex)
             {
@@ -47,19 +47,19 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        void InternalRunServiceOrConsole(Action execute, bool pause)
+        void InternalRunServiceOrConsole(Action execute, Action shutdown, bool pause)
         {
             if (Environment.UserInteractive)
             {
-                InternalRunConsole(execute, pause);
+                InternalRunConsole(execute, shutdown, pause);
             }
             else
             {
-                RunService(execute);
+                RunService(execute, shutdown);
             }
         }
 
-        static void InternalRunConsole(Action execute, bool waitForExit)
+        static void InternalRunConsole(Action execute, Action shutdown, bool waitForExit)
         {
             var name = GetName();
 
@@ -89,6 +89,8 @@ namespace Octopus.Shared.Startup
                     Console.Title = name + " - Shutting down...";
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine();
+
+                    shutdown();
                 }
 
                 Console.ResetColor();
@@ -104,6 +106,24 @@ namespace Octopus.Shared.Startup
                 Console.ReadKey();
                 Environment.Exit(-1);
             }
+        }
+
+        Action LogAndShutdown(string name, Action shutdown)
+        {
+            return delegate
+            {
+                Logger.Default.Info("Stopping " + name + " Windows Service");
+
+                try
+                {
+                    shutdown();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Default.Fatal(ex);
+                    throw;
+                }
+            };
         }
 
         static string GetName()

@@ -4,10 +4,10 @@ namespace Octopus.Shared.Startup
 {
     public interface IHost
     {
-        void RunConsole(Action execute);
-        void RunConsoleWithPause(Action execute);
-        void RunService(Action execute);
-        void RunServiceOrConsole(Action execute);
-        void RunServiceOrConsoleWithPause(Action execute);
+        void RunConsole(Action execute, Action shutdown);
+        void RunConsoleWithPause(Action execute, Action shutdown);
+        void RunService(Action execute, Action shutdown);
+        void RunServiceOrConsole(Action execute, Action shutdown);
+        void RunServiceOrConsoleWithPause(Action execute, Action shutdown);
     }
 }
