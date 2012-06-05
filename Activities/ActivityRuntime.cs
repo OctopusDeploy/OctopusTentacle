@@ -87,7 +87,7 @@ namespace Octopus.Shared.Activities
             var runtimeAware = activity as IRuntimeAware;
             if (runtimeAware != null)
             {
-                runtimeAware.Runtime = new ActivityRuntime(childState, cancellation, log);
+                runtimeAware.Runtime = new ActivityRuntime(childState, cancellation, childState.Log);
                 runtimeAware.Log = childState.Log;
             }
 

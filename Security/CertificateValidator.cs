@@ -34,7 +34,7 @@ namespace Octopus.Shared.Security
                 throw new SecurityTokenValidationException("The certificate thumbprint provided by the remote client is not in our list of trusted certificates. We can't accept requests from that client. The client identified itself with the thumbprint: " + key);                
             }
             
-            throw new SecurityTokenValidationException("The certificate thumbprint given by the remote server is not what we expected. The remote server identified as: " + key);
+            throw new SecurityTokenValidationException("The certificate thumbprint given by the remote server is not what we expected. The remote server identified as: " + key + " while we expected: " + string.Join(", ", trustedThumbprints));
         }
     }
 }
