@@ -4,14 +4,14 @@ namespace Octopus.Shared.Time
 {
     public class FixedClock : IClock
     {
-        DateTime now;
+        DateTimeOffset now;
 
-        public FixedClock(DateTime now)
+        public FixedClock(DateTimeOffset now)
         {
             this.now = now;
         }
 
-        public void Set(DateTime value)
+        public void Set(DateTimeOffset value)
         {
             now = value;
         }
@@ -21,9 +21,14 @@ namespace Octopus.Shared.Time
             now = now.Add(time);
         }
 
-        public DateTime GetUtcTime()
+        public DateTimeOffset GetUtcTime()
         {
             return now;
+        }
+
+        public DateTimeOffset GetLocalTime()
+        {
+            return now.ToLocalTime();
         }
     }
 }
