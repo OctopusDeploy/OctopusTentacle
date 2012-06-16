@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 
+// ReSharper disable CheckNamespace
 public static class StringExtensions
+// ReSharper restore CheckNamespace
 {
     public static string FirstLineTrimmedTo(this string text, int length)
     {
