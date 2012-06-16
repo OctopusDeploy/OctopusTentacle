@@ -185,6 +185,7 @@
     <Compile Include="Util\TimeSpanExtensions.cs" />
     <Compile Include="Util\Guard.cs" />
     <Compile Include="Util\NumericExtensions.cs" />
+    <Compile Include="Util\Uniquifier.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
