@@ -51,7 +51,7 @@ namespace Octopus.Shared.Contracts
             var file = new FileInfo(filePath);
             if (!file.Exists)
             {
-                throw new FileNotFoundException("NuGet package not found", filePath);
+                throw new FileNotFoundException(string.Format("Could not find NuGet package file '{0}'", filePath), filePath);
             }
 
             return new PackageMetadata(match.Groups["name"].Value, match.Groups["version"].Value, file.Length);
