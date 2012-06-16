@@ -3,16 +3,19 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Shared.Security;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
     public class TentacleConfiguration : ITentacleConfiguration
     {
         readonly IWindowsRegistry registry;
+        readonly IOctopusFileSystem fileSystem;
 
-        public TentacleConfiguration(IWindowsRegistry registry)
+        public TentacleConfiguration(IWindowsRegistry registry, IOctopusFileSystem fileSystem)
         {
             this.registry = registry;
+            this.fileSystem = fileSystem;
         }
 
         public string[] TrustedOctopusThumbprints
@@ -42,8 +45,21 @@ namespace Octopus.Shared.Configuration
 
         public string ApplicationDirectory
         {
-            get { return registry.GetString("Tentacle.Deployment.ApplicationDirectory"); }
+            get
+            {
+                return registry.GetString("Tentacle.Deployment.ApplicationDirectory");
+            }
             set { registry.Set("Tentacle.Deployment.ApplicationDirectory", value); }
+        }
+
+        public string PackagesDirectory
+        {
+            get { return Path.Combine(ApplicationDirectory, ".Tentacle\\Packages"); }
+        }
+
+        public string LogsDirectory
+        {
+            get { return Path.Combine(ApplicationDirectory, ".Tentacle\\Logs"); }
         }
 
         public X509Certificate2 TentacleCertificate

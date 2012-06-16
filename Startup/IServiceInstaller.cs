@@ -9,6 +9,8 @@ namespace Octopus.Shared.Startup
     public interface IServiceInstaller
     {
         void Install(ServiceOptions options);
+        void Reconfigure(ServiceOptions options);
         void Uninstall(string serviceName);
+        void Restart(string serviceName);
     }
 }

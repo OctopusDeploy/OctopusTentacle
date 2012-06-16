@@ -24,6 +24,16 @@ namespace Octopus.Shared.Configuration
         string ApplicationDirectory { get; set; }
 
         /// <summary>
+        /// Gets the directory in which NuGet packages will be uploaded to on this machine.
+        /// </summary>
+        string PackagesDirectory { get; }
+
+        /// <summary>
+        /// Gets the directory to which job logs will be uploaded to on this machine.
+        /// </summary>
+        string LogsDirectory { get; }
+
+        /// <summary>
         /// Gets or sets the X509 certificate used by the Tentacle.
         /// </summary>
         X509Certificate2 TentacleCertificate { get; set; }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -26,9 +27,24 @@ namespace Octopus.Shared.Startup
             AdminRequired(() => InstallAndStart(options));
         }
 
+        public void Reconfigure(ServiceOptions options)
+        {
+            // This is called normally via a non-interactive service, so bypass admin checking - if it fails, it fails.
+            Reconfigure(options.Assembly, options.ServiceName);
+        }
+
         public void Uninstall(string serviceName)
         {
             AdminRequired(() => UninstallService(serviceName));
+        }
+
+        public void Restart(string serviceName)
+        {
+            StopAndWaitForStop(serviceName);
+
+            Thread.Sleep(1000);
+
+            StartService(serviceName);
         }
 
         void InstallAndStart(ServiceOptions options)
@@ -72,10 +88,6 @@ namespace Octopus.Shared.Startup
                     null,
                     null,
                     null);
-
-                Thread.Sleep(100);
-
-                startController.Start();
             }
         }
 
@@ -517,29 +529,30 @@ namespace Octopus.Shared.Startup
         /// Takes a service name and starts it
         /// </summary>
         /// <param name="name">The service name</param>
-        static void StartService(string name)
+        static bool StartService(string name)
         {
-            var scman = OpenScManager(ServiceManagerRights.Connect);
-            try
+            using (var service = new ServiceController(name))
             {
-                var hService = OpenService(scman, name, ServiceRights.QueryStatus | ServiceRights.Start);
-                if (hService == IntPtr.Zero)
+                if (service.Status == ServiceControllerStatus.Running)
+                    return true;
+
+                service.Start();
+
+                var watch = Stopwatch.StartNew();
+                service.Refresh();
+                while (service.Status != ServiceControllerStatus.Running)
                 {
-                    throw new ApplicationException("Could not open service.");
-                }
-                try
-                {
-                    StartService(hService);
-                }
-                finally
-                {
-                    CloseServiceHandle(hService);
+                    service.Refresh();
+                    Thread.Sleep(100);
+
+                    if (watch.Elapsed.TotalSeconds > 30 && service.Status != ServiceControllerStatus.Running)
+                    {
+                        return false;
+                    }
                 }
             }
-            finally
-            {
-                CloseServiceHandle(scman);
-            }
+
+            return true;
         }
 
         /// <summary>
@@ -570,6 +583,32 @@ namespace Octopus.Shared.Startup
             {
                 CloseServiceHandle(scman);
             }
+        }
+
+        bool StopAndWaitForStop(string name)
+        {
+            using (var service = new ServiceController(name))
+            {
+                if (service.Status == ServiceControllerStatus.Running)
+                {
+                    service.Stop();
+                }
+
+                var watch = Stopwatch.StartNew();
+                service.Refresh();
+                while (service.Status != ServiceControllerStatus.Stopped)
+                {
+                    service.Refresh();
+                    Thread.Sleep(100);
+
+                    if (watch.Elapsed.TotalSeconds > 30 && service.Status != ServiceControllerStatus.Stopped)
+                    {
+                        return false;
+                    }
+                }          
+            }
+
+            return true;
         }
 
         /// <summary>
