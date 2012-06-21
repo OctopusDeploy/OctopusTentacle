@@ -47,7 +47,14 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                return registry.GetString("Tentacle.Deployment.ApplicationDirectory");
+                var path = registry.GetString("Tentacle.Deployment.ApplicationDirectory");
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                    path = Path.Combine(Path.GetPathRoot(programFiles), "Octopus\\Applications");
+                }
+
+                return path;
             }
             set { registry.Set("Tentacle.Deployment.ApplicationDirectory", value); }
         }
