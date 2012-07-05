@@ -21,6 +21,21 @@ namespace Octopus.Shared.Security
             }    
         }
 
+        public static X509Certificate2 FromBase64StringPublicKeyOnly(string certificateString)
+        {
+            var raw = Convert.FromBase64String(certificateString);
+            var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
+            try
+            {
+                File.WriteAllBytes(file, raw);
+                return new X509Certificate2(file);
+            }
+            finally
+            {
+                File.Delete(file);
+            }
+        }
+
         public static string ToBase64String(X509Certificate2 certificate)
         {
             var exported = certificate.Export(X509ContentType.Pkcs12);
