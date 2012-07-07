@@ -22,5 +22,10 @@ namespace Octopus.Shared.Configuration
         /// when checking for upgrades.
         /// </summary>
         bool IncludeUsageStatisticsWhenCheckingForUpgrades { get; set; }
+
+        /// <summary>
+        /// Gets the directory that Octopus Server should use to store downloaded packages.
+        /// </summary>
+        string CacheDirectory { get; }
     }
 }

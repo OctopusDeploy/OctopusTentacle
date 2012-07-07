@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Octopus.Shared.Configuration
 {
@@ -27,6 +28,21 @@ namespace Octopus.Shared.Configuration
         {
             get { return registry.Get("Octopus.Upgrades.IncludeStatistics", true); }
             set { registry.Set("Octopus.Upgrades.IncludeStatistics", value); }
+        }
+
+        public string CacheDirectory
+        {
+            get
+            {
+                var path = registry.GetString("Tentacle.Deployment.ApplicationDirectory");
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                    path = Path.Combine(Path.GetPathRoot(programFiles), "Octopus\\PackageCache");
+                }
+
+                return path;
+            }
         }
     }
 }
