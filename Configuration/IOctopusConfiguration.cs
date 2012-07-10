@@ -27,5 +27,15 @@ namespace Octopus.Shared.Configuration
         /// Gets the directory that Octopus Server should use to store downloaded packages.
         /// </summary>
         string CacheDirectory { get; }
+
+        /// <summary>
+        /// Gets the port number to use when connecting to the embedded RavenDB server.
+        /// </summary>
+        int RavenPort { get; }
+
+        /// <summary>
+        /// Gets the host name to use when connecting to the embedded RavenDB server.
+        /// </summary>
+        string RavenHostName { get; }
     }
 }

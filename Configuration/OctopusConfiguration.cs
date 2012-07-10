@@ -44,5 +44,17 @@ namespace Octopus.Shared.Configuration
                 return path;
             }
         }
+
+        public int RavenPort
+        {
+            get { return registry.Get("Octopus.Raven.Port", 10930); }
+            set { registry.Set("Octopus.Raven.Port", value); }
+        }
+
+        public string RavenHostName
+        {
+            get { return registry.Get("Octopus.Raven.HostName", "localhost"); }
+            set { registry.Set("Octopus.Raven.HostName", value); }
+        }
     }
 }
