@@ -34,12 +34,13 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var path = registry.GetString("Octopus.Packages.CacheDirectory");
+                var path = EmbeddedDatabaseStoragePath;
                 if (string.IsNullOrWhiteSpace(path))
                 {
-                    var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                    path = Path.Combine(appData, "Octopus\\PackageCache");
+                    path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
                 }
+
+                path = Path.Combine(path, "PackageCache");
 
                 return path;
             }
