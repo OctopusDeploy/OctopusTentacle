@@ -29,6 +29,12 @@ namespace Octopus.Shared.Activities
                 throw new TaskCanceledException("The activity was canceled by the user.");
         }
 
+        protected Task StartNew(Action callback)
+        {
+            var invoker = new NewThread(Log, callback);
+            return Task.Factory.StartNew(invoker.Execute);
+        }
+
         IActivityRuntime IRuntimeAware.Runtime
         {
             get { return Runtime; }
@@ -38,6 +44,35 @@ namespace Octopus.Shared.Activities
         Task IActivity.Execute()
         {
             return Execute();
+        }
+
+        class NewThread
+        {
+            readonly IActivityLog log;
+            readonly Action callback;
+
+            public NewThread(IActivityLog log, Action callback)
+            {
+                this.log = log;
+                this.callback = callback;
+            }
+
+            public void Execute()
+            {
+                try
+                {
+                    callback();
+                }
+                catch (ActivityFailedException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex);
+                    throw new ActivityFailedException("A child activity failed: " + ex.Message);
+                }
+            }
         }
     }
 }
