@@ -34,11 +34,11 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var path = registry.GetString("Tentacle.Deployment.ApplicationDirectory");
+                var path = registry.GetString("Octopus.Packages.CacheDirectory");
                 if (string.IsNullOrWhiteSpace(path))
                 {
-                    var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                    path = Path.Combine(Path.GetPathRoot(programFiles), "Octopus\\PackageCache");
+                    var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                    path = Path.Combine(appData, "Octopus\\PackageCache");
                 }
 
                 return path;
