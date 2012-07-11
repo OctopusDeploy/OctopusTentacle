@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Octopus.Shared.Util
@@ -172,5 +173,36 @@ namespace Octopus.Shared.Util
                 CopyDirectory(childSourceDirectory, childTargetDirectory);
             }
         }
+
+        public void EnsureDiskHasEnoughFreeSpace(string directoryPath)
+        {
+            EnsureDiskHasEnoughFreeSpace(directoryPath, 500 * 1024 * 1024);
+        }
+
+        public void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
+        {
+            ulong freeBytesAvailable;
+            ulong totalNumberOfBytes;
+            ulong totalNumberOfFreeBytes;
+
+            var success = GetDiskFreeSpaceEx(directoryPath, out freeBytesAvailable, out totalNumberOfBytes, out totalNumberOfFreeBytes);
+            if (!success) 
+                return;
+
+            // Always make sure at least 500MB are available regardless of what we need 
+            var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;
+            required = Math.Max(required, 500L * 1024 * 1024);
+            if (totalNumberOfFreeBytes < required)
+            {
+                throw new IOException(string.Format("The drive containing the directory '{0}' does not have enough free disk space available for this operation to proceed. The disk only has {1} available; please free up at least {2}.", directoryPath, totalNumberOfFreeBytes.ToFileSizeString(), required.ToFileSizeString()));
+            }
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetDiskFreeSpaceEx(string lpDirectoryName,
+            out ulong lpFreeBytesAvailable,
+            out ulong lpTotalNumberOfBytes,
+            out ulong lpTotalNumberOfFreeBytes);
     }
 }

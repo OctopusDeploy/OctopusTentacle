@@ -23,5 +23,7 @@ namespace Octopus.Shared.Util
         void CopyDirectory(string sourceDirectory, string targetDirectory, int overwriteFileRetryAttempts = 3);
         void PurgeDirectory(string targetDirectory, int deleteFileRetryAttempts = 3);
         void EnsureDirectoryExists(string directoryPath);
+        void EnsureDiskHasEnoughFreeSpace(string directoryPath);
+        void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes);
     }
 }

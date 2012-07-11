@@ -7,10 +7,15 @@
 
     public static string ToFileSizeString(this long bytes)
     {
-        if (bytes > Terabyte) return (bytes / Terabyte).ToString("0.00 TB");
-        if (bytes > Gigabyte) return (bytes / Gigabyte).ToString("0.00 GB");
-        if (bytes > Megabyte) return (bytes / Megabyte).ToString("0.00 MB");
-        if (bytes > Kilobyte) return (bytes / Kilobyte).ToString("0.00 KB");
+        return ToFileSizeString(bytes <= 0 ? 0 : (ulong) bytes);
+    }
+
+    public static string ToFileSizeString(this ulong bytes)
+    {
+        if (bytes > Terabyte) return (bytes / Terabyte).ToString("0 TB");
+        if (bytes > Gigabyte) return (bytes / Gigabyte).ToString("0 GB");
+        if (bytes > Megabyte) return (bytes / Megabyte).ToString("0 MB");
+        if (bytes > Kilobyte) return (bytes / Kilobyte).ToString("0 KB");
         return bytes + " bytes";
     }
 }
