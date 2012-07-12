@@ -198,6 +198,17 @@ namespace Octopus.Shared.Util
             }
         }
 
+        public string GetFullPathToFile(string relativeOrAbsoluteFilePath)
+        {
+            if (!Path.IsPathRooted(relativeOrAbsoluteFilePath))
+            {
+                relativeOrAbsoluteFilePath = Path.Combine(Environment.CurrentDirectory, relativeOrAbsoluteFilePath);
+            }
+
+            relativeOrAbsoluteFilePath = Path.GetFullPath(relativeOrAbsoluteFilePath);
+            return relativeOrAbsoluteFilePath;
+        }
+
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool GetDiskFreeSpaceEx(string lpDirectoryName,
