@@ -25,6 +25,6 @@ namespace Octopus.Shared.Util
         void EnsureDirectoryExists(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes);
-        string GetFullPathToFile(string relativeOrAbsoluteFilePath);
+        string GetFullPath(string relativeOrAbsoluteFilePath);
     }
 }

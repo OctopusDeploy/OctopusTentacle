@@ -198,7 +198,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        public string GetFullPathToFile(string relativeOrAbsoluteFilePath)
+        public string GetFullPath(string relativeOrAbsoluteFilePath)
         {
             if (!Path.IsPathRooted(relativeOrAbsoluteFilePath))
             {
