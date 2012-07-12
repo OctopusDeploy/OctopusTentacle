@@ -34,10 +34,14 @@ namespace Octopus.Shared.Startup
 
             try
             {
-                var options = command.Options;
+                var options = command.Value.Options;
                 options.Parse(args);
 
-                command.Execute();
+                command.Value.Execute();
+            }
+            catch (ArgumentException ex)
+            {
+                log.Error(ex.Message);
             }
             catch (Exception ex)
             {

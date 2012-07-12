@@ -41,17 +41,17 @@ namespace Octopus.Shared.Startup
                 }
                 else
                 {
-                    PrintCommandHelp(executable, command);                    
+                    PrintCommandHelp(executable, command.Value, command.Metadata);                    
                 }
             }
         }
 
-        void PrintCommandHelp(string executable, ICommand command)
+        void PrintCommandHelp(string executable, ICommand command, ICommandMetadata metadata)
         {
             Console.ResetColor();
             Console.Write("Usage: ");
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(executable + " " + command + " [<options>]");
+            Console.WriteLine(executable + " " + metadata.Name + " [<options>]");
             Console.ResetColor();
             Console.WriteLine();
             Console.WriteLine("Where [<options>] is any of: ");

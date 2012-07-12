@@ -5,6 +5,6 @@ namespace Octopus.Shared.Startup
     public interface ICommandLocator
     {
         ICommandMetadata[] List();
-        ICommand Find(string name);
+        Lazy<ICommand, ICommandMetadata> Find(string name);
     }
 }

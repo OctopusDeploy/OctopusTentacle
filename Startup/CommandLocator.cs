@@ -18,14 +18,14 @@ namespace Octopus.Shared.Startup
             return commands.Select(x => x.Metadata).ToArray();
         }
 
-        public ICommand Find(string name)
+        public Lazy<ICommand, ICommandMetadata> Find(string name)
         {
             var matchingCommands =
                 from command in commands
                 let commandName = command.Metadata.Name
                 let aliases = command.Metadata.Aliases
                 where commandName == name || aliases.Any(a => a == name)
-                select command.Value;
+                select command;
 
             return matchingCommands.FirstOrDefault();
         }
