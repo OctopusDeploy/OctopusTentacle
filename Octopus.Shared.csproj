@@ -50,6 +50,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\tools\Raven\EmbeddedClient\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="NuGet.Core, Version=1.6.21205.9031, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Octopus.Tests\bin\NuGet.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -162,6 +166,7 @@
     <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Time\IClock.cs" />
     <Compile Include="Util\ExceptionExtensions.cs" />
+    <Compile Include="Util\HashCalculator.cs" />
     <Compile Include="Util\ListExtensions.cs" />
     <Compile Include="Util\OctopusFileSystemModule.cs" />
     <Compile Include="Util\OctopusPhysicalFileSystem.cs" />
