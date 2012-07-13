@@ -32,6 +32,9 @@ namespace Octopus.Shared.Contracts
         [DataMember]
         public long Size { get; set; }
 
+        [DataMember]
+        public string Hash { get; set; }
+
         public static PackageMetadata FromFile(string filePath)
         {
             var file = new FileInfo(filePath);
