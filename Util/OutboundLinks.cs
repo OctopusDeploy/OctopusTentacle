@@ -20,5 +20,6 @@
         public static readonly string HelpMakeSuggestion = "http://help.octopusdeploy.com/discussions/suggestions";
         public static readonly string WhatIsMarkdown = "http://en.wikipedia.org/wiki/Markdown";
         public static readonly string CheckForUpgrades = "http://octopusdeploy.com/downloads/upgrade";
+        public static readonly string WhyAmINotAllowedToUseDependencies = "http://octopusdeploy.com/documentation/packaging";
     }
 }
