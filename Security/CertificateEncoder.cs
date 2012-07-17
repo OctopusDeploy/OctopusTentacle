@@ -19,7 +19,7 @@ namespace Octopus.Shared.Security
                 {
                     return new X509Certificate2(file, (string)null, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet);
                 }
-                catch (CryptographicException)
+                catch (Exception)
                 {
                     return new X509Certificate2(file, (string)null, X509KeyStorageFlags.Exportable);
                 }
