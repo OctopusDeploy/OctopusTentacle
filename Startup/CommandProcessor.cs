@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.ServiceProcess;
+using System.Security;
 using log4net;
 
 namespace Octopus.Shared.Startup
@@ -42,10 +42,18 @@ namespace Octopus.Shared.Startup
             catch (ArgumentException ex)
             {
                 log.Error(ex.Message);
+                Environment.ExitCode = -1;
+            }
+            catch (SecurityException ex)
+            {
+                log.Error("Security exception: " + ex.Message);
+                log.Error("Please try re-running the command as an administrator from an elevated command prompt.");
+                Environment.ExitCode = -42;
             }
             catch (Exception ex)
             {
                 log.Error(ex);
+                Environment.ExitCode = ex.GetType().Name.GetHashCode();
             }
         }
 
