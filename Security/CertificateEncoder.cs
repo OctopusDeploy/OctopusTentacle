@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Octopus.Shared.Security
@@ -13,7 +14,15 @@ namespace Octopus.Shared.Security
             try
             {
                 File.WriteAllBytes(file, raw);
-                return new X509Certificate2(file, (string)null, X509KeyStorageFlags.Exportable);
+                
+                try
+                {
+                    return new X509Certificate2(file, (string)null, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet);
+                }
+                catch (CryptographicException)
+                {
+                    return new X509Certificate2(file, (string)null, X509KeyStorageFlags.Exportable);
+                }
             }
             finally
             {
