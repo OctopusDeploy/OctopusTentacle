@@ -515,6 +515,7 @@ namespace Octopus.Shared.Startup
         }
 
         public OptionSet(Converter<string, string> localizer)
+            : base(new CaseInsensitiveStringComparer())
         {
             this.localizer = localizer;
         }
@@ -1145,6 +1146,19 @@ namespace Octopus.Shared.Startup
             if (sep == -1 || end == description.Length)
                 return end;
             return sep;
+        }
+    }
+
+    public class CaseInsensitiveStringComparer : IEqualityComparer<string>
+    {
+        public bool Equals(string x, string y)
+        {
+            return string.Equals(x, y, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public int GetHashCode(string obj)
+        {
+            return obj.ToLowerInvariant().GetHashCode();
         }
     }
 }
