@@ -84,8 +84,19 @@ namespace Octopus.Shared.Startup
                     Console.WriteLine("Running. Press <enter> to shut down...");
                     Console.ResetColor();
 
-                    Console.ReadLine();
-
+                    while (true)
+                    {
+                        var line = (Console.ReadLine() ?? string.Empty).ToLowerInvariant();
+                        if (line == "cls" || line == "clear")
+                        {
+                            Console.Clear();
+                        }
+                        if (string.IsNullOrWhiteSpace(line))
+                        {
+                            break;
+                        }
+                    } 
+                    
                     Console.Title = name + " - Shutting down...";
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine();
