@@ -7,7 +7,7 @@ public static class DateTimeExtensions
     /// </summary>
     /// <param name="dateAndTime">The date and time.</param>
     /// <returns>The formatted date and time.</returns>
-    public static string NormalFormatDateAndTime(this DateTime? dateAndTime)
+    public static string NormalFormatDateAndTime(this DateTimeOffset? dateAndTime)
     {
         return dateAndTime == null ? "" : NormalFormatDateAndTime(dateAndTime.Value);
     }
@@ -17,7 +17,7 @@ public static class DateTimeExtensions
     /// </summary>
     /// <param name="dateAndTime">The date and time.</param>
     /// <returns>The formatted date and time.</returns>
-    public static string NormalFormatDateAndTime(this DateTime dateAndTime)
+    public static string NormalFormatDateAndTime(this DateTimeOffset dateAndTime)
     {
         dateAndTime = dateAndTime.ToLocalTime();
         return dateAndTime.ToString("f");
@@ -28,7 +28,7 @@ public static class DateTimeExtensions
     /// </summary>
     /// <param name="date">The date to format.</param>
     /// <returns></returns>
-    public static string ShortFormatDate(this DateTime date)
+    public static string ShortFormatDate(this DateTimeOffset date)
     {
         date = date.ToLocalTime();
         if (date.Year == DateTime.Today.Year)
@@ -42,9 +42,9 @@ public static class DateTimeExtensions
     /// </summary>
     /// <param name="date">The date to format.</param>
     /// <returns></returns>
-    public static string ShortFormatTime(this DateTime date)
+    public static string ShortFormatTime(this DateTimeOffset date)
     {
         date = date.ToLocalTime();
-        return date.ToShortTimeString();
+        return date.LocalDateTime.ToShortTimeString();
     }
 }
