@@ -10,17 +10,29 @@ using log4net;
 
 namespace Octopus.Shared.Activities
 {
+    public class ActivityIdFountain
+    {
+        int next = 1;
+
+        public int NextId()
+        {
+            return Interlocked.Increment(ref next);
+        }
+    }
+
     public class ActivityRuntime : IActivityRuntime
     {
         readonly ActivityState parentState;
         readonly CancellationTokenSource cancellation;
         readonly IActivityLog log;
-
-        private ActivityRuntime(ActivityState parentState, CancellationTokenSource cancellation, IActivityLog log)
+        readonly ActivityIdFountain id;
+        
+        private ActivityRuntime(ActivityState parentState, CancellationTokenSource cancellation, IActivityLog log, ActivityIdFountain id)
         {
             this.parentState = parentState;
             this.cancellation = cancellation;
             this.log = log;
+            this.id = id;
         }
 
         public CancellationTokenSource Cancellation
@@ -30,7 +42,7 @@ namespace Octopus.Shared.Activities
 
         public Task ExecuteChildren(IEnumerable<IActivity> activities)
         {
-            var tasks = activities.Select(ExecuteChild);
+            var tasks = activities.Select(ExecuteChild).ToList();
             return TaskEx.WhenAll(tasks);
         }
 
@@ -83,11 +95,11 @@ namespace Octopus.Shared.Activities
                 name = activity.ToString;
             }
 
-            var childState = new ActivityState(name, tag);
+            var childState = new ActivityState(name, tag, id.NextId());
             var runtimeAware = activity as IRuntimeAware;
             if (runtimeAware != null)
             {
-                runtimeAware.Runtime = new ActivityRuntime(childState, cancellation, childState.Log);
+                runtimeAware.Runtime = new ActivityRuntime(childState, cancellation, childState.Log, id);
                 runtimeAware.Log = childState.Log;
             }
 
@@ -106,7 +118,7 @@ namespace Octopus.Shared.Activities
 
         public static IActivityState BeginExecute(IActivity activity, CancellationTokenSource cancellation)
         {
-            var runtime = new ActivityRuntime(null, cancellation ?? new CancellationTokenSource(), new NullActivityLog(Logger.Default));
+            var runtime = new ActivityRuntime(null, cancellation ?? new CancellationTokenSource(), new NullActivityLog(Logger.Default), new ActivityIdFountain());
             var logOutput = new StringBuilder();
             
             using (LogTapper.CaptureTo(logOutput))

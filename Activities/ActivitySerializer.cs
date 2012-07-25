@@ -32,24 +32,7 @@ namespace Octopus.Shared.Activities
             {
                 var serializer = new XmlSerializer(typeof(ActivityElement));
                 var result = (ActivityElement)serializer.Deserialize(xmlTextReader);
-
-                var i = 1;
-                AssignId(result, ref i);
-
                 return result;
-            }
-        }
-
-        static void AssignId(ActivityElement result, ref int i)
-        {
-            result.Id = i;
-            i++;
-            if (result.Children == null)
-                return;
-            
-            foreach (var child in result.Children)
-            {
-                AssignId(child, ref i);
             }
         }
 
@@ -59,6 +42,7 @@ namespace Octopus.Shared.Activities
             element.Name = state.Name;
             element.Status = state.Status;
             element.Tag = state.Tag;
+            element.Id = state.Id;
             
             if (state.Log != null)
             {

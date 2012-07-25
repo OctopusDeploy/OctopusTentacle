@@ -12,19 +12,23 @@ namespace Octopus.Shared.Activities
         readonly List<ActivityState> children = new List<ActivityState>();
         readonly object sync = new object();
         readonly Func<string> name;
+        readonly int id;
         readonly IActivityLog log = new ActivityLog();
         Task task;
         
-        public ActivityState(Func<string> name, string tag)
+        public ActivityState(Func<string> name, string tag, int id)
         {
             Guard.ArgumentNotNull(name, "name");
             this.name = name;
+            this.id = id;
             Tag = tag;
         }
 
         public string Name { get { return name(); } }
 
         public string Tag { get; private set; }
+
+        public int Id { get { return id; } }
 
         public ActivityStatus Status
         {
