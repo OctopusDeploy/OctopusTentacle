@@ -20,4 +20,15 @@ public static class ListExtensions
             i--;
         }
     }
+
+    public static void AddRange<TElement>(this IList<TElement> source, IEnumerable<TElement> itemsToAdd)
+    {
+        if (itemsToAdd == null || source == null)
+            return;
+
+        foreach (var item in itemsToAdd)
+        {
+            source.Add(item);
+        }
+    }
 }
