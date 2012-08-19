@@ -16,6 +16,7 @@ namespace Octopus.Shared.Contracts
         public static readonly string ReleaseNumber = "OctopusReleaseNumber";
         
         // Defaulted by Tentacle, but overridable by user
+        public static readonly string TreatWarningsAsErrors = "OctopusTreatWarningsAsErrors";
         public static readonly string PackageDirectoryPath = "OctopusPackageDirectoryPath";
         public static readonly string PurgePackageDirectoryBeforeCopy = "OctopusPurgePackageDirectoryBeforeCopy";
         public static readonly string WebSiteName = "OctopusWebSiteName";
