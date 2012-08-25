@@ -21,7 +21,7 @@ public static class ListExtensions
         }
     }
 
-    public static void AddRange<TElement>(this IList<TElement> source, IEnumerable<TElement> itemsToAdd)
+    public static void AddRange<TElement>(this ICollection<TElement> source, IEnumerable<TElement> itemsToAdd)
     {
         if (itemsToAdd == null || source == null)
             return;
