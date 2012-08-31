@@ -21,5 +21,8 @@ namespace Octopus.Shared.Contracts
         public static readonly string PurgePackageDirectoryBeforeCopy = "OctopusPurgePackageDirectoryBeforeCopy";
         public static readonly string WebSiteName = "OctopusWebSiteName";
         public static readonly string NotAWebSite = "OctopusNotAWebSite";
+
+        // Set by Tentacle exclusively
+        public static readonly string OriginalPackageDirectoryPath = "OctopusOriginalPackageDirectoryPath";
     }
 }
