@@ -37,5 +37,10 @@ namespace Octopus.Shared.Configuration
         /// Gets or sets the X509 certificate used by the Tentacle.
         /// </summary>
         X509Certificate2 TentacleCertificate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the IP address/hostname used to listen on (by default, localhost).
+        /// </summary>
+        string ServicesHostName { get; set; }
     }
 }

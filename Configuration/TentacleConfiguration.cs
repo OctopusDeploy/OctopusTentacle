@@ -82,5 +82,11 @@ namespace Octopus.Shared.Configuration
                 registry.Set("Cert-" + CertificateExpectations.TentacleCertificateFullName, CertificateEncoder.ToBase64String(value));
             }
         }
+
+        public string ServicesHostName
+        {
+            get { return registry.Get("Tentacle.Services.HostName", "localhost"); }
+            set { registry.Set("Tentacle.Services.HostName", value); }
+        }
     }
 }
