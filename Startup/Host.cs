@@ -95,14 +95,17 @@ namespace Octopus.Shared.Startup
                         {
                             break;
                         }
-                    } 
-                    
+                    }
+
+                    Console.ResetColor();
                     Console.Title = name + " - Shutting down...";
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine();
-
-                    shutdown();
                 }
+
+                Console.ResetColor();
+
+                shutdown();
 
                 Console.ResetColor();
             }
