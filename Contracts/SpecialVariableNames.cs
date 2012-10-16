@@ -24,5 +24,10 @@ namespace Octopus.Shared.Contracts
 
         // Set by Tentacle exclusively
         public static readonly string OriginalPackageDirectoryPath = "OctopusOriginalPackageDirectoryPath";
+
+        public static string[] GetUserVariables()
+        {
+            return new[] {TreatWarningsAsErrors, PackageDirectoryPath, PurgePackageDirectoryBeforeCopy, WebSiteName, NotAWebSite};
+        }
     }
 }
