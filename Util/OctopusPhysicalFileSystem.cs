@@ -99,6 +99,10 @@ namespace Octopus.Shared.Util
 
         public void PurgeDirectory(string targetDirectory, int deleteFileRetryAttempts = 3)
         {
+        }
+
+        public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, int deleteFileRetryAttempts = 3)
+        {
             if (!DirectoryExists(targetDirectory))
             {
                 return;
@@ -106,6 +110,15 @@ namespace Octopus.Shared.Util
 
             foreach (var file in EnumerateFilesRecursively(targetDirectory))
             {
+                if (include != null)
+                {
+                    var info = new FileInfoAdapter(new FileInfo(file));
+                    if (!include(info))
+                    {
+                        continue;
+                    }
+                }
+                
                 for (var i = 0; i < deleteFileRetryAttempts; i++)
                 {
                     try

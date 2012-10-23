@@ -22,6 +22,7 @@ namespace Octopus.Shared.Util
         Stream CreateTemporaryFile(string extension, out string path);
         void CopyDirectory(string sourceDirectory, string targetDirectory, int overwriteFileRetryAttempts = 3);
         void PurgeDirectory(string targetDirectory, int deleteFileRetryAttempts = 3);
+        void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, int deleteFileRetryAttempts = 3);
         void EnsureDirectoryExists(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes);

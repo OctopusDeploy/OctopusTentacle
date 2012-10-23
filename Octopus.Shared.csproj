@@ -166,7 +166,9 @@
     <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Time\IClock.cs" />
     <Compile Include="Util\ExceptionExtensions.cs" />
+    <Compile Include="Util\FileInfoAdapter.cs" />
     <Compile Include="Util\HashCalculator.cs" />
+    <Compile Include="Util\IFileInfo.cs" />
     <Compile Include="Util\ListExtensions.cs" />
     <Compile Include="Util\OctopusFileSystemModule.cs" />
     <Compile Include="Util\OctopusPhysicalFileSystem.cs" />
