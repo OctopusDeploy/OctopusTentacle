@@ -31,4 +31,13 @@ public static class ListExtensions
             source.Add(item);
         }
     }
+
+    public static IEnumerable<TElement> Apply<TElement>(this IEnumerable<TElement> source, Action<TElement> apply)
+    {
+        foreach (var item in source)
+        {
+            apply(item);
+            yield return item;
+        }
+    }
 }
