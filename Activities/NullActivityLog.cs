@@ -77,6 +77,11 @@ namespace Octopus.Shared.Activities
             defaultLog.ErrorFormat(format, args);
         }
 
+        public IActivityLog OverwritePrevious()
+        {
+            return this;
+        }
+
         public string GetLog()
         {
             return string.Empty;

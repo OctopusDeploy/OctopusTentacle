@@ -20,6 +20,8 @@ namespace Octopus.Shared.Activities
         void Error(object message, Exception exception);
         void ErrorFormat(string format, params object[] args);
 
+        IActivityLog OverwritePrevious();
+
         string GetLog();
     }
 }
