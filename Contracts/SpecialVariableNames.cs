@@ -21,13 +21,15 @@ namespace Octopus.Shared.Contracts
         public static readonly string PurgePackageDirectoryBeforeCopy = "OctopusPurgePackageDirectoryBeforeCopy";
         public static readonly string WebSiteName = "OctopusWebSiteName";
         public static readonly string NotAWebSite = "OctopusNotAWebSite";
+        public static readonly string PrintVariables = "OctopusPrintVariables";
 
         // Set by Tentacle exclusively
         public static readonly string OriginalPackageDirectoryPath = "OctopusOriginalPackageDirectoryPath";
 
+
         public static string[] GetUserVariables()
         {
-            return new[] {TreatWarningsAsErrors, PackageDirectoryPath, PurgePackageDirectoryBeforeCopy, WebSiteName, NotAWebSite};
+            return new[] {TreatWarningsAsErrors, PackageDirectoryPath, PurgePackageDirectoryBeforeCopy, WebSiteName, NotAWebSite, PrintVariables};
         }
     }
 }
