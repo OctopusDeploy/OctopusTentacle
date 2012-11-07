@@ -118,10 +118,8 @@
     <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Contracts\Variable.cs" />
     <Compile Include="Diagnostics\ILogScope.cs" />
-    <Compile Include="Diagnostics\LogTapAppender.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
-    <Compile Include="Diagnostics\LogTapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\CertificateEncoder.cs" />
     <Compile Include="Security\CertificateExpectations.cs" />

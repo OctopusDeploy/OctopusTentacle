@@ -119,21 +119,17 @@ namespace Octopus.Shared.Activities
         public static IActivityState BeginExecute(IActivity activity, CancellationTokenSource cancellation)
         {
             var runtime = new ActivityRuntime(null, cancellation ?? new CancellationTokenSource(), new NullActivityLog(Logger.Default), new ActivityIdFountain());
-            var logOutput = new StringBuilder();
             
-            using (LogTapper.CaptureTo(logOutput))
+            var state = runtime.ConfigureChildActivity(activity);
+            var task = Task.Factory.StartNew(() =>
             {
-                var state = runtime.ConfigureChildActivity(activity);
-                var task = Task.Factory.StartNew(() =>
-                {
-                    // Force the activity to run on at least one thread
-                    var childTask = activity.Execute();
-                    childTask.Wait();
-                });
+                // Force the activity to run on at least one thread
+                var childTask = activity.Execute();
+                childTask.Wait();
+            });
 
-                state.Attach(task);
-                return state;
-            }
+            state.Attach(task);
+            return state;
         }
     }
 }
