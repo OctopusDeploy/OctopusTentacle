@@ -6,14 +6,19 @@ namespace Octopus.Shared.Contracts
     {
         // Set by Octopus Server exclusively
         public static readonly string EnvironmentName = "OctopusEnvironmentName";
+        public static readonly string EnvironmentId = "OctopusEnvironmentId";
         public static readonly string MachineName = "OctopusMachineName";
         public static readonly string PackageName = "OctopusPackageName";
         public static readonly string PackageVersion = "OctopusPackageVersion";
         public static readonly string PackageNameAndVersion = "OctopusPackageNameAndVersion";
         public static readonly string ProjectName = "OctopusProjectName";
+        public static readonly string ProjectId = "OctopusProjectId";
         public static readonly string ForcePackageRedeployment = "OctopusForcePackageRedeployment";
         public static readonly string TaskId = "OctopusTaskId";
         public static readonly string ReleaseNumber = "OctopusReleaseNumber";
+        public static readonly string RetentionPolicySet = "OctopusRetentionPolicySet";
+        public static readonly string RetentionPolicyItemsToKeep = "OctopusRetentionPolicyItemsToKeep";
+        public static readonly string RetentionPolicyDaysToKeep = "OctopusRetentionPolicyDaysToKeep";
         
         // Defaulted by Tentacle, but overridable by user
         public static readonly string TreatWarningsAsErrors = "OctopusTreatWarningsAsErrors";

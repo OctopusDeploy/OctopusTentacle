@@ -34,6 +34,11 @@ namespace Octopus.Shared.Configuration
         string LogsDirectory { get; }
 
         /// <summary>
+        /// Gets the file where deployment entries should be added.
+        /// </summary>
+        string JournalFilePath { get; }
+
+        /// <summary>
         /// Gets or sets the X509 certificate used by the Tentacle.
         /// </summary>
         X509Certificate2 TentacleCertificate { get; set; }

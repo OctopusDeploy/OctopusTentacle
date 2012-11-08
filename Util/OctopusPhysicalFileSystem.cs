@@ -76,7 +76,12 @@ namespace Octopus.Shared.Util
 
         public Stream OpenFile(string path, FileAccess access, FileShare share)
         {
-            return new FileStream(path, FileMode.OpenOrCreate, access, share);
+            return OpenFile(path, FileMode.OpenOrCreate, access, share);
+        }
+
+        public Stream OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
+        {
+            return new FileStream(path, mode, access, share);
         }
 
         public Stream CreateTemporaryFile(string extension, out string path)
@@ -99,6 +104,7 @@ namespace Octopus.Shared.Util
 
         public void PurgeDirectory(string targetDirectory, int deleteFileRetryAttempts = 3)
         {
+            PurgeDirectory(targetDirectory, (fi) => true, deleteFileRetryAttempts);
         }
 
         public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, int deleteFileRetryAttempts = 3)
@@ -136,6 +142,20 @@ namespace Octopus.Shared.Util
                     }
                 }
             }
+        }
+
+        public void OverwriteAndDelete(string originalFile, string temporaryReplacement)
+        {
+            var backup = originalFile + ".backup" + Guid.NewGuid();
+
+            if (!File.Exists(originalFile))
+                File.Copy(temporaryReplacement, originalFile, true);
+            else
+                File.Replace(temporaryReplacement, originalFile, backup);
+
+            File.Delete(temporaryReplacement);
+            if (File.Exists(backup))
+                File.Delete(backup);
         }
 
         public void EnsureDirectoryExists(string directoryPath)

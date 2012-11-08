@@ -19,6 +19,7 @@ namespace Octopus.Shared.Util
         void AppendToFile(string path, string contents);
         void OverwriteFile(string path, string contents);
         Stream OpenFile(string path, FileAccess access = FileAccess.ReadWrite, FileShare share = FileShare.Read);
+        Stream OpenFile(string path, FileMode mode = FileMode.OpenOrCreate, FileAccess access = FileAccess.ReadWrite, FileShare share = FileShare.Read);
         Stream CreateTemporaryFile(string extension, out string path);
         void CopyDirectory(string sourceDirectory, string targetDirectory, int overwriteFileRetryAttempts = 3);
         void PurgeDirectory(string targetDirectory, int deleteFileRetryAttempts = 3);
@@ -27,5 +28,6 @@ namespace Octopus.Shared.Util
         void EnsureDiskHasEnoughFreeSpace(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes);
         string GetFullPath(string relativeOrAbsoluteFilePath);
+        void OverwriteAndDelete(string originalFile, string temporaryReplacement);
     }
 }
