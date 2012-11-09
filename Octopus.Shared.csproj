@@ -178,6 +178,7 @@
     <Compile Include="Util\IOctopusFileSystem.cs" />
     <Compile Include="Util\OutboundLinks.cs" />
     <Compile Include="Util\PathHelper.cs" />
+    <Compile Include="Util\RemotedObject.cs" />
     <Compile Include="Util\SlugGenerator.cs" />
     <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Util\DateTimeExtensions.cs" />
