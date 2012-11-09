@@ -30,6 +30,8 @@ namespace Octopus.Shared.Contracts
 
         // Set by Tentacle exclusively
         public static readonly string OriginalPackageDirectoryPath = "OctopusOriginalPackageDirectoryPath";
+        public static readonly string LastErrorMessage = "OctopusLastErrorMessage";
+        public static readonly string LastError = "OctopusLastError";
 
 
         public static string[] GetUserVariables()
