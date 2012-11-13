@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Octopus.Shared.Activities
@@ -13,14 +14,16 @@ namespace Octopus.Shared.Activities
         readonly object sync = new object();
         readonly Func<string> name;
         readonly int id;
+        readonly CancellationTokenSource cancellationTokenSource;
         readonly IActivityLog log = new ActivityLog();
         Task task;
         
-        public ActivityState(Func<string> name, string tag, int id)
+        public ActivityState(Func<string> name, string tag, int id, CancellationTokenSource cancellationTokenSource)
         {
             Guard.ArgumentNotNull(name, "name");
             this.name = name;
             this.id = id;
+            this.cancellationTokenSource = cancellationTokenSource;
             Tag = tag;
         }
 
@@ -70,6 +73,11 @@ namespace Octopus.Shared.Activities
             {
                 return task.IsCompleted;
             }
+        }
+
+        public void Cancel()
+        {
+            cancellationTokenSource.Cancel();
         }
 
         public void WaitForComplete()

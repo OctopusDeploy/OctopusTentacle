@@ -1,25 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
-using log4net;
 
 namespace Octopus.Shared.Activities
 {
-    public class ActivityIdFountain
-    {
-        int next = 1;
-
-        public int NextId()
-        {
-            return Interlocked.Increment(ref next);
-        }
-    }
-
     public class ActivityRuntime : IActivityRuntime
     {
         readonly ActivityState parentState;
@@ -95,7 +83,7 @@ namespace Octopus.Shared.Activities
                 name = activity.ToString;
             }
 
-            var childState = new ActivityState(name, tag, id.NextId());
+            var childState = new ActivityState(name, tag, id.NextId(), cancellation);
             var runtimeAware = activity as IRuntimeAware;
             if (runtimeAware != null)
             {

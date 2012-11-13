@@ -81,6 +81,7 @@
     </Compile>
     <Compile Include="Activities\Activity.cs" />
     <Compile Include="Activities\ActivityElement.cs" />
+    <Compile Include="Activities\ActivityIdFountain.cs" />
     <Compile Include="Activities\ActivityLog.cs" />
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityFailedException.cs" />

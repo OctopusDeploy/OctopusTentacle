@@ -15,6 +15,7 @@ namespace Octopus.Shared.Activities
         bool IsComplete { get; }
         int Id { get; }
 
+        void Cancel();
         void WaitForComplete();
     }
 }

@@ -26,7 +26,13 @@ namespace Octopus.Shared.Activities
                 return;
 
             if (runtime.Cancellation.IsCancellationRequested)
-                throw new TaskCanceledException("The activity was canceled by the user.");
+            {
+                var log = Log;
+                if (log != null)
+                    Log.Error("The activity was canceled.");
+
+                throw new TaskCanceledException("The activity was canceled.");
+            }
         }
 
         protected Task StartNew(Action callback)
