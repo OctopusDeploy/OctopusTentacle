@@ -22,7 +22,40 @@ namespace Octopus.Shared.Util
 
         public void DeleteFile(string path)
         {
-            File.Delete(path);
+            DeleteFile(path, null);
+        }
+
+        public void DeleteFile(string path, DeletionOptions options)
+        {
+            options = options ?? DeletionOptions.TryThreeTimes;
+
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            for (var i = 0; i < options.RetryAttempts; i++)
+            {
+                try
+                {
+                    if (File.Exists(path))
+                    {
+                        File.Delete(path);
+                    }
+                }
+                catch
+                {
+                    Thread.Sleep(options.SleepBetweenAttemptsMilliseconds);
+
+                    if (i == options.RetryAttempts - 1)
+                    {
+                        if (options.ThrowOnFailure)
+                        {
+                            throw;
+                        }
+                        
+                        break;
+                    }
+                }
+            }
         }
 
         public void DeleteDirectory(string path)
@@ -102,12 +135,12 @@ namespace Octopus.Shared.Util
             return OpenFile(path, FileAccess.ReadWrite, FileShare.Read);
         }
 
-        public void PurgeDirectory(string targetDirectory, int deleteFileRetryAttempts = 3)
+        public void PurgeDirectory(string targetDirectory, DeletionOptions options)
         {
-            PurgeDirectory(targetDirectory, (fi) => true, deleteFileRetryAttempts);
+            PurgeDirectory(targetDirectory, (fi) => true, options);
         }
 
-        public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, int deleteFileRetryAttempts = 3)
+        public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, DeletionOptions options)
         {
             if (!DirectoryExists(targetDirectory))
             {
@@ -124,23 +157,8 @@ namespace Octopus.Shared.Util
                         continue;
                     }
                 }
-                
-                for (var i = 0; i < deleteFileRetryAttempts; i++)
-                {
-                    try
-                    {
-                        File.Delete(file);
-                    }
-                    catch
-                    {
-                        Thread.Sleep(100);
 
-                        if (i == deleteFileRetryAttempts - 1)
-                        {
-                            throw;
-                        }
-                    }
-                }
+                DeleteFile(file, options);
             }
         }
 

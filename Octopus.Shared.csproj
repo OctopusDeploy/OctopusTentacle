@@ -169,6 +169,7 @@
     <Compile Include="Time\TimeModule.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Time\IClock.cs" />
+    <Compile Include="Util\DeletionOptions.cs" />
     <Compile Include="Util\ExceptionExtensions.cs" />
     <Compile Include="Util\FileInfoAdapter.cs" />
     <Compile Include="Util\HashCalculator.cs" />
