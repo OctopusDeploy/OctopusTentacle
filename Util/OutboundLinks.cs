@@ -21,5 +21,6 @@
         public static readonly string WhatIsMarkdown = "http://en.wikipedia.org/wiki/Markdown";
         public static readonly string CheckForUpgrades = "http://octopusdeploy.com/downloads/upgrade";
         public static readonly string WhyAmINotAllowedToUseDependencies = "http://octopusdeploy.com/documentation/packaging";
+        public static readonly string HowDoIInstallPowerShell = "http://octopusdeploy.com/documentation/install/tentacle";
     }
 }
