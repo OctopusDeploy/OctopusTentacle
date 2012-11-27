@@ -19,15 +19,25 @@ namespace Octopus.Shared.Packages
 
         public bool DoesPackageExist(PackageMetadata metadata)
         {
-            var package = GetPackage(metadata);
+            return DoesPackageExist(null, metadata);
+        }
+
+        public bool DoesPackageExist(string prefix, PackageMetadata metadata)
+        {
+            var package = GetPackage(prefix, metadata);
             return package != null;
         }
 
         public Stream CreateFileForPackage(PackageMetadata metadata)
         {
-            var prefix = GetPrefixForPackage(metadata);
+            return CreateFileForPackage(null, metadata);
+        }
 
-            var fullPath = Path.Combine(rootDirectory, prefix + BitConverter.ToString(Guid.NewGuid().ToByteArray()).Replace("-", string.Empty) + ".nupkg");
+        public Stream CreateFileForPackage(string prefix, PackageMetadata metadata)
+        {
+            var name = GetNameOfPackage(metadata);
+
+            var fullPath = Path.Combine(GetPackageRoot(prefix), name + BitConverter.ToString(Guid.NewGuid().ToByteArray()).Replace("-", string.Empty) + ".nupkg");
 
             fileSystem.EnsureDirectoryExists(rootDirectory);
             fileSystem.EnsureDiskHasEnoughFreeSpace(rootDirectory, metadata.Size);
@@ -37,14 +47,21 @@ namespace Octopus.Shared.Packages
 
         public StoredPackage GetPackage(PackageMetadata metadata)
         {
-            var prefix = GetPrefixForPackage(metadata);
-            fileSystem.EnsureDirectoryExists(rootDirectory);
-            var files = fileSystem.EnumerateFiles(rootDirectory, prefix + "*.nupkg");
+            return GetPackage(null, metadata);
+        }
+
+        public StoredPackage GetPackage(string prefix, PackageMetadata metadata)
+        {
+            var name = GetNameOfPackage(metadata);
+            var root = GetPackageRoot(prefix);
+            fileSystem.EnsureDirectoryExists(root);
+
+            var files = fileSystem.EnumerateFiles(root, name + "*.nupkg");
 
             foreach (var file in files)
             {
                 var package = ReadPackageFile(file);
-                if (package == null) 
+                if (package == null)
                     continue;
 
                 if (!string.Equals(package.PackageId, metadata.PackageId, StringComparison.OrdinalIgnoreCase) || !string.Equals(package.Version, metadata.Version, StringComparison.OrdinalIgnoreCase))
@@ -58,6 +75,11 @@ namespace Octopus.Shared.Packages
             }
 
             return null;
+        }
+
+        string GetPackageRoot(string prefix)
+        {
+            return string.IsNullOrWhiteSpace(prefix) ? rootDirectory : Path.Combine(rootDirectory, prefix);
         }
 
         StoredPackage ReadPackageFile(string filePath)
@@ -90,7 +112,7 @@ namespace Octopus.Shared.Packages
             }
         }
 
-        string GetPrefixForPackage(PackageMetadata metadata)
+        static string GetNameOfPackage(PackageMetadata metadata)
         {
             return metadata.PackageId + "." + metadata.Version + "_";
         }
