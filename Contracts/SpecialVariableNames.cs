@@ -27,6 +27,11 @@ namespace Octopus.Shared.Contracts
         public static readonly string WebSiteName = "OctopusWebSiteName";
         public static readonly string NotAWebSite = "OctopusNotAWebSite";
         public static readonly string PrintVariables = "OctopusPrintVariables";
+        public static readonly string IgnoreMissingVariableTokens = "OctopusIgnoreMissingVariableTokens";
+        public static readonly string NoVariableTokenReplacement = "OctopusNoVariableTokenReplacement";
+
+        // Defaulted by Tentacle, overridable by user, but very advanced
+        public static readonly string VariableTokenRegex = "OctopusVariableTokenRegex";
 
         // Set by Tentacle exclusively
         public static readonly string OriginalPackageDirectoryPath = "OctopusOriginalPackageDirectoryPath";
@@ -36,7 +41,7 @@ namespace Octopus.Shared.Contracts
 
         public static string[] GetUserVariables()
         {
-            return new[] {TreatWarningsAsErrors, PackageDirectoryPath, PurgePackageDirectoryBeforeCopy, WebSiteName, NotAWebSite, PrintVariables};
+            return new[] {TreatWarningsAsErrors, PackageDirectoryPath, PurgePackageDirectoryBeforeCopy, WebSiteName, NotAWebSite, PrintVariables, IgnoreMissingVariableTokens, NoVariableTokenReplacement};
         }
     }
 }
