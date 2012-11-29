@@ -13,7 +13,7 @@ namespace Octopus.Shared.Activities
         Exception Error { get; }
         ReadOnlyCollection<IActivityState> Children { get; }
         bool IsComplete { get; }
-        int Id { get; }
+        string Id { get; }
         
         void Cancel();
         void WaitForComplete();

@@ -5,11 +5,9 @@ namespace Octopus.Shared.Activities
 {
     public class ActivityIdFountain
     {
-        int next = 1;
-
-        public int NextId()
+        public string NextId()
         {
-            return Interlocked.Increment(ref next);
+            return Guid.NewGuid().ToString();
         }
     }
 }

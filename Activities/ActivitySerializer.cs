@@ -11,6 +11,11 @@ namespace Octopus.Shared.Activities
     {
         public static void Serialize(IActivityState state, Stream output)
         {
+            Serialize(state, output, null);
+        }
+
+        public static void Serialize(IActivityState state, Stream output, ActivityElement originalLog)
+        {
             using (var gzip = new GZipStream(output, CompressionMode.Compress, true))
             using (var writer = new StreamWriter(gzip))
             using (var xmlWriter = new XmlTextWriter(writer))
@@ -19,8 +24,18 @@ namespace Octopus.Shared.Activities
                 xmlWriter.IndentChar = ' ';
                 xmlWriter.Indentation = 2;
 
-                var serializer = new XmlSerializer(typeof (ActivityElement));
-                serializer.Serialize(xmlWriter, BuildTree(state));
+                var newElement = BuildTree(state);
+                if (originalLog != null)
+                {
+                    var fullLog = originalLog.Children.ToList();
+                    fullLog.AddRange(newElement.Children);
+                    originalLog.Children = fullLog.ToArray();
+                    originalLog.Log += Environment.NewLine + newElement.Log;
+                    newElement = originalLog;
+                }
+
+                var serializer = new XmlSerializer(typeof(ActivityElement));
+                serializer.Serialize(xmlWriter, newElement);
             }
         }
 
@@ -43,9 +58,9 @@ namespace Octopus.Shared.Activities
 
         static void AssignId(ActivityElement result, ref int i)
         {
-            if (result.Id == 0)
+            if (result.Id == null || result.Id == "0")
             {
-                result.Id = i;
+                result.Id = i.ToString();
                 i++;
             }
 

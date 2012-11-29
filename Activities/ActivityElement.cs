@@ -28,7 +28,7 @@ namespace Octopus.Shared.Activities
         public ActivityElement[] Children { get; set; }
 
         [XmlAttribute("id")]
-        public int Id { get; set; }
+        public string Id { get; set; }
 
         public ActivityStatus? GetStatusForTag(string tag)
         {
