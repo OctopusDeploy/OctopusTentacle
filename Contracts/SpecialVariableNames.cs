@@ -27,6 +27,7 @@ namespace Octopus.Shared.Contracts
         public static readonly string WebSiteName = "OctopusWebSiteName";
         public static readonly string NotAWebSite = "OctopusNotAWebSite";
         public static readonly string PrintVariables = "OctopusPrintVariables";
+        public static readonly string PrintEvaluatedVariables = "OctopusPrintEvaluatedVariables";
         public static readonly string IgnoreMissingVariableTokens = "OctopusIgnoreMissingVariableTokens";
         public static readonly string NoVariableTokenReplacement = "OctopusNoVariableTokenReplacement";
 
@@ -41,7 +42,7 @@ namespace Octopus.Shared.Contracts
 
         public static string[] GetUserVariables()
         {
-            return new[] {TreatWarningsAsErrors, PackageDirectoryPath, PurgePackageDirectoryBeforeCopy, WebSiteName, NotAWebSite, PrintVariables, IgnoreMissingVariableTokens, NoVariableTokenReplacement};
+            return new[] {TreatWarningsAsErrors, PackageDirectoryPath, PurgePackageDirectoryBeforeCopy, WebSiteName, NotAWebSite, PrintVariables, PrintEvaluatedVariables, IgnoreMissingVariableTokens, NoVariableTokenReplacement};
         }
     }
 }
