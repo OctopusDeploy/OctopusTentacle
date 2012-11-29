@@ -27,11 +27,13 @@ namespace Octopus.Shared.Activities
                 var newElement = BuildTree(state);
                 if (originalLog != null)
                 {
-                    var fullLog = originalLog.Children.ToList();
+                    var clone = originalLog.Clone();
+
+                    var fullLog = clone.Children.ToList();
                     fullLog.AddRange(newElement.Children);
-                    originalLog.Children = fullLog.ToArray();
-                    originalLog.Log += Environment.NewLine + newElement.Log;
-                    newElement = originalLog;
+                    clone.Children = fullLog.ToArray();
+                    clone.Log += Environment.NewLine + newElement.Log;
+                    newElement = clone;
                 }
 
                 var serializer = new XmlSerializer(typeof(ActivityElement));
