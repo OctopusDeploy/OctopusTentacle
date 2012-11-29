@@ -14,7 +14,7 @@ namespace Octopus.Shared.Activities
         ReadOnlyCollection<IActivityState> Children { get; }
         bool IsComplete { get; }
         int Id { get; }
-
+        
         void Cancel();
         void WaitForComplete();
     }
