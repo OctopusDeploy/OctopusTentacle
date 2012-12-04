@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -45,6 +46,22 @@ namespace Octopus.Shared.Startup
             Thread.Sleep(1000);
 
             StartService(serviceName);
+        }
+
+        public string GetExecutable(string serviceName)
+        {
+            var mc = new ManagementClass("Win32_Service");
+            foreach (ManagementObject mo in mc.GetInstances())
+            {
+                if (mo.GetPropertyValue("Name").ToString() == serviceName)
+                {
+                    return mo.GetPropertyValue("PathName").ToString().Trim('"');
+                }
+
+                mo.Dispose();
+            }
+
+            return null;
         }
 
         void InstallAndStart(ServiceOptions options)

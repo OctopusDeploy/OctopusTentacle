@@ -12,5 +12,6 @@ namespace Octopus.Shared.Startup
         void Reconfigure(ServiceOptions options);
         void Uninstall(string serviceName);
         void Restart(string serviceName);
+        string GetExecutable(string serviceName);
     }
 }
