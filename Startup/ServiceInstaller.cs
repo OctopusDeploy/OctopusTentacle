@@ -83,7 +83,7 @@ namespace Octopus.Shared.Startup
             }
             else
             {
-                InstallAndStart(serviceName, serviceName, assemblyContainingInstaller.FullLocalPath());
+                InstallAndStart(serviceName, serviceName, assemblyContainingInstaller.FullLocalPath(), options.DefaultAccount);
                 AddServiceDescriptionToRegistry(serviceName, options.Description);
                 Console.WriteLine("Service installed and started successfully");       
             }
@@ -510,7 +510,8 @@ namespace Octopus.Shared.Startup
         /// <param name="serviceName">The service name that this service will have</param>
         /// <param name="displayName">The display name that this service will have</param>
         /// <param name="fileName">The path to the executable of the service</param>
-        static void InstallAndStart(string serviceName, string displayName, string fileName)
+        /// <param name="defaultAccount"> </param>
+        static void InstallAndStart(string serviceName, string displayName, string fileName, ServiceAccount defaultAccount)
         {
             var scman = OpenScManager(ServiceManagerRights.Connect | ServiceManagerRights.CreateService);
             try
@@ -518,10 +519,12 @@ namespace Octopus.Shared.Startup
                 var service = OpenService(scman, serviceName, ServiceRights.QueryStatus | ServiceRights.Start);
                 if (service == IntPtr.Zero)
                 {
+                    var account = defaultAccount == ServiceAccount.LocalSystem ? null : defaultAccount.ToString();
+
                     service = CreateService(scman, serviceName, serviceName,
                         ServiceRights.QueryStatus | ServiceRights.Start, SERVICE_WIN32_OWN_PROCESS,
                         ServiceBootFlag.AutoStart, ServiceError.Normal, fileName, null, IntPtr.Zero,
-                        null, null, null);
+                        null, account, null);
                 }
                 if (service == IntPtr.Zero)
                 {
