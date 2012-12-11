@@ -522,7 +522,7 @@ namespace Octopus.Shared.Startup
                 var service = OpenService(scman, serviceName, ServiceRights.QueryStatus | ServiceRights.Start);
                 if (service == IntPtr.Zero)
                 {
-                    var account = defaultAccount == ServiceAccount.LocalSystem ? null : defaultAccount.ToString();
+                    var account = defaultAccount == ServiceAccount.LocalSystem ? null : "NT AUTHORITY\\" + defaultAccount;
 
                     service = CreateService(scman, serviceName, serviceName,
                         ServiceRights.QueryStatus | ServiceRights.Start, SERVICE_WIN32_OWN_PROCESS,
