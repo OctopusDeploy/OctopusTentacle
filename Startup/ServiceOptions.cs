@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.ServiceProcess;
 
 namespace Octopus.Shared.Startup
 {
@@ -12,6 +13,7 @@ namespace Octopus.Shared.Startup
         {
             this.serviceName = serviceName;
             this.assembly = assembly;
+            DefaultAccount = ServiceAccount.LocalSystem;
         }
 
         public string ServiceName
@@ -23,6 +25,8 @@ namespace Octopus.Shared.Startup
         {
             get { return assembly; }
         }
+
+        public ServiceAccount DefaultAccount { get; set; }
 
         public string Description { get; set; }
     }

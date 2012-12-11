@@ -1,5 +1,7 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -22,6 +24,8 @@ namespace Octopus.Shared.Startup
     /// </remarks>
     public class ServiceInstaller : IServiceInstaller
     {
+        const int MaxAttemptsToStop = 3;
+
         public void Install(ServiceOptions options)
         {
             AdminRequired(() => InstallAndStart(options));
@@ -40,11 +44,27 @@ namespace Octopus.Shared.Startup
 
         public void Restart(string serviceName)
         {
-            StopAndWaitForStop(serviceName);
+            Retry(MaxAttemptsToStop, () => StopAndWaitForStop(serviceName));
 
             Thread.Sleep(1000);
 
             StartService(serviceName);
+        }
+
+        public string GetExecutable(string serviceName)
+        {
+            var mc = new ManagementClass("Win32_Service");
+            foreach (ManagementObject mo in mc.GetInstances())
+            {
+                if (mo.GetPropertyValue("Name").ToString() == serviceName)
+                {
+                    return mo.GetPropertyValue("PathName").ToString().Trim('"');
+                }
+
+                mo.Dispose();
+            }
+
+            return null;
         }
 
         void InstallAndStart(ServiceOptions options)
@@ -66,7 +86,7 @@ namespace Octopus.Shared.Startup
             }
             else
             {
-                InstallAndStart(serviceName, serviceName, assemblyContainingInstaller.FullLocalPath());
+                InstallAndStart(serviceName, serviceName, assemblyContainingInstaller.FullLocalPath(), options.DefaultAccount);
                 AddServiceDescriptionToRegistry(serviceName, options.Description);
                 Console.WriteLine("Service installed and started successfully");       
             }
@@ -493,7 +513,8 @@ namespace Octopus.Shared.Startup
         /// <param name="serviceName">The service name that this service will have</param>
         /// <param name="displayName">The display name that this service will have</param>
         /// <param name="fileName">The path to the executable of the service</param>
-        static void InstallAndStart(string serviceName, string displayName, string fileName)
+        /// <param name="defaultAccount"> </param>
+        static void InstallAndStart(string serviceName, string displayName, string fileName, ServiceAccount defaultAccount)
         {
             var scman = OpenScManager(ServiceManagerRights.Connect | ServiceManagerRights.CreateService);
             try
@@ -501,10 +522,12 @@ namespace Octopus.Shared.Startup
                 var service = OpenService(scman, serviceName, ServiceRights.QueryStatus | ServiceRights.Start);
                 if (service == IntPtr.Zero)
                 {
+                    var account = defaultAccount == ServiceAccount.LocalSystem ? null : "NT AUTHORITY\\" + defaultAccount;
+
                     service = CreateService(scman, serviceName, serviceName,
                         ServiceRights.QueryStatus | ServiceRights.Start, SERVICE_WIN32_OWN_PROCESS,
                         ServiceBootFlag.AutoStart, ServiceError.Normal, fileName, null, IntPtr.Zero,
-                        null, null, null);
+                        null, account, null);
                 }
                 if (service == IntPtr.Zero)
                 {
@@ -585,7 +608,36 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        bool StopAndWaitForStop(string name)
+        void Retry(int attempts, Action callback)
+        {
+            const int attempt = 1;
+            while (attempt <= attempts)
+            {
+                var isLastAttempt = attempts == attempt;
+
+                try
+                {
+                    callback();
+                    return;
+                }
+                catch (COMException)
+                {
+                    if (isLastAttempt) throw;
+                }
+                catch (Win32Exception)
+                {
+                    if (isLastAttempt) throw;
+                }
+                catch (InvalidOperationException)
+                {
+                    if (isLastAttempt) throw;
+                }
+
+                Thread.Sleep(500);
+            }
+        }
+
+        static bool StopAndWaitForStop(string name)
         {
             using (var service = new ServiceController(name))
             {
