@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Management;
 using System.Reflection;
@@ -23,6 +24,8 @@ namespace Octopus.Shared.Startup
     /// </remarks>
     public class ServiceInstaller : IServiceInstaller
     {
+        const int MaxAttemptsToStop = 3;
+
         public void Install(ServiceOptions options)
         {
             AdminRequired(() => InstallAndStart(options));
@@ -41,7 +44,7 @@ namespace Octopus.Shared.Startup
 
         public void Restart(string serviceName)
         {
-            StopAndWaitForStop(serviceName);
+            Retry(MaxAttemptsToStop, () => StopAndWaitForStop(serviceName));
 
             Thread.Sleep(1000);
 
@@ -605,7 +608,36 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        bool StopAndWaitForStop(string name)
+        void Retry(int attempts, Action callback)
+        {
+            const int attempt = 1;
+            while (attempt <= attempts)
+            {
+                var isLastAttempt = attempts == attempt;
+
+                try
+                {
+                    callback();
+                    return;
+                }
+                catch (COMException)
+                {
+                    if (isLastAttempt) throw;
+                }
+                catch (Win32Exception)
+                {
+                    if (isLastAttempt) throw;
+                }
+                catch (InvalidOperationException)
+                {
+                    if (isLastAttempt) throw;
+                }
+
+                Thread.Sleep(500);
+            }
+        }
+
+        static bool StopAndWaitForStop(string name)
         {
             using (var service = new ServiceController(name))
             {
