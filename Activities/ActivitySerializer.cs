@@ -93,7 +93,7 @@ namespace Octopus.Shared.Activities
                 element.Error = state.Error.ToString();
             }
             
-            element.Children = state.Children.AsParallel().Select(BuildTree).ToArray();
+            element.Children = state.Children.Select(BuildTree).ToArray();
             
             return element;
         }
