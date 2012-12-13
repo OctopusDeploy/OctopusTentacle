@@ -1,20 +1,30 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
-using Octopus.Shared.Util;
+using Octopus.Shared.Time;
 using log4net.Core;
 
 namespace Octopus.Shared.Activities
 {
     public class ActivityLog : AbstractActivityLog
     {
+        readonly IClock clock;
         readonly StringBuilder log = new StringBuilder();
         string mostRecentLine;
         readonly object sync = new object();
 
+        public ActivityLog() : this(null)
+        {
+        }
+
+        public ActivityLog(IClock clock)
+        {
+            this.clock = clock ?? new SystemClock();
+        }
+
         protected override void Write(Level level, object message)
         {
-            var formatted = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " " + level.DisplayName.PadRight(6, ' ') + " " + message;
+            var now = clock.GetUtcTime();
+            var formatted = now.ToString("yyyy-MM-dd HH:mm:ss") + " " + level.DisplayName.PadRight(6, ' ') + " " + message;
             lock (sync)
             {
                 mostRecentLine = formatted;
