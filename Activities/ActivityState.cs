@@ -16,6 +16,7 @@ namespace Octopus.Shared.Activities
         readonly string id;
         readonly CancellationTokenSource cancellationTokenSource;
         readonly IActivityLog log = new ActivityLog();
+        readonly ManualResetEventSlim hasTask = new ManualResetEventSlim(false);
         Task task;
         
         public ActivityState(Func<string> name, string tag, string id, CancellationTokenSource cancellationTokenSource)
@@ -64,6 +65,7 @@ namespace Octopus.Shared.Activities
         public void Attach(Task runningTask)
         {
             task = runningTask;
+            hasTask.Set();
         }
 
         public bool IsComplete
@@ -81,6 +83,11 @@ namespace Octopus.Shared.Activities
 
         public void WaitForComplete()
         {
+            if (task == null)
+            {
+                hasTask.Wait();
+            }
+
             task.Wait();
         }
 
