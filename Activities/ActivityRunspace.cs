@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Octopus.Shared.Activities
 {
-    public class ActivityRunspace
+    public class ActivityRunspace : IActivityRunspace
     {
         private readonly IActivityResolver activityResolver;
 
