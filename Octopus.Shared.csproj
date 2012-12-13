@@ -80,6 +80,7 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Activities\AbstractActivityLog.cs" />
     <Compile Include="Activities\Activity.cs" />
     <Compile Include="Activities\ActivityElement.cs" />
     <Compile Include="Activities\ActivityIdFountain.cs" />
