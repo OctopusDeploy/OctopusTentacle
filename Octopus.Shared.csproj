@@ -86,7 +86,6 @@
     <Compile Include="Activities\ActivityLog.cs" />
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityFailedException.cs" />
-    <Compile Include="Activities\ActivityHandleBatch.cs" />
     <Compile Include="Activities\ActivityRuntime.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
     <Compile Include="Activities\IActivityLog.cs" />
@@ -94,7 +93,6 @@
     <Compile Include="Activities\ActivityState.cs" />
     <Compile Include="Activities\ChildActivityFailedException.cs" />
     <Compile Include="Activities\IActivity.cs" />
-    <Compile Include="Activities\IActivityHandleBatch.cs" />
     <Compile Include="Activities\IActivityRuntime.cs" />
     <Compile Include="Activities\IHaveName.cs" />
     <Compile Include="Activities\NullActivityLog.cs" />
