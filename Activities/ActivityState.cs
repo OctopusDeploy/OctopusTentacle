@@ -20,7 +20,6 @@ namespace Octopus.Shared.Activities
         
         public ActivityState(Func<string> name, string tag, string id, CancellationTokenSource cancellationTokenSource)
         {
-            Guard.ArgumentNotNull(name, "name");
             this.name = name;
             this.id = id;
             this.cancellationTokenSource = cancellationTokenSource;

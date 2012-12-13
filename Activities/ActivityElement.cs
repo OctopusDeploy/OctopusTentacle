@@ -1,8 +1,6 @@
 using System;
 using System.Linq;
 using System.Xml.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace Octopus.Shared.Activities
 {
@@ -16,7 +14,6 @@ namespace Octopus.Shared.Activities
         public string Tag { get; set; }
         
         [XmlAttribute("status")]
-        [JsonConverter(typeof(StringEnumConverter))]
         public ActivityStatus Status { get; set; }
 
         [XmlElement("log")]

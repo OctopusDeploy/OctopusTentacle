@@ -8,9 +8,10 @@ namespace Octopus.Shared.Activities
 {
     public interface IActivityRuntime
     {
-        CancellationTokenSource Cancellation { get; }
-
-        Task ExecuteChild(IActivity activity);
-        Task ExecuteChildren(IEnumerable<IActivity> activities);
+        TaskFactory TaskFactory { get; }
+        void EnsureNotCancelled();
+        Task Execute(IActivityMessage activity);
+        Task Execute(IEnumerable<IActivityMessage> activities);
+        Task Execute(IEnumerable<IActivityMessage> activities, int maxParallelismForChildTasks);
     }
 }
