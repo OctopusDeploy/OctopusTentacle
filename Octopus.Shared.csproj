@@ -101,6 +101,7 @@
     <Compile Include="Activities\ChildActivityFailedException.cs" />
     <Compile Include="Activities\IActivity.cs" />
     <Compile Include="Activities\IActivityRuntime.cs" />
+    <Compile Include="Activities\NullActivityLog.cs" />
     <Compile Include="Configuration\ConfigurationModule.cs" />
     <Compile Include="Configuration\OctopusConfiguration.cs" />
     <Compile Include="Configuration\IOctopusConfiguration.cs" />
