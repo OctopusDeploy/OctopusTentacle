@@ -12,7 +12,7 @@ public static class Guard
 
     public static void ArgumentIsOfType(object argument, Type type, string parameterName)
     {
-        if (argument == null || !type.IsAssignableFrom(argument.GetType()))
+        if (argument == null || !type.IsInstanceOfType(argument))
             throw new ArgumentException(parameterName);
     }
 

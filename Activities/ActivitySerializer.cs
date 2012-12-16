@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -62,7 +63,7 @@ namespace Octopus.Shared.Activities
         {
             if (result.Id == null || result.Id == "0")
             {
-                result.Id = i.ToString();
+                result.Id = i.ToString(CultureInfo.InvariantCulture);
                 i++;
             }
 

@@ -82,6 +82,7 @@
     </Compile>
     <Compile Include="Activities\AbstractActivityLog.cs" />
     <Compile Include="Activities\Activity.cs" />
+    <Compile Include="Activities\ActivityAttribute.cs" />
     <Compile Include="Activities\ActivityElement.cs" />
     <Compile Include="Activities\ActivityLog.cs" />
     <Compile Include="Activities\ActivityMessage.cs" />
@@ -159,7 +160,7 @@
     <Compile Include="Startup\ICommandProcessor.cs" />
     <Compile Include="Startup\IHost.cs" />
     <Compile Include="Startup\IServiceInstaller.cs" />
-    <Compile Include="Startup\Options.cs" />
+    <Compile Include="Startup\Options.Generated.cs" />
     <Compile Include="Startup\ServiceOptions.cs" />
     <Compile Include="Startup\Host.cs" />
     <Compile Include="Startup\ServiceInstaller.cs" />

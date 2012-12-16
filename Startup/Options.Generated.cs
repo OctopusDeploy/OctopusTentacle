@@ -128,6 +128,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
@@ -437,7 +438,7 @@ namespace Octopus.Shared.Startup
                         break;
                     default:
                         if (start == -1)
-                            seps.Add(name[i].ToString());
+                            seps.Add(name[i].ToString(CultureInfo.InvariantCulture));
                         break;
                 }
             }

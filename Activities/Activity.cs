@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 namespace Octopus.Shared.Activities
 {
+    [Activity]
     public abstract class Activity<TMessage> : IActivity<TMessage> where TMessage : IActivityMessage
     {
         public IActivityLog Log { get; set; }

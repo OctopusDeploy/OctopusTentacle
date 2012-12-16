@@ -72,7 +72,7 @@ namespace Octopus.Shared.Activities
         {
             get
             {
-                return task.IsCompleted;
+                return task != null && task.IsCompleted;
             }
         }
 

@@ -1,15 +1,19 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using log4net;
 
 namespace Octopus.Shared.Activities
 {
     public class ActivityRunspace : IActivityRunspace
     {
         private readonly IActivityResolver activityResolver;
+        readonly ILog log;
 
-        public ActivityRunspace(IActivityResolver activityResolver)
+        public ActivityRunspace(IActivityResolver activityResolver, ILog log)
         {
             this.activityResolver = activityResolver;
+            this.log = log;
             TaskFactory = Task.Factory;
         }
 
@@ -26,7 +30,14 @@ namespace Octopus.Shared.Activities
 
             TaskFactory.StartNew(() =>
             {
-                runtime.Execute();
+                try
+                {
+                    runtime.Execute();
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex);
+                }
             });
 
             return runtime.State;

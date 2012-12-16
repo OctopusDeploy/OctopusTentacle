@@ -35,7 +35,7 @@ namespace Octopus.Shared.Startup
                 if (command == null)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(string.Format("Command '{0}' is not supported", commandName));
+                    Console.WriteLine("Command '{0}' is not supported", commandName);
                     Console.ResetColor();
                     PrintGeneralHelp(executable);
                 }
