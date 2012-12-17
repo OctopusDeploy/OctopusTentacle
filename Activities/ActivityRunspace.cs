@@ -32,7 +32,7 @@ namespace Octopus.Shared.Activities
             {
                 try
                 {
-                    runtime.Execute();
+                    runtime.Execute().Wait();
                 }
                 catch (Exception ex)
                 {
