@@ -122,6 +122,7 @@
     <Compile Include="Contracts\JobTicket.cs" />
     <Compile Include="Contracts\PackageExistance.cs" />
     <Compile Include="Contracts\PackageMetadata.cs" />
+    <Compile Include="Contracts\ScriptRequest.cs" />
     <Compile Include="Contracts\SpecialVariableNames.cs" />
     <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Contracts\Variable.cs" />
