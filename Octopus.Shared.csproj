@@ -125,6 +125,8 @@
     <Compile Include="Contracts\SpecialVariableNames.cs" />
     <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Contracts\Variable.cs" />
+    <Compile Include="Contracts\VariableDictionary.cs" />
+    <Compile Include="Contracts\VariableEvaluator.cs" />
     <Compile Include="Diagnostics\ILogScope.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
