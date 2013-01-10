@@ -7,7 +7,7 @@ namespace Octopus.Shared.Contracts
 {
     public class VariableDictionary
     {
-        readonly List<Variable> variables = new List<Variable>();
+        readonly IDictionary<string, Variable> variables = new Dictionary<string, Variable>(StringComparer.OrdinalIgnoreCase);
 
         public VariableDictionary(IEnumerable<Variable> variables)
         {
@@ -27,25 +27,16 @@ namespace Octopus.Shared.Contracts
 
         public void Set(string name, string value)
         {
-            var existing = Get(name);
-            if (existing == null)
+            if (name == null) return;
+
+            if (!variables.ContainsKey(name))
             {
-                variables.Add(new Variable(name, value));
+                variables[name] = new Variable(name, value);
             }
             else
             {
-                existing.Value = value;
+                variables[name].Value = value;
             }
-        }
-
-        /// <summary>
-        /// Performs a case-insensitive lookup of a variable by name, returning null if the variable is not defined.
-        /// </summary>
-        /// <param name="variableName">Name of the variable.</param>
-        /// <returns>The value of the variable, or null if one is not defined.</returns>
-        public Variable Get(string variableName)
-        {
-            return variables.LastOrDefault(x => string.Equals(x.Name, variableName, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -55,8 +46,11 @@ namespace Octopus.Shared.Contracts
         /// <returns>The value of the variable, or null if one is not defined.</returns>
         public string GetValue(string variableName)
         {
-            var variable = Get(variableName);
-            return variable != null ? variable.Value : null;
+            Variable variable;
+            
+            return variables.TryGetValue(variableName, out variable) && variable != null 
+                ? variable.Value
+                : null;
         }
 
         public bool GetFlag(string variableName, bool defaultValueIfUnset)
@@ -85,18 +79,12 @@ namespace Octopus.Shared.Contracts
 
         public ReadOnlyCollection<Variable> AsList()
         {
-            return variables.AsReadOnly();
+            return variables.Select(v => v.Value).ToList().AsReadOnly();
         }
 
         public IDictionary<string, string> AsDictionary()
         {
-            var dictionary = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var item in variables)
-            {
-                dictionary[item.Name] = item.Value;
-            }
-
-            return dictionary;
+            return variables.ToDictionary(v => v.Key, v => v.Value.Value, StringComparer.OrdinalIgnoreCase);
         }
     }
 }
