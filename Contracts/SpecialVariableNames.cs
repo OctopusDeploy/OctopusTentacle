@@ -30,6 +30,7 @@ namespace Octopus.Shared.Contracts
         public static readonly string PrintEvaluatedVariables = "OctopusPrintEvaluatedVariables";
         public static readonly string IgnoreMissingVariableTokens = "OctopusIgnoreMissingVariableTokens";
         public static readonly string NoVariableTokenReplacement = "OctopusNoVariableTokenReplacement";
+        public static readonly string MaxParallelism = "OctopusMaxParallelism";
 
         // Defaulted by Tentacle, overridable by user, but very advanced
         public static readonly string VariableTokenRegex = "OctopusVariableTokenRegex";

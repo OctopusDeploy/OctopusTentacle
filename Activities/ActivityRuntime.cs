@@ -78,8 +78,11 @@ namespace Octopus.Shared.Activities
 
         public Task Execute(IEnumerable<IActivityMessage> activities, int maxParallelismForChildTasks)
         {
-            var scheduler = new LimitedConcurrencyLevelTaskScheduler(maxParallelismForChildTasks);
-            var tasks = activities.Select(a => ExecuteChild(a, new TaskFactory(scheduler))).ToList();
+            var factory = maxParallelismForChildTasks >= 1 
+                ? new TaskFactory(new LimitedConcurrencyLevelTaskScheduler(maxParallelismForChildTasks)) 
+                : taskFactory;
+
+            var tasks = activities.Select(a => ExecuteChild(a, factory)).ToList();
             return TaskEx.WhenAll(tasks);
         }
 
