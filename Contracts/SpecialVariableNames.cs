@@ -31,6 +31,7 @@ namespace Octopus.Shared.Contracts
         public static readonly string IgnoreMissingVariableTokens = "OctopusIgnoreMissingVariableTokens";
         public static readonly string NoVariableTokenReplacement = "OctopusNoVariableTokenReplacement";
         public static readonly string MaxParallelism = "OctopusMaxParallelism";
+        public static readonly string UseLegacyIisSupport = "OctopusUseLegacyIisSupport";
 
         // Defaulted by Tentacle, overridable by user, but very advanced
         public static readonly string VariableTokenRegex = "OctopusVariableTokenRegex";
@@ -40,10 +41,9 @@ namespace Octopus.Shared.Contracts
         public static readonly string LastErrorMessage = "OctopusLastErrorMessage";
         public static readonly string LastError = "OctopusLastError";
 
-
         public static string[] GetUserVariables()
         {
-            return new[] {TreatWarningsAsErrors, PackageDirectoryPath, PurgePackageDirectoryBeforeCopy, WebSiteName, NotAWebSite, PrintVariables, PrintEvaluatedVariables, IgnoreMissingVariableTokens, NoVariableTokenReplacement};
+            return new[] { TreatWarningsAsErrors, PackageDirectoryPath, PurgePackageDirectoryBeforeCopy, WebSiteName, NotAWebSite, PrintVariables, PrintEvaluatedVariables, IgnoreMissingVariableTokens, NoVariableTokenReplacement, MaxParallelism, UseLegacyIisSupport };
         }
     }
 }
