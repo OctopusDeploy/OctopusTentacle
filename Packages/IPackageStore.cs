@@ -12,6 +12,7 @@ namespace Octopus.Shared.Packages
         Stream CreateFileForPackage(PackageMetadata metadata);
         Stream CreateFileForPackage(string prefix, PackageMetadata metadata);
 
+        StoredPackage GetPackage(string packageFullPath);
         StoredPackage GetPackage(PackageMetadata metadata);
         StoredPackage GetPackage(string prefix, PackageMetadata metadata);
     }
