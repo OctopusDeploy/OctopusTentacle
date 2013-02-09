@@ -5,33 +5,33 @@ namespace Octopus.Shared.Packages
 {
     public class StoredPackage : IEquatable<StoredPackage>
     {
-        readonly string packageId;
-        readonly string version;
+        readonly PackageMetadata metadata;
         readonly string fullPath;
-        readonly string hash;
-        readonly long size;
+        
+        public StoredPackage(PackageMetadata metadata, string fullPath)
+        {
+            this.metadata = metadata;
+            this.fullPath = fullPath;
+        }
 
-        public StoredPackage(string packageId, string version, string fullPath, long size) : this(packageId, version, fullPath, string.Empty, size)
+        public StoredPackage(string packageId, string version, string fullPath, long length) 
+            : this(packageId, version, fullPath, null, length)
         {
         }
 
-        public StoredPackage(string packageId, string version, string fullPath, string hash, long size)
+        public StoredPackage(string packageId, string version, string fullPath, string hash, long length) 
+            : this(new PackageMetadata(packageId, version, length) { Hash = hash }, fullPath)
         {
-            this.packageId = packageId;
-            this.version = version;
-            this.fullPath = fullPath;
-            this.hash = hash;
-            this.size = size;
         }
 
         public string PackageId
         {
-            get { return packageId; }
+            get { return metadata.PackageId; }
         }
 
         public string Version
         {
-            get { return version; }
+            get { return metadata.Version; }
         }
 
         public string FullPath
@@ -41,24 +41,24 @@ namespace Octopus.Shared.Packages
 
         public long Size
         {
-            get { return size; }
+            get { return metadata.Size; }
         }
 
         public string Hash
         {
-            get { return hash; }
+            get { return metadata.Hash; }
         }
 
-        public PackageMetadata GetMetadata()
+        public PackageMetadata Metadata
         {
-            return new PackageMetadata(packageId, version, size) { Hash = hash };
+            get { return metadata; }
         }
 
         public bool Equals(StoredPackage other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return string.Equals(packageId, other.packageId) && string.Equals(version, other.version) && string.Equals(hash, other.hash);
+            return Equals(metadata, other.metadata) && string.Equals(fullPath, other.fullPath);
         }
 
         public override bool Equals(object obj)
@@ -73,10 +73,7 @@ namespace Octopus.Shared.Packages
         {
             unchecked
             {
-                int hashCode = (packageId != null ? packageId.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (version != null ? version.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (hash != null ? hash.GetHashCode() : 0);
-                return hashCode;
+                return ((metadata != null ? metadata.GetHashCode() : 0)*397) ^ (fullPath != null ? fullPath.GetHashCode() : 0);
             }
         }
 
@@ -88,6 +85,11 @@ namespace Octopus.Shared.Packages
         public static bool operator !=(StoredPackage left, StoredPackage right)
         {
             return !Equals(left, right);
+        }
+
+        public static implicit operator PackageMetadata(StoredPackage package)
+        {
+            return package == null ? null : package.metadata;
         }
 
         public override string ToString()

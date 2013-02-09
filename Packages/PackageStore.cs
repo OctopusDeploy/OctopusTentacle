@@ -45,6 +45,11 @@ namespace Octopus.Shared.Packages
             return fileSystem.OpenFile(fullPath, FileAccess.Write);
         }
 
+        public StoredPackage GetPackage(string packageFullPath)
+        {
+            return ReadPackageFile(packageFullPath);
+        }
+
         public StoredPackage GetPackage(PackageMetadata metadata)
         {
             return GetPackage(null, metadata);
@@ -96,7 +101,9 @@ namespace Octopus.Shared.Packages
                     hash = HashCalculator.Hash(stream);
                 }
 
-                return new StoredPackage(metadata.Id, metadata.Version.ToString(), filePath, hash, size);
+                var packageMetadata = new PackageMetadata(metadata.Id, metadata.Version.ToString(), size) {Hash = hash};
+
+                return new StoredPackage(packageMetadata, filePath);
             }
             catch (FileNotFoundException)
             {
