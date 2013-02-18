@@ -29,6 +29,7 @@ namespace Octopus.Shared.Contracts
         public static readonly string PrintVariables = "OctopusPrintVariables";
         public static readonly string PrintEvaluatedVariables = "OctopusPrintEvaluatedVariables";
         public static readonly string IgnoreMissingVariableTokens = "OctopusIgnoreMissingVariableTokens";
+        public static readonly string IgnoreConfigTransformationErrors = "OctopusIgnoreConfigTransformationErrors";
         public static readonly string NoVariableTokenReplacement = "OctopusNoVariableTokenReplacement";
         public static readonly string MaxParallelism = "OctopusMaxParallelism";
         public static readonly string UseLegacyIisSupport = "OctopusUseLegacyIisSupport";
