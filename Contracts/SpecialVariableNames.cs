@@ -13,9 +13,13 @@ namespace Octopus.Shared.Contracts
         public static readonly string PackageNameAndVersion = "OctopusPackageNameAndVersion";
         public static readonly string ProjectName = "OctopusProjectName";
         public static readonly string ProjectId = "OctopusProjectId";
+        public static readonly string ProjectWebLink = "OctopusProjectWebLink";
         public static readonly string ForcePackageRedeployment = "OctopusForcePackageRedeployment";
         public static readonly string TaskId = "OctopusTaskId";
         public static readonly string ReleaseNumber = "OctopusReleaseNumber";
+        public static readonly string ReleaseWebLink = "OctopusReleaseWebLink";
+        public static readonly string DeploymentId = "OctopusDeploymentId";
+        public static readonly string DeploymentWebLink = "OctopusDeploymentWebLink";
         public static readonly string RetentionPolicySet = "OctopusRetentionPolicySet";
         public static readonly string RetentionPolicyItemsToKeep = "OctopusRetentionPolicyItemsToKeep";
         public static readonly string RetentionPolicyDaysToKeep = "OctopusRetentionPolicyDaysToKeep";
