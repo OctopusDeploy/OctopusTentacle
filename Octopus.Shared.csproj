@@ -152,6 +152,8 @@
     <Compile Include="Security\CertificateValidator.cs" />
     <Compile Include="Security\ICertificateGenerator.cs" />
     <Compile Include="Security\CertificatesModule.cs" />
+    <Compile Include="ServiceMessages\ParseServiceMessageResult.cs" />
+    <Compile Include="ServiceMessages\ServiceMessageNames.cs" />
     <Compile Include="Startup\AutofacExtensions.cs" />
     <Compile Include="Startup\CommandLocator.cs" />
     <Compile Include="Startup\CommandProcessor.cs" />
@@ -178,6 +180,9 @@
     <Compile Include="Time\TimeModule.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Time\IClock.cs" />
+    <Compile Include="ServiceMessages\IServiceMessageParser.cs" />
+    <Compile Include="ServiceMessages\ServiceMessage.cs" />
+    <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
     <Compile Include="Util\SilentProcessRunner.cs" />
     <Compile Include="Util\DeletionOptions.cs" />
     <Compile Include="Util\ExceptionExtensions.cs" />
