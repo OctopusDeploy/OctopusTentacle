@@ -180,7 +180,6 @@
     <Compile Include="Time\TimeModule.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Time\IClock.cs" />
-    <Compile Include="ServiceMessages\IServiceMessageParser.cs" />
     <Compile Include="ServiceMessages\ServiceMessage.cs" />
     <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
     <Compile Include="Util\SilentProcessRunner.cs" />

@@ -1,39 +1,115 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace Octopus.Shared.ServiceMessages
 {
-    public class ServiceMessageParser : IServiceMessageParser
+    public class ServiceMessageParser
     {
-        static readonly Regex Regex = new Regex(@"\#\#octopus\s*?\[(?<message>.+?)\]", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
+        private readonly Action<string> stdOut;
+        private readonly Action<ServiceMessage> serviceMessage;
+        readonly StringBuilder buffer = new StringBuilder();
+        State state = State.Default;
 
-        public ParseServiceMessageResult ParseServiceMessages(string text)
+        public ServiceMessageParser(Action<string> stdOut, Action<ServiceMessage> serviceMessage)
         {
-            var matches = new List<ServiceMessage>();
-
-            text = Regex.Replace(text, delegate(Match match)
-            {
-                var messageText = match.Groups["message"];
-
-                matches.Add(ParseMessage(messageText.Value));
-
-                return string.Empty;
-            });
-
-            return new ParseServiceMessageResult(text, matches);
+            this.stdOut = stdOut;
+            this.serviceMessage = serviceMessage;
         }
 
-        static ServiceMessage ParseMessage(string messageText)
+        public void Append(string line)
         {
-            var element = XElement.Parse("<" + messageText + "/>");
+            for (var i = 0; i < line.Length; i++)
+            {
+                var c = line[i];
+
+                switch (state)
+                {
+                    case State.Default:
+                        if (c == '\r')
+                        {
+                        }
+                        else if (c == '\n')
+                        {
+                            Flush(stdOut);
+                        }
+                        else if (c == '#')
+                        {
+                            Flush(stdOut);
+                            state = State.PossibleMessage;
+                            buffer.Append(c);
+                        }
+                        else
+                        {
+                            buffer.Append(c);
+                        }
+                        break;
+
+                    case State.PossibleMessage:
+                        buffer.Append(c);
+                        var progress = buffer.ToString();
+                        if ("##octopus" == progress)
+                        {
+                            state = State.InMessage;
+                            buffer.Clear();
+                        }
+                        else if (!"##octopus".StartsWith(progress))
+                        {
+                            state = State.Default;
+                        }
+                        break;
+                    
+                    case State.InMessage:
+                        if (c == ']')
+                        {
+                            Flush(ProcessMessage);
+                            state = State.Default;
+                        }
+                        else
+                        {
+                            buffer.Append(c);
+                        }
+                        break;
+                    
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        public void Finish()
+        {
+            if (buffer.Length > 0)
+            {
+                Flush(stdOut);
+            }
+        }
+
+        void ProcessMessage(string message)
+        {
+            message = message.Trim().TrimStart('[');
+
+            var element = XElement.Parse("<" + message + "/>");
             var name = element.Name.LocalName;
             var values = element.Attributes().ToDictionary(s => s.Name.LocalName, s => Encoding.UTF8.GetString(Convert.FromBase64String(s.Value)), StringComparer.OrdinalIgnoreCase);
-            return new ServiceMessage(name, values);
+            serviceMessage(new ServiceMessage(name, values));
+        }
+
+        void Flush(Action<string> to)
+        {
+            var result = buffer.ToString();
+            buffer.Clear();
+
+            if (result.Length > 0)
+                to(result);
+        }
+
+        enum State
+        {
+            Default,
+            PossibleMessage,
+            InMessage
         }
     }
 }
