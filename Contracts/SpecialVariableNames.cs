@@ -37,6 +37,7 @@ namespace Octopus.Shared.Contracts
         public static readonly string NoVariableTokenReplacement = "OctopusNoVariableTokenReplacement";
         public static readonly string MaxParallelism = "OctopusMaxParallelism";
         public static readonly string UseLegacyIisSupport = "OctopusUseLegacyIisSupport";
+        public static readonly string UseLegacyPowerShellEngine = "OctopusUseLegacyPowerShellEngine";
 
         // Defaulted by Tentacle, overridable by user, but very advanced
         public static readonly string VariableTokenRegex = "OctopusVariableTokenRegex";
