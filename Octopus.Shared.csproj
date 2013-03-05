@@ -182,6 +182,7 @@
     <Compile Include="Time\IClock.cs" />
     <Compile Include="ServiceMessages\ServiceMessage.cs" />
     <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
+    <Compile Include="Util\PasswordHasher.cs" />
     <Compile Include="Util\SilentProcessRunner.cs" />
     <Compile Include="Util\DeletionOptions.cs" />
     <Compile Include="Util\ExceptionExtensions.cs" />
