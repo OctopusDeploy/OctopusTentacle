@@ -17,6 +17,10 @@ namespace Octopus.Shared.Packages
         {
             base.Load(builder);
 
+            builder.RegisterType<LightweightPackageExtractor>()
+                .As<IPackageExtractor>()
+                .InstancePerDependency();
+
             builder.Register(c =>
             {
                 var fileSystem = c.Resolve<IOctopusFileSystem>();

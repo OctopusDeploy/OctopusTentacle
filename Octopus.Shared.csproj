@@ -131,6 +131,8 @@
     <Compile Include="Diagnostics\ILogScope.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
+    <Compile Include="Packages\IPackageExtractor.cs" />
+    <Compile Include="Packages\LightweightPackageExtractor.cs" />
     <Compile Include="Packages\StoredPackage.cs" />
     <Compile Include="Packages\IPackageStore.cs" />
     <Compile Include="Packages\PackageStoreModule.cs" />
