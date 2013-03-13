@@ -21,7 +21,7 @@ namespace Octopus.Shared.Activities
             this.clock = clock ?? new SystemClock();
         }
 
-        protected override void Write(Level level, object message)
+        public override void Write(Level level, object message)
         {
             var now = clock.GetUtcTime();
             var formatted = now.ToString("yyyy-MM-dd HH:mm:ss") + " " + level.DisplayName.PadRight(6, ' ') + " " + message;

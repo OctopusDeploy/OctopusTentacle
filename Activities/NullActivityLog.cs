@@ -18,7 +18,7 @@ namespace Octopus.Shared.Activities
             this.log = log ?? Logger.Default;
         }
 
-        protected override void Write(Level level, object message)
+        public override void Write(Level level, object message)
         {
             log.Logger.Log(typeof(NullActivityLog), level, message, null);
         }

@@ -4,6 +4,47 @@ using log4net.Core;
 
 namespace Octopus.Shared.Activities
 {
+    public class PrefixedActivityLogDecorator : ActivityLogDecorator
+    {
+        readonly string prefix;
+
+        public PrefixedActivityLogDecorator(string prefix, IActivityLog inner) : base(inner)
+        {
+            this.prefix = prefix;
+        }
+
+        public override void Write(Level level, object message)
+        {
+            base.Write(level, prefix + message);
+        }
+    }
+
+    public abstract class ActivityLogDecorator : AbstractActivityLog
+    {
+        readonly IActivityLog inner;
+
+        protected ActivityLogDecorator(IActivityLog inner)
+        {
+            this.inner = inner;
+        }
+
+        public override void Write(Level level, object message)
+        {
+            inner.Write(level, message);
+        }
+
+        public override IActivityLog OverwritePrevious()
+        {
+            inner.OverwritePrevious();
+            return this;
+        }
+
+        public override string GetLog()
+        {
+            return inner.GetLog();
+        }
+    }
+
     public abstract class AbstractActivityLog : IActivityLog
     {
         public void Debug(object message)
@@ -66,8 +107,7 @@ namespace Octopus.Shared.Activities
             Write(Level.Error, format, args);
         }
 
-        protected abstract void Write(Level level, object message);
-
+        public abstract void Write(Level level, object message);
 
         void Write(Level level, string format, object[] args)
         {

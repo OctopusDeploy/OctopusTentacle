@@ -39,12 +39,21 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Autofac.2.6.3.862\lib\NET40\Autofac.Configuration.dll</HintPath>
     </Reference>
+    <Reference Include="edtFTPnetPRO, Version=8.4.0.20, Culture=neutral, PublicKeyToken=0dce1ad63760d80b, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\edtFTPnetPRO\edtFTPnetPRO.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CompilerServices.AsyncTargetingPack.Net4">
       <HintPath>..\packages\Microsoft.CompilerServices.AsyncTargetingPack.1.0.0\lib\net40\Microsoft.CompilerServices.AsyncTargetingPack.Net4.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.Administration, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Web.Publishing.Tasks, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Transforms\Microsoft.Web.Publishing.Tasks.Dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
@@ -60,8 +69,13 @@
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Entity" />
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\PowerShell\System.Management.Automation.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceProcess" />
@@ -123,14 +137,56 @@
     <Compile Include="Contracts\PackageExistance.cs" />
     <Compile Include="Contracts\PackageMetadata.cs" />
     <Compile Include="Contracts\ScriptRequest.cs" />
-    <Compile Include="Contracts\SpecialVariableNames.cs" />
+    <Compile Include="Contracts\SpecialVariables.cs" />
     <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Contracts\Variable.cs" />
     <Compile Include="Contracts\VariableDictionary.cs" />
     <Compile Include="Contracts\VariableEvaluator.cs" />
+    <Compile Include="Conventions\ConventionContext.cs" />
+    <Compile Include="Conventions\ConventionPriority.cs" />
+    <Compile Include="Conventions\ConventionProcessor.cs" />
+    <Compile Include="Conventions\ConventionsModule.cs" />
+    <Compile Include="Conventions\Implementations\CopyPackageConvention.cs" />
+    <Compile Include="Conventions\Implementations\DeletePackageFileConvention.cs" />
+    <Compile Include="Conventions\IConvention.cs" />
+    <Compile Include="Conventions\IConventionProcessor.cs" />
+    <Compile Include="Conventions\IInstallationConvention.cs" />
+    <Compile Include="Conventions\IisWebSiteConvention.cs" />
+    <Compile Include="Conventions\Implementations\FtpConvention.cs" />
+    <Compile Include="Conventions\IRollbackConvention.cs" />
+    <Compile Include="Conventions\Implementations\PowerShellConvention.cs" />
+    <Compile Include="Conventions\Implementations\PowerShellDeployFailedScriptConvention.cs" />
+    <Compile Include="Conventions\Implementations\PowerShellDeployScriptConvention.cs" />
+    <Compile Include="Conventions\Implementations\PowerShellPostDeployScriptConvention.cs" />
+    <Compile Include="Conventions\Implementations\PowerShellPreDeployScriptConvention.cs" />
+    <Compile Include="Conventions\Implementations\XmlConfigTransformConvention.cs" />
+    <Compile Include="Conventions\Implementations\XmlConfigVariablesConventions.cs" />
     <Compile Include="Diagnostics\ILogScope.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
+    <Compile Include="Integration\Ftp\Class1.cs" />
+    <Compile Include="Integration\Iis\IInternetInformationServer.cs" />
+    <Compile Include="Integration\Iis\IisModule.cs" />
+    <Compile Include="Integration\Iis\InternetInformationServer.cs" />
+    <Compile Include="Integration\Iis\WebServerSevenSupport.cs" />
+    <Compile Include="Integration\Iis\WebServerSixSupport.cs" />
+    <Compile Include="Integration\Iis\WebServerSupport.cs" />
+    <Compile Include="Integration\PowerShell\FileBasedPowerShellRunner.cs" />
+    <Compile Include="Integration\PowerShell\HostedPowerShellRunner.cs" />
+    <Compile Include="Integration\PowerShell\IPowerShell.cs" />
+    <Compile Include="Integration\PowerShell\OctopusPowerShellHost.cs" />
+    <Compile Include="Integration\PowerShell\OctopusPowerShellHostRawUserInterface.cs" />
+    <Compile Include="Integration\PowerShell\OctopusPowerShellHostUserInterface.cs" />
+    <Compile Include="Integration\PowerShell\PowerShellArguments.cs" />
+    <Compile Include="Integration\PowerShell\PowerShellEngineSelector.cs" />
+    <Compile Include="Integration\PowerShell\PowerShellExecutionResult.cs" />
+    <Compile Include="Integration\PowerShell\PowerShellOutput.cs" />
+    <Compile Include="Integration\PowerShell\ScriptFailureException.cs" />
+    <Compile Include="Integration\Transforms\ParametersLoader.cs" />
+    <Compile Include="Integration\Transforms\ParametersParser.cs" />
+    <Compile Include="Integration\Transforms\ParametersTask.cs" />
+    <Compile Include="Integration\Transforms\TransformationLogger.cs" />
+    <Compile Include="Integration\Transforms\TransformationTask.cs" />
     <Compile Include="Packages\IPackageExtractor.cs" />
     <Compile Include="Packages\LightweightPackageExtractor.cs" />
     <Compile Include="Packages\StoredPackage.cs" />

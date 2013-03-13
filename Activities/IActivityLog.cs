@@ -1,4 +1,5 @@
 ﻿using System;
+using log4net.Core;
 
 namespace Octopus.Shared.Activities
 {
@@ -19,6 +20,8 @@ namespace Octopus.Shared.Activities
         void Error(object message);
         void Error(object message, Exception exception);
         void ErrorFormat(string format, params object[] args);
+
+        void Write(Level level, object message);
 
         IActivityLog OverwritePrevious();
 
