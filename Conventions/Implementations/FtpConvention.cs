@@ -27,12 +27,16 @@ namespace Octopus.Shared.Conventions.Implementations
             var password = context.Variables.GetValue(SpecialVariables.Step.Ftp.Password);
             var useFtps = context.Variables.GetFlag(SpecialVariables.Step.Ftp.UseFtps, false);
             var root = context.Variables.GetValue(SpecialVariables.Step.Ftp.RootDirectory);
+            var port = context.Variables.GetInt32(SpecialVariables.Step.Ftp.FtpPort) ?? 0;
+            var deleteFiles = context.Variables.GetFlag(SpecialVariables.Step.Ftp.DeleteDestinationFiles, false);
 
             context.Log.Info("Begin synchronization...");
 
             var settings = new FtpSynchronizationSettings(host, username, password, useFtps, context.Log, context.CancellationToken);
             settings.LocalDirectory = context.PackageContentsDirectoryPath;
             settings.RemoteDirectory = root;
+            settings.Port = port;
+            settings.DeleteDestinationFiles = deleteFiles;
             
             synchronizer.Synchronize(settings);
         }

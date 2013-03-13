@@ -48,6 +48,7 @@ namespace Octopus.Shared.Integration.Ftp
             get { return log; }
         }
 
+        public int Port { get; set; }
         public string LocalDirectory { get; set; }
         public string RemoteDirectory { get; set; }
 
@@ -55,5 +56,7 @@ namespace Octopus.Shared.Integration.Ftp
         {
             get { return cancellationToken; }
         }
+
+        public bool DeleteDestinationFiles { get; set; }
     }
 }

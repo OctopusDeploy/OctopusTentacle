@@ -44,6 +44,10 @@ namespace Octopus.Shared.Integration.Ftp
                 ftpConnection.Password = settings.Password;
                 ftpConnection.AutoLogin = true;
                 ftpConnection.ServerValidation = SecureFTPServerValidationType.None;
+                if (settings.Port >= 1)
+                {
+                    ftpConnection.ServerPort = settings.Port;
+                }
 
                 ftpConnection.Synchronized += OnSynchronized;
                 ftpConnection.CommandSent += OnCommandSent;
@@ -76,7 +80,13 @@ namespace Octopus.Shared.Integration.Ftp
                     foreach (var message in ftpConnection.WelcomeMessage)
                         Console.WriteLine(message);
 
-                var rules = new FTPSyncRules { Direction = TransferDirection.UPLOAD, IgnoreCase = true, IncludeSubdirectories = true, DeleteIfSourceAbsent = true, FilterType = FTPFilterType.Callback, FilterCallback = FilterCallback };
+                var rules = new FTPSyncRules();
+                rules.Direction = TransferDirection.UPLOAD;
+                rules.IgnoreCase = true;
+                rules.IncludeSubdirectories = true;
+                rules.DeleteIfSourceAbsent = settings.DeleteDestinationFiles;
+                rules.FilterType = FTPFilterType.Callback;
+                rules.FilterCallback = FilterCallback;
 
                 ftpConnection.Synchronize(settings.LocalDirectory, settings.RemoteDirectory, rules);
             }
@@ -100,7 +110,14 @@ namespace Octopus.Shared.Integration.Ftp
 
             void OnConnected(object sender, FTPConnectionEventArgs e)
             {
-                log.Debug("Connected");
+                if (e.Exception != null)
+                {
+                    log.Error("Unable to connect: " + e.Exception.Message);
+                }
+                else
+                {
+                    log.Debug("Connected");
+                }
             }
 
             void OnCommandSent(object sender, FTPMessageEventArgs e)
