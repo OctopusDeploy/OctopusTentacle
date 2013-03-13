@@ -10,6 +10,7 @@ namespace Octopus.Shared.Activities
     {
         TaskFactory TaskFactory { get; }
         void EnsureNotCancelled();
+        CancellationToken CancellationToken { get; }
         Task Execute(IActivityMessage activity);
         Task Execute(IEnumerable<IActivityMessage> activities);
         Task Execute(IEnumerable<IActivityMessage> activities, int maxParallelismForChildTasks);

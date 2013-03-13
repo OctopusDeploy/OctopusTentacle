@@ -65,6 +65,8 @@ namespace Octopus.Shared.Activities
             }
         }
 
+        public CancellationToken CancellationToken { get { return cancellation.Token; } }
+
         public Task Execute(IActivityMessage activity)
         {
             return ExecuteChild(activity, taskFactory);

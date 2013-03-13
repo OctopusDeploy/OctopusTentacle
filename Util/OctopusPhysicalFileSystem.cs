@@ -63,6 +63,39 @@ namespace Octopus.Shared.Util
             Directory.Delete(path, true);
         }
 
+        public void DeleteDirectory(string path, DeletionOptions options)
+        {
+            options = options ?? DeletionOptions.TryThreeTimes;
+
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            for (var i = 0; i < options.RetryAttempts; i++)
+            {
+                try
+                {
+                    if (Directory.Exists(path))
+                    {
+                        Directory.Delete(path, true);
+                    }
+                }
+                catch
+                {
+                    Thread.Sleep(options.SleepBetweenAttemptsMilliseconds);
+
+                    if (i == options.RetryAttempts - 1)
+                    {
+                        if (options.ThrowOnFailure)
+                        {
+                            throw;
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
         public IEnumerable<string> EnumerateFiles(string parentDirectoryPath, params string[] searchPatterns)
         {
             return searchPatterns.Length == 0 

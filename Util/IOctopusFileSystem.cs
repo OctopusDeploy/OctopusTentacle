@@ -11,6 +11,7 @@ namespace Octopus.Shared.Util
         void DeleteFile(string path);
         void DeleteFile(string path, DeletionOptions options);
         void DeleteDirectory(string path);
+        void DeleteDirectory(string path, DeletionOptions options);
         IEnumerable<string> EnumerateDirectories(string parentDirectoryPath);
         IEnumerable<string> EnumerateDirectoriesRecursively(string parentDirectoryPath);
         IEnumerable<string> EnumerateFiles(string parentDirectoryPath, params string[] searchPatterns);
