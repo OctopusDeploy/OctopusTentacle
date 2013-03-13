@@ -6,7 +6,7 @@ using System.Xml.XPath;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Conventions
+namespace Octopus.Shared.Conventions.Implementations
 {
     public class XmlConfigVariablesConventions : IInstallationConvention 
     {

@@ -164,7 +164,10 @@
     <Compile Include="Diagnostics\ILogScope.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
-    <Compile Include="Integration\Ftp\Class1.cs" />
+    <Compile Include="Integration\Ftp\FtpModule.cs" />
+    <Compile Include="Integration\Ftp\FtpSynchronizationSettings.cs" />
+    <Compile Include="Integration\Ftp\FtpSynchronizer.cs" />
+    <Compile Include="Integration\Ftp\IFtpSynchronizer.cs" />
     <Compile Include="Integration\Iis\IInternetInformationServer.cs" />
     <Compile Include="Integration\Iis\IisModule.cs" />
     <Compile Include="Integration\Iis\InternetInformationServer.cs" />

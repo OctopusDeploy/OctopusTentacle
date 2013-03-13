@@ -6,7 +6,7 @@ using Octopus.Shared.Activities;
 using Octopus.Shared.Integration.PowerShell;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Conventions
+namespace Octopus.Shared.Conventions.Implementations
 {
     public abstract class PowerShellConvention : IConvention
     {

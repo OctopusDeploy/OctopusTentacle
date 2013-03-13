@@ -1,24 +1,12 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading;
-using Autofac;
 using EnterpriseDT.Net.Ftp;
 using Octopus.Shared.Activities;
 
 namespace Octopus.Shared.Integration.Ftp
 {
-    public class FtpModule : Module
-    {
-        protected override void Load(ContainerBuilder builder)
-        {
-            builder.RegisterType<FtpSynchronizer>().As<IFtpSynchronizer>();
-        }
-    }
-
-    public interface IFtpSynchronizer
-    {
-        void Synchronize(FtpSynchronizationSettings settings);
-    }
-
     public class FtpSynchronizer : IFtpSynchronizer
     {
         public void Synchronize(FtpSynchronizationSettings settings)
@@ -31,10 +19,19 @@ namespace Octopus.Shared.Integration.Ftp
 
         public class SynchronizationSession : IDisposable
         {
+            readonly static HashSet<string> IgnoredFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             readonly FtpSynchronizationSettings settings;
             readonly SecureFTPConnection ftpConnection;
             readonly IActivityLog log;
             CancellationTokenRegistration cancelRegistration;
+
+            static SynchronizationSession()
+            {
+                IgnoredFiles.Add("PreDeploy.ps1");
+                IgnoredFiles.Add("Deploy.ps1");
+                IgnoredFiles.Add("PostDeploy.ps1");
+                IgnoredFiles.Add("DeployFailed.ps1");
+            }
 
             public SynchronizationSession(FtpSynchronizationSettings settings)
             {
@@ -79,9 +76,21 @@ namespace Octopus.Shared.Integration.Ftp
                     foreach (var message in ftpConnection.WelcomeMessage)
                         Console.WriteLine(message);
 
-                var rules = new FTPSyncRules { Direction = TransferDirection.UPLOAD, IgnoreCase = true, IncludeSubdirectories = true, DeleteIfSourceAbsent = true };
+                var rules = new FTPSyncRules { Direction = TransferDirection.UPLOAD, IgnoreCase = true, IncludeSubdirectories = true, DeleteIfSourceAbsent = true, FilterType = FTPFilterType.Callback, FilterCallback = FilterCallback };
 
                 ftpConnection.Synchronize(settings.LocalDirectory, settings.RemoteDirectory, rules);
+            }
+
+            bool FilterCallback(FTPFile file)
+            {
+                var name = Path.GetFileName(file.Name);
+                if (name != null && IgnoredFiles.Contains(name))
+                {
+                    log.Debug("Excluding " + file.Name + " from upload");
+                    return false;
+                }
+
+                return true;
             }
 
             void OnConnecting(object sender, FTPConnectionEventArgs ftpConnectionEventArgs)
@@ -145,59 +154,6 @@ namespace Octopus.Shared.Integration.Ftp
                 }
                 catch { }
             }
-        }
-    }
-
-    public class FtpSynchronizationSettings
-    {
-        readonly string host;
-        readonly string username;
-        readonly string password;
-        readonly bool useFtps;
-        readonly IActivityLog log;
-        readonly CancellationToken cancellationToken;
-
-        public FtpSynchronizationSettings(string host, string username, string password, bool useFtps, IActivityLog log, CancellationToken cancellationToken)
-        {
-            this.host = host;
-            this.username = username;
-            this.password = password;
-            this.useFtps = useFtps;
-            this.log = log;
-            this.cancellationToken = cancellationToken;
-        }
-
-        public bool UseFtps
-        {
-            get { return useFtps; }
-        }
-
-        public string Host
-        {
-            get { return host; }
-        }
-
-        public string Username
-        {
-            get { return username; }
-        }
-
-        public string Password
-        {
-            get { return password; }
-        }
-
-        public IActivityLog Log
-        {
-            get { return log; }
-        }
-
-        public string LocalDirectory { get; set; }
-        public string RemoteDirectory { get; set; }
-
-        public CancellationToken CancellationToken
-        {
-            get { return cancellationToken; }
         }
     }
 }

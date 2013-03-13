@@ -1,10 +1,9 @@
 ﻿using System;
 using System.IO;
-using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Conventions
+namespace Octopus.Shared.Conventions.Implementations
 {
     public class CopyPackageConvention : IInstallationConvention 
     {
@@ -24,6 +23,12 @@ namespace Octopus.Shared.Conventions
 
         public void Install(ConventionContext context)
         {
+            if (!context.Variables.GetFlag(SpecialVariables.Step.IsTentacleDeployment, false))
+            {
+                // This convention is only run when deploying to a Tentacle
+                return;
+            }
+
             var targetDirectory = context.Variables.GetValue(SpecialVariables.PackageDirectoryPath);
             if (string.IsNullOrWhiteSpace(targetDirectory))
             {

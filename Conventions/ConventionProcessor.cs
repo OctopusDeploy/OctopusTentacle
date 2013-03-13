@@ -101,7 +101,7 @@ namespace Octopus.Shared.Conventions
         {
             log.Debug(message);
 
-            foreach (var variable in variables.AsList())
+            foreach (var variable in variables.AsList().OrderBy(v => v.Name))
             {
                 log.DebugFormat(" - [{0}] = '{1}'", variable.Name, variable.Value);
             }

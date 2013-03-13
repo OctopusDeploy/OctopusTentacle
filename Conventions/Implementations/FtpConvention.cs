@@ -1,7 +1,8 @@
-﻿using Octopus.Shared.Contracts;
+﻿using System;
+using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Ftp;
 
-namespace Octopus.Shared.Conventions
+namespace Octopus.Shared.Conventions.Implementations
 {
     public class FtpConvention : IInstallationConvention
     {

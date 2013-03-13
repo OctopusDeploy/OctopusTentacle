@@ -6,7 +6,7 @@ using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Transforms;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Conventions
+namespace Octopus.Shared.Conventions.Implementations
 {
     public class XmlConfigTransformConvention : IInstallationConvention 
     {

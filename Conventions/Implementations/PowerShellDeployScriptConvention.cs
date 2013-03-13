@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Conventions
+namespace Octopus.Shared.Conventions.Implementations
 {
     public class PowerShellDeployScriptConvention : PowerShellConvention, IInstallationConvention
     {
