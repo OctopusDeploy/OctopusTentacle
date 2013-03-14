@@ -10,6 +10,7 @@ using Microsoft.WindowsAzure.Management.Model;
 using Microsoft.WindowsAzure.ServiceManagement;
 using Microsoft.WindowsAzure.StorageClient;
 using Octopus.Shared.Activities;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Integration.Azure
 {
@@ -21,17 +22,7 @@ namespace Octopus.Shared.Integration.Azure
         {
             log.Debug("Connecting to Azure blob storage");
 
-            var binding = new WebHttpBinding();
-            binding.CloseTimeout = TimeSpan.FromSeconds(30);
-            binding.OpenTimeout = TimeSpan.FromSeconds(30);
-            binding.ReceiveTimeout = TimeSpan.FromMinutes(30);
-            binding.SendTimeout = TimeSpan.FromMinutes(30);
-            binding.ReaderQuotas.MaxStringContentLength = 1048576;
-            binding.ReaderQuotas.MaxBytesPerRead = 131072;
-            binding.Security.Mode = WebHttpSecurityMode.Transport;
-            binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Certificate;
-            
-            var client = new ServiceManagementClient(binding, new Uri(subscription.ServiceEndpoint), subscription.Certificate, ServiceManagementClientOptions.DefaultOptions);
+            var client = CreateBinding(subscription);
             var storageKeys = client.Service.GetStorageKeys(subscription.SubscriptionId, subscription.CurrentStorageAccount);
             var storageAccount = new CloudStorageAccount(new StorageCredentialsAccountAndKey(subscription.CurrentStorageAccount, storageKeys.StorageServiceKeys.Primary), true);
 
@@ -45,9 +36,58 @@ namespace Octopus.Shared.Integration.Azure
 
             var fileInfo = new FileInfo(packageFile);
 
-            var blob = container.GetBlockBlobReference(uploadedFileName);
+            var packageBlob = GetUniqueBlobName(uploadedFileName, log, fileInfo, container);
+            if (packageBlob.Exists())
+            {
+                log.Debug("A blob named " + packageBlob.Name + " already exists with the same length, so it will be used instead of uploading the new package.");
+                return packageBlob.Uri;
+            }
             
-            log.Debug("Uploading package to blob storage...");
+            UploadBlobInChunks(log, cancellation, fileInfo, packageBlob);
+
+            log.OverwritePrevious().Info("Package upload complete");
+            return packageBlob.Uri;
+        }
+
+        static ServiceManagementClient CreateBinding(SubscriptionData subscription)
+        {
+            var binding = new WebHttpBinding();
+            binding.CloseTimeout = TimeSpan.FromSeconds(30);
+            binding.OpenTimeout = TimeSpan.FromSeconds(30);
+            binding.ReceiveTimeout = TimeSpan.FromMinutes(30);
+            binding.SendTimeout = TimeSpan.FromMinutes(30);
+            binding.ReaderQuotas.MaxStringContentLength = 1048576;
+            binding.ReaderQuotas.MaxBytesPerRead = 131072;
+            binding.Security.Mode = WebHttpSecurityMode.Transport;
+            binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Certificate;
+
+            var client = new ServiceManagementClient(binding, new Uri(subscription.ServiceEndpoint), subscription.Certificate, ServiceManagementClientOptions.DefaultOptions);
+            return client;
+        }
+
+        static CloudBlockBlob GetUniqueBlobName(string uploadedFileName, IActivityLog log, FileInfo fileInfo, CloudBlobContainer container)
+        {
+            var length = fileInfo.Length;
+            var packageBlob = Uniquifier.UniquifyUntil(
+                uploadedFileName,
+                container.GetBlockBlobReference,
+                blob =>
+                {
+                    if (blob.Exists() && blob.Properties.Length != length)
+                    {
+                        log.Debug("A blob named " + blob.Name + " already exists but has a different length.");
+                        return true;
+                    }
+
+                    return false;
+                });
+
+            return packageBlob;
+        }
+
+        static void UploadBlobInChunks(IActivityLog log, CancellationToken cancellation, FileInfo fileInfo, CloudBlockBlob packageBlob)
+        {
+            log.Debug("Uploading the package to blob storage...");
 
             using (var fileReader = fileInfo.OpenRead())
             {
@@ -67,12 +107,12 @@ namespace Octopus.Shared.Integration.Azure
                     var read = fileReader.Read(data, 0, data.Length);
                     if (read == 0)
                     {
-                        blob.PutBlockList(blocklist);
+                        packageBlob.PutBlockList(blocklist);
                         break;
                     }
 
                     var blockId = Convert.ToBase64String(Encoding.UTF8.GetBytes(id.ToString(CultureInfo.InvariantCulture).PadLeft(30, '0')));
-                    blob.PutBlock(blockId, new MemoryStream(data, 0, read, true), null);
+                    packageBlob.PutBlock(blockId, new MemoryStream(data, 0, read, true), null);
                     blocklist.Add(blockId);
 
                     uploadedSoFar += read;
@@ -80,9 +120,6 @@ namespace Octopus.Shared.Integration.Azure
                     log.OverwritePrevious().InfoFormat("Uploaded: {0} of {1} ({2:n2}%)", uploadedSoFar.ToFileSizeString(), fileInfo.Length.ToFileSizeString(), (uploadedSoFar / (double)fileInfo.Length * 100.00));
                 }
             }
-
-            log.OverwritePrevious().Info("Package upload complete");
-            return blob.Uri;
         }
     }
 }

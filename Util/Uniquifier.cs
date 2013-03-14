@@ -7,15 +7,26 @@ namespace Octopus.Shared.Util
     {
         public static string UniquifyString(string input, Func<string, bool> isInUse, string format = "-{0}", int startCounter = 1)
         {
-            var result = input;
-            var i = startCounter;
-            while (isInUse(result))
-            {
-                result = input + string.Format(format, i);
-                i++;
-            }
+            return UniquifyUntil(input, s => s, isInUse, format, startCounter);
+        }
 
-            return result;
+        public static T UniquifyUntil<T>(string input, Func<string, T> creator, Func<T, bool> isInUse, string format = "-{0}", int startCounter = 1)
+        {
+            var inputToTest = input;
+            var i = startCounter;
+
+            do
+            {
+                var item = creator(inputToTest);
+
+                if (!isInUse(item))
+                {
+                    return item;
+                }
+
+                inputToTest = input + string.Format(format, i);
+                i++;
+            } while (true);
         }
 
         public static string UniquifyStringFriendly(string input, Func<string, bool> isInUse)
