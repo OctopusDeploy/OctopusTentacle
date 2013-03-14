@@ -55,6 +55,18 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Transforms\Microsoft.Web.Publishing.Tasks.Dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.WindowsAzure.Management, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Azure\Microsoft.WindowsAzure.Management.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAzure.ServiceManagement.Client, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Azure\Microsoft.WindowsAzure.ServiceManagement.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAzure.StorageClient, Version=1.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Azure\Microsoft.WindowsAzure.StorageClient.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -78,6 +90,7 @@
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
@@ -146,6 +159,7 @@
     <Compile Include="Conventions\ConventionPriority.cs" />
     <Compile Include="Conventions\ConventionProcessor.cs" />
     <Compile Include="Conventions\ConventionsModule.cs" />
+    <Compile Include="Conventions\Implementations\AzurePreparationConvention.cs" />
     <Compile Include="Conventions\Implementations\CopyPackageConvention.cs" />
     <Compile Include="Conventions\Implementations\DeletePackageFileConvention.cs" />
     <Compile Include="Conventions\IConvention.cs" />
@@ -164,6 +178,10 @@
     <Compile Include="Diagnostics\ILogScope.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
+    <Compile Include="Integration\Azure\AzureModule.cs" />
+    <Compile Include="Integration\Azure\AzurePackageUploader.cs" />
+    <Compile Include="Integration\Azure\IAzurePackageUploader.cs" />
+    <Compile Include="Integration\Azure\SubscriptionDataFactory.cs" />
     <Compile Include="Integration\Ftp\FtpModule.cs" />
     <Compile Include="Integration\Ftp\FtpSynchronizationSettings.cs" />
     <Compile Include="Integration\Ftp\FtpSynchronizer.cs" />
@@ -271,6 +289,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

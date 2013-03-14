@@ -209,6 +209,11 @@ namespace Octopus.Shared.Util
                 File.Delete(backup);
         }
 
+        public void WriteAllBytes(string filePath, byte[] data)
+        {
+            File.WriteAllBytes(filePath, data);
+        }
+
         public void EnsureDirectoryExists(string directoryPath)
         {
             if (!DirectoryExists(directoryPath))
@@ -232,22 +237,7 @@ namespace Octopus.Shared.Util
             {
                 var targetFile = Path.Combine(targetDirectory, Path.GetFileName(sourceFile));
 
-                for (var i = 0; i < overwriteFileRetryAttempts; i++)
-                {
-                    try
-                    {
-                        File.Copy(sourceFile, targetFile, true);
-                    }
-                    catch
-                    {
-                        Thread.Sleep(100);
-
-                        if (i == overwriteFileRetryAttempts - 1)
-                        {
-                            throw;
-                        }
-                    }
-                }
+                CopyFile(sourceFile, targetFile, overwriteFileRetryAttempts);
             }
 
             foreach (var childSourceDirectory in Directory.GetDirectories(sourceDirectory))
@@ -255,6 +245,26 @@ namespace Octopus.Shared.Util
                 var name = Path.GetFileName(childSourceDirectory);
                 var childTargetDirectory = Path.Combine(targetDirectory, name);
                 CopyDirectory(childSourceDirectory, childTargetDirectory);
+            }
+        }
+
+        public void CopyFile(string sourceFile, string targetFile, int overwriteFileRetryAttempts = 3)
+        {
+            for (var i = 0; i < overwriteFileRetryAttempts; i++)
+            {
+                try
+                {
+                    File.Copy(sourceFile, targetFile, true);
+                }
+                catch
+                {
+                    Thread.Sleep(100);
+
+                    if (i == overwriteFileRetryAttempts - 1)
+                    {
+                        throw;
+                    }
+                }
             }
         }
 

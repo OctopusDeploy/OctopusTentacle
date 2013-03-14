@@ -91,7 +91,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
             public void AppendLog(string message)
             {
-                log.Info(message);
+                log.Info("  " + message);
             }
         }
     }

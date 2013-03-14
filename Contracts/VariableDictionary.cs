@@ -9,6 +9,10 @@ namespace Octopus.Shared.Contracts
     {
         readonly IDictionary<string, Variable> variables = new Dictionary<string, Variable>(StringComparer.OrdinalIgnoreCase);
 
+        public VariableDictionary() : this(null)
+        {
+        }
+
         public VariableDictionary(IEnumerable<Variable> variables)
         {
             if (variables == null)

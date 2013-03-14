@@ -129,6 +129,16 @@ namespace Octopus.Shared.Contracts
                 public static readonly string RootDirectory = "Octopus.CurrentStep.Ftp.RootDirectory";
                 public static readonly string DeleteDestinationFiles = "Octopus.CurrentStep.Ftp.DeleteDestinationFiles";
             }
+
+            public static class Azure
+            {
+                public static readonly string SubscriptionId = "Octopus.CurrentStep.Azure.SubscriptionId";
+                public static readonly string Endpoint = "Octopus.CurrentStep.Azure.Endpoint";
+                public static readonly string StorageAccountName = "Octopus.CurrentStep.Azure.StorageAccountName";
+                public static readonly string CloudServiceName = "Octopus.CurrentStep.Azure.CloudServiceName";
+                public static readonly string UploadedPackageUri = "Octopus.CurrentStep.Azure.UploadedPackageUri";
+                public static readonly string Slot = "Octopus.CurrentStep.Azure.Slot";
+            }
         }
     }
 }
