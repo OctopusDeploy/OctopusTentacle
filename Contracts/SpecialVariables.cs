@@ -138,6 +138,8 @@ namespace Octopus.Shared.Contracts
                 public static readonly string CloudServiceName = "Octopus.CurrentStep.Azure.CloudServiceName";
                 public static readonly string UploadedPackageUri = "Octopus.CurrentStep.Azure.UploadedPackageUri";
                 public static readonly string Slot = "Octopus.CurrentStep.Azure.Slot";
+                public static readonly string SwapIfPossible = "Octopus.CurrentStep.Azure.SwapIfPossible";
+                public static readonly string UseCurrentInstanceCount = "Octopus.CurrentStep.Azure.UseCurrentInstanceCount";
             }
         }
     }

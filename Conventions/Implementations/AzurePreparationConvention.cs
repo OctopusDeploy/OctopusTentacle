@@ -136,6 +136,8 @@ namespace Octopus.Shared.Conventions.Implementations
                 context.Variables.Set("OctopusAzurePackageUri", context.Variables.GetValue(SpecialVariables.Step.Azure.UploadedPackageUri));
                 context.Variables.Set("OctopusAzureConfigurationFile", configurationFilePath);
                 context.Variables.Set("OctopusAzureDeploymentLabel", context.Variables.GetValue(SpecialVariables.Step.Name) + " v" + context.Variables.GetValue(SpecialVariables.Release.Number));
+                context.Variables.Set("OctopusAzureSwapIfPossible", context.Variables.GetValue(SpecialVariables.Step.Azure.SwapIfPossible));
+                context.Variables.Set("OctopusAzureUseCurrentInstanceCount", context.Variables.GetValue(SpecialVariables.Step.Azure.UseCurrentInstanceCount));
 
                 RunScript("BootstrapDeployToAzure.ps1", context);
             }
