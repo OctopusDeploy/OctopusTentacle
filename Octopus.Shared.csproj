@@ -181,9 +181,12 @@
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
     <Compile Include="Integration\Azure\AzureClientFactory.cs" />
+    <Compile Include="Integration\Azure\AzureConfigurationRetriever.cs" />
     <Compile Include="Integration\Azure\AzureModule.cs" />
     <Compile Include="Integration\Azure\AzurePackageUploader.cs" />
     <Compile Include="Integration\Azure\BlobExtensions.cs" />
+    <Compile Include="Integration\Azure\IAzureClient.cs" />
+    <Compile Include="Integration\Azure\IAzureConfigurationRetriever.cs" />
     <Compile Include="Integration\Azure\IAzurePackageUploader.cs" />
     <Compile Include="Integration\Azure\SubscriptionDataFactory.cs" />
     <Compile Include="Integration\Ftp\FtpModule.cs" />
@@ -212,6 +215,7 @@
     <Compile Include="Integration\Transforms\ParametersTask.cs" />
     <Compile Include="Integration\Transforms\TransformationLogger.cs" />
     <Compile Include="Integration\Transforms\TransformationTask.cs" />
+    <Compile Include="Integration\Transforms\TransformResult.cs" />
     <Compile Include="Packages\IPackageExtractor.cs" />
     <Compile Include="Packages\LightweightPackageExtractor.cs" />
     <Compile Include="Packages\StoredPackage.cs" />

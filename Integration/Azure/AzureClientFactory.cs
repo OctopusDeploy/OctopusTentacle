@@ -5,11 +5,6 @@ using Microsoft.WindowsAzure.ServiceManagement;
 
 namespace Octopus.Shared.Integration.Azure
 {
-    public interface IAzureClient : IDisposable
-    {
-        IServiceManagement Service { get; }
-    }
-
     public class AzureClientFactory
     {
         public IAzureClient CreateClient(SubscriptionData subscription)

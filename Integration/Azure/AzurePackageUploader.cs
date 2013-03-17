@@ -4,10 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Xml.Linq;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Management.Model;
-using Microsoft.WindowsAzure.Management.Utilities;
 using Microsoft.WindowsAzure.ServiceManagement;
 using Microsoft.WindowsAzure.StorageClient;
 using Octopus.Shared.Activities;
@@ -15,29 +13,6 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Integration.Azure
 {
-    public interface IAzureConfigurationRetriever
-    {
-        XDocument GetCurrentConfiguration(SubscriptionData subscription, string serviceName, string slot);
-    }
-
-    public class AzureConfigurationRetriever : IAzureConfigurationRetriever
-    {
-        public XDocument GetCurrentConfiguration(SubscriptionData subscription, string serviceName, string slot)
-        {
-            using (var client = new AzureClientFactory().CreateClient(subscription))
-            {
-                var deployment = client.Service.GetDeploymentBySlot(subscription.SubscriptionId, serviceName, slot);
-                if (deployment != null)
-                {
-                    var xml = ServiceManagementHelper.DecodeFromBase64String(deployment.Configuration);
-                    return XDocument.Parse(xml);
-                }
-            }
-
-            return null;
-        }
-    }
-
     public class AzurePackageUploader : IAzurePackageUploader
     {
         const string OctopusPackagesContainerName = "octopuspackages";
