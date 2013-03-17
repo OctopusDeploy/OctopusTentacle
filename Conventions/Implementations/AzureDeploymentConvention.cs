@@ -33,8 +33,7 @@ namespace Octopus.Shared.Conventions.Implementations
             {
                 CopyScriptFromTemplate(context, azurePowerShellFolder, "BootstrapDeployToAzure.ps1");
                 CopyScriptFromTemplate(context, azurePowerShellFolder, "DeployToAzure.ps1");
-                var configurationFilePath = ChooseWhichServiceConfigurationFileToUse(context);
-
+         
                 fileSystem.WriteAllBytes(certificateFilePath, context.Certificate.Export(X509ContentType.Pfx, certificateFilePassword));
 
                 context.Variables.Set("OctopusAzureModulePath", Path.Combine(azurePowerShellFolder, "Azure.psd1"));
@@ -46,7 +45,6 @@ namespace Octopus.Shared.Conventions.Implementations
                 context.Variables.Set("OctopusAzureStorageAccountName", context.Variables.GetValue(SpecialVariables.Step.Azure.StorageAccountName));
                 context.Variables.Set("OctopusAzureSlot", context.Variables.GetValue(SpecialVariables.Step.Azure.Slot));
                 context.Variables.Set("OctopusAzurePackageUri", context.Variables.GetValue(SpecialVariables.Step.Azure.UploadedPackageUri));
-                context.Variables.Set("OctopusAzureConfigurationFile", configurationFilePath);
                 context.Variables.Set("OctopusAzureDeploymentLabel", context.Variables.GetValue(SpecialVariables.Step.Name) + " v" + context.Variables.GetValue(SpecialVariables.Release.Number));
                 context.Variables.Set("OctopusAzureSwapIfPossible", context.Variables.GetValue(SpecialVariables.Step.Azure.SwapIfPossible));
                 context.Variables.Set("OctopusAzureUseCurrentInstanceCount", context.Variables.GetValue(SpecialVariables.Step.Azure.UseCurrentInstanceCount));
@@ -59,17 +57,6 @@ namespace Octopus.Shared.Conventions.Implementations
                 DeleteScript("BootstrapDeployToAzure.ps1", context);
                 fileSystem.DeleteFile(certificateFilePath, DeletionOptions.TryThreeTimes);
             }
-        }
-
-        string ChooseWhichServiceConfigurationFileToUse(ConventionContext context)
-        {
-            var configurationFilePath = Path.Combine(context.PackageContentsDirectoryPath, "ServiceConfiguration." + context.Variables.GetValue(SpecialVariables.Environment.Name) + ".cscfg");
-            if (!fileSystem.FileExists(configurationFilePath))
-            {
-                configurationFilePath = Path.Combine(context.PackageContentsDirectoryPath, "ServiceConfiguration.Cloud.cscfg");
-            }
-
-            return configurationFilePath;
         }
 
         void CopyScriptFromTemplate(ConventionContext context, string azurePowerShellFolder, string fileName)

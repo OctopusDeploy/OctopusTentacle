@@ -10,6 +10,7 @@ namespace Octopus.Shared.Integration.Azure
             base.Load(builder);
 
             builder.RegisterType<AzurePackageUploader>().As<IAzurePackageUploader>();
+            builder.RegisterType<AzureConfigurationRetriever>().As<IAzureConfigurationRetriever>();
         }
     }
 }

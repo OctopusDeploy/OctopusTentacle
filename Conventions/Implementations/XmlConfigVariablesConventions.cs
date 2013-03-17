@@ -51,7 +51,6 @@ namespace Octopus.Shared.Conventions.Implementations
 
             XDocument doc;
 
-            //var xrs = new XmlReaderSettings {};
             using (var reader = XmlReader.Create(configurationFilePath))
             {
                 doc = XDocument.Load(reader, LoadOptions.PreserveWhitespace);

@@ -180,6 +180,7 @@
     <Compile Include="Diagnostics\ILogScope.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
+    <Compile Include="Integration\Azure\AzureClientFactory.cs" />
     <Compile Include="Integration\Azure\AzureModule.cs" />
     <Compile Include="Integration\Azure\AzurePackageUploader.cs" />
     <Compile Include="Integration\Azure\BlobExtensions.cs" />

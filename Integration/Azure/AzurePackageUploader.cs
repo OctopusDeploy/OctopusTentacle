@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.ServiceModel;
 using System.Text;
 using System.Threading;
+using System.Xml.Linq;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Management.Model;
+using Microsoft.WindowsAzure.Management.Utilities;
 using Microsoft.WindowsAzure.ServiceManagement;
 using Microsoft.WindowsAzure.StorageClient;
 using Octopus.Shared.Activities;
@@ -14,6 +15,29 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Integration.Azure
 {
+    public interface IAzureConfigurationRetriever
+    {
+        XDocument GetCurrentConfiguration(SubscriptionData subscription, string serviceName, string slot);
+    }
+
+    public class AzureConfigurationRetriever : IAzureConfigurationRetriever
+    {
+        public XDocument GetCurrentConfiguration(SubscriptionData subscription, string serviceName, string slot)
+        {
+            using (var client = new AzureClientFactory().CreateClient(subscription))
+            {
+                var deployment = client.Service.GetDeploymentBySlot(subscription.SubscriptionId, serviceName, slot);
+                if (deployment != null)
+                {
+                    var xml = ServiceManagementHelper.DecodeFromBase64String(deployment.Configuration);
+                    return XDocument.Parse(xml);
+                }
+            }
+
+            return null;
+        }
+    }
+
     public class AzurePackageUploader : IAzurePackageUploader
     {
         const string OctopusPackagesContainerName = "octopuspackages";
@@ -21,9 +45,13 @@ namespace Octopus.Shared.Integration.Azure
         public Uri Upload(SubscriptionData subscription, string packageFile, string uploadedFileName, IActivityLog log, CancellationToken cancellation)
         {
             log.Debug("Connecting to Azure blob storage");
-
-            var client = CreateBinding(subscription);
-            var storageKeys = client.Service.GetStorageKeys(subscription.SubscriptionId, subscription.CurrentStorageAccount);
+            
+            StorageService storageKeys;
+            using (var client = new AzureClientFactory().CreateClient(subscription))
+            {
+                storageKeys = client.Service.GetStorageKeys(subscription.SubscriptionId, subscription.CurrentStorageAccount);
+            }
+            
             var storageAccount = new CloudStorageAccount(new StorageCredentialsAccountAndKey(subscription.CurrentStorageAccount, storageKeys.StorageServiceKeys.Primary), true);
 
             var blobClient = storageAccount.CreateCloudBlobClient();
@@ -47,22 +75,6 @@ namespace Octopus.Shared.Integration.Azure
 
             log.OverwritePrevious().Info("Package upload complete");
             return packageBlob.Uri;
-        }
-
-        static ServiceManagementClient CreateBinding(SubscriptionData subscription)
-        {
-            var binding = new WebHttpBinding();
-            binding.CloseTimeout = TimeSpan.FromSeconds(30);
-            binding.OpenTimeout = TimeSpan.FromSeconds(30);
-            binding.ReceiveTimeout = TimeSpan.FromMinutes(30);
-            binding.SendTimeout = TimeSpan.FromMinutes(30);
-            binding.ReaderQuotas.MaxStringContentLength = 1048576;
-            binding.ReaderQuotas.MaxBytesPerRead = 131072;
-            binding.Security.Mode = WebHttpSecurityMode.Transport;
-            binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Certificate;
-
-            var client = new ServiceManagementClient(binding, new Uri(subscription.ServiceEndpoint), subscription.Certificate, ServiceManagementClientOptions.DefaultOptions);
-            return client;
         }
 
         static CloudBlockBlob GetUniqueBlobName(string uploadedFileName, IActivityLog log, FileInfo fileInfo, CloudBlobContainer container)
