@@ -15,13 +15,11 @@ namespace Octopus.Shared.Contracts
         // Defaulted by Tentacle, but overridable by user
         public static readonly string TreatWarningsAsErrors = "OctopusTreatWarningsAsErrors";
         public static readonly string PackageDirectoryPath = "OctopusPackageDirectoryPath";
-        public static readonly string PurgePackageDirectoryBeforeCopy = "OctopusPurgePackageDirectoryBeforeCopy";
         public static readonly string WebSiteName = "OctopusWebSiteName";
         public static readonly string NotAWebSite = "OctopusNotAWebSite";
         public static readonly string PrintVariables = "OctopusPrintVariables";
         public static readonly string PrintEvaluatedVariables = "OctopusPrintEvaluatedVariables";
         public static readonly string IgnoreMissingVariableTokens = "OctopusIgnoreMissingVariableTokens";
-        public static readonly string IgnoreConfigTransformationErrors = "OctopusIgnoreConfigTransformationErrors";
         public static readonly string NoVariableTokenReplacement = "OctopusNoVariableTokenReplacement";
         public static readonly string MaxParallelism = "OctopusMaxParallelism";
         public static readonly string UseLegacyIisSupport = "OctopusUseLegacyIisSupport";
@@ -116,10 +114,25 @@ namespace Octopus.Shared.Contracts
             {
                 public static readonly string NuGetPackageId = "Octopus.Step.Package.NuGetPackageId";
                 public static readonly string NuGetPackageVersion = "Octopus.Step.Package.NuGetPackageVersion";
+
+                public static readonly string UpdateIisWebsite = "Octopus.Step.Package.UpdateIisWebsite";
+                public static readonly string UpdateIisWebsiteName = "Octopus.Step.Package.UpdateIisWebsiteName";
+
+                public static readonly string CustomInstallationDirectory = "Octopus.Step.Package.CustomInstallationDirectory";
+                public static readonly string CustomInstallationDirectoryShouldBePurgedBeforeDeployment = "Octopus.Step.Package.CustomInstallationDirectoryShouldBePurgedBeforeDeployment";
+                public static readonly string CustomInstallationDirectoryShouldBePurgedByRetentionPolicy = "Octopus.Step.Package.CustomInstallationDirectoryShouldBePurgedByRetentionPolicy";
+
+                public static readonly string AutomaticallyUpdateAppSettingsAndConnectionStrings = "Octopus.Step.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings";
+                public static readonly string AutomaticallyRunConfigurationTransformationFiles = "Octopus.Step.Package.AutomaticallyRunConfigurationTransformationFiles";
+                public static readonly string IgnoreConfigTranformationErrors = "Octopus.Step.Package.IgnoreConfigTranformationErrors";
+                public static readonly string AdditionalXmlConfigurationTransforms = "Octopus.Step.Package.AdditionalXmlConfigurationTransforms";
                 
                 public static readonly string LegacyPackageName = "OctopusPackageName";
                 public static readonly string LegacyPackageVersion = "OctopusPackageVersion";
                 public static readonly string LegacyPackageNameAndVersion = "OctopusPackageNameAndVersion";
+
+                public static readonly string LegacyPurgePackageDirectoryBeforeCopy = "OctopusPurgePackageDirectoryBeforeCopy";
+                public static readonly string LegacyIgnoreConfigTransformationErrors = "OctopusIgnoreConfigTransformationErrors";
             }
 
             public static class Ftp
