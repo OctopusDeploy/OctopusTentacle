@@ -54,8 +54,8 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
             }
             finally
             {
-                //File.Delete(bootstrapFile);
-                //File.Delete(configurationFile);
+                File.Delete(bootstrapFile);
+                File.Delete(configurationFile);
             }
         }
 
@@ -96,13 +96,10 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
                 writer.WriteLine("  {");
                 writer.WriteLine("    public OctopusParametersDictionary() : base(System.StringComparer.OrdinalIgnoreCase)");
                 writer.WriteLine("    {");
-                writer.WriteLine("      // Variables:");
                 WriteVariableDictionary(arguments, writer);
                 writer.WriteLine("    }");
-                WriteVariableProperties(arguments, writer);
                 writer.WriteLine("  }");
                 writer.WriteLine();
-                writer.WriteLine("  // Functions:");
                 writer.WriteLine(EmbeddedFunctions);
                 writer.WriteLine("}");
 
@@ -119,25 +116,6 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
             foreach (var variable in arguments.Variables)
             {
                 writer.WriteLine("    this[" + EncodeValue(variable.Key) + "] = " + EncodeValue(variable.Value) + ";");
-            }
-        }
-
-        static void WriteVariableProperties(ScriptArguments arguments, StreamWriter writer)
-        {
-            foreach (var variable in arguments.Variables)
-            {
-                // This is the way we used to fix up the identifiers - people might still rely on this behavior
-                var legacyKey = new string(variable.Key.Where(char.IsLetterOrDigit).ToArray());
-
-                // This is the way we should have done it
-                var smartKey = new string(variable.Key.Where(IsValidScriptIdentifierChar).ToArray());
-
-                if (legacyKey != smartKey)
-                {
-                    writer.WriteLine("    public string " + legacyKey + " { get { return this[" + EncodeValue(variable.Key) + "]; } }");
-                }
-
-                writer.WriteLine("    public string " + smartKey + " { get { return this[" + EncodeValue(variable.Key) + "]; } }");
             }
         }
 
