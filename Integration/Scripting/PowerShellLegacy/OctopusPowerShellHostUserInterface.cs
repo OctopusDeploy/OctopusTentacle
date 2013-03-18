@@ -7,16 +7,16 @@ using System.Management.Automation.Host;
 using System.Security;
 using System.Text;
 
-namespace Octopus.Shared.Integration.PowerShell
+namespace Octopus.Shared.Integration.Scripting.PowerShellLegacy
 {
     public class OctopusPowerShellHostUserInterface : PSHostUserInterface
     {
-        readonly PowerShellOutput log;
+        readonly ScriptOutput log;
         readonly StringBuilder buffer = new StringBuilder();
         readonly OctopusPowerShellHostRawUserInterface rawUi = new OctopusPowerShellHostRawUserInterface();
         bool hasErrors;
 
-        public OctopusPowerShellHostUserInterface(PowerShellOutput log)
+        public OctopusPowerShellHostUserInterface(ScriptOutput log)
         {
             this.log = log;
         }

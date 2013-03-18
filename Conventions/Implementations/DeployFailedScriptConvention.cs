@@ -2,7 +2,7 @@ using System;
 
 namespace Octopus.Shared.Conventions.Implementations
 {
-    public class PowerShellDeployFailedScriptConvention : PowerShellConvention, IRollbackConvention
+    public class DeployFailedScriptConvention : ScriptConvention, IRollbackConvention
     {
         public override int Priority
         {
@@ -11,17 +11,17 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public override string FriendlyName
         {
-            get { return "DeployFailed.ps1"; }
+            get { return "DeployFailed Script"; }
         }
 
         public void Rollback(ConventionContext context)
         {
-            RunScript("DeployFailed.ps1", context);
+            RunScript("DeployFailed", context);
         }
 
         public void Cleanup(ConventionContext context)
         {
-            DeleteScript("DeployFailed.ps1", context);
+            DeleteScript("DeployFailed", context);
         }
     }
 }

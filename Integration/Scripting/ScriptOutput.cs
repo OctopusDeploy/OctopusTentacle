@@ -1,9 +1,9 @@
 using System;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Integration.PowerShell
+namespace Octopus.Shared.Integration.Scripting
 {
-    public class PowerShellOutput : RemotedObject
+    public class ScriptOutput : RemotedObject
     {
         public event Action<string> Written;
 

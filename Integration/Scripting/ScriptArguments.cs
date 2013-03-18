@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Integration.PowerShell
+namespace Octopus.Shared.Integration.Scripting
 {
-    public class PowerShellArguments : RemotedObject
+    public class ScriptArguments : RemotedObject
     {
-        public PowerShellArguments()
+        public ScriptArguments()
         {
-            OutputStream = new PowerShellOutput();
+            OutputStream = new ScriptOutput();
         }
 
         public string ScriptFilePath { get; set; }
         public string WorkingDirectory { get; set; }
         public IDictionary<string, string> Variables { get; set; }
-        public PowerShellOutput OutputStream { get; private set; }
+        public ScriptOutput OutputStream { get; private set; }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Octopus.Shared.Conventions.Implementations
 {
-    public class PowerShellPreDeployScriptConvention : PowerShellConvention, IInstallationConvention
+    public class PreDeployScriptConvention : ScriptConvention, IInstallationConvention
     {
         public override int Priority
         {
@@ -11,13 +11,13 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public override string FriendlyName
         {
-            get { return "PreDeploy.ps1"; }
+            get { return "PreDeploy Script"; }
         }
 
         public void Install(ConventionContext context)
         {
-            RunScript("PreDeploy.ps1", context);
-            DeleteScript("PreDeploy.ps1", context);
+            RunScript("PreDeploy", context);
+            DeleteScript("PreDeploy", context);
         }
     }
 }
