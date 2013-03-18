@@ -14,9 +14,6 @@ namespace Octopus.Shared.Contracts
 
         // Defaulted by Tentacle, but overridable by user
         public static readonly string TreatWarningsAsErrors = "OctopusTreatWarningsAsErrors";
-        public static readonly string PackageDirectoryPath = "OctopusPackageDirectoryPath";
-        public static readonly string WebSiteName = "OctopusWebSiteName";
-        public static readonly string NotAWebSite = "OctopusNotAWebSite";
         public static readonly string PrintVariables = "OctopusPrintVariables";
         public static readonly string PrintEvaluatedVariables = "OctopusPrintEvaluatedVariables";
         public static readonly string IgnoreMissingVariableTokens = "OctopusIgnoreMissingVariableTokens";
@@ -35,7 +32,7 @@ namespace Octopus.Shared.Contracts
 
         public static string[] GetUserVariables()
         {
-            return new[] { TreatWarningsAsErrors, PackageDirectoryPath, PurgePackageDirectoryBeforeCopy, WebSiteName, NotAWebSite, PrintVariables, PrintEvaluatedVariables, IgnoreMissingVariableTokens, NoVariableTokenReplacement, MaxParallelism, UseLegacyIisSupport };
+            return new[] { TreatWarningsAsErrors, Step.Package.LegacyPackageDirectoryPath, Step.Package.LegacyWebSiteName, Step.Package.LegacyNotAWebSite, PrintVariables, PrintEvaluatedVariables, IgnoreMissingVariableTokens, NoVariableTokenReplacement, MaxParallelism, UseLegacyIisSupport };
         }
 
         public static class Environment
@@ -130,7 +127,9 @@ namespace Octopus.Shared.Contracts
                 public static readonly string LegacyPackageName = "OctopusPackageName";
                 public static readonly string LegacyPackageVersion = "OctopusPackageVersion";
                 public static readonly string LegacyPackageNameAndVersion = "OctopusPackageNameAndVersion";
-
+                public static readonly string LegacyPackageDirectoryPath = "OctopusPackageDirectoryPath";
+                public static readonly string LegacyWebSiteName = "OctopusWebSiteName";
+                public static readonly string LegacyNotAWebSite = "OctopusNotAWebSite";
                 public static readonly string LegacyPurgePackageDirectoryBeforeCopy = "OctopusPurgePackageDirectoryBeforeCopy";
                 public static readonly string LegacyIgnoreConfigTransformationErrors = "OctopusIgnoreConfigTransformationErrors";
             }

@@ -54,9 +54,9 @@ namespace Octopus.Shared.Conventions.Implementations
 
             if (result == TransformResult.Failed || result == TransformResult.SuccessWithErrors)
             {
-                if (!context.Variables.GetFlag(SpecialVariables.IgnoreConfigTransformationErrors, false))
+                if (!context.Variables.GetFlag(SpecialVariables.Step.Package.LegacyIgnoreConfigTransformationErrors, false))
                 {
-                    throw new ActivityFailedException("One or more errors were encountered when applying the XML configuration transformation file: " + transformFile + ". View the deployment log for more details, or set the special variable " + SpecialVariables.IgnoreConfigTransformationErrors + " to True to ignore this error.");                
+                    throw new ActivityFailedException("One or more errors were encountered when applying the XML configuration transformation file: " + transformFile + ". View the deployment log for more details, or set the special variable " + SpecialVariables.Step.Package.LegacyIgnoreConfigTransformationErrors + " to True to ignore this error.");                
                 }
             }
 
@@ -64,7 +64,7 @@ namespace Octopus.Shared.Conventions.Implementations
             {
                 if (context.Variables.GetFlag(SpecialVariables.TreatWarningsAsErrors, false))
                 {
-                    throw new ActivityFailedException("One or more warnings were encountered when applying the XML configuration transformation file: " + transformFile + ". View the deployment log for more details, or set the special variable " + SpecialVariables.IgnoreConfigTransformationErrors + " to True to ignore this error.");                
+                    throw new ActivityFailedException("One or more warnings were encountered when applying the XML configuration transformation file: " + transformFile + ". View the deployment log for more details, or set the special variable " + SpecialVariables.Step.Package.LegacyIgnoreConfigTransformationErrors + " to True to ignore this error.");                
                 }
             }
         }

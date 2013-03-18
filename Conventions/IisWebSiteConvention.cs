@@ -33,7 +33,7 @@ namespace Octopus.Shared.Conventions
                 return;
             }
 
-            if (context.Variables.GetFlag(SpecialVariables.NotAWebSite, false))
+            if (context.Variables.GetFlag(SpecialVariables.Step.Package.LegacyNotAWebSite, false))
             {
                 context.Log.Debug("The OctopusNotAWebSite variable has been set; skipping IIS configuration.");
                 return;
@@ -46,7 +46,7 @@ namespace Octopus.Shared.Conventions
                 return;
             }
 
-            var iisSiteName = context.Variables.GetValue(SpecialVariables.WebSiteName) 
+            var iisSiteName = context.Variables.GetValue(SpecialVariables.Step.Package.LegacyWebSiteName) 
                 ?? context.Package.PackageId;
 
             context.Log.InfoFormat("Updating IIS website named '{0}'", iisSiteName);
