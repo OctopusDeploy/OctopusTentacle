@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Management.Automation.Host;
 using System.Threading;
 
-namespace Octopus.Shared.Integration.PowerShell
+namespace Octopus.Shared.Integration.Scripting.PowerShellLegacy
 {
     public class OctopusPowerShellHost : PSHost
     {

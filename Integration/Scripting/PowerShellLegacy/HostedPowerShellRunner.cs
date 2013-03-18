@@ -7,11 +7,16 @@ using System.Management.Automation.Runspaces;
 using System.Runtime.Remoting;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Integration.PowerShell
+namespace Octopus.Shared.Integration.Scripting.PowerShellLegacy
 {
-    public class HostedPowerShellRunner : IPowerShell
+    public class HostedPowerShellRunner : IScriptRunner
     {
-        public PowerShellExecutionResult Execute(PowerShellArguments arguments)
+        public string[] GetSupportedExtensions()
+        {
+            return new[] { "ps1" };
+        }
+
+        public ScriptExecutionResult Execute(ScriptArguments arguments)
         {
             var setup = new AppDomainSetup();
             setup.ApplicationBase = Path.GetDirectoryName(typeof(HostedPowerShellRunner).Assembly.FullLocalPath());
@@ -37,7 +42,7 @@ namespace Octopus.Shared.Integration.PowerShell
 
         public class IsolatedScriptRunner : RemotedObject
         {
-            public PowerShellExecutionResult Execute(PowerShellArguments arguments)
+            public ScriptExecutionResult Execute(ScriptArguments arguments)
             {
                 var oldWorkingDirectory = Environment.CurrentDirectory;
                 Environment.CurrentDirectory = arguments.WorkingDirectory;
@@ -102,7 +107,7 @@ namespace Octopus.Shared.Integration.PowerShell
                     host.ExitCode = -12;
                 }
 
-                var result = new PowerShellExecutionResult(host.ExitCode, outputVariables);
+                var result = new ScriptExecutionResult(host.ExitCode, outputVariables);
                 return result;
             }
 

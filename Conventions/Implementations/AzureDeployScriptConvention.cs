@@ -6,11 +6,11 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Conventions.Implementations
 {
-    public class AzureDeploymentConvention : PowerShellConvention, IInstallationConvention
+    public class AzureDeployScriptConvention : ScriptConvention, IInstallationConvention
     {
         readonly IOctopusFileSystem fileSystem;
 
-        public AzureDeploymentConvention(IOctopusFileSystem fileSystem)
+        public AzureDeployScriptConvention(IOctopusFileSystem fileSystem)
         {
             this.fileSystem = fileSystem;
         }
@@ -23,7 +23,7 @@ namespace Octopus.Shared.Conventions.Implementations
             if (!context.Variables.GetFlag(SpecialVariables.Step.IsAzureDeployment, false))
                 return;
 
-            var azurePowerShellFolder = Path.Combine(Path.GetDirectoryName(typeof (AzureDeploymentConvention).Assembly.FullLocalPath()), "Azure");
+            var azurePowerShellFolder = Path.Combine(Path.GetDirectoryName(typeof (AzureDeployScriptConvention).Assembly.FullLocalPath()), "Azure");
 
             var certificateFilePath = Path.Combine(context.PackageContentsDirectoryPath, "Certificate.pfx");
             var certificateFilePassword = Guid.NewGuid().ToString();

@@ -1,6 +1,6 @@
 ﻿using System;
 using Autofac;
-using Octopus.Shared.Integration.PowerShell;
+using Octopus.Shared.Integration.Scripting;
 
 namespace Octopus.Shared.Conventions
 {
@@ -8,7 +8,7 @@ namespace Octopus.Shared.Conventions
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<PowerShellEngineSelector>().As<IPowerShell>();
+            builder.RegisterType<ScriptEngineSelector>().As<IScriptRunner>();
             
             builder.RegisterAssemblyTypes(GetType().Assembly)
                 .As<IConvention>()

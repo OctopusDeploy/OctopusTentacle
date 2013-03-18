@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Integration.PowerShell
+namespace Octopus.Shared.Integration.Scripting
 {
     [Serializable]
     public class ScriptFailureException : Exception

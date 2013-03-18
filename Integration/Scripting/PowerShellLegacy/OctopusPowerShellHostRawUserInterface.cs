@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Management.Automation.Host;
 
-namespace Octopus.Shared.Integration.PowerShell
+namespace Octopus.Shared.Integration.Scripting.PowerShellLegacy
 {
     public sealed class OctopusPowerShellHostRawUserInterface : PSHostRawUserInterface
     {

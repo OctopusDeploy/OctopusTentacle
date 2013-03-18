@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Octopus.Shared.Integration.PowerShell
+namespace Octopus.Shared.Integration.Scripting
 {
     [Serializable]
-    public class PowerShellExecutionResult
+    public class ScriptExecutionResult
     {
         readonly int exitCode;
         readonly IDictionary<string, string> outputVariables;
 
-        public PowerShellExecutionResult(int exitCode, IDictionary<string, string> outputVariables = null)
+        public ScriptExecutionResult(int exitCode, IDictionary<string, string> outputVariables = null)
         {
             this.exitCode = exitCode;
             this.outputVariables = outputVariables ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);

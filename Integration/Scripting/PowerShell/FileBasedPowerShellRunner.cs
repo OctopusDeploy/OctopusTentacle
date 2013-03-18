@@ -6,14 +6,18 @@ using System.Text;
 using Octopus.Shared.ServiceMessages;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Integration.PowerShell
+namespace Octopus.Shared.Integration.Scripting.PowerShell
 {
-    public class FileBasedPowerShellRunner : IPowerShell
+    public class FileBasedPowerShellRunner : IScriptRunner
     {
-        public PowerShellExecutionResult Execute(PowerShellArguments arguments)
+        public string[] GetSupportedExtensions()
+        {
+            return new[] { "ps1" };
+        }
+
+        public ScriptExecutionResult Execute(ScriptArguments arguments)
         {
             var bootstrapFile = PrepareBootstrapFile(arguments);
-
 
             var outputVariables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -48,7 +52,7 @@ namespace Octopus.Shared.Integration.PowerShell
                     exit = -12;
                 }
 
-                return new PowerShellExecutionResult(exit, outputVariables);
+                return new ScriptExecutionResult(exit, outputVariables);
             }
             finally
             {
@@ -57,7 +61,7 @@ namespace Octopus.Shared.Integration.PowerShell
         }
 
         // We create a temporary file to invoke the PowerShell script with the variables loaded
-        static string PrepareBootstrapFile(PowerShellArguments arguments)
+        static string PrepareBootstrapFile(ScriptArguments arguments)
         {
             var bootstrapFile = Path.Combine(arguments.WorkingDirectory, "Bootstrap." + Guid.NewGuid() + ".ps1");
 
@@ -87,7 +91,7 @@ namespace Octopus.Shared.Integration.PowerShell
             return bootstrapFile;
         }
 
-        static void WriteVariableDictionary(PowerShellArguments arguments, StreamWriter writer)
+        static void WriteVariableDictionary(ScriptArguments arguments, StreamWriter writer)
         {
             writer.WriteLine("$OctopusParameters = New-Object 'System.Collections.Generic.Dictionary[String,String]' (,[System.StringComparer]::OrdinalIgnoreCase)");
             foreach (var variable in arguments.Variables)
@@ -96,7 +100,7 @@ namespace Octopus.Shared.Integration.PowerShell
             }
         }
 
-        static void WriteLocalVariables(PowerShellArguments arguments, StreamWriter writer)
+        static void WriteLocalVariables(ScriptArguments arguments, StreamWriter writer)
         {
             foreach (var variable in arguments.Variables)
             {
