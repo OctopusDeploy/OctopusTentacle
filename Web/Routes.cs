@@ -40,7 +40,6 @@ namespace Octopus.Shared.Web
         // To update it, run the unit test RouteGeneration.GenerateRoutes, and then copy the trace output from the test below this point:
 
         #region Generated
-
         public static class Api
         {
             public static class Deployments
@@ -333,6 +332,14 @@ namespace Octopus.Shared.Web
                 public static string Get(string projectId, string id)
                 {
                     return Format("/api/projects/{0}/variables/{1}", new object[] { projectId, id }, new Dictionary<string, object>() { });
+                }
+
+                /// <summary>
+                /// Returns a URI like: /api/variables/names/Foo?area=api
+                /// </summary>
+                public static string Names(string projectId)
+                {
+                    return Format("/api/variables/names/{0}", new object[] { projectId }, new Dictionary<string, object>() { });
                 }
 
             }
@@ -643,11 +650,11 @@ namespace Octopus.Shared.Web
                 }
 
                 /// <summary>
-                /// Returns a URI like: /projects/Foo/edit?defaultgroupid=Foo
+                /// Returns a URI like: /projects/Foo/edit?defaultgroupid=Foo&amp;cloneprojectid=Foo
                 /// </summary>
-                public static string Edit(string slug, string defaultGroupId = null)
+                public static string Edit(string slug, string defaultGroupId = null, string cloneProjectId = null)
                 {
-                    return Format("/projects/{0}/edit", new object[] { slug }, new Dictionary<string, object>() { { "defaultGroupId", defaultGroupId } });
+                    return Format("/projects/{0}/edit", new object[] { slug }, new Dictionary<string, object>() { { "defaultGroupId", defaultGroupId }, { "cloneProjectId", cloneProjectId } });
                 }
 
                 /// <summary>
@@ -707,6 +714,22 @@ namespace Octopus.Shared.Web
                 public static string ScriptStep(string slug, string id)
                 {
                     return Format("/projects/{0}/steps/scriptstep/{1}", new object[] { slug, id }, new Dictionary<string, object>() { });
+                }
+
+                /// <summary>
+                /// Returns a URI like: /projects/Foo/steps/ftpstep/Foo
+                /// </summary>
+                public static string FtpStep(string slug, string id)
+                {
+                    return Format("/projects/{0}/steps/ftpstep/{1}", new object[] { slug, id }, new Dictionary<string, object>() { });
+                }
+
+                /// <summary>
+                /// Returns a URI like: /projects/Foo/steps/azurestep/Foo
+                /// </summary>
+                public static string AzureStep(string slug, string id)
+                {
+                    return Format("/projects/{0}/steps/azurestep/{1}", new object[] { slug, id }, new Dictionary<string, object>() { });
                 }
 
                 /// <summary>
@@ -845,6 +868,14 @@ namespace Octopus.Shared.Web
                 public static string Index(string name, string mime)
                 {
                     return Format("/resource/index/{id}", new object[] { }, new Dictionary<string, object>() { { "name", name }, { "mime", mime } });
+                }
+
+                /// <summary>
+                /// Returns a URI like: /resource/publiccertificate
+                /// </summary>
+                public static string PublicCertificate()
+                {
+                    return Format("/resource/publiccertificate/{id}", new object[] { }, new Dictionary<string, object>() { });
                 }
 
             }

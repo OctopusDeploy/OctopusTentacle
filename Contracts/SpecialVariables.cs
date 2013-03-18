@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace Octopus.Shared.Contracts
 {
@@ -101,18 +104,18 @@ namespace Octopus.Shared.Contracts
 
         public static class Step
         {
-            public static readonly string Id = "Octopus.CurrentStep.Id";
-            public static readonly string Name = "Octopus.CurrentStep.Name";
-            public static readonly string LogicalId = "Octopus.CurrentStep.LogicalId";
+            public static readonly string Id = "Octopus.Step.Id";
+            public static readonly string Name = "Octopus.Step.Name";
+            public static readonly string LogicalId = "Octopus.Step.LogicalId";
             
-            public static readonly string IsTentacleDeployment = "Octopus.CurrentStep.IsTentacleDeployment";
-            public static readonly string IsFtpDeployment = "Octopus.CurrentStep.IsFtpDeployment";
-            public static readonly string IsAzureDeployment = "Octopus.CurrentStep.IsAzureDeployment";
+            public static readonly string IsTentacleDeployment = "Octopus.Step.IsTentacleDeployment";
+            public static readonly string IsFtpDeployment = "Octopus.Step.IsFtpDeployment";
+            public static readonly string IsAzureDeployment = "Octopus.Step.IsAzureDeployment";
 
             public static class Package
             {
-                public static readonly string NuGetPackageId = "Octopus.CurrentStep.Package.NuGetPackageId";
-                public static readonly string NuGetPackageVersion = "Octopus.CurrentStep.Package.NuGetPackageVersion";
+                public static readonly string NuGetPackageId = "Octopus.Step.Package.NuGetPackageId";
+                public static readonly string NuGetPackageVersion = "Octopus.Step.Package.NuGetPackageVersion";
                 
                 public static readonly string LegacyPackageName = "OctopusPackageName";
                 public static readonly string LegacyPackageVersion = "OctopusPackageVersion";
@@ -121,25 +124,55 @@ namespace Octopus.Shared.Contracts
 
             public static class Ftp
             {
-                public static readonly string Host = "Octopus.CurrentStep.Ftp.Host";
-                public static readonly string Username = "Octopus.CurrentStep.Ftp.Username";
-                public static readonly string Password = "Octopus.CurrentStep.Ftp.Password";
-                public static readonly string UseFtps = "Octopus.CurrentStep.Ftp.UseFtps";
-                public static readonly string FtpPort = "Octopus.CurrentStep.Ftp.FtpPort";
-                public static readonly string RootDirectory = "Octopus.CurrentStep.Ftp.RootDirectory";
-                public static readonly string DeleteDestinationFiles = "Octopus.CurrentStep.Ftp.DeleteDestinationFiles";
+                public static readonly string Host = "Octopus.Step.Ftp.Host";
+                public static readonly string Username = "Octopus.Step.Ftp.Username";
+                public static readonly string Password = "Octopus.Step.Ftp.Password";
+                public static readonly string UseFtps = "Octopus.Step.Ftp.UseFtps";
+                public static readonly string FtpPort = "Octopus.Step.Ftp.FtpPort";
+                public static readonly string RootDirectory = "Octopus.Step.Ftp.RootDirectory";
+                public static readonly string DeleteDestinationFiles = "Octopus.Step.Ftp.DeleteDestinationFiles";
             }
 
             public static class Azure
             {
-                public static readonly string SubscriptionId = "Octopus.CurrentStep.Azure.SubscriptionId";
-                public static readonly string Endpoint = "Octopus.CurrentStep.Azure.Endpoint";
-                public static readonly string StorageAccountName = "Octopus.CurrentStep.Azure.StorageAccountName";
-                public static readonly string CloudServiceName = "Octopus.CurrentStep.Azure.CloudServiceName";
-                public static readonly string UploadedPackageUri = "Octopus.CurrentStep.Azure.UploadedPackageUri";
-                public static readonly string Slot = "Octopus.CurrentStep.Azure.Slot";
-                public static readonly string SwapIfPossible = "Octopus.CurrentStep.Azure.SwapIfPossible";
-                public static readonly string UseCurrentInstanceCount = "Octopus.CurrentStep.Azure.UseCurrentInstanceCount";
+                public static readonly string SubscriptionId = "Octopus.Step.Azure.SubscriptionId";
+                public static readonly string Endpoint = "Octopus.Step.Azure.Endpoint";
+                public static readonly string StorageAccountName = "Octopus.Step.Azure.StorageAccountName";
+                public static readonly string CloudServiceName = "Octopus.Step.Azure.CloudServiceName";
+                public static readonly string UploadedPackageUri = "Octopus.Step.Azure.UploadedPackageUri";
+                public static readonly string Slot = "Octopus.Step.Azure.Slot";
+                public static readonly string SwapIfPossible = "Octopus.Step.Azure.SwapIfPossible";
+                public static readonly string UseCurrentInstanceCount = "Octopus.Step.Azure.UseCurrentInstanceCount";
+            }
+        }
+
+        public static IEnumerable<string> GetAllUsableByUser()
+        {
+            return GetAll(typeof(SpecialVariables), (name, value) => !name.StartsWith("Legacy")).OrderBy(o => o).ToList();
+        }
+
+        public static IEnumerable<string> GetAllLegacy()
+        {
+            return GetAll(typeof(SpecialVariables), (name, value) => name.StartsWith("Legacy")).OrderBy(o => o).ToList();
+        }
+
+        static IEnumerable<string> GetAll(Type rootType, Func<string, string, bool> filter)
+        {
+            foreach (var member in rootType.GetFields(BindingFlags.Static | BindingFlags.Public))
+            {
+                var value = (string) member.GetValue(null);
+                if (filter(member.Name, value))
+                {
+                    yield return value;
+                }
+            }
+
+            foreach (var type in rootType.GetNestedTypes())
+            {
+                foreach (var item in GetAll(type, filter))
+                {
+                    yield return item;
+                }
             }
         }
     }
