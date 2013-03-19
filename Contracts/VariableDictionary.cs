@@ -33,13 +33,17 @@ namespace Octopus.Shared.Contracts
         {
             if (name == null) return;
 
-            if (!variables.ContainsKey(name))
+            var names = SpecialVariables.GetAlternativeNames(name);
+            foreach (var alternative in names)
             {
-                variables[name] = new Variable(name, value);
-            }
-            else
-            {
-                variables[name].Value = value;
+                if (!variables.ContainsKey(alternative))
+                {
+                    variables[alternative] = new Variable(alternative, value);
+                }
+                else
+                {
+                    variables[alternative].Value = value;
+                }
             }
         }
 
@@ -50,11 +54,14 @@ namespace Octopus.Shared.Contracts
         /// <returns>The value of the variable, or null if one is not defined.</returns>
         public string GetValue(string variableName)
         {
-            Variable variable;
-            
-            return variables.TryGetValue(variableName, out variable) && variable != null 
-                ? variable.Value
-                : null;
+            foreach (var alternative in SpecialVariables.GetAlternativeNames(variableName))
+            {
+                Variable variable;
+                if (variables.TryGetValue(alternative, out variable) && variable != null)
+                    return variable.Value;
+            }
+
+            return null;
         }
 
         public bool GetFlag(string variableName, bool defaultValueIfUnset)

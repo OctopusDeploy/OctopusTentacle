@@ -7,6 +7,31 @@ namespace Octopus.Shared.Contracts
 {
     public static class SpecialVariables
     {
+        static readonly Dictionary<string, string> LegacyToCurrent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        static readonly Dictionary<string, string> CurrentToLegacy = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        static SpecialVariables()
+        {
+            AddLegacy(Environment.LegacyEnvironmentId, Environment.Id);
+            AddLegacy(Environment.LegacyEnvironmentName, Environment.Name);
+            AddLegacy(Machine.LegacyMachineName, Machine.Name);
+            AddLegacy(Release.LegacyReleaseNumber, Release.Number);
+            AddLegacy(Deployment.LegacyDeploymentId, Deployment.Id);
+            AddLegacy(Deployment.LegacyForcePackageRedeployment, Deployment.ForcePackageRedeployment);
+            AddLegacy(Project.LegacyProjectName, Project.Name);
+            AddLegacy(Project.LegacyProjectId, Project.Id);
+            AddLegacy(Task.LegacyTaskId, Task.Id);
+            AddLegacy(Web.LegacyProjectWebLink, Web.ProjectLink);
+            AddLegacy(Web.LegacyReleaseWebLink, Web.ReleaseLink);
+            AddLegacy(Web.LegacyDeploymentWebLink, Web.DeploymentLink);
+            AddLegacy(Step.Package.LegacyIgnoreConfigTransformationErrors, Step.Package.IgnoreConfigTranformationErrors);
+            AddLegacy(Step.Package.LegacyPackageDirectoryPath, Step.Package.CustomInstallationDirectory);
+            AddLegacy(Step.Package.LegacyPackageName, Step.Package.NuGetPackageId);
+            AddLegacy(Step.Package.LegacyPackageVersion, Step.Package.NuGetPackageVersion);
+            AddLegacy(Step.Package.LegacyPurgePackageDirectoryBeforeCopy, Step.Package.CustomInstallationDirectoryShouldBePurgedBeforeDeployment);
+            AddLegacy(Step.Package.LegacyWebSiteName, Step.Package.UpdateIisWebsiteName);
+        }
+
         // Set by Octopus Server exclusively
         public static readonly string RetentionPolicySet = "OctopusRetentionPolicySet";
         public static readonly string RetentionPolicyItemsToKeep = "OctopusRetentionPolicyItemsToKeep";
@@ -117,8 +142,7 @@ namespace Octopus.Shared.Contracts
 
                 public static readonly string CustomInstallationDirectory = "Octopus.Step.Package.CustomInstallationDirectory";
                 public static readonly string CustomInstallationDirectoryShouldBePurgedBeforeDeployment = "Octopus.Step.Package.CustomInstallationDirectoryShouldBePurgedBeforeDeployment";
-                public static readonly string CustomInstallationDirectoryShouldBePurgedByRetentionPolicy = "Octopus.Step.Package.CustomInstallationDirectoryShouldBePurgedByRetentionPolicy";
-
+                
                 public static readonly string AutomaticallyUpdateAppSettingsAndConnectionStrings = "Octopus.Step.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings";
                 public static readonly string AutomaticallyRunConfigurationTransformationFiles = "Octopus.Step.Package.AutomaticallyRunConfigurationTransformationFiles";
                 public static readonly string IgnoreConfigTranformationErrors = "Octopus.Step.Package.IgnoreConfigTranformationErrors";
@@ -166,6 +190,25 @@ namespace Octopus.Shared.Contracts
         public static IEnumerable<string> GetAllLegacy()
         {
             return GetAll(typeof(SpecialVariables), (name, value) => name.StartsWith("Legacy")).OrderBy(o => o).ToList();
+        }
+
+        static void AddLegacy(string legacyVariableName, string currentVariableName)
+        {
+            LegacyToCurrent[legacyVariableName] = currentVariableName;
+            CurrentToLegacy[currentVariableName] = legacyVariableName;
+        }
+
+        public static IEnumerable<string> GetAlternativeNames(string name)
+        {
+            var names = new List<string>();
+            names.Add(name);
+            string value;
+            if (LegacyToCurrent.TryGetValue(name, out value))
+                names.Add(value);
+            if (CurrentToLegacy.TryGetValue(name, out value))
+                names.Add(value);
+
+            return names.Distinct(StringComparer.OrdinalIgnoreCase);
         }
 
         static IEnumerable<string> GetAll(Type rootType, Func<string, string, bool> filter)

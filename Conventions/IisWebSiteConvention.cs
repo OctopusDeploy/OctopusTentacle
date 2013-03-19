@@ -35,7 +35,6 @@ namespace Octopus.Shared.Conventions
 
             if (context.Variables.GetFlag(SpecialVariables.Step.Package.LegacyNotAWebSite, false))
             {
-                context.Log.Debug("The OctopusNotAWebSite variable has been set; skipping IIS configuration.");
                 return;
             }
 

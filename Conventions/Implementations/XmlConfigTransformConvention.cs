@@ -21,6 +21,11 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public void Install(ConventionContext context)
         {
+            if (context.Variables.GetFlag(SpecialVariables.Step.Package.AutomaticallyRunConfigurationTransformationFiles, true) == false)
+            {
+                return;
+            }
+
             context.Log.InfoFormat("Looking for any configuration transformation files");
             var configs = FileSystem.EnumerateFilesRecursively(context.PackageContentsDirectoryPath, "*.config");
             var environment = context.Variables.GetValue(SpecialVariables.Environment.Name);

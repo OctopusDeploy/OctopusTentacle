@@ -23,7 +23,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
             foreach (var script in scripts)
             {
-                context.Log.InfoFormat("Calling script: '{0}'", script);
+                context.Log.DebugFormat("Script: {0}", script);
 
                 var closure = new LogClosure(context.Log);
 
@@ -36,8 +36,6 @@ namespace Octopus.Shared.Conventions.Implementations
                 var result = ScriptRunner.Execute(arguments);
 
                 arguments.OutputStream.Written -= closure.AppendLog;
-
-                context.Log.DebugFormat("Exit code: {0}", result.ExitCode);
 
                 foreach (var outputVariable in result.OutputVariables)
                 {

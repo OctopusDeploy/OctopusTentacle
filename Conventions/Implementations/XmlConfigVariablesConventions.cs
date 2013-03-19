@@ -21,6 +21,11 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public void Install(ConventionContext context)
         {
+            if (context.Variables.GetFlag(SpecialVariables.Step.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings, true) == false)
+            {
+                return;
+            }
+
             var configFiles = FileSystem.EnumerateFilesRecursively(context.PackageContentsDirectoryPath, "*.config");
             context.Log.Info("Looking for appSettings and connectionStrings in any .config files");
 
