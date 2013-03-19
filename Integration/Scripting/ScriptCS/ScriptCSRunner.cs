@@ -69,6 +69,7 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
         static string PrepareBootstrapFile(ScriptArguments arguments, string configurationFile)
         {
             var bootstrapFile = Path.Combine(arguments.WorkingDirectory, "Bootstrap." + Guid.NewGuid() + ".csx");
+            File.SetAttributes(bootstrapFile, FileAttributes.Hidden);
 
             using (var writer = new StreamWriter(bootstrapFile))
             {
@@ -84,6 +85,7 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
         static string PrepareConfigurationFile(ScriptArguments arguments)
         {
             var bootstrapFile = Path.Combine(arguments.WorkingDirectory, "Configure." + Guid.NewGuid() + ".csx");
+            File.SetAttributes(bootstrapFile, FileAttributes.Hidden);
 
             using (var writer = new StreamWriter(bootstrapFile))
             {
