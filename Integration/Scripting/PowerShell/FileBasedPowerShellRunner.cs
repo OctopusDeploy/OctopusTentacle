@@ -64,8 +64,7 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
         static string PrepareBootstrapFile(ScriptArguments arguments)
         {
             var bootstrapFile = Path.Combine(arguments.WorkingDirectory, "Bootstrap." + Guid.NewGuid() + ".ps1");
-            File.SetAttributes(bootstrapFile, FileAttributes.Hidden);
-
+            
             using (var writer = new StreamWriter(bootstrapFile))
             {
                 writer.WriteLine("## Variables:");
@@ -88,7 +87,8 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
                 writer.WriteLine("exit $LastExitCode");
                 writer.Flush();
             }
-            
+
+            File.SetAttributes(bootstrapFile, FileAttributes.Hidden);
             return bootstrapFile;
         }
 
