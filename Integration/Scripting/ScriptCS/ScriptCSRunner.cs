@@ -17,6 +17,11 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
 
         public ScriptExecutionResult Execute(ScriptArguments arguments)
         {
+            if (RuntimeUtility.IsNet45OrNewer())
+            {
+                throw new Exception("ScriptCS files require the Roslyn CTP, which requires .NET framework 4.5");
+            }
+
             var configurationFile = PrepareConfigurationFile(arguments);
             var bootstrapFile = PrepareBootstrapFile(arguments, configurationFile);
 
