@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Transforms;
@@ -38,12 +40,30 @@ namespace Octopus.Shared.Conventions.Implementations
                 {
                     ApplyConfigTransforms(config, environment, context);
                 }
+
+                foreach (var suffix in GetSuffixes(context.Variables.GetValue(SpecialVariables.Step.Package.AdditionalXmlConfigurationTransforms)))
+                {
+                    ApplyConfigTransforms(config, suffix, context);
+                }
             }
+        }
+
+        IEnumerable<string> GetSuffixes(string suffixes)
+        {
+            if (string.IsNullOrWhiteSpace(suffixes))
+                return new string[0];
+
+            return suffixes.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
         }
 
         void ApplyConfigTransforms(string sourceFile, string suffix, ConventionContext context)
         {
-            var transformFile = Path.ChangeExtension(sourceFile, suffix + ".config");
+            if (!suffix.EndsWith(".config", StringComparison.OrdinalIgnoreCase))
+            {
+                suffix += ".config";
+            }
+
+            var transformFile = Path.ChangeExtension(sourceFile, suffix);
             if (!FileSystem.FileExists(transformFile))
                 return;
 
