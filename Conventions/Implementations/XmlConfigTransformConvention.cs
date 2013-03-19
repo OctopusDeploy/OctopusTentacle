@@ -34,16 +34,17 @@ namespace Octopus.Shared.Conventions.Implementations
 
             foreach (var config in configs)
             {
-                ApplyConfigTransforms(config, "Release", context);
+                var alreadyRun = new HashSet<string>();
+                ApplyConfigTransforms(config, "Release", context, alreadyRun);
 
                 if (!string.IsNullOrWhiteSpace(environment))
                 {
-                    ApplyConfigTransforms(config, environment, context);
+                    ApplyConfigTransforms(config, environment, context, alreadyRun);
                 }
 
                 foreach (var suffix in GetSuffixes(context.Variables.GetValue(SpecialVariables.Step.Package.AdditionalXmlConfigurationTransforms)))
                 {
-                    ApplyConfigTransforms(config, suffix, context);
+                    ApplyConfigTransforms(config, suffix, context, alreadyRun);
                 }
             }
         }
@@ -56,7 +57,7 @@ namespace Octopus.Shared.Conventions.Implementations
             return suffixes.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
         }
 
-        void ApplyConfigTransforms(string sourceFile, string suffix, ConventionContext context)
+        void ApplyConfigTransforms(string sourceFile, string suffix, ConventionContext context, HashSet<string> alreadyRun)
         {
             if (!suffix.EndsWith(".config", StringComparison.OrdinalIgnoreCase))
             {
@@ -69,6 +70,11 @@ namespace Octopus.Shared.Conventions.Implementations
 
             if (string.Equals(sourceFile, transformFile, StringComparison.InvariantCultureIgnoreCase))
                 return;
+
+            if (alreadyRun.Contains(transformFile))
+                return;
+
+            alreadyRun.Add(transformFile);
 
             // Parameters support could be added by using this code:
             // http://ctt.codeplex.com/SourceControl/changeset/view/9525#5293
