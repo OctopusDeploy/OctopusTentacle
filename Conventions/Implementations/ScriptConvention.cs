@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Octopus.Shared.Activities;
+using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Scripting;
 using Octopus.Shared.Util;
 
@@ -40,6 +41,13 @@ namespace Octopus.Shared.Conventions.Implementations
                 foreach (var outputVariable in result.OutputVariables)
                 {
                     context.Variables.Set(outputVariable.Key, outputVariable.Value);
+                }
+
+                if (result.ExitCode == 0 && result.StdErrorWritten)
+                {
+                    context.Log.WarnFormat("The script returned an exit code of 0, but output was written to the error output stream. Please investigate any errors in the script output above.");
+                    if (context.Variables.GetFlag(SpecialVariables.TreatWarningsAsErrors, false))
+                        throw new ScriptFailureException("One or more errors were encountered when running the script.");
                 }
 
                 if (result.ExitCode != 0)

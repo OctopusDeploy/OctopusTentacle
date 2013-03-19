@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using Octopus.Shared.Diagnostics;
 using log4net;
 using log4net.Core;
@@ -8,6 +9,7 @@ namespace Octopus.Shared.Activities
     public class NullActivityLog : AbstractActivityLog
     {
         readonly ILog log;
+        readonly StringBuilder logText = new StringBuilder();
 
         public NullActivityLog() : this(null)
         {
@@ -20,6 +22,7 @@ namespace Octopus.Shared.Activities
 
         public override void Write(Level level, object message)
         {
+            logText.AppendLine(level.Name + " " + message);
             log.Logger.Log(typeof(NullActivityLog), level, message, null);
         }
 
@@ -30,7 +33,7 @@ namespace Octopus.Shared.Activities
 
         public override string GetLog()
         {
-            return string.Empty;
+            return logText.ToString();
         }
     }
 }

@@ -47,12 +47,7 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
                         errorWritten = true;
                     });
 
-                if (errorWritten && exit == 0)
-                {
-                    exit = -12;
-                }
-
-                return new ScriptExecutionResult(exit, outputVariables);
+                return new ScriptExecutionResult(exit, errorWritten, outputVariables);
             }
             finally
             {

@@ -107,7 +107,7 @@ namespace Octopus.Shared.Integration.Scripting.PowerShellLegacy
                     host.ExitCode = -12;
                 }
 
-                var result = new ScriptExecutionResult(host.ExitCode, outputVariables);
+                var result = new ScriptExecutionResult(host.ExitCode, ui.HasErrors, outputVariables);
                 return result;
             }
 
