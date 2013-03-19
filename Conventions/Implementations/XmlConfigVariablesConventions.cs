@@ -66,8 +66,9 @@ namespace Octopus.Shared.Conventions.Implementations
             foreach (var variable in variables.AsList())
             {
                 var changed = 
-                    ReplaceAttributeValues(doc, "//*[local-name()='appSettings']/*[local-name()='add']", "key", variable.Name, "value", variable.Value, context) ||
-                    ReplaceAttributeValues(doc, "//*[local-name()='connectionStrings']/*[local-name()='add']", "name", variable.Name, "connectionString", variable.Value, context);
+                    ReplaceAttributeValues(doc, "//*[local-name()='appSettings']/*[local-name()='add']", "key", variable.Name, "value", variable.Value, context) |
+                    ReplaceAttributeValues(doc, "//*[local-name()='connectionStrings']/*[local-name()='add']", "name", variable.Name, "connectionString", variable.Value, context) |
+                    ReplaceAppSettingsValues(doc, "//*[local-name()='applicationSettings']//*[local-name()='setting']", "name", variable.Name, variable.Value, context);
 
                 if (changed) modified = true;
             }
@@ -108,6 +109,38 @@ namespace Octopus.Shared.Conventions.Implementations
                 else
                 {
                     valueAttribute.SetValue(value);
+                }
+            }
+
+            return modified;
+        }
+
+        bool ReplaceAppSettingsValues(XDocument document, string xpath, string keyAttributeName, string keyAttributeValue, string value, ConventionContext context)
+        {
+            var settings =
+                from element in document.XPathSelectElements(xpath)
+                let keyAttribute = element.Attribute(keyAttributeName)
+                where keyAttribute != null
+                where string.Equals(keyAttribute.Value, keyAttributeValue, StringComparison.InvariantCultureIgnoreCase)
+                select element;
+
+            value = value ?? string.Empty;
+
+            var modified = false;
+
+            foreach (var setting in settings)
+            {
+                modified = true;
+                context.Log.DebugFormat("Setting {0}[@{1}='{2}'] to '{3}'", xpath, keyAttributeName, keyAttributeValue, value);
+
+                var valueElement = setting.Elements().FirstOrDefault(e => e.Name.LocalName == "value");
+                if (valueElement == null)
+                {
+                    setting.Add(new XElement("value", value));
+                }
+                else
+                {
+                    valueElement.SetValue(value);
                 }
             }
 
