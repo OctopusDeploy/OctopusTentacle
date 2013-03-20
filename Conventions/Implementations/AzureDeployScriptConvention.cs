@@ -49,12 +49,12 @@ namespace Octopus.Shared.Conventions.Implementations
                 context.Variables.Set("OctopusAzureSwapIfPossible", context.Variables.GetValue(SpecialVariables.Step.Azure.SwapIfPossible));
                 context.Variables.Set("OctopusAzureUseCurrentInstanceCount", context.Variables.GetValue(SpecialVariables.Step.Azure.UseCurrentInstanceCount));
 
-                RunScript("BootstrapDeployToAzure.ps1", context);
+                RunScript("BootstrapDeployToAzure", context);
             }
             finally
             {
-                DeleteScript("DeployToAzure.ps1", context);
-                DeleteScript("BootstrapDeployToAzure.ps1", context);
+                DeleteScript("DeployToAzure", context);
+                DeleteScript("BootstrapDeployToAzure", context);
                 fileSystem.DeleteFile(certificateFilePath, DeletionOptions.TryThreeTimes);
             }
         }
