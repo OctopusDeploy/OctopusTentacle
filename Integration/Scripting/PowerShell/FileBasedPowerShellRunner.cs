@@ -79,7 +79,7 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
                 
 
                 writer.WriteLine(". \"" + arguments.ScriptFilePath + "\"");
-                writer.WriteLine("exit $LastExitCode");
+                writer.WriteLine("if ((test-path variable:global:lastexitcode)) { exit $LastExitCode }");
                 writer.Flush();
             }
 
