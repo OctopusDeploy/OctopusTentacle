@@ -38,6 +38,8 @@ namespace Octopus.Shared.Integration.Ftp
                 this.settings = settings;
 
                 ftpConnection = new SecureFTPConnection();
+                ftpConnection.LicenseOwner = "OctopusDeploy";
+                ftpConnection.LicenseKey = "064-6432-3419-5486";
                 ftpConnection.Protocol = settings.UseFtps ? FileTransferProtocol.FTPSExplicit : FileTransferProtocol.FTP;
                 ftpConnection.ServerAddress = settings.Host;
                 ftpConnection.UserName = settings.Username;
