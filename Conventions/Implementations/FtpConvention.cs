@@ -30,6 +30,15 @@ namespace Octopus.Shared.Conventions.Implementations
             var port = context.Variables.GetInt32(SpecialVariables.Step.Ftp.FtpPort) ?? 0;
             var deleteFiles = context.Variables.GetFlag(SpecialVariables.Step.Ftp.DeleteDestinationFiles, false);
 
+            if (host.Contains("/") || host.Contains(":"))
+            {
+                Uri uri;
+                if (Uri.TryCreate(host, UriKind.Absolute, out uri))
+                {
+                    host = uri.Host;
+                }
+            }
+
             context.Log.Info("Begin synchronization...");
 
             var settings = new FtpSynchronizationSettings(host, username, password, useFtps, context.Log, context.CancellationToken);
