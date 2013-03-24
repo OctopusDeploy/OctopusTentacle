@@ -60,6 +60,19 @@ namespace Octopus.Shared.Contracts
             return new[] { TreatWarningsAsErrors, Step.Package.LegacyPackageDirectoryPath, Step.Package.LegacyWebSiteName, Step.Package.LegacyNotAWebSite, PrintVariables, PrintEvaluatedVariables, IgnoreMissingVariableTokens, NoVariableTokenReplacement, MaxParallelism, UseLegacyIisSupport };
         }
 
+        public static readonly string SecretSuffix = "[Secret]";
+        public static readonly string NoSubstituionSuffix = "[NoSubstitute]";
+
+        public static bool IsSecret(string variableName)
+        {
+            return variableName.Contains(SecretSuffix);
+        }
+
+        public static bool AllowsSubstitution(string variableName)
+        {
+            return !variableName.Contains(NoSubstituionSuffix);
+        }
+
         public static class Environment
         {
             public static readonly string Id = "Octopus.Environment.Id";
@@ -162,7 +175,7 @@ namespace Octopus.Shared.Contracts
             {
                 public static readonly string Host = "Octopus.Step.Ftp.Host";
                 public static readonly string Username = "Octopus.Step.Ftp.Username";
-                public static readonly string Password = "Octopus.Step.Ftp.Password";
+                public static readonly string Password = "Octopus.Step.Ftp.Password" + SecretSuffix + NoSubstituionSuffix;
                 public static readonly string UseFtps = "Octopus.Step.Ftp.UseFtps";
                 public static readonly string FtpPort = "Octopus.Step.Ftp.FtpPort";
                 public static readonly string RootDirectory = "Octopus.Step.Ftp.RootDirectory";

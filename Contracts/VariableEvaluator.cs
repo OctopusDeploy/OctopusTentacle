@@ -49,6 +49,9 @@ namespace Octopus.Shared.Contracts
         {
             foreach (var node in nodes)
             {
+                if (!SpecialVariables.AllowsSubstitution(node.Name))
+                    continue;
+
                 var matches = config.TokenRegex.Matches(node.Value);
 
                 foreach (Match match in matches)

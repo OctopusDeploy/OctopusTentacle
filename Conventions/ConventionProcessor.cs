@@ -103,6 +103,9 @@ namespace Octopus.Shared.Conventions
 
             foreach (var variable in variables.AsList().OrderBy(v => v.Name))
             {
+                if (SpecialVariables.IsSecret(variable.Name))
+                    continue;
+
                 log.DebugFormat(" - [{0}] = '{1}'", variable.Name, variable.Value);
             }
         }
