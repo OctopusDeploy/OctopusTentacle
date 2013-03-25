@@ -229,6 +229,9 @@ namespace Octopus.Shared.Contracts
             foreach (var member in rootType.GetFields(BindingFlags.Static | BindingFlags.Public))
             {
                 var value = (string) member.GetValue(null);
+                if (value.StartsWith("["))
+                    continue;
+
                 if (filter(member.Name, value))
                 {
                     yield return value;
