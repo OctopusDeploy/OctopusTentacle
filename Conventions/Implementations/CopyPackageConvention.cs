@@ -21,7 +21,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public string FriendlyName { get { return "Copy"; } }
 
-        public void Install(ConventionContext context)
+        public void Install(IConventionContext context)
         {
             if (!context.Variables.GetFlag(SpecialVariables.Step.IsTentacleDeployment, false))
             {

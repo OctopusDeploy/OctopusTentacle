@@ -14,12 +14,12 @@ namespace Octopus.Shared.Conventions.Implementations
             get { return "DeployFailed Script"; }
         }
 
-        public void Rollback(ConventionContext context)
+        public void Rollback(IConventionContext context)
         {
             RunScript("DeployFailed", context);
         }
 
-        public void Cleanup(ConventionContext context)
+        public void Cleanup(IConventionContext context)
         {
             DeleteScript("DeployFailed", context);
         }

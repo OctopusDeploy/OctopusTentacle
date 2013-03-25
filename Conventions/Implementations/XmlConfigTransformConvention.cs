@@ -21,7 +21,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public string FriendlyName { get { return "XML Transformation"; } }
 
-        public void Install(ConventionContext context)
+        public void Install(IConventionContext context)
         {
             if (context.Variables.GetFlag(SpecialVariables.Step.Package.AutomaticallyRunConfigurationTransformationFiles, true) == false)
             {
@@ -57,7 +57,7 @@ namespace Octopus.Shared.Conventions.Implementations
             return suffixes.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
         }
 
-        void ApplyConfigTransforms(string sourceFile, string suffix, ConventionContext context, HashSet<string> alreadyRun)
+        void ApplyConfigTransforms(string sourceFile, string suffix, IConventionContext context, HashSet<string> alreadyRun)
         {
             if (!suffix.EndsWith(".config", StringComparison.OrdinalIgnoreCase))
             {

@@ -19,7 +19,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public string FriendlyName { get { return "Delete Package"; } }
 
-        public void Install(ConventionContext context)
+        public void Install(IConventionContext context)
         {
             var packages = fileSystem.EnumerateFiles(context.PackageContentsDirectoryPath, "*.nupkg");
 

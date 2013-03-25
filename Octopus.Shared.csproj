@@ -159,6 +159,7 @@
     <Compile Include="Conventions\ConventionPriority.cs" />
     <Compile Include="Conventions\ConventionProcessor.cs" />
     <Compile Include="Conventions\ConventionsModule.cs" />
+    <Compile Include="Conventions\IConventionContext.cs" />
     <Compile Include="Conventions\Implementations\AzureDeployScriptConvention.cs" />
     <Compile Include="Conventions\Implementations\AzureConfigurationConvention.cs" />
     <Compile Include="Conventions\Implementations\AzureUploadConvention.cs" />

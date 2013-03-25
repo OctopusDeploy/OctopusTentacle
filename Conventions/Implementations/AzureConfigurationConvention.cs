@@ -24,7 +24,7 @@ namespace Octopus.Shared.Conventions.Implementations
         public int Priority { get { return ConventionPriority.AzureConfiguration; } }
         public string FriendlyName { get { return "Azure Configuration"; } }
 
-        public void Install(ConventionContext context)
+        public void Install(IConventionContext context)
         {
             if (!context.Variables.GetFlag(SpecialVariables.Step.IsAzureDeployment, false))
                 return;
@@ -38,7 +38,7 @@ namespace Octopus.Shared.Conventions.Implementations
             SaveConfigurationFile(configurationFile, configurationFilePath);
         }
 
-        void UpdateConfigurationSettings(XContainer configurationFile, ConventionContext context)
+        void UpdateConfigurationSettings(XContainer configurationFile, IConventionContext context)
         {
             context.Log.Debug("Updating configuration settings...");
 
@@ -57,7 +57,7 @@ namespace Octopus.Shared.Conventions.Implementations
             });
         }
 
-        string ChooseWhichServiceConfigurationFileToUse(ConventionContext context)
+        string ChooseWhichServiceConfigurationFileToUse(IConventionContext context)
         {
             var configurationFilePath = Path.Combine(context.PackageContentsDirectoryPath, "ServiceConfiguration." + context.Variables.GetValue(SpecialVariables.Environment.Name) + ".cscfg");
             if (!fileSystem.FileExists(configurationFilePath))
@@ -78,7 +78,7 @@ namespace Octopus.Shared.Conventions.Implementations
             }
         }
 
-        void UpdateConfigurationBasedOnCurrentInstanceCount(XContainer localConfigurationFile, string configurationFileName, ConventionContext context)
+        void UpdateConfigurationBasedOnCurrentInstanceCount(XContainer localConfigurationFile, string configurationFileName, IConventionContext context)
         {
             var useInstanceCount = context.Variables.GetFlag(SpecialVariables.Step.Azure.UseCurrentInstanceCount, false);
             if (useInstanceCount == false)

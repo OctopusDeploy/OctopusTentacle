@@ -14,7 +14,7 @@ namespace Octopus.Shared.Conventions.Implementations
             get { return "PreDeploy Script"; }
         }
 
-        public void Install(ConventionContext context)
+        public void Install(IConventionContext context)
         {
             RunScript("PreDeploy", context);
             DeleteScript("PreDeploy", context);

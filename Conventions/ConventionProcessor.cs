@@ -16,7 +16,7 @@ namespace Octopus.Shared.Conventions
             this.conventions = conventions;
         }
 
-        public void RunConventions(ConventionContext context)
+        public void RunConventions(IConventionContext context)
         {
             EvaluateVariables(context, context.Log);
 
@@ -47,22 +47,22 @@ namespace Octopus.Shared.Conventions
             }
         }
 
-        void RunInstallConventions(ConventionContext context)
+        void RunInstallConventions(IConventionContext context)
         {
             Run<IInstallationConvention>(context, (c, ctx) => c.Install(ctx));
         }
 
-        void RunRollbackConventions(ConventionContext context)
+        void RunRollbackConventions(IConventionContext context)
         {
             Run<IRollbackConvention>(context, (c, ctx) => c.Rollback(ctx));
         }
 
-        void RunRollbackCleanup(ConventionContext context)
+        void RunRollbackCleanup(IConventionContext context)
         {
             Run<IRollbackConvention>(context, (c, ctx) => c.Cleanup(ctx));
         }
 
-        void Run<TConvention>(ConventionContext context, Action<TConvention, ConventionContext> conventionCallback) where TConvention : IConvention
+        void Run<TConvention>(IConventionContext context, Action<TConvention, IConventionContext> conventionCallback) where TConvention : IConvention
         {
             var conventionsToRun = 
                 conventions.OfType<TConvention>()
@@ -76,7 +76,7 @@ namespace Octopus.Shared.Conventions
             }
         }
 
-        static void EvaluateVariables(ConventionContext context, IActivityLog log)
+        static void EvaluateVariables(IConventionContext context, IActivityLog log)
         {
             context.Variables.Set(SpecialVariables.OriginalPackageDirectoryPath, context.PackageContentsDirectoryPath);
 

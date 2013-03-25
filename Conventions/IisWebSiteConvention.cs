@@ -25,7 +25,7 @@ namespace Octopus.Shared.Conventions
 
         public string FriendlyName { get { return "IIS"; } }
 
-        public void Install(ConventionContext context)
+        public void Install(IConventionContext context)
         {
             if (!context.Variables.GetFlag(SpecialVariables.Step.IsTentacleDeployment, false))
             {
@@ -45,8 +45,11 @@ namespace Octopus.Shared.Conventions
                 return;
             }
 
-            var iisSiteName = context.Variables.GetValue(SpecialVariables.Step.Package.LegacyWebSiteName) 
-                ?? context.Package.PackageId;
+            var iisSiteName = context.Variables.GetValue(SpecialVariables.Step.Package.LegacyWebSiteName);
+            if (string.IsNullOrWhiteSpace(iisSiteName))
+            {
+                iisSiteName = context.Package.PackageId;
+            }
 
             context.Log.InfoFormat("Updating IIS website named '{0}'", iisSiteName);
 
@@ -70,7 +73,7 @@ namespace Octopus.Shared.Conventions
             }
         }
 
-        string GetRootMostDirectoryContainingWebConfig(ConventionContext context)
+        string GetRootMostDirectoryContainingWebConfig(IConventionContext context)
         {
             // Optimize for most common case.
             if (fileSystem.FileExists(Path.Combine(context.PackageContentsDirectoryPath, "Web.config")))

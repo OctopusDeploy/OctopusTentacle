@@ -19,7 +19,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public string FriendlyName { get { return "XML Configuration"; } }
 
-        public void Install(ConventionContext context)
+        public void Install(IConventionContext context)
         {
             if (context.Variables.GetFlag(SpecialVariables.Step.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings, true) == false)
             {
@@ -50,7 +50,7 @@ namespace Octopus.Shared.Conventions.Implementations
             }
         }
 
-        void UpdateConfigurationFile(string configurationFilePath, ConventionContext context)
+        void UpdateConfigurationFile(string configurationFilePath, IConventionContext context)
         {
             var variables = context.Variables;
 
@@ -83,7 +83,7 @@ namespace Octopus.Shared.Conventions.Implementations
             }
         }
 
-        bool ReplaceAttributeValues(XDocument document, string xpath, string keyAttributeName, string keyAttributeValue, string valueAttributeName, string value, ConventionContext context)
+        bool ReplaceAttributeValues(XDocument document, string xpath, string keyAttributeName, string keyAttributeValue, string valueAttributeName, string value, IConventionContext context)
         {
             var settings =
                 from element in document.XPathSelectElements(xpath)
@@ -115,7 +115,7 @@ namespace Octopus.Shared.Conventions.Implementations
             return modified;
         }
 
-        bool ReplaceAppSettingsValues(XDocument document, string xpath, string keyAttributeName, string keyAttributeValue, string value, ConventionContext context)
+        bool ReplaceAppSettingsValues(XDocument document, string xpath, string keyAttributeName, string keyAttributeValue, string value, IConventionContext context)
         {
             var settings =
                 from element in document.XPathSelectElements(xpath)

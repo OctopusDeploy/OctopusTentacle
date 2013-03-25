@@ -21,7 +21,7 @@ namespace Octopus.Shared.Conventions.Implementations
         public int Priority { get { return ConventionPriority.AzureUpload; } }
         public string FriendlyName { get { return "Azure Upload"; } }
 
-        public void Install(ConventionContext context)
+        public void Install(IConventionContext context)
         {
             if (!context.Variables.GetFlag(SpecialVariables.Step.IsAzureDeployment, false))
                 return;
@@ -37,7 +37,7 @@ namespace Octopus.Shared.Conventions.Implementations
             context.Log.Info("Package uploaded as: " + uri);
         }
 
-        string FindPackageToUpload(ConventionContext context)
+        string FindPackageToUpload(IConventionContext context)
         {
             var packages = fileSystem.EnumerateFiles(context.PackageContentsDirectoryPath, "*.cspkg").ToList();
             if (packages.Count == 0)
@@ -61,7 +61,7 @@ namespace Octopus.Shared.Conventions.Implementations
             return packages.Single();
         }
 
-        Uri UploadPackage(ConventionContext context, string packageFilePath)
+        Uri UploadPackage(IConventionContext context, string packageFilePath)
         {
             context.Log.Info("Uploading package to Azure blob storage: " + packageFilePath);
 

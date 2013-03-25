@@ -17,7 +17,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public string FriendlyName { get { return "FTP"; } }
 
-        public void Install(ConventionContext context)
+        public void Install(IConventionContext context)
         {
             if (!context.Variables.GetFlag(SpecialVariables.Step.IsFtpDeployment, false))
                 return;

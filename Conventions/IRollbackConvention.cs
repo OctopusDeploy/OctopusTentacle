@@ -4,8 +4,8 @@ namespace Octopus.Shared.Conventions
 {
     public interface IRollbackConvention : IConvention
     {
-        void Rollback(ConventionContext context);
+        void Rollback(IConventionContext context);
 
-        void Cleanup(ConventionContext context);
+        void Cleanup(IConventionContext context);
     }
 }

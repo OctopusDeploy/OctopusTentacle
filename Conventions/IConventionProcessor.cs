@@ -4,6 +4,6 @@ namespace Octopus.Shared.Conventions
 {
     public interface IConventionProcessor
     {
-        void RunConventions(ConventionContext context);
+        void RunConventions(IConventionContext context);
     }
 }

@@ -4,6 +4,6 @@ namespace Octopus.Shared.Conventions
 {
     public interface IInstallationConvention : IConvention
     {
-        void Install(ConventionContext context);
+        void Install(IConventionContext context);
     }
 }

@@ -18,7 +18,7 @@ namespace Octopus.Shared.Conventions.Implementations
         public override int Priority { get { return ConventionPriority.AzureDeployment; } }
         public override string FriendlyName { get { return "Azure Deployment"; } }
 
-        public void Install(ConventionContext context)
+        public void Install(IConventionContext context)
         {
             if (!context.Variables.GetFlag(SpecialVariables.Step.IsAzureDeployment, false))
                 return;
@@ -59,7 +59,7 @@ namespace Octopus.Shared.Conventions.Implementations
             }
         }
 
-        void CopyScriptFromTemplate(ConventionContext context, string azurePowerShellFolder, string fileName)
+        void CopyScriptFromTemplate(IConventionContext context, string azurePowerShellFolder, string fileName)
         {
             var sourceScriptFile = Path.Combine(azurePowerShellFolder, fileName);
             var destinationScriptFile = Path.Combine(context.PackageContentsDirectoryPath, fileName);

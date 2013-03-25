@@ -18,7 +18,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public abstract string FriendlyName { get; }
 
-        protected void RunScript(string scriptName, ConventionContext context)
+        protected void RunScript(string scriptName, IConventionContext context)
         {
             var scripts = FindScripts(scriptName, context);
 
@@ -57,7 +57,7 @@ namespace Octopus.Shared.Conventions.Implementations
             }
         }
 
-        protected void DeleteScript(string scriptName, ConventionContext context)
+        protected void DeleteScript(string scriptName, IConventionContext context)
         {
             var scripts = FindScripts(scriptName, context);
 
@@ -67,12 +67,15 @@ namespace Octopus.Shared.Conventions.Implementations
             }
         }
 
-        protected IEnumerable<string> FindScripts(string scriptName, ConventionContext context)
+        protected IEnumerable<string> FindScripts(string scriptName, IConventionContext context)
         {
             var scripts = FileSystem.EnumerateFilesRecursively(context.StagingDirectoryPath, ScriptRunner.GetSupportedExtensions().Select(e => "*." + e).ToArray()).ToArray();
             
             scripts = scripts.Where(s => Path.GetFileNameWithoutExtension(s).Equals(scriptName, StringComparison.InvariantCultureIgnoreCase)).ToArray();
-            
+
+            context.Log.Info("FIX: " + context.StagingDirectoryPath);
+            context.Log.Info("FIX: " + context.PackageContentsDirectoryPath);
+
             if (context.StagingDirectoryPath != context.PackageContentsDirectoryPath)
             {
                 var relativePathIndex = context.StagingDirectoryPath.Length;
@@ -83,6 +86,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
                 scripts = scripts.Select(s => Path.Combine(context.PackageContentsDirectoryPath, s.Substring(relativePathIndex))).ToArray();
             }
+
             return scripts;
         }
 
