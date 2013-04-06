@@ -29,7 +29,7 @@ namespace Octopus.Shared.Contracts
             binding.ReliableSession.Ordered = true;
             binding.Security.Mode = SecurityMode.Message;
             binding.Security.Message.ClientCredentialType = MessageCredentialType.Certificate;
-            binding.SendTimeout = TimeSpan.FromSeconds(60);
+            binding.SendTimeout = TimeSpan.FromMinutes(20);
 
             return binding;
         }
