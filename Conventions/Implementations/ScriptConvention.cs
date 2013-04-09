@@ -73,9 +73,6 @@ namespace Octopus.Shared.Conventions.Implementations
             
             scripts = scripts.Where(s => Path.GetFileNameWithoutExtension(s).Equals(scriptName, StringComparison.InvariantCultureIgnoreCase)).ToArray();
 
-            context.Log.Info("FIX: " + context.StagingDirectoryPath);
-            context.Log.Info("FIX: " + context.PackageContentsDirectoryPath);
-
             if (context.StagingDirectoryPath != context.PackageContentsDirectoryPath)
             {
                 var relativePathIndex = context.StagingDirectoryPath.Length;

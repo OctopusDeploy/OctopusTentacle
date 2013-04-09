@@ -139,7 +139,9 @@
     <Compile Include="Configuration\WindowsRegistry.cs" />
     <Compile Include="Contracts\Bindings.cs" />
     <Compile Include="Contracts\DeploymentRequest.cs" />
+    <Compile Include="Contracts\DownloadRequest.cs" />
     <Compile Include="Contracts\HealthResult.cs" />
+    <Compile Include="Packages\IFeed.cs" />
     <Compile Include="Contracts\IHealthService.cs" />
     <Compile Include="Contracts\IJobService.cs" />
     <Compile Include="Contracts\IPackageService.cs" />
@@ -147,6 +149,7 @@
     <Compile Include="Contracts\JobStatus.cs" />
     <Compile Include="Contracts\JobSummary.cs" />
     <Compile Include="Contracts\JobTicket.cs" />
+    <Compile Include="Contracts\NuGetFeedProperties.cs" />
     <Compile Include="Contracts\PackageExistance.cs" />
     <Compile Include="Contracts\PackageMetadata.cs" />
     <Compile Include="Contracts\ScriptRequest.cs" />
@@ -218,8 +221,15 @@
     <Compile Include="Integration\Transforms\TransformationLogger.cs" />
     <Compile Include="Integration\Transforms\TransformationTask.cs" />
     <Compile Include="Integration\Transforms\TransformResult.cs" />
+    <Compile Include="Packages\FastLocalPackageRepository.cs" />
+    <Compile Include="Packages\FeedCredentialsProvider.cs" />
+    <Compile Include="Packages\FixedFilePathResolver.cs" />
     <Compile Include="Packages\IPackageExtractor.cs" />
     <Compile Include="Packages\LightweightPackageExtractor.cs" />
+    <Compile Include="Packages\NuGetExtensions.cs" />
+    <Compile Include="Packages\NuGetModule.cs" />
+    <Compile Include="Packages\OctopusPackageRepositoryFactory.cs" />
+    <Compile Include="Packages\PackageDownloader.cs" />
     <Compile Include="Packages\StoredPackage.cs" />
     <Compile Include="Packages\IPackageStore.cs" />
     <Compile Include="Packages\PackageStoreModule.cs" />

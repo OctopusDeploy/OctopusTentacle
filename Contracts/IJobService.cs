@@ -11,6 +11,9 @@ namespace Octopus.Shared.Contracts
         JobTicket DeployPackage(DeploymentRequest manifest);
 
         [OperationContract]
+        JobTicket DownloadPackage(DownloadRequest request);
+
+        [OperationContract]
         JobTicket RunScript(ScriptRequest request);
 
         [OperationContract]
