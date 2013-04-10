@@ -119,7 +119,7 @@ namespace Octopus.Shared.Packages
         {
             var package = FindPackage(attempt, packageMetadata, feed, log);
 
-            var fullPathToDownloadTo = GetFilePathToDownloadPackageTo(cacheDirectory, feed.Id, package);
+            var fullPathToDownloadTo = GetFilePathToDownloadPackageTo(cacheDirectory, package);
 
             DownloadPackage(package, fullPathToDownloadTo, log);
 
@@ -150,10 +150,10 @@ namespace Octopus.Shared.Packages
             local.AddPackage(package);
         }
 
-        static string GetFilePathToDownloadPackageTo(string cacheDirectory, string feedId, IPackageMetadata package)
+        static string GetFilePathToDownloadPackageTo(string cacheDirectory, IPackageMetadata package)
         {
             var name = package.Id + "." + package.Version + "_" + BitConverter.ToString(Guid.NewGuid().ToByteArray()).Replace("-", string.Empty) + Constants.PackageExtension;
-            return Path.Combine(cacheDirectory, feedId, name);
+            return Path.Combine(cacheDirectory, name);
         }
     }
 }
