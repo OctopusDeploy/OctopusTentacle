@@ -59,6 +59,8 @@ namespace Octopus.Shared.Conventions.Implementations
 
         string ChooseWhichServiceConfigurationFileToUse(IConventionContext context)
         {
+            // TODO: Make this use the existing variable
+
             var configurationFilePath = Path.Combine(context.PackageContentsDirectoryPath, "ServiceConfiguration." + context.Variables.GetValue(SpecialVariables.Environment.Name) + ".cscfg");
             if (!fileSystem.FileExists(configurationFilePath))
             {
