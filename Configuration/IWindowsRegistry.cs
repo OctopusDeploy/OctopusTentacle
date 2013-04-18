@@ -9,6 +9,8 @@ namespace Octopus.Shared.Configuration
     {
         TData Get<TData>(string name, TData defaultValue);
         void Set(string name, object value);
+        void SetSecure(string name, object value);
+        string GetSecure(string name);
         string GetString(string name);
     }
 }

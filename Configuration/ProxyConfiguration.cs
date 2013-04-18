@@ -28,8 +28,8 @@ namespace Octopus.Shared.Configuration
 
         public string CustomProxyPassword
         {
-            get { return registry.Get("Octopus.Proxy.ProxyPassword", string.Empty); }
-            set { registry.Set("Octopus.Proxy.ProxyPassword", value); }
+            get { return registry.GetSecure("Octopus.Proxy.ProxyPassword"); }
+            set { registry.SetSecure("Octopus.Proxy.ProxyPassword", value); }
         }
 
         public void Start()
