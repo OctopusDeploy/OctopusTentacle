@@ -45,6 +45,16 @@ namespace Octopus.Shared.Packages
             return fileSystem.OpenFile(fullPath, FileAccess.Write);
         }
 
+        public string GetPackagesDirectory()
+        {
+            return GetPackageRoot(null);
+        }
+
+        public string GetPackagesDirectory(string prefix)
+        {
+            return GetPackageRoot(prefix);
+        }
+
         public StoredPackage GetPackage(string packageFullPath)
         {
             return ReadPackageFile(packageFullPath);

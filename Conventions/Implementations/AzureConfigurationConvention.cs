@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Azure;
 using Octopus.Shared.Util;
@@ -59,15 +60,46 @@ namespace Octopus.Shared.Conventions.Implementations
 
         string ChooseWhichServiceConfigurationFileToUse(IConventionContext context)
         {
-            var configurationFilePath = Path.Combine(context.PackageContentsDirectoryPath, "ServiceConfiguration." + context.Variables.GetValue(SpecialVariables.Environment.Name) + ".cscfg");
-            if (!fileSystem.FileExists(configurationFilePath))
+            var configurationFilePath = context.Variables.GetValue("OctopusAzureConfigurationFile");
+            if (!string.IsNullOrWhiteSpace(configurationFilePath) && !fileSystem.FileExists(configurationFilePath))
             {
-                configurationFilePath = Path.Combine(context.PackageContentsDirectoryPath, "ServiceConfiguration.Cloud.cscfg");
+                throw new ActivityFailedException("The specified Azure service configuraton file does not exist: " + configurationFilePath);
+            }
+
+            if (string.IsNullOrWhiteSpace(configurationFilePath))
+            {
+                var userSpecifiedFile = context.Variables.GetValue("OctopusAzureConfigurationFileName");
+
+                configurationFilePath = GetFirstExistingFile(
+                    context,
+                    userSpecifiedFile,
+                    "ServiceConfiguration." + context.Variables.GetValue(SpecialVariables.Environment.Name) + ".cscfg",
+                    "ServiceConfiguration.Cloud.cscfg");
             }
 
             context.Variables.Set("OctopusAzureConfigurationFile", configurationFilePath);
 
             return configurationFilePath;
+        }
+
+        string GetFirstExistingFile(IConventionContext context, params string[] fileNames)
+        {
+            foreach (var name in fileNames)
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                    continue;
+
+                var path = Path.Combine(context.PackageContentsDirectoryPath, name);
+                if (fileSystem.FileExists(path))
+                {
+                    context.Log.Debug("Found Azure service configuration file: " + path);
+                    return path;
+                }
+                
+                context.Log.Debug("Azure service configuration file not found: " + path);
+            }
+
+            throw new ActivityFailedException("Could not find an Azure service configuration file in the package.");
         }
 
         static XDocument LoadConfigurationFile(string configurationFilePath)

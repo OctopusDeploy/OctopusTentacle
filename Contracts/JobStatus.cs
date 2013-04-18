@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace Octopus.Shared.Contracts
@@ -6,6 +7,11 @@ namespace Octopus.Shared.Contracts
     [DataContract(Namespace = "http://schemas.octopusdeploy.com/deployment/v1")]
     public class JobStatus
     {
+        public JobStatus()
+        {
+            Results = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+
         [DataMember]
         public JobQueueState State { get; set; }
 
@@ -17,5 +23,8 @@ namespace Octopus.Shared.Contracts
 
         [DataMember]
         public string ErrorMessage { get; set; }
+
+        [DataMember]
+        public Dictionary<string, string> Results { get; set; }
     }
 }

@@ -21,6 +21,8 @@ namespace Octopus.Shared.Packages
                 .As<IPackageExtractor>()
                 .InstancePerDependency();
 
+            builder.RegisterType<PackageDownloader>().As<IPackageDownloader>();
+
             builder.Register(c =>
             {
                 var fileSystem = c.Resolve<IOctopusFileSystem>();
