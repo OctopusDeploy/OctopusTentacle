@@ -33,5 +33,6 @@ namespace Octopus.Shared.Util
         string GetFullPath(string relativeOrAbsoluteFilePath);
         void OverwriteAndDelete(string originalFile, string temporaryReplacement);
         void WriteAllBytes(string filePath, byte[] data);
+        string RemoveInvalidFileNameChars(string path);
     }
 }

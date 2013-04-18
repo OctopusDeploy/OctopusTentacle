@@ -214,6 +214,13 @@ namespace Octopus.Shared.Util
             File.WriteAllBytes(filePath, data);
         }
 
+        public string RemoveInvalidFileNameChars(string path)
+        {
+            var invalidChars = Path.GetInvalidPathChars();
+            path = new string(path.Where(c => !invalidChars.Contains(c)).ToArray());
+            return path;
+        }
+
         public void EnsureDirectoryExists(string directoryPath)
         {
             if (!DirectoryExists(directoryPath))
