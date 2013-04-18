@@ -59,12 +59,14 @@ namespace Octopus.Shared.Conventions.Implementations
 
         string ChooseWhichServiceConfigurationFileToUse(IConventionContext context)
         {
-            // TODO: Make this use the existing variable
-
-            var configurationFilePath = Path.Combine(context.PackageContentsDirectoryPath, "ServiceConfiguration." + context.Variables.GetValue(SpecialVariables.Environment.Name) + ".cscfg");
-            if (!fileSystem.FileExists(configurationFilePath))
+            var configurationFilePath = context.Variables.GetValue("OctopusAzureConfigurationFile");
+            if (string.IsNullOrWhiteSpace(configurationFilePath))
             {
-                configurationFilePath = Path.Combine(context.PackageContentsDirectoryPath, "ServiceConfiguration.Cloud.cscfg");
+                configurationFilePath = Path.Combine(context.PackageContentsDirectoryPath, "ServiceConfiguration." + context.Variables.GetValue(SpecialVariables.Environment.Name) + ".cscfg");
+                if (!fileSystem.FileExists(configurationFilePath))
+                {
+                    configurationFilePath = Path.Combine(context.PackageContentsDirectoryPath, "ServiceConfiguration.Cloud.cscfg");
+                }
             }
 
             context.Variables.Set("OctopusAzureConfigurationFile", configurationFilePath);
