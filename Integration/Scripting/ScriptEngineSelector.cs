@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Octopus.Shared.Configuration;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Scripting.PowerShell;
 using Octopus.Shared.Integration.Scripting.PowerShellLegacy;
@@ -9,6 +10,13 @@ namespace Octopus.Shared.Integration.Scripting
 {
     public class ScriptEngineSelector : IScriptRunner
     {
+        readonly IProxyConfiguration proxyConfiguration;
+
+        public ScriptEngineSelector(IProxyConfiguration proxyConfiguration)
+        {
+            this.proxyConfiguration = proxyConfiguration;
+        }
+
         public string[] GetSupportedExtensions()
         {
             return new[] { "ps1", "csx" };
@@ -20,7 +28,7 @@ namespace Octopus.Shared.Integration.Scripting
             return runner.Execute(arguments);
         }
 
-        static IScriptRunner SelectEngine(ScriptArguments arguments)
+        IScriptRunner SelectEngine(ScriptArguments arguments)
         {
             if (string.Equals(Path.GetExtension(arguments.ScriptFilePath), ".csx", StringComparison.OrdinalIgnoreCase))
             {
@@ -35,8 +43,8 @@ namespace Octopus.Shared.Integration.Scripting
             {
                 return new HostedPowerShellRunner();
             }
-            
-            return new FileBasedPowerShellRunner();
+
+            return new FileBasedPowerShellRunner(proxyConfiguration);
         }
     }
 }

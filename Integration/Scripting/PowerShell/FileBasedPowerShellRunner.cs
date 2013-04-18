@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Octopus.Shared.Configuration;
 using Octopus.Shared.ServiceMessages;
 using Octopus.Shared.Util;
 
@@ -10,6 +11,13 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
 {
     public class FileBasedPowerShellRunner : IScriptRunner
     {
+        readonly IProxyConfiguration proxyConfiguration;
+
+        public FileBasedPowerShellRunner(IProxyConfiguration proxyConfiguration)
+        {
+            this.proxyConfiguration = proxyConfiguration;
+        }
+
         public string[] GetSupportedExtensions()
         {
             return new[] { "ps1" };
@@ -18,7 +26,7 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
         public ScriptExecutionResult Execute(ScriptArguments arguments)
         {
             var bootstrapFile = PrepareBootstrapFile(arguments);
-
+            
             var outputVariables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             try
@@ -56,7 +64,7 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
         }
 
         // We create a temporary file to invoke the PowerShell script with the variables loaded
-        static string PrepareBootstrapFile(ScriptArguments arguments)
+        string PrepareBootstrapFile(ScriptArguments arguments)
         {
             var bootstrapFile = Path.Combine(arguments.WorkingDirectory, "Bootstrap." + Guid.NewGuid() + ".ps1");
             
@@ -72,12 +80,12 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
                 writer.WriteLine("## Functions:");
 
                 writer.WriteLine(EmbeddedFunctions);
-
+                writer.WriteLine();
+                writer.WriteLine(GetProxyConfigurationScript());
                 writer.WriteLine();
 
                 writer.WriteLine("## Invoke:");
                 
-
                 writer.WriteLine(". \"" + arguments.ScriptFilePath + "\"");
                 writer.WriteLine("if ((test-path variable:global:lastexitcode)) { exit $LastExitCode }");
                 writer.Flush();
@@ -144,5 +152,15 @@ function Set-OctopusVariable([string]$name, [string]$value)
 }
 
 $ErrorActionPreference = ""Stop""";
+
+        string GetProxyConfigurationScript()
+        {
+            if (string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyUsername))
+            {
+                return "[System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials";
+            }
+            
+            return "[System.Net.WebRequest]::DefaultWebProxy.Credentials = new-object System.Net.NetworkCredential(" + EncodeValue(proxyConfiguration.CustomProxyUsername) + ", " + EncodeValue(proxyConfiguration.CustomProxyPassword) + ")";
+        }
     }
 }

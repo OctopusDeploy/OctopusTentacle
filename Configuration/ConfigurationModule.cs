@@ -12,6 +12,7 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<WindowsRegistry>().As<IWindowsRegistry>();
             builder.RegisterType<OctopusConfiguration>().As<IOctopusConfiguration>();
             builder.RegisterType<TentacleConfiguration>().As<ITentacleConfiguration>();
+            builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>().As<IStartable>();
         }
     }
 }
