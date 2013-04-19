@@ -29,6 +29,16 @@ namespace Octopus.Shared.Configuration
         string CacheDirectory { get; }
 
         /// <summary>
+        /// Gets a directory where Octopus can store packages for its internal NuGet repository.
+        /// </summary>
+        string PackagesDirectory { get; }
+
+        /// <summary>
+        /// Gets a directory where Octopus can store indexes for its internal NuGet repository.
+        /// </summary>
+        string PackagesIndexDirectory { get; }
+
+        /// <summary>
         /// Gets the port number to use when connecting to the embedded RavenDB server.
         /// </summary>
         int RavenPort { get; }

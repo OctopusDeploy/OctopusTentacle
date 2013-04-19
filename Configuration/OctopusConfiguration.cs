@@ -46,6 +46,28 @@ namespace Octopus.Shared.Configuration
             }
         }
 
+        public string PackagesDirectory
+        {
+            get { return registry.Get("Octopus.Storage.PackagesDirectoryPath", Path.Combine(EmbeddedDatabaseStoragePath, "Packages")); }
+            set { registry.Set("Octopus.Storage.PackagesDirectoryPath", value); }
+        }
+
+        public string PackagesIndexDirectory
+        {
+            get
+            {
+                var path = EmbeddedDatabaseStoragePath;
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                }
+
+                path = Path.Combine(path, "PackageIndex");
+
+                return path;
+            }
+        }
+
         public int RavenPort
         {
             get { return registry.Get("Octopus.Raven.Port", 10930); }
