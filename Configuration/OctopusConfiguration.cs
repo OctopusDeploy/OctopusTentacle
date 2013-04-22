@@ -79,5 +79,23 @@ namespace Octopus.Shared.Configuration
             get { return registry.Get("Octopus.Raven.HostName", "localhost"); }
             set { registry.Set("Octopus.Raven.HostName", value); }
         }
+
+        public string PublicWebPortalAddress
+        {
+            get { return registry.Get("Octopus.Web.PublicWebPortalAddress", string.Empty); }
+            set { registry.Set("Octopus.Web.PublicWebPortalAddress", value); }
+        }
+
+        public string LocalWebPortalAddress
+        {
+            get { return registry.Get("Octopus.Web.LocalWebPortalAddress", string.Empty); }
+            set { registry.Set("Octopus.Web.LocalWebPortalAddress", value); }
+        }
+
+        public bool LocalWebPortalAddressAutoConfigure
+        {
+            get { return registry.Get("Octopus.Web.LocalWebPortalAddressAutoConfigure", true); }
+            set { registry.Set("Octopus.Web.LocalWebPortalAddressAutoConfigure", value); }
+        }
     }
 }

@@ -47,5 +47,20 @@ namespace Octopus.Shared.Configuration
         /// Gets the host name to use when connecting to the embedded RavenDB server.
         /// </summary>
         string RavenHostName { get; }
+
+        /// <summary>
+        /// Gets the web portal address to use to contact the internal NuGet feed.
+        /// </summary>
+        string PublicWebPortalAddress { get; set; }
+
+        /// <summary>
+        /// Gets the web portal address to use to contact the internal NuGet feed from the Octopus server.
+        /// </summary>
+        string LocalWebPortalAddress { get; set; }
+
+        /// <summary>
+        /// Gets where the local address should be automatically configured.
+        /// </summary>
+        bool LocalWebPortalAddressAutoConfigure { get; set; }
     }
 }
