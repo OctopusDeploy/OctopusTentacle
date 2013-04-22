@@ -31,7 +31,7 @@ namespace Octopus.Shared.Configuration
         /// <summary>
         /// Gets a directory where Octopus can store packages for its internal NuGet repository.
         /// </summary>
-        string PackagesDirectory { get; }
+        string PackagesDirectory { get; set; }
 
         /// <summary>
         /// Gets a directory where Octopus can store indexes for its internal NuGet repository.

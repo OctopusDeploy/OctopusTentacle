@@ -48,7 +48,7 @@ namespace Octopus.Shared.Configuration
 
         public string PackagesDirectory
         {
-            get { return registry.Get("Octopus.Storage.PackagesDirectoryPath", Path.Combine(EmbeddedDatabaseStoragePath, "Packages")); }
+            get { return registry.GetString("Octopus.Storage.PackagesDirectoryPath"); }
             set { registry.Set("Octopus.Storage.PackagesDirectoryPath", value); }
         }
 

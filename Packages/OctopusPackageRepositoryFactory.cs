@@ -1,6 +1,8 @@
 using System;
 using System.Net;
+using EnterpriseDT.Google.GData.Client;
 using NuGet;
+using Octopus.Shared.Configuration;
 using log4net;
 
 namespace Octopus.Shared.Packages
@@ -8,12 +10,14 @@ namespace Octopus.Shared.Packages
     public class OctopusPackageRepositoryFactory : IPackageRepositoryFactory
     {
         readonly ILog log;
+        readonly IOctopusConfiguration configuration;
         readonly Func<Uri, IHttpClient> httpClientFactory;
 
-        public OctopusPackageRepositoryFactory(ILog log)
+        public OctopusPackageRepositoryFactory(ILog log, IOctopusConfiguration configuration)
         {
             this.log = log;
-            
+            this.configuration = configuration;
+
             httpClientFactory = uri =>
             {
                 var http = new RedirectedHttpClient(uri);
@@ -34,6 +38,12 @@ namespace Octopus.Shared.Packages
         {
             if (packageSource == null)
                 throw new ArgumentNullException("packageSource");
+
+            if (packageSource == "{IntegratedNuGetServer}")
+            {
+                packageSource = new Uri(new Uri(configuration.LocalWebPortalAddress), "/nuget").ToString();
+                log.Debug("Using integrated NuGet feed: " + packageSource);
+            }
 
             var uri = new Uri(packageSource);
             if (uri.IsFile)

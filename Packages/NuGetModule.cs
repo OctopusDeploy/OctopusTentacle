@@ -1,6 +1,7 @@
 using System;
 using Autofac;
 using NuGet;
+using Octopus.Shared.Configuration;
 using log4net;
 
 namespace Octopus.Shared.Packages
@@ -16,7 +17,7 @@ namespace Octopus.Shared.Packages
             builder.Register(c =>
             {
                 MachineCache.Default.Clear();
-                return new OctopusPackageRepositoryFactory(c.Resolve<ILog>());
+                return new OctopusPackageRepositoryFactory(c.Resolve<ILog>(), c.Resolve<IOctopusConfiguration>());
             }).As<IPackageRepositoryFactory>();
         }
     }
