@@ -1,5 +1,6 @@
 using System;
 using Autofac;
+using Autofac.Integration.Mef;
 
 namespace Octopus.Shared.Startup
 {
@@ -9,6 +10,7 @@ namespace Octopus.Shared.Startup
         {
             base.Load(builder);
 
+            builder.RegisterMetadataRegistrationSources();
             builder.RegisterCommand<HelpCommand>("help", "Prints this help text", "h", "?");
             builder.RegisterType<CommandProcessor>().As<ICommandProcessor>();
             builder.RegisterType<CommandLocator>().As<ICommandLocator>();

@@ -41,7 +41,7 @@ namespace Octopus.Shared.Packages
 
             if (packageSource == "{IntegratedNuGetServer}")
             {
-                packageSource = new Uri(new Uri(configuration.LocalWebPortalAddress), "/nuget").ToString();
+                packageSource = new Uri(new Uri(configuration.LocalWebPortalAddress), "/api/odata").ToString();
                 log.Debug("Using integrated NuGet feed: " + packageSource);
             }
 
