@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Web;
+using Octopus.Client.Model;
 
 namespace Octopus.Shared.Web
 {
@@ -560,7 +561,7 @@ namespace Octopus.Shared.Web
                 /// <summary>
                 /// Returns a URI like: /events/listevents?documentids=System.String%5B%5D&amp;scope=Application&amp;excludedeployments=False
                 /// </summary>
-                public static string ListEvents(System.String[] documentIds, Octopus.Shared.Web.EventScope scope = Octopus.Shared.Web.EventScope.Application, bool excludeDeployments = false)
+                public static string ListEvents(System.String[] documentIds, EventScope scope = EventScope.Application, bool excludeDeployments = false)
                 {
                     return Format("/events/listevents/{id}", new object[] { }, new Dictionary<string, object>() { { "documentIds", documentIds }, { "scope", scope }, { "excludeDeployments", excludeDeployments } });
                 }
