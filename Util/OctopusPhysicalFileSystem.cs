@@ -295,7 +295,7 @@ namespace Octopus.Shared.Util
             required = Math.Max(required, 500L * 1024 * 1024);
             if (totalNumberOfFreeBytes < required)
             {
-                throw new IOException(string.Format("The drive containing the directory '{0}' does not have enough free disk space available for this operation to proceed. The disk only has {1} available; please free up at least {2}.", directoryPath, totalNumberOfFreeBytes.ToFileSizeString(), required.ToFileSizeString()));
+                throw new IOException(string.Format("The drive containing the directory '{0}' on machine '{1}' does not have enough free disk space available for this operation to proceed. The disk only has {2} available; please free up at least {3}.", directoryPath, Environment.MachineName, totalNumberOfFreeBytes.ToFileSizeString(), required.ToFileSizeString()));
             }
         }
 
