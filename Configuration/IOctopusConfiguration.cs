@@ -67,5 +67,7 @@ namespace Octopus.Shared.Configuration
         /// Special API key that can be used by the Octopus server when querying the integrated package repository.
         /// </summary>
         string IntegratedFeedApiKey { get; }
+
+        void EnsureIntegratedFeedApiKey();
     }
 }

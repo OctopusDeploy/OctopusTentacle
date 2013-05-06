@@ -11,28 +11,11 @@ namespace Octopus.Shared.Packages
     {
         readonly ILog log;
         readonly IOctopusConfiguration configuration;
-        readonly Func<Uri, IHttpClient> httpClientFactory;
-
+        
         public OctopusPackageRepositoryFactory(ILog log, IOctopusConfiguration configuration)
         {
             this.log = log;
             this.configuration = configuration;
-
-            httpClientFactory = uri =>
-            {
-                var http = new RedirectedHttpClient(uri);
-                http.SendingRequest += (sender, args) =>
-                {
-                    args.Request.Headers.Add("X-Octopus-NuGetApiKey", configuration.IntegratedFeedApiKey);
-                    args.Request.Timeout = 1000*60*10;
-                    var httpWebRequest = args.Request as HttpWebRequest;
-                    if (httpWebRequest != null)
-                    {
-                        httpWebRequest.ReadWriteTimeout = 1000*60*10;
-                    }
-                };
-                return http;
-            };
         }
 
         public IPackageRepository CreateRepository(string packageSource)
@@ -40,7 +23,8 @@ namespace Octopus.Shared.Packages
             if (packageSource == null)
                 throw new ArgumentNullException("packageSource");
 
-            if (packageSource == "{IntegratedNuGetServer}")
+            bool isIntegrated = packageSource == "{IntegratedNuGetServer}";
+            if (isIntegrated)
             {
                 packageSource = new Uri(new Uri(configuration.LocalWebPortalAddress), "/api/odata").ToString();
                 log.Debug("Using integrated NuGet feed: " + packageSource);
@@ -49,8 +33,32 @@ namespace Octopus.Shared.Packages
             var uri = new Uri(packageSource);
             if (uri.IsFile)
                 return new FastLocalPackageRepository(uri.LocalPath, log);
-            
-            return new DataServicePackageRepository(httpClientFactory(uri));
+
+            var downloader = new NuGet.PackageDownloader();
+            downloader.SendingRequest += ((sender, args) => CustomizeRequest(args.Request, isIntegrated));
+            return new DataServicePackageRepository(CreateHttpClient(uri, isIntegrated), downloader);
+        }
+
+        RedirectedHttpClient CreateHttpClient(Uri uri, bool addApiKeyHeader)
+        {
+            var http = new RedirectedHttpClient(uri);
+            http.SendingRequest += (sender, args) => CustomizeRequest(args.Request, addApiKeyHeader);
+            return http;
+        }
+
+        void CustomizeRequest(WebRequest request, bool addApiKeyHeader)
+        {
+            if (addApiKeyHeader)
+            {
+                request.Headers.Add("X-Octopus-NuGetApiKey", configuration.IntegratedFeedApiKey);
+            }
+
+            request.Timeout = 1000 * 60 * 10;
+            var httpWebRequest = request as HttpWebRequest;
+            if (httpWebRequest != null)
+            {
+                httpWebRequest.ReadWriteTimeout = 1000 * 60 * 10;
+            }
         }
     }
 }

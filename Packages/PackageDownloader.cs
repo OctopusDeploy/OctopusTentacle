@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using NuGet;
 using Octopus.Shared.Activities;
@@ -121,7 +122,7 @@ namespace Octopus.Shared.Packages
 
             var fullPathToDownloadTo = GetFilePathToDownloadPackageTo(cacheDirectory, package);
 
-            DownloadPackage(package, fullPathToDownloadTo, log);
+            DownloadPackage(package, feed, fullPathToDownloadTo, log);
 
             path = fullPathToDownloadTo;
             downloadedPackage = new ZipPackage(fullPathToDownloadTo);
@@ -140,7 +141,7 @@ namespace Octopus.Shared.Packages
             return package;
         }
 
-        static void DownloadPackage(IPackage package, string fullPathToDownloadTo, IActivityLog log)
+        static void DownloadPackage(IPackage package, IFeed feed, string fullPathToDownloadTo, IActivityLog log)
         {
             log.DebugFormat("Found package {0} version {1}", package.Id, package.Version);
             log.Debug("Downloading to: " + fullPathToDownloadTo);

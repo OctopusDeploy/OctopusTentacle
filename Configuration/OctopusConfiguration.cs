@@ -105,13 +105,19 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
+                EnsureIntegratedFeedApiKey();
                 var key = registry.Get("Octopus.NuGet.IntegratedApiKey", "");
-                if (string.IsNullOrWhiteSpace(key))
-                {
-                    key = GenerateApiKey();
-                    registry.Set("Octopus.NuGet.IntegratedApiKey", key);
-                }
                 return key;
+            }
+        }
+
+        public void EnsureIntegratedFeedApiKey()
+        {
+            var key = registry.Get("Octopus.NuGet.IntegratedApiKey", "");
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                key = GenerateApiKey();
+                registry.Set("Octopus.NuGet.IntegratedApiKey", key);
             }
         }
 
