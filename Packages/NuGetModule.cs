@@ -17,7 +17,7 @@ namespace Octopus.Shared.Packages
             builder.Register(c =>
             {
                 MachineCache.Default.Clear();
-                return new OctopusPackageRepositoryFactory(c.Resolve<ILog>(), c.Resolve<IOctopusConfiguration>());
+                return new OctopusPackageRepositoryFactory(c.Resolve<ILog>());
             }).As<IPackageRepositoryFactory>();
         }
     }

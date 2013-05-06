@@ -29,11 +29,6 @@ namespace Octopus.Shared.Configuration
         string CacheDirectory { get; }
 
         /// <summary>
-        /// Gets a directory where Octopus can store packages for its internal NuGet repository.
-        /// </summary>
-        string PackagesDirectory { get; set; }
-
-        /// <summary>
         /// Gets a directory where Octopus can store indexes for its internal NuGet repository.
         /// </summary>
         string PackagesIndexDirectory { get; }
@@ -47,27 +42,5 @@ namespace Octopus.Shared.Configuration
         /// Gets the host name to use when connecting to the embedded RavenDB server.
         /// </summary>
         string RavenHostName { get; }
-
-        /// <summary>
-        /// Gets the web portal address to use to contact the internal NuGet feed.
-        /// </summary>
-        string PublicWebPortalAddress { get; set; }
-
-        /// <summary>
-        /// Gets the web portal address to use to contact the internal NuGet feed from the Octopus server.
-        /// </summary>
-        string LocalWebPortalAddress { get; set; }
-
-        /// <summary>
-        /// Gets where the local address should be automatically configured.
-        /// </summary>
-        bool LocalWebPortalAddressAutoConfigure { get; set; }
-
-        /// <summary>
-        /// Special API key that can be used by the Octopus server when querying the integrated package repository.
-        /// </summary>
-        string IntegratedFeedApiKey { get; }
-
-        void EnsureIntegratedFeedApiKey();
     }
 }

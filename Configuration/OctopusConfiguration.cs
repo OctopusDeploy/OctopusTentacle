@@ -49,12 +49,6 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-        public string PackagesDirectory
-        {
-            get { return registry.GetString("Octopus.Storage.PackagesDirectoryPath"); }
-            set { registry.Set("Octopus.Storage.PackagesDirectoryPath", value); }
-        }
-
         public string PackagesIndexDirectory
         {
             get
