@@ -1,5 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Octopus.Shared.Configuration
 {
@@ -96,6 +99,27 @@ namespace Octopus.Shared.Configuration
         {
             get { return registry.Get("Octopus.Web.LocalWebPortalAddressAutoConfigure", true); }
             set { registry.Set("Octopus.Web.LocalWebPortalAddressAutoConfigure", value); }
+        }
+
+        public string IntegratedFeedApiKey
+        {
+            get
+            {
+                var key = registry.Get("Octopus.NuGet.IntegratedApiKey", "");
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    key = GenerateApiKey();
+                    registry.Set("Octopus.NuGet.IntegratedApiKey", key);
+                }
+                return key;
+            }
+        }
+
+        string GenerateApiKey()
+        {
+            var key = Guid.NewGuid().ToString();
+            var hash = new SHA1Managed().ComputeHash(Encoding.Default.GetBytes(key));
+            return new string(Convert.ToBase64String(hash).Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
         }
     }
 }

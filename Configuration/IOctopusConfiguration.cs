@@ -62,5 +62,10 @@ namespace Octopus.Shared.Configuration
         /// Gets where the local address should be automatically configured.
         /// </summary>
         bool LocalWebPortalAddressAutoConfigure { get; set; }
+
+        /// <summary>
+        /// Special API key that can be used by the Octopus server when querying the integrated package repository.
+        /// </summary>
+        string IntegratedFeedApiKey { get; }
     }
 }

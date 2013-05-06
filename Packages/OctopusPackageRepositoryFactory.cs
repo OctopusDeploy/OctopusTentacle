@@ -23,6 +23,7 @@ namespace Octopus.Shared.Packages
                 var http = new RedirectedHttpClient(uri);
                 http.SendingRequest += (sender, args) =>
                 {
+                    args.Request.Headers.Add("X-Octopus-NuGetApiKey", configuration.IntegratedFeedApiKey);
                     args.Request.Timeout = 1000*60*10;
                     var httpWebRequest = args.Request as HttpWebRequest;
                     if (httpWebRequest != null)
