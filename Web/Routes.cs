@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Web;
+using Octopus.Client.Model;
 
 namespace Octopus.Shared.Web
 {
@@ -13,20 +14,23 @@ namespace Octopus.Shared.Web
             var builder = new StringBuilder();
             builder.AppendFormat(format, routeParameters.Select(p => (object) HttpUtility.UrlEncode((p ?? string.Empty).ToString())).ToArray());
 
-            if (queryString != null && queryString.Count > 0)
+            if (queryString != null && queryString.Any(c => c.Value != null))
             {
                 builder.Append("?");
 
                 var first = true;
                 foreach (var pair in queryString)
                 {
+                    if (pair.Value == null)
+                        continue;
+
                     if (!first)
                     {
                         builder.Append("&");
                     }
 
                     first = false;
-                    var value = (pair.Value ?? string.Empty).ToString();
+                    var value = (pair.Value).ToString();
                     value = HttpUtility.UrlEncode(value);
 
                     builder.Append(pair.Key).Append('=').Append(value);
@@ -74,7 +78,7 @@ namespace Octopus.Shared.Web
                 /// <summary>
                 /// Returns a URI like: /api/environments?area=api&amp;skip=0&amp;take=0
                 /// </summary>
-                public static string Index(int skip = 0, int take = 1000)
+                public static string Index(int? skip = null, int? take = null)
                 {
                     return Format("/api/environments", new object[] { }, new Dictionary<string, object>() { { "skip", skip }, { "take", take } });
                 }
@@ -150,7 +154,7 @@ namespace Octopus.Shared.Web
                 /// <summary>
                 /// Returns a URI like: /api/machines?area=api&amp;skip=0&amp;take=0
                 /// </summary>
-                public static string Index(int skip = 0, int take = 128)
+                public static string Index(int? skip = null, int? take = null)
                 {
                     return Format("/api/machines", new object[] { }, new Dictionary<string, object>() { { "skip", skip }, { "take", take } });
                 }
@@ -243,11 +247,11 @@ namespace Octopus.Shared.Web
             public static class Projects
             {
                 /// <summary>
-                /// Returns a URI like: /projects?area=api
+                /// Returns a URI like: /api/projects
                 /// </summary>
                 public static string Index()
                 {
-                    return Format("/projects", new object[] { }, new Dictionary<string, object>() { });
+                    return Format("/api/projects", new object[] { }, new Dictionary<string, object>() { });
                 }
 
                 /// <summary>
@@ -302,7 +306,7 @@ namespace Octopus.Shared.Web
                 /// <summary>
                 /// Returns a URI like: /api/tasks?area=api&amp;skip=0&amp;take=0
                 /// </summary>
-                public static string Index(int skip = 0, int take = 20)
+                public static string Index(int? skip = null, int? take = null)
                 {
                     return Format("/api/tasks", new object[] { }, new Dictionary<string, object>() { { "skip", skip }, { "take", take } });
                 }
@@ -560,7 +564,7 @@ namespace Octopus.Shared.Web
                 /// <summary>
                 /// Returns a URI like: /events/listevents?documentids=System.String%5B%5D&amp;scope=Application&amp;excludedeployments=False
                 /// </summary>
-                public static string ListEvents(System.String[] documentIds, Octopus.Shared.Web.EventScope scope = Octopus.Shared.Web.EventScope.Application, bool excludeDeployments = false)
+                public static string ListEvents(System.String[] documentIds, EventScope scope = EventScope.Application, bool excludeDeployments = false)
                 {
                     return Format("/events/listevents/{id}", new object[] { }, new Dictionary<string, object>() { { "documentIds", documentIds }, { "scope", scope }, { "excludeDeployments", excludeDeployments } });
                 }
