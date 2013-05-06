@@ -12,6 +12,8 @@
     <AssemblyName>Octopus.Shared</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -42,9 +44,8 @@
     <Reference Include="Autofac.Integration.Mef">
       <HintPath>..\packages\Autofac.Mef.3.0.1\lib\net40\Autofac.Integration.Mef.dll</HintPath>
     </Reference>
-    <Reference Include="edtFTPnetPRO, Version=8.4.0.20, Culture=neutral, PublicKeyToken=0dce1ad63760d80b, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\edtFTPnetPRO\edtFTPnetPRO.dll</HintPath>
+    <Reference Include="edtFTPnetPRO">
+      <HintPath>..\packages\edtFTPnet-PRO.8.4.0\lib\edtFTPnetPRO.dll</HintPath>
     </Reference>
     <Reference Include="log4net">
       <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
@@ -56,19 +57,19 @@
     <Reference Include="Microsoft.Web.Administration, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Web.Publishing.Tasks, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Transforms\Microsoft.Web.Publishing.Tasks.Dll</HintPath>
+      <HintPath>..\packages\Octopus.Dependencies.Transforms.1.0.2\lib\Microsoft.Web.Publishing.Tasks.Dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.WindowsAzure.Management, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Azure\Microsoft.WindowsAzure.Management.dll</HintPath>
+      <HintPath>..\packages\Octopus.Dependencies.AzureCmdlets.1.0.2\lib\Microsoft.WindowsAzure.Management.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.WindowsAzure.ServiceManagement.Client, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Azure\Microsoft.WindowsAzure.ServiceManagement.Client.dll</HintPath>
+      <HintPath>..\packages\Octopus.Dependencies.AzureCmdlets.1.0.2\lib\Microsoft.WindowsAzure.ServiceManagement.Client.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.WindowsAzure.StorageClient, Version=1.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Azure\Microsoft.WindowsAzure.StorageClient.dll</HintPath>
+      <HintPath>..\packages\Octopus.Dependencies.AzureCmdlets.1.0.2\lib\Microsoft.WindowsAzure.StorageClient.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -88,10 +89,7 @@
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.Management" />
-    <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\PowerShell\System.Management.Automation.dll</HintPath>
-    </Reference>
+    <Reference Include="System.Management.Automation" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceModel.Web" />
@@ -326,6 +324,7 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
