@@ -9,7 +9,7 @@ namespace Octopus.Shared.Packages
         public static IPackageRepository CreateRepository(this IPackageRepositoryFactory packageRepositoryFactory, string packageSource, ICredentials credentials)
         {
             Uri uri;
-            if (!packageSource.StartsWith("{") && !Uri.TryCreate(packageSource, UriKind.RelativeOrAbsolute, out uri))
+            if (Uri.TryCreate(packageSource, UriKind.RelativeOrAbsolute, out uri))
             {
                 FeedCredentialsProvider.Instance.SetCredentials(uri, credentials);
             }
