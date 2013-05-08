@@ -312,7 +312,7 @@
     <Compile Include="Util\Guard.cs" />
     <Compile Include="Util\NumericExtensions.cs" />
     <Compile Include="Util\Uniquifier.cs" />
-    <Compile Include="Web\Routes.cs" />
+    <Compile Include="Web\WebRoutes.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

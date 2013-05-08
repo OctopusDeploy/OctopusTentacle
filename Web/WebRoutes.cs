@@ -7,7 +7,7 @@ using Octopus.Client.Model;
 
 namespace Octopus.Shared.Web
 {
-    public static class Routes
+    public static class WebRoutes
     {
         static string Format(string format, IEnumerable<object> routeParameters, Dictionary<string, object> queryString)
         {
@@ -40,10 +40,6 @@ namespace Octopus.Shared.Web
             return builder.ToString();
         }
 
-        // CODE BELOW THIS POINT IS GENERATED. 
-        // To update it, run the unit test RouteGeneration.GenerateRoutes, and then copy the trace output from the test below this point:
-
-        #region Generated
         public static class Api
         {
             public static class Deployments
@@ -145,7 +141,7 @@ namespace Octopus.Shared.Web
                 /// </summary>
                 public static string Index()
                 {
-                    return Format("/api/home", new object[] { }, new Dictionary<string, object>() { });
+                    return Format("/api", new object[] { }, new Dictionary<string, object>() { });
                 }
 
             }
@@ -203,9 +199,9 @@ namespace Octopus.Shared.Web
                 /// <summary>
                 /// Returns a URI like: /api/projectgroups?area=api&amp;skip=0&amp;take=0
                 /// </summary>
-                public static string Index(int skip = 0, int take = 1000)
+                public static string Index()
                 {
-                    return Format("/api/projectgroups", new object[] { }, new Dictionary<string, object>() { { "skip", skip }, { "take", take } });
+                    return Format("/api/projectgroups", new object[] { }, new Dictionary<string, object>());
                 }
 
                 /// <summary>
@@ -806,15 +802,7 @@ namespace Octopus.Shared.Web
                 /// </summary>
                 public static string Index()
                 {
-                    return Format("/dashboard/index/{id}", new object[] { }, new Dictionary<string, object>() { });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /dashboard/releasematrix
-                /// </summary>
-                public static string ReleaseMatrix()
-                {
-                    return Format("/dashboard/releasematrix/{id}", new object[] { }, new Dictionary<string, object>() { });
+                    return Format("/", new object[] { }, new Dictionary<string, object>() { });
                 }
 
                 /// <summary>
@@ -824,7 +812,6 @@ namespace Octopus.Shared.Web
                 {
                     return Format("/dashboard/licenserequired/{id}", new object[] { }, new Dictionary<string, object>() { });
                 }
-
             }
             public static class Environments
             {
@@ -943,7 +930,5 @@ namespace Octopus.Shared.Web
 
             }
         }
-
-        #endregion
     }
 }
