@@ -767,7 +767,7 @@ namespace Octopus.Shared.Web
                 /// </summary>
                 public static string Login(string returnUrl = null)
                 {
-                    return Format("/accounts/login/{id}", new object[] { }, new Dictionary<string, object>() { { "returnUrl", returnUrl } });
+                    return Format("/accounts/login", new object[] { }, new Dictionary<string, object>() { { "returnUrl", returnUrl } });
                 }
 
                 /// <summary>
@@ -775,7 +775,7 @@ namespace Octopus.Shared.Web
                 /// </summary>
                 public static string Logout()
                 {
-                    return Format("/accounts/logout/{id}", new object[] { }, new Dictionary<string, object>() { });
+                    return Format("/accounts/logout", new object[] { }, new Dictionary<string, object>() { });
                 }
 
                 /// <summary>
@@ -783,7 +783,7 @@ namespace Octopus.Shared.Web
                 /// </summary>
                 public static string Register(string inviteCode)
                 {
-                    return Format("/accounts/register/{id}", new object[] { }, new Dictionary<string, object>() { { "inviteCode", inviteCode } });
+                    return Format("/accounts/register", new object[] { }, new Dictionary<string, object>() { { "inviteCode", inviteCode } });
                 }
 
                 /// <summary>
