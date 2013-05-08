@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Octopus.Shared.Util;
 
-namespace Octopus.Portal.Models.Shared
+namespace Octopus.Shared.Util
 {
     public class SlugGenerator
     {

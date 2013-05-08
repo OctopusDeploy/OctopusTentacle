@@ -74,9 +74,9 @@ namespace Octopus.Shared.Web
                 /// <summary>
                 /// Returns a URI like: /api/environments?area=api&amp;skip=0&amp;take=0
                 /// </summary>
-                public static string Index(int? skip = null, int? take = null)
+                public static string Index(int? skip = null, int? take = null, bool? nonStale = null)
                 {
-                    return Format("/api/environments", new object[] { }, new Dictionary<string, object>() { { "skip", skip }, { "take", take } });
+                    return Format("/api/environments", new object[] { }, new Dictionary<string, object>() { { "skip", skip }, { "take", take }, { "nonStale", nonStale } });
                 }
 
                 /// <summary>
