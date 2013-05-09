@@ -71,30 +71,9 @@ namespace Octopus.Shared.Web
             }
             public static class Environments
             {
-                /// <summary>
-                /// Returns a URI like: /api/environments?area=api&amp;skip=0&amp;take=0
-                /// </summary>
-                public static string Index(int? skip = null, int? take = null, bool? nonStale = null)
-                {
-                    return Format("/api/environments", new object[] { }, new Dictionary<string, object>() { { "skip", skip }, { "take", take }, { "nonStale", nonStale } });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/environments/Foo?area=api
-                /// </summary>
-                public static string Get(string id)
-                {
-                    return Format("/api/environments/{0}", new object[] { id }, new Dictionary<string, object>() { });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/environments/Foo/machines?area=api
-                /// </summary>
-                public static string Machines(string id)
-                {
-                    return Format("/api/environments/{0}/machines", new object[] { id }, new Dictionary<string, object>() { });
-                }
-
+                public static string Index = "/api/environments{?nonStale,skip}";
+                public static string Get = "/api/environments/{id}";
+                public static string Machines = "/api/environments/{id}/machines";
             }
             public static class Feeds
             {
