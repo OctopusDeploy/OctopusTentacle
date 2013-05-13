@@ -6,13 +6,19 @@ using System.Text;
 
 namespace Octopus.Shared.Configuration
 {
-    public class OctopusConfiguration : IOctopusConfiguration
+    public class RegistryOctopusConfiguration : IOctopusConfiguration
     {
         readonly IWindowsRegistry registry;
 
-        public OctopusConfiguration(IWindowsRegistry registry)
+        public RegistryOctopusConfiguration(IWindowsRegistry registry)
         {
             this.registry = registry;
+        }
+
+        public bool BackupsEnabledByDefault
+        {
+            get { return registry.Get("Octopus.Storage.BackupsEnabledByDefault", true); }
+            set { registry.Set("Octopus.Storage.BackupsEnabledByDefault", value); }
         }
 
         public string EmbeddedDatabaseStoragePath
@@ -76,6 +82,8 @@ namespace Octopus.Shared.Configuration
             get { return registry.Get("Octopus.Raven.HostName", "localhost"); }
             set { registry.Set("Octopus.Raven.HostName", value); }
         }
+        
+        public string RavenConnectionString { get { return string.Format("Url = http://{0}:{1}/", RavenHostName, RavenPort); } }
 
         public string PublicWebPortalAddress
         {

@@ -3,19 +3,16 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Shared.Security;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
-    public class TentacleConfiguration : ITentacleConfiguration
+    public class RegistryTentacleConfiguration : ITentacleConfiguration
     {
         readonly IWindowsRegistry registry;
-        readonly IOctopusFileSystem fileSystem;
 
-        public TentacleConfiguration(IWindowsRegistry registry, IOctopusFileSystem fileSystem)
+        public RegistryTentacleConfiguration(IWindowsRegistry registry)
         {
             this.registry = registry;
-            this.fileSystem = fileSystem;
         }
 
         public string[] TrustedOctopusThumbprints

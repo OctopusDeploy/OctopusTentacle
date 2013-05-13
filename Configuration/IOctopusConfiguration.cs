@@ -8,6 +8,11 @@ namespace Octopus.Shared.Configuration
     public interface IOctopusConfiguration
     {
         /// <summary>
+        /// Gets or sets whether Octopus should set up a default backup policy.
+        /// </summary>
+        bool BackupsEnabledByDefault { get; set; }
+
+        /// <summary>
         /// Gets or sets where Octopus should store the RavenDB data on the Octopus server.
         /// </summary>
         string EmbeddedDatabaseStoragePath { get; set; }
@@ -42,5 +47,10 @@ namespace Octopus.Shared.Configuration
         /// Gets the host name to use when connecting to the embedded RavenDB server.
         /// </summary>
         string RavenHostName { get; }
+
+        /// <summary>
+        /// Gets or sets the Raven database connection string.
+        /// </summary>
+        string RavenConnectionString { get; }
     }
 }
