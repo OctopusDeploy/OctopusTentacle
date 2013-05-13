@@ -16,6 +16,7 @@
         public static readonly string ExternalToolOctoTools = "https://github.com/OctopusDeploy/Octopus-Tools";
         public static readonly string HelpGeneral = "http://help.octopusdeploy.com";
         public static readonly string HelpReportAProblem = "http://help.octopusdeploy.com/discussions/problems";
+        public static readonly string HelpReportAProblemNewTopic = "http://help.octopusdeploy.com/discussions/problems#new_topic_form";
         public static readonly string HelpAskQuestion = "http://help.octopusdeploy.com/discussions/questions";
         public static readonly string HelpMakeSuggestion = "http://help.octopusdeploy.com/discussions/suggestions";
         public static readonly string WhatIsMarkdown = "http://en.wikipedia.org/wiki/Markdown";
