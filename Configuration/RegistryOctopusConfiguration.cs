@@ -85,6 +85,18 @@ namespace Octopus.Shared.Configuration
         
         public string RavenConnectionString { get { return string.Format("Url = http://{0}:{1}/", RavenHostName, RavenPort); } }
 
+        public bool SelfHostWebPortal
+        {
+            get { return registry.Get("Octopus.Portal.Enabled", true); }
+            set { registry.Set("Octopus.Portal.Enabled", value); }
+        }
+        
+        public int SelfHostWebPortalPort
+        {
+            get { return registry.Get("Octopus.Portal.Port", 8050); }
+            set { registry.Set("Octopus.Portal.Port", value); }
+        }
+
         public string PublicWebPortalAddress
         {
             get { return registry.Get("Octopus.Web.PublicWebPortalAddress", string.Empty); }

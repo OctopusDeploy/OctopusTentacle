@@ -52,5 +52,15 @@ namespace Octopus.Shared.Configuration
         /// Gets or sets the Raven database connection string.
         /// </summary>
         string RavenConnectionString { get; }
+
+        /// <summary>
+        /// Gets or sets whether the self host option is enabled.
+        /// </summary>
+        bool SelfHostWebPortal { get; set; }
+
+        /// <summary>
+        /// Gets or sets the port number that the self host server listens on.
+        /// </summary>
+        int SelfHostWebPortalPort { get; set; }
     }
 }
