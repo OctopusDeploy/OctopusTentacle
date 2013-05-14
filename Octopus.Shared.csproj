@@ -90,6 +90,7 @@
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.Management" />
     <Reference Include="System.Management.Automation" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceModel.Web" />
@@ -132,6 +133,7 @@
     <Compile Include="Activities\IActivity.cs" />
     <Compile Include="Activities\IActivityRuntime.cs" />
     <Compile Include="Activities\NullActivityLog.cs" />
+    <Compile Include="Caching\ICache.cs" />
     <Compile Include="Configuration\ConfigurationModule.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
     <Compile Include="Configuration\RegistryOctopusConfiguration.cs" />
