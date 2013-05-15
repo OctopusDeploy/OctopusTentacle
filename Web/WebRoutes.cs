@@ -175,13 +175,7 @@ namespace Octopus.Shared.Web
             }
             public static class ProjectGroups
             {
-                /// <summary>
-                /// Returns a URI like: /api/projectgroups?area=api&amp;skip=0&amp;take=0
-                /// </summary>
-                public static string Index()
-                {
-                    return Format("/api/projectgroups", new object[] { }, new Dictionary<string, object>());
-                }
+                public static string Index = "/api/projectgroups{?nonStale,skip}";
 
                 /// <summary>
                 /// Returns a URI like: /api/projectgroups/Foo?area=api
