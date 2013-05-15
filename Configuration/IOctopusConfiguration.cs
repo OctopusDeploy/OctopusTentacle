@@ -62,5 +62,16 @@ namespace Octopus.Shared.Configuration
         /// Gets or sets the port number that the self host server listens on.
         /// </summary>
         int SelfHostWebPortalPort { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether domain authentication is used.
+        /// </summary>
+        AuthenticationMode AuthenticationMode { get; set; }
+    }
+
+    public enum AuthenticationMode
+    {
+        UsernamePassword,
+        Domain
     }
 }

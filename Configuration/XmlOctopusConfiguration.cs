@@ -18,6 +18,7 @@ namespace Octopus.Shared.Configuration
         public string RavenConnectionString { get; set; }
         public bool SelfHostWebPortal { get; set; }
         public int SelfHostWebPortalPort { get; set; }
+        public AuthenticationMode AuthenticationMode { get; set; }
 
         public static XmlOctopusConfiguration LoadFrom(string file)
         {

@@ -97,6 +97,12 @@ namespace Octopus.Shared.Configuration
             set { registry.Set("Octopus.Portal.Port", value); }
         }
 
+        public AuthenticationMode AuthenticationMode
+        {
+            get { return registry.Get("Octopus.Web.AuthenticationMode", AuthenticationMode.UsernamePassword); }
+            set { registry.Set("Octopus.Web.AuthenticationMode", value); }
+        }
+
         public string PublicWebPortalAddress
         {
             get { return registry.Get("Octopus.Web.PublicWebPortalAddress", string.Empty); }
