@@ -75,6 +75,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "/api/environments/{id}";
                 public static string Machines = "/api/environments/{id}/machines";
             }
+
             public static class Feeds
             {
                 /// <summary>
