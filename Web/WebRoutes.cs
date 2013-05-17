@@ -73,7 +73,7 @@ namespace Octopus.Shared.Web
             {
                 public static string Index = "/api/environments{?nonStale,skip}";
                 public static string Get = "/api/environments/{id}";
-                public static string Machines = "/api/environments/{id}/machines";
+                public static string Machines = "/api/environments/{id}/machines{?nonStale,skip}";
             }
 
             public static class Feeds
@@ -127,23 +127,10 @@ namespace Octopus.Shared.Web
             }
             public static class Machines
             {
-                /// <summary>
-                /// Returns a URI like: /api/machines?area=api&amp;skip=0&amp;take=0
-                /// </summary>
-                public static string Index(int? skip = null, int? take = null)
-                {
-                    return Format("/api/machines", new object[] { }, new Dictionary<string, object>() { { "skip", skip }, { "take", take } });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/machines/Foo?area=api
-                /// </summary>
-                public static string Get(string id)
-                {
-                    return Format("/api/machines/{0}", new object[] { id }, new Dictionary<string, object>() { });
-                }
-
+                public static string Index = "/api/machines{?nonStale,skip}";
+                public static string Get = "/api/machines/{id}";
             }
+
             public static class Packages
             {
                 /// <summary>
