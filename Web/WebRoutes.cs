@@ -260,22 +260,8 @@ namespace Octopus.Shared.Web
             }
             public static class Tasks
             {
-                /// <summary>
-                /// Returns a URI like: /api/tasks?area=api&amp;skip=0&amp;take=0
-                /// </summary>
-                public static string Index(int? skip = null, int? take = null)
-                {
-                    return Format("/api/tasks", new object[] { }, new Dictionary<string, object>() { { "skip", skip }, { "take", take } });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/tasks/Foo?area=api
-                /// </summary>
-                public static string Get(string id)
-                {
-                    return Format("/api/tasks/{0}", new object[] { id }, new Dictionary<string, object>() { });
-                }
-
+                public static string Index = "/api/tasks{?nonStale,skip}";
+                public static string Get = "/api/tasks/{id}";
             }
             public static class Variables
             {
