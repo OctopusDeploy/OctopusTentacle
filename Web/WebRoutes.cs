@@ -263,6 +263,11 @@ namespace Octopus.Shared.Web
                 public static string Index = "/api/tasks{?nonStale,skip}";
                 public static string Get = "/api/tasks/{id}";
             }
+            public static class Events
+            {
+                public static string Index = "/api/events{?skip,regarding,user}";
+            }
+
             public static class Variables
             {
                 /// <summary>
