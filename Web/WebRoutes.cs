@@ -262,6 +262,8 @@ namespace Octopus.Shared.Web
             {
                 public static string Index = "/api/tasks{?nonStale,skip}";
                 public static string Get = "/api/tasks/{id}";
+                public static string Details = "/api/tasks/details/{id}";
+                public static string Raw = "/api/tasks/raw/{id}";
             }
             public static class Events
             {
@@ -837,7 +839,7 @@ namespace Octopus.Shared.Web
                 /// </summary>
                 public static string Show(string id)
                 {
-                    return Format("/tasks/show/{0}", new object[] { id }, new Dictionary<string, object>() { });
+                    return Format("/tasks/{0}", new object[] { id }, new Dictionary<string, object>() { });
                 }
 
                 /// <summary>
