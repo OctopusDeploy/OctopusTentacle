@@ -264,6 +264,8 @@ namespace Octopus.Shared.Web
                 public static string Get = "/api/tasks/{id}";
                 public static string Details = "/api/tasks/details/{id}";
                 public static string Raw = "/api/tasks/raw/{id}";
+                public static string Rerun = "/api/tasks/rerun/{id}";
+                public static string Cancel = "/api/tasks/cancel/{id}";
             }
             public static class Events
             {
