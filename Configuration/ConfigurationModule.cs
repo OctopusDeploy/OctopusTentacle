@@ -15,7 +15,7 @@ namespace Octopus.Shared.Configuration
             if (!string.IsNullOrWhiteSpace(OctopusConfigurationFile))
             {
                 Logger.Default.Debug("Octopus configuration will be read from: " + OctopusConfigurationFile);
-                builder.RegisterInstance(XmlOctopusConfiguration.LoadFrom(OctopusConfigurationFile)).As<IOctopusConfiguration>();
+                builder.RegisterInstance(new XmlOctopusConfigurationProvider(XmlOctopusConfiguration.LoadFrom(OctopusConfigurationFile))).As<IOctopusConfiguration>();
             }
             else
             {

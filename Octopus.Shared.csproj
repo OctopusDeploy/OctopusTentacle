@@ -144,6 +144,7 @@
     <Compile Include="Configuration\RegistryTentacleConfiguration.cs" />
     <Compile Include="Configuration\WindowsRegistry.cs" />
     <Compile Include="Configuration\XmlOctopusConfiguration.cs" />
+    <Compile Include="Configuration\XmlOctopusConfigurationProvider.cs" />
     <Compile Include="Contracts\Bindings.cs" />
     <Compile Include="Contracts\DeploymentRequest.cs" />
     <Compile Include="Contracts\DownloadRequest.cs" />
