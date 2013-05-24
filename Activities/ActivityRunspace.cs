@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Activities
 {

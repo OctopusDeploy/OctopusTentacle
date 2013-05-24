@@ -1,8 +1,7 @@
 using System;
 using Autofac;
 using NuGet;
-using Octopus.Shared.Configuration;
-using log4net;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Packages
 {

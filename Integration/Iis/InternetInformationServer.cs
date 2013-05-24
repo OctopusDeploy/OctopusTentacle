@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using log4net;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Integration.Iis
 {

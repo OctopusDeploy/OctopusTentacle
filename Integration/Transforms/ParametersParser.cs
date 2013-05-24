@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Octopus.Shared.Diagnostics;
-using log4net;
 
 namespace Octopus.Shared.Integration.Transforms
 {
@@ -11,7 +10,7 @@ namespace Octopus.Shared.Integration.Transforms
     /// </summary>
     public static class ParametersParser
     {
-        static readonly ILog Log = Logger.Default;
+        static readonly ILog Log = LogAdapter.GetDefault();
 
         /// <summary>
         /// Parse string of parameters <paramref name="parametersString"/> separated by semi ';'.

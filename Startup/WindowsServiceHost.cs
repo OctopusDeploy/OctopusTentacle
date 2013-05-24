@@ -49,7 +49,7 @@ namespace Octopus.Shared.Startup
             }
             catch (Exception ex)
             {
-                Logger.Default.Error(ex);
+                LogAdapter.GetDefault().Error(ex);
                 throw;
             }
         }

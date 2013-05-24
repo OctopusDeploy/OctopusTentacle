@@ -11,6 +11,8 @@ namespace Octopus.Shared.Startup
     /// </summary>
     public class Host : IHost
     {
+        readonly ILog log = LogAdapter.GetDefault();
+
         public void RunConsole(Action execute, Action shutdown)
         {
             InternalRunConsole(execute, shutdown, false);
@@ -35,7 +37,7 @@ namespace Octopus.Shared.Startup
         {
             var name = GetName();
 
-            Logger.Default.Info("Starting " + name + " Windows Service");
+            log.Info("Starting " + name + " Windows Service");
 
             try
             {
@@ -43,7 +45,7 @@ namespace Octopus.Shared.Startup
             }
             catch (Exception ex)
             {
-                Logger.Default.Fatal(ex);
+                log.Fatal(ex);
             }
         }
 
@@ -59,7 +61,7 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        static void InternalRunConsole(Action execute, Action shutdown, bool waitForExit)
+        void InternalRunConsole(Action execute, Action shutdown, bool waitForExit)
         {
             var name = GetName();
 
@@ -111,7 +113,7 @@ namespace Octopus.Shared.Startup
             }
             catch (Exception ex)
             {
-                Logger.Default.Fatal(ex);
+                log.Fatal(ex);
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("Unhandled exception:");
                 Console.ResetColor();
@@ -126,7 +128,7 @@ namespace Octopus.Shared.Startup
         {
             return delegate
             {
-                Logger.Default.Info("Stopping " + name + " Windows Service");
+                log.Info("Stopping " + name + " Windows Service");
 
                 try
                 {
@@ -134,7 +136,7 @@ namespace Octopus.Shared.Startup
                 }
                 catch (Exception ex)
                 {
-                    Logger.Default.Fatal(ex);
+                    log.Fatal(ex);
                     throw;
                 }
             };

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Selectors;
 using System.IdentityModel.Tokens;
 using System.Security.Cryptography.X509Certificates;
-using log4net;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Security
 {

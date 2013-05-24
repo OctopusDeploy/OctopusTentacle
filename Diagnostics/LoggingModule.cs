@@ -1,36 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using Autofac;
-using log4net;
-using log4net.Appender;
 
 namespace Octopus.Shared.Diagnostics
 {
     public class LoggingModule : Module
     {
-        public LoggingModule()
-        {
-            Level = "Debug";
-        }
+        readonly string logName;
 
-        public string Level { get; set; }
+        public LoggingModule(string logName)
+        {
+            this.logName = logName;
+        }
 
         protected override void Load(ContainerBuilder builder)
         {
-            builder.Register(BuildLog).As<ILog>().SingleInstance();
-        }
-
-        object BuildLog(IComponentContext componentContext)
-        {
-            var log = Logger.Default;
-            log.SetLevel(Level);
-
-            foreach (var appender in componentContext.Resolve<IEnumerable<IAppender>>())
-            {
-                log.AddAppender(appender);
-            }
-
-            return log;
+            var log = LogAdapter.GetLogger(logName);
+            builder.RegisterInstance(log).As<ILog>().SingleInstance();
         }
     }
 }

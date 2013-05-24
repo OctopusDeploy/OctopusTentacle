@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using NuGet;
-using log4net;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Packages
 {
@@ -33,7 +33,7 @@ namespace Octopus.Shared.Packages
             }
             catch (Exception ex)
             {
-                log.Warn("Unable to read NuGet package file: " + fullPath + " -- it will be ignored. Error: " + ex.Message, ex);
+                log.Warn(ex, "Unable to read NuGet package file: " + fullPath + " -- it will be ignored. Error: " + ex.Message);
                 return new NullPackage();
             }
         }

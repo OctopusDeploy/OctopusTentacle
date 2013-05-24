@@ -47,10 +47,6 @@
     <Reference Include="edtFTPnetPRO">
       <HintPath>..\packages\edtFTPnet-PRO.8.4.0\lib\edtFTPnetPRO.dll</HintPath>
     </Reference>
-    <Reference Include="log4net">
-      <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.CompilerServices.AsyncTargetingPack.Net4">
       <HintPath>..\packages\Microsoft.CompilerServices.AsyncTargetingPack.1.0.0\lib\net40\Microsoft.CompilerServices.AsyncTargetingPack.Net4.dll</HintPath>
     </Reference>
@@ -74,6 +70,9 @@
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.5.0.4\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog">
+      <HintPath>..\packages\NLog.2.0.1.2\lib\net40\NLog.dll</HintPath>
     </Reference>
     <Reference Include="NuGet.Core, Version=2.5.40416.9020, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -115,6 +114,8 @@
     <Compile Include="Activities\ActivityAttribute.cs" />
     <Compile Include="Activities\ActivityElement.cs" />
     <Compile Include="Activities\ActivityLog.cs" />
+    <Compile Include="Activities\ActivityLogDecorator.cs" />
+    <Compile Include="Activities\ActivityLogLevel.cs" />
     <Compile Include="Activities\ActivityMessage.cs" />
     <Compile Include="Activities\ActivityResolver.cs" />
     <Compile Include="Activities\ActivityRunspace.cs" />
@@ -133,9 +134,10 @@
     <Compile Include="Activities\IActivity.cs" />
     <Compile Include="Activities\IActivityRuntime.cs" />
     <Compile Include="Activities\NullActivityLog.cs" />
+    <Compile Include="Activities\PrefixedActivityLogDecorator.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Configuration\AuthenticationMode.cs" />
-    <Compile Include="Configuration\ConfigurationModule.cs" />
+    <Compile Include="Configuration\TentacleConfigurationModule.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
     <Compile Include="Configuration\RegistryOctopusConfiguration.cs" />
     <Compile Include="Configuration\IOctopusConfiguration.cs" />
@@ -149,6 +151,7 @@
     <Compile Include="Contracts\DeploymentRequest.cs" />
     <Compile Include="Contracts\DownloadRequest.cs" />
     <Compile Include="Contracts\HealthResult.cs" />
+    <Compile Include="Diagnostics\ILog.cs" />
     <Compile Include="Packages\IFeed.cs" />
     <Compile Include="Contracts\IHealthService.cs" />
     <Compile Include="Contracts\IJobService.cs" />
@@ -189,8 +192,7 @@
     <Compile Include="Conventions\Implementations\PreDeployScriptConvention.cs" />
     <Compile Include="Conventions\Implementations\XmlConfigTransformConvention.cs" />
     <Compile Include="Conventions\Implementations\XmlConfigVariablesConventions.cs" />
-    <Compile Include="Diagnostics\ILogScope.cs" />
-    <Compile Include="Diagnostics\Logger.cs" />
+    <Compile Include="Diagnostics\LogAdapter.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
     <Compile Include="Integration\Azure\AzureClientFactory.cs" />
     <Compile Include="Integration\Azure\AzureConfigurationRetriever.cs" />

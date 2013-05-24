@@ -1,8 +1,6 @@
 using System;
 using System.Text;
 using Octopus.Shared.Diagnostics;
-using log4net;
-using log4net.Core;
 
 namespace Octopus.Shared.Activities
 {
@@ -17,13 +15,29 @@ namespace Octopus.Shared.Activities
 
         public NullActivityLog(ILog log)
         {
-            this.log = log ?? Logger.Default;
+            this.log = log ?? LogAdapter.GetDefault();
         }
 
-        public override void Write(Level level, object message)
+        public override void Write(ActivityLogLevel level, object message)
         {
-            logText.AppendLine(level.Name + " " + message);
-            log.Logger.Log(typeof(NullActivityLog), level, message, null);
+            logText.AppendLine(level + " " + message);
+
+            var messageText = (message ?? string.Empty).ToString();
+            switch (level)
+            {
+                case ActivityLogLevel.Debug:
+                    log.Debug(messageText);
+                    break;
+                case ActivityLogLevel.Info:
+                    log.Info(messageText);
+                    break;
+                case ActivityLogLevel.Warn:
+                    log.Warn(messageText);
+                    break;
+                case ActivityLogLevel.Error:
+                    log.Error(messageText);
+                    break;
+            }
         }
 
         public override IActivityLog OverwritePrevious()

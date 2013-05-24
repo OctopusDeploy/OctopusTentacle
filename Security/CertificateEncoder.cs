@@ -78,7 +78,7 @@ namespace Octopus.Shared.Security
                         message.AppendLine("Furthermore, the private key file could not be located: " + ex.Message);
                     }
 
-                    Logger.Default.Warn(message.ToString().Trim());
+                    LogAdapter.GetDefault().Warn(message.ToString().Trim());
 
                     return false;
                 }
@@ -87,7 +87,7 @@ namespace Octopus.Shared.Security
             }
             catch (Exception ex)
             {
-                Logger.Default.Warn(ex);
+                LogAdapter.GetDefault().Warn(ex);
                 return false;
             }
         }

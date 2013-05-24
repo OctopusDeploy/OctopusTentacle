@@ -1,7 +1,6 @@
 using System;
 using System.Text;
 using Octopus.Shared.Time;
-using log4net.Core;
 
 namespace Octopus.Shared.Activities
 {
@@ -21,10 +20,10 @@ namespace Octopus.Shared.Activities
             this.clock = clock ?? new SystemClock();
         }
 
-        public override void Write(Level level, object message)
+        public override void Write(ActivityLogLevel level, object message)
         {
             var now = clock.GetUtcTime();
-            var formatted = now.ToString("yyyy-MM-dd HH:mm:ss") + " " + level.DisplayName.PadRight(6, ' ') + " " + message;
+            var formatted = now.ToString("yyyy-MM-dd HH:mm:ss") + " " + level.ToString().ToUpper().PadRight(6, ' ') + " " + message;
             lock (sync)
             {
                 mostRecentLine = formatted;

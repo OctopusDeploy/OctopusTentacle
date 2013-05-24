@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
-using log4net;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup
 {
