@@ -134,6 +134,7 @@
     <Compile Include="Activities\IActivityRuntime.cs" />
     <Compile Include="Activities\NullActivityLog.cs" />
     <Compile Include="Caching\ICache.cs" />
+    <Compile Include="Configuration\AuthenticationMode.cs" />
     <Compile Include="Configuration\ConfigurationModule.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
     <Compile Include="Configuration\RegistryOctopusConfiguration.cs" />
