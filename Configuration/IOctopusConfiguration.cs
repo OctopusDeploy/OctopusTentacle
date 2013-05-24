@@ -68,10 +68,4 @@ namespace Octopus.Shared.Configuration
         /// </summary>
         AuthenticationMode AuthenticationMode { get; set; }
     }
-
-    public enum AuthenticationMode
-    {
-        UsernamePassword,
-        Domain
-    }
 }

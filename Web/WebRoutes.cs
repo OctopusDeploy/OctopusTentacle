@@ -9,10 +9,62 @@ namespace Octopus.Shared.Web
 {
     public static class WebRoutes
     {
+        public static partial class Api
+        {
+            public static class Home
+            {
+                public static string Index = "/api";
+            }
+            
+            public static class Environments
+            {
+                public static string Index = "/api/environments{?nonStale,skip}";
+                public static string Get = "/api/environments/{id}";
+                public static string GetMachines = "/api/environments/{id}/machines{?nonStale,skip}";
+            }
+
+            public static class Machines
+            {
+                public static string Index = "/api/machines{?nonStale,skip}";
+                public static string Get = "/api/machines/{id}";
+            }
+
+            public static class ProjectGroups
+            {
+                public static string Index = "/api/projectgroups{?nonStale,skip}";
+                public static string Get = "/api/projectgroups/{id}";
+                public static string Projects = "/api/projectgroups/{id}/projects";
+            }
+            
+            public static class Tasks
+            {
+                public static string Index = "/api/tasks{?nonStale,skip}";
+                public static string Get = "/api/tasks/{id}";
+                public static string Details = "/api/tasks/details/{id}";
+                public static string Raw = "/api/tasks/raw/{id}";
+                public static string Rerun = "/api/tasks/rerun/{id}";
+                public static string Cancel = "/api/tasks/cancel/{id}";
+            }
+
+            public static class Events
+            {
+                public static string Index = "/api/events{?skip,regarding,user}";
+            }
+        }
+
+        public static partial class Web
+        {
+            public static class Accounts
+            {
+                public static string Login = "/accounts/login{?returnUrl}";
+            }            
+        }
+
+        // Old format (generated), not converted yet
         static string Format(string format, IEnumerable<object> routeParameters, Dictionary<string, object> queryString)
         {
             var builder = new StringBuilder();
-            builder.AppendFormat(format, routeParameters.Select(p => (object) HttpUtility.UrlEncode((p ?? string.Empty).ToString())).ToArray());
+            builder.AppendFormat(format, routeParameters.Select(p => (object)HttpUtility.UrlEncode((p ?? string.Empty).ToString())).ToArray());
 
             if (queryString != null && queryString.Any(c => c.Value != null))
             {
@@ -39,8 +91,7 @@ namespace Octopus.Shared.Web
 
             return builder.ToString();
         }
-
-        public static class Api
+        public static partial class Api
         {
             public static class Deployments
             {
@@ -69,13 +120,6 @@ namespace Octopus.Shared.Web
                 }
 
             }
-            public static class Environments
-            {
-                public static string Index = "/api/environments{?nonStale,skip}";
-                public static string Get = "/api/environments/{id}";
-                public static string Machines = "/api/environments/{id}/machines{?nonStale,skip}";
-            }
-
             public static class Feeds
             {
                 /// <summary>
@@ -114,23 +158,6 @@ namespace Octopus.Shared.Web
                 }
 
             }
-            public static class Home
-            {
-                /// <summary>
-                /// Returns a URI like: /api?area=api
-                /// </summary>
-                public static string Index()
-                {
-                    return Format("/api", new object[] { }, new Dictionary<string, object>() { });
-                }
-
-            }
-            public static class Machines
-            {
-                public static string Index = "/api/machines{?nonStale,skip}";
-                public static string Get = "/api/machines/{id}";
-            }
-
             public static class Packages
             {
                 /// <summary>
@@ -160,27 +187,6 @@ namespace Octopus.Shared.Web
             }
             public static class Preferences
             {
-            }
-            public static class ProjectGroups
-            {
-                public static string Index = "/api/projectgroups{?nonStale,skip}";
-
-                /// <summary>
-                /// Returns a URI like: /api/projectgroups/Foo?area=api
-                /// </summary>
-                public static string Get(string id)
-                {
-                    return Format("/api/projectgroups/{0}", new object[] { id }, new Dictionary<string, object>() { });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/projectgroups/Foo/projects?area=api&amp;skip=0&amp;take=0
-                /// </summary>
-                public static string Projects(string id, int skip = 0, int take = 30)
-                {
-                    return Format("/api/projectgroups/{0}/projects", new object[] { id }, new Dictionary<string, object>() { { "skip", skip }, { "take", take } });
-                }
-
             }
             public static class Users
             {
@@ -258,20 +264,6 @@ namespace Octopus.Shared.Web
                 }
 
             }
-            public static class Tasks
-            {
-                public static string Index = "/api/tasks{?nonStale,skip}";
-                public static string Get = "/api/tasks/{id}";
-                public static string Details = "/api/tasks/details/{id}";
-                public static string Raw = "/api/tasks/raw/{id}";
-                public static string Rerun = "/api/tasks/rerun/{id}";
-                public static string Cancel = "/api/tasks/cancel/{id}";
-            }
-            public static class Events
-            {
-                public static string Index = "/api/events{?skip,regarding,user}";
-            }
-
             public static class Variables
             {
                 /// <summary>
@@ -509,7 +501,7 @@ namespace Octopus.Shared.Web
 
             }
         }
-        public static class Web
+        public static partial class Web
         {
             public static class Events
             {
@@ -705,49 +697,6 @@ namespace Octopus.Shared.Web
                 public static string Index(string slug)
                 {
                     return Format("/projects/{0}/variables/index/{id}", new object[] { slug }, new Dictionary<string, object>() { });
-                }
-
-            }
-            public static class Accounts
-            {
-                /// <summary>
-                /// Returns a URI like: /accounts
-                /// </summary>
-                public static string Index()
-                {
-                    return Format("/accounts/index/{id}", new object[] { }, new Dictionary<string, object>() { });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /accounts/login?returnurl=Foo
-                /// </summary>
-                public static string Login(string returnUrl = null)
-                {
-                    return Format("/accounts/login", new object[] { }, new Dictionary<string, object>() { { "returnUrl", returnUrl } });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /accounts/logout
-                /// </summary>
-                public static string Logout()
-                {
-                    return Format("/accounts/logout", new object[] { }, new Dictionary<string, object>() { });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /accounts/register?invitecode=Foo
-                /// </summary>
-                public static string Register(string inviteCode)
-                {
-                    return Format("/accounts/register", new object[] { }, new Dictionary<string, object>() { { "inviteCode", inviteCode } });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /accounts/windowsauthenticationrequired
-                /// </summary>
-                public static string WindowsAuthenticationRequired()
-                {
-                    return Format("/accounts/windowsauthenticationrequired/{id}", new object[] { }, new Dictionary<string, object>() { });
                 }
 
             }
