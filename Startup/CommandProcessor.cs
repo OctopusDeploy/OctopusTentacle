@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security;
 using Octopus.Shared.Diagnostics;
 
@@ -49,6 +51,25 @@ namespace Octopus.Shared.Startup
                 log.Error("Security exception: " + ex.Message);
                 log.Error("Please try re-running the command as an administrator from an elevated command prompt.");
                 Environment.ExitCode = -42;
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                log.Error(ex);
+
+                foreach (var exSub in ex.LoaderExceptions)
+                {
+                    log.Error(exSub);
+                    
+                    if (exSub is FileNotFoundException)
+                    {
+                        var exFileNotFound = exSub as FileNotFoundException;
+                        if (!string.IsNullOrEmpty(exFileNotFound.FusionLog))
+                        {
+                            log.ErrorFormat("Fusion log: {0}", exFileNotFound.FusionLog);
+                        }
+                    }
+                }
+                Environment.ExitCode = -43;
             }
             catch (Exception ex)
             {

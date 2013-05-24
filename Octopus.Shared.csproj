@@ -136,18 +136,22 @@
     <Compile Include="Activities\NullActivityLog.cs" />
     <Compile Include="Activities\PrefixedActivityLogDecorator.cs" />
     <Compile Include="Caching\ICache.cs" />
+    <Compile Include="Configuration\AbstractKeyValueStore.cs" />
     <Compile Include="Configuration\AuthenticationMode.cs" />
-    <Compile Include="Configuration\TentacleConfigurationModule.cs" />
+    <Compile Include="Configuration\ConfigurationModule.cs" />
+    <Compile Include="Configuration\IKeyValueStore.cs" />
+    <Compile Include="Configuration\OctopusStorage.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
     <Compile Include="Configuration\RegistryOctopusConfiguration.cs" />
     <Compile Include="Configuration\IOctopusConfiguration.cs" />
     <Compile Include="Configuration\ITentacleConfiguration.cs" />
-    <Compile Include="Configuration\IWindowsRegistry.cs" />
     <Compile Include="Configuration\ProxyConfiguration.cs" />
     <Compile Include="Configuration\RegistryTentacleConfiguration.cs" />
-    <Compile Include="Configuration\WindowsRegistry.cs" />
-    <Compile Include="Configuration\XmlOctopusConfiguration.cs" />
-    <Compile Include="Configuration\XmlOctopusConfigurationProvider.cs" />
+    <Compile Include="Configuration\DictionaryKeyValueStore.cs" />
+    <Compile Include="Configuration\WindowsRegistryKeyValueStore.cs" />
+    <Compile Include="Configuration\XmlFileKeyValueStore.cs" />
+    <Compile Include="Configuration\XmlSetting.cs" />
+    <Compile Include="Configuration\XmlSettingsRoot.cs" />
     <Compile Include="Contracts\Bindings.cs" />
     <Compile Include="Contracts\DeploymentRequest.cs" />
     <Compile Include="Contracts\DownloadRequest.cs" />
@@ -283,7 +287,6 @@
     <Compile Include="Startup\ServiceOptions.cs" />
     <Compile Include="Startup\Host.cs" />
     <Compile Include="Startup\ServiceInstaller.cs" />
-    <Compile Include="Startup\ConfiguredModules.cs" />
     <Compile Include="Startup\WindowsServiceHost.cs">
       <SubType>Component</SubType>
     </Compile>

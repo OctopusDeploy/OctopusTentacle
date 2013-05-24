@@ -8,18 +8,18 @@ namespace Octopus.Shared.Configuration
 {
     public class RegistryTentacleConfiguration : ITentacleConfiguration
     {
-        readonly IWindowsRegistry registry;
+        readonly IKeyValueStore settings;
 
-        public RegistryTentacleConfiguration(IWindowsRegistry registry)
+        public RegistryTentacleConfiguration(IKeyValueStore settings)
         {
-            this.registry = registry;
+            this.settings = settings;
         }
 
         public string[] TrustedOctopusThumbprints
         {
             get
             {
-                var value = registry.GetString("Tentacle.Security.TrustedOctopusThumbprints");
+                var value = settings.Get("Tentacle.Security.TrustedOctopusThumbprints");
                 if (string.IsNullOrWhiteSpace(value))
                 {
                     return new string[0];
@@ -30,21 +30,21 @@ namespace Octopus.Shared.Configuration
 
             set
             {
-                registry.Set("Tentacle.Security.TrustedOctopusThumbprints", string.Join(",", value));
+                settings.Set("Tentacle.Security.TrustedOctopusThumbprints", string.Join(",", value));
             }
         }
 
         public int ServicesPortNumber
         {
-            get { return registry.Get("Tentacle.Services.PortNumber", 10933); }
-            set { registry.Set("Tentacle.Services.PortNumber", value); }
+            get { return settings.Get("Tentacle.Services.PortNumber", 10933); }
+            set { settings.Set("Tentacle.Services.PortNumber", value); }
         }
 
         public string ApplicationDirectory
         {
             get
             {
-                var path = registry.GetString("Tentacle.Deployment.ApplicationDirectory");
+                var path = settings.Get("Tentacle.Deployment.ApplicationDirectory");
                 if (string.IsNullOrWhiteSpace(path))
                 {
                     var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
@@ -53,7 +53,7 @@ namespace Octopus.Shared.Configuration
 
                 return path;
             }
-            set { registry.Set("Tentacle.Deployment.ApplicationDirectory", value); }
+            set { settings.Set("Tentacle.Deployment.ApplicationDirectory", value); }
         }
 
         public string PackagesDirectory
@@ -75,20 +75,20 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var encoded = registry.GetString("Cert-" + CertificateExpectations.TentacleCertificateFullName);
+                var encoded = settings.Get("Cert-" + CertificateExpectations.TentacleCertificateFullName);
                 return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(encoded);
             }
 
             set
             {
-                registry.Set("Cert-" + CertificateExpectations.TentacleCertificateFullName, CertificateEncoder.ToBase64String(value));
+                settings.Set("Cert-" + CertificateExpectations.TentacleCertificateFullName, CertificateEncoder.ToBase64String(value));
             }
         }
 
         public string ServicesHostName
         {
-            get { return registry.Get("Tentacle.Services.HostName", "localhost"); }
-            set { registry.Set("Tentacle.Services.HostName", value); }
+            get { return settings.Get("Tentacle.Services.HostName", "localhost"); }
+            set { settings.Set("Tentacle.Services.HostName", value); }
         }
     }
 }

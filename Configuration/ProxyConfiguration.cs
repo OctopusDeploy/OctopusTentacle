@@ -7,29 +7,29 @@ namespace Octopus.Shared.Configuration
 {
     public class ProxyConfiguration : IProxyConfiguration, IStartable
     {
-        readonly IWindowsRegistry registry;
-        
-        public ProxyConfiguration(IWindowsRegistry registry)
+        readonly IKeyValueStore settings;
+
+        public ProxyConfiguration(IKeyValueStore settings)
         {
-            this.registry = registry;
+            this.settings = settings;
         }
 
         public bool UseDefaultProxy
         {
-            get { return registry.Get("Octopus.Proxy.UseDefaultProxy", true); }
-            set { registry.Set("Octopus.Proxy.UseDefaultProxy", value); }
+            get { return settings.Get("Octopus.Proxy.UseDefaultProxy", true); }
+            set { settings.Set("Octopus.Proxy.UseDefaultProxy", value); }
         }
 
         public string CustomProxyUsername
         {
-            get { return registry.Get("Octopus.Proxy.ProxyUsername", string.Empty); }
-            set { registry.Set("Octopus.Proxy.ProxyUsername", value); }
+            get { return settings.Get("Octopus.Proxy.ProxyUsername", string.Empty); }
+            set { settings.Set("Octopus.Proxy.ProxyUsername", value); }
         }
 
         public string CustomProxyPassword
         {
-            get { return registry.GetSecure("Octopus.Proxy.ProxyPassword"); }
-            set { registry.SetSecure("Octopus.Proxy.ProxyPassword", value); }
+            get { return settings.GetSecure("Octopus.Proxy.ProxyPassword"); }
+            set { settings.SetSecure("Octopus.Proxy.ProxyPassword", value); }
         }
 
         public void Start()

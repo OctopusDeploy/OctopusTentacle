@@ -8,35 +8,35 @@ namespace Octopus.Shared.Configuration
 {
     public class RegistryOctopusConfiguration : IOctopusConfiguration
     {
-        readonly IWindowsRegistry registry;
+        readonly IKeyValueStore settings;
 
-        public RegistryOctopusConfiguration(IWindowsRegistry registry)
+        public RegistryOctopusConfiguration(IKeyValueStore settings)
         {
-            this.registry = registry;
+            this.settings = settings;
         }
 
         public bool BackupsEnabledByDefault
         {
-            get { return registry.Get("Octopus.Storage.BackupsEnabledByDefault", true); }
-            set { registry.Set("Octopus.Storage.BackupsEnabledByDefault", value); }
+            get { return settings.Get("Octopus.Storage.BackupsEnabledByDefault", true); }
+            set { settings.Set("Octopus.Storage.BackupsEnabledByDefault", value); }
         }
 
         public string EmbeddedDatabaseStoragePath
         {
-            get { return registry.GetString("Octopus.Storage.Path"); }
-            set { registry.Set("Octopus.Storage.Path", value); }
+            get { return settings.Get("Octopus.Storage.Path"); }
+            set { settings.Set("Octopus.Storage.Path", value); }
         }
 
         public bool AllowCheckingForUpgrades
         {
-            get { return registry.Get("Octopus.Upgrades.AllowChecking", true); }
-            set { registry.Set("Octopus.Upgrades.AllowChecking", value); }
+            get { return settings.Get("Octopus.Upgrades.AllowChecking", true); }
+            set { settings.Set("Octopus.Upgrades.AllowChecking", value); }
         }
 
         public bool IncludeUsageStatisticsWhenCheckingForUpgrades
         {
-            get { return registry.Get("Octopus.Upgrades.IncludeStatistics", true); }
-            set { registry.Set("Octopus.Upgrades.IncludeStatistics", value); }
+            get { return settings.Get("Octopus.Upgrades.IncludeStatistics", true); }
+            set { settings.Set("Octopus.Upgrades.IncludeStatistics", value); }
         }
 
         public string CacheDirectory
@@ -73,52 +73,52 @@ namespace Octopus.Shared.Configuration
 
         public int RavenPort
         {
-            get { return registry.Get("Octopus.Raven.Port", 10930); }
-            set { registry.Set("Octopus.Raven.Port", value); }
+            get { return settings.Get("Octopus.Raven.Port", 10930); }
+            set { settings.Set("Octopus.Raven.Port", value); }
         }
 
         public string RavenHostName
         {
-            get { return registry.Get("Octopus.Raven.HostName", "localhost"); }
-            set { registry.Set("Octopus.Raven.HostName", value); }
+            get { return settings.Get("Octopus.Raven.HostName", "localhost"); }
+            set { settings.Set("Octopus.Raven.HostName", value); }
         }
         
         public string RavenConnectionString { get { return string.Format("Url = http://{0}:{1}/", RavenHostName, RavenPort); } }
 
         public bool SelfHostWebPortal
         {
-            get { return registry.Get("Octopus.Portal.Enabled", true); }
-            set { registry.Set("Octopus.Portal.Enabled", value); }
+            get { return settings.Get("Octopus.Portal.Enabled", true); }
+            set { settings.Set("Octopus.Portal.Enabled", value); }
         }
         
         public int SelfHostWebPortalPort
         {
-            get { return registry.Get("Octopus.Portal.Port", 8050); }
-            set { registry.Set("Octopus.Portal.Port", value); }
+            get { return settings.Get("Octopus.Portal.Port", 8050); }
+            set { settings.Set("Octopus.Portal.Port", value); }
         }
 
         public AuthenticationMode AuthenticationMode
         {
-            get { return registry.Get("Octopus.Web.AuthenticationMode", AuthenticationMode.UsernamePassword); }
-            set { registry.Set("Octopus.Web.AuthenticationMode", value); }
+            get { return settings.Get("Octopus.Web.AuthenticationMode", AuthenticationMode.UsernamePassword); }
+            set { settings.Set("Octopus.Web.AuthenticationMode", value); }
         }
 
         public string PublicWebPortalAddress
         {
-            get { return registry.Get("Octopus.Web.PublicWebPortalAddress", string.Empty); }
-            set { registry.Set("Octopus.Web.PublicWebPortalAddress", value); }
+            get { return settings.Get("Octopus.Web.PublicWebPortalAddress", string.Empty); }
+            set { settings.Set("Octopus.Web.PublicWebPortalAddress", value); }
         }
 
         public string LocalWebPortalAddress
         {
-            get { return registry.Get("Octopus.Web.LocalWebPortalAddress", string.Empty); }
-            set { registry.Set("Octopus.Web.LocalWebPortalAddress", value); }
+            get { return settings.Get("Octopus.Web.LocalWebPortalAddress", string.Empty); }
+            set { settings.Set("Octopus.Web.LocalWebPortalAddress", value); }
         }
 
         public bool LocalWebPortalAddressAutoConfigure
         {
-            get { return registry.Get("Octopus.Web.LocalWebPortalAddressAutoConfigure", true); }
-            set { registry.Set("Octopus.Web.LocalWebPortalAddressAutoConfigure", value); }
+            get { return settings.Get("Octopus.Web.LocalWebPortalAddressAutoConfigure", true); }
+            set { settings.Set("Octopus.Web.LocalWebPortalAddressAutoConfigure", value); }
         }
 
         public string IntegratedFeedApiKey
@@ -126,18 +126,18 @@ namespace Octopus.Shared.Configuration
             get
             {
                 EnsureIntegratedFeedApiKey();
-                var key = registry.Get("Octopus.NuGet.IntegratedApiKey", "");
+                var key = settings.Get("Octopus.NuGet.IntegratedApiKey", "");
                 return key;
             }
         }
 
         public void EnsureIntegratedFeedApiKey()
         {
-            var key = registry.Get("Octopus.NuGet.IntegratedApiKey", "");
+            var key = settings.Get("Octopus.NuGet.IntegratedApiKey", "");
             if (string.IsNullOrWhiteSpace(key))
             {
                 key = GenerateApiKey();
-                registry.Set("Octopus.NuGet.IntegratedApiKey", key);
+                settings.Set("Octopus.NuGet.IntegratedApiKey", key);
             }
         }
 

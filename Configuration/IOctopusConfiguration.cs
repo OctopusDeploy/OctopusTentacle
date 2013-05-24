@@ -3,7 +3,7 @@ using System;
 namespace Octopus.Shared.Configuration
 {
     /// <summary>
-    /// Machine-wide Octopus configuration settings (backed by the Windows Registry). 
+    /// Machine-wide Octopus configuration settings.
     /// </summary>
     public interface IOctopusConfiguration
     {
