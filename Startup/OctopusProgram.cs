@@ -48,18 +48,18 @@ namespace Octopus.Shared.Startup
             }
             catch (ArgumentException ex)
             {
-                log.Error(ex.Message);
+                log.Fatal(ex.Message);
                 exitCode = 1;
             }
             catch (SecurityException ex)
             {
-                log.Error(ex, "A security exception was encountered. Please try re-running the command as an Administrator from an elevated command prompt.");
-                log.Error(ex);
+                log.Fatal(ex, "A security exception was encountered. Please try re-running the command as an Administrator from an elevated command prompt.");
+                log.Fatal(ex);
                 exitCode = 42;
             }
             catch (ReflectionTypeLoadException ex)
             {
-                log.Error(ex);
+                log.Fatal(ex);
 
                 foreach (var loaderException in ex.LoaderExceptions)
                 {
@@ -79,7 +79,7 @@ namespace Octopus.Shared.Startup
             }
             catch (Exception ex)
             {
-                log.Error(ex);
+                log.Fatal(ex);
                 exitCode = 100;
             }
 
