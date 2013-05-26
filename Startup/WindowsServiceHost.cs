@@ -1,62 +1,40 @@
-﻿using System;
-using System.Diagnostics;
+using System;
 using System.ServiceProcess;
-using System.Threading;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup
 {
-    public class WindowsServiceHost : ServiceBase
+    public class WindowsServiceHost : ICommandHost, ICommandRuntime
     {
-        readonly Action execute;
-        readonly Action shutdown;
-        Thread workerThread;
+        readonly ILog log = Log.Octopus();
 
-        public WindowsServiceHost(Action execute, Action shutdown)
+        public void Run(Action<ICommandRuntime> start, Action shutdown)
         {
-            this.execute = execute;
-            this.shutdown = shutdown;
-        }
+            log.Trace("Creating the Windows Service host adapter");
 
-        public void Start()
-        {
-            Run(this);
-        }
-
-        protected override void OnStart(string[] args)
-        {
-            if (args.Length > 0 && args[0].ToLowerInvariant().Contains("debug"))
+            var startService = new Action(delegate
             {
-                Debugger.Launch();
-            }
+                log.Trace("Starting the Windows Service");
+                start(this);
+                log.Trace("The Windows Service has started");
+            });
 
-            // Sometimes a server might be under load after rebooting, or virus scanners might be busy.
-            // A service will usually fail to start after 30 seconds, so by requesting additional time 
-            // we can be more likely to start up successfully. Also, 120 seconds seems to be about the 
-            // maximum time we can ask for.
-            RequestAdditionalTime(120000);
+            var stopService = new Action(delegate
+            {
+                log.Trace("Stopping the Windows Service");
+                shutdown();
+                log.Trace("The Windows Service has stopped");
+            });
 
-            workerThread = new Thread(RunService);
-            workerThread.IsBackground = true;
-            workerThread.Start();
+            var adapter = new WindowsServiceAdapter(startService, stopService);
+
+            log.Trace("Running the service host adapter");
+            ServiceBase.Run(adapter);
         }
 
-        void RunService()
+        public void WaitForUserToExit()
         {
-            try
-            {
-                execute();
-            }
-            catch (Exception ex)
-            {
-                LogAdapter.GetDefault().Error(ex);
-                throw;
-            }
-        }
-
-        protected override void OnStop()
-        {
-            shutdown();
+            // Only applicable for interactive hosts; services are stopped via the service control panel
         }
     }
 }

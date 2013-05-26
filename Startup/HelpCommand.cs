@@ -20,7 +20,7 @@ namespace Octopus.Shared.Startup
             get { return new OptionSet().WithExtras(extra => commandName = extra.FirstOrDefault()); }
         }
 
-        public void Execute()
+        public void Start(ICommandRuntime commandRuntime)
         {
             var executable = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullLocalPath());
 
@@ -41,9 +41,13 @@ namespace Octopus.Shared.Startup
                 }
                 else
                 {
-                    PrintCommandHelp(executable, command.Value, command.Metadata);                    
+                    PrintCommandHelp(executable, command.Value, command.Metadata);
                 }
             }
+        }
+
+        public void Stop()
+        {
         }
 
         void PrintCommandHelp(string executable, ICommand command, ICommandMetadata metadata)

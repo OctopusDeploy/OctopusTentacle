@@ -10,7 +10,7 @@ namespace Octopus.Shared.Integration.Transforms
     /// </summary>
     public static class ParametersParser
     {
-        static readonly ILog Log = LogAdapter.GetDefault();
+        static readonly ILog Log = Diagnostics.Log.Octopus();
 
         /// <summary>
         /// Parse string of parameters <paramref name="parametersString"/> separated by semi ';'.

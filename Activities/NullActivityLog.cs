@@ -15,7 +15,7 @@ namespace Octopus.Shared.Activities
 
         public NullActivityLog(ILog log)
         {
-            this.log = log ?? LogAdapter.GetDefault();
+            this.log = log ?? Log.Octopus();
         }
 
         public override void Write(ActivityLogLevel level, object message)

@@ -164,7 +164,7 @@ namespace Octopus.Shared.Integration.Iis
                             }
                             catch (Exception ex)
                             {
-                                LogAdapter.GetDefault().Error(ex, "Unable to find the virtual directory '{0}'", virtualDirectory);
+                                Log.Octopus().Error(ex, "Unable to find the virtual directory '{0}'", virtualDirectory);
                                 result = false;
                             }
                         }

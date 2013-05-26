@@ -6,6 +6,7 @@ namespace Octopus.Shared.Startup
     {
         OptionSet Options { get; }
 
-        void Execute();
+        void Start(ICommandRuntime commandRuntime);
+        void Stop();
     }
 }

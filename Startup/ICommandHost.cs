@@ -1,0 +1,9 @@
+using System;
+
+namespace Octopus.Shared.Startup
+{
+    public interface ICommandHost
+    {
+        void Run(Action<ICommandRuntime> start, Action shutdown);
+    }
+}

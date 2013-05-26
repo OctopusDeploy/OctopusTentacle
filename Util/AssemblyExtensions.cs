@@ -20,4 +20,9 @@ public static class AssemblyExtensions
     {
         return assembly.GetCustomAttributes(true).OfType<AssemblyFileVersionAttribute>().First().Version;
     }
+
+    public static string GetInformationalVersion(this Assembly assembly)
+    {
+        return assembly.GetCustomAttributes(true).OfType<AssemblyInformationalVersionAttribute>().First().InformationalVersion;
+    }
 }

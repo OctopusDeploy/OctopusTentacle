@@ -18,9 +18,14 @@ namespace Octopus.Shared.Configuration
             base.Load(builder);
 
             builder.Register(configurationProvider).As<IKeyValueStore>().SingleInstance();
-            builder.RegisterType<RegistryOctopusConfiguration>().As<IOctopusConfiguration>();
-            builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>().As<IStartable>();
-            builder.RegisterType<RegistryTentacleConfiguration>().As<ITentacleConfiguration>();
+            builder.RegisterType<DeploymentProcessConfiguration>().As<IDeploymentProcessConfiguration>().SingleInstance();
+            builder.RegisterType<WebPortalConfiguration>().As<IWebPortalConfiguration>().SingleInstance();
+            builder.RegisterType<UpgradeCheckConfiguration>().As<IUpgradeCheckConfiguration>().SingleInstance();
+            builder.RegisterType<HomeConfiguration>().As<IHomeConfiguration>().As<IStartable>().SingleInstance();
+            builder.RegisterType<OctopusServerStorageConfiguration>().As<IOctopusServerStorageConfiguration>();
+            builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().As<IStartable>().SingleInstance();
+            builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>().As<IStartable>().SingleInstance();
+            builder.RegisterType<RegistryTentacleConfiguration>().As<ITentacleConfiguration>().SingleInstance();
         }
 
         public static ConfigurationModule FromFile(string filePath)

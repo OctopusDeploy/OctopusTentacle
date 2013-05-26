@@ -1,7 +1,4 @@
 using System;
-using System.Text;
-using NLog;
-using NLog.LayoutRenderers;
 
 namespace Octopus.Shared.Diagnostics
 {
@@ -38,16 +35,5 @@ namespace Octopus.Shared.Diagnostics
         void Warn(string message);
         void WarnFormat(string format, params object[] args);
         void Warn(Exception exception, string format, params object[] args);
-    }
-
-    [LayoutRenderer("octopusLogsDirectory")]
-    public class OctopusLogsDirectoryRenderer : LayoutRenderer
-    {
-        public static string LogsDirectory = null;
-
-        protected override void Append(StringBuilder builder, LogEventInfo logEvent)
-        {
-            builder.Append(LogsDirectory);
-        }
     }
 }

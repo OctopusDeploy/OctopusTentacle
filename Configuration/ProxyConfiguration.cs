@@ -52,7 +52,7 @@ namespace Octopus.Shared.Configuration
             }
             catch (Exception ex)
             {
-                LogAdapter.GetDefault().Warn(ex, "Unable to configure the proxy server: " + ex.Message);
+                Log.Octopus().Warn(ex, "Unable to configure the proxy server: " + ex.Message);
             }
         }
     }
