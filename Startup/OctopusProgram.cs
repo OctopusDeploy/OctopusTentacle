@@ -16,6 +16,7 @@ namespace Octopus.Shared.Startup
         readonly OptionSet commonOptions;
         IContainer container;
         ICommand commandInstance;
+        bool forceConsole;
 
         protected OctopusProgram(string displayName, string[] commandLineArguments)
         {
@@ -89,6 +90,12 @@ namespace Octopus.Shared.Startup
         ICommandHost SelectMostAppropriateHost()
         {
             log.Trace("Selecting the most appropriate host");
+
+            if (commandLineArguments.Any(a => a.Trim('-', '/', '\\').ToLowerInvariant() == "console"))
+            {
+                log.Trace("The --console switch was passed; using a console host");
+                return new ConsoleHost(displayName);
+            }
 
             if (Environment.UserInteractive)
             {

@@ -33,13 +33,14 @@ namespace Octopus.Shared.Startup
             }
             catch (Exception ex)
             {
-                log.Fatal(ex);
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Unhandled exception:");
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.WriteLine(new string('-', 79));
+                Console.WriteLine("A fatal exception occurred:");
+                Console.WriteLine(new string('-', 79));
                 Console.ResetColor();
-                Console.WriteLine(ex);
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey();
+                log.Fatal(ex);
+                Console.WriteLine("Press <enter> to shut down...");
+                Console.ReadLine();
                 throw;
             }
         }
