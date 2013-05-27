@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security;
+using System.Threading.Tasks;
 using Autofac;
 using Octopus.Shared.Diagnostics;
 
@@ -39,6 +40,13 @@ namespace Octopus.Shared.Startup
 
         public int Run()
         {
+            TaskScheduler.UnobservedTaskException += (sender, args) => log.Error(args.Exception, "Unhandled task exception occurred: {0}", args.Exception.Message);
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                var exception = (Exception)args.ExceptionObject;
+                log.Fatal(exception, "Unhandled AppDomain exception occurred: {0}", exception.Message);
+            };
+
             int exitCode;
             try
             {
