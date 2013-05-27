@@ -35,6 +35,12 @@ namespace Octopus.Shared.Web
                 public static string Get = "/api/projectgroups/{id}";
                 public static string Projects = "/api/projectgroups/{id}/projects";
             }
+
+            public static class Projects
+            {
+                public static string Index = "/api/projects{?nonStale,skip}";
+                public static string Get = "/api/projects/{id}";
+            }
             
             public static class Tasks
             {
@@ -204,25 +210,6 @@ namespace Octopus.Shared.Web
                 public static string Get(string id)
                 {
                     return Format("/api/users/{0}", new object[] { id }, new Dictionary<string, object>() { });
-                }
-
-            }
-            public static class Projects
-            {
-                /// <summary>
-                /// Returns a URI like: /api/projects
-                /// </summary>
-                public static string Index()
-                {
-                    return Format("/api/projects", new object[] { }, new Dictionary<string, object>() { });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/projects/Foo?area=api
-                /// </summary>
-                public static string Get(string id)
-                {
-                    return Format("/api/projects/{0}", new object[] { id }, new Dictionary<string, object>() { });
                 }
 
             }
