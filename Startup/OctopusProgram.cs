@@ -16,7 +16,6 @@ namespace Octopus.Shared.Startup
         readonly OptionSet commonOptions;
         IContainer container;
         ICommand commandInstance;
-        bool forceConsole;
 
         protected OctopusProgram(string displayName, string[] commandLineArguments)
         {
@@ -158,11 +157,14 @@ namespace Octopus.Shared.Startup
 
         void Stop()
         {
-            if (commandInstance == null) 
-                return;
-
-            log.TraceFormat("Sending stop signal to current command");
-            commandInstance.Stop();
+            if (commandInstance != null)
+            {
+                log.TraceFormat("Sending stop signal to current command");
+                commandInstance.Stop();
+            }
+                
+            log.TraceFormat("Disposing of the container");
+            container.Dispose();
         }
     }
 }
