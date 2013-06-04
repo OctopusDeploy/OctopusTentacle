@@ -314,6 +314,7 @@
     <Compile Include="ServiceMessages\ServiceMessage.cs" />
     <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
     <Compile Include="Util\PasswordHasher.cs" />
+    <Compile Include="Util\RandomStringGenerator.cs" />
     <Compile Include="Util\RuntimeUtility.cs" />
     <Compile Include="Util\SilentProcessRunner.cs" />
     <Compile Include="Util\DeletionOptions.cs" />

@@ -56,6 +56,17 @@ namespace Octopus.Shared.Web
             {
                 public static string Index = "/api/events{?skip,regarding,user}";
             }
+
+            public static class Variables
+            {
+                public static string Get = "/api/variables/{id}";
+            }
+
+            public static class Users
+            {
+                public static string Index = "/api/users{?nonStale,skip}";
+                public static string Get = "/api/users/{id}";
+            }
         }
 
         public static partial class Web
@@ -194,25 +205,6 @@ namespace Octopus.Shared.Web
             public static class Preferences
             {
             }
-            public static class Users
-            {
-                /// <summary>
-                /// Returns a URI like: /api/users?area=api&amp;user=Foo
-                /// </summary>
-                public static string Index(string user = "")
-                {
-                    return Format("/api/users", new object[] { }, new Dictionary<string, object>() { { "user", user } });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/users/Foo?area=api
-                /// </summary>
-                public static string Get(string id)
-                {
-                    return Format("/api/users/{0}", new object[] { id }, new Dictionary<string, object>() { });
-                }
-
-            }
             public static class Releases
             {
                 /// <summary>
@@ -251,33 +243,7 @@ namespace Octopus.Shared.Web
                 }
 
             }
-            public static class Variables
-            {
-                /// <summary>
-                /// Returns a URI like: /api/projects/Foo/variables?area=api
-                /// </summary>
-                public static string Index(string projectId)
-                {
-                    return Format("/api/projects/{0}/variables", new object[] { projectId }, new Dictionary<string, object>() { });
-                }
 
-                /// <summary>
-                /// Returns a URI like: /api/projects/Foo/variables/Foo?area=api
-                /// </summary>
-                public static string Get(string projectId, string id)
-                {
-                    return Format("/api/projects/{0}/variables/{1}", new object[] { projectId, id }, new Dictionary<string, object>() { });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/variables/names/Foo?area=api
-                /// </summary>
-                public static string Names(string projectId)
-                {
-                    return Format("/api/variables/names/{0}", new object[] { projectId }, new Dictionary<string, object>() { });
-                }
-
-            }
         }
         public static class Configuration
         {
