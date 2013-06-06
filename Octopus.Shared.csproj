@@ -136,6 +136,7 @@
     <Compile Include="Activities\NullActivityLog.cs" />
     <Compile Include="Activities\PrefixedActivityLogDecorator.cs" />
     <Compile Include="Caching\ICache.cs" />
+    <Compile Include="Caching\OctopusCache.cs" />
     <Compile Include="Configuration\AbstractKeyValueStore.cs" />
     <Compile Include="Configuration\AuthenticationMode.cs" />
     <Compile Include="Configuration\ConfigurationModule.cs" />
@@ -145,6 +146,7 @@
     <Compile Include="Configuration\IKeyValueStore.cs" />
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
     <Compile Include="Configuration\IOctopusServerStorageConfiguration.cs" />
+    <Compile Include="Configuration\IsolatedStorageXmlFileKeyValueStore.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\IWebPortalConfiguration.cs" />
     <Compile Include="Configuration\OctopusServerStorageConfiguration.cs" />
@@ -161,6 +163,7 @@
     <Compile Include="Configuration\WebPortalConfiguration.cs" />
     <Compile Include="Configuration\WindowsRegistryKeyValueStore.cs" />
     <Compile Include="Configuration\XmlFileKeyValueStore.cs" />
+    <Compile Include="Configuration\XmlKeyValueStore.cs" />
     <Compile Include="Configuration\XmlSetting.cs" />
     <Compile Include="Configuration\XmlSettingsRoot.cs" />
     <Compile Include="Contracts\Bindings.cs" />
