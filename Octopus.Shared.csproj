@@ -172,6 +172,10 @@
     <Compile Include="Contracts\HealthResult.cs" />
     <Compile Include="Diagnostics\ILog.cs" />
     <Compile Include="Diagnostics\OctopusLogsDirectoryRenderer.cs" />
+    <Compile Include="Extensibility\IOctopusExtension.cs" />
+    <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
+    <Compile Include="Extensibility\OctopusPluginAttribute.cs" />
+    <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Packages\IFeed.cs" />
     <Compile Include="Contracts\IHealthService.cs" />
     <Compile Include="Contracts\IJobService.cs" />
