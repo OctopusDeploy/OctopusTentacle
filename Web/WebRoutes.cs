@@ -37,6 +37,12 @@ namespace Octopus.Shared.Web
                 public static string Get = "/api/machines/{id}";
             }
 
+            public static class Tenants
+            {
+                public static string Index = "/api/tenants{?nonStale,skip}";
+                public static string Get = "/api/tenants/{id}";
+            }
+
             public static class ProjectGroups
             {
                 public static string Index = "/api/projectgroups{?nonStale,skip}";

@@ -320,6 +320,7 @@
     <Compile Include="Time\IClock.cs" />
     <Compile Include="ServiceMessages\ServiceMessage.cs" />
     <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
+    <Compile Include="Util\DiffMatchPatch.cs" />
     <Compile Include="Util\PasswordHasher.cs" />
     <Compile Include="Util\RandomStringGenerator.cs" />
     <Compile Include="Util\RuntimeUtility.cs" />

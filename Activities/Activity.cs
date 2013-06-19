@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Activities
 {
@@ -48,7 +49,7 @@ namespace Octopus.Shared.Activities
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex);
+                    log.Error(ex.GetRootError());
                     throw new ActivityFailedException("A child activity failed: " + ex.Message);
                 }
             }
