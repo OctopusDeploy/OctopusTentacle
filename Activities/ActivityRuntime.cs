@@ -46,7 +46,7 @@ namespace Octopus.Shared.Activities
 
             try
             {
-                await task.ContinueWith(t => HandleError(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                await task;
             }
             catch (Exception ex)
             {
