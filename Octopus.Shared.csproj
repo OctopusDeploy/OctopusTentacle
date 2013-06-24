@@ -55,16 +55,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Octopus.Dependencies.Transforms.1.0.3\lib\Microsoft.Web.Publishing.Tasks.Dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.WindowsAzure.Management, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Octopus.Dependencies.AzureCmdlets.1.0.3\lib\Microsoft.WindowsAzure.Management.dll</HintPath>
+    <Reference Include="Microsoft.WindowsAzure.Management">
+      <HintPath>..\packages\Octopus.Dependencies.AzureBinaries.2.0.0\lib\Microsoft.WindowsAzure.Management.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.WindowsAzure.ServiceManagement.Client, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Octopus.Dependencies.AzureCmdlets.1.0.3\lib\Microsoft.WindowsAzure.ServiceManagement.Client.dll</HintPath>
+    <Reference Include="Microsoft.WindowsAzure.ServiceManagement.Client">
+      <HintPath>..\packages\Octopus.Dependencies.AzureBinaries.2.0.0\lib\Microsoft.WindowsAzure.ServiceManagement.Client.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.WindowsAzure.StorageClient, Version=1.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Dependencies.AzureCmdlets.1.0.3\lib\Microsoft.WindowsAzure.StorageClient.dll</HintPath>
+      <HintPath>..\packages\Octopus.Dependencies.AzureBinaries.2.0.0\lib\Microsoft.WindowsAzure.StorageClient.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
