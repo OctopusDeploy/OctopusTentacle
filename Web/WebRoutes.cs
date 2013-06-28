@@ -75,6 +75,11 @@ namespace Octopus.Shared.Web
                 public static string Get = "/api/variables/{id}";
             }
 
+            public static class DeploymentProcesses
+            {
+                public static string Get = "/api/deploymentprocesses/{id}";
+            }
+
             public static class Users
             {
                 public static string Index = "/api/users{?nonStale,skip}";
