@@ -11,14 +11,6 @@ namespace Octopus.Shared.Web
     {
         public static partial class Api
         {
-            public static class Accounts
-            {
-                public static string Login = "/api/accounts/login{?returnUrl}";
-                public static string Logout = "/api/accounts/logout";
-                public static string Register = "/api/accounts/register{?inviteCode}";
-                public static string Me = "/api/accounts/me";
-            }            
-
             public static class Home
             {
                 public static string Index = "/api";
@@ -87,6 +79,10 @@ namespace Octopus.Shared.Web
             {
                 public static string Index = "/api/users{?nonStale,skip}";
                 public static string Get = "/api/users/{id}";
+                public static string Login = "/api/users/login{?returnUrl}";
+                public static string Logout = "/api/users/logout";
+                public static string Register = "/api/users/register{?inviteCode}";
+                public static string Me = "/api/users/me";
             }
         }
 
