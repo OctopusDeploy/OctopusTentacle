@@ -22,5 +22,11 @@ namespace Octopus.Shared.Configuration
             get { return settings.Get("Octopus.Upgrades.IncludeStatistics", true); }
             set { settings.Set("Octopus.Upgrades.IncludeStatistics", value); }
         }
+
+        public bool ReportErrorsOnline
+        {
+            get { return settings.Get("Octopus.Errors.ReportErrorsOnline", true); }
+            set { settings.Set("Octopus.Errors.ReportErrorsOnline", value); }
+        }
     }
 }

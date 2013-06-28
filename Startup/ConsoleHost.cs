@@ -39,8 +39,11 @@ namespace Octopus.Shared.Startup
                 Console.WriteLine(new string('-', 79));
                 Console.ResetColor();
                 log.Fatal(ex);
-                Console.WriteLine("Press <enter> to shut down...");
-                Console.ReadLine();
+                if (Environment.UserInteractive)
+                {
+                    Console.WriteLine("Press <enter> to shut down...");
+                    Console.ReadLine();                    
+                }
                 throw;
             }
         }

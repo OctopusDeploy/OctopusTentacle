@@ -14,5 +14,10 @@ namespace Octopus.Shared.Configuration
         /// when checking for upgrades.
         /// </summary>
         bool IncludeUsageStatisticsWhenCheckingForUpgrades { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether unhandled errors can be reported online.
+        /// </summary>
+        bool ReportErrorsOnline { get; set; }
     }
 }

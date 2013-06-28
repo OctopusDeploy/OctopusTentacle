@@ -41,11 +41,17 @@ namespace Octopus.Shared.Startup
 
         public int Run()
         {
-            TaskScheduler.UnobservedTaskException += (sender, args) => log.Debug(args.Exception.GetRootError(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                log.Debug(args.Exception.GetRootError(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
+                ReportError(args.Exception);
+            };
+            
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var exception = (Exception)args.ExceptionObject;
                 log.Fatal(exception, "Unhandled AppDomain exception occurred: {0}", exception.Message);
+                ReportError(exception);
             };
 
             int exitCode;
@@ -84,11 +90,14 @@ namespace Octopus.Shared.Startup
                     }
                 }
 
+                ReportError(ex);
+
                 exitCode = 43;
             }
             catch (Exception ex)
             {
                 log.Fatal(ex);
+                ReportError(ex);
                 exitCode = 100;
             }
 
@@ -155,6 +164,15 @@ namespace Octopus.Shared.Startup
             var builder = new ContainerBuilder();
             builder.RegisterModule(new CommandModule());
             builder.Update(container);
+        }
+
+        void ReportError(Exception ex)
+        {
+            if (container != null)
+            {
+                var reporter = container.Resolve<IErrorReporter>();
+                reporter.ReportError(ex);
+            }
         }
 
         static string ExtractCommandName(ref string[] args)

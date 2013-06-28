@@ -8,6 +8,7 @@ namespace Octopus.Shared.Diagnostics
         protected override void Load(ContainerBuilder builder)
         {
             builder.Register(c => Log.Octopus()).As<ILog>();
+            builder.RegisterType<ErrorReporter>().As<IErrorReporter>();
         }
     }
 }
