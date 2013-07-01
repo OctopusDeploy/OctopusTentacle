@@ -70,6 +70,13 @@ namespace Octopus.Shared.Web
                 public static string Index = "/api/events{?skip,regarding,user}";
             }
 
+            public static class Feeds
+            {
+                public static string Template = "/api/feeds{/id}{?nonStale,skip}";
+                public static string Index = "/api/feeds{?nonStale,skip}";
+                public static string Get = "/api/feeds/{id}";
+            }
+
             public static class Variables
             {
                 public static string Get = "/api/variables/{id}";
@@ -158,25 +165,6 @@ namespace Octopus.Shared.Web
                 public static string Get(string projectId, string releaseId, string id)
                 {
                     return Format("/api/projects/{0}/releases/{1}/deployments/{2}", new object[] { projectId, releaseId, id }, new Dictionary<string, object>() { });
-                }
-
-            }
-            public static class Feeds
-            {
-                /// <summary>
-                /// Returns a URI like: /api/feeds?area=api
-                /// </summary>
-                public static string Index()
-                {
-                    return Format("/api/feeds", new object[] { }, new Dictionary<string, object>() { });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/feeds/Foo?area=api
-                /// </summary>
-                public static string Get(string id)
-                {
-                    return Format("/api/feeds/{0}", new object[] { id }, new Dictionary<string, object>() { });
                 }
 
             }
