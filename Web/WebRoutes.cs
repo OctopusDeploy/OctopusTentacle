@@ -18,6 +18,7 @@ namespace Octopus.Shared.Web
             
             public static class Environments
             {
+                public static string Template = "/api/environments{/id}{?nonStale,skip}";
                 public static string Index = "/api/environments{?nonStale,skip}";
                 public static string Get = "/api/environments/{id}";
                 public static string GetMachines = "/api/environments/{id}/machines{?nonStale,skip}";
@@ -25,18 +26,21 @@ namespace Octopus.Shared.Web
 
             public static class Machines
             {
+                public static string Template = "/api/machines{/id}{?nonStale,skip}";
                 public static string Index = "/api/machines{?nonStale,skip}";
                 public static string Get = "/api/machines/{id}";
             }
 
             public static class Tenants
             {
+                public static string Template = "/api/tenants{/id}{?nonStale,skip}";
                 public static string Index = "/api/tenants{?nonStale,skip}";
                 public static string Get = "/api/tenants/{id}";
             }
 
             public static class TenantPools
             {
+                public static string Template = "/api/tenantpools{/id}{?nonStale,skip}";
                 public static string Index = "/api/tenantpools{?nonStale,skip}";
                 public static string Get = "/api/tenantpools/{id}";
                 public static string GetTenants = "/api/tenantpools/{id}/tenants";
@@ -44,6 +48,7 @@ namespace Octopus.Shared.Web
 
             public static class ProjectGroups
             {
+                public static string Template = "/api/projectgroups{/id}{?nonStale,skip}";
                 public static string Index = "/api/projectgroups{?nonStale,skip}";
                 public static string Get = "/api/projectgroups/{id}";
                 public static string Projects = "/api/projectgroups/{id}/projects";
@@ -51,12 +56,14 @@ namespace Octopus.Shared.Web
 
             public static class Projects
             {
+                public static string Template = "/api/projects{/id}{?nonStale,skip}";
                 public static string Index = "/api/projects{?nonStale,skip}";
                 public static string Get = "/api/projects/{id}";
             }
             
             public static class Tasks
             {
+                public static string Template = "/api/tasks{/id}{?nonStale,skip}";
                 public static string Index = "/api/tasks{?nonStale,skip}";
                 public static string Get = "/api/tasks/{id}";
                 public static string Details = "/api/tasks/details/{id}";
@@ -67,6 +74,7 @@ namespace Octopus.Shared.Web
 
             public static class Events
             {
+                public static string Template = "/api/events{/id}{?skip,regarding,user}";
                 public static string Index = "/api/events{?skip,regarding,user}";
             }
 
