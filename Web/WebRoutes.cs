@@ -43,6 +43,14 @@ namespace Octopus.Shared.Web
                 public static string Template = "/api/releases{/id}{?nonStale,skip}";
                 public static string Index = "/api/releases{?nonStale,skip}";
                 public static string Get = "/api/releases/{id}";
+                public static string GetDeployments = "/api/releases/{id}/deployments";
+            }
+
+            public static class Deployments
+            {
+                public static string Template = "/api/deployments{/id}{?nonStale,skip}";
+                public static string Index = "/api/deployments{?nonStale,skip}";
+                public static string Get = "/api/deployments/{id}";
             }
 
             public static class TenantPools
@@ -159,33 +167,6 @@ namespace Octopus.Shared.Web
         }
         public static partial class Api
         {
-            public static class Deployments
-            {
-                /// <summary>
-                /// Returns a URI like: /api/projects/Foo/releases/Foo/Deployments?area=api
-                /// </summary>
-                public static string Index(string projectId, string releaseId)
-                {
-                    return Format("/api/projects/{0}/releases/{1}/deployments", new object[] { projectId, releaseId }, new Dictionary<string, object>() { });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/projects/Foo/most-recent-deployment/Foo?area=api
-                /// </summary>
-                public static string GetMostRecent(string projectId, string environmentId)
-                {
-                    return Format("/api/projects/{0}/most-recent-deployment/{1}", new object[] { projectId, environmentId }, new Dictionary<string, object>() { });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/projects/Foo/releases/Foo/Deployments/Foo?area=api
-                /// </summary>
-                public static string Get(string projectId, string releaseId, string id)
-                {
-                    return Format("/api/projects/{0}/releases/{1}/deployments/{2}", new object[] { projectId, releaseId, id }, new Dictionary<string, object>() { });
-                }
-
-            }
             public static class Groups
             {
                 /// <summary>
