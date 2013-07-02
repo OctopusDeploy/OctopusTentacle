@@ -38,6 +38,13 @@ namespace Octopus.Shared.Web
                 public static string Get = "/api/tenants/{id}";
             }
 
+            public static class Releases
+            {
+                public static string Template = "/api/releases{/id}{?nonStale,skip}";
+                public static string Index = "/api/releases{?nonStale,skip}";
+                public static string Get = "/api/releases/{id}";
+            }
+
             public static class TenantPools
             {
                 public static string Template = "/api/tenantpools{/id}{?nonStale,skip}";
@@ -59,6 +66,7 @@ namespace Octopus.Shared.Web
                 public static string Template = "/api/projects{/id}{?nonStale,skip}";
                 public static string Index = "/api/projects{?nonStale,skip}";
                 public static string Get = "/api/projects/{id}";
+                public static string GetReleases = "/api/projects/{id}/releases{?nonStale,skip}";
             }
             
             public static class Tasks
@@ -87,11 +95,13 @@ namespace Octopus.Shared.Web
 
             public static class Variables
             {
+                public static string Template = "/api/variables{/id}";
                 public static string Get = "/api/variables/{id}";
             }
 
             public static class DeploymentProcesses
             {
+                public static string Template = "/api/deploymentprocesses{/id}";
                 public static string Get = "/api/deploymentprocesses/{id}";
             }
 
@@ -225,25 +235,6 @@ namespace Octopus.Shared.Web
             public static class Preferences
             {
             }
-            public static class Releases
-            {
-                /// <summary>
-                /// Returns a URI like: /api/projects/Foo/releases?area=api&amp;skip=0&amp;take=0
-                /// </summary>
-                public static string Index(string projectId, int skip = 0, int take = 20)
-                {
-                    return Format("/api/projects/{0}/releases", new object[] { projectId }, new Dictionary<string, object>() { { "skip", skip }, { "take", take } });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/projects/Foo/releases/Foo?area=api
-                /// </summary>
-                public static string Get(string projectId, string id)
-                {
-                    return Format("/api/projects/{0}/releases/{1}", new object[] { projectId, id }, new Dictionary<string, object>() { });
-                }
-
-            }
             public static class Steps
             {
                 /// <summary>
@@ -263,7 +254,6 @@ namespace Octopus.Shared.Web
                 }
 
             }
-
         }
         public static class Configuration
         {
