@@ -113,6 +113,16 @@ namespace Octopus.Shared.Web
                 public static string Get = "/api/deploymentprocesses/{id}";
             }
 
+            public static class Dashboards
+            {
+                public static string Template = "/api/dashboard";
+            }
+
+            public static class DashboardConfigurations
+            {
+                public static string Template = "/api/dashboardconfiguration";
+            }
+
             public static class Users
             {
                 public static string Index = "/api/users{?nonStale,skip}";
