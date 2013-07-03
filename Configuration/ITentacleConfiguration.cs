@@ -6,7 +6,7 @@ namespace Octopus.Shared.Configuration
     /// <summary>
     /// Machine-wide Tentacle configuration settings (backed by the Windows Registry).
     /// </summary>
-    public interface ITentacleConfiguration
+    public interface ITentacleConfiguration : IModifiableConfiguraton
     {
         /// <summary>
         /// Gets or sets the list of X509 certificate thumbprints of Octopus servers that this Tentacle trusts.

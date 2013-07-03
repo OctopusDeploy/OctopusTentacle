@@ -6,11 +6,11 @@ using Octopus.Shared.Security;
 
 namespace Octopus.Shared.Configuration
 {
-    public class RegistryTentacleConfiguration : ITentacleConfiguration
+    public class TentacleConfiguration : ITentacleConfiguration
     {
         readonly IKeyValueStore settings;
 
-        public RegistryTentacleConfiguration(IKeyValueStore settings)
+        public TentacleConfiguration(IKeyValueStore settings)
         {
             this.settings = settings;
         }
@@ -89,6 +89,11 @@ namespace Octopus.Shared.Configuration
         {
             get { return settings.Get("Tentacle.Services.HostName", "localhost"); }
             set { settings.Set("Tentacle.Services.HostName", value); }
+        }
+
+        public void Save()
+        {
+            settings.Save();
         }
     }
 }

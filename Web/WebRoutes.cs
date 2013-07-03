@@ -122,6 +122,13 @@ namespace Octopus.Shared.Web
                 public static string Register = "/api/users/register{?inviteCode}";
                 public static string Me = "/api/users/me";
             }
+
+            public static class Certificates
+            {
+                public static string Template = "/api/certificates{/id}{?nonStale,skip}";
+                public static string Index = "/api/certificates{?nonStale,skip}";
+                public static string Get = "/api/certificates/{id}";
+            }
         }
 
         public static partial class Web

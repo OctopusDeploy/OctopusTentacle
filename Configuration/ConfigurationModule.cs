@@ -25,7 +25,7 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<OctopusServerStorageConfiguration>().As<IOctopusServerStorageConfiguration>();
             builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().As<IStartable>().SingleInstance();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>().As<IStartable>().SingleInstance();
-            builder.RegisterType<RegistryTentacleConfiguration>().As<ITentacleConfiguration>().SingleInstance();
+            builder.RegisterType<TentacleConfiguration>().As<ITentacleConfiguration>().SingleInstance();
         }
 
         public static ConfigurationModule FromFile(string filePath)

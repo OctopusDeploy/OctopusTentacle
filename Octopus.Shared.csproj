@@ -145,6 +145,7 @@
     <Compile Include="Configuration\IHomeConfiguration.cs" />
     <Compile Include="Configuration\IKeyValueStore.cs" />
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
+    <Compile Include="Configuration\IModifiableConfiguraton.cs" />
     <Compile Include="Configuration\IOctopusServerStorageConfiguration.cs" />
     <Compile Include="Configuration\IsolatedStorageXmlFileKeyValueStore.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
@@ -156,7 +157,7 @@
     <Compile Include="Configuration\LoggingConfiguration.cs" />
     <Compile Include="Configuration\ITentacleConfiguration.cs" />
     <Compile Include="Configuration\ProxyConfiguration.cs" />
-    <Compile Include="Configuration\RegistryTentacleConfiguration.cs" />
+    <Compile Include="Configuration\TentacleConfiguration.cs" />
     <Compile Include="Configuration\DictionaryKeyValueStore.cs" />
     <Compile Include="Configuration\StorageMode.cs" />
     <Compile Include="Configuration\UpgradeCheckConfiguration.cs" />
