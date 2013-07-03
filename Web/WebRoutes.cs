@@ -48,8 +48,8 @@ namespace Octopus.Shared.Web
 
             public static class Deployments
             {
-                public static string Template = "/api/deployments{/id}{?nonStale,skip}";
-                public static string Index = "/api/deployments{?nonStale,skip}";
+                public static string Template = "/api/deployments{/id}{?nonStale,skip,projects,environments}";
+                public static string Index = "/api/deployments{?nonStale,skip,projects,environments}";
                 public static string Get = "/api/deployments/{id}";
             }
 
