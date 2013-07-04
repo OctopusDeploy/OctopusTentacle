@@ -116,6 +116,7 @@ namespace Octopus.Shared.Web
             public static class Dashboards
             {
                 public static string Template = "/api/dashboard";
+                public static string DynamicTemplate = "/api/dashboard/dynamic{?projects,environments}";
             }
 
             public static class DashboardConfigurations
