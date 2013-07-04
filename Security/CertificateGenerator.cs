@@ -1,6 +1,6 @@
 using System;
 using System.Security.Cryptography.X509Certificates;
-using Octopus.Shared.Security.CertificateGeneration;
+using Octopus.Shared.Internals.CertificateGeneration;
 
 namespace Octopus.Shared.Security
 {

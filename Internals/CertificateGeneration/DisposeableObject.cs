@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Octopus.Shared.Security.CertificateGeneration
+namespace Octopus.Shared.Internals.CertificateGeneration
 {
     [StructLayout(LayoutKind.Sequential)]
     public abstract class DisposeableObject : IDisposable

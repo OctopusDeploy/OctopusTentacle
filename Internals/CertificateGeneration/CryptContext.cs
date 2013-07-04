@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Octopus.Shared.Security.CertificateGeneration
+namespace Octopus.Shared.Internals.CertificateGeneration
 {
     // This class has just enough functionality for generating self-signed certs.
     // In the future, I may expand it to do other things.

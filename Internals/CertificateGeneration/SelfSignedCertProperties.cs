@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Octopus.Shared.Security.CertificateGeneration
+namespace Octopus.Shared.Internals.CertificateGeneration
 {
     public class SelfSignedCertProperties
     {

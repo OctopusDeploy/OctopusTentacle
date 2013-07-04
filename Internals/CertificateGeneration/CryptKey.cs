@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Security.CertificateGeneration
+namespace Octopus.Shared.Internals.CertificateGeneration
 {
     public abstract class CryptKey : DisposeableObject
     {

@@ -153,7 +153,7 @@
     <Compile Include="Configuration\OctopusServerStorageConfiguration.cs" />
     <Compile Include="Configuration\OctopusStorage.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
-    <Compile Include="Configuration\RegistryOctopusConfiguration.cs" />
+    <Compile Include="Configuration\DeploymentProcessConfiguration.cs" />
     <Compile Include="Configuration\LoggingConfiguration.cs" />
     <Compile Include="Configuration\ITentacleConfiguration.cs" />
     <Compile Include="Configuration\ProxyConfiguration.cs" />
@@ -171,6 +171,7 @@
     <Compile Include="Contracts\DeploymentRequest.cs" />
     <Compile Include="Contracts\DownloadRequest.cs" />
     <Compile Include="Contracts\HealthResult.cs" />
+    <Compile Include="Conventions\ChildConventionContext.cs" />
     <Compile Include="Diagnostics\ErrorReporter.cs" />
     <Compile Include="Diagnostics\IErrorReporter.cs" />
     <Compile Include="Diagnostics\ILog.cs" />
@@ -271,11 +272,13 @@
     <Compile Include="Packages\FastLocalPackageRepository.cs" />
     <Compile Include="Packages\FeedCredentialsProvider.cs" />
     <Compile Include="Packages\FixedFilePathResolver.cs" />
+    <Compile Include="Packages\IPackageDownloader.cs" />
     <Compile Include="Packages\IPackageExtractor.cs" />
     <Compile Include="Packages\LightweightPackageExtractor.cs" />
     <Compile Include="Packages\NuGetExtensions.cs" />
     <Compile Include="Packages\NuGetModule.cs" />
     <Compile Include="Packages\OctopusPackageRepositoryFactory.cs" />
+    <Compile Include="Packages\PackageCachePolicy.cs" />
     <Compile Include="Packages\PackageDownloader.cs" />
     <Compile Include="Packages\StoredPackage.cs" />
     <Compile Include="Packages\IPackageStore.cs" />
@@ -285,15 +288,15 @@
     <Compile Include="Security\Aes256EncryptionAlgorithm.cs" />
     <Compile Include="Security\CertificateEncoder.cs" />
     <Compile Include="Security\CertificateExpectations.cs" />
-    <Compile Include="Security\CertificateGeneration\CertProperties.cs" />
-    <Compile Include="Security\CertificateGeneration\CryptContext.cs" />
-    <Compile Include="Security\CertificateGeneration\CryptKey.cs" />
-    <Compile Include="Security\CertificateGeneration\DisposableObject.cs" />
-    <Compile Include="Security\CertificateGeneration\KeyExchangeKey.cs" />
-    <Compile Include="Security\CertificateGeneration\KeyType.cs" />
-    <Compile Include="Security\CertificateGeneration\SignatureKey.cs" />
-    <Compile Include="Security\CertificateGeneration\Win32ErrorHelper.cs" />
-    <Compile Include="Security\CertificateGeneration\Win32Native.cs" />
+    <Compile Include="Internals\CertificateGeneration\SelfSignedCertProperties.cs" />
+    <Compile Include="Internals\CertificateGeneration\CryptContext.cs" />
+    <Compile Include="Internals\CertificateGeneration\CryptKey.cs" />
+    <Compile Include="Internals\CertificateGeneration\DisposeableObject.cs" />
+    <Compile Include="Internals\CertificateGeneration\KeyExchangeKey.cs" />
+    <Compile Include="Internals\CertificateGeneration\KeyType.cs" />
+    <Compile Include="Internals\CertificateGeneration\SignatureKey.cs" />
+    <Compile Include="Internals\CertificateGeneration\Win32ErrorHelper.cs" />
+    <Compile Include="Internals\CertificateGeneration\Win32Native.cs" />
     <Compile Include="Security\CertificateGenerator.cs" />
     <Compile Include="Security\CertificateValidationDirection.cs" />
     <Compile Include="Security\CertificateValidator.cs" />
@@ -335,6 +338,7 @@
     <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
     <Compile Include="Util\PasswordHasher.cs" />
+    <Compile Include="Util\PathSegmentValidator.cs" />
     <Compile Include="Util\RandomStringGenerator.cs" />
     <Compile Include="Util\RuntimeUtility.cs" />
     <Compile Include="Util\SilentProcessRunner.cs" />
@@ -374,6 +378,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Internals\CertificateGeneration\_Readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />

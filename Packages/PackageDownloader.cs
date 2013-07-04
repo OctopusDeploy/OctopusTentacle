@@ -10,17 +10,6 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Packages
 {
-    public interface IPackageDownloader
-    {
-        StoredPackage Download(PackageMetadata package, IFeed feed, PackageCachePolicy cachePolicy, IActivityLog log);
-    }
-
-    public enum PackageCachePolicy
-    {
-        UseCache,
-        BypassCache
-    }
-
     public class PackageDownloader : IPackageDownloader
     {
         const int NumberOfTimesToAttemptToDownloadPackage = 5;
