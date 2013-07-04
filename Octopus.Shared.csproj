@@ -179,6 +179,16 @@
     <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
     <Compile Include="Extensibility\OctopusPluginAttribute.cs" />
     <Compile Include="Extensibility\PluginsModule.cs" />
+    <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
+    <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
+    <Compile Include="Internals\DiffMatchPatch\Operation.cs" />
+    <Compile Include="Internals\DiffMatchPatch\Patch.cs" />
+    <Compile Include="Internals\Options\Option.cs" />
+    <Compile Include="Internals\Options\OptionAction.cs" />
+    <Compile Include="Internals\Options\OptionContext.cs" />
+    <Compile Include="Internals\Options\OptionException.cs" />
+    <Compile Include="Internals\Options\OptionSet.cs" />
+    <Compile Include="Internals\Options\OptionValueType.cs" />
     <Compile Include="Packages\IFeed.cs" />
     <Compile Include="Contracts\IHealthService.cs" />
     <Compile Include="Contracts\IJobService.cs" />
@@ -307,7 +317,7 @@
     <Compile Include="Startup\ICommandRuntime.cs" />
     <Compile Include="Startup\IServiceInstaller.cs" />
     <Compile Include="Startup\OctopusProgram.cs" />
-    <Compile Include="Startup\Options.Generated.cs" />
+    <Compile Include="Internals\Options\OptionValueCollection.cs" />
     <Compile Include="Startup\ServiceOptions.cs" />
     <Compile Include="Startup\ServiceInstaller.cs" />
     <Compile Include="Startup\WindowsServiceAdapter.cs">
@@ -323,7 +333,7 @@
     <Compile Include="Time\IClock.cs" />
     <Compile Include="ServiceMessages\ServiceMessage.cs" />
     <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
-    <Compile Include="Util\DiffMatchPatch.cs" />
+    <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
     <Compile Include="Util\PasswordHasher.cs" />
     <Compile Include="Util\RandomStringGenerator.cs" />
     <Compile Include="Util\RuntimeUtility.cs" />
@@ -358,6 +368,12 @@
       <Project>{FAF9A6DD-C669-4F5B-88AF-8AB2B8F3B7C4}</Project>
       <Name>Octopus.Client</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Internals\Options\_Readme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />

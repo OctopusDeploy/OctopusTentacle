@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Octopus.Shared.Internals.Options;
 
 namespace Octopus.Shared.Startup
 {

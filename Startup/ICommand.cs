@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Shared.Internals.Options;
 
 namespace Octopus.Shared.Startup
 {
