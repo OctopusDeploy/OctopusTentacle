@@ -145,6 +145,8 @@ namespace Octopus.Shared.Contracts
             public static readonly string IsFtpDeployment = "Octopus.Step.IsFtpDeployment";
             public static readonly string IsAzureDeployment = "Octopus.Step.IsAzureDeployment";
 
+            public static readonly string DestinationRoles = "Octopus.Step.DestinationRoles";
+
             public static class Package
             {
                 public static readonly string NuGetPackageId = "Octopus.Step.Package.NuGetPackageId";
