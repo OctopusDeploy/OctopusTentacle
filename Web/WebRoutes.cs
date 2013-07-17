@@ -15,7 +15,15 @@ namespace Octopus.Shared.Web
             {
                 public static string Index = "/api";
             }
-            
+
+            public static class Artifacts
+            {
+                public static string Template = "/api/artifacts{/id}{?nonStale,skip}";
+                public static string Index = "/api/artifacts{?nonStale,skip}";
+                public static string Get = "/api/artifacts/{id}";
+                public static string GetContent = "/api/artifacts/{id}/content{/filename}";
+            }
+                        
             public static class Environments
             {
                 public static string Template = "/api/environments{/id}{?nonStale,skip}";
@@ -44,6 +52,7 @@ namespace Octopus.Shared.Web
                 public static string Index = "/api/releases{?nonStale,skip}";
                 public static string Get = "/api/releases/{id}";
                 public static string GetDeployments = "/api/releases/{id}/deployments";
+                public static string GetArtifacts = "/api/releases/{id}/artifacts";
             }
 
             public static class Deployments
