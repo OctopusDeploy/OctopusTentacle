@@ -33,7 +33,7 @@ namespace Octopus.Shared.Conventions
                 return;
             }
 
-            if (context.Variables.GetFlag(SpecialVariables.Step.Package.UpdateIisWebsite, false))
+            if (!context.Variables.GetFlag(SpecialVariables.Step.Package.UpdateIisWebsite, true))
             {
                 return;
             }
