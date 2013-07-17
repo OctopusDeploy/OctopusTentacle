@@ -33,7 +33,7 @@ namespace Octopus.Shared.Conventions
                 return;
             }
 
-            if (context.Variables.GetFlag(SpecialVariables.Step.Package.LegacyNotAWebSite, false))
+            if (context.Variables.GetFlag(SpecialVariables.Step.Package.UpdateIisWebsite, false))
             {
                 return;
             }
@@ -45,7 +45,7 @@ namespace Octopus.Shared.Conventions
                 return;
             }
 
-            var iisSiteName = context.Variables.GetValue(SpecialVariables.Step.Package.LegacyWebSiteName);
+            var iisSiteName = context.Variables.Get(SpecialVariables.Step.Package.UpdateIisWebsiteName);
             if (string.IsNullOrWhiteSpace(iisSiteName))
             {
                 iisSiteName = context.Package.PackageId;

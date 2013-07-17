@@ -12,24 +12,6 @@ namespace Octopus.Shared.Contracts
 
         static SpecialVariables()
         {
-            AddLegacy(Environment.LegacyEnvironmentId, Environment.Id);
-            AddLegacy(Environment.LegacyEnvironmentName, Environment.Name);
-            AddLegacy(Machine.LegacyMachineName, Machine.Name);
-            AddLegacy(Release.LegacyReleaseNumber, Release.Number);
-            AddLegacy(Deployment.LegacyDeploymentId, Deployment.Id);
-            AddLegacy(Deployment.LegacyForcePackageRedeployment, Deployment.ForcePackageRedeployment);
-            AddLegacy(Project.LegacyProjectName, Project.Name);
-            AddLegacy(Project.LegacyProjectId, Project.Id);
-            AddLegacy(Task.LegacyTaskId, Task.Id);
-            AddLegacy(Web.LegacyProjectWebLink, Web.ProjectLink);
-            AddLegacy(Web.LegacyReleaseWebLink, Web.ReleaseLink);
-            AddLegacy(Web.LegacyDeploymentWebLink, Web.DeploymentLink);
-            AddLegacy(Step.Package.LegacyIgnoreConfigTransformationErrors, Step.Package.IgnoreConfigTranformationErrors);
-            AddLegacy(Step.Package.LegacyPackageDirectoryPath, Step.Package.CustomInstallationDirectory);
-            AddLegacy(Step.Package.LegacyPackageName, Step.Package.NuGetPackageId);
-            AddLegacy(Step.Package.LegacyPackageVersion, Step.Package.NuGetPackageVersion);
-            AddLegacy(Step.Package.LegacyPurgePackageDirectoryBeforeCopy, Step.Package.CustomInstallationDirectoryShouldBePurgedBeforeDeployment);
-            AddLegacy(Step.Package.LegacyWebSiteName, Step.Package.UpdateIisWebsiteName);
         }
 
         // Set by Octopus Server exclusively
@@ -57,7 +39,7 @@ namespace Octopus.Shared.Contracts
 
         public static string[] GetUserVariables()
         {
-            return new[] { TreatWarningsAsErrors, Step.Package.LegacyPackageDirectoryPath, Step.Package.LegacyWebSiteName, Step.Package.LegacyNotAWebSite, PrintVariables, PrintEvaluatedVariables, IgnoreMissingVariableTokens, NoVariableTokenReplacement, MaxParallelism, UseLegacyIisSupport };
+            return new[] { TreatWarningsAsErrors, PrintVariables, PrintEvaluatedVariables, IgnoreMissingVariableTokens, NoVariableTokenReplacement, MaxParallelism, UseLegacyIisSupport };
         }
 
         public static readonly string SecretSuffix = "[Secret]";
@@ -78,29 +60,22 @@ namespace Octopus.Shared.Contracts
             public static readonly string Id = "Octopus.Environment.Id";
             public static readonly string Name = "Octopus.Environment.Name";
             public static readonly string SortOrder = "Octopus.Environment.SortOrder";
-
-            public static readonly string LegacyEnvironmentName = "OctopusEnvironmentName";
-            public static readonly string LegacyEnvironmentId = "OctopusEnvironmentId";
         }
 
         public static class Machine
         {
-            public static readonly string LegacyMachineName = "OctopusMachineName";
             public static readonly string Id = "Octopus.Machine.Id";
             public static readonly string Name = "Octopus.Machine.Name";
         }
 
         public static class Release
         {
-            public static readonly string LegacyReleaseNumber = "OctopusReleaseNumber";
             public static readonly string Number = "Octopus.Release.Number";
             public static readonly string Notes = "Octopus.Release.Notes";
         }
 
         public static class Deployment
         {
-            public static readonly string LegacyDeploymentId = "OctopusDeploymentId";
-            public static readonly string LegacyForcePackageRedeployment = "OctopusForcePackageRedeployment";
             public static readonly string Id = "Octopus.Deployment.Id";
             public static readonly string Name = "Octopus.Deployment.Id";
             public static readonly string Comments = "Octopus.Deployment.Comments";
@@ -110,15 +85,12 @@ namespace Octopus.Shared.Contracts
 
         public static class Project
         {
-            public static readonly string LegacyProjectName = "OctopusProjectName";
-            public static readonly string LegacyProjectId = "OctopusProjectId";
             public static readonly string Id = "Octopus.Project.Id";
             public static readonly string Name = "Octopus.Project.Name";
         }
 
         public static class Task
         {
-            public static readonly string LegacyTaskId = "OctopusTaskId";
             public static readonly string Id = "Octopus.Task.Id";
             public static readonly string Name = "Octopus.Task.Name";
             public static readonly string Arguments = "Octopus.Task.Arguments";
@@ -126,10 +98,6 @@ namespace Octopus.Shared.Contracts
 
         public static class Web
         {
-            public static readonly string LegacyProjectWebLink = "OctopusProjectWebLink";
-            public static readonly string LegacyReleaseWebLink = "OctopusReleaseWebLink";
-            public static readonly string LegacyDeploymentWebLink = "OctopusDeploymentWebLink";
-
             public static readonly string ProjectLink = "Octopus.Web.ProjectLink";
             public static readonly string ReleaseLink = "Octopus.Web.ReleaseLink";
             public static readonly string DeploymentLink = "Octopus.Web.DeploymentLink";
@@ -145,13 +113,16 @@ namespace Octopus.Shared.Contracts
             public static readonly string IsFtpDeployment = "Octopus.Step.IsFtpDeployment";
             public static readonly string IsAzureDeployment = "Octopus.Step.IsAzureDeployment";
 
-            public static readonly string DestinationRoles = "Octopus.Step.DestinationRoles";
-
+            public static readonly string TargetRoles = "Octopus.Step.TargetRoles";
+            
             public static class Package
             {
                 public static readonly string NuGetPackageId = "Octopus.Step.Package.NuGetPackageId";
                 public static readonly string NuGetPackageVersion = "Octopus.Step.Package.NuGetPackageVersion";
 
+                public static readonly string ShouldDownloadOnTentacle = "Octopus.Step.Package.DownloadOnTentacle";
+                public static readonly string NuGetFeedId = "Octopus.Step.Package.NuGetFeedId";
+                
                 public static readonly string UpdateIisWebsite = "Octopus.Step.Package.UpdateIisWebsite";
                 public static readonly string UpdateIisWebsiteName = "Octopus.Step.Package.UpdateIisWebsiteName";
 
@@ -162,15 +133,6 @@ namespace Octopus.Shared.Contracts
                 public static readonly string AutomaticallyRunConfigurationTransformationFiles = "Octopus.Step.Package.AutomaticallyRunConfigurationTransformationFiles";
                 public static readonly string IgnoreConfigTranformationErrors = "Octopus.Step.Package.IgnoreConfigTranformationErrors";
                 public static readonly string AdditionalXmlConfigurationTransforms = "Octopus.Step.Package.AdditionalXmlConfigurationTransforms";
-                
-                public static readonly string LegacyPackageName = "OctopusPackageName";
-                public static readonly string LegacyPackageVersion = "OctopusPackageVersion";
-                public static readonly string LegacyPackageNameAndVersion = "OctopusPackageNameAndVersion";
-                public static readonly string LegacyPackageDirectoryPath = "OctopusPackageDirectoryPath";
-                public static readonly string LegacyWebSiteName = "OctopusWebSiteName";
-                public static readonly string LegacyNotAWebSite = "OctopusNotAWebSite";
-                public static readonly string LegacyPurgePackageDirectoryBeforeCopy = "OctopusPurgePackageDirectoryBeforeCopy";
-                public static readonly string LegacyIgnoreConfigTransformationErrors = "OctopusIgnoreConfigTransformationErrors";
             }
 
             public static class Ftp
@@ -182,6 +144,21 @@ namespace Octopus.Shared.Contracts
                 public static readonly string FtpPort = "Octopus.Step.Ftp.FtpPort";
                 public static readonly string RootDirectory = "Octopus.Step.Ftp.RootDirectory";
                 public static readonly string DeleteDestinationFiles = "Octopus.Step.Ftp.DeleteDestinationFiles";
+            }
+
+            public static class Email
+            {
+                public static readonly string To = "Octopus.Step.Email.To";
+                public static readonly string Cc = "Octopus.Step.Email.Cc";
+                public static readonly string Bcc = "Octopus.Step.Email.Bcc";
+                public static readonly string IsHtml = "Octopus.Step.Email.IsHtml";
+                public static readonly string Subject = "Octopus.Step.Email.Subject";
+                public static readonly string Body = "Octopus.Step.Email.Body";
+            }
+
+            public static class Script
+            {
+                public static readonly string ScriptBody = "Octopus.Step.Script.ScriptBody";
             }
 
             public static class Azure
