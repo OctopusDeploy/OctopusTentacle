@@ -60,7 +60,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         string ChooseWhichServiceConfigurationFileToUse(IConventionContext context)
         {
-            var configurationFilePath = context.Variables.GetValue("OctopusAzureConfigurationFile");
+            var configurationFilePath = context.Variables.Get("OctopusAzureConfigurationFile");
             if (!string.IsNullOrWhiteSpace(configurationFilePath) && !fileSystem.FileExists(configurationFilePath))
             {
                 throw new ActivityFailedException("The specified Azure service configuraton file does not exist: " + configurationFilePath);
@@ -68,12 +68,12 @@ namespace Octopus.Shared.Conventions.Implementations
 
             if (string.IsNullOrWhiteSpace(configurationFilePath))
             {
-                var userSpecifiedFile = context.Variables.GetValue("OctopusAzureConfigurationFileName");
+                var userSpecifiedFile = context.Variables.Get("OctopusAzureConfigurationFileName");
 
                 configurationFilePath = GetFirstExistingFile(
                     context,
                     userSpecifiedFile,
-                    "ServiceConfiguration." + context.Variables.GetValue(SpecialVariables.Environment.Name) + ".cscfg",
+                    "ServiceConfiguration." + context.Variables.Get(SpecialVariables.Environment.Name) + ".cscfg",
                     "ServiceConfiguration.Cloud.cscfg");
             }
 
@@ -116,8 +116,8 @@ namespace Octopus.Shared.Conventions.Implementations
             if (useInstanceCount == false)
                 return;
 
-            var serviceName = context.Variables.GetValue(SpecialVariables.Step.Azure.CloudServiceName);
-            var slot = context.Variables.GetValue(SpecialVariables.Step.Azure.Slot);
+            var serviceName = context.Variables.Get(SpecialVariables.Step.Azure.CloudServiceName);
+            var slot = context.Variables.Get(SpecialVariables.Step.Azure.Slot);
 
             var subscriptionData = SubscriptionDataFactory.CreateFromAzureStep(context.Variables, context.Certificate);
             var remoteConfigurationFile = configurationRetriever.GetCurrentConfiguration(subscriptionData, serviceName, slot);

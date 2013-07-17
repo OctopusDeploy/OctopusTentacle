@@ -22,11 +22,11 @@ namespace Octopus.Shared.Conventions.Implementations
             if (!context.Variables.GetFlag(SpecialVariables.Step.IsFtpDeployment, false))
                 return;
 
-            var host = context.Variables.GetValue(SpecialVariables.Step.Ftp.Host);
-            var username = context.Variables.GetValue(SpecialVariables.Step.Ftp.Username);
-            var password = context.Variables.GetValue(SpecialVariables.Step.Ftp.Password);
+            var host = context.Variables.Get(SpecialVariables.Step.Ftp.Host);
+            var username = context.Variables.Get(SpecialVariables.Step.Ftp.Username);
+            var password = context.Variables.Get(SpecialVariables.Step.Ftp.Password);
             var useFtps = context.Variables.GetFlag(SpecialVariables.Step.Ftp.UseFtps, false);
-            var root = context.Variables.GetValue(SpecialVariables.Step.Ftp.RootDirectory);
+            var root = context.Variables.Get(SpecialVariables.Step.Ftp.RootDirectory);
             var port = context.Variables.GetInt32(SpecialVariables.Step.Ftp.FtpPort) ?? 0;
             var deleteFiles = context.Variables.GetFlag(SpecialVariables.Step.Ftp.DeleteDestinationFiles, false);
 

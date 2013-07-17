@@ -29,20 +29,20 @@ namespace Octopus.Shared.Conventions.Implementations
                 return;
             }
 
-            var targetDirectory = context.Variables.GetValue(SpecialVariables.Step.Package.LegacyPackageDirectoryPath);
+            var targetDirectory = context.Variables.Get(SpecialVariables.Step.Package.CustomInstallationDirectory);
             if (string.IsNullOrWhiteSpace(targetDirectory))
             {
                 context.Log.Debug("The package has been installed to: " + context.PackageContentsDirectoryPath);
-                context.Log.DebugFormat("If you would like the package to be installed to an alternative location, please specify the variable '{0}'", SpecialVariables.Step.Package.LegacyPackageDirectoryPath);
+                context.Log.DebugFormat("If you would like the package to be installed to an alternative location, please specify the variable '{0}'", SpecialVariables.Step.Package.CustomInstallationDirectory);
 
-                context.Variables.Set(SpecialVariables.Step.Package.LegacyPackageDirectoryPath, context.PackageContentsDirectoryPath);
+                context.Variables.Set(SpecialVariables.Step.Package.CustomInstallationDirectory, context.PackageContentsDirectoryPath);
                 return;
             }
 
             targetDirectory = Path.GetFullPath(targetDirectory);
 
             bool purgeFirst = false;
-            var purgeFirstText = context.Variables.GetValue(SpecialVariables.Step.Package.LegacyPurgePackageDirectoryBeforeCopy);
+            var purgeFirstText = context.Variables.Get(SpecialVariables.Step.Package.CustomInstallationDirectoryShouldBePurgedBeforeDeployment);
             if (!string.IsNullOrWhiteSpace(purgeFirstText))
             {
                 bool.TryParse(purgeFirstText, out purgeFirst);

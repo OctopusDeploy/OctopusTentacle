@@ -65,7 +65,7 @@ namespace Octopus.Shared.Conventions.Implementations
         {
             context.Log.Info("Uploading package to Azure blob storage: " + packageFilePath);
 
-            var packageVersion = context.Variables.GetValue(SpecialVariables.Step.Package.NuGetPackageVersion);
+            var packageVersion = context.Variables.Get(SpecialVariables.Step.Package.NuGetPackageVersion);
             var packageHash = Hash(packageFilePath);            
             var fileName = Path.ChangeExtension(Path.GetFileName(packageFilePath), "." + packageVersion + "_" + packageHash + ".cspkg");
             

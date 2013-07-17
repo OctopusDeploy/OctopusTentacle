@@ -25,7 +25,7 @@ namespace Octopus.Shared.Contracts
         static Configuration GetConfiguration(VariableDictionary variables)
         {
             var tokenRegex = DefaultTokenRegex;
-            var tokenRegexSetting = variables.GetValue(SpecialVariables.VariableTokenRegex);
+            var tokenRegexSetting = variables.Get(SpecialVariables.VariableTokenRegex);
             if (!string.IsNullOrWhiteSpace(tokenRegexSetting))
             {
                 tokenRegex = new Regex(tokenRegexSetting, RegexOptions.Compiled | RegexOptions.Singleline);

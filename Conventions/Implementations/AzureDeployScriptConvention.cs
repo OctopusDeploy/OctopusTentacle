@@ -39,15 +39,15 @@ namespace Octopus.Shared.Conventions.Implementations
                 context.Variables.Set("OctopusAzureModulePath", Path.Combine(azurePowerShellFolder, "Azure.psd1"));
                 context.Variables.Set("OctopusAzureCertificateFileName", certificateFilePath);
                 context.Variables.Set("OctopusAzureCertificatePassword", certificateFilePassword);
-                context.Variables.Set("OctopusAzureSubscriptionId", context.Variables.GetValue(SpecialVariables.Step.Azure.SubscriptionId));
+                context.Variables.Set("OctopusAzureSubscriptionId", context.Variables.Get(SpecialVariables.Step.Azure.SubscriptionId));
                 context.Variables.Set("OctopusAzureSubscriptionName", subscriptionName);
-                context.Variables.Set("OctopusAzureServiceName", context.Variables.GetValue(SpecialVariables.Step.Azure.CloudServiceName));
-                context.Variables.Set("OctopusAzureStorageAccountName", context.Variables.GetValue(SpecialVariables.Step.Azure.StorageAccountName));
-                context.Variables.Set("OctopusAzureSlot", context.Variables.GetValue(SpecialVariables.Step.Azure.Slot));
-                context.Variables.Set("OctopusAzurePackageUri", context.Variables.GetValue(SpecialVariables.Step.Azure.UploadedPackageUri));
-                context.Variables.Set("OctopusAzureDeploymentLabel", context.Variables.GetValue(SpecialVariables.Step.Name) + " v" + context.Variables.GetValue(SpecialVariables.Release.Number));
-                context.Variables.Set("OctopusAzureSwapIfPossible", context.Variables.GetValue(SpecialVariables.Step.Azure.SwapIfPossible));
-                context.Variables.Set("OctopusAzureUseCurrentInstanceCount", context.Variables.GetValue(SpecialVariables.Step.Azure.UseCurrentInstanceCount));
+                context.Variables.Set("OctopusAzureServiceName", context.Variables.Get(SpecialVariables.Step.Azure.CloudServiceName));
+                context.Variables.Set("OctopusAzureStorageAccountName", context.Variables.Get(SpecialVariables.Step.Azure.StorageAccountName));
+                context.Variables.Set("OctopusAzureSlot", context.Variables.Get(SpecialVariables.Step.Azure.Slot));
+                context.Variables.Set("OctopusAzurePackageUri", context.Variables.Get(SpecialVariables.Step.Azure.UploadedPackageUri));
+                context.Variables.Set("OctopusAzureDeploymentLabel", context.Variables.Get(SpecialVariables.Step.Name) + " v" + context.Variables.Get(SpecialVariables.Release.Number));
+                context.Variables.Set("OctopusAzureSwapIfPossible", context.Variables.Get(SpecialVariables.Step.Azure.SwapIfPossible));
+                context.Variables.Set("OctopusAzureUseCurrentInstanceCount", context.Variables.Get(SpecialVariables.Step.Azure.UseCurrentInstanceCount));
 
                 RunScript("BootstrapDeployToAzure", context);
             }
