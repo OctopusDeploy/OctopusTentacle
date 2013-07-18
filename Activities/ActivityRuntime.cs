@@ -35,6 +35,16 @@ namespace Octopus.Shared.Activities
 
         public TaskFactory TaskFactory { get { return taskFactory; } }
 
+        public void Start()
+        {
+            dynamic activity = activityResolver.Locate(message);
+            activity.Runtime = this;
+            activity.Log = state.Log;
+
+            var task = (Task)activity.Execute((dynamic)message);
+            state.Attach(task);
+        }
+
         public async Task Execute()
         {
             dynamic activity = activityResolver.Locate(message);
