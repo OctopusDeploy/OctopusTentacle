@@ -15,6 +15,7 @@ namespace Octopus.Shared.Integration.Scripting
         {
             public static string Name = "createArtifact";
             public static string PathAttribute = "path";
+            public static string OriginalFilenameAttribute = "originalFilename";
         }
     }
 }

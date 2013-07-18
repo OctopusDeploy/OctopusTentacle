@@ -26,5 +26,8 @@ namespace Octopus.Shared.Contracts
 
         [DataMember]
         public Dictionary<string, string> Results { get; set; }
+
+        [DataMember]
+        public List<JobArtifact> CreatedArtifacts { get; set; }
     }
 }

@@ -12,7 +12,7 @@ namespace Octopus.Shared.Integration.Scripting
     {
         readonly ServiceMessageParser parser;
         readonly IDictionary<string, string> outputVariables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase); 
-        readonly ICollection<string> createdArtifacts = new List<string>(); 
+        readonly ICollection<CreatedArtifact> createdArtifacts = new List<CreatedArtifact>(); 
 
         public ScriptExecutionOutputFilter(ScriptOutput outputStream)
         {
@@ -29,7 +29,9 @@ namespace Octopus.Shared.Integration.Scripting
                     }
                     else if (message.Name == ScriptServiceMessageNames.CreateArtifact.Name)
                     {
-                        createdArtifacts.Add(message.GetValue(ScriptServiceMessageNames.CreateArtifact.PathAttribute));
+                        var path = message.GetValue(ScriptServiceMessageNames.CreateArtifact.PathAttribute);
+                        var originalFilename = message.GetValue(ScriptServiceMessageNames.CreateArtifact.OriginalFilenameAttribute);
+                        createdArtifacts.Add(new CreatedArtifact(path, originalFilename));
                     }
                 });
         }
@@ -39,7 +41,7 @@ namespace Octopus.Shared.Integration.Scripting
             get { return outputVariables; }
         }
 
-        public ICollection<string> CreatedArtifacts
+        public ICollection<CreatedArtifact> CreatedArtifacts
         {
             get { return createdArtifacts; }
         }

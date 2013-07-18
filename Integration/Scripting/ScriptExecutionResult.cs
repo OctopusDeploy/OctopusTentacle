@@ -10,18 +10,18 @@ namespace Octopus.Shared.Integration.Scripting
         readonly int exitCode;
         readonly bool stdErrorWritten;
         readonly IDictionary<string, string> outputVariables;
-        readonly ICollection<string> createdArtifacts;
+        readonly ICollection<CreatedArtifact> createdArtifacts;
 
         public ScriptExecutionResult(
             int exitCode, 
             bool stdErrorWritten, 
             IDictionary<string, string> outputVariables = null,
-            IEnumerable<string> createdArtifacts = null)
+            IEnumerable<CreatedArtifact> createdArtifacts = null)
         {
             this.exitCode = exitCode;
             this.stdErrorWritten = stdErrorWritten;
             this.outputVariables = outputVariables ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            this.createdArtifacts = (createdArtifacts ?? new List<string>()).ToList();
+            this.createdArtifacts = (createdArtifacts ?? new List<CreatedArtifact>()).ToList();
         }
 
         public bool StdErrorWritten { get { return stdErrorWritten; } }
@@ -36,7 +36,7 @@ namespace Octopus.Shared.Integration.Scripting
             get { return outputVariables; }
         }
 
-        public ICollection<string> CreatedArtifacts
+        public ICollection<CreatedArtifact> CreatedArtifacts
         {
             get { return createdArtifacts; }
         }

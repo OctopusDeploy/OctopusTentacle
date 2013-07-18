@@ -143,9 +143,11 @@ function Set-OctopusVariable([string]$name, [string]$value)
 
 function New-OctopusArtifact([string]$path) 
 { 	
+    $originalFilename = [System.IO.Path]::GetFileName($path);
+    $originalFilename = Encode-ServiceMessageValue($originalFilename);
     $path = Encode-ServiceMessageValue($path)
 
-	Write-Output ""##octopus[createArtifact path='$path']""
+	Write-Output ""##octopus[createArtifact path='$path' originalFilename='$originalFilename']""
 }
 
 $ErrorActionPreference = ""Stop""";
