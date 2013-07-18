@@ -180,6 +180,7 @@
     <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
     <Compile Include="Extensibility\OctopusPluginAttribute.cs" />
     <Compile Include="Extensibility\PluginsModule.cs" />
+    <Compile Include="Integration\Scripting\ScriptExecutionOutputFilter.cs" />
     <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
     <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
     <Compile Include="Internals\DiffMatchPatch\Operation.cs" />
@@ -306,7 +307,7 @@
     <Compile Include="Security\CertificatesModule.cs" />
     <Compile Include="Security\SymmetricEncryptionAlgorithm.cs" />
     <Compile Include="ServiceMessages\ParseServiceMessageResult.cs" />
-    <Compile Include="ServiceMessages\ServiceMessageNames.cs" />
+    <Compile Include="Integration\Scripting\ScriptServiceMessageNames.cs" />
     <Compile Include="Startup\AutofacExtensions.cs" />
     <Compile Include="Startup\CommandLocator.cs" />
     <Compile Include="Startup\WindowsServiceHost.cs" />
