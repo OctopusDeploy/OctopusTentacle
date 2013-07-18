@@ -23,6 +23,9 @@ namespace Octopus.Shared.Contracts
         JobStatus CheckStatus(JobTicket ticket);
 
         [OperationContract]
+        ArtifactChunk GetArtifactChunk(JobTicket ticket, string artifactId, int chunkIndex);
+
+        [OperationContract]
         void CompleteJob(JobTicket ticket);
     }
 }

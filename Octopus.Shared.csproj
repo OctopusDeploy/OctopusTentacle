@@ -167,6 +167,7 @@
     <Compile Include="Configuration\XmlKeyValueStore.cs" />
     <Compile Include="Configuration\XmlSetting.cs" />
     <Compile Include="Configuration\XmlSettingsRoot.cs" />
+    <Compile Include="Contracts\ArtifactChunk.cs" />
     <Compile Include="Contracts\Bindings.cs" />
     <Compile Include="Contracts\DeploymentRequest.cs" />
     <Compile Include="Contracts\DownloadRequest.cs" />
