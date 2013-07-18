@@ -49,8 +49,9 @@ namespace Octopus.Shared.Activities
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex.GetRootError());
-                    throw new ActivityFailedException("A child activity failed: " + ex.Message);
+                    var root = ex.GetRootError();
+                    log.Error(root);
+                    throw new ActivityFailedException("A child activity failed: " + root.Message);
                 }
             }
         }

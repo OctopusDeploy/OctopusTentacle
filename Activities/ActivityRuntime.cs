@@ -50,7 +50,7 @@ namespace Octopus.Shared.Activities
             }
             catch (Exception ex)
             {
-                HandleError(ex);
+                HandleError(state, ex);
                 throw;
             }
         }
@@ -94,20 +94,20 @@ namespace Octopus.Shared.Activities
             return runtime.Execute();
         }
 
-        void HandleError(Exception exception)
+        void HandleError(ActivityState childState, Exception exception)
         {
             exception = exception.GetRootError();
             if (exception is TaskCanceledException)
             {
-                log.Error("The task was canceled.");
+                childState.Log.Error("The task was canceled.");
             }
             else if (exception is ActivityFailedException)
             {
-                log.Error(exception.Message);
+                childState.Log.Error(exception.Message);
             }
             else
             {
-                log.Error(exception);
+                childState.Log.Error(exception);
             }
         }
 

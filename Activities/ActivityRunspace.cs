@@ -26,21 +26,17 @@ namespace Octopus.Shared.Activities
 
         public IActivityState StartActivity(IActivityMessage activity)
         {
-            var runtime = new ActivityRuntime(activity, null, new CancellationTokenSource(), new ActivityLog(), activityResolver, TaskFactory);
-
-            TaskFactory.StartNew(() =>
+            var root = new ActivityState(() => "Execute task", null, Guid.NewGuid().ToString(), new CancellationTokenSource());
+            var task = new Task(delegate
             {
-                try
-                {
-                    runtime.Execute().Wait();
-                }
-                catch (Exception ex)
-                {
-                    log.Error(ex);
-                }
+                var runtime = new ActivityRuntime(activity, null, new CancellationTokenSource(), new ActivityLog(), activityResolver, TaskFactory);
+                var childTask = runtime.Execute();
+                root.AddChild(runtime.State);
+                childTask.Wait();
             });
-
-            return runtime.State;
+            root.Attach(task);
+            task.Start();
+            return root;
         }
     }
 }

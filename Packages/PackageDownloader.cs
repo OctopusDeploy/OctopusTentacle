@@ -82,7 +82,7 @@ namespace Octopus.Shared.Packages
 
             if (downloaded == null || downloadedTo == null)
             {
-                throw new Exception("The package could not be downloaded from NuGet. Please see the below errors for details. If you are getting a package verification error, try switching to a Windows File Share package repository to see if that helps.");
+                throw new ActivityFailedException("The package could not be downloaded from NuGet. Please see the below errors for details. If you are getting a package verification error, try switching to a Windows File Share package repository to see if that helps.");
             }
 
             CheckWhetherThePackageHasDependencies(downloaded, log);

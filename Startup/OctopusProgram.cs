@@ -46,6 +46,7 @@ namespace Octopus.Shared.Startup
             {
                 log.Debug(args.Exception.GetRootError(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
                 ReportError(args.Exception);
+                args.SetObserved();
             };
             
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
