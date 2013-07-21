@@ -143,8 +143,10 @@ function Set-OctopusVariable([string]$name, [string]$value)
 
 function New-OctopusArtifact([string]$path) 
 { 	
-    $originalFilename = [System.IO.Path]::GetFileName($path);
-    $originalFilename = Encode-ServiceMessageValue($originalFilename);
+    $originalFilename = [System.IO.Path]::GetFileName($path)
+    $originalFilename = Encode-ServiceMessageValue($originalFilename)
+
+    $path = [System.IO.Path]::GetFullPath($path)
     $path = Encode-ServiceMessageValue($path)
 
 	Write-Output ""##octopus[createArtifact path='$path' originalFilename='$originalFilename']""

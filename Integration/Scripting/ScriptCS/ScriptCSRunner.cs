@@ -142,6 +142,8 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
   {
     var originalFilename = System.IO.Path.GetFileName(path); 
     originalFilename = EncodeServiceMessageValue(originalFilename);	
+
+    path = System.IO.Path.GetFullPath(path);
     path = EncodeServiceMessageValue(path);
 
 	Console.WriteLine(""##octopus[createArtifact path='{0}' originalFilename='{1}']"", path, originalFilename);
