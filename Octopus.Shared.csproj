@@ -167,10 +167,12 @@
     <Compile Include="Configuration\XmlKeyValueStore.cs" />
     <Compile Include="Configuration\XmlSetting.cs" />
     <Compile Include="Configuration\XmlSettingsRoot.cs" />
+    <Compile Include="Contracts\ArtifactChunk.cs" />
     <Compile Include="Contracts\Bindings.cs" />
     <Compile Include="Contracts\DeploymentRequest.cs" />
     <Compile Include="Contracts\DownloadRequest.cs" />
     <Compile Include="Contracts\HealthResult.cs" />
+    <Compile Include="Contracts\JobArtifact.cs" />
     <Compile Include="Conventions\ChildConventionContext.cs" />
     <Compile Include="Diagnostics\ErrorReporter.cs" />
     <Compile Include="Diagnostics\IErrorReporter.cs" />
@@ -180,6 +182,8 @@
     <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
     <Compile Include="Extensibility\OctopusPluginAttribute.cs" />
     <Compile Include="Extensibility\PluginsModule.cs" />
+    <Compile Include="Integration\Scripting\CreatedArtifact.cs" />
+    <Compile Include="Integration\Scripting\ScriptExecutionOutputFilter.cs" />
     <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
     <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
     <Compile Include="Internals\DiffMatchPatch\Operation.cs" />
@@ -306,7 +310,7 @@
     <Compile Include="Security\CertificatesModule.cs" />
     <Compile Include="Security\SymmetricEncryptionAlgorithm.cs" />
     <Compile Include="ServiceMessages\ParseServiceMessageResult.cs" />
-    <Compile Include="ServiceMessages\ServiceMessageNames.cs" />
+    <Compile Include="Integration\Scripting\ScriptServiceMessageNames.cs" />
     <Compile Include="Startup\AutofacExtensions.cs" />
     <Compile Include="Startup\CommandLocator.cs" />
     <Compile Include="Startup\WindowsServiceHost.cs" />

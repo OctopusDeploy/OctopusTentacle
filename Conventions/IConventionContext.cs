@@ -2,6 +2,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
+using Octopus.Shared.Integration.Scripting;
 
 namespace Octopus.Shared.Conventions
 {
@@ -15,5 +16,6 @@ namespace Octopus.Shared.Conventions
         VariableDictionary Variables { get; }
         IActivityLog Log { get; }
         IConventionContext ScopeTo(IConvention convention);
+        void AddCreatedArtifact(CreatedArtifact artifact);
     }
 }

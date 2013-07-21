@@ -27,8 +27,6 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
         {
             var bootstrapFile = PrepareBootstrapFile(arguments);
             
-            var outputVariables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
             try
             {
                 var commandArguments = new StringBuilder();
@@ -37,25 +35,17 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
                 commandArguments.Append("-ExecutionPolicy Unrestricted ");
                 commandArguments.AppendFormat("-File \"{0}\"", bootstrapFile);
 
-                var parser = new ServiceMessageParser(
-                    output => arguments.OutputStream.OnWritten(output),
-                    message =>
-                    {
-                        if (message.Name == ServiceMessageNames.SetVariable.Name)
-                        {
-                            outputVariables[message.GetValue(ServiceMessageNames.SetVariable.NameAttribute)] = message.GetValue(ServiceMessageNames.SetVariable.ValueAttribute);
-                        }
-                    });
+                var filter = new ScriptExecutionOutputFilter(arguments.OutputStream);
 
                 var errorWritten = false;
                 var exit = SilentProcessRunner.ExecuteCommand("powershell.exe", commandArguments.ToString(), arguments.WorkingDirectory,
-                    output => parser.Append(output + Environment.NewLine),
+                    filter.WriteLine,
                     error => { 
                         arguments.OutputStream.OnWritten("ERROR: " + error);
                         errorWritten = true;
                     });
 
-                return new ScriptExecutionResult(exit, errorWritten, outputVariables);
+                return new ScriptExecutionResult(exit, errorWritten, filter.OutputVariables, filter.CreatedArtifacts);
             }
             finally
             {
@@ -136,7 +126,7 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
             return c == '_' || char.IsLetterOrDigit(c);
         }
 
-        const string EmbeddedFunctions = 
+        const string EmbeddedFunctions =
 @"function Encode-ServiceMessageValue([string]$value)
 {
 	$valueBytes = [System.Text.Encoding]::UTF8.GetBytes($value)
@@ -149,6 +139,15 @@ function Set-OctopusVariable([string]$name, [string]$value)
     $value = Encode-ServiceMessageValue($value)
 
 	Write-Output ""##octopus[setVariable name='$name' value='$value']""
+}
+
+function New-OctopusArtifact([string]$path) 
+{ 	
+    $originalFilename = [System.IO.Path]::GetFileName($path);
+    $originalFilename = Encode-ServiceMessageValue($originalFilename);
+    $path = Encode-ServiceMessageValue($path)
+
+	Write-Output ""##octopus[createArtifact path='$path' originalFilename='$originalFilename']""
 }
 
 $ErrorActionPreference = ""Stop""";

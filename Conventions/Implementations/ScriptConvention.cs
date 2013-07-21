@@ -35,6 +35,10 @@ namespace Octopus.Shared.Conventions.Implementations
                 arguments.OutputStream.Written += closure.AppendLog;
                 
                 var result = ScriptRunner.Execute(arguments);
+                foreach (var createdArtifact in result.CreatedArtifacts)
+                {
+                    context.AddCreatedArtifact(createdArtifact);
+                }
 
                 arguments.OutputStream.Written -= closure.AppendLog;
 

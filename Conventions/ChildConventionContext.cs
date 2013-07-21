@@ -3,6 +3,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
+using Octopus.Shared.Integration.Scripting;
 
 namespace Octopus.Shared.Conventions
 {
@@ -28,6 +29,11 @@ namespace Octopus.Shared.Conventions
         public IConventionContext ScopeTo(IConvention convention)
         {
             return new ChildConventionContext(root, new PrefixedActivityLogDecorator("[" + convention.FriendlyName + "] ", log));
+        }
+
+        public void AddCreatedArtifact(CreatedArtifact artifact)
+        {
+            root.AddCreatedArtifact(artifact);
         }
     }
 }

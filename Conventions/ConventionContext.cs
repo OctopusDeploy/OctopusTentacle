@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
+using Octopus.Shared.Integration.Scripting;
 
 namespace Octopus.Shared.Conventions
 {
@@ -12,16 +12,20 @@ namespace Octopus.Shared.Conventions
         readonly IActivityLog log;
         readonly CancellationToken cancellationToken;
         readonly X509Certificate2 certificate;
+        readonly Action<CreatedArtifact> storeCreatedArtifact;
         readonly PackageMetadata package;
         readonly VariableDictionary variables;
 
-        public ConventionContext(PackageMetadata package, string directoryPath, VariableDictionary variables, IActivityLog log, CancellationToken cancellationToken, X509Certificate2 certificate)
+        public ConventionContext(PackageMetadata package, string directoryPath,
+            VariableDictionary variables, IActivityLog log, CancellationToken cancellationToken,
+            X509Certificate2 certificate, Action<CreatedArtifact> storeCreatedArtifact)
         {
             this.package = package;
             this.variables = variables;
             this.log = log;
             this.cancellationToken = cancellationToken;
             this.certificate = certificate;
+            this.storeCreatedArtifact = storeCreatedArtifact;
             PackageContentsDirectoryPath = directoryPath;
             StagingDirectoryPath = directoryPath;
         }
@@ -58,6 +62,11 @@ namespace Octopus.Shared.Conventions
         public IConventionContext ScopeTo(IConvention convention)
         {
             return new ChildConventionContext(this, new PrefixedActivityLogDecorator("[" + convention.FriendlyName + "] ", Log));
+        }
+
+        public void AddCreatedArtifact(CreatedArtifact artifact)
+        {
+            storeCreatedArtifact(artifact);
         }
     }
 }

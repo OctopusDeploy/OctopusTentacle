@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Octopus.Shared.ServiceMessages;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Integration.Scripting.ScriptCS
@@ -25,32 +24,22 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
             var configurationFile = PrepareConfigurationFile(arguments);
             var bootstrapFile = PrepareBootstrapFile(arguments, configurationFile);
 
-            var outputVariables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
             try
             {
                 var commandArguments = new StringBuilder();
                 commandArguments.AppendFormat("-s \"{0}\"", bootstrapFile);
 
-                var parser = new ServiceMessageParser(
-                    output => arguments.OutputStream.OnWritten(output),
-                    message =>
-                    {
-                        if (message.Name == ServiceMessageNames.SetVariable.Name)
-                        {
-                            outputVariables[message.GetValue(ServiceMessageNames.SetVariable.NameAttribute)] = message.GetValue(ServiceMessageNames.SetVariable.ValueAttribute);
-                        }
-                    });
+                var filter = new ScriptExecutionOutputFilter(arguments.OutputStream);
 
                 var errorWritten = false;
                 var exit = SilentProcessRunner.ExecuteCommand(GetScriptCsPath(), commandArguments.ToString(), arguments.WorkingDirectory,
-                    output => parser.Append(output + Environment.NewLine),
+                    filter.WriteLine,
                     error => { 
                         arguments.OutputStream.OnWritten("ERROR: " + error);
                         errorWritten = true;
                     });
 
-                return new ScriptExecutionResult(exit, errorWritten, outputVariables);
+                return new ScriptExecutionResult(exit, errorWritten, filter.OutputVariables, filter.CreatedArtifacts);
             }
             finally
             {
@@ -141,12 +130,21 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
 	return Convert.ToBase64String(valueBytes);
   }
 
-  public static void SetOctopusVariable(string name, string value) 
+  public static void SetVariable(string name, string value) 
   { 	
     name = EncodeServiceMessageValue(name);
     value = EncodeServiceMessageValue(value);
 
-	Console.WriteLine(""##octopus[setVariable name='$name' value='$value']"");
+	Console.WriteLine(""##octopus[setVariable name='{0}' value='{1}']"", name, value);
+  }
+
+  public static void CreateArtifact(string path) 
+  {
+    var originalFilename = System.IO.Path.GetFileName(path); 
+    originalFilename = EncodeServiceMessageValue(originalFilename);	
+    path = EncodeServiceMessageValue(path);
+
+	Console.WriteLine(""##octopus[createArtifact path='{0}' originalFilename='{1}']"", path, originalFilename);
   }";
     }
 }
