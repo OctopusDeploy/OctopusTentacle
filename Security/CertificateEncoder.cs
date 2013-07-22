@@ -37,8 +37,10 @@ namespace Octopus.Shared.Security
         static X509Certificate2 LoadCertificateWithPrivateKey(string file)
         {
             return TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet, true)
+                ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet, true)
                 ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable, true)
                 ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet, false)
+                ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet, false)
                 ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable, false);
         }
 
@@ -96,7 +98,7 @@ namespace Octopus.Shared.Security
         {
             try
             {
-                return certificate2.HasPrivateKey;
+                return certificate2.HasPrivateKey && certificate2.PrivateKey != null;
             }
             catch (Exception)
             {
