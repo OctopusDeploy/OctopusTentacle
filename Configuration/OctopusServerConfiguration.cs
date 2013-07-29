@@ -1,5 +1,6 @@
 using System;
 using Octopus.Client.Model;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
@@ -30,11 +31,19 @@ namespace Octopus.Shared.Configuration
         /// <summary>
         /// The URL used when connecting to the server, if available.
         /// </summary>
-        public string Address { get; set; }
+        public Uri Address { get; set; }
 
         /// <summary>
         /// The server's unique identifier.
         /// </summary>
         public string Squid { get; set; }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        public override string ToString()
+        {
+            return ObjectFormatter.Format(this);
+        }
     }
 }

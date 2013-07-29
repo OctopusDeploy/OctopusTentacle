@@ -369,6 +369,7 @@
     <Compile Include="ServiceMessages\ServiceMessage.cs" />
     <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
+    <Compile Include="Util\ObjectFormatter.cs" />
     <Compile Include="Util\PasswordHasher.cs" />
     <Compile Include="Util\PathSegmentValidator.cs" />
     <Compile Include="Util\RandomStringGenerator.cs" />
