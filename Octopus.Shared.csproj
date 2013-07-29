@@ -86,8 +86,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Nuget.Core.2.6.0.1\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish">
-      <HintPath>..\packages\Pipefish.0.1.0.19\lib\Pipefish.dll</HintPath>
+    <Reference Include="Pipefish, Version=0.1.0.24, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Pipefish.0.1.0.24\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
