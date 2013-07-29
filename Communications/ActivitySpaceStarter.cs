@@ -1,11 +1,10 @@
 ﻿using System;
-using Autofac;
 using Octopus.Shared.Diagnostics;
 using Pipefish.Hosting;
 
 namespace Octopus.Shared.Communications
 {
-    public class ActivitySpaceStarter : IStartable
+    public class ActivitySpaceStarter : IActivitySpaceStarter
     {
         readonly ActivitySpace space;
 
@@ -18,6 +17,12 @@ namespace Octopus.Shared.Communications
         {
             Log.Octopus().Debug("Starting activity space");
             space.Run();
+        }
+
+        public void Stop()
+        {
+            Log.Octopus().Debug("Stopping activity space");
+            space.Dispose();
         }
     }
 }
