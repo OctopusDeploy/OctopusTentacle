@@ -5,8 +5,10 @@ using System.Reflection;
 using Autofac;
 using Autofac.Core;
 using Autofac.Features.Metadata;
+using Octopus.Shared.Communications.Logging;
 using Octopus.Shared.Communications.Stub;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Hosting;
 using Pipefish.Persistence;
@@ -25,7 +27,7 @@ namespace Octopus.Shared.Communications
         public PipefishModule(string spaceName, params Assembly[] assemblies)
         {
             this.spaceName = spaceName;
-            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly }).ToArray();
+            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly, typeof(ActivityLoggerActor).Assembly }).Distinct().ToArray();
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -34,7 +36,7 @@ namespace Octopus.Shared.Communications
 
             var logger = Log.Octopus();
             Pipefish.Diagnostics.Log.OnDebug(logger.Debug);
-            Pipefish.Diagnostics.Log.OnError((e, m) => logger.Error(e, m));
+            Pipefish.Diagnostics.Log.OnError((e, m) => logger.Error(e.GetRootError(), m));
 
             builder.RegisterAssemblyTypes(assemblies)
                 .Where(t => t.IsClosedTypeOf(typeof(ICreatedBy<>)))
@@ -54,6 +56,9 @@ namespace Octopus.Shared.Communications
 
             builder.RegisterType<MessageInspectorCollection>()
                 .Named<IMessageInspector>("collection");
+
+            builder.RegisterType<ActorLog>().As<IActorLog>();
+            builder.RegisterInstance(new DirectoryActivityLogStorage("C:\\Octopus")).As<IActivityLogStorage>();
 
             builder.Register(c => new ActivitySpace(spaceName, c.Resolve<IMessageStore>(), c.ResolveNamed<IMessageInspector>("collection")))
                 .AsSelf()
