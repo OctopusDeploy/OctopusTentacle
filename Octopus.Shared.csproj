@@ -156,7 +156,6 @@
     <Compile Include="Activities\PrefixedActivityLogDecorator.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
-    <Compile Include="Communications\CommunicationStyle.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Communications\PipefishModule.cs" />
     <Compile Include="Communications\ActivitySpaceStarter.cs" />

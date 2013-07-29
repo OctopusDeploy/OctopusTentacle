@@ -1,5 +1,5 @@
 using System;
-using Octopus.Shared.Communications;
+using Octopus.Client.Model;
 
 namespace Octopus.Shared.Configuration
 {
