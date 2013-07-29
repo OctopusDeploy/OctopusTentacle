@@ -190,6 +190,7 @@
     <Compile Include="Configuration\IsolatedStorageXmlFileKeyValueStore.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\IWebPortalConfiguration.cs" />
+    <Compile Include="Configuration\OctopusServerConfiguration.cs" />
     <Compile Include="Configuration\OctopusServerStorageConfiguration.cs" />
     <Compile Include="Configuration\OctopusStorage.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
@@ -381,6 +382,7 @@
     <Compile Include="ServiceMessages\ServiceMessage.cs" />
     <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
+    <Compile Include="Util\ObjectFormatter.cs" />
     <Compile Include="Util\PasswordHasher.cs" />
     <Compile Include="Util\PathSegmentValidator.cs" />
     <Compile Include="Util\RandomStringGenerator.cs" />
