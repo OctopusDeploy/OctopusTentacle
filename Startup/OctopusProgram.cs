@@ -44,7 +44,7 @@ namespace Octopus.Shared.Startup
         {
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
-                log.Debug(args.Exception.GetRootError(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
+                log.DebugFormat(args.Exception.GetRootError(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
                 ReportError(args.Exception);
                 args.SetObserved();
             };
@@ -52,7 +52,7 @@ namespace Octopus.Shared.Startup
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var exception = (Exception)args.ExceptionObject;
-                log.Fatal(exception, "Unhandled AppDomain exception occurred: {0}", exception.Message);
+                log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception.Message);
                 ReportError(exception);
             };
 
