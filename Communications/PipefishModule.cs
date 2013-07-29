@@ -80,7 +80,7 @@ namespace Octopus.Shared.Communications
                 .SingleInstance();
 
             builder.RegisterType<ActivitySpaceStarter>()
-                .As<IStartable>()
+                .As<IActivitySpaceStarter>()
                 .SingleInstance();
 
             builder.RegisterModule<StubModule>();
