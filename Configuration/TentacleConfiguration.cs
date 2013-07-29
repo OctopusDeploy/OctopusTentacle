@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using Newtonsoft.Json;
 using Octopus.Shared.Security;
 
 namespace Octopus.Shared.Configuration
@@ -13,24 +15,82 @@ namespace Octopus.Shared.Configuration
         public TentacleConfiguration(IKeyValueStore settings)
         {
             this.settings = settings;
+            if (string.IsNullOrWhiteSpace(TentacleSquid))
+            {
+                var newSquid = "SQ-" +
+                    Environment.MachineName + "-" +
+                    Guid.NewGuid().GetHashCode().ToString("X8");
+                TentacleSquid = NormalizeSquid(newSquid);
+                Save();
+            }
         }
 
-        public string[] TrustedOctopusThumbprints
+        public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers
         {
             get
             {
-                var value = settings.Get("Tentacle.Security.TrustedOctopusThumbprints");
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    return new string[0];
-                }
-
-                return value.Split(';', ',').Where(i => !string.IsNullOrWhiteSpace(i)).Select(i => i.Trim()).Distinct().ToArray();
+                var setting = settings.Get("Tentacle.Communication.TrustedOctopusServers");
+                if (string.IsNullOrWhiteSpace(setting)) return Enumerable.Empty<OctopusServerConfiguration>();
+                return JsonConvert.DeserializeObject<OctopusServerConfiguration[]>(setting);
             }
-
-            set
+            private set
             {
-                settings.Set("Tentacle.Security.TrustedOctopusThumbprints", string.Join(",", value));
+                var setting = JsonConvert.SerializeObject(value.ToArray());
+                settings.Set("Tentacle.Communication.TrustedOctopusServers", setting);
+            }
+        }
+
+        public void AddTrustedOctopusServer(OctopusServerConfiguration machine)
+        {
+            if (machine == null) throw new ArgumentNullException("machine");
+
+            if (!string.IsNullOrWhiteSpace(machine.Squid))
+                machine.Squid = NormalizeSquid(machine.Squid);
+
+            var all = TrustedOctopusServers.ToList();
+            
+            var existing = all.SingleOrDefault(m => m.Address == machine.Address || m.Squid != null && machine.Squid != null && m.Squid == machine.Squid);
+
+            if (existing != null)
+                all.Remove(existing);
+
+            foreach (var duplicate in all.Where(m => m.Address == machine.Address && m.Squid == machine.Squid && m.Thumbprint == machine.Thumbprint))
+            {
+                all.Remove(duplicate);
+            }            
+
+            all.Add(machine);
+            TrustedOctopusServers = all;
+        }
+
+        static string NormalizeSquid(string squid)
+        {
+            return squid.ToUpperInvariant();
+        }
+
+        public void ResetTrustedOctopusServers()
+        {
+            TrustedOctopusServers = Enumerable.Empty<OctopusServerConfiguration>();
+        }
+
+        public void RemoveTrustedOctopusServersWithThumbprint(string toRemove)
+        {
+            if (toRemove == null) throw new ArgumentNullException("toRemove");
+            TrustedOctopusServers = TrustedOctopusServers.Where(t => t.Thumbprint != toRemove);
+        }
+
+        public void UpdateTrustedServerThumbprint(string old, string @new)
+        {
+            var existing = TrustedOctopusServers.SingleOrDefault(m => m.Thumbprint == old);
+            if (existing != null)
+                existing.Thumbprint = @new;
+        }
+
+        public IEnumerable<string> TrustedOctopusThumbprints
+        {
+            get
+            {
+                return TrustedOctopusServers.Select(s => s.Thumbprint);
             }
         }
 
@@ -89,6 +149,12 @@ namespace Octopus.Shared.Configuration
         {
             get { return settings.Get("Tentacle.Services.HostName", "localhost"); }
             set { settings.Set("Tentacle.Services.HostName", value); }
+        }
+
+        public string TentacleSquid
+        {
+            get { return settings.Get("Tentacle.Communications.Squid"); }
+            set { settings.Set("Tentacle.Communications.Squid", value); }
         }
 
         public void Save()
