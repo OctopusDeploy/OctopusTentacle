@@ -17,10 +17,17 @@ namespace Octopus.Shared.Diagnostics
             Log(typeof(Log), logEvent);
         }
 
-        public void Debug(Exception exception, string format, params object[] args)
+        public void DebugFormat(Exception exception, string format, params object[] args)
         {
             if (!base.IsDebugEnabled) return;
             var logEvent = GetLogEvent(LogLevel.Debug, exception, format, args);
+            Log(typeof(Log), logEvent);
+        }
+
+        public void Debug(Exception exception, string message)
+        {
+            if (!base.IsDebugEnabled) return;
+            var logEvent = GetLogEvent(LogLevel.Debug, exception, message);
             Log(typeof(Log), logEvent);
         }
 
@@ -31,10 +38,17 @@ namespace Octopus.Shared.Diagnostics
             base.Log(typeof(Log), logEvent);
         }
 
-        public void Error(Exception exception, string format, params object[] args)
+        public void ErrorFormat(Exception exception, string format, params object[] args)
         {
             if (!base.IsErrorEnabled) return;
             var logEvent = GetLogEvent(LogLevel.Error, exception, format, args);
+            base.Log(typeof(Log), logEvent);
+        }
+
+        public void Error(Exception exception, string message)
+        {
+            if (!base.IsErrorEnabled) return;
+            var logEvent = GetLogEvent(LogLevel.Error, exception, message);
             base.Log(typeof(Log), logEvent);
         }
 
@@ -45,10 +59,17 @@ namespace Octopus.Shared.Diagnostics
             base.Log(typeof(Log), logEvent);
         }
 
-        public void Fatal(Exception exception, string format, params object[] args)
+        public void FatalFormat(Exception exception, string format, params object[] args)
         {
             if (!base.IsFatalEnabled) return;
             var logEvent = GetLogEvent(LogLevel.Fatal, exception, format, args);
+            base.Log(typeof(Log), logEvent);
+        }
+
+        public void Fatal(Exception exception, string message)
+        {
+            if (!base.IsFatalEnabled) return;
+            var logEvent = GetLogEvent(LogLevel.Fatal, exception, message);
             base.Log(typeof(Log), logEvent);
         }
 
@@ -59,10 +80,17 @@ namespace Octopus.Shared.Diagnostics
             base.Log(typeof(Log), logEvent);
         }
 
-        public void Info(Exception exception, string format, params object[] args)
+        public void InfoFormat(Exception exception, string format, params object[] args)
         {
             if (!base.IsInfoEnabled) return;
             var logEvent = GetLogEvent(LogLevel.Info, exception, format, args);
+            base.Log(typeof(Log), logEvent);
+        }
+
+        public void Info(Exception exception, string message)
+        {
+            if (!base.IsInfoEnabled) return;
+            var logEvent = GetLogEvent(LogLevel.Info, exception, message);
             base.Log(typeof(Log), logEvent);
         }
 
@@ -73,10 +101,17 @@ namespace Octopus.Shared.Diagnostics
             base.Log(typeof(Log), logEvent);
         }
 
-        public void Trace(Exception exception, string format, params object[] args)
+        public void TraceFormat(Exception exception, string format, params object[] args)
         {
             if (!base.IsTraceEnabled) return;
             var logEvent = GetLogEvent(LogLevel.Trace, exception, format, args);
+            base.Log(typeof(Log), logEvent);
+        }
+
+        public void Trace(Exception exception, string message)
+        {
+            if (!base.IsTraceEnabled) return;
+            var logEvent = GetLogEvent(LogLevel.Trace, exception, message);
             base.Log(typeof(Log), logEvent);
         }
 
@@ -87,10 +122,17 @@ namespace Octopus.Shared.Diagnostics
             base.Log(typeof(Log), logEvent);
         }
 
-        public void Warn(Exception exception, string format, params object[] args)
+        public void WarnFormat(Exception exception, string format, params object[] args)
         {
             if (!base.IsWarnEnabled) return;
             var logEvent = GetLogEvent(LogLevel.Warn, exception, format, args);
+            base.Log(typeof(Log), logEvent);
+        }
+
+        public void Warn(Exception exception, string message)
+        {
+            if (!base.IsWarnEnabled) return;
+            var logEvent = GetLogEvent(LogLevel.Warn, exception, message);
             base.Log(typeof(Log), logEvent);
         }
 
@@ -122,6 +164,11 @@ namespace Octopus.Shared.Diagnostics
         public void Warn(Exception exception)
         {
             this.Warn(exception, string.Empty);
+        }
+
+        private LogEventInfo GetLogEvent(LogLevel level, Exception exception, string message)
+        {
+            return LogEventInfo.Create(level, Name, message, exception);
         }
 
         private LogEventInfo GetLogEvent(LogLevel level, Exception exception, string format, object[] args)
