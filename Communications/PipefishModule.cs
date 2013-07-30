@@ -57,7 +57,11 @@ namespace Octopus.Shared.Communications
             builder.RegisterType<MessageInspectorCollection>()
                 .Named<IMessageInspector>("collection");
 
-            builder.RegisterType<ActorLog>().As<IActorLog>();
+            builder.RegisterAssemblyTypes(assemblies)
+                .Where(t => t.IsAssignableTo<IAspect>())
+                .AsImplementedInterfaces()
+                .AsSelf()
+                .InstancePerDependency();
 
             builder.Register(c => new ActivitySpace(spaceName, c.Resolve<IMessageStore>(), c.ResolveNamed<IMessageInspector>("collection")))
                 .AsSelf()

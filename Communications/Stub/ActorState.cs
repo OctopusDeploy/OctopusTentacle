@@ -11,13 +11,14 @@ namespace Octopus.Shared.Communications.Stub
             InitiatingMessageType = initiatingMessageType;
         }
 
-        public TData Load<TData>()
+        public ActorStateDictionary Load()
         {
-            return default(TData);
+            return null;
         }
 
-        public void Save(object state)
+        public void Save(ActorStateDictionary state)
         {
+
         }
 
         public void Remove()
