@@ -162,6 +162,7 @@
     <Compile Include="Communications\Conversations\BeginsConversationEndedByAttribute.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Communications\Logging\ActivityLogCategory.cs" />
+    <Compile Include="Communications\Logging\IActivityLogStorage.cs" />
     <Compile Include="Communications\Logging\LoggerReference.cs" />
     <Compile Include="Communications\Logging\ActivityLogEntry.cs" />
     <Compile Include="Communications\Logging\ActivityLogTreeNode.cs" />
