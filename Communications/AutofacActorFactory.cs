@@ -1,7 +1,7 @@
 ﻿using System;
 using Autofac.Features.Indexed;
 using Autofac.Features.OwnedInstances;
-using Pipefish;
+using Pipefish.Core;
 using Pipefish.WellKnown.Dispatch;
 
 namespace Octopus.Shared.Communications

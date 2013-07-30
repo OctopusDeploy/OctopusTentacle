@@ -1,7 +1,7 @@
 ﻿using System;
 using Octopus.Shared.Communications.Conversations;
 using Octopus.Shared.Communications.Logging;
-using Pipefish.Standard;
+using Pipefish;
 
 namespace Octopus.Shared.Orchestration.Health
 {

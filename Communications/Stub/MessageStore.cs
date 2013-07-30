@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using Pipefish;
+using Pipefish.Core;
 using Pipefish.Transport;
 
 namespace Octopus.Shared.Communications.Stub
@@ -8,11 +8,20 @@ namespace Octopus.Shared.Communications.Stub
     class MessageStore : IMessageStore
     {
         readonly ConcurrentDictionary<string, ConcurrentQueue<Message>> queues = new ConcurrentDictionary<string, ConcurrentQueue<Message>>();
+        readonly ConcurrentDictionary<string, ConcurrentQueue<Message>> stash = new ConcurrentDictionary<string, ConcurrentQueue<Message>>();
 
         public void Subscribe(string spaceName, ConcurrentQueue<Message> queue)
         {
             if (!queues.TryAdd(spaceName, queue))
                 throw new InvalidOperationException("Space already subscribed");
+
+            ConcurrentQueue<Message> waiting;
+            if (stash.TryRemove(spaceName, out waiting))
+            {
+                Message w;
+                while (waiting.TryDequeue(out w))
+                    queue.Enqueue(w);
+            }
         }
 
         public bool Unsubscribe(string space)
@@ -29,10 +38,15 @@ namespace Octopus.Shared.Communications.Stub
         public void Store(Message message)
         {
             ConcurrentQueue<Message> subscribedQueue;
-            if (!queues.TryGetValue(message.To.Space, out subscribedQueue))
-                throw new InvalidOperationException("No subscriber exists");
-
-            subscribedQueue.Enqueue(message);
+            if (queues.TryGetValue(message.To.Space, out subscribedQueue))
+            {
+                subscribedQueue.Enqueue(message);
+            }
+            else
+            {
+                var waiting = stash.GetOrAdd(message.To.Space, s => new ConcurrentQueue<Message>());
+                waiting.Enqueue(message);
+            }
         }
     }
 }

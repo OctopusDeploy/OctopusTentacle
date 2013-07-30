@@ -3,7 +3,7 @@ using System.Text;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 using Pipefish;
-using Pipefish.Standard;
+using Pipefish.Core;
 
 namespace Octopus.Shared.Communications.Logging
 {

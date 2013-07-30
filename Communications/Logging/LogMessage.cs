@@ -1,6 +1,6 @@
 ﻿using System;
 using Newtonsoft.Json;
-using Pipefish.Standard;
+using Pipefish;
 
 namespace Octopus.Shared.Communications.Logging
 {

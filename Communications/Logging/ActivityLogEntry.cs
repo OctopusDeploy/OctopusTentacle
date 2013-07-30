@@ -1,5 +1,6 @@
 ﻿using System;
 using Pipefish;
+using Pipefish.Core;
 
 namespace Octopus.Shared.Communications.Logging
 {
