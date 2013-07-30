@@ -4,11 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
+using Octopus.Shared.Communications;
 using Octopus.Shared.Security;
 
 namespace Octopus.Shared.Configuration
 {
-    public class TentacleConfiguration : ITentacleConfiguration
+    public class TentacleConfiguration : ITentacleConfiguration, IActivitySpaceParameters
     {
         readonly IKeyValueStore settings;
 
@@ -161,5 +162,7 @@ namespace Octopus.Shared.Configuration
         {
             settings.Save();
         }
+
+        public string LocalSpace { get { return TentacleSquid; } }
     }
 }

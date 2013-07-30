@@ -1,5 +1,6 @@
 using System;
 using Autofac;
+using Octopus.Shared.Communications;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Configuration
@@ -25,7 +26,7 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<OctopusServerStorageConfiguration>().As<IOctopusServerStorageConfiguration>();
             builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().As<IStartable>().SingleInstance();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>().As<IStartable>().SingleInstance();
-            builder.RegisterType<TentacleConfiguration>().As<ITentacleConfiguration>().SingleInstance();
+            builder.RegisterType<TentacleConfiguration>().As<ITentacleConfiguration>().As<IActivitySpaceParameters>().SingleInstance();
         }
 
         public static ConfigurationModule FromFile(string filePath)
