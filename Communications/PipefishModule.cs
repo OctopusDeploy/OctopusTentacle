@@ -27,7 +27,7 @@ namespace Octopus.Shared.Communications
         public PipefishModule(string spaceName, params Assembly[] assemblies)
         {
             this.spaceName = spaceName;
-            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly, typeof(ActivityLoggerActor).Assembly }).Distinct().ToArray();
+            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly }).Distinct().ToArray();
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -58,7 +58,6 @@ namespace Octopus.Shared.Communications
                 .Named<IMessageInspector>("collection");
 
             builder.RegisterType<ActorLog>().As<IActorLog>();
-            builder.RegisterInstance(new DirectoryActivityLogStorage("C:\\Octopus")).As<IActivityLogStorage>();
 
             builder.Register(c => new ActivitySpace(spaceName, c.Resolve<IMessageStore>(), c.ResolveNamed<IMessageInspector>("collection")))
                 .AsSelf()

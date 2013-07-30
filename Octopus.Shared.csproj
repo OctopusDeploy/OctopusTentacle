@@ -163,13 +163,11 @@
     <Compile Include="Communications\Logging\ActivityLogCategory.cs" />
     <Compile Include="Communications\Logging\ActivityLogContext.cs" />
     <Compile Include="Communications\Logging\ActivityLogEntry.cs" />
-    <Compile Include="Communications\Logging\ActivityLoggerActor.cs" />
     <Compile Include="Communications\Logging\ActivityLogTreeNode.cs" />
     <Compile Include="Communications\Logging\ActorLog.cs" />
-    <Compile Include="Communications\Logging\DirectoryActivityLogStorage.cs" />
-    <Compile Include="Communications\Logging\IActivityLogStorage.cs" />
     <Compile Include="Communications\Logging\IActorLog.cs" />
     <Compile Include="Communications\Logging\LogMessage.cs" />
+    <Compile Include="Communications\Logging\WellKnownOctopusActors.cs" />
     <Compile Include="Communications\PipefishModule.cs" />
     <Compile Include="Communications\ActivitySpaceStarter.cs" />
     <Compile Include="Communications\AutofacActorFactory.cs" />

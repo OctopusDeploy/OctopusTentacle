@@ -31,7 +31,7 @@ namespace Octopus.Shared.Communications.Logging
             return new ActivityLogContext(loggerActorId, (correlationId + "/" + GenerateId()));
         }
 
-        string GenerateId()
+        static string GenerateId()
         {
             return Guid.NewGuid().ToString("N");
         }
@@ -40,7 +40,7 @@ namespace Octopus.Shared.Communications.Logging
         {
             Guard.ArgumentNotNullOrEmpty(spaceName, "spaceName");
             Guard.ArgumentNotNullOrEmpty(correlationId, "correlationId");
-            return new ActivityLogContext(new ActorId("Logger", spaceName), null);
+            return new ActivityLogContext(new ActorId(WellKnownOctopusActors.Logger, spaceName), correlationId);
         }
     }
 }

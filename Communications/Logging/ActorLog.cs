@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Text;
+using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Standard;
 
@@ -7,8 +9,14 @@ namespace Octopus.Shared.Communications.Logging
 {
     public class ActorLog : IActorLog
     {
+        readonly ILog log;
         IActor currentActor;
         IActivitySpace activitySpace;
+
+        public ActorLog(ILog log)
+        {
+            this.log = log;
+        }
 
         void IAspect.Attach(IActor actor, IActivitySpace space)
         {
@@ -26,22 +34,37 @@ namespace Octopus.Shared.Communications.Logging
 
         public virtual void Write(ActivityLogContext logContext, ActivityLogCategory category, string messageText)
         {
+            switch (category)
+            {
+                case ActivityLogCategory.Verbose:
+                    log.Debug(messageText);
+                    break;
+                case ActivityLogCategory.Info:
+                    log.Info(messageText);
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
+                case ActivityLogCategory.Warning:
+                    log.Warn(messageText);
+                    break;
+                case ActivityLogCategory.Error:
+                    log.Error(messageText);
+                    break;
+            }
+
             if (logContext == null)
                 throw new ArgumentNullException("logContext", "You must pass a logging context in order for messages to be logged.");
 
             var message = new Message(currentActor.Id, logContext.LoggerActorId, new LogMessage(logContext.CorrelationId, category, messageText));
-            // Todo: What should the TTL and persistance mode be?
             activitySpace.Send(message);
         }
 
         public virtual void Write(ActivityLogContext logContext, ActivityLogCategory category, Exception error, string messageText)
         {
             var message = new StringBuilder();
-            message.AppendLine(messageText);
+            if (!string.IsNullOrWhiteSpace(messageText))
+                message.AppendLine(messageText);
+            message.AppendLine(error.GetRootError().ToString());
             
-            // Todo: better formatting, expand type resolver errors, get the root errror, etc.
-            message.AppendLine(error.ToString());
-
             Write(logContext, category, message.ToString());
         }
 
