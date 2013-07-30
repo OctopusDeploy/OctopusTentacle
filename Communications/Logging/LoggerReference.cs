@@ -4,13 +4,13 @@ using Pipefish;
 
 namespace Octopus.Shared.Communications.Logging
 {
-    public class ActivityLogContext
+    public class LoggerReference
     {
         private readonly ActorId loggerActorId;
         private readonly string correlationId;
         
         [JsonConstructor]
-        protected ActivityLogContext(ActorId loggerActorId, string correlationId)
+        protected LoggerReference(ActorId loggerActorId, string correlationId)
         {
             this.loggerActorId = loggerActorId;
             this.correlationId = correlationId ?? GenerateId();
@@ -26,9 +26,9 @@ namespace Octopus.Shared.Communications.Logging
             get { return correlationId; }
         }
 
-        public ActivityLogContext CreateChild()
+        public LoggerReference CreateChild()
         {
-            return new ActivityLogContext(loggerActorId, (correlationId + "/" + GenerateId()));
+            return new LoggerReference(loggerActorId, (correlationId + "/" + GenerateId()));
         }
 
         static string GenerateId()
@@ -36,11 +36,11 @@ namespace Octopus.Shared.Communications.Logging
             return Guid.NewGuid().ToString("N");
         }
 
-        public static ActivityLogContext CreateNew(string spaceName, string correlationId)
+        public static LoggerReference CreateNew(string spaceName, string correlationId)
         {
             Guard.ArgumentNotNullOrEmpty(spaceName, "spaceName");
             Guard.ArgumentNotNullOrEmpty(correlationId, "correlationId");
-            return new ActivityLogContext(new ActorId(WellKnownOctopusActors.Logger, spaceName), correlationId);
+            return new LoggerReference(new ActorId(WellKnownOctopusActors.Logger, spaceName), correlationId);
         }
     }
 }

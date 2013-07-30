@@ -32,7 +32,7 @@ namespace Octopus.Shared.Communications.Logging
         {
         }
 
-        public virtual void Write(ActivityLogContext logContext, ActivityLogCategory category, string messageText)
+        public virtual void Write(LoggerReference logContext, ActivityLogCategory category, string messageText)
         {
             switch (category)
             {
@@ -58,7 +58,7 @@ namespace Octopus.Shared.Communications.Logging
             activitySpace.Send(message);
         }
 
-        public virtual void Write(ActivityLogContext logContext, ActivityLogCategory category, Exception error, string messageText)
+        public virtual void Write(LoggerReference logContext, ActivityLogCategory category, Exception error, string messageText)
         {
             var message = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(messageText))
@@ -68,57 +68,57 @@ namespace Octopus.Shared.Communications.Logging
             Write(logContext, category, message.ToString());
         }
 
-        public void WriteFormat(ActivityLogContext logContext, ActivityLogCategory category, string messageFormat, params object[] args)
+        public void WriteFormat(LoggerReference logContext, ActivityLogCategory category, string messageFormat, params object[] args)
         {
             Write(logContext, category, string.Format(messageFormat, args));
         }
 
-        public void Verbose(ActivityLogContext logContext, string messageText)
+        public void Verbose(LoggerReference logContext, string messageText)
         {
             Write(logContext, ActivityLogCategory.Verbose, messageText);
         }
 
-        public void VerboseFormat(ActivityLogContext logContext, string messageFormat, params object[] args)
+        public void VerboseFormat(LoggerReference logContext, string messageFormat, params object[] args)
         {
             WriteFormat(logContext, ActivityLogCategory.Verbose, messageFormat, args);
         }
 
-        public void Info(ActivityLogContext logContext, string messageText)
+        public void Info(LoggerReference logContext, string messageText)
         {
             Write(logContext, ActivityLogCategory.Info, messageText);
         }
 
-        public void InfoFormat(ActivityLogContext logContext, string messageFormat, params object[] args)
+        public void InfoFormat(LoggerReference logContext, string messageFormat, params object[] args)
         {
             WriteFormat(logContext, ActivityLogCategory.Info, messageFormat, args);
         }
 
-        public void Warn(ActivityLogContext logContext, string messageText)
+        public void Warn(LoggerReference logContext, string messageText)
         {
             Write(logContext, ActivityLogCategory.Warning, messageText);
         }
 
-        public void Warn(ActivityLogContext logContext, Exception error, string messageText)
+        public void Warn(LoggerReference logContext, Exception error, string messageText)
         {
             Write(logContext, ActivityLogCategory.Warning, error, messageText);
         }
 
-        public void WarnFormat(ActivityLogContext logContext, string messageFormat, params object[] args)
+        public void WarnFormat(LoggerReference logContext, string messageFormat, params object[] args)
         {
             WriteFormat(logContext, ActivityLogCategory.Warning, messageFormat, args);
         }
 
-        public void Error(ActivityLogContext logContext, string messageText)
+        public void Error(LoggerReference logContext, string messageText)
         {
             Write(logContext, ActivityLogCategory.Error, messageText);
         }
 
-        public void Error(ActivityLogContext logContext, Exception error, string messageText)
+        public void Error(LoggerReference logContext, Exception error, string messageText)
         {
             Write(logContext, ActivityLogCategory.Error, error, messageText);
         }
 
-        public void ErrorFormat(ActivityLogContext logContext, string messageFormat, params object[] args)
+        public void ErrorFormat(LoggerReference logContext, string messageFormat, params object[] args)
         {
             WriteFormat(logContext, ActivityLogCategory.Error, messageFormat, args);
         }
