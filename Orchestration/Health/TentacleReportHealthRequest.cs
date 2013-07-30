@@ -8,11 +8,16 @@ namespace Octopus.Shared.Orchestration.Health
     [BeginsConversationEndedBy(typeof(TentacleReportHealthReply))]
     public class TentacleReportHealthRequest : IMessage
     {
-        public ActivityLogContext Logger { get; set; }
+        readonly LoggerReference logger;
 
-        public TentacleReportHealthRequest(ActivityLogContext logger)
+        public TentacleReportHealthRequest(LoggerReference logger)
         {
-            Logger = logger;
+            this.logger = logger;
+        }
+
+        public LoggerReference Logger
+        {
+            get { return logger; }
         }
     }
 }

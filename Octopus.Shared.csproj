@@ -163,7 +163,8 @@
     <Compile Include="Communications\IActivitySpaceParameters.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Communications\Logging\ActivityLogCategory.cs" />
-    <Compile Include="Communications\Logging\ActivityLogContext.cs" />
+    <Compile Include="Communications\Logging\IActivityLogStorage.cs" />
+    <Compile Include="Communications\Logging\LoggerReference.cs" />
     <Compile Include="Communications\Logging\ActivityLogEntry.cs" />
     <Compile Include="Communications\Logging\ActivityLogTreeNode.cs" />
     <Compile Include="Communications\Logging\ActorLog.cs" />

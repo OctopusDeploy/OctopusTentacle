@@ -25,7 +25,7 @@ namespace Octopus.Shared.Communications
 
         public PipefishModule(params Assembly[] assemblies)
         {
-            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly }).Distinct().ToArray();
+            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly, typeof(ActorLog).Assembly }).ToArray();
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -55,7 +55,11 @@ namespace Octopus.Shared.Communications
             builder.RegisterType<MessageInspectorCollection>()
                 .Named<IMessageInspector>("collection");
 
-            builder.RegisterType<ActorLog>().As<IActorLog>();
+            builder.RegisterAssemblyTypes(assemblies)
+                .As<IAspect>()
+                .AsImplementedInterfaces()
+                .AsSelf()
+                .InstancePerDependency();
 
             builder.Register(c => new ActivitySpace(c.Resolve<IActivitySpaceParameters>().LocalSpace, c.Resolve<IMessageStore>(), c.ResolveNamed<IMessageInspector>("collection")))
                 .AsSelf()

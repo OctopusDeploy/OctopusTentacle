@@ -51,8 +51,8 @@ namespace Octopus.Shared.Web
                 public static string Template = "/api/releases{/id}{?nonStale,skip}";
                 public static string Index = "/api/releases{?nonStale,skip}";
                 public static string Get = "/api/releases/{id}";
-                public static string GetDeployments = "/api/releases/{id}/deployments";
-                public static string GetArtifacts = "/api/releases/{id}/artifacts";
+                public static string GetDeployments = "/api/releases/{id}/deployments{?nonStale,skip}";
+                public static string GetArtifacts = "/api/releases/{id}/artifacts{?nonStale,skip}";
             }
 
             public static class Deployments
