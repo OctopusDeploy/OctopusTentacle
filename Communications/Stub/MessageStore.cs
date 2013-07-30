@@ -15,6 +15,12 @@ namespace Octopus.Shared.Communications.Stub
                 throw new InvalidOperationException("Space already subscribed");
         }
 
+        public bool Unsubscribe(string space)
+        {
+            ConcurrentQueue<Message> unused;
+            return queues.TryRemove(space, out unused);
+        }
+
         public void ConfirmAccepted(Message message)
         {
             // Do nothing, we don't support persistent messages
