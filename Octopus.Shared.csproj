@@ -160,6 +160,7 @@
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
     <Compile Include="Communications\Conversations\BeginsConversationEndedByAttribute.cs" />
+    <Compile Include="Communications\IActivitySpaceParameters.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Communications\Logging\ActivityLogCategory.cs" />
     <Compile Include="Communications\Logging\ActivityLogContext.cs" />
@@ -234,6 +235,8 @@
     <Compile Include="Internals\Options\OptionException.cs" />
     <Compile Include="Internals\Options\OptionSet.cs" />
     <Compile Include="Internals\Options\OptionValueType.cs" />
+    <Compile Include="Orchestration\Health\TentacleReportHealthReply.cs" />
+    <Compile Include="Orchestration\Health\TentacleReportHealthRequest.cs" />
     <Compile Include="Packages\IFeed.cs" />
     <Compile Include="Contracts\IHealthService.cs" />
     <Compile Include="Contracts\IJobService.cs" />

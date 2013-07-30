@@ -21,12 +21,10 @@ namespace Octopus.Shared.Communications
 {
     public class PipefishModule : Module
     {
-        readonly string spaceName;
         readonly Assembly[] assemblies;
 
-        public PipefishModule(string spaceName, params Assembly[] assemblies)
+        public PipefishModule(params Assembly[] assemblies)
         {
-            this.spaceName = spaceName;
             this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly }).Distinct().ToArray();
         }
 
@@ -59,7 +57,7 @@ namespace Octopus.Shared.Communications
 
             builder.RegisterType<ActorLog>().As<IActorLog>();
 
-            builder.Register(c => new ActivitySpace(spaceName, c.Resolve<IMessageStore>(), c.ResolveNamed<IMessageInspector>("collection")))
+            builder.Register(c => new ActivitySpace(c.Resolve<IActivitySpaceParameters>().LocalSpace, c.Resolve<IMessageStore>(), c.ResolveNamed<IMessageInspector>("collection")))
                 .AsSelf()
                 .As<IActivitySpace>()
                 .OnActivating(e =>
