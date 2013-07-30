@@ -27,7 +27,7 @@ namespace Octopus.Shared.Communications
         public PipefishModule(string spaceName, params Assembly[] assemblies)
         {
             this.spaceName = spaceName;
-            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly }).Distinct().ToArray();
+            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly, typeof(ActorLog).Assembly }).ToArray();
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -58,7 +58,7 @@ namespace Octopus.Shared.Communications
                 .Named<IMessageInspector>("collection");
 
             builder.RegisterAssemblyTypes(assemblies)
-                .Where(t => t.IsAssignableTo<IAspect>())
+                .As<IAspect>()
                 .AsImplementedInterfaces()
                 .AsSelf()
                 .InstancePerDependency();
