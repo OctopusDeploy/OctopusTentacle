@@ -42,7 +42,7 @@ namespace Octopus.Shared.Startup
                 if (Environment.UserInteractive)
                 {
                     Console.WriteLine("Press <enter> to shut down...");
-                    Console.ReadLine();                    
+                    Console.ReadLine();
                 }
                 throw;
             }
