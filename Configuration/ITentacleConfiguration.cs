@@ -79,9 +79,9 @@ namespace Octopus.Shared.Configuration
         string ServicesHostName { get; set; }
 
         /// <summary>
-        /// Gets or sets the SQUID that the tentacle uses to uniquely identify itself. This value must be unique
-        /// among all tentacles that connect to an Octopus server.
+        /// Gets or sets the SQUID uniquely identifying the local instance. This value must be unique
+        /// among all entities in an Octopus network.
         /// </summary>
-        string TentacleSquid { get; set; }
+        string Squid { get; set; }
     }
 }

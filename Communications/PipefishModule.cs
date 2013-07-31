@@ -6,14 +6,15 @@ using Autofac;
 using Autofac.Core;
 using Autofac.Features.Metadata;
 using Octopus.Shared.Communications.Logging;
-using Octopus.Shared.Communications.Stub;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Core;
 using Pipefish.Hosting;
 using Pipefish.Persistence;
+using Pipefish.Persistence.Filesystem;
 using Pipefish.Transport;
+using Pipefish.Transport.Filesystem;
 using Pipefish.WellKnown.Dispatch;
 using Module = Autofac.Module;
 
@@ -61,7 +62,7 @@ namespace Octopus.Shared.Communications
                 .AsSelf()
                 .InstancePerDependency();
 
-            builder.Register(c => new ActivitySpace(c.Resolve<IActivitySpaceParameters>().LocalSpace, c.Resolve<IMessageStore>(), c.ResolveNamed<IMessageInspector>("collection")))
+            builder.Register(c => new ActivitySpace(c.Resolve<ICommunicationsConfiguration>().Squid, c.Resolve<IMessageStore>(), c.ResolveNamed<IMessageInspector>("collection")))
                 .AsSelf()
                 .As<IActivitySpace>()
                 .OnActivating(e =>
@@ -89,7 +90,13 @@ namespace Octopus.Shared.Communications
                 .As<IActivitySpaceStarter>()
                 .SingleInstance();
 
-            builder.RegisterModule<StubModule>();
+            builder.Register(c => new DirectoryMessageStore(c.Resolve<ICommunicationsConfiguration>().MessagesDirectory))
+                .As<IMessageStore>()
+                .SingleInstance();
+
+            builder.Register(c => new DirectoryActorStorage(c.Resolve<ICommunicationsConfiguration>().ActorStateDirectory))
+                .As<IActorStorage>()
+                .SingleInstance();
         }
 
         static bool IsCreatedByMessage(Type t)

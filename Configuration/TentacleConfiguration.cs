@@ -9,21 +9,15 @@ using Octopus.Shared.Security;
 
 namespace Octopus.Shared.Configuration
 {
-    public class TentacleConfiguration : ITentacleConfiguration, IActivitySpaceParameters
+    public class TentacleConfiguration : ITentacleConfiguration
     {
         readonly IKeyValueStore settings;
+        readonly ICommunicationsConfiguration communicationsConfiguration;
 
-        public TentacleConfiguration(IKeyValueStore settings)
+        public TentacleConfiguration(IKeyValueStore settings, ICommunicationsConfiguration communicationsConfiguration)
         {
             this.settings = settings;
-            if (string.IsNullOrWhiteSpace(TentacleSquid))
-            {
-                var newSquid = "SQ-" +
-                    Environment.MachineName + "-" +
-                    Guid.NewGuid().GetHashCode().ToString("X8");
-                TentacleSquid = NormalizeSquid(newSquid);
-                Save();
-            }
+            this.communicationsConfiguration = communicationsConfiguration;
         }
 
         public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers
@@ -152,17 +146,15 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Tentacle.Services.HostName", value); }
         }
 
-        public string TentacleSquid
+        public string Squid
         {
-            get { return settings.Get("Tentacle.Communications.Squid"); }
-            set { settings.Set("Tentacle.Communications.Squid", value); }
+            get { return communicationsConfiguration.Squid; }
+            set { communicationsConfiguration.Squid = value; }
         }
 
         public void Save()
         {
             settings.Save();
         }
-
-        public string LocalSpace { get { return TentacleSquid; } }
     }
 }

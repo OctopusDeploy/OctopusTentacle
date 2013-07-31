@@ -86,9 +86,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Nuget.Core.2.6.0.1\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish, Version=0.1.0.36, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Pipefish, Version=0.1.0.37, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.0.1.0.36\lib\Pipefish.dll</HintPath>
+      <HintPath>..\packages\Pipefish.0.1.0.37\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -160,7 +160,7 @@
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
     <Compile Include="Communications\Conversations\BeginsConversationEndedByAttribute.cs" />
-    <Compile Include="Communications\IActivitySpaceParameters.cs" />
+    <Compile Include="Communications\ICommunicationsConfiguration.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Communications\Logging\ActivityLogCategory.cs" />
     <Compile Include="Communications\Logging\IActivityLogStorage.cs" />
@@ -174,12 +174,9 @@
     <Compile Include="Communications\PipefishModule.cs" />
     <Compile Include="Communications\ActivitySpaceStarter.cs" />
     <Compile Include="Communications\AutofacActorFactory.cs" />
-    <Compile Include="Communications\Stub\ActorState.cs" />
-    <Compile Include="Communications\Stub\ActorStorage.cs" />
-    <Compile Include="Communications\Stub\MessageStore.cs" />
-    <Compile Include="Communications\Stub\StubModule.cs" />
     <Compile Include="Configuration\AbstractKeyValueStore.cs" />
     <Compile Include="Configuration\AuthenticationMode.cs" />
+    <Compile Include="Configuration\CommunicationsConfiguration.cs" />
     <Compile Include="Configuration\ConfigurationModule.cs" />
     <Compile Include="Configuration\HomeConfiguration.cs" />
     <Compile Include="Configuration\IDeploymentProcessConfiguration.cs" />
