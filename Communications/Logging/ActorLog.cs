@@ -54,8 +54,11 @@ namespace Octopus.Shared.Communications.Logging
 
             if (logContext == null)
                 throw new ArgumentNullException("logContext", "You must pass a logging context in order for messages to be logged.");
+            
+            if (string.IsNullOrWhiteSpace(logContext.LoggerActorId))
+                throw new InvalidOperationException("The given logging context does not specify an actor ID");
 
-            var message = new Message(currentActor.Id, logContext.LoggerActorId, new LogMessage(logContext.CorrelationId, category, messageText));
+            var message = new Message(currentActor.Id, new ActorId(logContext.LoggerActorId), new LogMessage(logContext.CorrelationId, category, messageText));
             activitySpace.SendWithExpiry(message);
         }
 

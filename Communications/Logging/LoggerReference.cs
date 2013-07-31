@@ -6,17 +6,17 @@ namespace Octopus.Shared.Communications.Logging
 {
     public class LoggerReference
     {
-        private readonly ActorId loggerActorId;
+        private readonly string loggerActorId;
         private readonly string correlationId;
         
         [JsonConstructor]
-        protected LoggerReference(ActorId loggerActorId, string correlationId)
+        public LoggerReference(string loggerActorId, string correlationId)
         {
             this.loggerActorId = loggerActorId;
             this.correlationId = correlationId ?? GenerateId();
         }
 
-        public ActorId LoggerActorId
+        public string LoggerActorId
         {
             get { return loggerActorId; }
         }
@@ -40,7 +40,7 @@ namespace Octopus.Shared.Communications.Logging
         {
             Guard.ArgumentNotNullOrEmpty(spaceName, "spaceName");
             Guard.ArgumentNotNullOrEmpty(correlationId, "correlationId");
-            return new LoggerReference(new ActorId(WellKnownOctopusActors.Logger, spaceName), correlationId);
+            return new LoggerReference(new ActorId(WellKnownOctopusActors.Logger, spaceName).ToString(), correlationId);
         }
     }
 }
