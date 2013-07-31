@@ -213,7 +213,6 @@
     <Compile Include="Contracts\Bindings.cs" />
     <Compile Include="Contracts\DeploymentRequest.cs" />
     <Compile Include="Contracts\DownloadRequest.cs" />
-    <Compile Include="Contracts\HealthResult.cs" />
     <Compile Include="Contracts\JobArtifact.cs" />
     <Compile Include="Conventions\ChildConventionContext.cs" />
     <Compile Include="Diagnostics\ErrorReporter.cs" />
@@ -239,7 +238,6 @@
     <Compile Include="Orchestration\Health\TentacleReportHealthReply.cs" />
     <Compile Include="Orchestration\Health\TentacleReportHealthRequest.cs" />
     <Compile Include="Packages\IFeed.cs" />
-    <Compile Include="Contracts\IHealthService.cs" />
     <Compile Include="Contracts\IJobService.cs" />
     <Compile Include="Contracts\IPackageService.cs" />
     <Compile Include="Contracts\JobQueueState.cs" />
