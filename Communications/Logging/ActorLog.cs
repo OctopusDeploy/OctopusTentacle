@@ -2,35 +2,19 @@
 using System.Text;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
-using Pipefish;
 using Pipefish.Core;
 using Pipefish.Hosting;
+using Pipefish.Standard;
 
 namespace Octopus.Shared.Communications.Logging
 {
-    public class ActorLog : IActorLog
+    public class ActorLog : Aspect, IActorLog
     {
         readonly ILog log;
-        IActor currentActor;
-        IActivitySpace activitySpace;
-
+        
         public ActorLog(ILog log)
         {
             this.log = log;
-        }
-
-        void IAspect.Attach(IActor actor, IActivitySpace space)
-        {
-            currentActor = actor;
-            activitySpace = space;
-        }
-
-        void IAspect.OnReceiving(Message message)
-        {
-        }
-
-        void IAspect.OnReceived(Message message)
-        {
         }
 
         public virtual void Write(LoggerReference logContext, ActivityLogCategory category, string messageText)
@@ -58,8 +42,7 @@ namespace Octopus.Shared.Communications.Logging
             if (string.IsNullOrWhiteSpace(logContext.LoggerActorId))
                 throw new InvalidOperationException("The given logging context does not specify an actor ID");
 
-            var message = new Message(currentActor.Id, new ActorId(logContext.LoggerActorId), new LogMessage(logContext.CorrelationId, category, messageText));
-            activitySpace.SendWithExpiry(message);
+            Send(new ActorId(logContext.LoggerActorId), new LogMessage(logContext.CorrelationId, category, messageText));
         }
 
         public virtual void Write(LoggerReference logContext, ActivityLogCategory category, Exception error, string messageText)
