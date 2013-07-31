@@ -4,6 +4,7 @@ using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Core;
+using Pipefish.Hosting;
 
 namespace Octopus.Shared.Communications.Logging
 {
@@ -55,7 +56,7 @@ namespace Octopus.Shared.Communications.Logging
                 throw new ArgumentNullException("logContext", "You must pass a logging context in order for messages to be logged.");
 
             var message = new Message(currentActor.Id, logContext.LoggerActorId, new LogMessage(logContext.CorrelationId, category, messageText));
-            activitySpace.Send(message);
+            activitySpace.SendWithExpiry(message);
         }
 
         public virtual void Write(LoggerReference logContext, ActivityLogCategory category, Exception error, string messageText)

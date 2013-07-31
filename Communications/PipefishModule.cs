@@ -37,10 +37,10 @@ namespace Octopus.Shared.Communications
             Pipefish.Diagnostics.Log.OnError((e, m) => logger.Error(e.GetRootError(), m));
 
             builder.RegisterAssemblyTypes(assemblies)
-                .Where(t => t.IsClosedTypeOf(typeof(ICreatedBy<>)))
+                .Where(IsCreatedByMessage)
                 .As(t => t
                     .GetInterfaces()
-                    .Where(i => i.IsClosedTypeOf(typeof(ICreatedBy<>)))
+                    .Where(IsCreatedByMessage)
                     .Select(i => new KeyedService(
                         MessageTypeName.For(i.GetGenericArguments()[0]),
                         typeof(IActor))));
@@ -90,6 +90,11 @@ namespace Octopus.Shared.Communications
                 .SingleInstance();
 
             builder.RegisterModule<StubModule>();
+        }
+
+        static bool IsCreatedByMessage(Type t)
+        {
+            return t.IsClosedTypeOf(typeof(ICreatedBy<>)) || t.IsClosedTypeOf(typeof(ICreatedByAsync<>));
         }
     }
 }
