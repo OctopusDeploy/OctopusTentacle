@@ -38,8 +38,8 @@ namespace Octopus.Shared.Communications.Logging
 
         public static LoggerReference CreateNew(string spaceName, string correlationId)
         {
-            Guard.ArgumentNotNullOrEmpty(spaceName, "spaceName");
-            Guard.ArgumentNotNullOrEmpty(correlationId, "correlationId");
+            if (spaceName == null) throw new ArgumentNullException("spaceName");
+            if (correlationId == null) throw new ArgumentNullException("correlationId");
             return new LoggerReference(new ActorId(WellKnownOctopusActors.Logger, spaceName).ToString(), correlationId);
         }
     }

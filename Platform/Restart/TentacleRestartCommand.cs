@@ -4,8 +4,8 @@ using Pipefish;
 
 namespace Octopus.Shared.Orchestration.Restart
 {
-    [BeginsConversationEndedBy(typeof(TentacleRestartReply))]
-    public class TentacleRestartRequest : IMessage
+    [BeginsConversationEndedBy(typeof(TentacleRestartResult))]
+    public class TentacleRestartCommand : IMessage
     {
     }
 }
