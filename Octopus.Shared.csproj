@@ -178,8 +178,10 @@
     <Compile Include="Configuration\AuthenticationMode.cs" />
     <Compile Include="Configuration\CommunicationsConfiguration.cs" />
     <Compile Include="Configuration\ConfigurationModule.cs" />
+    <Compile Include="Configuration\FileStorageConfiguration.cs" />
     <Compile Include="Configuration\HomeConfiguration.cs" />
     <Compile Include="Configuration\IDeploymentProcessConfiguration.cs" />
+    <Compile Include="Configuration\IFileStorageConfiguration.cs" />
     <Compile Include="Configuration\IHomeConfiguration.cs" />
     <Compile Include="Configuration\IKeyValueStore.cs" />
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
@@ -232,6 +234,16 @@
     <Compile Include="Internals\Options\OptionException.cs" />
     <Compile Include="Internals\Options\OptionSet.cs" />
     <Compile Include="Internals\Options\OptionValueType.cs" />
+    <Compile Include="Orchestration\FileTransfer\Implementation\BeginFileTransferCommand.cs" />
+    <Compile Include="Orchestration\FileTransfer\Implementation\FileReceiveData.cs" />
+    <Compile Include="Orchestration\FileTransfer\Implementation\FileReceiver.cs" />
+    <Compile Include="Orchestration\FileTransfer\Implementation\FileSendData.cs" />
+    <Compile Include="Orchestration\FileTransfer\Implementation\FileSender.cs" />
+    <Compile Include="Orchestration\FileTransfer\Implementation\FileTransferCompleteEvent.cs" />
+    <Compile Include="Orchestration\FileTransfer\Implementation\SendNextChunkRequest.cs" />
+    <Compile Include="Orchestration\FileTransfer\Implementation\SendNextChunkReply.cs" />
+    <Compile Include="Orchestration\FileTransfer\SendFileReply.cs" />
+    <Compile Include="Orchestration\FileTransfer\SendFileRequest.cs" />
     <Compile Include="Orchestration\Health\TentacleReportHealthReply.cs" />
     <Compile Include="Orchestration\Health\TentacleReportHealthRequest.cs" />
     <Compile Include="Orchestration\Restart\TentacleRestartReply.cs" />
@@ -428,9 +440,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Internals\CertificateGeneration\_Readme.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Orchestration\FileTransfer\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.8\tools\Microsoft.Bcl.Build.targets" />
