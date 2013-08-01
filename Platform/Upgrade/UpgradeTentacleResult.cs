@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Orchestration.Upgrade
+namespace Octopus.Shared.Platform.Upgrade
 {
     public class UpgradeTentacleResult : ResultMessage
     {

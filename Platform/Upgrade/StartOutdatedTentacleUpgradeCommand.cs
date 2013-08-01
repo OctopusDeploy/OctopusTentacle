@@ -1,7 +1,8 @@
 ﻿using System;
-using Octopus.Shared.Communications.Logging;
+using Octopus.Shared.Platform.Logging;
+using Octopus.Shared.Platform.ServerTasks;
 
-namespace Octopus.Core.Orchestration.Messages.Upgrade
+namespace Octopus.Shared.Platform.Upgrade
 {
     public class StartOutdatedTentacleUpgradeCommand : IStartOrchestrationCommand
     {

@@ -1,9 +1,9 @@
 ﻿using System;
-using Octopus.Shared.Communications.Conversations;
 using Octopus.Shared.Contracts;
+using Octopus.Shared.Platform.Conversations;
 using Pipefish;
 
-namespace Octopus.Shared.Orchestration.PackageUpload
+namespace Octopus.Shared.Platform.PackageUpload
 {
     [BeginsConversationEndedBy(typeof(TentaclePackageStoredResult))]
     public class TentacleStorePackageCommand : IMessage

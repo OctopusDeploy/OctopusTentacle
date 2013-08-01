@@ -1,8 +1,8 @@
 using System;
-using Octopus.Shared.Communications.Logging;
+using Octopus.Shared.Platform.Logging;
 using Pipefish;
 
-namespace Octopus.Core.Orchestration.Messages
+namespace Octopus.Shared.Platform
 {
     public interface IMessageWithLogger : IMessage
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Shared.Orchestration
+namespace Octopus.Shared.Platform
 {
     public abstract class ResultMessage : IMessage
     {

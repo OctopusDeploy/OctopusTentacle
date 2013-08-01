@@ -1,8 +1,8 @@
 ﻿using System;
-using Octopus.Shared.Communications.Conversations;
+using Octopus.Shared.Platform.Conversations;
 using Pipefish;
 
-namespace Octopus.Shared.Orchestration.Restart
+namespace Octopus.Shared.Platform.Restart
 {
     [BeginsConversationEndedBy(typeof(TentacleRestartResult))]
     public class TentacleRestartCommand : IMessage

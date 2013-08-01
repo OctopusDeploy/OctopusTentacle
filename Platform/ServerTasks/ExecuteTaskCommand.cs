@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Core.Orchestration.Messages
+namespace Octopus.Shared.Platform.ServerTasks
 {
     public class ExecuteTaskCommand : IMessage
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Orchestration.FileTransfer
+namespace Octopus.Shared.Platform.FileTransfer
 {
     public class SendFileResult : ResultMessage
     {

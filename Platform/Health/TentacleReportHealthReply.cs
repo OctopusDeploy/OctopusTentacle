@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Shared.Orchestration.Health
+namespace Octopus.Shared.Platform.Health
 {
     public class TentacleReportHealthReply : IMessage
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Octopus.Shared.Communications.Conversations
+namespace Octopus.Shared.Platform.Conversations
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class BeginsConversationEndedByAttribute : Attribute

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Orchestration.Restart
+namespace Octopus.Shared.Platform.Restart
 {
     public class TentacleRestartResult : ResultMessage
     {

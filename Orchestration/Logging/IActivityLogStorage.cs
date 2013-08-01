@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Octopus.Shared.Platform.Logging;
 
 namespace Octopus.Shared.Communications.Logging
 {

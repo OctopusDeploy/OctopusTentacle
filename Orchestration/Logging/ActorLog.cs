@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Platform.Logging;
 using Octopus.Shared.Util;
 using Pipefish.Core;
 using Pipefish.Hosting;

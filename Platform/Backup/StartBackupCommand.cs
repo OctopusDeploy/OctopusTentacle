@@ -1,7 +1,8 @@
 ﻿using System;
-using Octopus.Shared.Communications.Logging;
+using Octopus.Shared.Platform.Logging;
+using Octopus.Shared.Platform.ServerTasks;
 
-namespace Octopus.Core.Orchestration.Messages.Backup
+namespace Octopus.Shared.Platform.Backup
 {
     public class StartBackupCommand : IStartOrchestrationCommand
     {

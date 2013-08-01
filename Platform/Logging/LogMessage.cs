@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Pipefish;
 
-namespace Octopus.Shared.Communications.Logging
+namespace Octopus.Shared.Platform.Logging
 {
     public class LogMessage : IMessage
     {

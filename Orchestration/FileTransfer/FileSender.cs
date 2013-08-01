@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Platform.FileTransfer;
 using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Messages;

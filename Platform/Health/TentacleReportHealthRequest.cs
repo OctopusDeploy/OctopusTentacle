@@ -1,9 +1,9 @@
 ﻿using System;
-using Octopus.Shared.Communications.Conversations;
-using Octopus.Shared.Communications.Logging;
+using Octopus.Shared.Platform.Conversations;
+using Octopus.Shared.Platform.Logging;
 using Pipefish;
 
-namespace Octopus.Shared.Orchestration.Health
+namespace Octopus.Shared.Platform.Health
 {
     [BeginsConversationEndedBy(typeof(TentacleReportHealthReply))]
     public class TentacleReportHealthRequest : IMessage

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Orchestration.PackageUpload
+namespace Octopus.Shared.Platform.PackageUpload
 {
     public class TentaclePackageStoredResult : ResultMessage
     {

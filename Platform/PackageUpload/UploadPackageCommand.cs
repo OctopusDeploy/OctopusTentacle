@@ -2,7 +2,7 @@
 using Octopus.Shared.Packages;
 using Pipefish;
 
-namespace Octopus.Shared.Orchestration.PackageUpload
+namespace Octopus.Shared.Platform.PackageUpload
 {
     public class UploadPackageCommand : IMessage
     {

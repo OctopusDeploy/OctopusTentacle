@@ -2,7 +2,7 @@
 using Pipefish;
 using Pipefish.Core;
 
-namespace Octopus.Core.Orchestration.Messages
+namespace Octopus.Shared.Platform.ServerTasks
 {
     public class TaskStartedEvent : IMessage
     {

@@ -2,7 +2,7 @@
 using Octopus.Shared.Packages;
 using Pipefish;
 
-namespace Octopus.Shared.Orchestration.Upgrade
+namespace Octopus.Shared.Platform.Upgrade
 {
     public class UpgradeTentacleCommand : IMessage
     {

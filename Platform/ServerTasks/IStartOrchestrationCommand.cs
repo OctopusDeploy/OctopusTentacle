@@ -1,6 +1,6 @@
 using System;
 
-namespace Octopus.Core.Orchestration.Messages
+namespace Octopus.Shared.Platform.ServerTasks
 {
     public interface IStartOrchestrationCommand : IMessageWithLogger
     {

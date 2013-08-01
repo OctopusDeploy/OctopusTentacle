@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Shared.Orchestration.FileTransfer
+namespace Octopus.Shared.Platform.FileTransfer
 {
     public class SendFileRequest : IMessage
     {

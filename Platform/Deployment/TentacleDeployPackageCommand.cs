@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Shared.Communications.Conversations;
 using Octopus.Shared.Contracts;
+using Octopus.Shared.Platform.Conversations;
 using Pipefish;
 
-namespace Octopus.Shared.Orchestration.Deployment
+namespace Octopus.Shared.Platform.Deployment
 {
     [BeginsConversationEndedBy(typeof(TentaclePackageDeploymentResult))]
     public class TentacleDeployPackageCommand : IMessage
