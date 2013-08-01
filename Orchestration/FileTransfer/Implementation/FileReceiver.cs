@@ -31,18 +31,12 @@ namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
         {
             var path = Path.Combine(
                 fileStorageConfiguration.FileStorageDirectory,
-                message.Filename + "#" + message.Hash);
-
-            if (fileSystem.FileExists(path))
-            {
-                Reply(message, new FileTransferCompleteEvent(true, true, "The file is already present on the machine", path));
-                Complete();
-                return;
-            }
+                message.Filename + "-" + Guid.NewGuid());
 
             Data = new FileReceiveData
             {
-                LocalPath = path
+                LocalPath = path,
+                Hash = message.Hash
             };
             
             SetTimeout(ProcessTimeout);
@@ -67,7 +61,20 @@ namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
 
             if (message.IsLastChunk)
             {
-                Reply(message, new FileTransferCompleteEvent(true, false, "The file was transferred successfully", Data.LocalPath));
+                using (var file = fileSystem.OpenFile(Data.LocalPath, FileAccess.Read))
+                {
+                    var hash = HashCalculator.Hash(file);
+                    if (hash != Data.Hash)
+                    {
+                        file.Dispose();
+                        fileSystem.DeleteFile(Data.LocalPath, DeletionOptions.TryThreeTimesIgnoreFailure);
+                        Reply(message, new FileTransferCompleteEvent(false, "The file corrupted during transfer", null));
+                        Complete();
+                        return;
+                    }
+                }
+
+                Reply(message, new FileTransferCompleteEvent(true, "The file was transferred successfully", Data.LocalPath));
                 Complete();
                 return;
             }

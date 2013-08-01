@@ -59,14 +59,12 @@ namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
         {
             var remoteSpace = message.GetMessage().From.Space;
 
-            if (message.AlreadyPresent)
-                Log.Octopus().InfoFormat("File {0} with hash {1} has already been uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
-            else if (message.Succeeded)
+            if (message.Succeeded)
                 Log.Octopus().InfoFormat("File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
             else
                 Log.Octopus().ErrorFormat("Upload of file {0} with hash {1} to {2} failed: {3}", Data.LocalFilename, Data.Hash, remoteSpace, message.Message);
 
-            Send(Data.ReplyTo, new SendFileReply(message.Succeeded, message.Message));
+            Send(Data.ReplyTo, new SendFileResult(message.Succeeded, message.Message, message.DestinationPath));
             
             Complete();
         }

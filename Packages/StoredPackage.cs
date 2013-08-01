@@ -1,4 +1,5 @@
 ﻿using System;
+using Newtonsoft.Json;
 using Octopus.Shared.Contracts;
 
 namespace Octopus.Shared.Packages
@@ -8,6 +9,7 @@ namespace Octopus.Shared.Packages
         readonly PackageMetadata metadata;
         readonly string fullPath;
         
+        [JsonConstructor]
         public StoredPackage(PackageMetadata metadata, string fullPath)
         {
             this.metadata = metadata;
@@ -24,11 +26,13 @@ namespace Octopus.Shared.Packages
         {
         }
 
+        [JsonIgnore]
         public string PackageId
         {
             get { return metadata.PackageId; }
         }
 
+        [JsonIgnore]
         public string Version
         {
             get { return metadata.Version; }
@@ -39,11 +43,13 @@ namespace Octopus.Shared.Packages
             get { return fullPath; }
         }
 
+        [JsonIgnore]
         public long Size
         {
             get { return metadata.Size; }
         }
 
+        [JsonIgnore]
         public string Hash
         {
             get { return metadata.Hash; }
