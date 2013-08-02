@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Octopus.Shared.Communications.Logging;
 using Octopus.Shared.Orchestration.FileTransfer.Implementation;
+using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Platform.FileTransfer;
 using Octopus.Shared.Util;
 using Pipefish;
@@ -40,7 +40,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
                 Logger = message.Logger
             };
 
-            log.Verbose(Data.Logger, "Requesting upload...");
+            log.Verbose("Requesting upload...");
 
             SetTimeout(ProcessTimeout);
 
@@ -54,7 +54,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
             using (var file = fileSystem.OpenFile(Data.LocalFilename, FileAccess.Read))
             {
                 var expected = Data.ExpectedSize != 0 ? Data.ExpectedSize : file.Length;
-                log.VerboseFormat(Data.Logger, "Uploaded {0} of {1} ({2:n0}%)", nextChunkOffset.ToFileSizeString(), expected.ToFileSizeString(), ((double)nextChunkOffset / Data.ExpectedSize * 100.00));
+                log.VerboseFormat("Uploaded {0} of {1} ({2:n0}%)", nextChunkOffset.ToFileSizeString(), expected.ToFileSizeString(), ((double)nextChunkOffset / Data.ExpectedSize * 100.00));
                 
                 file.Seek(nextChunkOffset, SeekOrigin.Begin);
                 var bytes = new byte[ChunkSize];
@@ -71,9 +71,9 @@ namespace Octopus.Shared.Orchestration.FileTransfer
             var remoteSpace = message.GetMessage().From.Space;
 
             if (message.Succeeded)
-                log.InfoFormat(Data.Logger, "File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
+                log.InfoFormat("File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
             else
-                log.ErrorFormat(Data.Logger, "Upload of file {0} with hash {1} to {2} failed: {3}", Data.LocalFilename, Data.Hash, remoteSpace, message.Message);
+                log.ErrorFormat("Upload of file {0} with hash {1} to {2} failed: {3}", Data.LocalFilename, Data.Hash, remoteSpace, message.Message);
 
             Send(Data.ReplyTo, new SendFileResult(message.Succeeded, message.Message, message.DestinationPath));
             
@@ -82,7 +82,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
 
         public void Receive(TimeoutElapsedEvent message)
         {
-            log.Error(Data.Logger, "Transfer of " + Data.LocalFilename + " did not complete in " + ProcessTimeout);
+            log.Error("Transfer of " + Data.LocalFilename + " did not complete in " + ProcessTimeout);
             Complete();
         }
     }

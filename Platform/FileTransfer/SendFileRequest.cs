@@ -1,10 +1,9 @@
 ﻿using System;
 using Octopus.Shared.Platform.Logging;
-using Pipefish;
 
 namespace Octopus.Shared.Platform.FileTransfer
 {
-    public class SendFileRequest : IMessage
+    public class SendFileRequest : IMessageWithLogger
     {
         public string LocalFilename { get; private set; }
         public string RemoteSquid { get; private set; }
