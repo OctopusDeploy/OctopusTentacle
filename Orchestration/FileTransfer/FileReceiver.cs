@@ -3,11 +3,12 @@ using System.IO;
 using System.Threading.Tasks;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Orchestration.FileTransfer.Implementation;
 using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Messages;
 
-namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
+namespace Octopus.Shared.Orchestration.FileTransfer
 {
     public class FileReceiver : PersistentActor<FileReceiveData>,
                                 ICreatedBy<BeginFileTransferCommand>,
@@ -47,7 +48,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
 
         public void Receive(TimeoutElapsedEvent message)
         {
-            Log.Octopus().ErrorFormat("Transfer of {0} did not complete before the process timeout", ProcessTimeout);
+            Log.Octopus().ErrorFormat("Transfer of {0} did not complete before the process timeout", Data.LocalPath);
             Complete();
         }
 

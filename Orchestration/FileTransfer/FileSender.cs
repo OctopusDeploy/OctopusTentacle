@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Octopus.Shared.Orchestration.FileTransfer.Implementation;
 using Octopus.Shared.Orchestration.Logging;
+using Octopus.Shared.Orchestration.Origination;
 using Octopus.Shared.Platform.FileTransfer;
 using Octopus.Shared.Util;
 using Pipefish;
@@ -21,11 +22,13 @@ namespace Octopus.Shared.Orchestration.FileTransfer
         readonly IActorLog log;
         const int ChunkSize = 128 * 1024;
         readonly TimeSpan ProcessTimeout = TimeSpan.FromDays(90);
+        readonly ActorOrigin origin;
 
         public FileSender(IOctopusFileSystem fileSystem, IActorLog log)
         {
             this.fileSystem = fileSystem;
             this.log = RegisterAspect(log);
+            origin = RegisterAspect(new ActorOrigin());
         }
 
         public void Receive(SendFileRequest message)
@@ -35,7 +38,6 @@ namespace Octopus.Shared.Orchestration.FileTransfer
                 LocalFilename = message.LocalFilename, 
                 Hash = message.Hash, 
                 NextChunkIndex = 0,
-                ReplyTo = message.GetMessage().From,
                 ExpectedSize = message.ExpectedSize,
                 Logger = message.Logger
             };
@@ -75,7 +77,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
             else
                 log.ErrorFormat("Upload of file {0} with hash {1} to {2} failed: {3}", Data.LocalFilename, Data.Hash, remoteSpace, message.Message);
 
-            Send(Data.ReplyTo, new SendFileResult(message.Succeeded, message.Message, message.DestinationPath));
+            origin.Reply(new SendFileResult(message.Succeeded, message.Message, message.DestinationPath));
             
             Complete();
         }

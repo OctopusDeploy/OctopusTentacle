@@ -161,6 +161,9 @@
     <Compile Include="Caching\OctopusCache.cs" />
     <Compile Include="Communications\ICommunicationsConfiguration.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
+    <Compile Include="Orchestration\NoState.cs" />
+    <Compile Include="Orchestration\Origination\ActorOrigin.cs" />
+    <Compile Include="Orchestration\Origination\OriginatingMessage.cs" />
     <Compile Include="Platform\Logging\ActivityLogCategory.cs" />
     <Compile Include="Orchestration\Logging\IActivityLogStorage.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntry.cs" />
