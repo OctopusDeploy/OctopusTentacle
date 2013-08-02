@@ -3,22 +3,19 @@ using System.IO;
 using System.Threading.Tasks;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Orchestration.Completion;
 using Octopus.Shared.Orchestration.FileTransfer.Implementation;
 using Octopus.Shared.Util;
 using Pipefish;
-using Pipefish.Messages;
 
 namespace Octopus.Shared.Orchestration.FileTransfer
 {
     public class FileReceiver : PersistentActor<FileReceiveData>,
                                 ICreatedBy<BeginFileTransferCommand>,
-                                IReceive<TimeoutElapsedEvent>,
                                 IReceiveAsync<SendNextChunkReply>
     {
         readonly IFileStorageConfiguration fileStorageConfiguration;
         readonly IOctopusFileSystem fileSystem;
-
-        readonly TimeSpan ProcessTimeout = TimeSpan.FromDays(90);
 
         public FileReceiver(
             IFileStorageConfiguration fileStorageConfiguration,
@@ -26,6 +23,8 @@ namespace Octopus.Shared.Orchestration.FileTransfer
         {
             this.fileStorageConfiguration = fileStorageConfiguration;
             this.fileSystem = fileSystem;
+
+            RegisterAspect(new CompletesOnTimeout(() => Log.Octopus().ErrorFormat("Transfer of {0} did not complete before the process timeout", Data.LocalPath)));
         }
 
         public void Receive(BeginFileTransferCommand message)
@@ -40,16 +39,8 @@ namespace Octopus.Shared.Orchestration.FileTransfer
                 Hash = message.Hash
             };
             
-            SetTimeout(ProcessTimeout);
-
             Log.Octopus().InfoFormat("Beginning transfer of {0}", Data.LocalPath);
             Reply(message, new SendNextChunkRequest());
-        }
-
-        public void Receive(TimeoutElapsedEvent message)
-        {
-            Log.Octopus().ErrorFormat("Transfer of {0} did not complete before the process timeout", Data.LocalPath);
-            Complete();
         }
 
         public async Task ReceiveAsync(SendNextChunkReply message)

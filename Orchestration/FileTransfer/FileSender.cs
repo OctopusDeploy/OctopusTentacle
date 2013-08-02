@@ -1,13 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Orchestration.Completion;
 using Octopus.Shared.Orchestration.FileTransfer.Implementation;
 using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Orchestration.Origination;
 using Octopus.Shared.Platform.FileTransfer;
 using Octopus.Shared.Util;
 using Pipefish;
-using Pipefish.Messages;
 
 namespace Octopus.Shared.Orchestration.FileTransfer
 {
@@ -15,20 +16,19 @@ namespace Octopus.Shared.Orchestration.FileTransfer
         PersistentActor<FileSendData>,
         ICreatedBy<SendFileRequest>,
         IReceiveAsync<SendNextChunkRequest>,
-        IReceive<FileTransferCompleteEvent>,
-        IReceive<TimeoutElapsedEvent>
+        IReceive<FileTransferCompleteEvent>
     {
         readonly IOctopusFileSystem fileSystem;
         readonly IActorLog log;
         const int ChunkSize = 128 * 1024;
-        readonly TimeSpan ProcessTimeout = TimeSpan.FromDays(90);
         readonly Originator origin;
 
         public FileSender(IOctopusFileSystem fileSystem, IActorLog log)
         {
             this.fileSystem = fileSystem;
             this.log = RegisterAspect(log);
-            origin = RegisterAspect(new Originator());
+            origin = RegisterAspect<Originator>();
+            RegisterAspect(new CompletesOnTimeout(() => Log.Octopus().ErrorFormat("Transfer of {0} did not complete before the process timeout", Data.LocalFilename)));
         }
 
         public void Receive(SendFileRequest message)
@@ -43,8 +43,6 @@ namespace Octopus.Shared.Orchestration.FileTransfer
             };
 
             log.Verbose("Requesting upload...");
-
-            SetTimeout(ProcessTimeout);
 
             Dispatch(message.RemoteSquid, new BeginFileTransferCommand(Path.GetFileName(Data.LocalFilename), Data.Hash, Data.ExpectedSize));
         }
@@ -64,7 +62,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
                 if (read != ChunkSize)
                     Array.Resize(ref bytes, read);
                 var chunk = new SendNextChunkReply(bytes, read != ChunkSize);
-                Reply(message, chunk, ProcessTimeout);
+                Reply(message, chunk);
             }
         }
 
@@ -79,12 +77,6 @@ namespace Octopus.Shared.Orchestration.FileTransfer
 
             origin.Reply(new SendFileResult(message.Succeeded, message.Message, message.DestinationPath));
             
-            Complete();
-        }
-
-        public void Receive(TimeoutElapsedEvent message)
-        {
-            log.Error("Transfer of " + Data.LocalFilename + " did not complete in " + ProcessTimeout);
             Complete();
         }
     }

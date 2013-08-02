@@ -1,57 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
 using Pipefish;
 using Pipefish.Core;
-using Pipefish.Persistence;
-using Pipefish.Standard;
 
 namespace Octopus.Shared.Orchestration.Origination
 {
-    public class Originator : Aspect
+    public class Originator : PersistentAspect<OriginatingMessage>
     {
         const string OriginStateKey = "ActorOrigin.Origin";
         readonly TimeSpan ReplyDefaultTtl = TimeSpan.FromDays(90);
-        OriginatingMessage originatingMessage;
 
-        public override void Attach(IActor actor, IActivitySpace space)
-        {
-            base.Attach(actor, space);
+        public Originator() : base(OriginStateKey) { }
 
-            var persistent = actor as IPersistentActor;
-            if (persistent == null) return;
-
-            persistent.AfterLoading += () => LoadOrigin(persistent.State);
-            persistent.BeforeSaving += () => SaveOrigin(persistent.State);
-        }
 
         public override void OnReceiving(Message message)
         {
             base.OnReceiving(message);
 
-            if (originatingMessage == null)
+            if (AspectData == null)
             {
-                originatingMessage = new OriginatingMessage(message.Id, message.From);
+                AspectData = new OriginatingMessage(message.Id, message.From);
             }
-        }
-
-        void LoadOrigin(IDictionary<string, object> state)
-        {
-            object savedOrigin;
-            if (state.TryGetValue(OriginStateKey, out savedOrigin))
-            {
-                originatingMessage = (OriginatingMessage)savedOrigin;
-            }
-        }
-
-        void SaveOrigin(IDictionary<string, object> state)
-        {
-            if (originatingMessage != null  && !state.ContainsKey(OriginStateKey))
-                state.Add(OriginStateKey, originatingMessage);
         }
 
         public ActorId From
         {
-            get { return originatingMessage.From; }
+            get { return AspectData.From; }
         }
 
         public void Reply(IMessage body, TimeSpan? ttl = null)
@@ -59,7 +32,7 @@ namespace Octopus.Shared.Orchestration.Origination
             var replyExpiry = DateTime.UtcNow + (ttl ?? ReplyDefaultTtl);
             var reply = new Message(Actor.Id, From, body);
             reply.SetExpiresAt(replyExpiry);
-            reply.Headers.Add(ProtocolExtensions.InReplyToHeader, originatingMessage.Id.ToString());
+            reply.Headers.Add(ProtocolExtensions.InReplyToHeader, AspectData.Id.ToString());
             Space.Send(reply);
         }
     }

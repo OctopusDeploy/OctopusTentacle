@@ -1,62 +1,33 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Platform;
 using Octopus.Shared.Platform.Logging;
 using Octopus.Shared.Util;
 using Pipefish.Core;
-using Pipefish.Persistence;
-using Pipefish.Standard;
 
 namespace Octopus.Shared.Orchestration.Logging
 {
-    public class ActorLog : Aspect, IActorLog
+    public class ActorLog : PersistentAspect<LoggerReference>, IActorLog
     {
         const string DefaultLoggerStateKey = "ActorLog.DefaultLogger";
 
         readonly ILog log;
-        LoggerReference defaultLogger;
         
         public ActorLog(ILog log)
+            : base(DefaultLoggerStateKey)
         {
             this.log = log;
         }
 
-        public override void Attach(IActor actor, IActivitySpace space)
-        {
-            base.Attach(actor, space);
-
-            var persistent = actor as IPersistentActor;
-            if (persistent == null) return;
-
-            persistent.AfterLoading += () => LoadDefaultLogger(persistent.State);
-            persistent.BeforeSaving += () => SaveDefaultLogger(persistent.State);
-        }
-
-        void LoadDefaultLogger(IDictionary<string, object> state)
-        {
-            object savedDefault;
-            if (state.TryGetValue(DefaultLoggerStateKey, out savedDefault))
-            {
-                defaultLogger = (LoggerReference)savedDefault;
-            }
-        }
-
-        void SaveDefaultLogger(IDictionary<string, object> state)
-        {
-            if (defaultLogger != null && !state.ContainsKey(DefaultLoggerStateKey))
-                state.Add(DefaultLoggerStateKey, defaultLogger);
-        }
-
         public override void OnReceiving(Message message)
         {
-            if (defaultLogger != null) return;
+            if (AspectData != null) return;
 
             var bodyWithLogger = message.Body as IMessageWithLogger;
             if (bodyWithLogger == null) return;
 
-            defaultLogger = bodyWithLogger.Logger;
+            AspectData = bodyWithLogger.Logger;
         }
 
         public void Write(ActivityLogCategory category, string messageText)
@@ -67,7 +38,7 @@ namespace Octopus.Shared.Orchestration.Logging
         public virtual void Write(LoggerReference logContext, ActivityLogCategory category, string messageText)
         {
             WriteToDiagnostics(category, messageText);
-            SendToLoggerActor(logContext ?? defaultLogger, category, messageText);
+            SendToLoggerActor(logContext ?? AspectData, category, messageText);
         }
 
         void WriteToDiagnostics(ActivityLogCategory category, string messageText)
