@@ -7,7 +7,7 @@ using Pipefish.Standard;
 
 namespace Octopus.Shared.Orchestration.Origination
 {
-    public class ActorOrigin : Aspect
+    public class Originator : Aspect
     {
         const string OriginStateKey = "ActorOrigin.Origin";
         readonly TimeSpan ReplyDefaultTtl = TimeSpan.FromDays(90);

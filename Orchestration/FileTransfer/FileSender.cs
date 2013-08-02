@@ -22,13 +22,13 @@ namespace Octopus.Shared.Orchestration.FileTransfer
         readonly IActorLog log;
         const int ChunkSize = 128 * 1024;
         readonly TimeSpan ProcessTimeout = TimeSpan.FromDays(90);
-        readonly ActorOrigin origin;
+        readonly Originator origin;
 
         public FileSender(IOctopusFileSystem fileSystem, IActorLog log)
         {
             this.fileSystem = fileSystem;
             this.log = RegisterAspect(log);
-            origin = RegisterAspect(new ActorOrigin());
+            origin = RegisterAspect(new Originator());
         }
 
         public void Receive(SendFileRequest message)

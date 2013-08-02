@@ -162,7 +162,7 @@
     <Compile Include="Communications\ICommunicationsConfiguration.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Orchestration\NoState.cs" />
-    <Compile Include="Orchestration\Origination\ActorOrigin.cs" />
+    <Compile Include="Orchestration\Origination\Originator.cs" />
     <Compile Include="Orchestration\Origination\OriginatingMessage.cs" />
     <Compile Include="Platform\Logging\ActivityLogCategory.cs" />
     <Compile Include="Orchestration\Logging\IActivityLogStorage.cs" />
@@ -465,7 +465,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Internals\CertificateGeneration\_Readme.txt" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Orchestration\CompleteOnTimeout\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.8\tools\Microsoft.Bcl.Build.targets" />
