@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Text;
+using Octopus.Shared.Communications.Logging;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Platform.Logging;
 using Octopus.Shared.Util;
 using Pipefish.Core;
-using Pipefish.Hosting;
 using Pipefish.Standard;
 
-namespace Octopus.Shared.Communications.Logging
+namespace Octopus.Shared.Orchestration.Logging
 {
     public class ActorLog : Aspect, IActorLog
     {

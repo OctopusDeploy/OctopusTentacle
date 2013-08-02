@@ -353,7 +353,7 @@
     <Compile Include="Platform\Restart\TentacleRestartCommand.cs" />
     <Compile Include="Platform\Restart\TentacleRestartResult.cs" />
     <Compile Include="Platform\ResultMessage.cs" />
-    <Compile Include="Platform\ServerTasks\CancelTaskCommand.cs" />
+    <Compile Include="Platform\CancelCommand.cs" />
     <Compile Include="Platform\ServerTasks\ExecuteTaskCommand.cs" />
     <Compile Include="Platform\ServerTasks\IStartOrchestrationCommand.cs" />
     <Compile Include="Platform\ServerTasks\TaskCompletedEvent.cs" />

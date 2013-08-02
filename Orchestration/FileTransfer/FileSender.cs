@@ -1,13 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Communications.Logging;
+using Octopus.Shared.Orchestration.FileTransfer.Implementation;
 using Octopus.Shared.Platform.FileTransfer;
 using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Messages;
 
-namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
+namespace Octopus.Shared.Orchestration.FileTransfer
 {
     public class FileSender : 
         PersistentActor<FileSendData>,
@@ -17,27 +18,33 @@ namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
         IReceive<TimeoutElapsedEvent>
     {
         readonly IOctopusFileSystem fileSystem;
+        readonly IActorLog log;
         const int ChunkSize = 128 * 1024;
         readonly TimeSpan ProcessTimeout = TimeSpan.FromDays(90);
 
-        public FileSender(IOctopusFileSystem fileSystem)
+        public FileSender(IOctopusFileSystem fileSystem, IActorLog log)
         {
             this.fileSystem = fileSystem;
+            this.log = RegisterAspect(log);
         }
 
         public void Receive(SendFileRequest message)
         {
-            Data = new FileSendData { 
+            Data = new FileSendData
+            { 
                 LocalFilename = message.LocalFilename, 
                 Hash = message.Hash, 
                 NextChunkIndex = 0,
                 ReplyTo = message.GetMessage().From,
                 ExpectedSize = message.ExpectedSize,
+                Logger = message.Logger
             };
+
+            log.Verbose(Data.Logger, "Requesting upload...");
 
             SetTimeout(ProcessTimeout);
 
-            Dispatch(message.RemoteSquid, new BeginFileTransferCommand(Path.GetFileName(Data.LocalFilename), Data.Hash, Data.ExpectedSize), null);
+            Dispatch(message.RemoteSquid, new BeginFileTransferCommand(Path.GetFileName(Data.LocalFilename), Data.Hash, Data.ExpectedSize));
         }
 
         public async Task ReceiveAsync(SendNextChunkRequest message)
@@ -46,6 +53,9 @@ namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
 
             using (var file = fileSystem.OpenFile(Data.LocalFilename, FileAccess.Read))
             {
+                var expected = Data.ExpectedSize != 0 ? Data.ExpectedSize : file.Length;
+                log.VerboseFormat(Data.Logger, "Uploaded {0} of {1} ({2:n0}%)", nextChunkOffset.ToFileSizeString(), expected.ToFileSizeString(), ((double)nextChunkOffset / Data.ExpectedSize * 100.00));
+                
                 file.Seek(nextChunkOffset, SeekOrigin.Begin);
                 var bytes = new byte[ChunkSize];
                 var read = await file.ReadAsync(bytes, 0, ChunkSize);
@@ -61,9 +71,9 @@ namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
             var remoteSpace = message.GetMessage().From.Space;
 
             if (message.Succeeded)
-                Log.Octopus().InfoFormat("File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
+                log.InfoFormat(Data.Logger, "File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
             else
-                Log.Octopus().ErrorFormat("Upload of file {0} with hash {1} to {2} failed: {3}", Data.LocalFilename, Data.Hash, remoteSpace, message.Message);
+                log.ErrorFormat(Data.Logger, "Upload of file {0} with hash {1} to {2} failed: {3}", Data.LocalFilename, Data.Hash, remoteSpace, message.Message);
 
             Send(Data.ReplyTo, new SendFileResult(message.Succeeded, message.Message, message.DestinationPath));
             
@@ -72,7 +82,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
 
         public void Receive(TimeoutElapsedEvent message)
         {
-            Log.Octopus().Error("Transfer of " + Data.LocalFilename + " did not complete in " + ProcessTimeout);
+            log.Error(Data.Logger, "Transfer of " + Data.LocalFilename + " did not complete in " + ProcessTimeout);
             Complete();
         }
     }
