@@ -132,6 +132,36 @@ namespace Octopus.Shared.Orchestration.Logging
             InfoFormat(null, messageFormat, args);
         }
 
+        public void Alert(string messageText)
+        {
+            Write(null, ActivityLogCategory.Alert, messageText);
+        }
+
+        public void Alert(Exception error, string messageText)
+        {
+            Write(null, ActivityLogCategory.Alert, error, messageText);
+        }
+
+        public void AlertFormat(string messageFormat, params object[] args)
+        {
+            WriteFormat(null, ActivityLogCategory.Alert, messageFormat, args);
+        }
+
+        public void Alert(LoggerReference logger, string messageText)
+        {
+            Write(logger, ActivityLogCategory.Alert, messageText);
+        }
+
+        public void Alert(LoggerReference logger, Exception error, string messageText)
+        {
+            Write(logger, ActivityLogCategory.Alert, error, messageText);
+        }
+
+        public void AlertFormat(LoggerReference logger, string messageFormat, params object[] args)
+        {
+            WriteFormat(logger, ActivityLogCategory.Alert, messageFormat, args);
+        }
+
         public void InfoFormat(LoggerReference logContext, string messageFormat, params object[] args)
         {
             WriteFormat(logContext, ActivityLogCategory.Info, messageFormat, args);

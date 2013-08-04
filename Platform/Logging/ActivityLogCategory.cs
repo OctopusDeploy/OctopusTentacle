@@ -6,6 +6,7 @@ namespace Octopus.Shared.Platform.Logging
     {
         Verbose = 100,
         Info = 200,
+        Alert = 250,
         Warning = 300,
         Error = 400
     }
