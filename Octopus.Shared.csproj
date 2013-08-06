@@ -86,9 +86,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Nuget.Core.2.6.0.1\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish, Version=0.1.0.44, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Pipefish, Version=0.1.0.49, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.0.1.0.44\lib\Pipefish.dll</HintPath>
+      <HintPath>..\packages\Pipefish.0.1.0.49\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -163,9 +163,6 @@
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Orchestration\Completion\CompletesOnTimeout.cs" />
     <Compile Include="Orchestration\NoState.cs" />
-    <Compile Include="Orchestration\Origination\Originator.cs" />
-    <Compile Include="Orchestration\Origination\OriginatingMessage.cs" />
-    <Compile Include="Orchestration\PersistentAspect.cs" />
     <Compile Include="Platform\Logging\ActivityLogCategory.cs" />
     <Compile Include="Orchestration\Logging\IActivityLogStorage.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntry.cs" />

@@ -1,6 +1,7 @@
 ﻿using System;
 using Pipefish.Core;
 using Pipefish.Messages;
+using Pipefish.Toolkit.AspectUtility;
 
 namespace Octopus.Shared.Orchestration.Completion
 {
@@ -22,10 +23,8 @@ namespace Octopus.Shared.Orchestration.Completion
         {
         }
 
-        public override void OnReceiving(Message message)
+        public override bool OnReceiving(Message message)
         {
-            base.OnReceiving(message);
-
             if (AspectData == null)
             {
                 AspectData = Guid.NewGuid().ToString();
@@ -51,6 +50,8 @@ namespace Octopus.Shared.Orchestration.Completion
                     }
                 }
             }
+
+            return base.OnReceiving(message);
         }
     }
 }

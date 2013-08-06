@@ -5,6 +5,7 @@ using Octopus.Shared.Platform;
 using Octopus.Shared.Platform.Logging;
 using Octopus.Shared.Util;
 using Pipefish.Core;
+using Pipefish.Toolkit.AspectUtility;
 
 namespace Octopus.Shared.Orchestration.Logging
 {
@@ -20,14 +21,18 @@ namespace Octopus.Shared.Orchestration.Logging
             this.log = log;
         }
 
-        public override void OnReceiving(Message message)
+        public override bool OnReceiving(Message message)
         {
-            if (AspectData != null) return;
+            if (AspectData == null)
+            {
+                var bodyWithLogger = message.Body as IMessageWithLogger;
+                if (bodyWithLogger != null)
+                {
+                    AspectData = bodyWithLogger.Logger;
+                }
+            }
 
-            var bodyWithLogger = message.Body as IMessageWithLogger;
-            if (bodyWithLogger == null) return;
-
-            AspectData = bodyWithLogger.Logger;
+            return base.OnReceiving(message);
         }
 
         public void Write(ActivityLogCategory category, string messageText)
