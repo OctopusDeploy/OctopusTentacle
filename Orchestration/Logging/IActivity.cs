@@ -4,7 +4,7 @@ using Pipefish;
 
 namespace Octopus.Shared.Orchestration.Logging
 {
-    public interface IActorLog : IAspect
+    public interface IActivity
     {
         void Write(LoggerReference logger, ActivityLogCategory category, string messageText);
         void Write(LoggerReference logger, ActivityLogCategory category, Exception error, string messageText);
@@ -43,5 +43,12 @@ namespace Octopus.Shared.Orchestration.Logging
         void Error(string messageText);
         void Error(Exception error, string messageText);
         void ErrorFormat(string messageFormat, params object[] args);
+
+        void Fatal(LoggerReference logger, string messageText);
+        void Fatal(LoggerReference logger, Exception error, string messageText);
+        void FatalFormat(LoggerReference logger, string messageFormat, params object[] args);
+        void Fatal(string messageText);
+        void Fatal(Exception error, string messageText);
+        void FatalFormat(string messageFormat, params object[] args);
     }
 }

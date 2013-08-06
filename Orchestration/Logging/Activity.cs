@@ -8,16 +8,15 @@ using Pipefish.Core;
 
 namespace Octopus.Shared.Orchestration.Logging
 {
-    public class ActorLog : PersistentAspect<LoggerReference>, IActorLog
+    public class Activity : PersistentAspect<LoggerReference>, IActivity
     {
         const string DefaultLoggerStateKey = "ActorLog.DefaultLogger";
 
-        readonly ILog log;
+        readonly ILog diagnostics = Log.Octopus();
         
-        public ActorLog(ILog log)
+        public Activity()
             : base(DefaultLoggerStateKey)
         {
-            this.log = log;
         }
 
         public override void OnReceiving(Message message)
@@ -35,10 +34,10 @@ namespace Octopus.Shared.Orchestration.Logging
             Write(null, category, messageText);
         }
 
-        public virtual void Write(LoggerReference logContext, ActivityLogCategory category, string messageText)
+        public virtual void Write(LoggerReference  logger, ActivityLogCategory category, string messageText)
         {
             WriteToDiagnostics(category, messageText);
-            SendToLoggerActor(logContext ?? AspectData, category, messageText);
+            SendToLoggerActor( logger ?? AspectData, category, messageText);
         }
 
         void WriteToDiagnostics(ActivityLogCategory category, string messageText)
@@ -46,17 +45,16 @@ namespace Octopus.Shared.Orchestration.Logging
             switch (category)
             {
                 case ActivityLogCategory.Verbose:
-                    log.Debug(messageText);
+                    diagnostics.Debug(messageText);
                     break;
                 case ActivityLogCategory.Info:
-                    log.Info(messageText);
-                    Console.ForegroundColor = ConsoleColor.White;
+                    diagnostics.Info(messageText);
                     break;
                 case ActivityLogCategory.Warning:
-                    log.Warn(messageText);
+                    diagnostics.Warn(messageText);
                     break;
                 case ActivityLogCategory.Error:
-                    log.Error(messageText);
+                    diagnostics.Error(messageText);
                     break;
             }
         }
@@ -77,14 +75,14 @@ namespace Octopus.Shared.Orchestration.Logging
             Write(null, category, error, messageText);
         }
 
-        public virtual void Write(LoggerReference logContext, ActivityLogCategory category, Exception error, string messageText)
+        public virtual void Write(LoggerReference logger, ActivityLogCategory category, Exception error, string messageText)
         {
             var message = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(messageText))
                 message.AppendLine(messageText);
             message.AppendLine(error.GetRootError().ToString());
             
-            Write(logContext, category, message.ToString());
+            Write( logger, category, message.ToString());
         }
 
         public void WriteFormat(ActivityLogCategory category, string messageFormat, params object[] args)
@@ -92,9 +90,9 @@ namespace Octopus.Shared.Orchestration.Logging
             WriteFormat(null, category, messageFormat, args);
         }
 
-        public void WriteFormat(LoggerReference logContext, ActivityLogCategory category, string messageFormat, params object[] args)
+        public void WriteFormat(LoggerReference logger, ActivityLogCategory category, string messageFormat, params object[] args)
         {
-            Write(logContext, category, string.Format(messageFormat, args));
+            Write(logger, category, string.Format(messageFormat, args));
         }
 
         public void Verbose(string messageText)
@@ -102,9 +100,9 @@ namespace Octopus.Shared.Orchestration.Logging
             Verbose(null, messageText);
         }
 
-        public void Verbose(LoggerReference logContext, string messageText)
+        public void Verbose(LoggerReference logger, string messageText)
         {
-            Write(logContext, ActivityLogCategory.Verbose, messageText);
+            Write(logger, ActivityLogCategory.Verbose, messageText);
         }
 
         public void VerboseFormat(string messageFormat, params object[] args)
@@ -112,9 +110,9 @@ namespace Octopus.Shared.Orchestration.Logging
             VerboseFormat(null, messageFormat, args);
         }
 
-        public void VerboseFormat(LoggerReference logContext, string messageFormat, params object[] args)
+        public void VerboseFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            WriteFormat(logContext, ActivityLogCategory.Verbose, messageFormat, args);
+            WriteFormat(logger, ActivityLogCategory.Verbose, messageFormat, args);
         }
 
         public void Info(string messageText)
@@ -122,9 +120,9 @@ namespace Octopus.Shared.Orchestration.Logging
             Info(null, messageText);
         }
 
-        public void Info(LoggerReference logContext, string messageText)
+        public void Info(LoggerReference logger, string messageText)
         {
-            Write(logContext, ActivityLogCategory.Info, messageText);
+            Write(logger, ActivityLogCategory.Info, messageText);
         }
 
         public void InfoFormat(string messageFormat, params object[] args)
@@ -162,9 +160,9 @@ namespace Octopus.Shared.Orchestration.Logging
             WriteFormat(logger, ActivityLogCategory.Alert, messageFormat, args);
         }
 
-        public void InfoFormat(LoggerReference logContext, string messageFormat, params object[] args)
+        public void InfoFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            WriteFormat(logContext, ActivityLogCategory.Info, messageFormat, args);
+            WriteFormat(logger, ActivityLogCategory.Info, messageFormat, args);
         }
 
         public void Warn(string messageText)
@@ -172,9 +170,9 @@ namespace Octopus.Shared.Orchestration.Logging
             Warn((LoggerReference)null, messageText);
         }
 
-        public void Warn(LoggerReference logContext, string messageText)
+        public void Warn(LoggerReference logger, string messageText)
         {
-            Write(logContext, ActivityLogCategory.Warning, messageText);
+            Write(logger, ActivityLogCategory.Warning, messageText);
         }
 
         public void Warn(Exception error, string messageText)
@@ -182,9 +180,9 @@ namespace Octopus.Shared.Orchestration.Logging
             Warn(null, error, messageText);
         }
 
-        public void Warn(LoggerReference logContext, Exception error, string messageText)
+        public void Warn(LoggerReference logger, Exception error, string messageText)
         {
-            Write(logContext, ActivityLogCategory.Warning, error, messageText);
+            Write(logger, ActivityLogCategory.Warning, error, messageText);
         }
 
         public void WarnFormat(string messageFormat, params object[] args)
@@ -192,9 +190,9 @@ namespace Octopus.Shared.Orchestration.Logging
             WarnFormat(null, messageFormat, args);
         }
 
-        public void WarnFormat(LoggerReference logContext, string messageFormat, params object[] args)
+        public void WarnFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            WriteFormat(logContext, ActivityLogCategory.Warning, messageFormat, args);
+            WriteFormat(logger, ActivityLogCategory.Warning, messageFormat, args);
         }
 
         public void Error(string messageText)
@@ -202,9 +200,9 @@ namespace Octopus.Shared.Orchestration.Logging
             Error((LoggerReference)null, messageText);
         }
 
-        public void Error(LoggerReference logContext, string messageText)
+        public void Error(LoggerReference logger, string messageText)
         {
-            Write(logContext, ActivityLogCategory.Error, messageText);
+            Write(logger, ActivityLogCategory.Error, messageText);
         }
 
         public void Error(Exception error, string messageText)
@@ -212,9 +210,9 @@ namespace Octopus.Shared.Orchestration.Logging
             Error(null, error, messageText);
         }
 
-        public void Error(LoggerReference logContext, Exception error, string messageText)
+        public void Error(LoggerReference logger, Exception error, string messageText)
         {
-            Write(logContext, ActivityLogCategory.Error, error, messageText);
+            Write(logger, ActivityLogCategory.Error, error, messageText);
         }
 
         public void ErrorFormat(string messageFormat, params object[] args)
@@ -222,9 +220,39 @@ namespace Octopus.Shared.Orchestration.Logging
             ErrorFormat(null, messageFormat, args);
         }
 
-        public void ErrorFormat(LoggerReference logContext, string messageFormat, params object[] args)
+        public void ErrorFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            WriteFormat(logContext, ActivityLogCategory.Error, messageFormat, args);
+            WriteFormat(logger, ActivityLogCategory.Error, messageFormat, args);
+        }
+
+        public void Fatal(LoggerReference logger, string messageText)
+        {
+            Write(logger, ActivityLogCategory.Fatal, messageText);
+        }
+
+        public void Fatal(LoggerReference logger, Exception error, string messageText)
+        {
+            Write(logger, ActivityLogCategory.Fatal, error, messageText);
+        }
+
+        public void FatalFormat(LoggerReference logger, string messageFormat, params object[] args)
+        {
+            WriteFormat(logger, ActivityLogCategory.Fatal, messageFormat, args);
+        }
+
+        public void Fatal(string messageText)
+        {
+            Write(ActivityLogCategory.Fatal, messageText);
+        }
+
+        public void Fatal(Exception error, string messageText)
+        {
+            Write(ActivityLogCategory.Fatal, error, messageText);
+        }
+
+        public void FatalFormat(string messageFormat, params object[] args)
+        {
+            WriteFormat(ActivityLogCategory.Fatal, messageFormat, args);
         }
     }
 }
