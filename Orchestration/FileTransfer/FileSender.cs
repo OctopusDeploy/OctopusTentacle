@@ -5,10 +5,10 @@ using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Orchestration.Completion;
 using Octopus.Shared.Orchestration.FileTransfer.Implementation;
 using Octopus.Shared.Orchestration.Logging;
-using Octopus.Shared.Orchestration.Origination;
 using Octopus.Shared.Platform.FileTransfer;
 using Octopus.Shared.Util;
 using Pipefish;
+using Pipefish.Toolkit.Origination;
 
 namespace Octopus.Shared.Orchestration.FileTransfer
 {
