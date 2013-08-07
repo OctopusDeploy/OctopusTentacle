@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Octopus.Shared.Platform.Deployment;
 
-namespace Octopus.Shared.Platform.Deployment
+namespace Octopus.Shared.Platform.Deploy
 {
     public class TentaclePackageDeploymentResult : ResultMessage
     {

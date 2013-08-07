@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Platform.Conversations;
+using Octopus.Shared.Platform.Deploy;
 using Octopus.Shared.Platform.Logging;
 using Pipefish;
 
