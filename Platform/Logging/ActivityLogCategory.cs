@@ -8,6 +8,7 @@ namespace Octopus.Shared.Platform.Logging
         Info = 200,
         Alert = 250,
         Warning = 300,
-        Error = 400
+        Error = 400,
+        Fatal = 500
     }
 }

@@ -19,14 +19,14 @@ namespace Octopus.Shared.Orchestration.FileTransfer
         IReceive<FileTransferCompleteEvent>
     {
         readonly IOctopusFileSystem fileSystem;
-        readonly IActorLog log;
+        readonly IActivity activity;
         const int ChunkSize = 128 * 1024;
         readonly Originator origin;
 
-        public FileSender(IOctopusFileSystem fileSystem, IActorLog log)
+        public FileSender(IOctopusFileSystem fileSystem)
         {
             this.fileSystem = fileSystem;
-            this.log = RegisterAspect(log);
+            activity = RegisterAspect<Activity>();
             origin = RegisterAspect<Originator>();
             RegisterAspect(new CompletesOnTimeout(() => Log.Octopus().ErrorFormat("Transfer of {0} did not complete before the process timeout", Data.LocalFilename)));
         }
@@ -42,7 +42,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
                 Logger = message.Logger
             };
 
-            log.Verbose("Requesting upload...");
+            activity.Verbose("Requesting upload...");
 
             Dispatch(message.RemoteSquid, new BeginFileTransferCommand(Path.GetFileName(Data.LocalFilename), Data.Hash, Data.ExpectedSize));
         }
@@ -54,7 +54,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
             using (var file = fileSystem.OpenFile(Data.LocalFilename, FileAccess.Read))
             {
                 var expected = Data.ExpectedSize != 0 ? Data.ExpectedSize : file.Length;
-                log.VerboseFormat("Uploaded {0} of {1} ({2:n0}%)", nextChunkOffset.ToFileSizeString(), expected.ToFileSizeString(), ((double)nextChunkOffset / Data.ExpectedSize * 100.00));
+                activity.VerboseFormat("Uploaded {0} of {1} ({2:n0}%)", nextChunkOffset.ToFileSizeString(), expected.ToFileSizeString(), ((double)nextChunkOffset / Data.ExpectedSize * 100.00));
                 
                 file.Seek(nextChunkOffset, SeekOrigin.Begin);
                 var bytes = new byte[ChunkSize];
@@ -71,9 +71,9 @@ namespace Octopus.Shared.Orchestration.FileTransfer
             var remoteSpace = message.GetMessage().From.Space;
 
             if (message.Succeeded)
-                log.InfoFormat("File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
+                activity.InfoFormat("File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
             else
-                log.ErrorFormat("Upload of file {0} with hash {1} to {2} failed: {3}", Data.LocalFilename, Data.Hash, remoteSpace, message.Message);
+                activity.ErrorFormat("Upload of file {0} with hash {1} to {2} failed: {3}", Data.LocalFilename, Data.Hash, remoteSpace, message.Message);
 
             origin.Reply(new SendFileResult(message.Succeeded, message.Message, message.DestinationPath));
             

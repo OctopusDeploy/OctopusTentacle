@@ -26,7 +26,7 @@ namespace Octopus.Shared.Communications
 
         public PipefishModule(params Assembly[] assemblies)
         {
-            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly, typeof(ActorLog).Assembly }).ToArray();
+            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly, typeof(Activity).Assembly }).ToArray();
         }
 
         protected override void Load(ContainerBuilder builder)

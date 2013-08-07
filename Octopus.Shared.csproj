@@ -177,8 +177,8 @@
     <Compile Include="Orchestration\Logging\IActivityLogStorage.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntry.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogTreeNode.cs" />
-    <Compile Include="Orchestration\Logging\ActorLog.cs" />
-    <Compile Include="Orchestration\Logging\IActorLog.cs" />
+    <Compile Include="Orchestration\Logging\Activity.cs" />
+    <Compile Include="Orchestration\Logging\IActivity.cs" />
     <Compile Include="Platform\Logging\LogMessage.cs" />
     <Compile Include="Communications\PipefishModule.cs" />
     <Compile Include="Communications\ActivitySpaceStarter.cs" />
