@@ -163,6 +163,16 @@
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Orchestration\Completion\CompletesOnTimeout.cs" />
     <Compile Include="Orchestration\NoState.cs" />
+    <Compile Include="Platform\Deployment\Acquire\AcquiredPackage.cs" />
+    <Compile Include="Platform\Deployment\Acquire\AcquirePackagesCommand.cs" />
+    <Compile Include="Platform\Deployment\Acquire\DownloadAndPushPackageToTentaclesCommand.cs" />
+    <Compile Include="Platform\Deployment\Acquire\DownloadPackageOnTentaclesCommand.cs" />
+    <Compile Include="Platform\Deployment\Acquire\PackageAcquiredEvent.cs" />
+    <Compile Include="Platform\Deployment\Acquire\PackagesAcquiredEvent.cs" />
+    <Compile Include="Platform\Deployment\Package\StartPackageStepCommand.cs" />
+    <Compile Include="Platform\Deployment\Script\StartScriptStepCommand.cs" />
+    <Compile Include="Platform\Deployment\StartDeploymentCommand.cs" />
+    <Compile Include="Platform\Deployment\StartDeploymentStepCommand.cs" />
     <Compile Include="Platform\Logging\ActivityLogCategory.cs" />
     <Compile Include="Orchestration\Logging\IActivityLogStorage.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntry.cs" />
