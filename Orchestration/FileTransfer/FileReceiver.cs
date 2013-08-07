@@ -7,6 +7,7 @@ using Octopus.Shared.Orchestration.Completion;
 using Octopus.Shared.Orchestration.FileTransfer.Implementation;
 using Octopus.Shared.Util;
 using Pipefish;
+using Pipefish.Toolkit.Origination;
 
 namespace Octopus.Shared.Orchestration.FileTransfer
 {
@@ -23,7 +24,6 @@ namespace Octopus.Shared.Orchestration.FileTransfer
         {
             this.fileStorageConfiguration = fileStorageConfiguration;
             this.fileSystem = fileSystem;
-
             RegisterAspect(new CompletesOnTimeout(() => Log.Octopus().ErrorFormat("Transfer of {0} did not complete before the process timeout", Data.LocalPath)));
         }
 

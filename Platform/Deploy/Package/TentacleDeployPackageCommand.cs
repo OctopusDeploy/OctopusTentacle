@@ -4,10 +4,11 @@ using Octopus.Shared.Contracts;
 using Octopus.Shared.Platform.Conversations;
 using Octopus.Shared.Platform.Logging;
 using Pipefish;
+using Pipefish.Toolkit.Supervision;
 
 namespace Octopus.Shared.Platform.Deploy.Package
 {
-    [BeginsConversationEndedBy(typeof(TentaclePackageDeploymentResult))]
+    [BeginsConversationEndedBy(typeof(TentaclePackageDeployedEvent), typeof(CompletionEvent))]
     public class TentacleDeployPackageCommand : IMessage
     {
         public PackageMetadata Package { get; private set; }

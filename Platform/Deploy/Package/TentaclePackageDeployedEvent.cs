@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using Octopus.Shared.Platform.Deployment;
+using Pipefish;
 
 namespace Octopus.Shared.Platform.Deploy.Package
 {
-    public class TentaclePackageDeploymentResult : ResultMessage
+    public class TentaclePackageDeployedEvent : IMessage
     {
         public IList<TentacleArtifact> CreatedArtifacts { get; private set; }
 
-        public TentaclePackageDeploymentResult(bool wasSuccessful, string details, IList<TentacleArtifact> createdArtifacts)
-            : base(wasSuccessful, details)
+        public TentaclePackageDeployedEvent(IList<TentacleArtifact> createdArtifacts)
         {
             CreatedArtifacts = createdArtifacts;
         }

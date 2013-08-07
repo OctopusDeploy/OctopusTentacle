@@ -1,13 +1,13 @@
 ﻿using System;
+using Pipefish;
 
 namespace Octopus.Shared.Platform.FileTransfer
 {
-    public class SendFileResult : ResultMessage
+    public class FileSentEvent : IMessage
     {
         public string DestinationPath { get; private set; }
 
-        public SendFileResult(bool wasSuccessful, string details, string destinationPath)
-            : base(wasSuccessful, details)
+        public FileSentEvent(string destinationPath)
         {
             DestinationPath = destinationPath;
         }

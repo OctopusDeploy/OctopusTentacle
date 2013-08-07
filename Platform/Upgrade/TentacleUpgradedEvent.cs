@@ -1,14 +1,14 @@
 ﻿using System;
+using Pipefish;
 
 namespace Octopus.Shared.Platform.Upgrade
 {
-    public class UpgradeTentacleResult : ResultMessage
+    public class TentacleUpgradedEvent : IMessage
     {
         public string TentacleSquid { get; set; }
         public string Version { get; private set; }
 
-        public UpgradeTentacleResult(bool wasSuccessful, string details, string tentacleSquid, string version)
-            : base(wasSuccessful, details)
+        public TentacleUpgradedEvent(string tentacleSquid, string version)
         {
             TentacleSquid = tentacleSquid;
             Version = version;

@@ -1,11 +1,18 @@
 ﻿using System;
 using Octopus.Shared.Platform.Conversations;
-using Pipefish;
+using Octopus.Shared.Platform.Logging;
+using Pipefish.Toolkit.Supervision;
 
 namespace Octopus.Shared.Platform.Restart
 {
-    [BeginsConversationEndedBy(typeof(TentacleRestartResult))]
-    public class TentacleRestartCommand : IMessage
+    [BeginsConversationEndedBy(typeof(TentacleRestartedEvent), typeof(CompletionEvent))]
+    public class TentacleRestartCommand : IMessageWithLogger
     {
+        public TentacleRestartCommand(LoggerReference logger)
+        {
+            Logger = logger;
+        }
+
+        public LoggerReference Logger { get; private set; }
     }
 }

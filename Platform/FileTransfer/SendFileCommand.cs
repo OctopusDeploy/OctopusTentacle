@@ -1,9 +1,12 @@
 ﻿using System;
+using Octopus.Shared.Platform.Conversations;
 using Octopus.Shared.Platform.Logging;
+using Pipefish.Toolkit.Supervision;
 
 namespace Octopus.Shared.Platform.FileTransfer
 {
-    public class SendFileRequest : IMessageWithLogger
+    [BeginsConversationEndedBy(typeof(FileSentEvent), typeof(CompletionEvent))]
+    public class SendFileCommand : IMessageWithLogger
     {
         public string LocalFilename { get; private set; }
         public string RemoteSquid { get; private set; }
@@ -11,7 +14,7 @@ namespace Octopus.Shared.Platform.FileTransfer
         public string Hash { get; private set; }
         public LoggerReference Logger { get; private set; }
 
-        public SendFileRequest(string localFilename, string remoteSquid, long expectedSize, string hash, LoggerReference logger)
+        public SendFileCommand(string localFilename, string remoteSquid, long expectedSize, string hash, LoggerReference logger)
         {
             LocalFilename = localFilename;
             RemoteSquid = remoteSquid;

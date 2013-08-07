@@ -86,9 +86,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Nuget.Core.2.6.0.1\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish, Version=0.1.0.49, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Pipefish, Version=0.1.0.50, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.0.1.0.49\lib\Pipefish.dll</HintPath>
+      <HintPath>..\packages\Pipefish.0.1.0.50\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -352,23 +352,22 @@
     <Compile Include="Platform\Conversations\BeginsConversationEndedByAttribute.cs" />
     <Compile Include="Platform\Deploy\TentacleArtifact.cs" />
     <Compile Include="Platform\Deploy\Package\TentacleDeployPackageCommand.cs" />
-    <Compile Include="Platform\Deploy\Package\TentaclePackageDeploymentResult.cs" />
-    <Compile Include="Platform\FileTransfer\SendFileRequest.cs" />
-    <Compile Include="Platform\FileTransfer\SendFileResult.cs" />
+    <Compile Include="Platform\Deploy\Package\TentaclePackageDeployedEvent.cs" />
+    <Compile Include="Platform\FileTransfer\SendFileCommand.cs" />
+    <Compile Include="Platform\FileTransfer\FileSentEvent.cs" />
     <Compile Include="Platform\Health\StartHealthCheckCommand.cs" />
     <Compile Include="Platform\Health\TentacleReportHealthReply.cs" />
     <Compile Include="Platform\Health\TentacleReportHealthRequest.cs" />
     <Compile Include="Platform\IMessageWithLogger.cs" />
     <Compile Include="Platform\Logging\LoggerReference.cs" />
-    <Compile Include="Platform\PackageUpload\PackageUploadResult.cs" />
+    <Compile Include="Platform\PackageUpload\PackageUploadedEvent.cs" />
     <Compile Include="Platform\PackageUpload\TentacleGetPackageStatusRequest.cs" />
     <Compile Include="Platform\PackageUpload\TentaclePackageStatusReply.cs" />
-    <Compile Include="Platform\PackageUpload\TentaclePackageStoredResult.cs" />
+    <Compile Include="Platform\PackageUpload\TentaclePackageStoredEvent.cs" />
     <Compile Include="Platform\PackageUpload\TentacleStorePackageCommand.cs" />
     <Compile Include="Platform\PackageUpload\UploadPackageCommand.cs" />
     <Compile Include="Platform\Restart\TentacleRestartCommand.cs" />
-    <Compile Include="Platform\Restart\TentacleRestartResult.cs" />
-    <Compile Include="Platform\ResultMessage.cs" />
+    <Compile Include="Platform\Restart\TentacleRestartedEvent.cs" />
     <Compile Include="Platform\CancelCommand.cs" />
     <Compile Include="Platform\ServerTasks\ExecuteTaskCommand.cs" />
     <Compile Include="Platform\ServerTasks\IStartOrchestrationCommand.cs" />
@@ -377,7 +376,7 @@
     <Compile Include="Platform\ServerTasks\TaskStartedEvent.cs" />
     <Compile Include="Platform\Upgrade\StartOutdatedTentacleUpgradeCommand.cs" />
     <Compile Include="Platform\Upgrade\UpgradeTentacleCommand.cs" />
-    <Compile Include="Platform\Upgrade\UpgradeTentacleResult.cs" />
+    <Compile Include="Platform\Upgrade\TentacleUpgradedEvent.cs" />
     <Compile Include="Platform\WellKnownOctopusActors.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\Aes256EncryptionAlgorithm.cs" />

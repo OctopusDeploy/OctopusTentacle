@@ -1,13 +1,13 @@
 ﻿using System;
+using Pipefish;
 
 namespace Octopus.Shared.Platform.Restart
 {
-    public class TentacleRestartResult : ResultMessage
+    public class TentacleRestartedEvent : IMessage
     {
         public string RunningVersion { get; private set; }
 
-        public TentacleRestartResult(bool wasSuccessful, string description, string runningVersion)
-            :base(wasSuccessful, description)
+        public TentacleRestartedEvent(string runningVersion)
         {
             RunningVersion = runningVersion;
         }

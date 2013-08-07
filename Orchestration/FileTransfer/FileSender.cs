@@ -1,37 +1,36 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Orchestration.Completion;
 using Octopus.Shared.Orchestration.FileTransfer.Implementation;
 using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Platform.FileTransfer;
 using Octopus.Shared.Util;
 using Pipefish;
-using Pipefish.Toolkit.Origination;
+using Pipefish.Toolkit.Supervision;
 
 namespace Octopus.Shared.Orchestration.FileTransfer
 {
     public class FileSender : 
         PersistentActor<FileSendData>,
-        ICreatedBy<SendFileRequest>,
+        ICreatedBy<SendFileCommand>,
         IReceiveAsync<SendNextChunkRequest>,
         IReceive<FileTransferCompleteEvent>
     {
         readonly IOctopusFileSystem fileSystem;
         readonly IActivity activity;
         const int ChunkSize = 128 * 1024;
-        readonly Originator origin;
+        readonly Supervised supervised;
 
         public FileSender(IOctopusFileSystem fileSystem)
         {
             this.fileSystem = fileSystem;
             activity = RegisterAspect<Activity>();
-            origin = RegisterAspect<Originator>();
-            RegisterAspect(new CompletesOnTimeout(() => Log.Octopus().ErrorFormat("Transfer of {0} did not complete before the process timeout", Data.LocalFilename)));
+            supervised = RegisterAspect<Supervised>();
+            RegisterAspect(new CompletesOnTimeout(() => activity.ErrorFormat("Transfer of {0} did not complete before the process timeout", Data.LocalFilename)));
         }
 
-        public void Receive(SendFileRequest message)
+        public void Receive(SendFileCommand message)
         {
             Data = new FileSendData
             { 
@@ -71,13 +70,15 @@ namespace Octopus.Shared.Orchestration.FileTransfer
             var remoteSpace = message.GetMessage().From.Space;
 
             if (message.Succeeded)
+            {
                 activity.InfoFormat("File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
+                supervised.Succeed(new FileSentEvent(message.DestinationPath));
+            }
             else
+            {
                 activity.ErrorFormat("Upload of file {0} with hash {1} to {2} failed: {3}", Data.LocalFilename, Data.Hash, remoteSpace, message.Message);
-
-            origin.Reply(new SendFileResult(message.Succeeded, message.Message, message.DestinationPath));
-            
-            Complete();
+                supervised.Fail(message.Message, null);
+            }
         }
     }
 }

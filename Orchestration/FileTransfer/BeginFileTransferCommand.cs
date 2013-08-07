@@ -2,7 +2,7 @@
 using Octopus.Shared.Platform.Conversations;
 using Pipefish;
 
-namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
+namespace Octopus.Shared.Orchestration.FileTransfer
 {
     [BeginsConversationEndedBy(typeof(FileTransferCompleteEvent))]
     public class BeginFileTransferCommand : IMessage
