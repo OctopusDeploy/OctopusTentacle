@@ -5,7 +5,7 @@ using Pipefish;
 
 namespace Octopus.Shared.Platform.Health
 {
-    [BeginsConversationEndedBy(typeof(TentacleReportHealthReply))]
+    [ExpectReply]
     public class TentacleReportHealthRequest : IMessage
     {
         readonly LoggerReference logger;

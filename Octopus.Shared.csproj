@@ -349,7 +349,7 @@
     <Compile Include="Packages\PackageStoreModule.cs" />
     <Compile Include="Packages\PackageStore.cs" />
     <Compile Include="Platform\Backup\StartBackupCommand.cs" />
-    <Compile Include="Platform\Conversations\BeginsConversationEndedByAttribute.cs" />
+    <Compile Include="Platform\Conversations\ExpectReplyAttribute.cs" />
     <Compile Include="Platform\Deploy\TentacleArtifact.cs" />
     <Compile Include="Platform\Deploy\Package\TentacleDeployPackageCommand.cs" />
     <Compile Include="Platform\Deploy\Package\TentaclePackageDeployedEvent.cs" />

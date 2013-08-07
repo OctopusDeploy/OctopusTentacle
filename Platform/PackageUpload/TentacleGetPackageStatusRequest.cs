@@ -5,7 +5,7 @@ using Pipefish;
 
 namespace Octopus.Shared.Platform.PackageUpload
 {
-    [BeginsConversationEndedBy(typeof(TentaclePackageStatusReply))]
+    [ExpectReply]
     public class TentacleGetPackageStatusRequest : IMessage
     {
         public PackageMetadata Package { get; private set; }

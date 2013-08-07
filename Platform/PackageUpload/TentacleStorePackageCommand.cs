@@ -5,7 +5,7 @@ using Octopus.Shared.Platform.Logging;
 
 namespace Octopus.Shared.Platform.PackageUpload
 {
-    [BeginsConversationEndedBy(typeof(TentaclePackageStoredEvent))]
+    [ExpectReply]
     public class TentacleStorePackageCommand : IMessageWithLogger
     {
         public LoggerReference Logger { get; private set; }

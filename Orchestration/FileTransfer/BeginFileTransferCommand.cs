@@ -4,7 +4,7 @@ using Pipefish;
 
 namespace Octopus.Shared.Orchestration.FileTransfer
 {
-    [BeginsConversationEndedBy(typeof(FileTransferCompleteEvent))]
+    [ExpectReply]
     public class BeginFileTransferCommand : IMessage
     {
         public string Filename { get; private set; }

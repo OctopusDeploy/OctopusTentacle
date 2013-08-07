@@ -1,11 +1,10 @@
 ﻿using System;
 using Octopus.Shared.Platform.Conversations;
 using Octopus.Shared.Platform.Logging;
-using Pipefish.Toolkit.Supervision;
 
 namespace Octopus.Shared.Platform.FileTransfer
 {
-    [BeginsConversationEndedBy(typeof(FileSentEvent), typeof(CompletionEvent))]
+    [ExpectReply]
     public class SendFileCommand : IMessageWithLogger
     {
         public string LocalFilename { get; private set; }
