@@ -1,11 +1,11 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using NuGet;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
+using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Packages
@@ -24,7 +24,7 @@ namespace Octopus.Shared.Packages
             this.fileSystem = fileSystem;
         }
 
-        public StoredPackage Download(PackageMetadata package, IFeed feed, PackageCachePolicy cachePolicy, IActivityLog log)
+        public StoredPackage Download(PackageMetadata package, IFeed feed, PackageCachePolicy cachePolicy, IActivity log)
         {
             StoredPackage storedPackage = null;
 
@@ -39,27 +39,27 @@ namespace Octopus.Shared.Packages
             }
             else
             {
-                log.Debug("Package was found in cache. No need to download. Using file: " + storedPackage.FullPath);
+                log.Verbose("Package was found in cache. No need to download. Using file: " + storedPackage.FullPath);
             }
 
-            log.Debug("SHA1 hash of package is: " + storedPackage.Hash);
+            log.Verbose("SHA1 hash of package is: " + storedPackage.Hash);
 
             return storedPackage;
         }
 
-        StoredPackage AttemptToGetPackageFromCache(PackageMetadata metadata, IFeed feed, IActivityLog log)
+        StoredPackage AttemptToGetPackageFromCache(PackageMetadata metadata, IFeed feed, IActivity log)
         {
-            log.DebugFormat("Checking package cache for package {0} {1}", metadata.PackageId, metadata.Version);
+            log.VerboseFormat("Checking package cache for package {0} {1}", metadata.PackageId, metadata.Version);
 
             return packageStore.GetPackage(feed.Id, metadata);
         }
 
-        StoredPackage AttemptToDownload(PackageMetadata metadata, IFeed feed, IActivityLog log)
+        StoredPackage AttemptToDownload(PackageMetadata metadata, IFeed feed, IActivity log)
         {
             log.InfoFormat("Downloading NuGet package {0} {1} from feed: '{2}'", metadata.PackageId, metadata.Version, feed.FeedUri);
 
             var cacheDirectory = packageStore.GetPackagesDirectory(feed.Id);
-            log.DebugFormat("Downloaded packages will be stored in: {0}", cacheDirectory);
+            log.VerboseFormat("Downloaded packages will be stored in: {0}", cacheDirectory);
             fileSystem.EnsureDirectoryExists(cacheDirectory);
             fileSystem.EnsureDiskHasEnoughFreeSpace(cacheDirectory);
 
@@ -75,7 +75,7 @@ namespace Octopus.Shared.Packages
                 }
                 catch (Exception dataException)
                 {
-                    log.Error("Unable to download package: " + dataException.Message, dataException);
+                    log.Error(dataException, "Unable to download package: " + dataException.Message);
                     Thread.Sleep(i * 1000);
                 }
             }
@@ -92,7 +92,7 @@ namespace Octopus.Shared.Packages
             return new StoredPackage(metadata.PackageId, metadata.Version, downloadedTo, hash, size);
         }
 
-        static void CheckWhetherThePackageHasDependencies(IPackageMetadata downloaded, IActivityLog log)
+        static void CheckWhetherThePackageHasDependencies(IPackageMetadata downloaded, IActivity log)
         {
             var dependencies = downloaded.DependencySets.SelectMany(ds => ds.Dependencies).Count();
             if (dependencies > 0)
@@ -105,21 +105,21 @@ namespace Octopus.Shared.Packages
             }
         }
 
-        void AttemptToFindAndDownloadPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, IActivityLog log, string cacheDirectory, out IPackage downloadedPackage, out string path)
+        void AttemptToFindAndDownloadPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, IActivity log, string cacheDirectory, out IPackage downloadedPackage, out string path)
         {
             var package = FindPackage(attempt, packageMetadata, feed, log);
 
             var fullPathToDownloadTo = GetFilePathToDownloadPackageTo(cacheDirectory, package);
 
-            DownloadPackage(package, feed, fullPathToDownloadTo, log);
+            DownloadPackage(package, fullPathToDownloadTo, log);
 
             path = fullPathToDownloadTo;
             downloadedPackage = new ZipPackage(fullPathToDownloadTo);
         }
 
-        IPackage FindPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, IActivityLog log)
+        IPackage FindPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, IActivity log)
         {
-            log.DebugFormat("Finding package (attempt {0} of {1})", attempt, NumberOfTimesToAttemptToDownloadPackage);
+            log.VerboseFormat("Finding package (attempt {0} of {1})", attempt, NumberOfTimesToAttemptToDownloadPackage);
 
             var remoteRepository = packageRepositoryFactory.CreateRepository(feed.FeedUri, feed.GetCredentials());
             var package = remoteRepository.FindPackage(packageMetadata.PackageId, new SemanticVersion(packageMetadata.Version), true, true);
@@ -130,10 +130,10 @@ namespace Octopus.Shared.Packages
             return package;
         }
 
-        static void DownloadPackage(IPackage package, IFeed feed, string fullPathToDownloadTo, IActivityLog log)
+        static void DownloadPackage(IPackage package, string fullPathToDownloadTo, IActivity log)
         {
-            log.DebugFormat("Found package {0} version {1}", package.Id, package.Version);
-            log.Debug("Downloading to: " + fullPathToDownloadTo);
+            log.VerboseFormat("Found package {0} version {1}", package.Id, package.Version);
+            log.Verbose("Downloading to: " + fullPathToDownloadTo);
 
             var physical = new PhysicalFileSystem(Path.GetDirectoryName(fullPathToDownloadTo));
             var local = new LocalPackageRepository(new FixedFilePathResolver(package.Id, fullPathToDownloadTo), physical);

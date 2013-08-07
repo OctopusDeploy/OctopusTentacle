@@ -133,6 +133,11 @@ namespace Octopus.Shared.Orchestration.Logging
             return child;
         }
 
+        public LoggerReference CreateChildFormat(string messageFormat, params object[] args)
+        {
+            return CreateChildFormat(null, messageFormat, args);
+        }
+
         public LoggerReference CreateChildFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
             var child = EnsureLogger(logger).CreateChild();

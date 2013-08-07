@@ -19,6 +19,7 @@ namespace Octopus.Shared.Orchestration.Logging
 
         LoggerReference CreateChild(string messageText);
         LoggerReference CreateChild(LoggerReference logger, string messageText);
+        LoggerReference CreateChildFormat(string messageFormat, params object[] args);
         LoggerReference CreateChildFormat(LoggerReference logger, string messageFormat, params object[] args);
 
         void Info(LoggerReference logger, string messageText);

@@ -169,6 +169,8 @@
     <Compile Include="Platform\Deploy\Acquire\DownloadPackageOnTentaclesCommand.cs" />
     <Compile Include="Platform\Deploy\Acquire\PackageAcquiredEvent.cs" />
     <Compile Include="Platform\Deploy\Acquire\PackagesAcquiredEvent.cs" />
+    <Compile Include="Platform\Deploy\Acquire\TentacleDownloadPackageCommand.cs" />
+    <Compile Include="Platform\Deploy\Acquire\TentaclePackageDownloadedEvent.cs" />
     <Compile Include="Platform\Deploy\Package\StartPackageStepCommand.cs" />
     <Compile Include="Platform\Deploy\Script\StartScriptStepCommand.cs" />
     <Compile Include="Platform\Deploy\Script\TentacleRunScriptCommand.cs" />
@@ -349,8 +351,8 @@
     <Compile Include="Platform\Backup\StartBackupCommand.cs" />
     <Compile Include="Platform\Conversations\BeginsConversationEndedByAttribute.cs" />
     <Compile Include="Platform\Deploy\TentacleArtifact.cs" />
-    <Compile Include="Platform\Deploy\TentacleDeployPackageCommand.cs" />
-    <Compile Include="Platform\Deploy\TentaclePackageDeploymentResult.cs" />
+    <Compile Include="Platform\Deploy\Package\TentacleDeployPackageCommand.cs" />
+    <Compile Include="Platform\Deploy\Package\TentaclePackageDeploymentResult.cs" />
     <Compile Include="Platform\FileTransfer\SendFileRequest.cs" />
     <Compile Include="Platform\FileTransfer\SendFileResult.cs" />
     <Compile Include="Platform\Health\StartHealthCheckCommand.cs" />

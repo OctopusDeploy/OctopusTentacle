@@ -1,7 +1,8 @@
 using System;
+using Octopus.Shared.Platform.Deployment.Acquire;
 using Pipefish;
 
-namespace Octopus.Shared.Platform.Deployment.Acquire
+namespace Octopus.Shared.Platform.Deploy.Acquire
 {
     public class PackageAcquiredEvent : IMessage
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using Octopus.Shared.Platform.Logging;
 
-namespace Octopus.Shared.Platform.Deployment.Acquire
+namespace Octopus.Shared.Platform.Deploy.Acquire
 {
     public class AcquirePackagesCommand : IMessageWithLogger
     {
