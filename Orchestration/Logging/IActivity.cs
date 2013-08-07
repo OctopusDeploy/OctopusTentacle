@@ -1,6 +1,5 @@
 ﻿using System;
 using Octopus.Shared.Platform.Logging;
-using Pipefish;
 
 namespace Octopus.Shared.Orchestration.Logging
 {
@@ -17,6 +16,10 @@ namespace Octopus.Shared.Orchestration.Logging
         void VerboseFormat(LoggerReference logger, string messageFormat, params object[] args);
         void Verbose(string messageText);
         void VerboseFormat(string messageFormat, params object[] args);
+
+        LoggerReference CreateChild(string messageText);
+        LoggerReference CreateChild(LoggerReference logger, string messageText);
+        LoggerReference CreateChildFormat(LoggerReference logger, string messageFormat, params object[] args);
 
         void Info(LoggerReference logger, string messageText);
         void InfoFormat(LoggerReference logger, string messageFormat, params object[] args);
@@ -50,5 +53,11 @@ namespace Octopus.Shared.Orchestration.Logging
         void Fatal(string messageText);
         void Fatal(Exception error, string messageText);
         void FatalFormat(string messageFormat, params object[] args);
+
+        LoggerReference ProgressStarted(string message);
+        LoggerReference ProgressStarted(LoggerReference logger, string message);
+        void ProgressMessage(LoggerReference progressStartedLogger, int progressPercentage, string message);
+        void ProgressMessageFormat(LoggerReference progressStartedLogger, int progressPercentage, string messageFormat, params object[] args);
+        void ProgressFinished(LoggerReference progressStartedLogger);
     }
 }

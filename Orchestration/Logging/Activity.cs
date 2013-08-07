@@ -4,6 +4,7 @@ using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Platform;
 using Octopus.Shared.Platform.Logging;
 using Octopus.Shared.Util;
+using Pipefish;
 using Pipefish.Core;
 using Pipefish.Toolkit.AspectUtility;
 
@@ -39,10 +40,10 @@ namespace Octopus.Shared.Orchestration.Logging
             Write(null, category, messageText);
         }
 
-        public virtual void Write(LoggerReference  logger, ActivityLogCategory category, string messageText)
+        public virtual void Write(LoggerReference logger, ActivityLogCategory category, string messageText)
         {
             WriteToDiagnostics(category, messageText);
-            SendToLoggerActor( logger ?? AspectData, category, messageText);
+            SendToLoggerActor(logger, category, messageText);
         }
 
         void WriteToDiagnostics(ActivityLogCategory category, string messageText)
@@ -64,15 +65,20 @@ namespace Octopus.Shared.Orchestration.Logging
             }
         }
 
-        void SendToLoggerActor(LoggerReference context, ActivityLogCategory category, string messageText)
+        void SendToLoggerActor(LoggerReference logger, ActivityLogCategory category, string messageText)
         {
-            if (context == null)
-                throw new ArgumentNullException("context", "You must pass a logging context in order for messages to be logged.");
+            SendToLoggerActor(logger, correlationId => new LogMessage(correlationId, category, messageText));
+        }
 
-            if (string.IsNullOrWhiteSpace(context.LoggerActorId))
-                throw new InvalidOperationException("The given logging context does not specify an actor ID");
+        void SendToLoggerActor(LoggerReference logger, ProgressMessageCategory category, int percentage, string messageText)
+        {
+            SendToLoggerActor(logger, correlationId => new ProgressMessage(correlationId, category, percentage, messageText));
+        }
 
-            Send(new ActorId(context.LoggerActorId), new LogMessage(context.CorrelationId, category, messageText));
+        void SendToLoggerActor(LoggerReference logger, Func<string, IMessage> messageBuilder)
+        {
+            logger = EnsureLogger(logger);
+            Send(new ActorId(logger.LoggerActorId), messageBuilder(logger.CorrelationId));
         }
 
         public void Write(ActivityLogCategory category, Exception error, string messageText)
@@ -113,6 +119,25 @@ namespace Octopus.Shared.Orchestration.Logging
         public void VerboseFormat(string messageFormat, params object[] args)
         {
             VerboseFormat(null, messageFormat, args);
+        }
+
+        public LoggerReference CreateChild(string messageText)
+        {
+            return CreateChild(null, messageText);
+        }
+
+        public LoggerReference CreateChild(LoggerReference logger, string messageText)
+        {
+            var child = EnsureLogger(logger).CreateChild();
+            Info(child, messageText);
+            return child;
+        }
+
+        public LoggerReference CreateChildFormat(LoggerReference logger, string messageFormat, params object[] args)
+        {
+            var child = EnsureLogger(logger).CreateChild();
+            InfoFormat(child, messageFormat, args);
+            return child;
         }
 
         public void VerboseFormat(LoggerReference logger, string messageFormat, params object[] args)
@@ -258,6 +283,45 @@ namespace Octopus.Shared.Orchestration.Logging
         public void FatalFormat(string messageFormat, params object[] args)
         {
             WriteFormat(ActivityLogCategory.Fatal, messageFormat, args);
+        }
+
+        public LoggerReference ProgressStarted(string message)
+        {
+            return ProgressStarted(null, message);
+        }
+
+        public LoggerReference ProgressStarted(LoggerReference logger, string message)
+        {
+            logger = EnsureLogger(logger).CreateChild();
+            SendToLoggerActor(logger, ProgressMessageCategory.ProgressMessage, 0, message);
+            return logger;
+        }
+
+        public void ProgressMessage(LoggerReference progressStartedLogger, int progressPercentage, string message)
+        {
+            SendToLoggerActor(progressStartedLogger, ProgressMessageCategory.ProgressMessage, 0, message);
+        }
+
+        public void ProgressMessageFormat(LoggerReference progressStartedLogger, int progressPercentage, string messageFormat, params object[] args)
+        {
+            SendToLoggerActor(progressStartedLogger, ProgressMessageCategory.ProgressMessage, progressPercentage, string.Format(messageFormat, args));
+        }
+
+        public void ProgressFinished(LoggerReference progressStartedLogger)
+        {
+            SendToLoggerActor(progressStartedLogger, ProgressMessageCategory.ProgressFinished, 100, string.Empty);
+        }
+
+        LoggerReference EnsureLogger(LoggerReference logger)
+        {
+            logger = logger ?? AspectData;
+            if (logger == null)
+                throw new ArgumentNullException("logger", "A null logger reference was passed, and the current message does not have a logger associated. You must pass a logger reference in order for messages to be logged.");
+
+            if (string.IsNullOrWhiteSpace(logger.LoggerActorId))
+                throw new InvalidOperationException("The given logger reference does not specify an actor ID");
+
+            return logger;
         }
     }
 }
