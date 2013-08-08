@@ -2,7 +2,6 @@
 using System.IO;
 using System.Threading.Tasks;
 using Octopus.Shared.Orchestration.Completion;
-using Octopus.Shared.Orchestration.FileTransfer.Implementation;
 using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Platform.FileTransfer;
 using Octopus.Shared.Util;
@@ -82,7 +81,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
             else
             {
                 activity.ErrorFormat("Upload of file {0} with hash {1} to {2} failed: {3}", Data.LocalFilename, Data.Hash, remoteSpace, message.Message);
-                supervised.Fail(message.Message, null);
+                supervised.Fail(message.Message);
             }
         }
     }

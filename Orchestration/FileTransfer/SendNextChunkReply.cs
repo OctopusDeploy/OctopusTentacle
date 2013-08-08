@@ -1,8 +1,10 @@
 ﻿using System;
+using Octopus.Shared.Platform.Conversations;
 using Pipefish;
 
-namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
+namespace Octopus.Shared.Orchestration.FileTransfer
 {
+    [ExpectReply]
     public class SendNextChunkReply : IMessage
     {
         public byte[] Data { get; private set; }

@@ -7,6 +7,7 @@ using Octopus.Shared.Orchestration.Completion;
 using Octopus.Shared.Orchestration.FileTransfer.Implementation;
 using Octopus.Shared.Util;
 using Pipefish;
+using Pipefish.Toolkit.Origination;
 
 namespace Octopus.Shared.Orchestration.FileTransfer
 {
@@ -16,6 +17,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
     {
         readonly IFileStorageConfiguration fileStorageConfiguration;
         readonly IOctopusFileSystem fileSystem;
+        readonly Originator originator;
 
         public FileReceiver(
             IFileStorageConfiguration fileStorageConfiguration,
@@ -23,6 +25,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
         {
             this.fileStorageConfiguration = fileStorageConfiguration;
             this.fileSystem = fileSystem;
+            originator = RegisterAspect<Originator>();
             RegisterAspect(new CompletesOnTimeout(() => Log.Octopus().ErrorFormat("Transfer of {0} did not complete before the process timeout", Data.LocalPath)));
         }
 
@@ -39,7 +42,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
             };
             
             Log.Octopus().InfoFormat("Beginning transfer of {0}", Data.LocalPath);
-            Reply(message, new SendNextChunkRequest());
+            Send(originator.From, new SendNextChunkRequest());
         }
 
         public async Task ReceiveAsync(SendNextChunkReply message)
@@ -59,18 +62,18 @@ namespace Octopus.Shared.Orchestration.FileTransfer
                     {
                         file.Dispose();
                         fileSystem.DeleteFile(Data.LocalPath, DeletionOptions.TryThreeTimesIgnoreFailure);
-                        Reply(message, new FileTransferCompleteEvent(false, "The file corrupted during transfer", null));
+                        originator.Reply(new FileTransferCompleteEvent(false, "The file corrupted during transfer", null));
                         Complete();
                         return;
                     }
                 }
 
-                Reply(message, new FileTransferCompleteEvent(true, "The file was transferred successfully", Data.LocalPath));
+                originator.Reply(new FileTransferCompleteEvent(true, "The file was transferred successfully", Data.LocalPath));
                 Complete();
                 return;
             }
 
-            Reply(message, new SendNextChunkRequest());
+            Send(originator.From, new SendNextChunkRequest());
         }
     }
 }
