@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Pipefish;
+using Octopus.Shared.Platform.Deploy.Steps;
 
 namespace Octopus.Shared.Platform.Deploy.Script
 {
-    public class TentacleScriptRunEvent : IMessage
+    public class TentacleScriptRunEvent : IMessageWithTentacleArtifacts
     {
         public List<TentacleArtifact> CreatedArtifacts { get; private set; }
 
