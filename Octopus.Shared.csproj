@@ -171,6 +171,8 @@
     <Compile Include="Platform\Deploy\Acquire\PackagesAcquiredEvent.cs" />
     <Compile Include="Platform\Deploy\Acquire\TentacleDownloadPackageCommand.cs" />
     <Compile Include="Platform\Deploy\Acquire\TentaclePackageDownloadedEvent.cs" />
+    <Compile Include="Platform\Deploy\Collect\ArtifactsCollectedEvent.cs" />
+    <Compile Include="Platform\Deploy\Collect\StartArtifactCollectionCommand.cs" />
     <Compile Include="Platform\Deploy\Package\StartPackageStepCommand.cs" />
     <Compile Include="Platform\Deploy\Script\StartScriptStepCommand.cs" />
     <Compile Include="Platform\Deploy\Script\TentacleRunScriptCommand.cs" />

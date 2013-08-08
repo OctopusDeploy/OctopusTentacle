@@ -35,9 +35,9 @@ namespace Octopus.Shared.Orchestration.FileTransfer
             Data = new FileSendData
             { 
                 LocalFilename = message.LocalFilename, 
-                Hash = message.Hash, 
+                Hash = message.Hash ?? CalculateHash(message.LocalFilename),
                 NextChunkIndex = 0,
-                ExpectedSize = message.ExpectedSize,
+                ExpectedSize = message.ExpectedSize ?? fileSystem.GetFileSize(message.LocalFilename),
                 Logger = message.Logger
             };
 
@@ -46,14 +46,19 @@ namespace Octopus.Shared.Orchestration.FileTransfer
             Dispatch(message.RemoteSquid, new BeginFileTransferCommand(Path.GetFileName(Data.LocalFilename), Data.Hash, Data.ExpectedSize));
         }
 
+        string CalculateHash(string localFilename)
+        {
+            using (var file = fileSystem.OpenFile(localFilename, FileAccess.Read))
+                return HashCalculator.Hash(file);
+        }
+
         public async Task ReceiveAsync(SendNextChunkRequest message)
         {
             var nextChunkOffset = Data.NextChunkIndex * ChunkSize;
 
             using (var file = fileSystem.OpenFile(Data.LocalFilename, FileAccess.Read))
             {
-                var expected = Data.ExpectedSize != 0 ? Data.ExpectedSize : file.Length;
-                activity.VerboseFormat("Uploaded {0} of {1} ({2:n0}%)", nextChunkOffset.ToFileSizeString(), expected.ToFileSizeString(), ((double)nextChunkOffset / Data.ExpectedSize * 100.00));
+                activity.VerboseFormat("Uploaded {0} of {1} ({2:n0}%)", nextChunkOffset.ToFileSizeString(), Data.ExpectedSize.ToFileSizeString(), ((double)nextChunkOffset / Data.ExpectedSize * 100.00));
                 
                 file.Seek(nextChunkOffset, SeekOrigin.Begin);
                 var bytes = new byte[ChunkSize];

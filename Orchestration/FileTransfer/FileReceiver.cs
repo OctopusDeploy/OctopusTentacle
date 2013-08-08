@@ -7,7 +7,6 @@ using Octopus.Shared.Orchestration.Completion;
 using Octopus.Shared.Orchestration.FileTransfer.Implementation;
 using Octopus.Shared.Util;
 using Pipefish;
-using Pipefish.Toolkit.Origination;
 
 namespace Octopus.Shared.Orchestration.FileTransfer
 {

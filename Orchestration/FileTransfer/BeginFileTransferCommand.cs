@@ -1,10 +1,8 @@
 ﻿using System;
-using Octopus.Shared.Platform.Conversations;
 using Pipefish;
 
 namespace Octopus.Shared.Orchestration.FileTransfer
 {
-    [ExpectReply]
     public class BeginFileTransferCommand : IMessage
     {
         public string Filename { get; private set; }
