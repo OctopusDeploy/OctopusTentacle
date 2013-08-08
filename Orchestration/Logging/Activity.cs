@@ -35,6 +35,19 @@ namespace Octopus.Shared.Orchestration.Logging
             return base.OnReceiving(message);
         }
 
+        public override void OnError(Message message, Exception ex, ref bool swallow)
+        {
+            try
+            {
+                if (AspectData != null)
+                    Fatal(AspectData, ex, "An unhandled exception was detected.");
+            }
+            // ReSharper disable once EmptyGeneralCatchClause
+            catch { }
+
+            base.OnError(message, ex, ref swallow);
+        }
+
         public void Write(ActivityLogCategory category, string messageText)
         {
             Write(null, category, messageText);
