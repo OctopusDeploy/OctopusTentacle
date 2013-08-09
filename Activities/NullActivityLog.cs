@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Platform.Logging;
 
 namespace Octopus.Shared.Activities
 {
@@ -18,34 +19,13 @@ namespace Octopus.Shared.Activities
             this.log = log ?? Log.Octopus();
         }
 
-        public override void Write(ActivityLogLevel level, object message)
+        public override void Write(TraceCategory level, object message)
         {
             logText.AppendLine(level + " " + message);
-
-            var messageText = (message ?? string.Empty).ToString();
-            switch (level)
-            {
-                case ActivityLogLevel.Debug:
-                    log.Verbose(messageText);
-                    break;
-                case ActivityLogLevel.Info:
-                    log.Info(messageText);
-                    break;
-                case ActivityLogLevel.Warn:
-                    log.Warn(messageText);
-                    break;
-                case ActivityLogLevel.Error:
-                    log.Error(messageText);
-                    break;
-            }
+            log.Write(level, (message ?? "").ToString());
         }
 
-        public override IActivityLog OverwritePrevious()
-        {
-            return this;
-        }
-
-        public override string GetLog()
+        public string GetLog()
         {
             return logText.ToString();
         }

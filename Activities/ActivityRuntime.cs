@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Activities
@@ -12,11 +13,11 @@ namespace Octopus.Shared.Activities
         private readonly IActivityMessage message;
         readonly ActivityState state;
         readonly CancellationTokenSource cancellation;
-        readonly IActivityLog log;
+        readonly ITrace log;
         private readonly IActivityResolver activityResolver;
         private readonly TaskFactory taskFactory;
 
-        public ActivityRuntime(IActivityMessage message, ActivityState state, CancellationTokenSource cancellation, IActivityLog log, IActivityResolver activityResolver, TaskFactory taskFactory)
+        public ActivityRuntime(IActivityMessage message, ActivityState state, CancellationTokenSource cancellation, ITrace log, IActivityResolver activityResolver, TaskFactory taskFactory)
         {
             this.message = message;
             this.cancellation = cancellation;
@@ -117,7 +118,7 @@ namespace Octopus.Shared.Activities
             }
             else
             {
-                childState.Log.Error(exception);
+                childState.Log.Error(exception, exception.Message);
             }
         }
 

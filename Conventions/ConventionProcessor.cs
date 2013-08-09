@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
+using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Conventions
@@ -30,7 +31,7 @@ namespace Octopus.Shared.Conventions
             }
             catch (Exception ex)
             {
-                context.Log.Error(ex);
+                context.Log.Error(ex, "Error running convetions");
                 context.Log.Error("Running rollback conventions...");
 
                 ex = ex.GetRootError();
@@ -76,7 +77,7 @@ namespace Octopus.Shared.Conventions
             }
         }
 
-        static void EvaluateVariables(IConventionContext context, IActivityLog log)
+        static void EvaluateVariables(IConventionContext context, ITrace log)
         {
             context.Variables.Set(SpecialVariables.OriginalPackageDirectoryPath, context.PackageContentsDirectoryPath);
 
@@ -91,22 +92,22 @@ namespace Octopus.Shared.Conventions
 
                 if (context.Variables.GetFlag(SpecialVariables.PrintEvaluatedVariables, false))
                 {
-                    log.Debug("Variables have been evaluated.");
+                    log.Verbose("Variables have been evaluated.");
                     PrintVariables("The following evaluated variables are available:", context.Variables, log);
                 }
             }
         }
 
-        static void PrintVariables(string message, VariableDictionary variables, IActivityLog log)
+        static void PrintVariables(string message, VariableDictionary variables, ITrace log)
         {
-            log.Debug(message);
+            log.Verbose(message);
 
             foreach (var variable in variables.AsList().OrderBy(v => v.Name))
             {
                 if (SpecialVariables.IsSecret(variable.Name))
                     continue;
 
-                log.DebugFormat(" - [{0}] = '{1}'", variable.Name, variable.Value);
+                log.VerboseFormat(" - [{0}] = '{1}'", variable.Name, variable.Value);
             }
         }
     }

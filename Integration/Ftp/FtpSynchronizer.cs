@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using EnterpriseDT.Net.Ftp;
 using Octopus.Shared.Activities;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Integration.Ftp
 {
@@ -22,7 +23,7 @@ namespace Octopus.Shared.Integration.Ftp
             readonly static HashSet<string> IgnoredFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             readonly FtpSynchronizationSettings settings;
             readonly SecureFTPConnection ftpConnection;
-            readonly IActivityLog log;
+            readonly ITrace log;
             CancellationTokenRegistration cancelRegistration;
 
             static SynchronizationSession()
@@ -98,7 +99,7 @@ namespace Octopus.Shared.Integration.Ftp
                 var name = Path.GetFileName(file.Name);
                 if (name != null && IgnoredFiles.Contains(name))
                 {
-                    log.Debug("Excluding " + file.Name + " from upload");
+                    log.Verbose("Excluding " + file.Name + " from upload");
                     return false;
                 }
 
@@ -107,7 +108,7 @@ namespace Octopus.Shared.Integration.Ftp
 
             void OnConnecting(object sender, FTPConnectionEventArgs ftpConnectionEventArgs)
             {
-                log.Debug("Connecting...");
+                log.Verbose("Connecting...");
             }
 
             void OnConnected(object sender, FTPConnectionEventArgs e)
@@ -118,34 +119,34 @@ namespace Octopus.Shared.Integration.Ftp
                 }
                 else
                 {
-                    log.Debug("Connected");
+                    log.Verbose("Connected");
                 }
             }
 
             void OnCommandSent(object sender, FTPMessageEventArgs e)
             {
-                log.Debug(e.Message);
+                log.Verbose(e.Message);
             }
 
             void OnSynchronized(object sender, FTPSyncEventArgs e)
             {
-                log.Debug("Synchronize complete");
+                log.Verbose("Synchronize complete");
 
                 var results = e.Results;
                 if (results != null)
                 {
-                    log.Debug("Total operations: " + results.TotalCount);
+                    log.Verbose("Total operations: " + results.TotalCount);
                 }
             }
 
             void OnClosed(object sender, FTPConnectionEventArgs e)
             {
-                log.Debug("Connection closed");
+                log.Verbose("Connection closed");
             }
 
             void Cancel()
             {
-                log.Debug("Cancelling...");
+                log.Verbose("Cancelling...");
                 Dispose();
             }
 

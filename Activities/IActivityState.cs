@@ -1,6 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
-using System.Text;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Activities
 {
@@ -9,7 +9,7 @@ namespace Octopus.Shared.Activities
         string Name { get; }
         string Tag { get; }
         ActivityStatus Status { get; }
-        IActivityLog Log { get; }
+        ITrace Log { get; }
         Exception Error { get; }
         ReadOnlyCollection<IActivityState> Children { get; }
         bool IsComplete { get; }

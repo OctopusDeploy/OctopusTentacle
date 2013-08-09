@@ -1,10 +1,11 @@
 using System.Threading.Tasks;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Activities
 {
     public interface IActivity<in TActivityMessage> where TActivityMessage : IActivityMessage
     {
-        IActivityLog Log { get; set; }
+        ITrace Log { get; set; }
         IActivityRuntime Runtime { get; set; }
 
         Task Execute(TActivityMessage message);

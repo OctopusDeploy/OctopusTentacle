@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Activities
 {
@@ -15,7 +16,7 @@ namespace Octopus.Shared.Activities
         readonly Func<string> name;
         readonly string id;
         readonly CancellationTokenSource cancellationTokenSource;
-        readonly IActivityLog log = new ActivityLog();
+        readonly ITrace log = new ActivityLog();
         readonly ManualResetEventSlim hasTask = new ManualResetEventSlim(false);
         Task task;
         
@@ -47,7 +48,7 @@ namespace Octopus.Shared.Activities
             }
         }
 
-        public IActivityLog Log
+        public ITrace Log
         {
             get { return log; }
         }

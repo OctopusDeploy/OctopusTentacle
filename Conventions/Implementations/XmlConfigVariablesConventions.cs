@@ -31,7 +31,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
             foreach (var configFile in configFiles)
             {
-                context.Log.DebugFormat("Scanning configuration file: {0}", configFile);
+                context.Log.VerboseFormat("Scanning configuration file: {0}", configFile);
 
                 try
                 {
@@ -99,7 +99,7 @@ namespace Octopus.Shared.Conventions.Implementations
             foreach (var setting in settings)
             {
                 modified = true;
-                context.Log.DebugFormat("Setting {0}[@{1}='{2}'] to '{3}'", xpath, keyAttributeName, keyAttributeValue, value);
+                context.Log.VerboseFormat("Setting {0}[@{1}='{2}'] to '{3}'", xpath, keyAttributeName, keyAttributeValue, value);
 
                 var valueAttribute = setting.Attribute(valueAttributeName);
                 if (valueAttribute == null)
@@ -131,7 +131,7 @@ namespace Octopus.Shared.Conventions.Implementations
             foreach (var setting in settings)
             {
                 modified = true;
-                context.Log.DebugFormat("Setting {0}[@{1}='{2}'] to '{3}'", xpath, keyAttributeName, keyAttributeValue, value);
+                context.Log.VerboseFormat("Setting {0}[@{1}='{2}'] to '{3}'", xpath, keyAttributeName, keyAttributeValue, value);
 
                 var valueElement = setting.Elements().FirstOrDefault(e => e.Name.LocalName == "value");
                 if (valueElement == null)

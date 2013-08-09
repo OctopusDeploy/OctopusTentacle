@@ -41,7 +41,7 @@ namespace Octopus.Shared.Conventions
             var webRoot = GetRootMostDirectoryContainingWebConfig(context);
             if (webRoot == null)
             {
-                context.Log.Debug("A web.config file was not found, so no IIS configuration will be performed.");
+                context.Log.Verbose("A web.config file was not found, so no IIS configuration will be performed.");
                 return;
             }
 

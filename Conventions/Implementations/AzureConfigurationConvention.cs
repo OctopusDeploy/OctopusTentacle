@@ -41,7 +41,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         void UpdateConfigurationSettings(XContainer configurationFile, IConventionContext context)
         {
-            context.Log.Debug("Updating configuration settings...");
+            context.Log.Verbose("Updating configuration settings...");
 
             var variables = context.Variables.AsDictionary();
 
@@ -52,7 +52,7 @@ namespace Octopus.Shared.Conventions.Implementations
                     || variables.TryGetValue(roleName + "\\" + settingName, out value)
                     || variables.TryGetValue(settingName, out value))
                 {
-                    context.Log.Debug("  Updating setting for role " + roleName + ": " + settingName + " = " + value);
+                    context.Log.Verbose("  Updating setting for role " + roleName + ": " + settingName + " = " + value);
                     settingValueAttribute.Value = value;
                 }
             });
@@ -92,11 +92,11 @@ namespace Octopus.Shared.Conventions.Implementations
                 var path = Path.Combine(context.PackageContentsDirectoryPath, name);
                 if (fileSystem.FileExists(path))
                 {
-                    context.Log.Debug("Found Azure service configuration file: " + path);
+                    context.Log.Verbose("Found Azure service configuration file: " + path);
                     return path;
                 }
                 
-                context.Log.Debug("Azure service configuration file not found: " + path);
+                context.Log.Verbose("Azure service configuration file not found: " + path);
             }
 
             throw new ActivityFailedException("Could not find an Azure service configuration file in the package.");
@@ -130,10 +130,10 @@ namespace Octopus.Shared.Conventions.Implementations
 
             var rolesByCount = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            context.Log.Debug("Local instance counts (from " + Path.GetFileName(configurationFileName) + "): ");
+            context.Log.Verbose("Local instance counts (from " + Path.GetFileName(configurationFileName) + "): ");
             WithInstanceCounts(localConfigurationFile, (roleName, attribute) =>
             {
-                context.Log.Debug(" - " + roleName + " = " + attribute.Value);
+                context.Log.Verbose(" - " + roleName + " = " + attribute.Value);
 
                 string value;
                 if (rolesByCount.TryGetValue(roleName, out value))
@@ -142,14 +142,14 @@ namespace Octopus.Shared.Conventions.Implementations
                 }
             });
 
-            context.Log.Debug("Remote instance counts: ");
+            context.Log.Verbose("Remote instance counts: ");
             WithInstanceCounts(remoteConfigurationFile, (roleName, attribute) =>
             {
                 rolesByCount[roleName] = attribute.Value;
-                context.Log.Debug(" - " + roleName + " = " + attribute.Value);
+                context.Log.Verbose(" - " + roleName + " = " + attribute.Value);
             });
 
-            context.Log.Debug("Replacing local instance count settings with remote settings: ");
+            context.Log.Verbose("Replacing local instance count settings with remote settings: ");
             WithInstanceCounts(localConfigurationFile, (roleName, attribute) =>
             {
                 string value;
@@ -157,7 +157,7 @@ namespace Octopus.Shared.Conventions.Implementations
                     return;
 
                 attribute.SetValue(value);
-                context.Log.Debug(" - " + roleName + " = " + attribute.Value);
+                context.Log.Verbose(" - " + roleName + " = " + attribute.Value);
             });
         }
 

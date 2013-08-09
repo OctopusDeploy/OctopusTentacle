@@ -5,6 +5,7 @@ using System.Linq;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Scripting;
+using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Conventions.Implementations
@@ -24,7 +25,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
             foreach (var script in scripts)
             {
-                context.Log.DebugFormat("Script: {0}", script);
+                context.Log.VerboseFormat("Script: {0}", script);
 
                 var closure = new LogClosure(context.Log);
 
@@ -93,9 +94,9 @@ namespace Octopus.Shared.Conventions.Implementations
 
         class LogClosure
         {
-            readonly IActivityLog log;
+            readonly ITrace log;
 
-            public LogClosure(IActivityLog log)
+            public LogClosure(ITrace log)
             {
                 this.log = log;
             }

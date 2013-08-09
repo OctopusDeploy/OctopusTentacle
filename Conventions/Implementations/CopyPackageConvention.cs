@@ -32,8 +32,8 @@ namespace Octopus.Shared.Conventions.Implementations
             var targetDirectory = context.Variables.Get(SpecialVariables.Step.Package.CustomInstallationDirectory);
             if (string.IsNullOrWhiteSpace(targetDirectory))
             {
-                context.Log.Debug("The package has been installed to: " + context.PackageContentsDirectoryPath);
-                context.Log.DebugFormat("If you would like the package to be installed to an alternative location, please specify the variable '{0}'", SpecialVariables.Step.Package.CustomInstallationDirectory);
+                context.Log.Verbose("The package has been installed to: " + context.PackageContentsDirectoryPath);
+                context.Log.VerboseFormat("If you would like the package to be installed to an alternative location, please specify the variable '{0}'", SpecialVariables.Step.Package.CustomInstallationDirectory);
 
                 context.Variables.Set(SpecialVariables.Step.Package.CustomInstallationDirectory, context.PackageContentsDirectoryPath);
                 return;
@@ -62,7 +62,7 @@ namespace Octopus.Shared.Conventions.Implementations
             }
             catch (Exception ex)
             {
-                context.Log.Error(string.Format("Unable to copy the package to the specified directory '{0}'. One or more files in the directory may be locked by another process. You could use a PreDeploy.ps1 script to stop any processes that may be locking the file. Error details follow.", targetDirectory), ex);
+                context.Log.Error(ex, string.Format("Unable to copy the package to the specified directory '{0}'. One or more files in the directory may be locked by another process. You could use a PreDeploy.ps1 script to stop any processes that may be locking the file. Error details follow.", targetDirectory));
                 throw;
             }
         }

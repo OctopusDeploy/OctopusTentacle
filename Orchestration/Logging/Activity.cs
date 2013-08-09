@@ -40,7 +40,7 @@ namespace Octopus.Shared.Orchestration.Logging
             try
             {
                 if (AspectData != null)
-                    Fatal(AspectData, ex, "An unhandled exception was detected.");
+                    Fatal(AspectData, ex, ex.GetErrorSummary());
             }
             // ReSharper disable once EmptyGeneralCatchClause
             catch { }

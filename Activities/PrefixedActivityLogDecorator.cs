@@ -1,4 +1,6 @@
 using System;
+using Octopus.Shared.Orchestration.Logging;
+using Octopus.Shared.Platform.Logging;
 
 namespace Octopus.Shared.Activities
 {
@@ -6,14 +8,14 @@ namespace Octopus.Shared.Activities
     {
         readonly string prefix;
 
-        public PrefixedActivityLogDecorator(string prefix, IActivityLog inner) : base(inner)
+        public PrefixedActivityLogDecorator(string prefix, ITrace inner) : base(inner)
         {
             this.prefix = prefix;
         }
 
-        public override void Write(ActivityLogLevel level, object message)
+        public override void Write(TraceCategory level, object message)
         {
-            base.Write(level, prefix + message);
+            base.Write(level, (object)(prefix + message));
         }
     }
 }

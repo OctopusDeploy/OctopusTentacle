@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using Octopus.Shared.Activities;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Integration.Ftp
 {
@@ -10,10 +10,10 @@ namespace Octopus.Shared.Integration.Ftp
         readonly string username;
         readonly string password;
         readonly bool useFtps;
-        readonly IActivityLog log;
+        readonly ITrace log;
         readonly CancellationToken cancellationToken;
 
-        public FtpSynchronizationSettings(string host, string username, string password, bool useFtps, IActivityLog log, CancellationToken cancellationToken)
+        public FtpSynchronizationSettings(string host, string username, string password, bool useFtps, ITrace log, CancellationToken cancellationToken)
         {
             this.host = host;
             this.username = username;
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Integration.Ftp
             get { return password; }
         }
 
-        public IActivityLog Log
+        public ITrace Log
         {
             get { return log; }
         }

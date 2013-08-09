@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Activities
@@ -8,7 +9,7 @@ namespace Octopus.Shared.Activities
     [Activity]
     public abstract class Activity<TMessage> : IActivity<TMessage> where TMessage : IActivityMessage
     {
-        public IActivityLog Log { get; set; }
+        public ITrace Log { get; set; }
         public IActivityRuntime Runtime { get; set; }
 
         public abstract Task Execute(TMessage message);
@@ -27,10 +28,10 @@ namespace Octopus.Shared.Activities
         [DebuggerNonUserCode]
         class StartNewThread
         {
-            readonly IActivityLog log;
+            readonly ITrace log;
             readonly Action callback;
 
-            public StartNewThread(IActivityLog log, Action callback)
+            public StartNewThread(ITrace log, Action callback)
             {
                 this.log = log;
                 this.callback = callback;
@@ -50,7 +51,7 @@ namespace Octopus.Shared.Activities
                 catch (Exception ex)
                 {
                     var root = ex.GetRootError();
-                    log.Error(root);
+                    log.Error(root, ex.Message);
                     throw new ActivityFailedException("A child activity failed: " + root.Message);
                 }
             }

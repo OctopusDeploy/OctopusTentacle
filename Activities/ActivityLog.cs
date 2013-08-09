@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Octopus.Shared.Platform.Logging;
 using Octopus.Shared.Time;
 
 namespace Octopus.Shared.Activities
@@ -20,7 +21,7 @@ namespace Octopus.Shared.Activities
             this.clock = clock ?? new SystemClock();
         }
 
-        public override void Write(ActivityLogLevel level, object message)
+        public override void Write(TraceCategory level, object message)
         {
             var now = clock.GetUtcTime();
             var formatted = now.ToString("yyyy-MM-dd HH:mm:ss") + " " + level.ToString().ToUpper().PadRight(6, ' ') + " " + message;
@@ -31,18 +32,9 @@ namespace Octopus.Shared.Activities
             }
         }
 
-        public override IActivityLog OverwritePrevious()
+        public string GetLog()
         {
-            lock (sync)
-            {
-                log.Length = log.Length - mostRecentLine.Length - 2;
-            }
-
-            return this;
-        }
-
-        public override string GetLog()
-        {
+            // For testing only, not thread safe
             return log.ToString();
         }
     }

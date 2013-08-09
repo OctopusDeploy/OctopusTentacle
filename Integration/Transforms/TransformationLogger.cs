@@ -1,14 +1,14 @@
 using System;
 using Microsoft.Web.Publishing.Tasks;
-using Octopus.Shared.Activities;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Integration.Transforms
 {
     public class TransformationLogger : IXmlTransformationLogger
     {
-        readonly IActivityLog log;
+        readonly ITrace log;
 
-        public TransformationLogger(IActivityLog log)
+        public TransformationLogger(ITrace log)
         {
             this.log = log;
         }
@@ -18,12 +18,12 @@ namespace Octopus.Shared.Integration.Transforms
 
         public void LogMessage(string message, params object[] messageArgs)
         {
-            log.DebugFormat(message, messageArgs);
+            log.VerboseFormat(message, messageArgs);
         }
 
         public void LogMessage(MessageType type, string message, params object[] messageArgs)
         {
-            log.DebugFormat(message, messageArgs);
+            log.VerboseFormat(message, messageArgs);
         }
 
         public void LogWarning(string message, params object[] messageArgs)
@@ -65,19 +65,19 @@ namespace Octopus.Shared.Integration.Transforms
         public void LogErrorFromException(Exception ex)
         {
             WasErrorLogged = true;
-            log.Error(ex);
+            log.Error(ex, ex.Message);
         }
 
         public void LogErrorFromException(Exception ex, string file)
         {
             WasErrorLogged = true;
-            log.Error("ERROR: ", ex);
+            log.Error(ex, "ERROR: ");
         }
 
         public void LogErrorFromException(Exception ex, string file, int lineNumber, int linePosition)
         {
             WasErrorLogged = true;
-            log.Error(string.Format("ERROR: LineNumber: {1}, LinePosition: {2}", file, lineNumber, linePosition), ex);
+            log.Error(ex, string.Format("ERROR: LineNumber: {1}, LinePosition: {2}", file, lineNumber, linePosition));
         }
 
         public void StartSection(string message, params object[] messageArgs)
@@ -87,17 +87,17 @@ namespace Octopus.Shared.Integration.Transforms
 
         public void StartSection(MessageType type, string message, params object[] messageArgs)
         {
-            log.DebugFormat(message, messageArgs);
+            log.VerboseFormat(message, messageArgs);
         }
 
         public void EndSection(string message, params object[] messageArgs)
         {
-            log.DebugFormat(message, messageArgs);
+            log.VerboseFormat(message, messageArgs);
         }
 
         public void EndSection(MessageType type, string message, params object[] messageArgs)
         {
-            log.DebugFormat(message, messageArgs);
+            log.VerboseFormat(message, messageArgs);
         }
     }
 }

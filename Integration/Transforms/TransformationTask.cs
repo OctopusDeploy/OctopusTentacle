@@ -4,6 +4,7 @@ using System.IO;
 using System.Xml;
 using Microsoft.Web.Publishing.Tasks;
 using Octopus.Shared.Activities;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Integration.Transforms
 {
@@ -13,7 +14,7 @@ namespace Octopus.Shared.Integration.Transforms
     /// </summary>
     public class TransformationTask
     {
-        readonly IActivityLog log;
+        readonly ITrace log;
         readonly TransformationLogger transformationLogger;
         IDictionary<string, string> parameters;
 
@@ -23,7 +24,7 @@ namespace Octopus.Shared.Integration.Transforms
         /// <param name="sourceFilePath">Source file path</param>
         /// <param name="transformFilePath">Transformation file path</param>
         /// <param name="log"> </param>
-        public TransformationTask(string sourceFilePath, string transformFilePath, IActivityLog log)
+        public TransformationTask(string sourceFilePath, string transformFilePath, ITrace log)
         {
             this.log = log;
             transformationLogger = new TransformationLogger(log);
@@ -65,7 +66,7 @@ namespace Octopus.Shared.Integration.Transforms
             if (string.IsNullOrWhiteSpace(destinationFilePath))
                 throw new ArgumentException("Destination file can't be empty.", "destinationFilePath");
 
-            log.DebugFormat("Start tranformation to '{0}'.", destinationFilePath);
+            log.VerboseFormat("Start tranformation to '{0}'.", destinationFilePath);
 
             if (string.IsNullOrWhiteSpace(SourceFilePath) || !File.Exists(SourceFilePath))
                 throw new FileNotFoundException("Can't find source file.", SourceFilePath);
@@ -73,8 +74,8 @@ namespace Octopus.Shared.Integration.Transforms
             if (string.IsNullOrWhiteSpace(TransformFile) || !File.Exists(TransformFile))
                 throw new FileNotFoundException("Can't find transform  file.", TransformFile);
 
-            log.DebugFormat("Source file: '{0}'.", SourceFilePath);
-            log.DebugFormat("Transform  file: '{0}'.", TransformFile);
+            log.VerboseFormat("Source file: '{0}'.", SourceFilePath);
+            log.VerboseFormat("Transform  file: '{0}'.", TransformFile);
 
             try
             {
@@ -111,7 +112,7 @@ namespace Octopus.Shared.Integration.Transforms
             }
             catch (Exception e)
             {
-                log.Error(e);
+                log.Error(e, e.Message);
                 return TransformResult.Failed;
             }
         }
