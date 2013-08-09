@@ -162,6 +162,7 @@
     <Compile Include="Communications\ICommunicationsConfiguration.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Orchestration\Completion\CompletesOnTimeout.cs" />
+    <Compile Include="Orchestration\Logging\ITrace.cs" />
     <Compile Include="Orchestration\NoState.cs" />
     <Compile Include="Platform\Deploy\Acquire\AcquiredPackage.cs" />
     <Compile Include="Platform\Deploy\Acquire\AcquirePackagesCommand.cs" />
@@ -180,7 +181,7 @@
     <Compile Include="Platform\Deploy\StartDeploymentCommand.cs" />
     <Compile Include="Platform\Deploy\StartDeploymentStepCommand.cs" />
     <Compile Include="Platform\Deploy\Script\TentacleScriptRunEvent.cs" />
-    <Compile Include="Platform\Logging\ActivityLogCategory.cs" />
+    <Compile Include="Platform\Logging\TraceCategory.cs" />
     <Compile Include="Orchestration\Logging\IActivityLogStorage.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntry.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogTreeNode.cs" />
@@ -363,6 +364,8 @@
     <Compile Include="Platform\Health\TentacleReportHealthRequest.cs" />
     <Compile Include="Platform\IMessageWithLogger.cs" />
     <Compile Include="Platform\Logging\LoggerReference.cs" />
+    <Compile Include="Platform\Logging\ProgressMessage.cs" />
+    <Compile Include="Platform\Logging\ProgressMessageCategory.cs" />
     <Compile Include="Platform\PackageUpload\PackageUploadedEvent.cs" />
     <Compile Include="Platform\PackageUpload\TentacleGetPackageStatusRequest.cs" />
     <Compile Include="Platform\PackageUpload\TentaclePackageStatusReply.cs" />

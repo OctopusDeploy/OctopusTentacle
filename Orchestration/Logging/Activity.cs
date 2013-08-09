@@ -14,7 +14,7 @@ namespace Octopus.Shared.Orchestration.Logging
     {
         const string DefaultLoggerStateKey = "ActorLog.DefaultLogger";
 
-        readonly ILog diagnostics = Log.Octopus();
+        readonly ITrace diagnostics = Log.Octopus();
         
         public Activity()
             : base(DefaultLoggerStateKey)
@@ -48,37 +48,20 @@ namespace Octopus.Shared.Orchestration.Logging
             base.OnError(message, ex, ref swallow);
         }
 
-        public void Write(ActivityLogCategory category, string messageText)
+        public override void OnDetaching()
         {
-            Write(null, category, messageText);
-        }
-
-        public virtual void Write(LoggerReference logger, ActivityLogCategory category, string messageText)
-        {
-            WriteToDiagnostics(category, messageText);
-            SendToLoggerActor(logger, category, messageText);
-        }
-
-        void WriteToDiagnostics(ActivityLogCategory category, string messageText)
-        {
-            switch (category)
+            try
             {
-                case ActivityLogCategory.Verbose:
-                    diagnostics.Debug(messageText);
-                    break;
-                case ActivityLogCategory.Info:
-                    diagnostics.Info(messageText);
-                    break;
-                case ActivityLogCategory.Warning:
-                    diagnostics.Warn(messageText);
-                    break;
-                case ActivityLogCategory.Error:
-                    diagnostics.Error(messageText);
-                    break;
+                if (AspectData != null)
+                    Finished();
             }
+            // ReSharper disable once EmptyGeneralCatchClause
+            catch { }
+
+            base.OnDetaching();
         }
 
-        void SendToLoggerActor(LoggerReference logger, ActivityLogCategory category, string messageText)
+        void SendToLoggerActor(LoggerReference logger, TraceCategory category, string messageText)
         {
             SendToLoggerActor(logger, correlationId => new LogMessage(correlationId, category, messageText));
         }
@@ -94,27 +77,55 @@ namespace Octopus.Shared.Orchestration.Logging
             Send(new ActorId(logger.LoggerActorId), messageBuilder(logger.CorrelationId));
         }
 
-        public void Write(ActivityLogCategory category, Exception error, string messageText)
+        public virtual void Write(LoggerReference logger, TraceCategory category, string messageText)
         {
-            Write(null, category, error, messageText);
+            diagnostics.Write(category, messageText);
+            if (category <= TraceCategory.Trace)
+                return;
+
+            SendToLoggerActor(logger, category, messageText);
         }
 
-        public virtual void Write(LoggerReference logger, ActivityLogCategory category, Exception error, string messageText)
+        public virtual void Write(LoggerReference logger, TraceCategory category, Exception error, string messageText)
         {
+            diagnostics.Write(category, error, messageText);
+            if (category <= TraceCategory.Trace)
+                return;
+
             var message = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(messageText))
                 message.AppendLine(messageText);
             message.AppendLine(error.GetRootError().ToString());
-            
-            Write( logger, category, message.ToString());
+
+            SendToLoggerActor(logger, category, message.ToString());
         }
 
-        public void WriteFormat(ActivityLogCategory category, string messageFormat, params object[] args)
+        public void Write(TraceCategory category, string messageText)
+        {
+            Write(null, category, messageText);
+        }
+
+        public void Write(TraceCategory category, Exception error, string messageText)
+        {
+            Write(null, category, error, messageText);
+        }
+
+        public void WriteFormat(TraceCategory category, string messageFormat, params object[] args)
         {
             WriteFormat(null, category, messageFormat, args);
         }
 
-        public void WriteFormat(LoggerReference logger, ActivityLogCategory category, string messageFormat, params object[] args)
+        public void Trace(string messageText)
+        {
+            Write(TraceCategory.Trace, messageText);
+        }
+
+        public void TraceFormat(string messageFormat, params object[] args)
+        {
+            Write(TraceCategory.Trace, string.Format(messageFormat, args));
+        }
+
+        public void WriteFormat(LoggerReference logger, TraceCategory category, string messageFormat, params object[] args)
         {
             Write(logger, category, string.Format(messageFormat, args));
         }
@@ -126,7 +137,7 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void Verbose(LoggerReference logger, string messageText)
         {
-            Write(logger, ActivityLogCategory.Verbose, messageText);
+            Write(logger, TraceCategory.Verbose, messageText);
         }
 
         public void VerboseFormat(string messageFormat, params object[] args)
@@ -160,7 +171,7 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void VerboseFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            WriteFormat(logger, ActivityLogCategory.Verbose, messageFormat, args);
+            WriteFormat(logger, TraceCategory.Verbose, messageFormat, args);
         }
 
         public void Info(string messageText)
@@ -170,7 +181,7 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void Info(LoggerReference logger, string messageText)
         {
-            Write(logger, ActivityLogCategory.Info, messageText);
+            Write(logger, TraceCategory.Info, messageText);
         }
 
         public void InfoFormat(string messageFormat, params object[] args)
@@ -180,37 +191,37 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void Alert(string messageText)
         {
-            Write(null, ActivityLogCategory.Alert, messageText);
+            Write(null, TraceCategory.Alert, messageText);
         }
 
         public void Alert(Exception error, string messageText)
         {
-            Write(null, ActivityLogCategory.Alert, error, messageText);
+            Write(null, TraceCategory.Alert, error, messageText);
         }
 
         public void AlertFormat(string messageFormat, params object[] args)
         {
-            WriteFormat(null, ActivityLogCategory.Alert, messageFormat, args);
+            WriteFormat(null, TraceCategory.Alert, messageFormat, args);
         }
 
         public void Alert(LoggerReference logger, string messageText)
         {
-            Write(logger, ActivityLogCategory.Alert, messageText);
+            Write(logger, TraceCategory.Alert, messageText);
         }
 
         public void Alert(LoggerReference logger, Exception error, string messageText)
         {
-            Write(logger, ActivityLogCategory.Alert, error, messageText);
+            Write(logger, TraceCategory.Alert, error, messageText);
         }
 
         public void AlertFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            WriteFormat(logger, ActivityLogCategory.Alert, messageFormat, args);
+            WriteFormat(logger, TraceCategory.Alert, messageFormat, args);
         }
 
         public void InfoFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            WriteFormat(logger, ActivityLogCategory.Info, messageFormat, args);
+            WriteFormat(logger, TraceCategory.Info, messageFormat, args);
         }
 
         public void Warn(string messageText)
@@ -220,7 +231,7 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void Warn(LoggerReference logger, string messageText)
         {
-            Write(logger, ActivityLogCategory.Warning, messageText);
+            Write(logger, TraceCategory.Warning, messageText);
         }
 
         public void Warn(Exception error, string messageText)
@@ -230,7 +241,7 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void Warn(LoggerReference logger, Exception error, string messageText)
         {
-            Write(logger, ActivityLogCategory.Warning, error, messageText);
+            Write(logger, TraceCategory.Warning, error, messageText);
         }
 
         public void WarnFormat(string messageFormat, params object[] args)
@@ -240,7 +251,7 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void WarnFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            WriteFormat(logger, ActivityLogCategory.Warning, messageFormat, args);
+            WriteFormat(logger, TraceCategory.Warning, messageFormat, args);
         }
 
         public void Error(string messageText)
@@ -250,7 +261,7 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void Error(LoggerReference logger, string messageText)
         {
-            Write(logger, ActivityLogCategory.Error, messageText);
+            Write(logger, TraceCategory.Error, messageText);
         }
 
         public void Error(Exception error, string messageText)
@@ -260,7 +271,7 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void Error(LoggerReference logger, Exception error, string messageText)
         {
-            Write(logger, ActivityLogCategory.Error, error, messageText);
+            Write(logger, TraceCategory.Error, error, messageText);
         }
 
         public void ErrorFormat(string messageFormat, params object[] args)
@@ -270,64 +281,89 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void ErrorFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            WriteFormat(logger, ActivityLogCategory.Error, messageFormat, args);
+            WriteFormat(logger, TraceCategory.Error, messageFormat, args);
         }
 
         public void Fatal(LoggerReference logger, string messageText)
         {
-            Write(logger, ActivityLogCategory.Fatal, messageText);
+            Write(logger, TraceCategory.Fatal, messageText);
         }
 
         public void Fatal(LoggerReference logger, Exception error, string messageText)
         {
-            Write(logger, ActivityLogCategory.Fatal, error, messageText);
+            Write(logger, TraceCategory.Fatal, error, messageText);
         }
 
         public void FatalFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            WriteFormat(logger, ActivityLogCategory.Fatal, messageFormat, args);
+            WriteFormat(logger, TraceCategory.Fatal, messageFormat, args);
         }
 
         public void Fatal(string messageText)
         {
-            Write(ActivityLogCategory.Fatal, messageText);
+            Write(TraceCategory.Fatal, messageText);
         }
 
         public void Fatal(Exception error, string messageText)
         {
-            Write(ActivityLogCategory.Fatal, error, messageText);
+            Write(TraceCategory.Fatal, error, messageText);
         }
 
         public void FatalFormat(string messageFormat, params object[] args)
         {
-            WriteFormat(ActivityLogCategory.Fatal, messageFormat, args);
+            WriteFormat(TraceCategory.Fatal, messageFormat, args);
         }
 
-        public LoggerReference ProgressStarted(string message)
+        public LoggerReference PlanChild(string message)
         {
-            return ProgressStarted(null, message);
+            return PlanChild(null, message);
         }
 
-        public LoggerReference ProgressStarted(LoggerReference logger, string message)
+        public LoggerReference PlanChild(LoggerReference logger, string message)
         {
             logger = EnsureLogger(logger).CreateChild();
-            SendToLoggerActor(logger, ProgressMessageCategory.ProgressMessage, 0, message);
+            SendToLoggerActor(logger, ProgressMessageCategory.Planned, 0, message);
             return logger;
         }
 
-        public void ProgressMessage(LoggerReference progressStartedLogger, int progressPercentage, string message)
+        public LoggerReference PlanChildFormat(string messageFormat, params object[] args)
         {
-            SendToLoggerActor(progressStartedLogger, ProgressMessageCategory.ProgressMessage, 0, message);
+            return PlanChild(string.Format(messageFormat, args));
         }
 
-        public void ProgressMessageFormat(LoggerReference progressStartedLogger, int progressPercentage, string messageFormat, params object[] args)
+        public LoggerReference PlanChildFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            SendToLoggerActor(progressStartedLogger, ProgressMessageCategory.ProgressMessage, progressPercentage, string.Format(messageFormat, args));
+            return PlanChild(logger, string.Format(messageFormat, args));
         }
 
-        public void ProgressFinished(LoggerReference progressStartedLogger)
+        public void Abandoned()
         {
-            SendToLoggerActor(progressStartedLogger, ProgressMessageCategory.ProgressFinished, 100, string.Empty);
+            Abandoned(null);
+        }
+
+        public void Abandoned(LoggerReference logger)
+        {
+            SendToLoggerActor(logger, ProgressMessageCategory.Abandoned, 0, null);
+        }
+
+        public void UpdateProgress(LoggerReference logger, int progressPercentage, string message)
+        {
+            SendToLoggerActor(logger, ProgressMessageCategory.Updated, progressPercentage, message);
+        }
+
+        public void UpdateProgressFormat(LoggerReference logger, int progressPercentage, string messageFormat, params object[] args)
+        {
+            SendToLoggerActor(logger, ProgressMessageCategory.Updated, progressPercentage, string.Format(messageFormat, args));
+        }
+
+        public void Finished()
+        {
+            Finished(null);
+        }
+
+        public void Finished(LoggerReference logger)
+        {
+            SendToLoggerActor(logger, ProgressMessageCategory.Finished, 100, string.Empty);
         }
 
         LoggerReference EnsureLogger(LoggerReference logger)

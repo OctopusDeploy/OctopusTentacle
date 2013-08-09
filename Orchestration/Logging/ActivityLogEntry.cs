@@ -8,11 +8,11 @@ namespace Octopus.Shared.Communications.Logging
     public class ActivityLogEntry
     {
         readonly DateTimeOffset occurred;
-        readonly ActivityLogCategory category;
+        readonly TraceCategory category;
         readonly ActorId actorId;
         readonly string message;
 
-        public ActivityLogEntry(DateTimeOffset occurred, ActivityLogCategory category, ActorId actorId, string message)
+        public ActivityLogEntry(DateTimeOffset occurred, TraceCategory category, ActorId actorId, string message)
         {
             this.occurred = occurred;
             this.category = category;
@@ -30,7 +30,7 @@ namespace Octopus.Shared.Communications.Logging
             get { return occurred; }
         }
 
-        public ActivityLogCategory Category
+        public TraceCategory Category
         {
             get { return category; }
         }

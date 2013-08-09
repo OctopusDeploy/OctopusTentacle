@@ -34,7 +34,7 @@ namespace Octopus.Shared.Communications
             base.Load(builder);
 
             var logger = Log.Octopus();
-            Pipefish.Diagnostics.Log.OnDebug(logger.Debug);
+            Pipefish.Diagnostics.Log.OnDebug(logger.Verbose);
             Pipefish.Diagnostics.Log.OnError((e, m) => logger.Error(e.GetRootError(), m));
 
             builder.RegisterAssemblyTypes(assemblies)

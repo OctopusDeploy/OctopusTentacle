@@ -22,7 +22,7 @@ namespace Octopus.Shared.Extensibility
                 return;
             }
             
-            log.DebugFormat("Loading plugins from: {0}", path);
+            log.VerboseFormat("Loading plugins from: {0}", path);
             
             var catalog = new DirectoryCatalog(path);
 

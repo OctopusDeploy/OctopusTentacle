@@ -96,11 +96,11 @@ namespace Octopus.Shared.Integration.Transforms
 
             AddParameter(parameters, parameterName, parameterValue);
 
-            if (Log.IsDebugEnabled)
+            if (Log.IsVerboseEnabled)
             {
                 foreach (var parameter in parameters)
                 {
-                    Log.DebugFormat("Parameter Name: '{0}', Value: '{1}'", parameter.Key, parameter.Value);
+                    Log.VerboseFormat("Parameter Name: '{0}', Value: '{1}'", parameter.Key, parameter.Value);
                 }
             }
         }

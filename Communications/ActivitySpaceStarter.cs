@@ -15,13 +15,13 @@ namespace Octopus.Shared.Communications
 
         public void Start()
         {
-            Log.Octopus().Debug("Starting activity space");
+            Log.Octopus().Verbose("Starting activity space");
             space.Run();
         }
 
         public void Stop()
         {
-            Log.Octopus().Debug("Stopping activity space");
+            Log.Octopus().Verbose("Stopping activity space");
             space.Dispose();
         }
     }

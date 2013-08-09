@@ -37,7 +37,7 @@ namespace Octopus.Shared.Configuration
         public void Start()
         {
             var resolvedHomeDirectory = HomeDirectory;
-            log.DebugFormat("Using home directory: {0}", resolvedHomeDirectory);
+            log.VerboseFormat("Using home directory: {0}", resolvedHomeDirectory);
         }
     }
 }

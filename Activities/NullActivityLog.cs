@@ -26,7 +26,7 @@ namespace Octopus.Shared.Activities
             switch (level)
             {
                 case ActivityLogLevel.Debug:
-                    log.Debug(messageText);
+                    log.Verbose(messageText);
                     break;
                 case ActivityLogLevel.Info:
                     log.Info(messageText);

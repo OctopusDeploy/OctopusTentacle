@@ -2,8 +2,9 @@
 
 namespace Octopus.Shared.Platform.Logging
 {
-    public enum ActivityLogCategory
+    public enum TraceCategory
     {
+        Trace = 1,
         Verbose = 100,
         Info = 200,
         Alert = 250,
