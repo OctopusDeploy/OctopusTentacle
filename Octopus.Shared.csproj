@@ -379,7 +379,7 @@
     <Compile Include="Platform\ServerTasks\IStartOrchestrationCommand.cs" />
     <Compile Include="Platform\ServerTasks\TaskCompletedEvent.cs" />
     <Compile Include="Platform\ServerTasks\TaskPausedEvent.cs" />
-    <Compile Include="Platform\ServerTasks\TaskStartedEvent.cs" />
+    <Compile Include="Platform\ServerTasks\StartTaskCommand.cs" />
     <Compile Include="Platform\Upgrade\StartOutdatedTentacleUpgradeCommand.cs" />
     <Compile Include="Platform\Upgrade\UpgradeTentacleCommand.cs" />
     <Compile Include="Platform\Upgrade\TentacleUpgradedEvent.cs" />
