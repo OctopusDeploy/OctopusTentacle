@@ -153,6 +153,7 @@ namespace Octopus.Shared.Orchestration.Logging
         public LoggerReference CreateChild(LoggerReference logger, string messageText)
         {
             var child = EnsureLogger(logger).CreateChild();
+            diagnostics.TraceFormat("Creating child activity {0}: {1}", child.CorrelationId, messageText);
             Info(child, messageText);
             return child;
         }
@@ -164,9 +165,7 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public LoggerReference CreateChildFormat(LoggerReference logger, string messageFormat, params object[] args)
         {
-            var child = EnsureLogger(logger).CreateChild();
-            InfoFormat(child, messageFormat, args);
-            return child;
+            return CreateChild(logger, string.Format(messageFormat, args));
         }
 
         public void VerboseFormat(LoggerReference logger, string messageFormat, params object[] args)
@@ -321,9 +320,10 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public LoggerReference PlanChild(LoggerReference logger, string message)
         {
-            logger = EnsureLogger(logger).CreateChild();
-            SendToLoggerActor(logger, ProgressMessageCategory.Planned, 0, message);
-            return logger;
+            var child = EnsureLogger(logger).CreateChild();
+            diagnostics.TraceFormat("Planning {0}: {1}", child.CorrelationId, message);
+            SendToLoggerActor(child, ProgressMessageCategory.Planned, 0, message);
+            return child;
         }
 
         public LoggerReference PlanChildFormat(string messageFormat, params object[] args)
@@ -343,17 +343,21 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void Abandoned(LoggerReference logger)
         {
+            logger = EnsureLogger(logger);
+            diagnostics.TraceFormat("Abandoning planned activity {0}", logger.CorrelationId);
             SendToLoggerActor(logger, ProgressMessageCategory.Abandoned, 0, null);
         }
 
         public void UpdateProgress(LoggerReference logger, int progressPercentage, string message)
         {
+            logger = EnsureLogger(logger);
+            diagnostics.VerboseFormat("{0} ({1}%)", message, progressPercentage);
             SendToLoggerActor(logger, ProgressMessageCategory.Updated, progressPercentage, message);
         }
 
         public void UpdateProgressFormat(LoggerReference logger, int progressPercentage, string messageFormat, params object[] args)
         {
-            SendToLoggerActor(logger, ProgressMessageCategory.Updated, progressPercentage, string.Format(messageFormat, args));
+            UpdateProgress(logger, progressPercentage, string.Format(messageFormat, args));
         }
 
         public void Finished()
@@ -363,6 +367,8 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void Finished(LoggerReference logger)
         {
+            logger = EnsureLogger(logger);
+            diagnostics.TraceFormat("Finished {0}", logger.CorrelationId);
             SendToLoggerActor(logger, ProgressMessageCategory.Finished, 100, string.Empty);
         }
 
