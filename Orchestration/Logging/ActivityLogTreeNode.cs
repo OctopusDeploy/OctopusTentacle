@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace Octopus.Shared.Communications.Logging
+namespace Octopus.Shared.Orchestration.Logging
 {
     public class ActivityLogTreeNode
     {

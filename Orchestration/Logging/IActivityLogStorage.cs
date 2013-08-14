@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Shared.Communications.Logging;
 using Octopus.Shared.Platform.Logging;
 
 namespace Octopus.Shared.Orchestration.Logging

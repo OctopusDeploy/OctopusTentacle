@@ -144,6 +144,7 @@
     <Compile Include="Communications\ICommunicationsConfiguration.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Orchestration\Completion\CompletesOnTimeout.cs" />
+    <Compile Include="Orchestration\Logging\ActivityLogEntryCategory.cs" />
     <Compile Include="Orchestration\Logging\ITrace.cs" />
     <Compile Include="Orchestration\NoState.cs" />
     <Compile Include="Platform\Deletion\StartDocumentDeletionCommand.cs" />

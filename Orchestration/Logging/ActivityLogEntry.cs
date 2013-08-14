@@ -1,23 +1,28 @@
 ﻿using System;
-using Octopus.Shared.Platform.Logging;
-using Pipefish;
 using Pipefish.Core;
 
-namespace Octopus.Shared.Communications.Logging
+namespace Octopus.Shared.Orchestration.Logging
 {
     public class ActivityLogEntry
     {
         readonly DateTimeOffset occurred;
-        readonly TraceCategory category;
+        readonly ActivityLogEntryCategory category;
         readonly ActorId actorId;
         readonly string message;
+        readonly int? percentage;
 
-        public ActivityLogEntry(DateTimeOffset occurred, TraceCategory category, ActorId actorId, string message)
+        public ActivityLogEntry(
+            DateTimeOffset occurred,
+            ActivityLogEntryCategory category, 
+            ActorId actorId, 
+            string message,
+            int? percentage)
         {
             this.occurred = occurred;
             this.category = category;
             this.actorId = actorId;
             this.message = message;
+            this.percentage = percentage;
         }
 
         public ActorId ActorId
@@ -30,7 +35,7 @@ namespace Octopus.Shared.Communications.Logging
             get { return occurred; }
         }
 
-        public TraceCategory Category
+        public ActivityLogEntryCategory Category
         {
             get { return category; }
         }
@@ -38,6 +43,11 @@ namespace Octopus.Shared.Communications.Logging
         public string Message
         {
             get { return message; }
+        }
+
+        public int? Percentage
+        {
+            get { return percentage; }
         }
     }
 }
