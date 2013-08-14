@@ -231,6 +231,17 @@ namespace Octopus.Shared.Diagnostics
             Warn(exception, string.Empty);
         }
 
+        public void UpdateProgress(int progressPercentage, string messageText)
+        {
+            WriteFormat(TraceCategory.Verbose, "{0} ({1}%)", messageText, progressPercentage);
+        }
+
+        public void UpdateProgressFormat(int progressPercentage, string messageFormat, params object[] args)
+        {
+            if (!IsVerboseEnabled) return;
+            UpdateProgress(progressPercentage, string.Format(messageFormat, args));
+        }
+
         private LogEventInfo GetLogEvent(LogLevel level, Exception exception, string message)
         {
             return LogEventInfo.Create(level, Name, message, exception);

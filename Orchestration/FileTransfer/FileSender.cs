@@ -57,7 +57,8 @@ namespace Octopus.Shared.Orchestration.FileTransfer
 
             using (var file = fileSystem.OpenFile(Data.LocalFilename, FileAccess.Read))
             {
-                activity.VerboseFormat("Uploaded {0} of {1} ({2:n0}%)", nextChunkOffset.ToFileSizeString(), Data.ExpectedSize.ToFileSizeString(), ((double)nextChunkOffset / Data.ExpectedSize * 100.00));
+                var percentage = (int)((double)nextChunkOffset / Data.ExpectedSize * 100.00);
+                activity.UpdateProgressFormat(percentage, "Uploaded {0} of {1}", nextChunkOffset.ToFileSizeString(), Data.ExpectedSize.ToFileSizeString());
                 
                 file.Seek(nextChunkOffset, SeekOrigin.Begin);
                 var bytes = new byte[ChunkSize];
@@ -65,6 +66,8 @@ namespace Octopus.Shared.Orchestration.FileTransfer
                 if (read != ChunkSize)
                     Array.Resize(ref bytes, read);
                 var chunk = new SendNextChunkReply(bytes, read != ChunkSize);
+
+                Data.NextChunkIndex++;
                 Reply(message, chunk);
             }
         }

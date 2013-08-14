@@ -348,11 +348,21 @@ namespace Octopus.Shared.Orchestration.Logging
             SendToLoggerActor(logger, ProgressMessageCategory.Abandoned, 0, null);
         }
 
+        public void UpdateProgress(int progressPercentage, string messageText)
+        {
+            UpdateProgress(null, progressPercentage, messageText);
+        }
+
         public void UpdateProgress(LoggerReference logger, int progressPercentage, string message)
         {
             logger = EnsureLogger(logger);
-            diagnostics.VerboseFormat("{0} ({1}%)", message, progressPercentage);
+            diagnostics.UpdateProgress(progressPercentage, message);
             SendToLoggerActor(logger, ProgressMessageCategory.Updated, progressPercentage, message);
+        }
+
+        public void UpdateProgressFormat(int progressPercentage, string messageFormat, params object[] args)
+        {
+            UpdateProgressFormat(null, progressPercentage, messageFormat, args);
         }
 
         public void UpdateProgressFormat(LoggerReference logger, int progressPercentage, string messageFormat, params object[] args)

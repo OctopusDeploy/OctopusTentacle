@@ -105,8 +105,8 @@ namespace Octopus.Shared.Integration.Azure
 
                     uploadedSoFar += read;
 
-                    // OverwritePrevious
-                    log.InfoFormat("Uploaded: {0} of {1} ({2:n2}%)", uploadedSoFar.ToFileSizeString(), fileInfo.Length.ToFileSizeString(), (uploadedSoFar / (double)fileInfo.Length * 100.00));
+                    var percentage = (int)(uploadedSoFar / (double)fileInfo.Length * 100.00);
+                    log.UpdateProgressFormat(percentage, "Uploaded {0} of {1})", uploadedSoFar.ToFileSizeString(), fileInfo.Length.ToFileSizeString());
                 }
             }
         }

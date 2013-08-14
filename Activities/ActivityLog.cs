@@ -5,6 +5,7 @@ using Octopus.Shared.Time;
 
 namespace Octopus.Shared.Activities
 {
+    // To be removed along with activities subsystem
     public class ActivityLog : AbstractActivityLog
     {
         readonly IClock clock;
@@ -21,10 +22,10 @@ namespace Octopus.Shared.Activities
             this.clock = clock ?? new SystemClock();
         }
 
-        public override void Write(TraceCategory level, object message)
+        protected override void WriteEvent(TraceCategory level, Exception error, string messageText)
         {
             var now = clock.GetUtcTime();
-            var formatted = now.ToString("yyyy-MM-dd HH:mm:ss") + " " + level.ToString().ToUpper().PadRight(6, ' ') + " " + message;
+            var formatted = now.ToString("yyyy-MM-dd HH:mm:ss") + " " + level.ToString().ToUpper().PadRight(6, ' ') + " " + messageText + " " + error;
             lock (sync)
             {
                 mostRecentLine = formatted;

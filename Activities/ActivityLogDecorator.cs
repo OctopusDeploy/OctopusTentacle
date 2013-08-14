@@ -13,9 +13,19 @@ namespace Octopus.Shared.Activities
             this.inner = inner;
         }
 
-        public override void Write(TraceCategory level, object message)
+        protected override void WriteEvent(TraceCategory category, Exception error, string messageText)
         {
-            inner.Write(level, (message ?? "").ToString());
+            var message = messageText;
+
+            if (error != null)
+            {
+                if (message != null)
+                    message += " " + error;
+                else
+                    message = error.ToString();
+            }
+
+            inner.Write(category, message);
         }
     }
 }

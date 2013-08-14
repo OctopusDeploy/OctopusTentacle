@@ -19,10 +19,10 @@ namespace Octopus.Shared.Activities
             this.log = log ?? Log.Octopus();
         }
 
-        public override void Write(TraceCategory level, object message)
+        protected override void WriteEvent(TraceCategory level, Exception error, string messageText)
         {
-            logText.AppendLine(level + " " + message);
-            log.Write(level, (message ?? "").ToString());
+            logText.AppendLine(level + " " + messageText + " " + error);
+            log.Write(level, error, messageText);
         }
 
         public string GetLog()

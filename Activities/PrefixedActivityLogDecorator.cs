@@ -13,9 +13,9 @@ namespace Octopus.Shared.Activities
             this.prefix = prefix;
         }
 
-        public override void Write(TraceCategory level, object message)
+        protected override void WriteEvent(TraceCategory category, Exception error, string messageText)
         {
-            base.Write(level, (object)(prefix + message));
+            base.WriteEvent(category, error, (prefix + messageText));
         }
     }
 }
