@@ -160,6 +160,7 @@
     <Compile Include="Platform\Deploy\Collect\StartArtifactCollectionCommand.cs" />
     <Compile Include="Platform\Deploy\Email\StartEmailStepCommand.cs" />
     <Compile Include="Platform\Deploy\Package\StartPackageStepCommand.cs" />
+    <Compile Include="Platform\Deploy\ServerSide\StartServerStepCommand.cs" />
     <Compile Include="Platform\Deploy\Steps\IMessageWithTentacleArtifacts.cs" />
     <Compile Include="Platform\Deploy\Script\StartScriptStepCommand.cs" />
     <Compile Include="Platform\Deploy\Script\TentacleRunScriptCommand.cs" />
