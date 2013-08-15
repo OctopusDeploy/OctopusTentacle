@@ -78,6 +78,7 @@ namespace Octopus.Shared.Orchestration.FileTransfer
 
             if (message.Succeeded)
             {
+                activity.UpdateProgressFormat(100, "Uploaded {0}", Data.ExpectedSize.ToFileSizeString());
                 activity.InfoFormat("File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
                 supervised.Succeed(new FileSentEvent(message.DestinationPath));
             }

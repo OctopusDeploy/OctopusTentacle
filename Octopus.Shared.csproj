@@ -158,6 +158,7 @@
     <Compile Include="Platform\Deploy\Acquire\TentaclePackageDownloadedEvent.cs" />
     <Compile Include="Platform\Deploy\Collect\ArtifactsCollectedEvent.cs" />
     <Compile Include="Platform\Deploy\Collect\StartArtifactCollectionCommand.cs" />
+    <Compile Include="Platform\Deploy\Email\StartEmailStepCommand.cs" />
     <Compile Include="Platform\Deploy\Package\StartPackageStepCommand.cs" />
     <Compile Include="Platform\Deploy\Steps\IMessageWithTentacleArtifacts.cs" />
     <Compile Include="Platform\Deploy\Script\StartScriptStepCommand.cs" />
