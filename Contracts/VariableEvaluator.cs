@@ -9,6 +9,11 @@ namespace Octopus.Shared.Contracts
     {
         private static readonly Regex DefaultTokenRegex = new Regex("\\#\\{(?<variable>.+?)\\}", RegexOptions.Compiled | RegexOptions.Singleline);
 
+        public static bool HasReferences(string value)
+        {
+            return DefaultTokenRegex.IsMatch(value);
+        }
+
         public void Evaluate(VariableDictionary variables)
         {
             var nodes = variables.AsList().Select(variable => new VariableNode(variable)).ToList();
