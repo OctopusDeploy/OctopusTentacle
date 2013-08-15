@@ -83,7 +83,7 @@ namespace Octopus.Shared.Web
                 public static string Template = "/api/projects{/id}{?nonStale,skip}";
                 public static string Index = "/api/projects{?nonStale,skip}";
                 public static string Get = "/api/projects/{id}";
-                public static string GetReleases = "/api/projects/{id}/releases{?nonStale,skip}";
+                public static string GetReleases = "/api/projects/{id}/releases{/version}{?nonStale,skip}";
             }
             
             public static class Tasks
@@ -120,6 +120,7 @@ namespace Octopus.Shared.Web
             {
                 public static string Template = "/api/deploymentprocesses{/id}";
                 public static string Get = "/api/deploymentprocesses/{id}";
+                public static string GetTemplate = "/api/deploymentprocesses/{id}/template";
             }
 
             public static class Dashboards
