@@ -153,7 +153,7 @@ namespace Octopus.Shared.Web
 
             public static class Packages
             {
-                public static string Search = "/api/feeds/{id}/packages{?packageId,partialMatch,includeMultipleVersions,take}";
+                public static string Search = "/api/feeds/{id}/packages{?packageId,partialMatch,includeMultipleVersions,includeNotes,includePreRelease,take}";
                 public static string Versions = "/api/feeds/{id}/packages{?packageIds}";                
                 public static string Notes = "/api/feeds/{id}/packages/notes{?packageId,version}";                
             }
