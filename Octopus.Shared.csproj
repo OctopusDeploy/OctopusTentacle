@@ -86,9 +86,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Nuget.Core.2.6.0.1\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish, Version=0.1.0.60, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Pipefish, Version=0.1.0.62, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.0.1.0.60\lib\Pipefish.dll</HintPath>
+      <HintPath>..\packages\Pipefish.0.1.0.62\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -160,6 +160,7 @@
     <Compile Include="Platform\Deploy\Collect\StartArtifactCollectionCommand.cs" />
     <Compile Include="Platform\Deploy\Email\StartEmailStepCommand.cs" />
     <Compile Include="Platform\Deploy\Package\StartPackageStepCommand.cs" />
+    <Compile Include="Platform\Deploy\Manual\StartManualStepCommand.cs" />
     <Compile Include="Platform\Deploy\ServerSide\StartServerStepCommand.cs" />
     <Compile Include="Platform\Deploy\Steps\IMessageWithTentacleArtifacts.cs" />
     <Compile Include="Platform\Deploy\Script\StartScriptStepCommand.cs" />
@@ -167,6 +168,7 @@
     <Compile Include="Platform\Deploy\StartDeploymentCommand.cs" />
     <Compile Include="Platform\Deploy\StartDeploymentStepCommand.cs" />
     <Compile Include="Platform\Deploy\Script\TentacleScriptRunEvent.cs" />
+    <Compile Include="Platform\Interruptions\InterruptionCompletedEvent.cs" />
     <Compile Include="Platform\Logging\TraceCategory.cs" />
     <Compile Include="Orchestration\Logging\IActivityLogStorage.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntry.cs" />

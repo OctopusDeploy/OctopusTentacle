@@ -172,6 +172,11 @@ namespace Octopus.Shared.Contracts
                 public static readonly string SwapIfPossible = "Octopus.Step.Azure.SwapIfPossible";
                 public static readonly string UseCurrentInstanceCount = "Octopus.Step.Azure.UseCurrentInstanceCount";
             }
+
+            public static class Manual
+            {
+                public static readonly string Notes = "Octopus.Step.Manual.Notes";
+            }
         }
 
         public static IEnumerable<string> GetAllUsableByUser()

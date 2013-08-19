@@ -19,7 +19,7 @@ namespace Octopus.Shared.Web
             public static class Artifacts
             {
                 public static string Template = "/api/artifacts{/id}{?nonStale,skip}";
-                public static string Index = "/api/artifacts{?nonStale,skip}";
+                public static string Index = "/api/artifacts{?nonStale,skip,regarding}";
                 public static string Get = "/api/artifacts/{id}";
                 public static string GetContent = "/api/artifacts/{id}/content{/filename}";
             }
