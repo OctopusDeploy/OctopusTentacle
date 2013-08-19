@@ -150,6 +150,13 @@ namespace Octopus.Shared.Web
                 public static string Index = "/api/certificates{?nonStale,skip}";
                 public static string Get = "/api/certificates/{id}";
             }
+
+            public static class Packages
+            {
+                public static string Search = "/api/feeds/{id}/packages{?packageId,partialMatch,includeMultipleVersions,includeNotes,includePreRelease,take}";
+                public static string Versions = "/api/feeds/{id}/packages{?packageIds}";                
+                public static string Notes = "/api/feeds/{id}/packages/notes{?packageId,version}";                
+            }
         }
 
         public static partial class Web
@@ -211,33 +218,6 @@ namespace Octopus.Shared.Web
                 public static string Get(string id)
                 {
                     return Format("/api/groups/{0}", new object[] { id }, new Dictionary<string, object>() { });
-                }
-
-            }
-            public static class Packages
-            {
-                /// <summary>
-                /// Returns a URI like: /api/feeds/Foo/packages?area=api&amp;packageid=Foo&amp;partialmatch=False&amp;includemultipleversions=False&amp;take=0
-                /// </summary>
-                public static string Index(string feedId, string packageId, bool partialMatch = false, bool includeMultipleVersions = true, int take = 20)
-                {
-                    return Format("/api/feeds/{0}/packages", new object[] { feedId }, new Dictionary<string, object>() { { "packageId", packageId }, { "partialMatch", partialMatch }, { "includeMultipleVersions", includeMultipleVersions }, { "take", take } });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/feeds/Foo/packages/versions?area=api&amp;packageids=System.String%5B%5D
-                /// </summary>
-                public static string Versions(string feedId, System.String[] packageIds)
-                {
-                    return Format("/api/feeds/{0}/packages/versions", new object[] { feedId }, new Dictionary<string, object>() { { "packageIds", packageIds } });
-                }
-
-                /// <summary>
-                /// Returns a URI like: /api/feeds/Foo/packages/notes?area=api&amp;packageid=Foo&amp;version=Foo
-                /// </summary>
-                public static string Notes(string feedId, string packageId, string version)
-                {
-                    return Format("/api/feeds/{0}/packages/notes", new object[] { feedId }, new Dictionary<string, object>() { { "packageId", packageId }, { "version", version } });
                 }
 
             }
