@@ -3,11 +3,11 @@ using Pipefish;
 
 namespace Octopus.Shared.Platform.Interruptions
 {
-    public class InterruptionCompletedEvent : IMessage
+    public class InterruptionSubmittedEvent : IMessage
     {
         public string InterruptionId { get; private set; }
 
-        public InterruptionCompletedEvent(string interruptionId)
+        public InterruptionSubmittedEvent(string interruptionId)
         {
             InterruptionId = interruptionId;
         }

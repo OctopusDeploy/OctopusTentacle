@@ -110,6 +110,13 @@ namespace Octopus.Shared.Web
                 public static string Get = "/api/feeds/{id}";
             }
 
+            public static class Interruptions
+            {
+                public static string Index = "/api/interruptions{?skip,nonStale,regarding,pendingOnly}";
+                public static string Get = "/api/interruptions/{id}";
+                public static string Submit = "/api/interruptions/{id}/submit";
+            }
+
             public static class Variables
             {
                 public static string Template = "/api/variables{/id}";
