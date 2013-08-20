@@ -175,7 +175,7 @@ namespace Octopus.Shared.Contracts
 
             public static class Manual
             {
-                public static readonly string Notes = "Octopus.Step.Manual.Notes";
+                public static readonly string Instructions = "Octopus.Step.Manual.Instructions";
             }
         }
 

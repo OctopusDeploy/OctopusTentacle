@@ -168,7 +168,7 @@
     <Compile Include="Platform\Deploy\StartDeploymentCommand.cs" />
     <Compile Include="Platform\Deploy\StartDeploymentStepCommand.cs" />
     <Compile Include="Platform\Deploy\Script\TentacleScriptRunEvent.cs" />
-    <Compile Include="Platform\Interruptions\InterruptionCompletedEvent.cs" />
+    <Compile Include="Platform\Interruptions\InterruptionSubmittedEvent.cs" />
     <Compile Include="Platform\Logging\TraceCategory.cs" />
     <Compile Include="Orchestration\Logging\IActivityLogStorage.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntry.cs" />
