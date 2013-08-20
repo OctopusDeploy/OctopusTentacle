@@ -143,6 +143,7 @@
     <Compile Include="Caching\OctopusCache.cs" />
     <Compile Include="Communications\ICommunicationsConfiguration.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
+    <Compile Include="Contracts\VariableDictionaryExtensions.cs" />
     <Compile Include="Orchestration\Completion\CompletesOnTimeout.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntryCategory.cs" />
     <Compile Include="Orchestration\Logging\ITrace.cs" />
