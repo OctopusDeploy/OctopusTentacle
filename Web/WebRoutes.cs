@@ -112,6 +112,7 @@ namespace Octopus.Shared.Web
 
             public static class Interruptions
             {
+                public static string Template = "/api/interruptions{/id}{?skip,nonStale,regarding,pendingOnly}";
                 public static string Index = "/api/interruptions{?skip,nonStale,regarding,pendingOnly}";
                 public static string Get = "/api/interruptions/{id}";
                 public static string Submit = "/api/interruptions/{id}/submit";
