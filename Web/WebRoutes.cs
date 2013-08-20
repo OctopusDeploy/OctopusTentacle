@@ -18,78 +18,78 @@ namespace Octopus.Shared.Web
 
             public static class Artifacts
             {
-                public static string Template = "/api/artifacts{/id}{?nonStale,skip}";
-                public static string Index = "/api/artifacts{?nonStale,skip,regarding}";
+                public static string Template = "/api/artifacts{/id}{?skip}";
+                public static string Index = "/api/artifacts{?skip,regarding}";
                 public static string Get = "/api/artifacts/{id}";
                 public static string GetContent = "/api/artifacts/{id}/content{/filename}";
             }
                         
             public static class Environments
             {
-                public static string Template = "/api/environments{/id}{?nonStale,skip}";
-                public static string Index = "/api/environments{?nonStale,skip}";
+                public static string Template = "/api/environments{/id}{?skip}";
+                public static string Index = "/api/environments{?skip}";
                 public static string Get = "/api/environments/{id}";
-                public static string GetMachines = "/api/environments/{id}/machines{?nonStale,skip}";
+                public static string GetMachines = "/api/environments/{id}/machines{?skip}";
             }
 
             public static class Machines
             {
-                public static string Template = "/api/machines{/id}{?nonStale,skip}";
-                public static string Index = "/api/machines{?nonStale,skip}";
+                public static string Template = "/api/machines{/id}{?skip}";
+                public static string Index = "/api/machines{?skip}";
                 public static string Get = "/api/machines/{id}";
             }
 
             public static class Tenants
             {
-                public static string Template = "/api/tenants{/id}{?nonStale,skip}";
-                public static string Index = "/api/tenants{?nonStale,skip}";
+                public static string Template = "/api/tenants{/id}{?skip}";
+                public static string Index = "/api/tenants{?skip}";
                 public static string Get = "/api/tenants/{id}";
             }
 
             public static class Releases
             {
-                public static string Template = "/api/releases{/id}{?nonStale,skip}";
-                public static string Index = "/api/releases{?nonStale,skip}";
+                public static string Template = "/api/releases{/id}{?skip}";
+                public static string Index = "/api/releases{?skip}";
                 public static string Get = "/api/releases/{id}";
-                public static string GetDeployments = "/api/releases/{id}/deployments{?nonStale,skip}";
-                public static string GetArtifacts = "/api/releases/{id}/artifacts{?nonStale,skip}";
+                public static string GetDeployments = "/api/releases/{id}/deployments{?skip}";
+                public static string GetArtifacts = "/api/releases/{id}/artifacts{?skip}";
             }
 
             public static class Deployments
             {
-                public static string Template = "/api/deployments{/id}{?nonStale,skip,projects,environments}";
-                public static string Index = "/api/deployments{?nonStale,skip,projects,environments}";
+                public static string Template = "/api/deployments{/id}{?skip,projects,environments}";
+                public static string Index = "/api/deployments{?skip,projects,environments}";
                 public static string Get = "/api/deployments/{id}";
             }
 
             public static class TenantPools
             {
-                public static string Template = "/api/tenantpools{/id}{?nonStale,skip}";
-                public static string Index = "/api/tenantpools{?nonStale,skip}";
+                public static string Template = "/api/tenantpools{/id}{?skip}";
+                public static string Index = "/api/tenantpools{?skip}";
                 public static string Get = "/api/tenantpools/{id}";
                 public static string GetTenants = "/api/tenantpools/{id}/tenants";
             }
 
             public static class ProjectGroups
             {
-                public static string Template = "/api/projectgroups{/id}{?nonStale,skip}";
-                public static string Index = "/api/projectgroups{?nonStale,skip}";
+                public static string Template = "/api/projectgroups{/id}{?skip}";
+                public static string Index = "/api/projectgroups{?skip}";
                 public static string Get = "/api/projectgroups/{id}";
                 public static string Projects = "/api/projectgroups/{id}/projects";
             }
 
             public static class Projects
             {
-                public static string Template = "/api/projects{/id}{?nonStale,skip}";
-                public static string Index = "/api/projects{?nonStale,skip}";
+                public static string Template = "/api/projects{/id}{?skip}";
+                public static string Index = "/api/projects{?skip}";
                 public static string Get = "/api/projects/{id}";
-                public static string GetReleases = "/api/projects/{id}/releases{/version}{?nonStale,skip}";
+                public static string GetReleases = "/api/projects/{id}/releases{/version}{?skip}";
             }
             
             public static class Tasks
             {
-                public static string Template = "/api/tasks{/id}{?nonStale,skip}";
-                public static string Index = "/api/tasks{?nonStale,skip}";
+                public static string Template = "/api/tasks{/id}{?skip}";
+                public static string Index = "/api/tasks{?skip}";
                 public static string Get = "/api/tasks/{id}";
                 public static string Details = "/api/tasks/details/{id}";
                 public static string Raw = "/api/tasks/raw/{id}";
@@ -105,8 +105,8 @@ namespace Octopus.Shared.Web
 
             public static class Feeds
             {
-                public static string Template = "/api/feeds{/id}{?nonStale,skip}";
-                public static string Index = "/api/feeds{?nonStale,skip}";
+                public static string Template = "/api/feeds{/id}{?skip}";
+                public static string Index = "/api/feeds{?skip}";
                 public static string Get = "/api/feeds/{id}";
             }
 
@@ -136,7 +136,7 @@ namespace Octopus.Shared.Web
 
             public static class Users
             {
-                public static string Index = "/api/users{?nonStale,skip}";
+                public static string Index = "/api/users{?skip}";
                 public static string Get = "/api/users/{id}";
                 public static string Login = "/api/users/login{?returnUrl}";
                 public static string Logout = "/api/users/logout";
@@ -146,8 +146,8 @@ namespace Octopus.Shared.Web
 
             public static class Certificates
             {
-                public static string Template = "/api/certificates{/id}{?nonStale,skip}";
-                public static string Index = "/api/certificates{?nonStale,skip}";
+                public static string Template = "/api/certificates{/id}{?skip}";
+                public static string Index = "/api/certificates{?skip}";
                 public static string Get = "/api/certificates/{id}";
             }
 
