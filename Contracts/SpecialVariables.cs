@@ -56,6 +56,7 @@ namespace Octopus.Shared.Contracts
             public static readonly string Id = "Octopus.Environment.Id";
             public static readonly string Name = "Octopus.Environment.Name";
             public static readonly string SortOrder = "Octopus.Environment.SortOrder";
+            public static readonly string MachinesInRolePrefix = "Octopus.Environment.MachinesInRole.";
         }
 
         public static class Machine

@@ -55,6 +55,12 @@ namespace Octopus.Shared.Contracts
             }
         }
 
+        public void SetStrings(string variableName, ReferenceCollection values, string separator = ",")
+        {
+            var value = string.Join(separator, values.Where(v => !string.IsNullOrWhiteSpace(v)));
+            Set(variableName, value);
+        }
+
         /// <summary>
         /// Performs a case-insensitive lookup of a variable by name, returning null if the variable is not defined.
         /// </summary>
