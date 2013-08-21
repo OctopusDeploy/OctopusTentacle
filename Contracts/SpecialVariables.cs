@@ -10,10 +10,6 @@ namespace Octopus.Shared.Contracts
         static readonly Dictionary<string, string> LegacyToCurrent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         static readonly Dictionary<string, string> CurrentToLegacy = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        static SpecialVariables()
-        {
-        }
-
         // Set by Octopus Server exclusively
         public static readonly string RetentionPolicySet = "OctopusRetentionPolicySet";
         public static readonly string RetentionPolicyItemsToKeep = "OctopusRetentionPolicyItemsToKeep";
