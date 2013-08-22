@@ -350,7 +350,6 @@
     <Compile Include="Platform\PackageUpload\UploadPackageCommand.cs" />
     <Compile Include="Platform\Restart\TentacleRestartCommand.cs" />
     <Compile Include="Platform\Restart\TentacleRestartedEvent.cs" />
-    <Compile Include="Platform\CancelCommand.cs" />
     <Compile Include="Platform\Retention\ApplyRetentionPolicyCommand.cs" />
     <Compile Include="Platform\Retention\StartRetentionPolicyApplicationCommand.cs" />
     <Compile Include="Platform\ServerTasks\ExecuteTaskCommand.cs" />
