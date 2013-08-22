@@ -37,7 +37,7 @@ namespace Octopus.Shared.Contracts
             }
 
             var config = new Configuration();
-            config.IgnoreMissingTokens = variables.GetFlag(SpecialVariables.IgnoreMissingVariableTokens, false);
+            config.IgnoreMissingTokens = variables.GetFlag(SpecialVariables.IgnoreMissingVariableTokens, true);
             config.TokenRegex = tokenRegex;
             return config;
         }

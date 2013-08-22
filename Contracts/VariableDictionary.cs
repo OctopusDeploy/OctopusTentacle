@@ -13,7 +13,16 @@ namespace Octopus.Shared.Contracts
         /// <summary>
         /// Initializes a new instance of the <see cref="VariableDictionary"/> class.
         /// </summary>
-        public VariableDictionary() : this(null)
+        public VariableDictionary() : this((IEnumerable<Variable>)null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VariableDictionary"/> class.
+        /// </summary>
+        /// <param name="variables"></param>
+        public VariableDictionary(IEnumerable<KeyValuePair<string, string>> variables)
+            : this(variables.Select(kv => new Variable(kv.Key, kv.Value)))
         {
         }
 
