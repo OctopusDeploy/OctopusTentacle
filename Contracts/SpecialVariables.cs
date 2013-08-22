@@ -74,7 +74,7 @@ namespace Octopus.Shared.Contracts
         public static class Deployment
         {
             public static readonly string Id = "Octopus.Deployment.Id";
-            public static readonly string Name = "Octopus.Deployment.Id";
+            public static readonly string Name = "Octopus.Deployment.Name";
             public static readonly string Comments = "Octopus.Deployment.Comments";
             public static readonly string ForcePackageRedeployment = "Octopus.Deployment.ForcePackageRedeployment";
             public static readonly string ForcePackageDownload = "Octopus.Deployment.ForcePackageDownload";
