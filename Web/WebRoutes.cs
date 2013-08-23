@@ -115,6 +115,7 @@ namespace Octopus.Shared.Web
                 public static string Index = "/api/interruptions{?skip,regarding,pendingOnly}";
                 public static string Get = "/api/interruptions/{id}";
                 public static string Submit = "/api/interruptions/{id}/submit";
+                public static string Responsible = "/api/interruptions/{id}/responsible";
             }
 
             public static class Variables
