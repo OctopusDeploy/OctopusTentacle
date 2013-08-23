@@ -1,18 +1,18 @@
 using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
-using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Scripting;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Conventions
 {
     public class ChildConventionContext : IConventionContext
     {
         readonly IConventionContext root;
-        readonly Octopus.Shared.Orchestration.Logging.ITrace log;
+        readonly ITrace log;
 
-        public ChildConventionContext(IConventionContext root, Octopus.Shared.Orchestration.Logging.ITrace log)
+        public ChildConventionContext(IConventionContext root, ITrace log)
         {
             this.root = root;
             this.log = log;
@@ -24,11 +24,11 @@ namespace Octopus.Shared.Conventions
         public string PackageContentsDirectoryPath { get { return root.PackageContentsDirectoryPath; } set { root.PackageContentsDirectoryPath = value; } }
         public string StagingDirectoryPath { get { return root.StagingDirectoryPath; } }
         public VariableDictionary Variables { get { return root.Variables; } }
-        public Octopus.Shared.Orchestration.Logging.ITrace Log { get { return log; } }
+        public ITrace Log { get { return log; } }
 
         public IConventionContext ScopeTo(IConvention convention)
         {
-            return new ChildConventionContext(root, new PrefixedActivityLogDecorator("[" + convention.FriendlyName + "] ", log));
+            return new ChildConventionContext(root, log.BeginOperation(convention.FriendlyName));
         }
 
         public void AddCreatedArtifact(CreatedArtifact artifact)

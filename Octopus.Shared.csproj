@@ -131,14 +131,12 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
-    <Compile Include="Activities\AbstractActivityLog.cs" />
+    <Compile Include="Activities\AbstractTrace.cs" />
     <Compile Include="Activities\ActivityElement.cs" />
-    <Compile Include="Activities\ActivityLogDecorator.cs" />
     <Compile Include="Activities\ActivityFailedException.cs" />
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
-    <Compile Include="Activities\NullActivityLog.cs" />
-    <Compile Include="Activities\PrefixedActivityLogDecorator.cs" />
+    <Compile Include="Activities\PrefixedTraceDecorator.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
     <Compile Include="Communications\ICommunicationsConfiguration.cs" />
@@ -146,6 +144,7 @@
     <Compile Include="Contracts\VariableDictionaryExtensions.cs" />
     <Compile Include="Orchestration\Completion\CompletesOnTimeout.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntryCategory.cs" />
+    <Compile Include="Orchestration\Logging\ChildActivityTrace.cs" />
     <Compile Include="Orchestration\Logging\ITrace.cs" />
     <Compile Include="Orchestration\NoState.cs" />
     <Compile Include="Platform\Deletion\StartDocumentDeletionCommand.cs" />

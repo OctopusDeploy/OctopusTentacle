@@ -34,6 +34,9 @@ namespace Octopus.Shared.Orchestration.Logging
         void Fatal(Exception error, string messageText);
         void FatalFormat(string messageFormat, params object[] args);
 
+        ITrace BeginOperation(string messageText);
+        ITrace BeginOperationFormat(string messageFormat, params object[] args);
+
         void UpdateProgress(int progressPercentage, string messageText);
         void UpdateProgressFormat(int progressPercentage, string messageFormat, params object[] args);
     }

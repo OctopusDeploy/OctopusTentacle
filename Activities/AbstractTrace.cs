@@ -5,7 +5,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Activities
 {
-    public abstract class AbstractActivityLog : ITrace
+    public abstract class AbstractTrace : ITrace
     {
         protected abstract void WriteEvent(TraceCategory category, Exception error, string messageText);
 
@@ -114,6 +114,13 @@ namespace Octopus.Shared.Activities
             Write(TraceCategory.Alert, messageFormat, args);
         }
 
+        public abstract ITrace BeginOperation(string messageText);
+
+        public ITrace BeginOperationFormat(string messageFormat, params object[] args)
+        {
+            return BeginOperation(string.Format(messageFormat, args));
+        }
+
         void Write(TraceCategory level, string format, object[] args)
         {
             var message = string.Format(format, args);
@@ -125,9 +132,6 @@ namespace Octopus.Shared.Activities
             UpdateProgress(progressPercentage, string.Format(messageFormat, args));
         }
 
-        public void UpdateProgress(int progressPercentage, string messageText)
-        {
-            VerboseFormat("{0} ({1}%)", messageText, progressPercentage);
-        }
+        public abstract void UpdateProgress(int progressPercentage, string messageText);
     }
 }

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using NLog;
+using Octopus.Shared.Activities;
+using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Platform.Logging;
 
 namespace Octopus.Shared.Diagnostics
@@ -102,6 +104,16 @@ namespace Octopus.Shared.Diagnostics
             if (!IsFatalEnabled) return;
             var logEvent = GetLogEvent(LogLevel.Fatal, null, format, args);
             Log(typeof(Log), logEvent);
+        }
+
+        public ITrace BeginOperation(string messageText)
+        {
+            return new PrefixedTraceDecorator("[" + messageText + "]", this);
+        }
+
+        public ITrace BeginOperationFormat(string messageFormat, params object[] args)
+        {
+            return BeginOperation(string.Format(messageFormat, args));
         }
 
         public void FatalFormat(Exception exception, string format, params object[] args)

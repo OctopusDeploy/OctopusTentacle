@@ -61,6 +61,12 @@ namespace Octopus.Shared.Orchestration.Logging
             base.OnDetaching();
         }
 
+        void SendToLoggerActor(LoggerReference logger, Func<string, IMessage> messageBuilder)
+        {
+            logger = EnsureLogger(logger);
+            Send(new ActorId(logger.LoggerActorId), messageBuilder(logger.CorrelationId));
+        }
+
         void SendToLoggerActor(LoggerReference logger, TraceCategory category, string messageText)
         {
             SendToLoggerActor(logger, correlationId => new LogMessage(correlationId, category, messageText));
@@ -69,12 +75,6 @@ namespace Octopus.Shared.Orchestration.Logging
         void SendToLoggerActor(LoggerReference logger, ProgressMessageCategory category, int percentage, string messageText)
         {
             SendToLoggerActor(logger, correlationId => new ProgressMessage(correlationId, category, percentage, messageText));
-        }
-
-        void SendToLoggerActor(LoggerReference logger, Func<string, IMessage> messageBuilder)
-        {
-            logger = EnsureLogger(logger);
-            Send(new ActorId(logger.LoggerActorId), messageBuilder(logger.CorrelationId));
         }
 
         public virtual void Write(LoggerReference logger, TraceCategory category, string messageText)
@@ -95,7 +95,8 @@ namespace Octopus.Shared.Orchestration.Logging
             var message = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(messageText))
                 message.AppendLine(messageText);
-            message.AppendLine(error.GetRootError().ToString());
+            if (error != null)
+                message.AppendLine(error.GetRootError().ToString());
 
             SendToLoggerActor(logger, category, message.ToString());
         }
@@ -311,6 +312,16 @@ namespace Octopus.Shared.Orchestration.Logging
         public void FatalFormat(string messageFormat, params object[] args)
         {
             WriteFormat(TraceCategory.Fatal, messageFormat, args);
+        }
+
+        public ITrace BeginOperation(string messageText)
+        {
+            return new ChildActivityTrace(messageText, this, EnsureLogger(null));
+        }
+
+        public ITrace BeginOperationFormat(string messageFormat, params object[] args)
+        {
+            return BeginOperation(string.Format(messageFormat, args));
         }
 
         public LoggerReference PlanChild(string message)

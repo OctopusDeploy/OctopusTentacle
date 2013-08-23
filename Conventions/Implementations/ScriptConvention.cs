@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Scripting;
-using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Conventions.Implementations
@@ -27,13 +25,11 @@ namespace Octopus.Shared.Conventions.Implementations
             {
                 context.Log.VerboseFormat("Script: {0}", script);
 
-                var closure = new LogClosure(context.Log);
-
                 var arguments = new ScriptArguments();
                 arguments.ScriptFilePath = script;
                 arguments.WorkingDirectory = context.PackageContentsDirectoryPath;
                 arguments.Variables = context.Variables.AsDictionary();
-                arguments.OutputStream.Written += closure.AppendLog;
+                arguments.OutputStream.Written += context.Log.Info;
                 
                 var result = ScriptRunner.Execute(arguments);
                 foreach (var createdArtifact in result.CreatedArtifacts)
@@ -41,7 +37,7 @@ namespace Octopus.Shared.Conventions.Implementations
                     context.AddCreatedArtifact(createdArtifact);
                 }
 
-                arguments.OutputStream.Written -= closure.AppendLog;
+                arguments.OutputStream.Written -= context.Log.Info;
 
                 foreach (var outputVariable in result.OutputVariables)
                 {
@@ -90,21 +86,6 @@ namespace Octopus.Shared.Conventions.Implementations
             }
 
             return scripts;
-        }
-
-        class LogClosure
-        {
-            readonly ITrace log;
-
-            public LogClosure(ITrace log)
-            {
-                this.log = log;
-            }
-
-            public void AppendLog(string message)
-            {
-                log.Info("  " + message);
-            }
         }
     }
 }
