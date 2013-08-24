@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Xml;
 using System.Xml.Serialization;
+using Octopus.Client.Model;
 
 namespace Octopus.Shared.Activities
 {

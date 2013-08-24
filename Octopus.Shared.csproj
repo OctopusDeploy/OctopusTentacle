@@ -132,7 +132,6 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
     <Compile Include="Activities\AbstractTrace.cs" />
-    <Compile Include="Activities\ActivityElement.cs" />
     <Compile Include="Activities\ActivityFailedException.cs" />
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
