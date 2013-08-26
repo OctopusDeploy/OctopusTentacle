@@ -13,5 +13,9 @@
   <package id="NuGet.Core" version="2.7.0" targetFramework="net40" />
   <package id="Octopus.Dependencies.AzureBinaries" version="2.0.0" targetFramework="net40" />
   <package id="Octopus.Dependencies.Transforms" version="1.0.3" targetFramework="net40" />
+<<<<<<< HEAD
   <package id="Pipefish" version="0.1.0.73" targetFramework="net40" />
+=======
+  <package id="Pipefish" version="0.1.0.72" targetFramework="net40" />
+>>>>>>> c8024053b8ba29fe30c15818737fed66521a2121
 </packages>
