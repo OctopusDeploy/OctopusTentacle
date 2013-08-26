@@ -1,4 +1,5 @@
 ﻿using System;
+using Pipefish;
 using Pipefish.Core;
 using Pipefish.Messages;
 using Pipefish.Toolkit.AspectUtility;
@@ -23,7 +24,7 @@ namespace Octopus.Shared.Orchestration.Completion
         {
         }
 
-        public override bool OnReceiving(Message message)
+        public override Intervention OnReceiving(Message message)
         {
             if (AspectData == null)
             {
@@ -34,20 +35,20 @@ namespace Octopus.Shared.Orchestration.Completion
                     new ActorId(WellKnownActors.Clock, Space.Name),
                     new SetTimeoutCommand(timeout, AspectData));
                 Space.Send(timeoutRequest);
+                return Intervention.NotHandled;
             }
-            else
+            
+            var elapsed = message.Body as TimeoutElapsedEvent;
+            if (elapsed != null && AspectData.Equals(elapsed.Reminder))
             {
-                var elapsed = message.Body as TimeoutElapsedEvent;
-                if (elapsed != null && AspectData.Equals(elapsed.Reminder))
+                try
                 {
-                    try
-                    {
-                        onCompleting();
-                    }
-                    finally
-                    {
-                        Space.Detach(Actor);
-                    }
+                    onCompleting();
+                    return Intervention.Handled;
+                }
+                finally
+                {
+                    Space.Detach(Actor);
                 }
             }
 

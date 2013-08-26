@@ -86,9 +86,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Nuget.Core.2.6.0.1\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish, Version=0.1.0.67, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Pipefish, Version=0.1.0.73, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.0.1.0.67\lib\Pipefish.dll</HintPath>
+      <HintPath>..\packages\Pipefish.0.1.0.73\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -143,6 +143,11 @@
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Contracts\VariableDictionaryExtensions.cs" />
     <Compile Include="Orchestration\Completion\CompletesOnTimeout.cs" />
+    <Compile Include="Orchestration\Guidance\FailedItem.cs" />
+    <Compile Include="Orchestration\Guidance\Guided.cs" />
+    <Compile Include="Orchestration\Guidance\GuidedOperationItem.cs" />
+    <Compile Include="Orchestration\Guidance\GuidedOperationState.cs" />
+    <Compile Include="Orchestration\Guidance\IGuided.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntryCategory.cs" />
     <Compile Include="Orchestration\Logging\ChildActivityTrace.cs" />
     <Compile Include="Orchestration\Logging\ITrace.cs" />
@@ -168,6 +173,9 @@
     <Compile Include="Platform\Deploy\StartDeploymentCommand.cs" />
     <Compile Include="Platform\Deploy\StartDeploymentStepCommand.cs" />
     <Compile Include="Platform\Deploy\Script\TentacleScriptRunEvent.cs" />
+    <Compile Include="Platform\Guidance\FailureGuidance.cs" />
+    <Compile Include="Platform\Guidance\FailureGuidanceReply.cs" />
+    <Compile Include="Platform\Guidance\FailureGuidanceRequest.cs" />
     <Compile Include="Platform\Interruptions\InterruptionSubmittedEvent.cs" />
     <Compile Include="Platform\Logging\TraceCategory.cs" />
     <Compile Include="Orchestration\Logging\IActivityLogStorage.cs" />

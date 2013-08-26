@@ -12,16 +12,13 @@ namespace Octopus.Shared.Orchestration.Logging
 {
     public class Activity : PersistentAspect<LoggerReference>, IActivity
     {
-        const string DefaultLoggerStateKey = "ActorLog.DefaultLogger";
-
         readonly ITrace diagnostics = Log.Octopus();
         
-        public Activity()
-            : base(DefaultLoggerStateKey)
+        public Activity() : base(typeof(Activity).FullName)
         {
         }
 
-        public override bool OnReceiving(Message message)
+        public override Intervention OnReceiving(Message message)
         {
             if (AspectData == null)
             {
@@ -35,7 +32,7 @@ namespace Octopus.Shared.Orchestration.Logging
             return base.OnReceiving(message);
         }
 
-        public override void OnError(Message message, Exception ex, ref bool swallow)
+        public override Intervention OnError(Message message, Exception ex)
         {
             try
             {
@@ -45,7 +42,7 @@ namespace Octopus.Shared.Orchestration.Logging
             // ReSharper disable once EmptyGeneralCatchClause
             catch { }
 
-            base.OnError(message, ex, ref swallow);
+            return base.OnError(message, ex);
         }
 
         public override void OnDetaching()
@@ -76,6 +73,8 @@ namespace Octopus.Shared.Orchestration.Logging
         {
             SendToLoggerActor(logger, correlationId => new ProgressMessage(correlationId, category, percentage, messageText));
         }
+
+        public LoggerReference DefaultLogger { get { return EnsureLogger(null); } }
 
         public virtual void Write(LoggerReference logger, TraceCategory category, string messageText)
         {
