@@ -131,20 +131,19 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
-    <Compile Include="Activities\AbstractTrace.cs" />
     <Compile Include="Activities\ActivityFailedException.cs" />
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
-    <Compile Include="Activities\PrefixedTraceDecorator.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
     <Compile Include="Communications\ICommunicationsConfiguration.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
-    <Compile Include="Contracts\VariableDictionaryExtensions.cs" />
+    <Compile Include="Contracts\SuffixAttribute.cs" />
+    <Compile Include="Diagnostics\Log.cs" />
+    <Compile Include="OctopusFileSystemModule.cs" />
     <Compile Include="Orchestration\Completion\CompletesOnTimeout.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntryCategory.cs" />
     <Compile Include="Orchestration\Logging\ChildActivityTrace.cs" />
-    <Compile Include="Orchestration\Logging\ITrace.cs" />
     <Compile Include="Orchestration\NoState.cs" />
     <Compile Include="Platform\Deletion\StartDocumentDeletionCommand.cs" />
     <Compile Include="Platform\Deploy\Acquire\AcquiredPackage.cs" />
@@ -168,7 +167,6 @@
     <Compile Include="Platform\Deploy\StartDeploymentStepCommand.cs" />
     <Compile Include="Platform\Deploy\Script\TentacleScriptRunEvent.cs" />
     <Compile Include="Platform\Interruptions\InterruptionSubmittedEvent.cs" />
-    <Compile Include="Platform\Logging\TraceCategory.cs" />
     <Compile Include="Orchestration\Logging\IActivityLogStorage.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntry.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogTreeNode.cs" />
@@ -215,7 +213,6 @@
     <Compile Include="Conventions\ChildConventionContext.cs" />
     <Compile Include="Diagnostics\ErrorReporter.cs" />
     <Compile Include="Diagnostics\IErrorReporter.cs" />
-    <Compile Include="Diagnostics\ILog.cs" />
     <Compile Include="Diagnostics\OctopusLogsDirectoryRenderer.cs" />
     <Compile Include="Extensibility\IOctopusExtension.cs" />
     <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
@@ -241,14 +238,8 @@
     <Compile Include="Orchestration\FileTransfer\FileTransferCompleteEvent.cs" />
     <Compile Include="Orchestration\FileTransfer\SendNextChunkRequest.cs" />
     <Compile Include="Orchestration\FileTransfer\SendNextChunkReply.cs" />
-    <Compile Include="Packages\IFeed.cs" />
     <Compile Include="Contracts\NuGetFeedProperties.cs" />
     <Compile Include="Contracts\PackageMetadata.cs" />
-    <Compile Include="Contracts\SpecialVariables.cs" />
-    <Compile Include="Contracts\SuffixAttribute.cs" />
-    <Compile Include="Contracts\Variable.cs" />
-    <Compile Include="Contracts\VariableDictionary.cs" />
-    <Compile Include="Contracts\VariableEvaluator.cs" />
     <Compile Include="Conventions\ConventionContext.cs" />
     <Compile Include="Conventions\ConventionPriority.cs" />
     <Compile Include="Conventions\ConventionProcessor.cs" />
@@ -272,7 +263,6 @@
     <Compile Include="Conventions\Implementations\PreDeployScriptConvention.cs" />
     <Compile Include="Conventions\Implementations\XmlConfigTransformConvention.cs" />
     <Compile Include="Conventions\Implementations\XmlConfigVariablesConventions.cs" />
-    <Compile Include="Diagnostics\Log.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
     <Compile Include="Integration\Azure\AzureClientFactory.cs" />
     <Compile Include="Integration\Azure\AzureConfigurationRetriever.cs" />
@@ -360,8 +350,6 @@
     <Compile Include="Platform\Upgrade\TentacleUpgradedEvent.cs" />
     <Compile Include="Platform\WellKnownOctopusActors.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Security\Aes256EncryptionAlgorithm.cs" />
-    <Compile Include="Security\CertificateEncoder.cs" />
     <Compile Include="Security\CertificateExpectations.cs" />
     <Compile Include="Internals\CertificateGeneration\SelfSignedCertProperties.cs" />
     <Compile Include="Internals\CertificateGeneration\CryptContext.cs" />
@@ -375,11 +363,8 @@
     <Compile Include="Security\CertificateGenerator.cs" />
     <Compile Include="Security\CertificateValidationDirection.cs" />
     <Compile Include="Security\CertificateValidator.cs" />
-    <Compile Include="Security\EncryptionAlgorithm.cs" />
-    <Compile Include="Security\EncryptResult.cs" />
     <Compile Include="Security\ICertificateGenerator.cs" />
     <Compile Include="Security\CertificatesModule.cs" />
-    <Compile Include="Security\SymmetricEncryptionAlgorithm.cs" />
     <Compile Include="ServiceMessages\ParseServiceMessageResult.cs" />
     <Compile Include="Integration\Scripting\ScriptServiceMessageNames.cs" />
     <Compile Include="Startup\AutofacExtensions.cs" />
@@ -406,38 +391,10 @@
     <Compile Include="Time\Sleep.cs" />
     <Compile Include="Time\SystemClock.cs" />
     <Compile Include="Time\TimeModule.cs" />
-    <Compile Include="Util\AmazingConverter.cs" />
-    <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Time\IClock.cs" />
     <Compile Include="ServiceMessages\ServiceMessage.cs" />
     <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
-    <Compile Include="Util\ObjectFormatter.cs" />
-    <Compile Include="Util\PasswordHasher.cs" />
-    <Compile Include="Util\PathSegmentValidator.cs" />
-    <Compile Include="Util\RandomStringGenerator.cs" />
-    <Compile Include="Util\RuntimeUtility.cs" />
-    <Compile Include="Util\SilentProcessRunner.cs" />
-    <Compile Include="Util\DeletionOptions.cs" />
-    <Compile Include="Util\ExceptionExtensions.cs" />
-    <Compile Include="Util\FileInfoAdapter.cs" />
-    <Compile Include="Util\HashCalculator.cs" />
-    <Compile Include="Util\IFileInfo.cs" />
-    <Compile Include="Util\LimitedConcurrencyLevelTaskScheduler.cs" />
-    <Compile Include="Util\ListExtensions.cs" />
-    <Compile Include="Util\OctopusFileSystemModule.cs" />
-    <Compile Include="Util\OctopusPhysicalFileSystem.cs" />
-    <Compile Include="Util\IOctopusFileSystem.cs" />
-    <Compile Include="Util\OutboundLinks.cs" />
-    <Compile Include="Util\PathHelper.cs" />
-    <Compile Include="Util\RemotedObject.cs" />
-    <Compile Include="Util\SlugGenerator.cs" />
-    <Compile Include="Util\StringExtensions.cs" />
-    <Compile Include="Util\DateTimeExtensions.cs" />
-    <Compile Include="Util\TimeSpanExtensions.cs" />
-    <Compile Include="Util\Guard.cs" />
-    <Compile Include="Util\NumericExtensions.cs" />
-    <Compile Include="Util\Uniquifier.cs" />
     <Compile Include="Web\WebRoutes.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -447,6 +404,10 @@
     <ProjectReference Include="..\Octopus.Client\Octopus.Client.csproj">
       <Project>{FAF9A6DD-C669-4F5B-88AF-8AB2B8F3B7C4}</Project>
       <Name>Octopus.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Octopus.Platform\Octopus.Platform.csproj">
+      <Project>{F4754A78-708D-4D87-B912-EC2062AF0B2F}</Project>
+      <Name>Octopus.Platform</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

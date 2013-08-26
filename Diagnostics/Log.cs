@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using NLog;
-using Octopus.Shared.Activities;
 using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Platform.Logging;
 

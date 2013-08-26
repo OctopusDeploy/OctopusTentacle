@@ -3,7 +3,7 @@ using Octopus.Shared.Platform.Logging;
 
 namespace Octopus.Shared.Orchestration.Logging
 {
-    public interface IActivity : ITrace
+    public interface IActivity : ILog
     {
         LoggerReference CreateChild(string messageText);
         LoggerReference CreateChild(LoggerReference logger, string messageText);

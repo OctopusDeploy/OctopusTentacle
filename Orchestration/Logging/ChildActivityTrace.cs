@@ -4,12 +4,12 @@ using Octopus.Shared.Platform.Logging;
 
 namespace Octopus.Shared.Orchestration.Logging
 {
-    public class ChildActivityTrace : AbstractTrace
+    public class ChildActivityLog : AbstractLog
     {
         readonly IActivity activity;
         readonly Lazy<LoggerReference> child;
 
-        public ChildActivityTrace(string messageText, IActivity activity, LoggerReference parent)
+        public ChildActivityLog(string messageText, IActivity activity, LoggerReference parent)
         {
             this.activity = activity;
             child = new Lazy<LoggerReference>(() => activity.CreateChild(parent, messageText), isThreadSafe: true);
@@ -20,14 +20,19 @@ namespace Octopus.Shared.Orchestration.Logging
             activity.Write(child.Value, category, error, messageText);
         }
 
-        public override ITrace BeginOperation(string messageText)
+        public override ILog BeginOperation(string messageText)
         {
-            return new ChildActivityTrace(messageText, activity, child.Value);
+            return new ChildActivityLog(messageText, activity, child.Value);
         }
 
         public override void UpdateProgress(int progressPercentage, string messageText)
         {
             activity.UpdateProgress(child.Value, progressPercentage, messageText);
+        }
+
+        public override bool IsEnabled(TraceCategory category)
+        {
+            return activity.IsEnabled(category);
         }
     }
 }
