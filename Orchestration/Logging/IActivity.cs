@@ -5,6 +5,8 @@ namespace Octopus.Shared.Orchestration.Logging
 {
     public interface IActivity : ILog
     {
+        LoggerReference DefaultLogger { get; }
+
         LoggerReference CreateChild(string messageText);
         LoggerReference CreateChild(LoggerReference logger, string messageText);
         LoggerReference CreateChildFormat(string messageFormat, params object[] args);
