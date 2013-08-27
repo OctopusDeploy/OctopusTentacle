@@ -1,6 +1,8 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
+using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Util
+namespace Octopus.Shared
 {
     public class OctopusFileSystemModule : Module
     {

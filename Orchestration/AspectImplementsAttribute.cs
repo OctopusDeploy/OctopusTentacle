@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Orchestration.Logging
+namespace Octopus.Shared.Orchestration
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class AspectImplementsAttribute : Attribute

@@ -24,7 +24,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn>1998</NoWarn>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -142,7 +142,7 @@
     <Compile Include="Communications\ICommunicationsConfiguration.cs" />
     <Compile Include="Communications\IActivitySpaceStarter.cs" />
     <Compile Include="Contracts\SuffixAttribute.cs" />
-    <Compile Include="Diagnostics\Log.cs" />
+    <Compile Include="Diagnostics\LogAdapter.cs" />
     <Compile Include="OctopusFileSystemModule.cs" />
     <Compile Include="Orchestration\Completion\CompletesOnTimeout.cs" />
     <Compile Include="Orchestration\Guidance\FailedItem.cs" />
@@ -151,8 +151,8 @@
     <Compile Include="Orchestration\Guidance\GuidedOperationState.cs" />
     <Compile Include="Orchestration\Guidance\IGuided.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntryCategory.cs" />
-    <Compile Include="Orchestration\Logging\AspectImplementsAttribute.cs" />
-    <Compile Include="Orchestration\Logging\ChildActivityTrace.cs" />
+    <Compile Include="Orchestration\AspectImplementsAttribute.cs" />
+    <Compile Include="Orchestration\Logging\ChildActivityLog.cs" />
     <Compile Include="Orchestration\NoState.cs" />
     <Compile Include="Platform\Deletion\StartDocumentDeletionCommand.cs" />
     <Compile Include="Platform\Deploy\Acquire\AcquiredPackage.cs" />

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Orchestration.FileTransfer.Implementation
+namespace Octopus.Shared.Orchestration.FileTransfer
 {
     public class FileReceiveData
     {

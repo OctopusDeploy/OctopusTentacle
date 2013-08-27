@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Server.Orchestration
+namespace Octopus.Shared.Orchestration
 {
     public class NoState
     {

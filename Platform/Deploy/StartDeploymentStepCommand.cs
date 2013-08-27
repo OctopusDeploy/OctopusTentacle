@@ -1,7 +1,7 @@
 ﻿using System;
 using Octopus.Shared.Platform.Logging;
 
-namespace Octopus.Shared.Platform.Deployment
+namespace Octopus.Shared.Platform.Deploy
 {
     public abstract class StartDeploymentStepCommand : IMessageWithLogger
     {

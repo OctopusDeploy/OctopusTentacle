@@ -7,6 +7,7 @@ using Autofac.Core;
 using Autofac.Features.Metadata;
 using NuGet;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Orchestration;
 using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Util;
 using Pipefish;
