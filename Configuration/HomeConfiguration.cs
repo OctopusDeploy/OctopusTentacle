@@ -2,8 +2,6 @@ using System;
 using System.IO;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
-using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Configuration
 {
@@ -11,13 +9,11 @@ namespace Octopus.Shared.Configuration
     {
         readonly ILog log = Log.Octopus();
         readonly IKeyValueStore settings;
-        readonly IOctopusFileSystem fileSystem;
         readonly string defaultHome;
 
-        public HomeConfiguration(IKeyValueStore settings, IOctopusFileSystem fileSystem)
+        public HomeConfiguration(IKeyValueStore settings)
         {
             this.settings = settings;
-            this.fileSystem = fileSystem;
             defaultHome = Path.Combine(Directory.GetDirectoryRoot(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)), "Octopus");
         }
 

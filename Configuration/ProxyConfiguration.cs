@@ -2,7 +2,6 @@ using System;
 using System.Net;
 using Autofac;
 using Octopus.Platform.Diagnostics;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {

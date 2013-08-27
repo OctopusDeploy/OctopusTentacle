@@ -1,7 +1,6 @@
 using System;
 using Octopus.Platform.Security;
 using Octopus.Platform.Util;
-using Octopus.Shared.Security;
 
 namespace Octopus.Shared.Configuration
 {
