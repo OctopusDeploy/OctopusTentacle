@@ -24,6 +24,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn>1998</NoWarn>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -150,6 +151,7 @@
     <Compile Include="Orchestration\Guidance\GuidedOperationState.cs" />
     <Compile Include="Orchestration\Guidance\IGuided.cs" />
     <Compile Include="Orchestration\Logging\ActivityLogEntryCategory.cs" />
+    <Compile Include="Orchestration\Logging\AspectImplementsAttribute.cs" />
     <Compile Include="Orchestration\Logging\ChildActivityTrace.cs" />
     <Compile Include="Orchestration\NoState.cs" />
     <Compile Include="Platform\Deletion\StartDocumentDeletionCommand.cs" />

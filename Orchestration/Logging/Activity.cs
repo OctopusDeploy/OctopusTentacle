@@ -12,7 +12,7 @@ namespace Octopus.Shared.Orchestration.Logging
 {
     public class Activity : PersistentAspect<LoggerReference>, IActivity
     {
-        readonly ITrace diagnostics = Log.Octopus();
+        readonly ILog diagnostics = Log.Octopus();
         
         public Activity() : base(typeof(Activity).FullName)
         {
@@ -85,6 +85,12 @@ namespace Octopus.Shared.Orchestration.Logging
             SendToLoggerActor(logger, category, messageText);
         }
 
+        public void Write(LoggerReference logger, TraceCategory category, Exception error)
+        {
+            if (error == null) return;
+            Write(logger, category, error, error.GetErrorSummary());
+        }
+
         public virtual void Write(LoggerReference logger, TraceCategory category, Exception error, string messageText)
         {
             diagnostics.Write(category, error, messageText);
@@ -100,9 +106,33 @@ namespace Octopus.Shared.Orchestration.Logging
             SendToLoggerActor(logger, category, message.ToString());
         }
 
+        public bool IsVerboseEnabled { get { return true; } }
+        public bool IsErrorEnabled { get { return true; } }
+        public bool IsFatalEnabled { get { return true; } }
+        public bool IsInfoEnabled { get { return true; } }
+        public bool IsTraceEnabled { get { return false; } }
+        public bool IsWarnEnabled { get { return true; } }
+
+        public bool IsEnabled(TraceCategory category)
+        {
+            switch (category)
+            {
+                case TraceCategory.Trace:
+                    return false;
+                default:
+                    return true;
+            }
+        }
+
         public void Write(TraceCategory category, string messageText)
         {
             Write(null, category, messageText);
+        }
+
+        public void Write(TraceCategory category, Exception error)
+        {
+            if (error == null) return;
+            Write(null, category, error, error.GetErrorSummary());
         }
 
         public void Write(TraceCategory category, Exception error, string messageText)
@@ -115,6 +145,46 @@ namespace Octopus.Shared.Orchestration.Logging
             WriteFormat(null, category, messageFormat, args);
         }
 
+        public void WriteFormat(LoggerReference logger, TraceCategory category, string messageFormat, params object[] args)
+        {
+            Write(logger, category, string.Format(messageFormat, args));
+        }
+
+        public void WriteFormat(LoggerReference logger, TraceCategory category, Exception error, string messageFormat, params object[] args)
+        {
+            Write(logger, category, error, string.Format(messageFormat, args));
+        }
+
+        public void WriteFormat(TraceCategory category, Exception error, string messageFormat, params object[] args)
+        {
+            Write(null, category, error, string.Format(messageFormat, args));
+        }
+
+        public void Trace(LoggerReference logger, string messageText)
+        {
+            Write(logger, TraceCategory.Trace, messageText);
+        }
+
+        public void TraceFormat(LoggerReference logger, string messageFormat, params object[] args)
+        {
+            WriteFormat(logger, TraceCategory.Trace, messageFormat, args);
+        }
+
+        public void Trace(LoggerReference logger, Exception error)
+        {
+            Write(logger, TraceCategory.Trace, error);
+        }
+
+        public void Trace(LoggerReference logger, Exception error, string messageText)
+        {
+            Write(logger, TraceCategory.Trace, error, messageText);
+        }
+
+        public void TraceFormat(LoggerReference logger, Exception error, string format, params object[] args)
+        {
+            WriteFormat(logger, TraceCategory.Trace, error, format, args);
+        }
+
         public void Trace(string messageText)
         {
             Write(TraceCategory.Trace, messageText);
@@ -125,14 +195,34 @@ namespace Octopus.Shared.Orchestration.Logging
             Write(TraceCategory.Trace, string.Format(messageFormat, args));
         }
 
-        public void WriteFormat(LoggerReference logger, TraceCategory category, string messageFormat, params object[] args)
+        public void Trace(Exception error)
         {
-            Write(logger, category, string.Format(messageFormat, args));
+            Write(TraceCategory.Trace, error);
+        }
+
+        public void Trace(Exception error, string messageText)
+        {
+            Write(TraceCategory.Trace, error, messageText);
+        }
+
+        public void TraceFormat(Exception error, string format, params object[] args)
+        {
+            WriteFormat(TraceCategory.Trace, error, format, args);
         }
 
         public void Verbose(string messageText)
         {
-            Verbose(null, messageText);
+            Write(TraceCategory.Verbose, messageText);
+        }
+
+        public void Verbose(Exception error)
+        {
+            Write(TraceCategory.Verbose, error);
+        }
+
+        public void Verbose(Exception error, string messageText)
+        {
+            Write(TraceCategory.Verbose, error, messageText);
         }
 
         public void Verbose(LoggerReference logger, string messageText)
@@ -140,9 +230,24 @@ namespace Octopus.Shared.Orchestration.Logging
             Write(logger, TraceCategory.Verbose, messageText);
         }
 
+        public void Verbose(LoggerReference logger, Exception error)
+        {
+            Write(logger, TraceCategory.Verbose, error);
+        }
+
+        public void Verbose(LoggerReference logger, Exception error, string messageText)
+        {
+            Write(logger, TraceCategory.Verbose, error, messageText);
+        }
+
         public void VerboseFormat(string messageFormat, params object[] args)
         {
-            VerboseFormat(null, messageFormat, args);
+            WriteFormat(TraceCategory.Verbose, messageFormat, args);
+        }
+
+        public void VerboseFormat(Exception error, string format, params object[] args)
+        {
+            WriteFormat(TraceCategory.Verbose, error, format, args);
         }
 
         public LoggerReference CreateChild(string messageText)
@@ -173,9 +278,24 @@ namespace Octopus.Shared.Orchestration.Logging
             WriteFormat(logger, TraceCategory.Verbose, messageFormat, args);
         }
 
+        public void VerboseFormat(LoggerReference logger, Exception error, string format, params object[] args)
+        {
+            WriteFormat(logger, TraceCategory.Verbose, error, format, args);
+        }
+
         public void Info(string messageText)
         {
-            Info(null, messageText);
+            Write(TraceCategory.Info, messageText);
+        }
+
+        public void Info(Exception error)
+        {
+            Write(TraceCategory.Info, error);
+        }
+
+        public void Info(Exception error, string messageText)
+        {
+            Write(TraceCategory.Info, error, messageText);
         }
 
         public void Info(LoggerReference logger, string messageText)
@@ -183,29 +303,69 @@ namespace Octopus.Shared.Orchestration.Logging
             Write(logger, TraceCategory.Info, messageText);
         }
 
+        public void Info(LoggerReference logger, Exception error)
+        {
+            Write(logger, TraceCategory.Info, error);
+        }
+
+        public void Info(LoggerReference logger, Exception error, string messageText)
+        {
+            Write(logger, TraceCategory.Info, error, messageText);
+        }
+
         public void InfoFormat(string messageFormat, params object[] args)
         {
-            InfoFormat(null, messageFormat, args);
+            WriteFormat(TraceCategory.Info, messageFormat, args);
+        }
+
+        public void InfoFormat(Exception error, string format, params object[] args)
+        {
+            WriteFormat(TraceCategory.Info, error, format, args);
+        }
+
+        public void InfoFormat(LoggerReference logger, Exception error, string format, params object[] args)
+        {
+            WriteFormat(logger, TraceCategory.Info, error, format, args);
+        }
+
+        public void InfoFormat(LoggerReference logger, string messageFormat, params object[] args)
+        {
+            WriteFormat(logger, TraceCategory.Info, messageFormat, args);
         }
 
         public void Alert(string messageText)
         {
-            Write(null, TraceCategory.Alert, messageText);
+            Write(TraceCategory.Alert, messageText);
+        }
+
+        public void Alert(Exception error)
+        {
+            Write(TraceCategory.Alert, error);
         }
 
         public void Alert(Exception error, string messageText)
         {
-            Write(null, TraceCategory.Alert, error, messageText);
+            Write(TraceCategory.Alert, error, messageText);
         }
 
         public void AlertFormat(string messageFormat, params object[] args)
         {
-            WriteFormat(null, TraceCategory.Alert, messageFormat, args);
+            WriteFormat(TraceCategory.Alert, messageFormat, args);
+        }
+
+        public void AlertFormat(Exception error, string messageFormat, params object[] args)
+        {
+            WriteFormat(TraceCategory.Alert, error, messageFormat, args);
         }
 
         public void Alert(LoggerReference logger, string messageText)
         {
             Write(logger, TraceCategory.Alert, messageText);
+        }
+
+        public void Alert(LoggerReference logger, Exception error)
+        {
+            Write(logger, TraceCategory.Alert, error);
         }
 
         public void Alert(LoggerReference logger, Exception error, string messageText)
@@ -218,19 +378,29 @@ namespace Octopus.Shared.Orchestration.Logging
             WriteFormat(logger, TraceCategory.Alert, messageFormat, args);
         }
 
-        public void InfoFormat(LoggerReference logger, string messageFormat, params object[] args)
+        public void AlertFormat(LoggerReference logger, Exception error, string messageFormat, params object[] args)
         {
-            WriteFormat(logger, TraceCategory.Info, messageFormat, args);
+            WriteFormat(logger, TraceCategory.Alert, error, messageFormat, args);
         }
 
         public void Warn(string messageText)
         {
-            Warn((LoggerReference)null, messageText);
+            Write(TraceCategory.Warning, messageText);
+        }
+
+        public void Warn(Exception error)
+        {
+            Write(TraceCategory.Warning, error);
         }
 
         public void Warn(LoggerReference logger, string messageText)
         {
             Write(logger, TraceCategory.Warning, messageText);
+        }
+
+        public void Warn(LoggerReference logger, Exception error)
+        {
+            Write(logger, TraceCategory.Warning, error);
         }
 
         public void Warn(Exception error, string messageText)
@@ -245,7 +415,12 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void WarnFormat(string messageFormat, params object[] args)
         {
-            WarnFormat(null, messageFormat, args);
+            WriteFormat(TraceCategory.Warning, messageFormat, args);
+        }
+
+        public void WarnFormat(Exception error, string format, params object[] args)
+        {
+            WriteFormat(TraceCategory.Warning, error, format, args);
         }
 
         public void WarnFormat(LoggerReference logger, string messageFormat, params object[] args)
@@ -253,9 +428,19 @@ namespace Octopus.Shared.Orchestration.Logging
             WriteFormat(logger, TraceCategory.Warning, messageFormat, args);
         }
 
+        public void WarnFormat(LoggerReference logger, Exception error, string format, params object[] args)
+        {
+            WriteFormat(logger, TraceCategory.Warning, error, format, args);
+        }
+
         public void Error(string messageText)
         {
-            Error((LoggerReference)null, messageText);
+            Write(TraceCategory.Error, messageText);
+        }
+
+        public void Error(Exception error)
+        {
+            Write(TraceCategory.Error, error);
         }
 
         public void Error(LoggerReference logger, string messageText)
@@ -263,9 +448,14 @@ namespace Octopus.Shared.Orchestration.Logging
             Write(logger, TraceCategory.Error, messageText);
         }
 
+        public void Error(LoggerReference logger, Exception error)
+        {
+            Write(logger, TraceCategory.Error, error);
+        }
+
         public void Error(Exception error, string messageText)
         {
-            Error(null, error, messageText);
+            Write(TraceCategory.Error, error, messageText);
         }
 
         public void Error(LoggerReference logger, Exception error, string messageText)
@@ -275,7 +465,12 @@ namespace Octopus.Shared.Orchestration.Logging
 
         public void ErrorFormat(string messageFormat, params object[] args)
         {
-            ErrorFormat(null, messageFormat, args);
+            WriteFormat(TraceCategory.Error, messageFormat, args);
+        }
+
+        public void ErrorFormat(Exception error, string format, params object[] args)
+        {
+            WriteFormat(TraceCategory.Error, error, format, args);
         }
 
         public void ErrorFormat(LoggerReference logger, string messageFormat, params object[] args)
@@ -283,9 +478,19 @@ namespace Octopus.Shared.Orchestration.Logging
             WriteFormat(logger, TraceCategory.Error, messageFormat, args);
         }
 
+        public void ErrorFormat(LoggerReference logger, Exception error, string format, params object[] args)
+        {
+            WriteFormat(logger, TraceCategory.Error, error, format, args);
+        }
+
         public void Fatal(LoggerReference logger, string messageText)
         {
             Write(logger, TraceCategory.Fatal, messageText);
+        }
+
+        public void Fatal(LoggerReference logger, Exception error)
+        {
+            Write(logger, TraceCategory.Fatal, error);
         }
 
         public void Fatal(LoggerReference logger, Exception error, string messageText)
@@ -298,9 +503,19 @@ namespace Octopus.Shared.Orchestration.Logging
             WriteFormat(logger, TraceCategory.Fatal, messageFormat, args);
         }
 
+        public void FatalFormat(LoggerReference logger, Exception error, string format, params object[] args)
+        {
+            WriteFormat(logger, TraceCategory.Fatal, error, format, args);
+        }
+
         public void Fatal(string messageText)
         {
             Write(TraceCategory.Fatal, messageText);
+        }
+
+        public void Fatal(Exception error)
+        {
+            Write(TraceCategory.Fatal, error);
         }
 
         public void Fatal(Exception error, string messageText)
@@ -313,12 +528,17 @@ namespace Octopus.Shared.Orchestration.Logging
             WriteFormat(TraceCategory.Fatal, messageFormat, args);
         }
 
-        public ITrace BeginOperation(string messageText)
+        public void FatalFormat(Exception error, string format, params object[] args)
         {
-            return new ChildActivityTrace(messageText, this, EnsureLogger(null));
+            WriteFormat(TraceCategory.Fatal, error, format, args);
         }
 
-        public ITrace BeginOperationFormat(string messageFormat, params object[] args)
+        public ILog BeginOperation(string messageText)
+        {
+            return new ChildActivityLog(messageText, this, EnsureLogger(null));
+        }
+
+        public ILog BeginOperationFormat(string messageFormat, params object[] args)
         {
             return BeginOperation(string.Format(messageFormat, args));
         }

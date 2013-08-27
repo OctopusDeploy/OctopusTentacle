@@ -14,7 +14,7 @@ namespace Octopus.Shared.Integration.Transforms
     /// </summary>
     public class TransformationTask
     {
-        readonly ITrace log;
+        readonly ILog log;
         readonly TransformationLogger transformationLogger;
         IDictionary<string, string> parameters;
 
@@ -24,7 +24,7 @@ namespace Octopus.Shared.Integration.Transforms
         /// <param name="sourceFilePath">Source file path</param>
         /// <param name="transformFilePath">Transformation file path</param>
         /// <param name="log"> </param>
-        public TransformationTask(string sourceFilePath, string transformFilePath, ITrace log)
+        public TransformationTask(string sourceFilePath, string transformFilePath, ILog log)
         {
             this.log = log;
             transformationLogger = new TransformationLogger(log);

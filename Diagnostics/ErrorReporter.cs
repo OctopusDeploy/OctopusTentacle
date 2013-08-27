@@ -5,6 +5,7 @@ using System.Security.Principal;
 using Mindscape.Raygun4Net;
 using Mindscape.Raygun4Net.Messages;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Diagnostics
 {

@@ -5,6 +5,7 @@ using System.Reflection;
 using Autofac;
 using Autofac.Core;
 using Autofac.Features.Metadata;
+using NuGet;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Util;
@@ -58,7 +59,14 @@ namespace Octopus.Shared.Communications
 
             builder.RegisterAssemblyTypes(assemblies)
                 .As<IAspect>()
-                .AsImplementedInterfaces()
+                .As(t =>
+                {
+                    var implements = t.GetCustomAttribute<AspectImplementsAttribute>();
+                    if (implements == null)
+                        return new Type[0];
+
+                    return implements.ImplementedTypes;
+                })
                 .AsSelf()
                 .InstancePerDependency();
 

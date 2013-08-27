@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Win32;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Configuration
 {

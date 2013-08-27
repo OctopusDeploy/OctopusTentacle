@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Diagnostics
 {
@@ -7,6 +8,8 @@ namespace Octopus.Shared.Diagnostics
     {
         protected override void Load(ContainerBuilder builder)
         {
+            var logAdapter = new LogAdapter();
+            Log.SetFactory(() => logAdapter);
             builder.Register(c => Log.Octopus()).As<ILog>();
             builder.RegisterType<ErrorReporter>().As<IErrorReporter>();
         }

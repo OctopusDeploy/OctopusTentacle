@@ -6,9 +6,9 @@ namespace Octopus.Shared.Integration.Transforms
 {
     public class TransformationLogger : IXmlTransformationLogger
     {
-        readonly ITrace log;
+        readonly ILog log;
 
-        public TransformationLogger(ITrace log)
+        public TransformationLogger(ILog log)
         {
             this.log = log;
         }

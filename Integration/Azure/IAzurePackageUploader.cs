@@ -7,6 +7,6 @@ namespace Octopus.Shared.Integration.Azure
 {
     public interface IAzurePackageUploader
     {
-        Uri Upload(SubscriptionData subscription, string packageFile, string uploadedFileName, ITrace log, CancellationToken cancellation);
+        Uri Upload(SubscriptionData subscription, string packageFile, string uploadedFileName, ILog log, CancellationToken cancellation);
     }
 }

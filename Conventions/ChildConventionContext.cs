@@ -10,9 +10,9 @@ namespace Octopus.Shared.Conventions
     public class ChildConventionContext : IConventionContext
     {
         readonly IConventionContext root;
-        readonly ITrace log;
+        readonly ILog log;
 
-        public ChildConventionContext(IConventionContext root, ITrace log)
+        public ChildConventionContext(IConventionContext root, ILog log)
         {
             this.root = root;
             this.log = log;
@@ -24,7 +24,7 @@ namespace Octopus.Shared.Conventions
         public string PackageContentsDirectoryPath { get { return root.PackageContentsDirectoryPath; } set { root.PackageContentsDirectoryPath = value; } }
         public string StagingDirectoryPath { get { return root.StagingDirectoryPath; } }
         public VariableDictionary Variables { get { return root.Variables; } }
-        public ITrace Log { get { return log; } }
+        public ILog Log { get { return log; } }
 
         public IConventionContext ScopeTo(IConvention convention)
         {

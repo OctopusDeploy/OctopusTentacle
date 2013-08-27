@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using NuGet;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Packages
 {

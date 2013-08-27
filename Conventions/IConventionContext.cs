@@ -14,7 +14,7 @@ namespace Octopus.Shared.Conventions
         string PackageContentsDirectoryPath { get; set; }
         string StagingDirectoryPath { get; }
         VariableDictionary Variables { get; }
-        ITrace Log { get; }
+        ILog Log { get; }
         IConventionContext ScopeTo(IConvention convention);
         void AddCreatedArtifact(CreatedArtifact artifact);
     }

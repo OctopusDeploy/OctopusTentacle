@@ -17,7 +17,7 @@ namespace Octopus.Shared.Integration.Azure
     {
         const string OctopusPackagesContainerName = "octopuspackages";
 
-        public Uri Upload(SubscriptionData subscription, string packageFile, string uploadedFileName, ITrace log, CancellationToken cancellation)
+        public Uri Upload(SubscriptionData subscription, string packageFile, string uploadedFileName, ILog log, CancellationToken cancellation)
         {
             log.Verbose("Connecting to Azure blob storage");
             
@@ -53,7 +53,7 @@ namespace Octopus.Shared.Integration.Azure
             return packageBlob.Uri;
         }
 
-        static CloudBlockBlob GetUniqueBlobName(string uploadedFileName, ITrace log, FileInfo fileInfo, CloudBlobContainer container)
+        static CloudBlockBlob GetUniqueBlobName(string uploadedFileName, ILog log, FileInfo fileInfo, CloudBlobContainer container)
         {
             var length = fileInfo.Length;
             var packageBlob = Uniquifier.UniquifyUntil(
@@ -73,7 +73,7 @@ namespace Octopus.Shared.Integration.Azure
             return packageBlob;
         }
 
-        static void UploadBlobInChunks(ITrace log, CancellationToken cancellation, FileInfo fileInfo, CloudBlockBlob packageBlob)
+        static void UploadBlobInChunks(ILog log, CancellationToken cancellation, FileInfo fileInfo, CloudBlockBlob packageBlob)
         {
             log.Verbose("Uploading the package to blob storage...");
 

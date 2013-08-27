@@ -23,7 +23,7 @@ namespace Octopus.Shared.Integration.Ftp
             readonly static HashSet<string> IgnoredFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             readonly FtpSynchronizationSettings settings;
             readonly SecureFTPConnection ftpConnection;
-            readonly ITrace log;
+            readonly ILog log;
             CancellationTokenRegistration cancelRegistration;
 
             static SynchronizationSession()

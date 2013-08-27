@@ -77,7 +77,7 @@ namespace Octopus.Shared.Conventions
             }
         }
 
-        static void EvaluateVariables(IConventionContext context, ITrace log)
+        static void EvaluateVariables(IConventionContext context, ILog log)
         {
             context.Variables.Set(SpecialVariables.OriginalPackageDirectoryPath, context.PackageContentsDirectoryPath);
 
@@ -98,7 +98,7 @@ namespace Octopus.Shared.Conventions
             }
         }
 
-        static void PrintVariables(string message, VariableDictionary variables, ITrace log)
+        static void PrintVariables(string message, VariableDictionary variables, ILog log)
         {
             log.Verbose(message);
 

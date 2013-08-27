@@ -9,7 +9,7 @@ namespace Octopus.Shared.Conventions
 {
     public class ConventionContext : IConventionContext
     {
-        readonly ITrace log;
+        readonly ILog log;
         readonly CancellationToken cancellationToken;
         readonly X509Certificate2 certificate;
         readonly Action<CreatedArtifact> storeCreatedArtifact;
@@ -17,7 +17,7 @@ namespace Octopus.Shared.Conventions
         readonly VariableDictionary variables;
 
         public ConventionContext(PackageMetadata package, string directoryPath,
-            VariableDictionary variables, ITrace log, CancellationToken cancellationToken,
+            VariableDictionary variables, ILog log, CancellationToken cancellationToken,
             X509Certificate2 certificate, Action<CreatedArtifact> storeCreatedArtifact)
         {
             this.package = package;
@@ -54,7 +54,7 @@ namespace Octopus.Shared.Conventions
             get { return variables; }
         }
 
-        public ITrace Log
+        public ILog Log
         {
             get { return log; }
         }

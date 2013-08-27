@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Autofac;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Extensibility
 {

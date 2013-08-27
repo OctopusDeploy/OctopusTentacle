@@ -1,6 +1,7 @@
 using System;
 using System.ServiceProcess;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Startup
 {
