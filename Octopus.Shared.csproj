@@ -91,6 +91,9 @@
     </Reference>
     <Reference Include="Pipefish">
       <HintPath>..\packages\Pipefish.0.1.0.73\lib\Pipefish.dll</HintPath>
+    <Reference Include="Pipefish, Version=0.1.0.75, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Pipefish.0.1.0.75\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
