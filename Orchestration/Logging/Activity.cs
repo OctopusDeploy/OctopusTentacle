@@ -13,8 +13,9 @@ namespace Octopus.Shared.Orchestration.Logging
     public class Activity : PersistentAspect<LoggerReference>, IActivity
     {
         readonly ITrace diagnostics = Log.Octopus();
-        
-        public Activity() : base(typeof(Activity).FullName)
+
+        public Activity()
+            : base(typeof(Activity).FullName)
         {
         }
 

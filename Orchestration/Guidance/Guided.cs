@@ -37,7 +37,12 @@ namespace Octopus.Shared.Orchestration.Guidance
             };
         }
 
-        public void BeginGuidedOperation(object operation, IList<GuidedOperationItem> items, int? maxParallelism = null)
+        public void BeginGuidedOperation(
+            string taskId,
+            string deploymentId,
+            object operation, 
+            IList<GuidedOperationItem> items, 
+            int? maxParallelism = null)
         {
             if (operation == null) throw new ArgumentNullException("operation");
             if (items == null) throw new ArgumentNullException("items");
@@ -45,6 +50,8 @@ namespace Octopus.Shared.Orchestration.Guidance
                 throw new ArgumentOutOfRangeException("maxParallelism");
 
             ResetState();
+            AspectData.TaskId = taskId;
+            AspectData.DeploymentId = deploymentId;
 
             var initial = items;
             if (maxParallelism != null)
@@ -86,56 +93,57 @@ namespace Octopus.Shared.Orchestration.Guidance
             }
         }
 
-        bool OnFirstChanceItemFailure(object operation, Guid id, string error, Exception exception)
+        Intervention OnFirstChanceItemFailure(object operation, Guid id, string error, Exception exception)
         {
             GuidedOperationItem failed;
-            if (AspectData.DispatchedItems.TryGetValue(id, out failed))
+            if (!AspectData.DispatchedItems.TryGetValue(id, out failed)) return Intervention.NotHandled;
+
+            AspectData.DispatchedItems.Remove(id);
+
+            // First check if we can decide automatically
+
+            if (failed.PreappliedGuidance.Count != 0)
             {
-                AspectData.DispatchedItems.Remove(id);
-
-                // First check if we can decide automatically
-
-                if (failed.PreappliedGuidance.Count != 0)
-                {
-                    var preapplied = failed.PreappliedGuidance.Dequeue();
-                    return ApplyGuidance(failed, preapplied);
-                }
-
-                // add the item the failure queue
-                AspectData.PendingGuidance.Enqueue(new FailedItem(failed, error, exception));
-
-                if (AspectData.GuidanceRequestId == null)
-                {
-                    var prompt = string.Format("{0} failed; what would you like to do?", failed.Description);
-                    var m = Send(Space.WellKnownActorId(WellKnownActors.Dispatcher),
-                         new FailureGuidanceRequest(failed.InitiatingMessage.Logger, prompt,
-                             new List<FailureGuidance>{ FailureGuidance.Fail, FailureGuidance.Retry, FailureGuidance.Ignore }));
-                    supervised.ExtendCurrentOperation(m.Id);
-                    AspectData.GuidanceRequestId = m.Id;
-                }
-
-                return true;
+                var preapplied = failed.PreappliedGuidance.Dequeue();
+                return ApplyGuidance(failed, preapplied);
             }
 
-            return false;
+            // add the item the failure queue
+            AspectData.PendingGuidance.Enqueue(new FailedItem(failed, error, exception));
+
+            if (AspectData.GuidanceRequestId == null)
+            {
+                var prompt = string.Format("{0} failed; what would you like to do?", failed.Description);
+                var m = Send(Space.WellKnownActorId(WellKnownActors.Dispatcher),
+                    new FailureGuidanceRequest(
+                        failed.InitiatingMessage.Logger,
+                        AspectData.TaskId,
+                        AspectData.DeploymentId,
+                        prompt,
+                        new List<FailureGuidance>{ FailureGuidance.Fail, FailureGuidance.Retry, FailureGuidance.Ignore }));
+                supervised.ExtendCurrentOperation(m.Id);
+                AspectData.GuidanceRequestId = m.Id;
+            }
+
+            return Intervention.Handled;
         }
             
-        bool ApplyGuidance(GuidedOperationItem item, FailureGuidance guidance)
+        Intervention ApplyGuidance(GuidedOperationItem item, FailureGuidance guidance)
         {
             switch (guidance)
             {
                 case FailureGuidance.Fail:
                 {
-                    return false;
+                    return Intervention.NotHandled;
                 }
                 case FailureGuidance.Ignore:
                 {
-                    return true;
+                    return Intervention.Handled;
                 }
                 case FailureGuidance.Retry:
                 {
                     DispatchItem(item);
-                    return true;
+                    return Intervention.Handled;
                 }
                 default:
                     throw new NotSupportedException("Guidance " + guidance + " not supported");
@@ -153,7 +161,7 @@ namespace Octopus.Shared.Orchestration.Guidance
             if (message.Guidance == FailureGuidance.Fail)
             {
                 var firstFailure = AspectData.PendingGuidance.Dequeue();
-                var errorMessage = string.Format("Operation {0} failed{1}", firstFailure.Item.Description, firstFailure.Error != null ? " with error " + firstFailure.Error : "");
+                var errorMessage = string.Format("Operation: {0} failed{1}", firstFailure.Item.Description, firstFailure.Error != null ? " with error: " + firstFailure.Error : "");
                 supervised.Fail(errorMessage, firstFailure.Exception);
                 return Intervention.Handled;
             }

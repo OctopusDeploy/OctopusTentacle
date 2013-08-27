@@ -5,6 +5,6 @@ namespace Octopus.Shared.Orchestration.Guidance
 {
     public interface IGuided
     {
-        void BeginGuidedOperation(object operation, IList<GuidedOperationItem> items, int? maxParallelism = null);
+        void BeginGuidedOperation(string taskId, string deploymentId, object operation, IList<GuidedOperationItem> items, int? maxParallelism = null);
     }
 }

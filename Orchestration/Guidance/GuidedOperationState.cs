@@ -11,6 +11,8 @@ namespace Octopus.Shared.Orchestration.Guidance
         public Queue<FailedItem> PendingGuidance { get; set; }
  
         public Dictionary<Guid, GuidedOperationItem> DispatchedItems { get; set; } 
-        public Queue<GuidedOperationItem> RemainingItems { get; set; } 
+        public Queue<GuidedOperationItem> RemainingItems { get; set; }
+        public string TaskId { get; set; }
+        public string DeploymentId { get; set; }
     }
 }
