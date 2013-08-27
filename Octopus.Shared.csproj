@@ -232,10 +232,6 @@
     <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Integration\Scripting\CreatedArtifact.cs" />
     <Compile Include="Integration\Scripting\ScriptExecutionOutputFilter.cs" />
-    <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
-    <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
-    <Compile Include="Internals\DiffMatchPatch\Operation.cs" />
-    <Compile Include="Internals\DiffMatchPatch\Patch.cs" />
     <Compile Include="Internals\Options\Option.cs" />
     <Compile Include="Internals\Options\OptionAction.cs" />
     <Compile Include="Internals\Options\OptionContext.cs" />
@@ -406,8 +402,6 @@
     <Compile Include="Time\IClock.cs" />
     <Compile Include="ServiceMessages\ServiceMessage.cs" />
     <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
-    <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
-    <Compile Include="Web\WebRoutes.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -424,9 +418,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Internals\Options\_Readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Internals\CertificateGeneration\_Readme.txt" />
