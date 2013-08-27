@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using Autofac;
+using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
 
 namespace Octopus.Shared.Configuration

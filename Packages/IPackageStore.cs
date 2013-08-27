@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Octopus.Platform.Deployment.Packages;
 using Octopus.Shared.Contracts;
 
 namespace Octopus.Shared.Packages

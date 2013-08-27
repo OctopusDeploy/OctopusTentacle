@@ -5,7 +5,6 @@ using System.Xml;
 using Microsoft.Web.Publishing.Tasks;
 using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Activities;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Integration.Transforms
 {

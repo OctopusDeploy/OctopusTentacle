@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Platform.Deployment.Conventions;
 
 namespace Octopus.Shared.Conventions.Implementations
 {

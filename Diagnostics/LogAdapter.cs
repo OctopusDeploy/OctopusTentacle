@@ -2,8 +2,6 @@ using System;
 using NLog;
 using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Activities;
-using Octopus.Shared.Orchestration.Logging;
-using Octopus.Shared.Platform.Logging;
 
 namespace Octopus.Shared.Diagnostics
 {

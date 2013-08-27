@@ -6,6 +6,7 @@ using System.Management.Automation;
 using System.Management.Automation.Host;
 using System.Security;
 using System.Text;
+using Octopus.Platform.Deployment.Conventions;
 
 namespace Octopus.Shared.Integration.Scripting.PowerShellLegacy
 {

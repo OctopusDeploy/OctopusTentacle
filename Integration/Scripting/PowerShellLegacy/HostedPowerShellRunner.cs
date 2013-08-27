@@ -5,6 +5,7 @@ using System.Linq;
 using System.Management.Automation.Host;
 using System.Management.Automation.Runspaces;
 using System.Runtime.Remoting;
+using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Util;
 
 namespace Octopus.Shared.Integration.Scripting.PowerShellLegacy

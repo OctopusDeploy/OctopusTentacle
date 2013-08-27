@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Octopus.Platform.Deployment.Conventions;
 using Octopus.Shared.ServiceMessages;
 
 namespace Octopus.Shared.Integration.Scripting

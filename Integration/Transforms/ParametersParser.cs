@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Integration.Transforms
 {

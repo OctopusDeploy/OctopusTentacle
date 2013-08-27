@@ -5,7 +5,6 @@ using System.IdentityModel.Tokens;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Security
 {

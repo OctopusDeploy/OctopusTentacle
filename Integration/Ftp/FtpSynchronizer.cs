@@ -5,7 +5,6 @@ using System.Threading;
 using EnterpriseDT.Net.Ftp;
 using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Activities;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Integration.Ftp
 {

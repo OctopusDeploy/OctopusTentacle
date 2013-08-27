@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
+using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Security;
 using Octopus.Shared.Communications;
 using Octopus.Shared.Security;

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using Octopus.Platform.Deployment.Conventions;
+using Octopus.Platform.Deployment.Packages;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Variables;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Scripting;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Conventions
 {

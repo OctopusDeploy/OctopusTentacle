@@ -9,7 +9,6 @@ using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Startup
 {

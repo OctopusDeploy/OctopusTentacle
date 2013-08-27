@@ -10,7 +10,6 @@ using Microsoft.WindowsAzure.ServiceManagement;
 using Microsoft.WindowsAzure.StorageClient;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Integration.Azure
 {

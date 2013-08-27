@@ -6,7 +6,6 @@ using System.Runtime.Versioning;
 using NuGet;
 using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Packages
 {

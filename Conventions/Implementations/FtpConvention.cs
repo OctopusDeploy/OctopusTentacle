@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Variables;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Ftp;

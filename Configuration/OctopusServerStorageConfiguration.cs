@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Octopus.Platform.Deployment.Configuration;
 
 namespace Octopus.Shared.Configuration
 {

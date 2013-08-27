@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using Octopus.Platform.Deployment.Configuration;
+using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Variables;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Contracts;

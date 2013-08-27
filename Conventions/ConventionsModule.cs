@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using Octopus.Platform.Deployment.Conventions;
 using Octopus.Shared.Integration.Scripting;
 
 namespace Octopus.Shared.Conventions

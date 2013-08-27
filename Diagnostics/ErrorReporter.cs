@@ -4,10 +4,10 @@ using System.Reflection;
 using System.Security.Principal;
 using Mindscape.Raygun4Net;
 using Mindscape.Raygun4Net.Messages;
+using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Diagnostics
 {

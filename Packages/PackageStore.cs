@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using NuGet;
+using Octopus.Platform.Deployment.Packages;
 using Octopus.Platform.Util;
 using Octopus.Shared.Contracts;
 

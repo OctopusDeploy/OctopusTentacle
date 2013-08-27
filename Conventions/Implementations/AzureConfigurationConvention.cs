@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using Octopus.Platform.Deployment;
+using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Util;
 using Octopus.Platform.Variables;
 using Octopus.Shared.Activities;

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Util;
 using Octopus.Platform.Variables;
 using Octopus.Shared.Contracts;

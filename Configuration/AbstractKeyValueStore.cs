@@ -1,4 +1,5 @@
 using System;
+using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Security;
 using Octopus.Platform.Util;
 

@@ -2,7 +2,6 @@
 using System.Linq;
 using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Integration.Iis
 {

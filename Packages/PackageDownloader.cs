@@ -3,11 +3,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NuGet;
+using Octopus.Platform.Deployment;
+using Octopus.Platform.Deployment.Logging;
+using Octopus.Platform.Deployment.Packages;
 using Octopus.Platform.Packages;
 using Octopus.Platform.Util;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Packages
 {

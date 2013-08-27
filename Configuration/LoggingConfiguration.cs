@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Reflection;
+using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Configuration
 {
