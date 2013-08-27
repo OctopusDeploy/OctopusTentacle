@@ -1,5 +1,6 @@
 ﻿using System;
 using Newtonsoft.Json;
+using Octopus.Platform.Diagnostics;
 using Pipefish;
 
 namespace Octopus.Shared.Platform.Logging

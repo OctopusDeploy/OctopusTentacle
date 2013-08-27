@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Orchestration.Logging;
 
@@ -11,7 +12,7 @@ namespace Octopus.Shared.Integration.Transforms
     /// </summary>
     public static class ParametersParser
     {
-        static readonly ILog Log = Diagnostics.Log.Octopus();
+        static readonly ILog Log = Octopus.Platform.Diagnostics.Log.Octopus();
 
         /// <summary>
         /// Parse string of parameters <paramref name="parametersString"/> separated by semi ';'.

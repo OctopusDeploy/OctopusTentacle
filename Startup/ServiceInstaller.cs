@@ -8,6 +8,7 @@ using System.Security.Principal;
 using System.ServiceProcess;
 using System.Threading;
 using Microsoft.Win32;
+using Octopus.Platform.Util;
 
 namespace Octopus.Shared.Startup
 {

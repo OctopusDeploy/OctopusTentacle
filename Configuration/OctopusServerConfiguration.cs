@@ -1,6 +1,7 @@
 using System;
 using Octopus.Client.Model;
-using Octopus.Shared.Util;
+using Octopus.Platform.Model;
+using Octopus.Platform.Util;
 
 namespace Octopus.Shared.Configuration
 {

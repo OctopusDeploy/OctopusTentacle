@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using NuGet;
+using Octopus.Platform.Util;
 
 namespace Octopus.Shared.Packages
 {

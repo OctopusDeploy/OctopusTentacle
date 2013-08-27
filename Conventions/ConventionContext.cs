@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using Octopus.Platform.Diagnostics;
+using Octopus.Platform.Variables;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Scripting;
 using Octopus.Shared.Orchestration.Logging;

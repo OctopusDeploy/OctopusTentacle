@@ -1,4 +1,5 @@
 using System;
+using Octopus.Platform.Packages;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Orchestration.Logging;
 

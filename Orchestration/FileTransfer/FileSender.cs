@@ -1,10 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Octopus.Platform.Util;
 using Octopus.Shared.Orchestration.Completion;
 using Octopus.Shared.Orchestration.Logging;
 using Octopus.Shared.Platform.FileTransfer;
-using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Toolkit.Supervision;
 

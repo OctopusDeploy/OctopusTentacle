@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Octopus.Platform.Util;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.ServiceMessages;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Integration.Scripting.PowerShell
 {

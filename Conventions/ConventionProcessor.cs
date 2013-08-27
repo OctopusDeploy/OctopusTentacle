@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Octopus.Platform.Diagnostics;
+using Octopus.Platform.Util;
+using Octopus.Platform.Variables;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Orchestration.Logging;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Conventions
 {

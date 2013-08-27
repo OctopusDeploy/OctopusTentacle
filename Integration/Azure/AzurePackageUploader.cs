@@ -8,8 +8,9 @@ using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Management.Model;
 using Microsoft.WindowsAzure.ServiceManagement;
 using Microsoft.WindowsAzure.StorageClient;
+using Octopus.Platform.Diagnostics;
+using Octopus.Platform.Util;
 using Octopus.Shared.Orchestration.Logging;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Integration.Azure
 {

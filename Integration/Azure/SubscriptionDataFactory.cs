@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.WindowsAzure.Management.Model;
+using Octopus.Platform.Variables;
 using Octopus.Shared.Contracts;
 
 namespace Octopus.Shared.Integration.Azure

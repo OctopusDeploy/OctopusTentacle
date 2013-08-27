@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Shared.Util;
+using Octopus.Platform.Util;
 
 namespace Octopus.Shared.Integration.Scripting
 {

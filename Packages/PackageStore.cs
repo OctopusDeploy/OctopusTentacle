@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 using NuGet;
+using Octopus.Platform.Util;
 using Octopus.Shared.Contracts;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Packages
 {

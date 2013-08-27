@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Integration.Ftp

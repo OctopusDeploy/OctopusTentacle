@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Octopus.Platform.Util;
+using Octopus.Platform.Variables;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Iis;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Conventions
 {

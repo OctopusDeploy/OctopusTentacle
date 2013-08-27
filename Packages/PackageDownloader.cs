@@ -3,10 +3,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NuGet;
+using Octopus.Platform.Packages;
+using Octopus.Platform.Util;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Orchestration.Logging;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Packages
 {

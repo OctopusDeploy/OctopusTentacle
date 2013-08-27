@@ -1,6 +1,7 @@
 ﻿using System;
 using System.DirectoryServices;
 using System.Linq;
+using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Integration.Iis

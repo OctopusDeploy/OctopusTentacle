@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Platform.Logging;
 

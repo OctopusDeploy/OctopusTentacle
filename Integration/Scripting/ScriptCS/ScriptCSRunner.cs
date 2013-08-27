@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Octopus.Shared.Util;
+using Octopus.Platform.Util;
 
 namespace Octopus.Shared.Integration.Scripting.ScriptCS
 {

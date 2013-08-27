@@ -4,10 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using Octopus.Platform.Util;
+using Octopus.Platform.Variables;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Azure;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Conventions.Implementations
 {

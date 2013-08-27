@@ -1,5 +1,5 @@
 using System;
-using Octopus.Shared.Util;
+using Octopus.Platform.Util;
 
 namespace Octopus.Shared.Integration.Scripting
 {

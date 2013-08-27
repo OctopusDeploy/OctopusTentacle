@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Octopus.Platform.Diagnostics;
+using Octopus.Platform.Util;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Orchestration.Completion;
-using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Toolkit.Origination;
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using EnterpriseDT.Net.Ftp;
+using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Activities;
 using Octopus.Shared.Orchestration.Logging;
 

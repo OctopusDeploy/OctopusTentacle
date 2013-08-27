@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Microsoft.WindowsAzure.Management.Model;
+using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Orchestration.Logging;
 
 namespace Octopus.Shared.Integration.Azure

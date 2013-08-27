@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Octopus.Platform.Variables;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Platform.Conversations;
 using Octopus.Shared.Platform.Logging;

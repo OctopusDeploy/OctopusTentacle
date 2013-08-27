@@ -1,5 +1,6 @@
 using System;
 using System.ServiceProcess;
+using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Orchestration.Logging;
 

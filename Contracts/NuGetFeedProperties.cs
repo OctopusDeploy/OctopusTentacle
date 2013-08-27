@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Runtime.Serialization;
+using Octopus.Platform.Packages;
 using Octopus.Shared.Packages;
 
 namespace Octopus.Shared.Contracts

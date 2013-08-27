@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Autofac;
+using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Communications;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Orchestration.Logging;

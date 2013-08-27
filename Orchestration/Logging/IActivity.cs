@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Platform.Logging;
 
 namespace Octopus.Shared.Orchestration.Logging

@@ -3,8 +3,9 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Octopus.Platform.Util;
+using Octopus.Platform.Variables;
 using Octopus.Shared.Contracts;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Conventions.Implementations
 {

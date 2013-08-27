@@ -3,7 +3,7 @@ using System.IO;
 using System.IO.Packaging;
 using System.Linq;
 using NuGet;
-using Octopus.Shared.Util;
+using Octopus.Platform.Util;
 
 namespace Octopus.Shared.Packages
 {

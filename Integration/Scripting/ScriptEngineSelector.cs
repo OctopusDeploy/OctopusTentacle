@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Octopus.Platform.Variables;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Scripting.PowerShell;
