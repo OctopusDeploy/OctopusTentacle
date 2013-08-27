@@ -24,7 +24,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn>1998</NoWarn>
-    <UseVSHostingProcess>true</UseVSHostingProcess>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -160,6 +160,11 @@
     <Compile Include="Configuration\XmlSettingsRoot.cs" />
     <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Diagnostics\LogAdapter.cs" />
+    <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
+    <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
+    <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
+    <Compile Include="Internals\DiffMatchPatch\Operation.cs" />
+    <Compile Include="Internals\DiffMatchPatch\Patch.cs" />
     <Compile Include="OctopusFileSystemModule.cs" />
     <Compile Include="Communications\PipefishModule.cs" />
     <Compile Include="Communications\ActivitySpaceStarter.cs" />
@@ -317,7 +322,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Internals\CertificateGeneration\_Readme.txt" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.8\tools\Microsoft.Bcl.Build.targets" />
