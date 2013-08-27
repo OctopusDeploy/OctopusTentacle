@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 
-namespace Octopus.Platform.Internal.DiffMatchPatch
+namespace Octopus.Shared.Internals.DiffMatchPatch
 {
     public class GoogleDiffMatchPatch
     {

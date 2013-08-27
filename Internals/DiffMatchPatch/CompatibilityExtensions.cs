@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Octopus.Platform.Internal.DiffMatchPatch
+namespace Octopus.Shared.Internals.DiffMatchPatch
 {
     static class CompatibilityExtensions
     {

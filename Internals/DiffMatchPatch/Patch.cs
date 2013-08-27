@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Web;
 
-namespace Octopus.Platform.Internal.DiffMatchPatch
+namespace Octopus.Shared.Internals.DiffMatchPatch
 {
     public class Patch
     {

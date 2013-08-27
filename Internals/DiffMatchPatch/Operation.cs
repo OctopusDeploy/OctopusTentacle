@@ -1,6 +1,6 @@
 using System;
 
-namespace Octopus.Platform.Internal.DiffMatchPatch
+namespace Octopus.Shared.Internals.DiffMatchPatch
 {
     public enum Operation
     {
