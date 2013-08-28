@@ -5,7 +5,6 @@ using System.Linq;
 using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Util;
 using Octopus.Platform.Variables;
-using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Scripting;
 
 namespace Octopus.Shared.Conventions.Implementations
@@ -55,7 +54,8 @@ namespace Octopus.Shared.Conventions.Implementations
 
                 if (result.ExitCode != 0)
                 {
-                    throw new ScriptFailureException(string.Format("Script '{0}' returned non-zero exit code: {1}. Deployment terminated.", script, result.ExitCode));
+                    var message = string.Format("Script '{0}' returned non-zero exit code: {1}. Deployment terminated.", script, result.ExitCode);
+                    throw new ScriptFailureException(message);
                 }
             }
         }

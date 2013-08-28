@@ -75,7 +75,15 @@ namespace Octopus.Shared.Conventions
             foreach (var convention in conventionsToRun)
             {
                 var childContext = context.ScopeTo(convention);
-                conventionCallback(convention, childContext);
+                try
+                {
+                    conventionCallback(convention, childContext);
+                }
+                catch (Exception ex)
+                {
+                    childContext.Log.Fatal(ex);
+                    throw;
+                }
             }
         }
 
