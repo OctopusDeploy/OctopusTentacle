@@ -5,7 +5,7 @@ using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
 using Pipefish;
-using Pipefish.Toolkit.Supervision;
+using Pipefish.Supervision;
 
 namespace Octopus.Shared.FileTransfer
 {

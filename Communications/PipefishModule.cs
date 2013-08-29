@@ -16,6 +16,7 @@ using Pipefish.Core;
 using Pipefish.Hosting;
 using Pipefish.Persistence;
 using Pipefish.Persistence.Filesystem;
+using Pipefish.Standard;
 using Pipefish.Transport;
 using Pipefish.Transport.Filesystem;
 using Pipefish.WellKnown.Dispatch;

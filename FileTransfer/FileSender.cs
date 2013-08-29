@@ -5,6 +5,7 @@ using Octopus.Platform.Deployment.Logging;
 using Octopus.Platform.Deployment.Messages.FileTransfer;
 using Octopus.Platform.Util;
 using Pipefish;
+using Pipefish.Messages;
 
 namespace Octopus.Shared.FileTransfer
 {
@@ -83,7 +84,7 @@ namespace Octopus.Shared.FileTransfer
             supervised.Succeed(new FileSentEvent(message.DestinationPath));
         }
 
-        Intervention SendFileFailure(Guid id, string error, Exception exception)
+        Intervention SendFileFailure(Guid id, Error error)
         {
             supervised.Activity.ErrorFormat("Upload of file {0} with hash {1} to {2} failed", Data.LocalFilename, Data.Hash, Data.Destination);
             return Intervention.NotHandled;
