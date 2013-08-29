@@ -161,6 +161,14 @@
     <Compile Include="Configuration\XmlSettingsRoot.cs" />
     <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Diagnostics\LogAdapter.cs" />
+    <Compile Include="FileTransfer\BeginFileTransferCommand.cs" />
+    <Compile Include="FileTransfer\FileReceiveData.cs" />
+    <Compile Include="FileTransfer\FileReceiver.cs" />
+    <Compile Include="FileTransfer\FileSendData.cs" />
+    <Compile Include="FileTransfer\FileSender.cs" />
+    <Compile Include="FileTransfer\FileTransferCompleteEvent.cs" />
+    <Compile Include="FileTransfer\SendNextChunkReply.cs" />
+    <Compile Include="FileTransfer\SendNextChunkRequest.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
     <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
