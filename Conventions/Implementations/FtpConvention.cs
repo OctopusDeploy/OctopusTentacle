@@ -21,16 +21,16 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public void Install(IConventionContext context)
         {
-            if (!context.Variables.GetFlag(SpecialVariables.Step.IsFtpDeployment, false))
+            if (!context.Variables.GetFlag(SpecialVariables.Action.IsFtpDeployment, false))
                 return;
 
-            var host = context.Variables.Get(SpecialVariables.Step.Ftp.Host);
-            var username = context.Variables.Get(SpecialVariables.Step.Ftp.Username);
-            var password = context.Variables.Get(SpecialVariables.Step.Ftp.Password);
-            var useFtps = context.Variables.GetFlag(SpecialVariables.Step.Ftp.UseFtps, false);
-            var root = context.Variables.Get(SpecialVariables.Step.Ftp.RootDirectory);
-            var port = context.Variables.GetInt32(SpecialVariables.Step.Ftp.FtpPort) ?? 0;
-            var deleteFiles = context.Variables.GetFlag(SpecialVariables.Step.Ftp.DeleteDestinationFiles, false);
+            var host = context.Variables.Get(SpecialVariables.Action.Ftp.Host);
+            var username = context.Variables.Get(SpecialVariables.Action.Ftp.Username);
+            var password = context.Variables.Get(SpecialVariables.Action.Ftp.Password);
+            var useFtps = context.Variables.GetFlag(SpecialVariables.Action.Ftp.UseFtps, false);
+            var root = context.Variables.Get(SpecialVariables.Action.Ftp.RootDirectory);
+            var port = context.Variables.GetInt32(SpecialVariables.Action.Ftp.FtpPort) ?? 0;
+            var deleteFiles = context.Variables.GetFlag(SpecialVariables.Action.Ftp.DeleteDestinationFiles, false);
 
             if (host.Contains("/") || host.Contains(":"))
             {

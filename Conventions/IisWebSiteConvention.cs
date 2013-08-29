@@ -29,13 +29,13 @@ namespace Octopus.Shared.Conventions
 
         public void Install(IConventionContext context)
         {
-            if (!context.Variables.GetFlag(SpecialVariables.Step.IsTentacleDeployment, false))
+            if (!context.Variables.GetFlag(SpecialVariables.Action.IsTentacleDeployment, false))
             {
                 // This convention is only run when deploying to a Tentacle
                 return;
             }
 
-            if (!context.Variables.GetFlag(SpecialVariables.Step.Package.UpdateIisWebsite, true))
+            if (!context.Variables.GetFlag(SpecialVariables.Action.Package.UpdateIisWebsite, true))
             {
                 return;
             }
@@ -47,7 +47,7 @@ namespace Octopus.Shared.Conventions
                 return;
             }
 
-            var iisSiteName = context.Variables.Get(SpecialVariables.Step.Package.UpdateIisWebsiteName);
+            var iisSiteName = context.Variables.Get(SpecialVariables.Action.Package.UpdateIisWebsiteName);
             if (string.IsNullOrWhiteSpace(iisSiteName))
             {
                 iisSiteName = context.Package.PackageId;

@@ -30,7 +30,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public void Install(IConventionContext context)
         {
-            if (!context.Variables.GetFlag(SpecialVariables.Step.IsAzureDeployment, false))
+            if (!context.Variables.GetFlag(SpecialVariables.Action.IsAzureDeployment, false))
                 return;
 
             var configurationFilePath = ChooseWhichServiceConfigurationFileToUse(context);
@@ -115,12 +115,12 @@ namespace Octopus.Shared.Conventions.Implementations
 
         void UpdateConfigurationBasedOnCurrentInstanceCount(XContainer localConfigurationFile, string configurationFileName, IConventionContext context)
         {
-            var useInstanceCount = context.Variables.GetFlag(SpecialVariables.Step.Azure.UseCurrentInstanceCount, false);
+            var useInstanceCount = context.Variables.GetFlag(SpecialVariables.Action.Azure.UseCurrentInstanceCount, false);
             if (useInstanceCount == false)
                 return;
 
-            var serviceName = context.Variables.Get(SpecialVariables.Step.Azure.CloudServiceName);
-            var slot = context.Variables.Get(SpecialVariables.Step.Azure.Slot);
+            var serviceName = context.Variables.Get(SpecialVariables.Action.Azure.CloudServiceName);
+            var slot = context.Variables.Get(SpecialVariables.Action.Azure.Slot);
 
             var subscriptionData = SubscriptionDataFactory.CreateFromAzureStep(context.Variables, context.Certificate);
             var remoteConfigurationFile = configurationRetriever.GetCurrentConfiguration(subscriptionData, serviceName, slot);

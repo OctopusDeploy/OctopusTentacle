@@ -26,7 +26,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public void Install(IConventionContext context)
         {
-            if (context.Variables.GetFlag(SpecialVariables.Step.Package.AutomaticallyRunConfigurationTransformationFiles, true) == false)
+            if (context.Variables.GetFlag(SpecialVariables.Action.Package.AutomaticallyRunConfigurationTransformationFiles, true) == false)
             {
                 return;
             }
@@ -45,7 +45,7 @@ namespace Octopus.Shared.Conventions.Implementations
                     ApplyConfigTransforms(config, environment, context, alreadyRun);
                 }
 
-                foreach (var suffix in GetSuffixes(context.Variables.Get(SpecialVariables.Step.Package.AdditionalXmlConfigurationTransforms)))
+                foreach (var suffix in GetSuffixes(context.Variables.Get(SpecialVariables.Action.Package.AdditionalXmlConfigurationTransforms)))
                 {
                     ApplyConfigTransforms(config, suffix, context, alreadyRun);
                 }
@@ -88,9 +88,9 @@ namespace Octopus.Shared.Conventions.Implementations
 
             if (result == TransformResult.Failed || result == TransformResult.SuccessWithErrors)
             {
-                if (!context.Variables.GetFlag(SpecialVariables.Step.Package.IgnoreConfigTranformationErrors, false))
+                if (!context.Variables.GetFlag(SpecialVariables.Action.Package.IgnoreConfigTranformationErrors, false))
                 {
-                    throw new ActivityFailedException("One or more errors were encountered when applying the XML configuration transformation file: " + transformFile + ". View the deployment log for more details, or set the special variable " + SpecialVariables.Step.Package.IgnoreConfigTranformationErrors + " to True to ignore this error.");                
+                    throw new ActivityFailedException("One or more errors were encountered when applying the XML configuration transformation file: " + transformFile + ". View the deployment log for more details, or set the special variable " + SpecialVariables.Action.Package.IgnoreConfigTranformationErrors + " to True to ignore this error.");                
                 }
             }
 
@@ -98,7 +98,7 @@ namespace Octopus.Shared.Conventions.Implementations
             {
                 if (context.Variables.GetFlag(SpecialVariables.TreatWarningsAsErrors, false))
                 {
-                    throw new ActivityFailedException("One or more warnings were encountered when applying the XML configuration transformation file: " + transformFile + ". View the deployment log for more details, or set the special variable " + SpecialVariables.Step.Package.IgnoreConfigTranformationErrors + " to True to ignore this error.");                
+                    throw new ActivityFailedException("One or more warnings were encountered when applying the XML configuration transformation file: " + transformFile + ". View the deployment log for more details, or set the special variable " + SpecialVariables.Action.Package.IgnoreConfigTranformationErrors + " to True to ignore this error.");                
                 }
             }
         }

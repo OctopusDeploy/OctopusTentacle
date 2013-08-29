@@ -12,11 +12,11 @@ namespace Octopus.Shared.Integration.Azure
         {
             var subscription = new SubscriptionData();
             subscription.ServiceEndpoint = "https://management.core.windows.net";
-            subscription.SubscriptionId = variables.Get(SpecialVariables.Step.Azure.SubscriptionId);
+            subscription.SubscriptionId = variables.Get(SpecialVariables.Action.Azure.SubscriptionId);
             subscription.Certificate = certificate;
-            subscription.CurrentStorageAccount = variables.Get(SpecialVariables.Step.Azure.StorageAccountName);
+            subscription.CurrentStorageAccount = variables.Get(SpecialVariables.Action.Azure.StorageAccountName);
             
-            var customEndpoint = variables.Get(SpecialVariables.Step.Azure.Endpoint);
+            var customEndpoint = variables.Get(SpecialVariables.Action.Azure.Endpoint);
             if (!string.IsNullOrWhiteSpace(customEndpoint))
             {
                 subscription.ServiceEndpoint = customEndpoint;

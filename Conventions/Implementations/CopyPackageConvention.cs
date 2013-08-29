@@ -25,26 +25,26 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public void Install(IConventionContext context)
         {
-            if (!context.Variables.GetFlag(SpecialVariables.Step.IsTentacleDeployment, false))
+            if (!context.Variables.GetFlag(SpecialVariables.Action.IsTentacleDeployment, false))
             {
                 // This convention is only run when deploying to a Tentacle
                 return;
             }
 
-            var targetDirectory = context.Variables.Get(SpecialVariables.Step.Package.CustomInstallationDirectory);
+            var targetDirectory = context.Variables.Get(SpecialVariables.Action.Package.CustomInstallationDirectory);
             if (string.IsNullOrWhiteSpace(targetDirectory))
             {
                 context.Log.Verbose("The package has been installed to: " + context.PackageContentsDirectoryPath);
-                context.Log.VerboseFormat("If you would like the package to be installed to an alternative location, please specify the variable '{0}'", SpecialVariables.Step.Package.CustomInstallationDirectory);
+                context.Log.VerboseFormat("If you would like the package to be installed to an alternative location, please specify the variable '{0}'", SpecialVariables.Action.Package.CustomInstallationDirectory);
 
-                context.Variables.Set(SpecialVariables.Step.Package.CustomInstallationDirectory, context.PackageContentsDirectoryPath);
+                context.Variables.Set(SpecialVariables.Action.Package.CustomInstallationDirectory, context.PackageContentsDirectoryPath);
                 return;
             }
 
             targetDirectory = Path.GetFullPath(targetDirectory);
 
             bool purgeFirst = false;
-            var purgeFirstText = context.Variables.Get(SpecialVariables.Step.Package.CustomInstallationDirectoryShouldBePurgedBeforeDeployment);
+            var purgeFirstText = context.Variables.Get(SpecialVariables.Action.Package.CustomInstallationDirectoryShouldBePurgedBeforeDeployment);
             if (!string.IsNullOrWhiteSpace(purgeFirstText))
             {
                 bool.TryParse(purgeFirstText, out purgeFirst);
