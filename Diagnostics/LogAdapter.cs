@@ -1,7 +1,6 @@
 using System;
 using NLog;
 using Octopus.Platform.Diagnostics;
-using Octopus.Shared.Activities;
 
 namespace Octopus.Shared.Diagnostics
 {
@@ -35,6 +34,11 @@ namespace Octopus.Shared.Diagnostics
                 default:
                     return LogLevel.Info;
             }
+        }
+
+        public override void EndOperation()
+        {
+            Verbose("Finished");
         }
 
         public override void UpdateProgress(int progressPercentage, string messageText)

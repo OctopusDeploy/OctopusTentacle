@@ -78,6 +78,7 @@ namespace Octopus.Shared.Conventions
                 try
                 {
                     conventionCallback(convention, childContext);
+                    childContext.Log.EndOperation();
                 }
                 catch (Exception ex)
                 {
