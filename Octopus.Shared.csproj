@@ -89,9 +89,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NuGet.Core.2.7.0\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish, Version=0.1.0.77, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Pipefish, Version=0.1.0.83, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.0.1.0.77\lib\Pipefish.dll</HintPath>
+      <HintPath>..\packages\Pipefish.0.1.0.83\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -161,6 +161,14 @@
     <Compile Include="Configuration\XmlSettingsRoot.cs" />
     <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Diagnostics\LogAdapter.cs" />
+    <Compile Include="FileTransfer\BeginFileTransferCommand.cs" />
+    <Compile Include="FileTransfer\FileReceiveData.cs" />
+    <Compile Include="FileTransfer\FileReceiver.cs" />
+    <Compile Include="FileTransfer\FileSendData.cs" />
+    <Compile Include="FileTransfer\FileSender.cs" />
+    <Compile Include="FileTransfer\FileTransferCompleteEvent.cs" />
+    <Compile Include="FileTransfer\SendNextChunkReply.cs" />
+    <Compile Include="FileTransfer\SendNextChunkRequest.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
     <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />

@@ -1,0 +1,13 @@
+﻿using System;
+
+namespace Octopus.Shared.FileTransfer
+{
+    public class FileSendData
+    {
+        public string LocalFilename { get; set; }
+        public string Hash { get; set; }
+        public long NextChunkIndex { get; set; }
+        public long ExpectedSize { get; set; }
+        public string Destination { get; set; }
+    }
+}

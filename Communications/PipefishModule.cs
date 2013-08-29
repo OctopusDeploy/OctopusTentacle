@@ -8,9 +8,9 @@ using Autofac.Features.Metadata;
 using NuGet;
 using Octopus.Platform.Deployment;
 using Octopus.Platform.Deployment.Configuration;
-using Octopus.Platform.Deployment.Logging;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
+using Octopus.Shared.FileTransfer;
 using Pipefish;
 using Pipefish.Core;
 using Pipefish.Hosting;
@@ -29,7 +29,7 @@ namespace Octopus.Shared.Communications
 
         public PipefishModule(params Assembly[] assemblies)
         {
-            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly, typeof(Activity).Assembly }).ToArray();
+            this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly, typeof(FileSender).Assembly }).ToArray();
         }
 
         protected override void Load(ContainerBuilder builder)
