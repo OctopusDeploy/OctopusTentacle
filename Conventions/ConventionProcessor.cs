@@ -36,7 +36,7 @@ namespace Octopus.Shared.Conventions
                 context.Log.Error(ex, "Error running convetions");
                 context.Log.Error("Running rollback conventions...");
 
-                ex = ex.GetRootError();
+                ex = ex.UnpackFromContainers();
                 context.Variables.Set(SpecialVariables.LastError, ex.ToString());
                 context.Variables.Set(SpecialVariables.LastErrorMessage, ex.Message);
 
