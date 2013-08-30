@@ -25,7 +25,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public void Install(IConventionContext context)
         {
-            if (!context.Variables.GetFlag(SpecialVariables.Step.IsAzureDeployment, false))
+            if (!context.Variables.GetFlag(SpecialVariables.Action.IsAzureDeployment, false))
                 return;
 
             var package = FindPackageToUpload(context);
@@ -34,7 +34,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
             var uri = UploadPackage(context, package);
 
-            context.Variables.Set(SpecialVariables.Step.Azure.UploadedPackageUri, uri.ToString());
+            context.Variables.Set(SpecialVariables.Action.Azure.UploadedPackageUri, uri.ToString());
 
             context.Log.Info("Package uploaded as: " + uri);
         }
@@ -67,7 +67,7 @@ namespace Octopus.Shared.Conventions.Implementations
         {
             context.Log.Info("Uploading package to Azure blob storage: " + packageFilePath);
 
-            var packageVersion = context.Variables.Get(SpecialVariables.Step.Package.NuGetPackageVersion);
+            var packageVersion = context.Variables.Get(SpecialVariables.Action.Package.NuGetPackageVersion);
             var packageHash = Hash(packageFilePath);            
             var fileName = Path.ChangeExtension(Path.GetFileName(packageFilePath), "." + packageVersion + "_" + packageHash + ".cspkg");
             

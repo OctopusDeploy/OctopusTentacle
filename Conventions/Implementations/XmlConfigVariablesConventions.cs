@@ -23,7 +23,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
         public void Install(IConventionContext context)
         {
-            if (context.Variables.GetFlag(SpecialVariables.Step.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings, true) == false)
+            if (context.Variables.GetFlag(SpecialVariables.Action.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings, true) == false)
             {
                 return;
             }
