@@ -1,4 +1,5 @@
 ﻿using System;
+using Autofac.Core.Registration;
 using Autofac.Features.Indexed;
 using Autofac.Features.OwnedInstances;
 using Pipefish.Core;
@@ -18,8 +19,15 @@ namespace Octopus.Shared.Communications
 
         public IActor CreateActorFor(string messageType)
         {
-            // Disposal needs to be accounted for here
-            return actorsCreatedByMessageType[messageType].Invoke().Value;
+            try
+            {
+                // Disposal needs to be accounted for here
+                return actorsCreatedByMessageType[messageType].Invoke().Value;
+            }
+            catch (ComponentNotRegisteredException cex)
+            {                
+                throw new ArgumentException("No actor is registered for creation on " + messageType, cex);
+            }
         }
     }
 }
