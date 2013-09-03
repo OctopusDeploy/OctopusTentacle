@@ -47,6 +47,8 @@ namespace Octopus.Shared.Conventions.Implementations
                     ApplyConfigTransforms(config, suffix, context, alreadyRun);
                 }
             }
+
+            throw new DivideByZeroException("hafsdhfasdl");
         }
 
         IEnumerable<string> GetSuffixes(string suffixes)
