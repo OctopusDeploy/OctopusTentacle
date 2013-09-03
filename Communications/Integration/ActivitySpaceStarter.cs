@@ -1,9 +1,8 @@
 ﻿using System;
 using Octopus.Platform.Diagnostics;
-using Octopus.Shared.Diagnostics;
 using Pipefish.Hosting;
 
-namespace Octopus.Shared.Communications
+namespace Octopus.Shared.Communications.Integration
 {
     public class ActivitySpaceStarter : IActivitySpaceStarter
     {

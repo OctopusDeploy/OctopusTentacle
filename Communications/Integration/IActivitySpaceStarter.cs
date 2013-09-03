@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Communications
+namespace Octopus.Shared.Communications.Integration
 {
     public interface IActivitySpaceStarter
     {

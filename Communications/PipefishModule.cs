@@ -10,6 +10,7 @@ using Octopus.Platform.Deployment;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
+using Octopus.Shared.Communications.Integration;
 using Octopus.Shared.FileTransfer;
 using Pipefish;
 using Pipefish.Core;

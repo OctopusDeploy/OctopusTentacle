@@ -89,9 +89,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NuGet.Core.2.7.0\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish, Version=0.1.0.85, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Pipefish, Version=0.1.0.88, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.0.1.0.85\lib\Pipefish.dll</HintPath>
+      <HintPath>..\packages\Pipefish.0.1.0.88\lib\Pipefish.dll</HintPath>
+    </Reference>
+    <Reference Include="Pipefish.Transport.HttpClient, Version=0.1.0.88, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Pipefish.Transport.HttpClient.0.1.0.88\lib\Pipefish.Transport.HttpClient.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -138,7 +142,10 @@
     <Compile Include="Activities\ActivityStatus.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
-    <Compile Include="Communications\IActivitySpaceStarter.cs" />
+    <Compile Include="Communications\Conversations\ActiveConversation.cs" />
+    <Compile Include="Communications\Conversations\ConversationState.cs" />
+    <Compile Include="Communications\Conversations\ConversationTracker.cs" />
+    <Compile Include="Communications\Integration\IActivitySpaceStarter.cs" />
     <Compile Include="Configuration\AbstractKeyValueStore.cs" />
     <Compile Include="Configuration\CommunicationsConfiguration.cs" />
     <Compile Include="Configuration\ConfigurationModule.cs" />
@@ -176,8 +183,8 @@
     <Compile Include="Internals\DiffMatchPatch\Patch.cs" />
     <Compile Include="OctopusFileSystemModule.cs" />
     <Compile Include="Communications\PipefishModule.cs" />
-    <Compile Include="Communications\ActivitySpaceStarter.cs" />
-    <Compile Include="Communications\AutofacActorFactory.cs" />
+    <Compile Include="Communications\Integration\ActivitySpaceStarter.cs" />
+    <Compile Include="Communications\Integration\AutofacActorFactory.cs" />
     <Compile Include="Conventions\ChildConventionContext.cs" />
     <Compile Include="Diagnostics\ErrorReporter.cs" />
     <Compile Include="Diagnostics\IErrorReporter.cs" />

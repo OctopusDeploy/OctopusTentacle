@@ -5,7 +5,7 @@ using Autofac.Features.OwnedInstances;
 using Pipefish.Core;
 using Pipefish.WellKnown.Dispatch;
 
-namespace Octopus.Shared.Communications
+namespace Octopus.Shared.Communications.Integration
 {
     public class AutofacActorFactory : IActorFactory
     {
