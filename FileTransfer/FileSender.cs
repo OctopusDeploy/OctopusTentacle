@@ -80,7 +80,7 @@ namespace Octopus.Shared.FileTransfer
             var remoteSpace = message.GetMessage().From.Space;
 
             supervised.Activity.UpdateProgressFormat(100, "Uploaded {0}", Data.ExpectedSize.ToFileSizeString());
-            supervised.Activity.InfoFormat("File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
+            supervised.Activity.VerboseFormat("File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
             supervised.Succeed(new FileSentEvent(message.DestinationPath));
         }
 

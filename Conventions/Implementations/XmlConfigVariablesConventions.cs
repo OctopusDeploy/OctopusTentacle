@@ -4,9 +4,9 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Octopus.Platform.Deployment.Conventions;
+using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
 using Octopus.Platform.Variables;
-using Octopus.Shared.Contracts;
 
 namespace Octopus.Shared.Conventions.Implementations
 {
@@ -29,7 +29,7 @@ namespace Octopus.Shared.Conventions.Implementations
             }
 
             var configFiles = FileSystem.EnumerateFilesRecursively(context.PackageContentsDirectoryPath, "*.config");
-            context.Log.Info("Looking for appSettings and connectionStrings in any .config files");
+            context.Log.Verbose("Looking for appSettings and connectionStrings in any .config files");
 
             foreach (var configFile in configFiles)
             {
@@ -65,12 +65,24 @@ namespace Octopus.Shared.Conventions.Implementations
             
             var modified = false;
 
+            var updateMessageLogged = false;
+            Func<ILog> getLog = () =>
+            {
+                if (!updateMessageLogged)
+                {
+                    updateMessageLogged = true;
+                    context.Log.InfoFormat("Updating appSettings and connectionStrings in: {0}", configurationFilePath);
+                }
+
+                return context.Log;
+            };
+
             foreach (var variable in variables.AsList())
             {
                 var changed = 
-                    ReplaceAttributeValues(doc, "//*[local-name()='appSettings']/*[local-name()='add']", "key", variable.Name, "value", variable.Value, context) |
-                    ReplaceAttributeValues(doc, "//*[local-name()='connectionStrings']/*[local-name()='add']", "name", variable.Name, "connectionString", variable.Value, context) |
-                    ReplaceAppSettingsValues(doc, "//*[local-name()='applicationSettings']//*[local-name()='setting']", "name", variable.Name, variable.Value, context);
+                    ReplaceAttributeValues(doc, "//*[local-name()='appSettings']/*[local-name()='add']", "key", variable.Name, "value", variable.Value, getLog) |
+                    ReplaceAttributeValues(doc, "//*[local-name()='connectionStrings']/*[local-name()='add']", "name", variable.Name, "connectionString", variable.Value, getLog) |
+                    ReplaceAppSettingsValues(doc, "//*[local-name()='applicationSettings']//*[local-name()='setting']", "name", variable.Name, variable.Value, getLog);
 
                 if (changed) modified = true;
             }
@@ -85,7 +97,7 @@ namespace Octopus.Shared.Conventions.Implementations
             }
         }
 
-        bool ReplaceAttributeValues(XDocument document, string xpath, string keyAttributeName, string keyAttributeValue, string valueAttributeName, string value, IConventionContext context)
+        bool ReplaceAttributeValues(XDocument document, string xpath, string keyAttributeName, string keyAttributeValue, string valueAttributeName, string value, Func<ILog> getLog)
         {
             var settings =
                 from element in document.XPathSelectElements(xpath)
@@ -101,7 +113,7 @@ namespace Octopus.Shared.Conventions.Implementations
             foreach (var setting in settings)
             {
                 modified = true;
-                context.Log.VerboseFormat("Setting {0}[@{1}='{2}'] to '{3}'", xpath, keyAttributeName, keyAttributeValue, value);
+                getLog().InfoFormat("Setting {0}[@{1}='{2}'] to '{3}'", xpath, keyAttributeName, keyAttributeValue, value);
 
                 var valueAttribute = setting.Attribute(valueAttributeName);
                 if (valueAttribute == null)
@@ -117,7 +129,7 @@ namespace Octopus.Shared.Conventions.Implementations
             return modified;
         }
 
-        bool ReplaceAppSettingsValues(XDocument document, string xpath, string keyAttributeName, string keyAttributeValue, string value, IConventionContext context)
+        bool ReplaceAppSettingsValues(XDocument document, string xpath, string keyAttributeName, string keyAttributeValue, string value, Func<ILog> getLog)
         {
             var settings =
                 from element in document.XPathSelectElements(xpath)
@@ -133,7 +145,7 @@ namespace Octopus.Shared.Conventions.Implementations
             foreach (var setting in settings)
             {
                 modified = true;
-                context.Log.VerboseFormat("Setting {0}[@{1}='{2}'] to '{3}'", xpath, keyAttributeName, keyAttributeValue, value);
+                getLog().InfoFormat("Setting {0}[@{1}='{2}'] to '{3}'", xpath, keyAttributeName, keyAttributeValue, value);
 
                 var valueElement = setting.Elements().FirstOrDefault(e => e.Name.LocalName == "value");
                 if (valueElement == null)

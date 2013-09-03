@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,8 +6,6 @@ using Octopus.Platform.Deployment;
 using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Util;
 using Octopus.Platform.Variables;
-using Octopus.Shared.Activities;
-using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Transforms;
 
 namespace Octopus.Shared.Conventions.Implementations
@@ -31,7 +28,7 @@ namespace Octopus.Shared.Conventions.Implementations
                 return;
             }
 
-            context.Log.InfoFormat("Looking for any configuration transformation files");
+            context.Log.Verbose("Looking for any configuration transformation files");
             var configs = FileSystem.EnumerateFilesRecursively(context.PackageContentsDirectoryPath, "*.config");
             var environment = context.Variables.Get(SpecialVariables.Environment.Name);
 
@@ -84,7 +81,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
             var task = new TransformationTask(sourceFile, transformFile, context.Log);
             task.SetParameters(new Dictionary<string, string>());
-            var result = task.Execute(sourceFile, false);
+            var result = task.Execute(sourceFile);
 
             if (result == TransformResult.Failed || result == TransformResult.SuccessWithErrors)
             {

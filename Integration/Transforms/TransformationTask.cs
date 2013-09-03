@@ -66,13 +66,13 @@ namespace Octopus.Shared.Integration.Transforms
             if (string.IsNullOrWhiteSpace(destinationFilePath))
                 throw new ArgumentException("Destination file can't be empty.", "destinationFilePath");
 
-            log.VerboseFormat("Start tranformation to '{0}'.", destinationFilePath);
+            log.InfoFormat("Transforming '{0}'.", destinationFilePath);
 
             if (string.IsNullOrWhiteSpace(SourceFilePath) || !File.Exists(SourceFilePath))
                 throw new FileNotFoundException("Can't find source file.", SourceFilePath);
 
             if (string.IsNullOrWhiteSpace(TransformFile) || !File.Exists(TransformFile))
-                throw new FileNotFoundException("Can't find transform  file.", TransformFile);
+                throw new FileNotFoundException("Can't find transform file.", TransformFile);
 
             log.VerboseFormat("Source file: '{0}'.", SourceFilePath);
             log.VerboseFormat("Transform  file: '{0}'.", TransformFile);
