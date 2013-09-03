@@ -35,7 +35,9 @@ namespace Octopus.Shared.Communications.Conversations
 
         public void OnReceiving(IActor actor, Message message)
         {
-            UpdateConversations(message.From.Space, message);
+            ConversationState state;
+            if (conversations.TryGetValue(message.From.Space, out state))
+                state.TryEnd(message);
         }
 
         public void OnReceived(IActor actor, Message message, Exception exceptionIfThrown)
@@ -48,14 +50,16 @@ namespace Octopus.Shared.Communications.Conversations
 
         public void OnSent(IActor actor, Message message)
         {
-            UpdateConversations(message.To.Space, message);
+            ConversationState state;
+            if (conversations.TryGetValue(message.To.Space, out state))
+                state.TryBegin(message);
         }
 
-        private void UpdateConversations(string remoteSpace, Message message)
+        public void OnSendRevoked(IActor actor, Message message)
         {
             ConversationState state;
-            if (conversations.TryGetValue(remoteSpace, out state))
-                state.UpdateConversation(message);
+            if (conversations.TryGetValue(message.To.Space, out state))
+                state.TryRevoke(message);
         }
     }
 }

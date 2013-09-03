@@ -28,23 +28,7 @@ namespace Octopus.Shared.Communications.Conversations
             this.conversationPollingSequence = conversationPollingSequence.ToList();
         }
 
-        public void UpdateConversation(Message message)
-        {
-            if (message.To.Space == remoteSpace)
-            {
-                TryBegin(message);
-            }
-            else if (message.From.Space == remoteSpace)
-            {
-                TryEnd(message);
-            }
-            else
-            {
-                throw new InvalidOperationException("Message doesn't relate to this tracked space");
-            }
-        }
-
-        void TryBegin(Message message)
+        public void TryBegin(Message message)
         {
             var bodyType = message.Body.GetType();
 
@@ -74,22 +58,32 @@ namespace Octopus.Shared.Communications.Conversations
             }
         }
 
-        void TryEnd(Message message)
+        public void TryEnd(Message message)
+        {
+            var inReply = message.TryGetInReplyTo();
+            if (!inReply.HasValue)
+                return;
+
+            TryEnd(inReply.Value);
+        }
+
+        public void TryRevoke(Message message)
+        {
+            TryEnd(message.Id);
+        }
+
+        void TryEnd(Guid initiating)
         {
             lock (sync)
             {
-                if (conversations.Any())
+                ActiveConversation ended;
+                if (conversations.TryGetValue(initiating, out ended))
                 {
-                    var inReply = message.TryGetInReplyTo();
-                    ActiveConversation ended;
-                    if (inReply.HasValue && conversations.TryGetValue(inReply.Value, out ended))
+                    conversations.Remove(ended.InitiatingMessageId);
+                    if (conversations.Count == 0)
                     {
-                        conversations.Remove(ended.InitiatingMessageId);
-                        if (conversations.Count == 0)
-                        {
-                            Log.Octopus().Verbose("The conversation with " + remoteSpace + " has ended");
-                            connection.SetPollingSequence(preConversationPollingSequence);
-                        }
+                        Log.Octopus().Verbose("The conversation with " + remoteSpace + " has ended");
+                        connection.SetPollingSequence(preConversationPollingSequence);
                     }
                 }
             }
