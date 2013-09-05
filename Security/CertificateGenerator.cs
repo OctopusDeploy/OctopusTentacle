@@ -26,7 +26,7 @@ namespace Octopus.Shared.Security
                     new SelfSignedCertProperties
                         {
                             IsPrivateKeyExportable = exportable,
-                            KeyBitLength = 512,
+                            KeyBitLength = 2048,
                             Name = new X500DistinguishedName(fullName),
                             ValidFrom = DateTime.Today.AddDays(-1),
                             ValidTo = DateTime.Today.AddYears(100)
