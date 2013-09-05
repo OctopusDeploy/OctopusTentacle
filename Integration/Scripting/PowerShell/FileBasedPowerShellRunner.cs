@@ -140,7 +140,7 @@ function Set-OctopusVariable([string]$name, [string]$value)
     $name = Encode-ServiceMessageValue($name)
     $value = Encode-ServiceMessageValue($value)
 
-	Write-Output ""##octopus[setVariable name='$name' value='$value']""
+	Write-Host ""##octopus[setVariable name='$name' value='$value']""
 }
 
 function New-OctopusArtifact([string]$path) 

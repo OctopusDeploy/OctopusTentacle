@@ -88,7 +88,7 @@ namespace Octopus.Shared.ServiceMessages
 
         void ProcessMessage(string message)
         {
-            message = message.Trim().TrimStart('[');
+            message = message.Trim().TrimStart('[').Replace("\r", "").Replace("\n", "");
 
             var element = XElement.Parse("<" + message + "/>");
             var name = element.Name.LocalName;
