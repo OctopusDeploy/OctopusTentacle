@@ -158,5 +158,20 @@ namespace Octopus.Shared.Configuration
         {
             settings.Save();
         }
+
+        public OctopusServerConfiguration LastReceivedHandshake
+        {
+            get
+            {
+                var setting = settings.Get("Tentacle.Communication.LastReceivedHandshake");
+                if (string.IsNullOrWhiteSpace(setting)) return null;
+                return JsonConvert.DeserializeObject<OctopusServerConfiguration>(setting);
+            }
+            set
+            {
+                var setting = JsonConvert.SerializeObject(value);
+                settings.Set("Tentacle.Communication.LastReceivedHandshake", setting);
+            }
+        }
     }
 }

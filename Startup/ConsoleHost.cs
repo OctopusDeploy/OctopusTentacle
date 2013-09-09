@@ -1,6 +1,5 @@
 using System;
 using Octopus.Platform.Diagnostics;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup
 {
@@ -36,7 +35,7 @@ namespace Octopus.Shared.Startup
             {
                 Console.ForegroundColor = ConsoleColor.Magenta;
                 Console.WriteLine(new string('-', 79));
-                Console.WriteLine("A fatal exception occurred:");
+                Console.WriteLine("A fatal exception occurred: " + ex.Message);
                 Console.WriteLine(new string('-', 79));
                 Console.ResetColor();
                 log.Fatal(ex);

@@ -95,7 +95,7 @@
     </Reference>
     <Reference Include="Pipefish.Transport.SecureTcp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.Transport.SecureTcp.0.1.0.109\lib\Pipefish.Transport.SecureTcp.dll</HintPath>
+      <HintPath>..\packages\Pipefish.Transport.SecureTcp.0.1.0.112\lib\Pipefish.Transport.SecureTcp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -145,6 +145,10 @@
     <Compile Include="Communications\Conversations\ActiveConversation.cs" />
     <Compile Include="Communications\Conversations\ConversationState.cs" />
     <Compile Include="Communications\Conversations\ConversationTracker.cs" />
+    <Compile Include="Communications\Handshaking\HandshakeAsServerModule.cs" />
+    <Compile Include="Communications\Handshaking\HandshakeRequest.cs" />
+    <Compile Include="Communications\Handshaking\HandshakeResponse.cs" />
+    <Compile Include="Communications\Handshaking\IHandshakeReceiver.cs" />
     <Compile Include="Communications\Integration\IActivitySpaceStarter.cs" />
     <Compile Include="Configuration\AbstractKeyValueStore.cs" />
     <Compile Include="Configuration\CommunicationsConfiguration.cs" />
@@ -341,6 +345,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.10\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.10\tools\Microsoft.Bcl.Build.targets')" />
