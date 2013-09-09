@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Pipefish.Core;
 using Pipefish.Hosting;
-using Pipefish.Transport.HttpClient;
+using Pipefish.Transport.SecureTcp.MessageExchange.Client;
 
 namespace Octopus.Shared.Communications.Conversations
 {

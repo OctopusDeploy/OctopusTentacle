@@ -1,11 +1,10 @@
 using System;
 using System.IO;
 using Octopus.Platform.Deployment.Configuration;
-using Octopus.Shared.Communications;
 
 namespace Octopus.Shared.Configuration
 {
-    public class CommunicationsConfiguration : ICommunicationsConfiguration
+    public class CommunicationsConfiguration : ICommunicationsConfiguration, ITcpServerCommunicationsConfiguration
     {
         readonly IKeyValueStore settings;
         readonly IHomeConfiguration homeConfiguration;
@@ -53,6 +52,12 @@ namespace Octopus.Shared.Configuration
                 Directory.CreateDirectory(path);
 
             return path;
+        }
+
+        public int ServicesPort
+        {
+            get { return settings.Get("Octopus.Communications.ServicesPort", 10943); }
+            set { settings.Set("Octopus.Communications.ServicesPort", value); }
         }
     }
 }

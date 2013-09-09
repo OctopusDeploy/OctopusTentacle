@@ -1,10 +1,7 @@
 using System;
-using System.IO;
 using Autofac;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
-using Octopus.Shared.Communications;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {
@@ -30,7 +27,7 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().As<IStartable>().SingleInstance();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>().As<IStartable>().SingleInstance();
             builder.RegisterType<TentacleConfiguration>().As<ITentacleConfiguration>().SingleInstance();
-            builder.RegisterType<CommunicationsConfiguration>().As<ICommunicationsConfiguration>().SingleInstance();
+            builder.RegisterType<CommunicationsConfiguration>().As<ICommunicationsConfiguration, ITcpServerCommunicationsConfiguration>().SingleInstance();
             builder.RegisterType<FileStorageConfiguration>().As<IFileStorageConfiguration>().SingleInstance();
         }
 

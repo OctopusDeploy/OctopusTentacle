@@ -43,7 +43,7 @@ namespace Octopus.Shared.Diagnostics
 
         public override void UpdateProgress(int progressPercentage, string messageText)
         {
-            VerboseFormat("{0} ({1}%", messageText, progressPercentage);
+            VerboseFormat("{0} ({1}%)", messageText, progressPercentage);
         }
 
         public override bool IsEnabled(TraceCategory category)
