@@ -37,9 +37,10 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-        public void AddTrustedOctopusServer(OctopusServerConfiguration machine)
+        public bool AddTrustedOctopusServer(OctopusServerConfiguration machine)
         {
             if (machine == null) throw new ArgumentNullException("machine");
+            var result = false;
 
             if (!string.IsNullOrWhiteSpace(machine.Squid))
                 machine.Squid = NormalizeSquid(machine.Squid);
@@ -49,7 +50,10 @@ namespace Octopus.Shared.Configuration
             var existing = all.SingleOrDefault(m => m.Address == machine.Address || m.Squid != null && machine.Squid != null && m.Squid == machine.Squid);
 
             if (existing != null)
+            {
+                result = true;
                 all.Remove(existing);
+            }
 
             foreach (var duplicate in all.Where(m => m.Address == machine.Address && m.Squid == machine.Squid && m.Thumbprint == machine.Thumbprint))
             {
@@ -58,6 +62,8 @@ namespace Octopus.Shared.Configuration
 
             all.Add(machine);
             TrustedOctopusServers = all;
+
+            return result;
         }
 
         static string NormalizeSquid(string squid)
