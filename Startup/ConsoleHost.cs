@@ -35,7 +35,8 @@ namespace Octopus.Shared.Startup
             {
                 Console.ForegroundColor = ConsoleColor.Magenta;
                 Console.WriteLine(new string('-', 79));
-                Console.WriteLine("A fatal exception occurred: " + ex.Message);
+                Console.WriteLine("A fatal exception occurred");
+                Console.WriteLine(ex);
                 Console.WriteLine(new string('-', 79));
                 Console.ResetColor();
                 log.Fatal(ex);
