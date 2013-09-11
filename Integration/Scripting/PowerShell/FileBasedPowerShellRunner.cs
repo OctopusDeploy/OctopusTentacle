@@ -35,7 +35,7 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
                 commandArguments.Append("-NonInteractive ");
                 commandArguments.Append("-NoLogo ");
                 commandArguments.Append("-ExecutionPolicy Unrestricted ");
-                commandArguments.AppendFormat("-File \"{0}\"", bootstrapFile);
+                commandArguments.AppendFormat("-Command \"& {{. '{0}'; if ((test-path variable:global:lastexitcode)) {{ exit $LastExitCode }}}}\"", bootstrapFile);
 
                 var filter = new ScriptExecutionOutputFilter(arguments.OutputStream);
 
