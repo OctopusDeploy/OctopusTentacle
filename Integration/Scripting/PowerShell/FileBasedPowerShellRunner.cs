@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Util;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.ServiceMessages;
 
 namespace Octopus.Shared.Integration.Scripting.PowerShell
 {
@@ -35,7 +32,8 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
                 commandArguments.Append("-NonInteractive ");
                 commandArguments.Append("-NoLogo ");
                 commandArguments.Append("-ExecutionPolicy Unrestricted ");
-                commandArguments.AppendFormat("-Command \"& {{. '{0}'; if ((test-path variable:global:lastexitcode)) {{ exit $LastExitCode }}}}\"", bootstrapFile);
+                var escapedBootstrapFile = bootstrapFile.Replace("'", "''");
+                commandArguments.AppendFormat("-Command \"& {{. '{0}'; if ((test-path variable:global:lastexitcode)) {{ exit $LastExitCode }}}}\"", escapedBootstrapFile);
 
                 var filter = new ScriptExecutionOutputFilter(arguments.OutputStream);
 
