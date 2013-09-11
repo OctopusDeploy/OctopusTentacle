@@ -37,7 +37,7 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-        public bool AddTrustedOctopusServer(OctopusServerConfiguration machine)
+        public bool AddOrUpdateTrustedOctopusServer(OctopusServerConfiguration machine)
         {
             if (machine == null) throw new ArgumentNullException("machine");
             var result = false;
