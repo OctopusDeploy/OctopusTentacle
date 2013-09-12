@@ -17,18 +17,25 @@ namespace Octopus.Shared.Security.MasterKey
 
         public static SymmetricAlgorithm CreateAlgorithm(byte[] key)
         {
-            var algorithm = CryptoConfig.AllowOnlyFipsAlgorithms
-                    ? (Aes)new AesCryptoServiceProvider()
-                    : new AesManaged();
-
-            algorithm.Padding = PaddingMode.PKCS7;
-            algorithm.KeySize = KeySizeBits;
-            algorithm.Key = key;
-            algorithm.BlockSize = BlockSizeBits;
-            algorithm.Mode = CipherMode.CBC;
-            algorithm.IV = key;
+            var algorithm = new AesCryptoServiceProvider
+            {
+                Padding = PaddingMode.PKCS7, 
+                KeySize = KeySizeBits, 
+                Key = key, 
+                BlockSize = BlockSizeBits, 
+                Mode = CipherMode.CBC,
+                IV = new byte[BlockSizeBits/8]
+            };
 
             return algorithm;
+        }
+
+        public static Type Algorithm
+        {
+            get
+            {
+                return typeof(AesCryptoServiceProvider);
+            }
         }
     }
 }
