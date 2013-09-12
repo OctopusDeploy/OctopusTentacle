@@ -89,9 +89,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NuGet.Core.2.7.0\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish, Version=0.1.0.102, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Pipefish, Version=0.1.0.118, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.0.1.0.102\lib\Pipefish.dll</HintPath>
+      <HintPath>..\packages\Pipefish.0.1.0.118\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="Pipefish.Transport.SecureTcp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -117,6 +117,7 @@
     </Reference>
     <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.ServiceProcess" />
@@ -289,6 +290,7 @@
     <Compile Include="Security\CertificateValidator.cs" />
     <Compile Include="Security\ICertificateGenerator.cs" />
     <Compile Include="Security\CertificatesModule.cs" />
+    <Compile Include="Security\MasterKey\MasterKeyEncryption.cs" />
     <Compile Include="ServiceMessages\ParseServiceMessageResult.cs" />
     <Compile Include="Integration\Scripting\ScriptServiceMessageNames.cs" />
     <Compile Include="Startup\AutofacExtensions.cs" />

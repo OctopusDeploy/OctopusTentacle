@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using Octopus.Platform.Deployment.Configuration;
 
 namespace Octopus.Shared.Configuration
@@ -50,5 +52,40 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Octopus.Storage.EmbeddedDatabaseListenHostname", value); }
         }
 
+        static readonly byte[] MasterKeyEntropy = Encoding.UTF8.GetBytes("Octopus.Storage.MasterKey");
+
+        public byte[] MasterKey
+        {
+            get
+            {
+                var value = settings.Get("Octopus.Storage.MasterKey");
+                if (string.IsNullOrWhiteSpace(value))
+                    return null;
+                
+                var p = Convert.FromBase64String(value.Trim());
+                return ProtectedData.Unprotect(p, MasterKeyEntropy, DataProtectionScope.LocalMachine);
+            }
+            set
+            {
+                string encoded = null;
+                if (value != null)
+                {
+                    var p = ProtectedData.Protect(value, MasterKeyEntropy, DataProtectionScope.LocalMachine);
+                    encoded = Convert.ToBase64String(p);
+                }
+                settings.Set("Octopus.Storage.MasterKey", encoded);
+            }
+        }
+
+        public bool IsMasterKeyBackedUp
+        {
+            get { return settings.Get("Octopus.Storage.IsMasterKeyBackedUp", false); }
+            set { settings.Set("Octopus.Storage.IsMasterKeyBackedUp", value); }
+        }
+
+        public void Save()
+        {
+            settings.Save();
+        }
     }
 }
