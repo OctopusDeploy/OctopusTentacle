@@ -1,6 +1,7 @@
 using System;
 using NLog;
 using Octopus.Platform.Diagnostics;
+using Octopus.Platform.Security.Masking;
 
 namespace Octopus.Shared.Diagnostics
 {
@@ -53,7 +54,7 @@ namespace Octopus.Shared.Diagnostics
 
         protected override void WriteEvent(TraceCategory category, Exception error, string messageText)
         {
-            logger.WriteEvent(TraceCategoryToLogLevel(category), error, messageText);
+            logger.WriteEvent(TraceCategoryToLogLevel(category), MaskingContext.ApplyTo(error), MaskingContext.ApplyTo(messageText));
         }
 
         public override ILog BeginOperation(string messageText)
