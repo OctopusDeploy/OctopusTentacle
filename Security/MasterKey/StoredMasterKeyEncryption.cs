@@ -3,7 +3,6 @@ using System.IO;
 using System.Security.Cryptography;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Model;
-using Octopus.Platform.Security;
 using Octopus.Platform.Security.MasterKey;
 
 namespace Octopus.Shared.Security.MasterKey
