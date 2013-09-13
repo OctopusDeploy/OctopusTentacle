@@ -291,6 +291,7 @@
     <Compile Include="Security\ICertificateGenerator.cs" />
     <Compile Include="Security\CertificatesModule.cs" />
     <Compile Include="Security\MasterKey\MasterKeyEncryption.cs" />
+    <Compile Include="Security\MasterKey\StoredMasterKeyEncryption.cs" />
     <Compile Include="ServiceMessages\ParseServiceMessageResult.cs" />
     <Compile Include="Integration\Scripting\ScriptServiceMessageNames.cs" />
     <Compile Include="Startup\AutofacExtensions.cs" />

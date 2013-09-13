@@ -1,5 +1,6 @@
 using System;
 using Octopus.Platform.Deployment.Configuration;
+using Octopus.Platform.Model;
 using Octopus.Platform.Security;
 using Octopus.Platform.Util;
 
@@ -44,8 +45,8 @@ namespace Octopus.Shared.Configuration
                 text = Algorithm.Encrypt(string.Empty).ToBase64();
             }
 
-            var encrypted = EncryptResult.FromBase64(text);
-            var decrypted = Algorithm.Decrypt(encrypted.CipherText, encrypted.Salt);
+            var encrypted = EncryptedBytes.FromBase64(text);
+            var decrypted = Algorithm.Decrypt(encrypted.Ciphertext, encrypted.Salt);
             return decrypted;
         }
 

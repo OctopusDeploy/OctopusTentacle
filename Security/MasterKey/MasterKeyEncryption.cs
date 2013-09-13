@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace Octopus.Shared.Security.MasterKey
 {
-    public static class MasterKeyEncryption
+    public class MasterKeyEncryption
     {
         const int KeySizeBits = 128, BlockSizeBits = 128;
 
@@ -15,8 +15,11 @@ namespace Octopus.Shared.Security.MasterKey
             return key;
         }
 
-        public static SymmetricAlgorithm CreateAlgorithm(byte[] key)
-        {
+        public static SymmetricAlgorithm CreateAlgorithm(byte[] key, bool generateSalt = false)
+        { 
+            // If generateSalt is true, we'll let the algorithm generate the salt itself,
+            // since that will use the underlying provider.
+
             var algorithm = new AesCryptoServiceProvider
             {
                 Padding = PaddingMode.PKCS7, 
@@ -24,13 +27,15 @@ namespace Octopus.Shared.Security.MasterKey
                 Key = key, 
                 BlockSize = BlockSizeBits, 
                 Mode = CipherMode.CBC,
-                IV = new byte[BlockSizeBits/8]
             };
+
+            if (!generateSalt)
+                algorithm.IV = new byte[BlockSizeBits / 8];
 
             return algorithm;
         }
 
-        public static Type Algorithm
+        public static Type AlgorithmType
         {
             get
             {
