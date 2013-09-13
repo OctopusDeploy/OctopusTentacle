@@ -5,7 +5,7 @@ namespace Octopus.Shared.Security.MasterKey
 {
     public class MasterKeyEncryption
     {
-        const int KeySizeBits = 128, BlockSizeBits = 128;
+        public const int KeySizeBits = 128, BlockSizeBits = 128, IVSizeBits = BlockSizeBits;
 
         public static byte[] GenerateKey()
         {
