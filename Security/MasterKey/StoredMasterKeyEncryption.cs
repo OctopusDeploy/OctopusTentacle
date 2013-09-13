@@ -27,9 +27,12 @@ namespace Octopus.Shared.Security.MasterKey
 
                 using (var encryptor = algorithm.CreateEncryptor())
                 using (var memoryStream = new MemoryStream())
-                using (var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
                 {
-                    cryptoStream.Write(plaintext, 0, plaintext.Length);
+                    using (var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
+                    {
+                        cryptoStream.Write(plaintext, 0, plaintext.Length);
+                    }
+
                     return new EncryptedBytes(memoryStream.ToArray(), salt);
                 }
             }
