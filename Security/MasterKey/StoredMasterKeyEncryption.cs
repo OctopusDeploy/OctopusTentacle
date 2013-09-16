@@ -17,99 +17,31 @@ namespace Octopus.Shared.Security.MasterKey
             this.storageConfiguration = storageConfiguration;
         }
 
+        byte[] MasterKey { get { return storageConfiguration.MasterKey; } }
+
         public EncryptedBytes ToCiphertext(byte[] plaintext)
         {
-            if (plaintext == null) throw new ArgumentNullException("plaintext");
-
-            using (var algorithm = MasterKeyEncryption.CreateAlgorithm(storageConfiguration.MasterKey, generateSalt: true))
-            {
-                var salt = algorithm.IV;
-
-                using (var encryptor = algorithm.CreateEncryptor())
-                using (var memoryStream = new MemoryStream())
-                {
-                    using (var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
-                    {
-                        cryptoStream.Write(plaintext, 0, plaintext.Length);
-                    }
-
-                    return new EncryptedBytes(memoryStream.ToArray(), salt);
-                }
-            }
+            return MasterKeyEncryption.ToCiphertext(MasterKey, plaintext);
         }
 
         public byte[] ToPlaintext(EncryptedBytes encrypted)
         {
-            if (encrypted == null) throw new ArgumentNullException("encrypted");
-
-            using (var algorithm = MasterKeyEncryption.CreateAlgorithm(storageConfiguration.MasterKey))
-            {
-                algorithm.IV = encrypted.Salt;
-
-                using (var memoryStream = new MemoryStream())
-                using (var decryptor = algorithm.CreateDecryptor())
-                {
-                    using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Write))
-                    {
-                        cryptoStream.Write(encrypted.Ciphertext, 0, encrypted.Ciphertext.Length);
-                    }
-
-                    return memoryStream.ToArray();
-                }
-            }
+            return MasterKeyEncryption.ToPlaintext(MasterKey, encrypted);
         }
 
         public Stream ReadAsCiphertext(Stream plaintext)
         {
-            if (plaintext == null) throw new ArgumentNullException("plaintext");
-
-            // This can be done lazily by creating a "salted stream" class that prepends the salt, but
-            // for now we'll buffer it.
-
-            using (var algorithm = MasterKeyEncryption.CreateAlgorithm(storageConfiguration.MasterKey, generateSalt: true))
-            {
-                var salt = algorithm.IV;
-
-                var result = new MemoryStream();
-                result.Write(salt, 0, salt.Length);
-
-                using (var encryptor = algorithm.CreateEncryptor())
-                {
-                    using (var cryptoStream = new CryptoStream(plaintext, encryptor, CryptoStreamMode.Read))
-                        cryptoStream.CopyTo(result);
-
-                    result.Position = 0;
-                    return result;
-                }
-            }
+            return MasterKeyEncryption.ReadAsCiphertext(MasterKey, plaintext);
         }
 
         public Stream ReadAsPlaintext(Stream ciphertext)
         {
-            if (ciphertext == null) throw new ArgumentNullException("ciphertext");
-
-            var salt = new byte[MasterKeyEncryption.IVSizeBits / 8];
-            var read = ciphertext.Read(salt, 0, salt.Length);
-            if (read != MasterKeyEncryption.IVSizeBits / 8)
-                throw new InvalidOperationException("The ciphertext stream does not contain a salt value");
-
-            var algorithm = MasterKeyEncryption.CreateAlgorithm(storageConfiguration.MasterKey);
-            algorithm.IV = salt;
-
-            var decryptor = algorithm.CreateDecryptor(); // Let this get GC'd
-            return new StreamDisposalChain(new CryptoStream(ciphertext, decryptor, CryptoStreamMode.Read), decryptor, algorithm);
+            return MasterKeyEncryption.ReadAsPlaintext(MasterKey, ciphertext);
         }
 
         public Stream WriteCiphertextTo(Stream stream)
         {
-            if (stream == null) throw new ArgumentNullException("stream");
-
-            var algorithm = MasterKeyEncryption.CreateAlgorithm(storageConfiguration.MasterKey, generateSalt: true);
-            var salt = algorithm.IV;
-            stream.Write(salt, 0, salt.Length);
-
-            var encryptor = algorithm.CreateEncryptor();
-            return new StreamDisposalChain(new CryptoStream(stream, encryptor, CryptoStreamMode.Write), encryptor, algorithm);
+            return MasterKeyEncryption.WriteCiphertextTo(MasterKey, stream);
         }
     }
 }
