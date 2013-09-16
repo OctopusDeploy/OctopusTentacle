@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Model;
 using Octopus.Platform.Security.MasterKey;
+using Octopus.Shared.Bcl.IO;
 
 namespace Octopus.Shared.Security.MasterKey
 {
@@ -92,27 +93,23 @@ namespace Octopus.Shared.Security.MasterKey
             if (read != MasterKeyEncryption.IVSizeBits / 8)
                 throw new InvalidOperationException("The ciphertext stream does not contain a salt value");
 
-            using (var algorithm = MasterKeyEncryption.CreateAlgorithm(storageConfiguration.MasterKey))
-            {
-                algorithm.IV = salt;
+            var algorithm = MasterKeyEncryption.CreateAlgorithm(storageConfiguration.MasterKey);
+            algorithm.IV = salt;
 
-                var decryptor = algorithm.CreateDecryptor(); // Let this get GC'd
-                return new CryptoStream(ciphertext, decryptor, CryptoStreamMode.Read);
-            }
+            var decryptor = algorithm.CreateDecryptor(); // Let this get GC'd
+            return new StreamDisposalChain(new CryptoStream(ciphertext, decryptor, CryptoStreamMode.Read), decryptor, algorithm);
         }
 
         public Stream WriteCiphertextTo(Stream stream)
         {
             if (stream == null) throw new ArgumentNullException("stream");
 
-            using (var algorithm = MasterKeyEncryption.CreateAlgorithm(storageConfiguration.MasterKey, generateSalt: true))
-            {
-                var salt = algorithm.IV;
-                stream.Write(salt, 0, salt.Length);
+            var algorithm = MasterKeyEncryption.CreateAlgorithm(storageConfiguration.MasterKey, generateSalt: true);
+            var salt = algorithm.IV;
+            stream.Write(salt, 0, salt.Length);
 
-                var encryptor = algorithm.CreateEncryptor(); // Let this get GC'd
-                return new CryptoStream(stream, encryptor, CryptoStreamMode.Write);
-            }
+            var encryptor = algorithm.CreateEncryptor();
+            return new StreamDisposalChain(new CryptoStream(stream, encryptor, CryptoStreamMode.Write), encryptor, algorithm);
         }
     }
 }
