@@ -20,6 +20,7 @@ using Pipefish.Persistence.Filesystem;
 using Pipefish.Standard;
 using Pipefish.Transport;
 using Pipefish.Transport.Filesystem;
+using Pipefish.Util.Storage;
 using Pipefish.WellKnown.Dispatch;
 using Module = Autofac.Module;
 
@@ -102,11 +103,15 @@ namespace Octopus.Shared.Communications
                 .As<IActivitySpaceStarter>()
                 .SingleInstance();
 
-            builder.Register(c => new DirectoryMessageStore(c.Resolve<ICommunicationsConfiguration>().MessagesDirectory))
+            builder.Register(c => new DirectoryMessageStore(
+                    c.Resolve<ICommunicationsConfiguration>().MessagesDirectory,
+                    c.ResolveOptional<IStorageStreamTransform>()))
                 .As<IMessageStore>()
                 .SingleInstance();
 
-            builder.Register(c => new DirectoryActorStorage(c.Resolve<ICommunicationsConfiguration>().ActorStateDirectory))
+            builder.Register(c => new DirectoryActorStorage(
+                    c.Resolve<ICommunicationsConfiguration>().ActorStateDirectory,
+                    c.ResolveOptional<IStorageStreamTransform>()))
                 .As<IActorStorage>()
                 .SingleInstance();
         }
