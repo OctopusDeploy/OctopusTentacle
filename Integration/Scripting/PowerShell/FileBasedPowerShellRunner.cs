@@ -113,7 +113,7 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
             }
         }
 
-        static string EncodeValue(string value)
+        static string EncodeValue(string value) //, bool isSensitive)
         {
             if (value == null)
                 return "$null";

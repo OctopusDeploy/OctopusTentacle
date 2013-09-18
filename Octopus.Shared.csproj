@@ -249,10 +249,6 @@
     <Compile Include="Integration\Iis\WebServerSixSupport.cs" />
     <Compile Include="Integration\Iis\WebServerSupport.cs" />
     <Compile Include="Integration\Scripting\PowerShell\FileBasedPowerShellRunner.cs" />
-    <Compile Include="Integration\Scripting\PowerShellLegacy\HostedPowerShellRunner.cs" />
-    <Compile Include="Integration\Scripting\PowerShellLegacy\OctopusPowerShellHost.cs" />
-    <Compile Include="Integration\Scripting\PowerShellLegacy\OctopusPowerShellHostRawUserInterface.cs" />
-    <Compile Include="Integration\Scripting\PowerShellLegacy\OctopusPowerShellHostUserInterface.cs" />
     <Compile Include="Integration\Scripting\ScriptCS\ScriptCSRunner.cs" />
     <Compile Include="Integration\Scripting\ScriptEngineSelector.cs" />
     <Compile Include="Integration\Scripting\ScriptFailureException.cs" />

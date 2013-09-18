@@ -3,10 +3,7 @@ using System.IO;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Variables;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Scripting.PowerShell;
-using Octopus.Shared.Integration.Scripting.PowerShellLegacy;
 using Octopus.Shared.Integration.Scripting.ScriptCS;
 
 namespace Octopus.Shared.Integration.Scripting
@@ -36,15 +33,6 @@ namespace Octopus.Shared.Integration.Scripting
             if (string.Equals(Path.GetExtension(arguments.ScriptFilePath), ".csx", StringComparison.OrdinalIgnoreCase))
             {
                 return new ScriptCSRunner();
-            }
-
-            string legacyString;
-            bool legacyValue;
-            if (arguments.Variables.TryGetValue(SpecialVariables.UseLegacyPowerShellEngine, out legacyString)
-                && Boolean.TryParse(legacyString, out legacyValue)
-                && legacyValue)
-            {
-                return new HostedPowerShellRunner();
             }
 
             return new FileBasedPowerShellRunner(proxyConfiguration);
