@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Deployment.Conventions;
@@ -88,37 +89,52 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
         static void WriteVariableDictionary(ScriptArguments arguments, StreamWriter writer)
         {
             writer.WriteLine("$OctopusParameters = New-Object 'System.Collections.Generic.Dictionary[String,String]' (,[System.StringComparer]::OrdinalIgnoreCase)");
-            foreach (var variable in arguments.Variables)
+            foreach (var variable in arguments.Variables.AsList())
             {
-                writer.WriteLine("$OctopusParameters[" + EncodeValue(variable.Key) + "] = " + EncodeValue(variable.Value));
+                writer.WriteLine("$OctopusParameters[" + EncodeValue(variable.Name) + "] = " + EncodeValue(variable.Value, variable.IsSensitive));
             }
         }
 
         static void WriteLocalVariables(ScriptArguments arguments, StreamWriter writer)
         {
-            foreach (var variable in arguments.Variables)
+            foreach (var variable in arguments.Variables.AsList())
             {
                 // This is the way we used to fix up the identifiers - people might still rely on this behavior
-                var legacyKey = new string(variable.Key.Where(char.IsLetterOrDigit).ToArray());
+                var legacyKey = new string(variable.Name.Where(char.IsLetterOrDigit).ToArray());
 
                 // This is the way we should have done it
-                var smartKey = new string(variable.Key.Where(IsValidPowerShellIdentifierChar).ToArray());
+                var smartKey = new string(variable.Name.Where(IsValidPowerShellIdentifierChar).ToArray());
 
                 if (legacyKey != smartKey)
                 {
-                    writer.WriteLine("$" + legacyKey + " = " + EncodeValue(variable.Value));
+                    writer.WriteLine("$" + legacyKey + " = " + EncodeValue(variable.Value, variable.IsSensitive));
                 }
 
-                writer.WriteLine("$" + smartKey + " = " + EncodeValue(variable.Value));
+                writer.WriteLine("$" + smartKey + " = " + EncodeValue(variable.Value, variable.IsSensitive));
             }
         }
 
-        static string EncodeValue(string value) //, bool isSensitive)
+        static string EncodeValue(string value, bool isSensitive = false)
         {
             if (value == null)
                 return "$null";
 
-            return "[System.Text.Encoding]::UTF8.GetString( [Convert]::FromBase64String( \"" + Convert.ToBase64String(Encoding.UTF8.GetBytes(value)) + "\" ) )";
+            var bytes = Encoding.UTF8.GetBytes(value);
+            string decryptBytesStart = "", decryptBytesEnd = "";
+            if (isSensitive)
+            {
+                bytes = ProtectedData.Protect(bytes, null, DataProtectionScope.CurrentUser);
+                decryptBytesStart = "[System.Security.Cryptography.ProtectedData]::Unprotect(";
+                decryptBytesEnd = ", $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)";
+            }
+
+            return "[System.Text.Encoding]::UTF8.GetString(" +
+                       decryptBytesStart +
+                           "[Convert]::FromBase64String(\"" + 
+                               Convert.ToBase64String(bytes) + 
+                           "\")" + 
+                       decryptBytesEnd + 
+                   ")";
         }
 
         static bool IsValidPowerShellIdentifierChar(char c)

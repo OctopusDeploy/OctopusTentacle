@@ -46,16 +46,18 @@ namespace Octopus.Shared.Conventions.Implementations
         {
             context.Log.Verbose("Updating configuration settings...");
 
-            var variables = context.Variables.AsDictionary();
-
             WithConfigurationSettings(configurationFile, (roleName, settingName, settingValueAttribute) =>
             {
-                string value;
-                if (variables.TryGetValue(roleName + "/" + settingName, out value)
-                    || variables.TryGetValue(roleName + "\\" + settingName, out value)
-                    || variables.TryGetValue(settingName, out value))
+                var variables = context.Variables;
+                var value = variables.Get(roleName + "/" + settingName) ??
+                            variables.Get(roleName + "\\" + settingName) ??
+                            variables.Get(settingName);
+                
+                if (value != null)
                 {
                     context.Log.Verbose("  Updating setting for role " + roleName + ": " + settingName + " = " + value);
+
+                    // TODO - encrypt sensitive variables
                     settingValueAttribute.Value = value;
                 }
             });

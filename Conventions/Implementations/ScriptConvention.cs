@@ -29,7 +29,7 @@ namespace Octopus.Shared.Conventions.Implementations
                 var arguments = new ScriptArguments();
                 arguments.ScriptFilePath = script;
                 arguments.WorkingDirectory = context.PackageContentsDirectoryPath;
-                arguments.Variables = context.Variables.AsDictionary();
+                arguments.Variables = context.Variables;
                 arguments.OutputStream.Written += context.Log.Info;
                 
                 var result = ScriptRunner.Execute(arguments);

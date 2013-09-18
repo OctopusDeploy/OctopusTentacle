@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Util;
@@ -51,6 +50,7 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
 
         static string GetScriptCsPath()
         {
+            // ReSharper disable once AssignNullToNotNullAttribute
             var scriptCsFolder = Path.Combine(Path.GetDirectoryName(typeof(ScriptCSRunner).Assembly.FullLocalPath()), "ScriptCS");
             return Path.Combine(scriptCsFolder, "scriptcs.exe");
         }
@@ -105,23 +105,33 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
 
         static void WriteVariableDictionary(ScriptArguments arguments, StreamWriter writer)
         {
-            foreach (var variable in arguments.Variables)
+            foreach (var variable in arguments.Variables.AsList())
             {
-                writer.WriteLine("    this[" + EncodeValue(variable.Key) + "] = " + EncodeValue(variable.Value) + ";");
+                writer.WriteLine("    this[" + EncodeValue(variable.Name) + "] = " + EncodeValue(variable.Value, variable.IsSensitive) + ";");
             }
         }
 
-        static string EncodeValue(string value)
+        static string EncodeValue(string value, bool isSensitive = false)
         {
             if (value == null)
                 return "null";
 
-            return "System.Text.Encoding.UTF8.GetString(Convert.FromBase64String( \"" + Convert.ToBase64String(Encoding.UTF8.GetBytes(value)) + "\" ) )";
-        }
+            var bytes = Encoding.UTF8.GetBytes(value);
+            string decryptBytesStart = "", decryptBytesEnd = "";
+            if (isSensitive)
+            {
+                bytes = ProtectedData.Protect(bytes, null, DataProtectionScope.CurrentUser);
+                decryptBytesStart = "System.Security.Cryptography.ProtectedData.Unprotect(";
+                decryptBytesEnd = ", null, System.Security.Cryptography.DataProtectionScope.CurrentUser)";
+            }
 
-        static bool IsValidScriptIdentifierChar(char c)
-        {
-            return c == '_' || char.IsLetterOrDigit(c);
+            return "System.Text.Encoding.UTF8.GetString(" +
+                       decryptBytesStart +
+                           "Convert.FromBase64String(\"" +
+                               Convert.ToBase64String(bytes) + 
+                           "\")" +
+                       decryptBytesEnd +
+                   ")";
         }
 
         const string EmbeddedFunctions =
