@@ -78,6 +78,7 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
 
             using (var writer = new StreamWriter(bootstrapFile))
             {
+                writer.WriteLine("#r \"System.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\"");
                 writer.WriteLine("using System;");
                 writer.WriteLine("public static class Octopus");
                 writer.WriteLine("{");

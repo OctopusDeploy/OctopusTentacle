@@ -61,13 +61,16 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
             
             using (var writer = new StreamWriter(bootstrapFile))
             {
+                writer.WriteLine("## Dependencies:");
+
+                writer.WriteLine("[System.Reflection.Assembly]::Load(\"System.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\")");
+
                 writer.WriteLine("## Variables:");
                 
                 WriteLocalVariables(arguments, writer);
-
                 WriteVariableDictionary(arguments, writer);
-
                 writer.WriteLine();
+
                 writer.WriteLine("## Functions:");
 
                 writer.WriteLine(EmbeddedFunctions);
@@ -81,6 +84,8 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
                 writer.WriteLine("if ((test-path variable:global:lastexitcode)) { exit $LastExitCode }");
                 writer.Flush();
             }
+
+            // File.Copy(bootstrapFile, "C:\\BS-" + DateTime.Now.Ticks + ".ps1");
 
             File.SetAttributes(bootstrapFile, FileAttributes.Hidden);
             return bootstrapFile;
