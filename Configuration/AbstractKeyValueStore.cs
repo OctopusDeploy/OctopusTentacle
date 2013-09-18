@@ -1,63 +1,82 @@
 using System;
+using System.Security.Cryptography;
+using System.Text;
 using Octopus.Platform.Deployment.Configuration;
-using Octopus.Platform.Model;
-using Octopus.Platform.Security;
-using Octopus.Platform.Util;
+using Pipefish.Util;
 
 namespace Octopus.Shared.Configuration
 {
     public abstract class AbstractKeyValueStore : IKeyValueStore
     {
-        static readonly EncryptionAlgorithm Algorithm = new Aes256EncryptionAlgorithm();
-
         protected abstract void Write(string key, string value);
         protected abstract string Read(string key);
 
-        public TData Get<TData>(string name, TData defaultValue)
+        public string Get(string name, DataProtectionScope? protectionScope = null)
         {
-            var value = Get(name);
-            if (!string.IsNullOrWhiteSpace(value))
+            var s = Read(name);
+            if (string.IsNullOrWhiteSpace(s))
+                return null;
+
+            if (protectionScope != null)
             {
-                return (TData)AmazingConverter.Convert(value, typeof(TData));
+                s = Encoding.UTF8.GetString(
+                    ProtectedData.Unprotect(
+                        Convert.FromBase64String(s),
+                        null,
+                        protectionScope.Value));
             }
 
-            return defaultValue;
+            return s;
         }
 
-        public void Set(string name, object value)
+        public TData Get<TData>(string name, TData defaultValue = default(TData), DataProtectionScope? protectionScope = null)
         {
-            SetString(name, value == null ? null : value.ToString());
+            if (name == null) throw new ArgumentNullException("name");
+
+            var s = Get(name, protectionScope);
+            if (s == null)
+                return defaultValue;
+
+            if (typeof(TData) == typeof(string))
+                return (TData)(object)s;
+
+            return Json.Deserialize<TData>(s);
         }
 
-        public void SetSecure(string name, object value)
+        public void Set(string name, string value, DataProtectionScope? protectionScope = null)
         {
-            var encrypted = Algorithm.Encrypt(value == null ? null : value.ToString());
-            Set(name, encrypted.ToBase64());
+            if (name == null) throw new ArgumentNullException("name");
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                Write(name, null);
+                return;
+            }
+
+            var v = value;
+
+            if (protectionScope != null)
+            {
+                v = Convert.ToBase64String(
+                        ProtectedData.Protect(
+                            Encoding.UTF8.GetBytes(v),
+                            null,
+                            protectionScope.Value));
+            }
+
+            Write(name, v);
+        }
+
+        public void Set<TData>(string name, TData value, DataProtectionScope? protectionScope = null)
+        {
+            if (name == null) throw new ArgumentNullException("name");
+
+            if (typeof(TData) == typeof(string))
+                Set(name, (string)(object)value, protectionScope);
+            else
+                Set(name, Json.Serialize(value), protectionScope);
         }
 
         public abstract void Save();
-
-        public string GetSecure(string name)
-        {
-            var text = Get(name);
-            if (text == null)
-            {
-                text = Algorithm.Encrypt(string.Empty).ToBase64();
-            }
-
-            var encrypted = EncryptedBytes.FromBase64(text);
-            var decrypted = Algorithm.Decrypt(encrypted.Ciphertext, encrypted.Salt);
-            return decrypted;
-        }
-
-        public string Get(string name)
-        {
-            return Read(name);
-        }
-
-        void SetString(string name, string value)
-        {
-            Write(name, value);
-        }
     }
 }

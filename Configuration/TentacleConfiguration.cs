@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Security;
-using Octopus.Shared.Communications;
 using Octopus.Shared.Security;
 
 namespace Octopus.Shared.Configuration
@@ -26,14 +26,11 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var setting = settings.Get("Tentacle.Communication.TrustedOctopusServers");
-                if (string.IsNullOrWhiteSpace(setting)) return Enumerable.Empty<OctopusServerConfiguration>();
-                return JsonConvert.DeserializeObject<OctopusServerConfiguration[]>(setting);
+                return settings.Get("Tentacle.Communication.TrustedOctopusServers", new OctopusServerConfiguration[0]);
             }
             private set
             {
-                var setting = JsonConvert.SerializeObject(value.ToArray());
-                settings.Set("Tentacle.Communication.TrustedOctopusServers", setting);
+                settings.Set("Tentacle.Communication.TrustedOctopusServers", (value ?? new OctopusServerConfiguration[0]).ToArray());
             }
         }
 
@@ -138,13 +135,15 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var encoded = settings.Get("Cert-" + CertificateExpectations.TentacleCertificateFullName);
+                var encoded = settings.Get("Cert-" + CertificateExpectations.TentacleCertificateFullName, protectionScope: DataProtectionScope.LocalMachine);
+
+                // Todo: The certificate touches the disc in this routine; can we store/retrieve certs in memory only?
                 return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(encoded);
             }
 
             set
             {
-                settings.Set("Cert-" + CertificateExpectations.TentacleCertificateFullName, CertificateEncoder.ToBase64String(value));
+                settings.Set("Cert-" + CertificateExpectations.TentacleCertificateFullName, CertificateEncoder.ToBase64String(value), DataProtectionScope.LocalMachine);
             }
         }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Security.Cryptography;
 using Autofac;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
@@ -29,8 +30,8 @@ namespace Octopus.Shared.Configuration
 
         public string CustomProxyPassword
         {
-            get { return settings.GetSecure("Octopus.Proxy.ProxyPassword"); }
-            set { settings.SetSecure("Octopus.Proxy.ProxyPassword", value); }
+            get { return settings.Get("Octopus.Proxy.ProxyPassword", protectionScope: DataProtectionScope.LocalMachine); }
+            set { settings.Set("Octopus.Proxy.ProxyPassword", value, DataProtectionScope.LocalMachine); }
         }
 
         public void Start()
