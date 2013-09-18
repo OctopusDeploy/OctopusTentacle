@@ -49,16 +49,21 @@ namespace Octopus.Shared.Conventions.Implementations
             WithConfigurationSettings(configurationFile, (roleName, settingName, settingValueAttribute) =>
             {
                 var variables = context.Variables;
-                var value = variables.Get(roleName + "/" + settingName) ??
-                            variables.Get(roleName + "\\" + settingName) ??
-                            variables.Get(settingName);
+                var setting = variables.Find(roleName + "/" + settingName) ??
+                            variables.Find(roleName + "\\" + settingName) ??
+                            variables.Find(settingName);
                 
-                if (value != null)
+                if (setting != null)
                 {
-                    context.Log.Verbose("  Updating setting for role " + roleName + ": " + settingName + " = " + value);
-
-                    // TODO - encrypt sensitive variables
-                    settingValueAttribute.Value = value;
+                    if (setting.IsSensitive)
+                    {
+                        context.Log.WarnFormat("Setting for role {0}: {1} is marked as sensitive, but must be written to Azure configuration in cleartext", roleName, settingName);
+                    }
+                    else
+                    {
+                        context.Log.VerboseFormat("Updating setting for role {0}: {1} = {2}", roleName, settingName, setting.Value);
+                    }
+                    settingValueAttribute.Value = setting.Value;
                 }
             });
         }
