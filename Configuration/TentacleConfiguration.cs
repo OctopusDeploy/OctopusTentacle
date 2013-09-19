@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Security;
+using Octopus.Platform.Security.Certificates;
 using Octopus.Shared.Security;
 using Octopus.Shared.Security.MasterKey;
 
