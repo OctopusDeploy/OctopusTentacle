@@ -6,20 +6,30 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using Octopus.Platform.Deployment.Configuration;
+using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Security;
 using Octopus.Shared.Security;
+using Octopus.Shared.Security.MasterKey;
 
 namespace Octopus.Shared.Configuration
 {
-    public class TentacleConfiguration : ITentacleConfiguration
+    public class TentacleConfiguration : ITentacleConfiguration, IMasterKeyConfiguration
     {
         readonly IKeyValueStore settings;
         readonly ICommunicationsConfiguration communicationsConfiguration;
+        readonly ILog log = Log.Octopus();
 
         public TentacleConfiguration(IKeyValueStore settings, ICommunicationsConfiguration communicationsConfiguration)
         {
             this.settings = settings;
             this.communicationsConfiguration = communicationsConfiguration;
+
+            if (MasterKey == null)
+            {
+                log.Verbose("Generating a new Master Key for this Tentacle...");
+                MasterKey = MasterKeyEncryption.GenerateKey();
+                Save();
+            }
         }
 
         public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers
@@ -136,11 +146,8 @@ namespace Octopus.Shared.Configuration
             get
             {
                 var encoded = settings.Get("Cert-" + CertificateExpectations.TentacleCertificateFullName, protectionScope: DataProtectionScope.LocalMachine);
-
-                // Todo: The certificate touches the disc in this routine; can we store/retrieve certs in memory only?
                 return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(encoded);
             }
-
             set
             {
                 settings.Set("Cert-" + CertificateExpectations.TentacleCertificateFullName, CertificateEncoder.ToBase64String(value), DataProtectionScope.LocalMachine);
@@ -177,6 +184,12 @@ namespace Octopus.Shared.Configuration
                 var setting = JsonConvert.SerializeObject(value);
                 settings.Set("Tentacle.Communication.LastReceivedHandshake", setting);
             }
+        }
+
+        public byte[] MasterKey
+        {
+            get { return settings.Get<byte[]>("Octopus.Storage.MasterKey", protectionScope: DataProtectionScope.LocalMachine); }
+            set { settings.Set("Octopus.Storage.MasterKey", value, DataProtectionScope.LocalMachine); }
         }
     }
 }

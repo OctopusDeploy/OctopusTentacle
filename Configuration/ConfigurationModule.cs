@@ -2,6 +2,8 @@ using System;
 using Autofac;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
+using Octopus.Platform.Security.MasterKey;
+using Octopus.Shared.Security.MasterKey;
 
 namespace Octopus.Shared.Configuration
 {
@@ -19,16 +21,13 @@ namespace Octopus.Shared.Configuration
             base.Load(builder);
 
             builder.Register(configurationProvider).As<IKeyValueStore>().SingleInstance();
-            builder.RegisterType<DeploymentProcessConfiguration>().As<IDeploymentProcessConfiguration>().SingleInstance();
-            builder.RegisterType<WebPortalConfiguration>().As<IWebPortalConfiguration>().SingleInstance();
             builder.RegisterType<UpgradeCheckConfiguration>().As<IUpgradeCheckConfiguration>().SingleInstance();
             builder.RegisterType<HomeConfiguration>().As<IHomeConfiguration>().As<IStartable>().SingleInstance();
-            builder.RegisterType<OctopusServerStorageConfiguration>().As<IOctopusServerStorageConfiguration>();
             builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().As<IStartable>().SingleInstance();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>().As<IStartable>().SingleInstance();
-            builder.RegisterType<TentacleConfiguration>().As<ITentacleConfiguration>().SingleInstance();
             builder.RegisterType<CommunicationsConfiguration>().As<ICommunicationsConfiguration, ITcpServerCommunicationsConfiguration>().SingleInstance();
             builder.RegisterType<FileStorageConfiguration>().As<IFileStorageConfiguration>().SingleInstance();
+            builder.RegisterType<StoredMasterKeyEncryption>().As<IMasterKeyEncryption>();
         }
 
         public static ConfigurationModule FromFile(string filePath)

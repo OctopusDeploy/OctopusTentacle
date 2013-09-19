@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using Octopus.Platform.Deployment.Configuration;
+using Octopus.Platform.Diagnostics;
+using Octopus.Shared.Security.MasterKey;
 
 namespace Octopus.Shared.Configuration
 {
@@ -9,11 +11,21 @@ namespace Octopus.Shared.Configuration
     {
         readonly IKeyValueStore settings;
         readonly IHomeConfiguration home;
+        readonly ILog log = Log.Octopus();
 
         public OctopusServerStorageConfiguration(IKeyValueStore settings, IHomeConfiguration home)
         {
             this.settings = settings;
             this.home = home;
+
+            if (MasterKey == null)
+            {
+                log.Info("Generating a new Master Key for this Octopus Server...");
+                MasterKey = MasterKeyEncryption.GenerateKey();
+                IsMasterKeyBackedUp = false;
+                Save();
+                log.Info("Master Key saved; use the Octopus Administration tool to back the key up.");
+            }
         }
 
         public string ExternalDatabaseConnectionString

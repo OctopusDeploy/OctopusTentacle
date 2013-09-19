@@ -165,7 +165,9 @@
     <Compile Include="Configuration\OctopusServerStorageConfiguration.cs" />
     <Compile Include="Configuration\OctopusStorage.cs" />
     <Compile Include="Configuration\ProxyConfiguration.cs" />
+    <Compile Include="Configuration\ServerConfigurationModule.cs" />
     <Compile Include="Configuration\TentacleConfiguration.cs" />
+    <Compile Include="Configuration\TentacleConfigurationModule.cs" />
     <Compile Include="Configuration\UpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\WebPortalConfiguration.cs" />
     <Compile Include="Configuration\WindowsRegistryKeyValueStore.cs" />

@@ -1,23 +1,21 @@
 ﻿using System;
 using System.IO;
-using System.Security.Cryptography;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Model;
 using Octopus.Platform.Security.MasterKey;
-using Octopus.Shared.Bcl.IO;
 
 namespace Octopus.Shared.Security.MasterKey
 {
     public class StoredMasterKeyEncryption : IMasterKeyEncryption
     {
-        readonly IOctopusServerStorageConfiguration storageConfiguration;
+        readonly IMasterKeyConfiguration configuration;
 
-        public StoredMasterKeyEncryption(IOctopusServerStorageConfiguration storageConfiguration)
+        public StoredMasterKeyEncryption(IMasterKeyConfiguration configuration)
         {
-            this.storageConfiguration = storageConfiguration;
+            this.configuration = configuration;
         }
 
-        byte[] MasterKey { get { return storageConfiguration.MasterKey; } }
+        byte[] MasterKey { get { return configuration.MasterKey; } }
 
         public EncryptedBytes ToCiphertext(byte[] plaintext)
         {

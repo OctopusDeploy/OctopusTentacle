@@ -21,7 +21,7 @@ namespace Octopus.Shared.Configuration
                                Guid.NewGuid().GetHashCode().ToString("X8");
                 Squid = NormalizeSquid(newSquid);
 
-                settings.Save(); // For server this will fail I think; needs to be set on installation.
+                settings.Save();
             }
         }
 

@@ -10,6 +10,7 @@ using Octopus.Platform.Deployment;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
+using Octopus.Shared.Communications.Encryption;
 using Octopus.Shared.Communications.Integration;
 using Octopus.Shared.FileTransfer;
 using Pipefish;
@@ -105,15 +106,17 @@ namespace Octopus.Shared.Communications
 
             builder.Register(c => new DirectoryMessageStore(
                     c.Resolve<ICommunicationsConfiguration>().MessagesDirectory,
-                    c.ResolveOptional<IStorageStreamTransform>()))
+                    c.Resolve<IStorageStreamTransform>()))
                 .As<IMessageStore>()
                 .SingleInstance();
 
             builder.Register(c => new DirectoryActorStorage(
                     c.Resolve<ICommunicationsConfiguration>().ActorStateDirectory,
-                    c.ResolveOptional<IStorageStreamTransform>()))
+                    c.Resolve<IStorageStreamTransform>()))
                 .As<IActorStorage>()
                 .SingleInstance();
+
+            builder.RegisterType<EncryptedStorageStream>().As<IStorageStreamTransform>();
         }
 
         static bool IsCreatedByMessage(Type t)
