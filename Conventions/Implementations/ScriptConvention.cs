@@ -30,15 +30,13 @@ namespace Octopus.Shared.Conventions.Implementations
                 arguments.ScriptFilePath = script;
                 arguments.WorkingDirectory = context.PackageContentsDirectoryPath;
                 arguments.Variables = context.Variables;
-                arguments.OutputStream.Written += context.Log.Info;
+                arguments.Log = context.Log;
                 
                 var result = ScriptRunner.Execute(arguments);
                 foreach (var createdArtifact in result.CreatedArtifacts)
                 {
                     context.AddCreatedArtifact(createdArtifact);
                 }
-
-                arguments.OutputStream.Written -= context.Log.Info;
 
                 foreach (var outputVariable in result.OutputVariables)
                 {

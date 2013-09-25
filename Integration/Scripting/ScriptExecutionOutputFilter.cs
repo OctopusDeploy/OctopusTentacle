@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Octopus.Platform.Deployment.Conventions;
+using Octopus.Platform.Diagnostics;
 using Octopus.Shared.ServiceMessages;
 
 namespace Octopus.Shared.Integration.Scripting
@@ -15,12 +16,12 @@ namespace Octopus.Shared.Integration.Scripting
         readonly IDictionary<string, string> outputVariables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase); 
         readonly ICollection<CreatedArtifact> createdArtifacts = new List<CreatedArtifact>(); 
 
-        public ScriptExecutionOutputFilter(ScriptOutput outputStream)
+        public ScriptExecutionOutputFilter(ILog outputStream)
         {
             if (outputStream == null) throw new ArgumentNullException("outputStream");
 
             parser = new ServiceMessageParser(
-                outputStream.OnWritten,
+                outputStream.Info,
                 message =>
                 {
                     if (message.Name == ScriptServiceMessageNames.SetVariable.Name)

@@ -29,13 +29,14 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
                 var commandArguments = new StringBuilder();
                 commandArguments.AppendFormat("-s \"{0}\"", bootstrapFile);
 
-                var filter = new ScriptExecutionOutputFilter(arguments.OutputStream);
+                var filter = new ScriptExecutionOutputFilter(arguments.Log);
 
                 var errorWritten = false;
                 var exit = SilentProcessRunner.ExecuteCommand(GetScriptCsPath(), commandArguments.ToString(), arguments.WorkingDirectory,
                     filter.WriteLine,
-                    error => { 
-                        arguments.OutputStream.OnWritten("ERROR: " + error);
+                    error => {
+                        if (!string.IsNullOrWhiteSpace(error))
+                            arguments.Log.Error(error);
                         errorWritten = true;
                     });
 

@@ -36,13 +36,14 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
                 var escapedBootstrapFile = bootstrapFile.Replace("'", "''");
                 commandArguments.AppendFormat("-Command \"& {{. '{0}'; if ((test-path variable:global:lastexitcode)) {{ exit $LastExitCode }}}}\"", escapedBootstrapFile);
 
-                var filter = new ScriptExecutionOutputFilter(arguments.OutputStream);
+                var filter = new ScriptExecutionOutputFilter(arguments.Log);
 
                 var errorWritten = false;
                 var exit = SilentProcessRunner.ExecuteCommand("powershell.exe", commandArguments.ToString(), arguments.WorkingDirectory,
                     filter.WriteLine,
-                    error => { 
-                        arguments.OutputStream.OnWritten("ERROR: " + error);
+                    error => {
+                        if (!string.IsNullOrWhiteSpace(error))
+                            arguments.Log.Error(error);
                         errorWritten = true;
                     });
 
@@ -63,7 +64,7 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
             {
                 writer.WriteLine("## Dependencies:");
 
-                writer.WriteLine("[System.Reflection.Assembly]::Load(\"System.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\")");
+                writer.WriteLine("[System.Reflection.Assembly]::Load(\"System.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\") | Out-Null");
 
                 writer.WriteLine("## Variables:");
                 
