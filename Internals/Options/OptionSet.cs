@@ -45,14 +45,11 @@ namespace Octopus.Shared.Internals.Options
         {
             if (option == null)
                 throw new ArgumentNullException("option");
-            try
-            {
-                return base[option];
-            }
-            catch (KeyNotFoundException)
-            {
+
+            if (!Contains(option))
                 return null;
-            }
+                
+            return base[option];
         }
 
         protected override void InsertItem(int index, Option item)
