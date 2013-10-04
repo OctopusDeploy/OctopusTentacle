@@ -57,5 +57,10 @@ namespace Octopus.Shared.Configuration
                 Log.Octopus().Warn(ex, "Unable to configure the proxy server: " + ex.Message);
             }
         }
+
+        public void Save()
+        {
+            settings.Save();
+        }
     }
 }

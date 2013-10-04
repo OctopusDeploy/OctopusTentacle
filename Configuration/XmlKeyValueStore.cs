@@ -32,17 +32,21 @@ namespace Octopus.Shared.Configuration
         protected override void SaveSettings(IDictionary<string, string> settingsToSave)
         {
             var serializer = new XmlSerializer(typeof(XmlSettingsRoot));
-            using (var xmlWriter = new XmlTextWriter(new StreamWriter(OpenForWriting())))
+            using (var stream = OpenForWriting())
             {
-                xmlWriter.Formatting = Formatting.Indented;
-
-                var settings = new XmlSettingsRoot();
-                foreach (var key in settingsToSave.Keys.OrderBy(k => k))
+                stream.SetLength(0);
+                using (var xmlWriter = new XmlTextWriter(new StreamWriter(stream)))
                 {
-                    settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key] });
-                }
+                    xmlWriter.Formatting = Formatting.Indented;
 
-                serializer.Serialize(xmlWriter, settings);
+                    var settings = new XmlSettingsRoot();
+                    foreach (var key in settingsToSave.Keys.OrderBy(k => k))
+                    {
+                        settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key] });
+                    }
+
+                    serializer.Serialize(xmlWriter, settings);
+                }
             }
         }
 

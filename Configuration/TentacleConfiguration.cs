@@ -7,7 +7,6 @@ using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Security;
 using Octopus.Platform.Security.Certificates;
 using Octopus.Shared.Security;
 using Octopus.Shared.Security.MasterKey;
@@ -55,18 +54,13 @@ namespace Octopus.Shared.Configuration
 
             var all = TrustedOctopusServers.ToList();
             
-            var existing = all.SingleOrDefault(m => m.Address == machine.Address || m.Squid != null && machine.Squid != null && m.Squid == machine.Squid);
+            var existing = all.SingleOrDefault(m => string.Compare(m.Thumbprint, machine.Thumbprint, StringComparison.OrdinalIgnoreCase) == 0);
 
             if (existing != null)
             {
                 result = true;
                 all.Remove(existing);
-            }
-
-            foreach (var duplicate in all.Where(m => m.Address == machine.Address && m.Squid == machine.Squid && m.Thumbprint == machine.Thumbprint))
-            {
-                all.Remove(duplicate);
-            }            
+            }      
 
             all.Add(machine);
             TrustedOctopusServers = all;
