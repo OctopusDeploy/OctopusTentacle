@@ -65,8 +65,9 @@ namespace Octopus.Shared.Configuration
                     {
                         subKey.SetValue(setting.Key, setting.Value);
                         subKey.Flush();
-                        subKey.Close();
                     }
+
+                    subKey.Close();
                 }
             }
         }
