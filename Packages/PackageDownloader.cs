@@ -7,9 +7,8 @@ using Octopus.Platform.Deployment;
 using Octopus.Platform.Deployment.Logging;
 using Octopus.Platform.Deployment.Packages;
 using Octopus.Platform.Packages;
+using Octopus.Platform.Security.MasterKey;
 using Octopus.Platform.Util;
-using Octopus.Shared.Activities;
-using Octopus.Shared.Contracts;
 
 namespace Octopus.Shared.Packages
 {
@@ -19,12 +18,18 @@ namespace Octopus.Shared.Packages
         readonly IPackageStore packageStore;
         readonly IPackageRepositoryFactory packageRepositoryFactory;
         readonly IOctopusFileSystem fileSystem;
-        
-        public PackageDownloader(IPackageStore packageStore, IPackageRepositoryFactory packageRepositoryFactory, IOctopusFileSystem fileSystem)
+        readonly IMasterKeyEncryption encryption;
+
+        public PackageDownloader(
+            IPackageStore packageStore,
+            IPackageRepositoryFactory packageRepositoryFactory, 
+            IOctopusFileSystem fileSystem,
+            IMasterKeyEncryption encryption)
         {
             this.packageStore = packageStore;
             this.packageRepositoryFactory = packageRepositoryFactory;
             this.fileSystem = fileSystem;
+            this.encryption = encryption;
         }
 
         public StoredPackage Download(PackageMetadata package, IFeed feed, PackageCachePolicy cachePolicy, IActivity log)
@@ -124,7 +129,7 @@ namespace Octopus.Shared.Packages
         {
             log.VerboseFormat("Finding package (attempt {0} of {1})", attempt, NumberOfTimesToAttemptToDownloadPackage);
 
-            var remoteRepository = packageRepositoryFactory.CreateRepository(feed.FeedUri, feed.GetCredentials());
+            var remoteRepository = packageRepositoryFactory.CreateRepository(feed.FeedUri, feed.GetCredentials(encryption));
             var package = remoteRepository.FindPackage(packageMetadata.PackageId, new SemanticVersion(packageMetadata.Version), true, true);
 
             if (package == null)
