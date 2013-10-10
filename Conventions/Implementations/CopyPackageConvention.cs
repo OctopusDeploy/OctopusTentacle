@@ -43,7 +43,7 @@ namespace Octopus.Shared.Conventions.Implementations
 
             targetDirectory = Path.GetFullPath(targetDirectory);
 
-            bool purgeFirst = false;
+            var purgeFirst = false;
             var purgeFirstText = context.Variables.Get(SpecialVariables.Action.Package.CustomInstallationDirectoryShouldBePurgedBeforeDeployment);
             if (!string.IsNullOrWhiteSpace(purgeFirstText))
             {

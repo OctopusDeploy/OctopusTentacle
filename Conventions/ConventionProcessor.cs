@@ -5,8 +5,6 @@ using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
 using Octopus.Platform.Variables;
-using Octopus.Shared.Activities;
-using Octopus.Shared.Contracts;
 
 namespace Octopus.Shared.Conventions
 {
