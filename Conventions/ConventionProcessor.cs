@@ -49,7 +49,11 @@ namespace Octopus.Shared.Conventions
 
         void RunInstallConventions(IConventionContext context)
         {
-            Run<IInstallationConvention>(context, (c, ctx) => c.Install(ctx));
+            Run<IInstallationConvention>(context, (c, ctx) =>
+            {
+                if (!ctx.Variables.GetFlag(SpecialVariables.Action.SkipRemainingConventions, false))
+                    c.Install(ctx);
+            });
         }
 
         void RunRollbackConventions(IConventionContext context)
