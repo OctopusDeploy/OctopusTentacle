@@ -116,10 +116,10 @@ namespace Octopus.Shared.Conventions
 
             foreach (var variable in variables.AsList().OrderBy(v => v.Name))
             {
-                if (SpecialVariables.IsSecret(variable.Name))
-                    continue;
-
-                log.VerboseFormat(" - [{0}] = '{1}'", variable.Name, variable.Value);
+                if (variable.IsSensitive)
+                    log.VerboseFormat(" - [{0}] = ********", variable.Name);
+                else
+                    log.VerboseFormat(" - [{0}] = '{1}'", variable.Name, variable.Value);
             }
         }
     }
