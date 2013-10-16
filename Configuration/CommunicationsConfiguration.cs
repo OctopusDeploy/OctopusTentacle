@@ -38,12 +38,12 @@ namespace Octopus.Shared.Configuration
 
         public string ActorStateDirectory
         {
-            get { return EnsureExists(Path.Combine(homeConfiguration.HomeDirectory, "Actors")); }
+            get { return EnsureExists(Path.Combine(homeConfiguration.ApplicationSpecificHomeDirectory, "Actors")); }
         }
 
         public string MessagesDirectory
         {
-            get { return EnsureExists(Path.Combine(homeConfiguration.HomeDirectory, "Messages")); }
+            get { return EnsureExists(Path.Combine(homeConfiguration.ApplicationSpecificHomeDirectory, "Messages")); }
         }
 
         static string EnsureExists(string path)

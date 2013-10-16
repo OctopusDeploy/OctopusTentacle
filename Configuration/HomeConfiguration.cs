@@ -9,13 +9,20 @@ namespace Octopus.Shared.Configuration
     public class HomeConfiguration : IHomeConfiguration, Autofac.IStartable
     {
         readonly ILog log = Log.Octopus();
+        readonly ApplicationName application;
         readonly IKeyValueStore settings;
         readonly string defaultHome;
 
-        public HomeConfiguration(IKeyValueStore settings)
+        public HomeConfiguration(ApplicationName application, IKeyValueStore settings)
         {
+            this.application = application;
             this.settings = settings;
             defaultHome = Path.Combine(Directory.GetDirectoryRoot(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)), "Octopus");
+        }
+
+        public string ApplicationSpecificHomeDirectory
+        {
+            get { return Path.Combine(HomeDirectory, application.ToString()); }
         }
 
         public string HomeDirectory

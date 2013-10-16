@@ -154,6 +154,7 @@
     <Compile Include="Communications\Handshaking\IHandshakeReceiver.cs" />
     <Compile Include="Communications\Integration\IActivitySpaceStarter.cs" />
     <Compile Include="Configuration\AbstractKeyValueStore.cs" />
+    <Compile Include="Configuration\ApplicationName.cs" />
     <Compile Include="Configuration\CommunicationsConfiguration.cs" />
     <Compile Include="Configuration\ConfigurationModule.cs" />
     <Compile Include="Configuration\DeploymentProcessConfiguration.cs" />
