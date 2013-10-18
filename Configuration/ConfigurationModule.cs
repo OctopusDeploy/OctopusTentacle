@@ -22,6 +22,7 @@ namespace Octopus.Shared.Configuration
         {
             base.Load(builder);
 
+            builder.RegisterType<ApplicationInstanceRepository>().As<IApplicationInstanceRepository>();
             builder.Register(configurationProvider).As<IKeyValueStore>().SingleInstance();
             builder.RegisterType<UpgradeCheckConfiguration>().As<IUpgradeCheckConfiguration>().SingleInstance();
             builder.Register(c => new HomeConfiguration(applicationName, c.Resolve<IKeyValueStore>())).As<IHomeConfiguration>().As<IStartable>().SingleInstance();
@@ -32,19 +33,26 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<StoredMasterKeyEncryption>().As<IMasterKeyEncryption>();
         }
 
+        public static ConfigurationModule FromInstance(ApplicationName application, string instanceName)
+        {
+            var repository = new ApplicationInstanceRepository();
+            var instance = repository.GetInstance(application, instanceName);
+            if (instance == null)
+            {
+                throw new Exception("Could not find configuration for the " + instanceName + " instance");
+            }
+
+            return FromFile(application, instance.ConfigurationFilePath);
+        }
+
+        public static ConfigurationModule FromDefaultInstance(ApplicationName application)
+        {
+            return FromInstance(application, ApplicationInstance.GetDefaultInstance(application));
+        }
+
         public static ConfigurationModule FromFile(ApplicationName application, string filePath)
         {
             return new ConfigurationModule(application, c => new XmlFileKeyValueStore(filePath, c.Resolve<ILog>()));
-        }
-
-        public static ConfigurationModule FromStore(ApplicationName application, IKeyValueStore store)
-        {
-            return new ConfigurationModule(application, c => store);
-        }
-
-        public static ConfigurationModule FromRegistry(ApplicationName application)
-        {
-            return new ConfigurationModule(application, c => new WindowsRegistryKeyValueStore(c.Resolve<ILog>()));
         }
     }
 }
