@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.Versioning;
 using NuGet;
 using Octopus.Platform.Diagnostics;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Packages
 {
