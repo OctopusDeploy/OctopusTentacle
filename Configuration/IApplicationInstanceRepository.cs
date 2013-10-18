@@ -9,5 +9,6 @@ namespace Octopus.Shared.Configuration
         ApplicationInstance GetInstance(ApplicationName name, string instanceName);
         ApplicationInstance GetDefaultInstance(ApplicationName name);
         void SaveInstance(ApplicationInstance instance);
+        void DeleteInstance(ApplicationInstance instance);
     }
 }

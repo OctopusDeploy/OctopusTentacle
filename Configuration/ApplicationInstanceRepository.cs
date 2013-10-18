@@ -67,13 +67,24 @@ namespace Octopus.Shared.Configuration
             }
         }
 
+        public void DeleteInstance(ApplicationInstance instance)
+        {
+            using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
+            using (var subKey = CreateOrOpenKeyForWrite(rootKey, KeyName))
+            using (var applicationNameKey = CreateOrOpenKeyForWrite(subKey, instance.ApplicationName.ToString()))
+            {
+                applicationNameKey.DeleteSubKey(instance.InstanceName);
+                applicationNameKey.Flush();
+            }
+        }
+
         static RegistryKey CreateOrOpenKeyForWrite(RegistryKey parent, string keyName)
         {
             using (var subKey = parent.OpenSubKey(keyName, true))
             {
                 if (subKey == null)
                 {
-                    parent.CreateSubKey(KeyName);
+                    parent.CreateSubKey(keyName);
                     parent.Flush();
                 }
             }
