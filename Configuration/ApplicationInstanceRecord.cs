@@ -2,13 +2,13 @@ using System;
 
 namespace Octopus.Shared.Configuration
 {
-    public class ApplicationInstance
+    public class ApplicationInstanceRecord
     {
         readonly string instanceName;
         readonly ApplicationName applicationName;
         readonly string configurationFilePath;
 
-        public ApplicationInstance(string instanceName, ApplicationName applicationName, string configurationFilePath)
+        public ApplicationInstanceRecord(string instanceName, ApplicationName applicationName, string configurationFilePath)
         {
             this.instanceName = instanceName;
             this.applicationName = applicationName;

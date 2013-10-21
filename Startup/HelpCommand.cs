@@ -10,34 +10,40 @@ namespace Octopus.Shared.Startup
     public class HelpCommand : ICommand
     {
         readonly ICommandLocator commands;
-        string commandName;
-
+        
         public HelpCommand(ICommandLocator commands)
         {
             this.commands = commands;
         }
 
+        public string CommandName { get; set; }
+
         public OptionSet Options
         {
-            get { return new OptionSet().WithExtras(extra => commandName = extra.FirstOrDefault()); }
+            get { return new OptionSet().WithExtras(extra => CommandName = extra.FirstOrDefault()); }
         }
 
-        public void Start(ICommandRuntime commandRuntime)
+        public void WriteHelp(TextWriter writer)
+        {
+            
+        }
+
+        public void Start(string[] commandLineArguments, ICommandRuntime commandRuntime)
         {
             var executable = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullLocalPath());
 
-            if (string.IsNullOrEmpty(commandName))
+            if (string.IsNullOrEmpty(CommandName))
             {
                 PrintGeneralHelp(executable);
             }
             else
             {
-                var command = commands.Find(commandName);
+                var command = commands.Find(CommandName);
 
                 if (command == null)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Command '{0}' is not supported", commandName);
+                    Console.WriteLine("Command '{0}' is not supported", CommandName);
                     Console.ResetColor();
                     PrintGeneralHelp(executable);
                 }
@@ -63,7 +69,7 @@ namespace Octopus.Shared.Startup
             Console.WriteLine("Where [<options>] is any of: ");
             Console.WriteLine();
 
-            command.Options.WriteOptionDescriptions(Console.Out);
+            command.WriteHelp(Console.Out);
 
             Console.WriteLine();
             Console.Write("Or use ");

@@ -6,7 +6,7 @@ using Octopus.Platform.Util;
 
 namespace Octopus.Shared.Configuration
 {
-    public class HomeConfiguration : IHomeConfiguration, Autofac.IStartable
+    public class HomeConfiguration : IHomeConfiguration
     {
         readonly ILog log = Log.Octopus();
         readonly ApplicationName application;
@@ -40,10 +40,9 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Octopus.Home", value); }
         }
 
-        public void Start()
+        public void Save()
         {
-            var resolvedHomeDirectory = HomeDirectory;
-            log.VerboseFormat("Using home directory: {0}", resolvedHomeDirectory);
+            settings.Save();
         }
     }
 }

@@ -7,23 +7,29 @@ namespace Octopus.Shared.Startup
     {
         readonly ILog log = Log.Octopus();
         readonly string displayName;
+        readonly bool showLogo;
 
-        public ConsoleHost(string displayName)
+        public ConsoleHost(string displayName, bool showLogo)
         {
             this.displayName = displayName;
+            this.showLogo = showLogo;
         }
 
         public void Run(Action<ICommandRuntime> start, Action shutdown)
         {
             try
             {
-                Console.Title = displayName;
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(new string('-', 79));
-                Console.WriteLine("- " + displayName);
-                Console.WriteLine(new string('-', 79));
-                Console.WriteLine();
                 Console.ResetColor();
+                Console.Title = displayName;
+                if (showLogo)
+                {                 
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine(new string('-', 79));
+                    Console.WriteLine("- " + displayName);
+                    Console.WriteLine(new string('-', 79));
+                    Console.WriteLine();
+                    Console.ResetColor();
+                }
 
                 start(this);
 
@@ -40,11 +46,6 @@ namespace Octopus.Shared.Startup
                 Console.WriteLine(new string('-', 79));
                 Console.ResetColor();
                 log.Fatal(ex);
-                if (Environment.UserInteractive)
-                {
-                    Console.WriteLine("Press <enter> to shut down...");
-                    Console.ReadLine();
-                }
                 throw;
             }
         }

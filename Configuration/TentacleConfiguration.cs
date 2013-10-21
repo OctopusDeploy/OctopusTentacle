@@ -17,12 +17,14 @@ namespace Octopus.Shared.Configuration
     {
         readonly IKeyValueStore settings;
         readonly ICommunicationsConfiguration communicationsConfiguration;
+        readonly ICertificateGenerator certificateGenerator;
         readonly ILog log = Log.Octopus();
 
-        public TentacleConfiguration(IKeyValueStore settings, ICommunicationsConfiguration communicationsConfiguration)
+        public TentacleConfiguration(IKeyValueStore settings, ICommunicationsConfiguration communicationsConfiguration, ICertificateGenerator certificateGenerator)
         {
             this.settings = settings;
             this.communicationsConfiguration = communicationsConfiguration;
+            this.certificateGenerator = certificateGenerator;
 
             if (MasterKey == null)
             {
@@ -141,12 +143,19 @@ namespace Octopus.Shared.Configuration
             get
             {
                 var encoded = settings.Get("Cert-" + CertificateExpectations.TentacleCertificateFullName, protectionScope: DataProtectionScope.LocalMachine);
-                return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(encoded);
+                return string.IsNullOrWhiteSpace(encoded) ? GenerateNewCertificate() : CertificateEncoder.FromBase64String(encoded);
             }
             set
             {
                 settings.Set("Cert-" + CertificateExpectations.TentacleCertificateFullName, CertificateEncoder.ToBase64String(value), DataProtectionScope.LocalMachine);
             }
+        }
+
+        public X509Certificate2 GenerateNewCertificate()
+        {
+            var certificate = certificateGenerator.GenerateNew(CertificateExpectations.TentacleCertificateFullName);
+            TentacleCertificate = certificate;
+            return certificate;
         }
 
         public string ServicesHostName

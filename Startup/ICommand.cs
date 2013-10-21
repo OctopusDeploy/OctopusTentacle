@@ -1,13 +1,12 @@
 ﻿using System;
-using Octopus.Shared.Internals.Options;
+using System.IO;
 
 namespace Octopus.Shared.Startup
 {
     public interface ICommand
     {
-        OptionSet Options { get; }
-
-        void Start(ICommandRuntime commandRuntime);
+        void WriteHelp(TextWriter writer);
+        void Start(string[] commandLineArguments, ICommandRuntime commandRuntime);
         void Stop();
     }
 }

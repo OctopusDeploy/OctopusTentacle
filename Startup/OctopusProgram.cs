@@ -15,17 +15,21 @@ namespace Octopus.Shared.Startup
     public abstract class OctopusProgram
     {
         readonly ILog log = Log.Octopus();
-        readonly string[] commandLineArguments;
         readonly string displayName;
         readonly OptionSet commonOptions;
         IContainer container;
         ICommand commandInstance;
+        string[] commandLineArguments;
+        bool forceConsole = false;
+        bool showLogo = true;
 
         protected OctopusProgram(string displayName, string[] commandLineArguments)
         {
             this.commandLineArguments = commandLineArguments;
             this.displayName = displayName;
             commonOptions = new OptionSet();
+            commonOptions.Add("console", v => forceConsole = true);
+            commonOptions.Add("nologo", v => showLogo = false);
         }
 
         protected OptionSet CommonOptions { get { return commonOptions; } }
@@ -60,6 +64,7 @@ namespace Octopus.Shared.Startup
             int exitCode;
             try
             {
+                commandLineArguments = ProcessCommonOptions();
                 var host = SelectMostAppropriateHost();
                 host.Run(Start, Stop);
                 exitCode = Environment.ExitCode;
@@ -111,16 +116,16 @@ namespace Octopus.Shared.Startup
         {
             log.Trace("Selecting the most appropriate host");
 
-            if (commandLineArguments.Any(a => a.Trim('-', '/', '\\').ToLowerInvariant() == "console"))
+            if (forceConsole)
             {
                 log.Trace("The --console switch was passed; using a console host");
-                return new ConsoleHost(displayName);
+                return new ConsoleHost(displayName, showLogo);
             }
 
             if (Environment.UserInteractive)
             {
                 log.Trace("The program is running interactively; using a console host");
-                return new ConsoleHost(displayName);
+                return new ConsoleHost(displayName, showLogo);
             }
             
             log.Trace("The program is not running interactively; using a Windows Service host");
@@ -135,29 +140,27 @@ namespace Octopus.Shared.Startup
 
         void Start(ICommandRuntime commandRuntime)
         {
-            var args = ProcessCommonOptions();
-
             log.Trace("Creating and configuring the Autofac container");
             container = BuildContainer();
             RegisterAdditionalModules();
 
             var commandLocator = container.Resolve<ICommandLocator>();
 
-            var commandName = ExtractCommandName(ref args);
+            var commandName = ExtractCommandName(ref commandLineArguments);
             
             log.TraceFormat("Finding the implementation for command: {0}", commandName);
-            var command =
-                commandLocator.Find(commandName) ??
-                commandLocator.Find("help");
+            var command = commandLocator.Find(commandName);
+            if (command == null)
+            {
+                command = commandLocator.Find("help");
+                ((HelpCommand) command.Value).CommandName = commandName;
+                Environment.ExitCode = -1;
+            }
 
             commandInstance = command.Value;
             
             log.TraceFormat("Using command: {0}", commandInstance.GetType().Name);
-            log.TraceFormat("Forwarding remaining command line options");
-            commandInstance.Options.Parse(args);
-
-            log.TraceFormat("Delegating to command");
-            commandInstance.Start(commandRuntime);
+            commandInstance.Start(commandLineArguments, commandRuntime);
         }
 
         protected abstract IContainer BuildContainer();
@@ -173,8 +176,15 @@ namespace Octopus.Shared.Startup
         {
             if (container != null)
             {
-                var reporter = container.Resolve<IErrorReporter>();
-                reporter.ReportError(ex);
+                try
+                {
+                    var reporter = container.Resolve<IErrorReporter>();
+                    reporter.ReportError(ex);
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch
+                {
+                }
             }
         }
 

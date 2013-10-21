@@ -1,40 +1,21 @@
 using System;
 using System.IO;
-using System.Reflection;
 using Octopus.Platform.Deployment.Configuration;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Util;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {
-    public class LoggingConfiguration : ILoggingConfiguration, Autofac.IStartable
+    public class LoggingConfiguration : ILoggingConfiguration
     {
-        readonly ILog log = Log.Octopus();
         readonly IHomeConfiguration home;
-        readonly IOctopusFileSystem fileSystem;
 
-        public LoggingConfiguration(IHomeConfiguration home, IOctopusFileSystem fileSystem)
+        public LoggingConfiguration(IHomeConfiguration home)
         {
             this.home = home;
-            this.fileSystem = fileSystem;
         }
 
         public string LogsDirectory
         {
             get { return Path.Combine(home.HomeDirectory, "Logs"); }
-        }
-
-        public void Start()
-        {
-            var logDirectory = LogsDirectory;
-
-            log.TraceFormat("Logs will be written to: {0}", logDirectory);
-            fileSystem.EnsureDirectoryExists(logDirectory);
-
-            OctopusLogsDirectoryRenderer.LogsDirectory = logDirectory;
-
-            log.InfoFormat("Octopus version: {0}", Assembly.GetExecutingAssembly().GetInformationalVersion());
         }
     }
 }

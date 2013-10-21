@@ -5,15 +5,15 @@ using Microsoft.Win32;
 
 namespace Octopus.Shared.Configuration
 {
-    public class ApplicationInstanceRepository : IApplicationInstanceRepository
+    public class ApplicationInstanceStore : IApplicationInstanceStore
     {
         const RegistryHive Hive = RegistryHive.LocalMachine;
         const RegistryView View = RegistryView.Registry64;
         const string KeyName = "Software\\Octopus";
 
-        public IList<ApplicationInstance> ListInstances(ApplicationName name)
+        public IList<ApplicationInstanceRecord> ListInstances(ApplicationName name)
         {
-            var results = new List<ApplicationInstance>();
+            var results = new List<ApplicationInstanceRecord>();
 
             using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
             using (var subKey = rootKey.OpenSubKey(KeyName, false))
@@ -36,7 +36,7 @@ namespace Octopus.Shared.Configuration
                                 continue;
 
                             var path = instanceKey.GetValue("ConfigurationFilePath");
-                            results.Add(new ApplicationInstance(instanceName, name, (string)path));
+                            results.Add(new ApplicationInstanceRecord(instanceName, name, (string)path));
                         }
                     }
                 }
@@ -45,35 +45,35 @@ namespace Octopus.Shared.Configuration
             return results;
         }
 
-        public ApplicationInstance GetInstance(ApplicationName name, string instanceName)
+        public ApplicationInstanceRecord GetInstance(ApplicationName name, string instanceName)
         {
             return ListInstances(name).SingleOrDefault(s => s.InstanceName == instanceName);
         }
 
-        public ApplicationInstance GetDefaultInstance(ApplicationName name)
+        public ApplicationInstanceRecord GetDefaultInstance(ApplicationName name)
         {
-            return GetInstance(name, ApplicationInstance.GetDefaultInstance(name));
+            return GetInstance(name, ApplicationInstanceRecord.GetDefaultInstance(name));
         }
 
-        public void SaveInstance(ApplicationInstance instance)
+        public void SaveInstance(ApplicationInstanceRecord instanceRecord)
         {
             using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
             using (var subKey = CreateOrOpenKeyForWrite(rootKey, KeyName))
-            using (var applicationNameKey = CreateOrOpenKeyForWrite(subKey, instance.ApplicationName.ToString()))
-            using (var instanceKey = CreateOrOpenKeyForWrite(applicationNameKey, instance.InstanceName))
+            using (var applicationNameKey = CreateOrOpenKeyForWrite(subKey, instanceRecord.ApplicationName.ToString()))
+            using (var instanceKey = CreateOrOpenKeyForWrite(applicationNameKey, instanceRecord.InstanceName))
             {
-                instanceKey.SetValue("ConfigurationFilePath", instance.ConfigurationFilePath);
+                instanceKey.SetValue("ConfigurationFilePath", instanceRecord.ConfigurationFilePath);
                 instanceKey.Flush();
             }
         }
 
-        public void DeleteInstance(ApplicationInstance instance)
+        public void DeleteInstance(ApplicationInstanceRecord instanceRecord)
         {
             using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
             using (var subKey = CreateOrOpenKeyForWrite(rootKey, KeyName))
-            using (var applicationNameKey = CreateOrOpenKeyForWrite(subKey, instance.ApplicationName.ToString()))
+            using (var applicationNameKey = CreateOrOpenKeyForWrite(subKey, instanceRecord.ApplicationName.ToString()))
             {
-                applicationNameKey.DeleteSubKey(instance.InstanceName);
+                applicationNameKey.DeleteSubKey(instanceRecord.InstanceName);
                 applicationNameKey.Flush();
             }
         }
