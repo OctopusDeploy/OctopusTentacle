@@ -59,5 +59,10 @@ namespace Octopus.Shared.Configuration
             get { return settings.Get("Octopus.Communications.ServicesPort", 10943); }
             set { settings.Set("Octopus.Communications.ServicesPort", value); }
         }
+
+        public void Save()
+        {
+            settings.Save();
+        }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net;
 using Octopus.Platform.Deployment.Configuration;
 
@@ -38,6 +39,11 @@ namespace Octopus.Shared.Configuration
         {
             get { return settings.Get("Octopus.WebPortal.AuthenticationMode", AuthenticationMode.UsernamePassword); }
             set { settings.Set("Octopus.WebPortal.AuthenticationMode", value); }
+        }
+
+        public void Save()
+        {
+            settings.Save();
         }
     }
 }
