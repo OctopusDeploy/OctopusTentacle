@@ -310,6 +310,7 @@
     <Compile Include="Startup\CreateInstanceCommand.cs" />
     <Compile Include="Startup\DeleteInstanceCommand.cs" />
     <Compile Include="Startup\LsaUtility.cs" />
+    <Compile Include="Startup\ServiceCommand.cs" />
     <Compile Include="Startup\WindowsServiceHost.cs" />
     <Compile Include="Startup\CommandModule.cs" />
     <Compile Include="Startup\ConsoleHost.cs" />
