@@ -33,15 +33,15 @@ namespace Octopus.Shared.Configuration
 
                 return selector.Current.Configuration;
             }).As<IKeyValueStore>().SingleInstance();
-            builder.RegisterType<UpgradeCheckConfiguration>().As<IUpgradeCheckConfiguration>();
-            builder.Register(c => new HomeConfiguration(applicationName, c.Resolve<IKeyValueStore>())).As<IHomeConfiguration>();
-            builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>();
+            builder.RegisterType<UpgradeCheckConfiguration>().As<IUpgradeCheckConfiguration>().SingleInstance();
+            builder.Register(c => new HomeConfiguration(applicationName, c.Resolve<IKeyValueStore>())).As<IHomeConfiguration>().SingleInstance();
+            builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().SingleInstance();
             builder.RegisterType<LogInitializer>().As<IStartable>();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
             builder.RegisterType<ProxyInitializer>().As<IStartable>();
-            builder.RegisterType<CommunicationsConfiguration>().As<ICommunicationsConfiguration, ITcpServerCommunicationsConfiguration>();
-            builder.RegisterType<FileStorageConfiguration>().As<IFileStorageConfiguration>();
-            builder.RegisterType<StoredMasterKeyEncryption>().As<IMasterKeyEncryption>();
+            builder.RegisterType<CommunicationsConfiguration>().As<ICommunicationsConfiguration, ITcpServerCommunicationsConfiguration>().SingleInstance();
+            builder.RegisterType<FileStorageConfiguration>().As<IFileStorageConfiguration>().SingleInstance();
+            builder.RegisterType<StoredMasterKeyEncryption>().As<IMasterKeyEncryption>().SingleInstance();
         }
     }
 }

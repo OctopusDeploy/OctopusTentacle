@@ -19,7 +19,6 @@ namespace Octopus.Shared.Configuration
 
         protected override void LoadSettings(IDictionary<string, string> settingsToFill)
         {
-            log.InfoFormat("Loading configuration settings from file {0}", configurationFile);
             if (!ExistsForReading())
                 throw new Exception(string.Format("Configuration file {0} could not be found.", configurationFile));
 
@@ -28,7 +27,6 @@ namespace Octopus.Shared.Configuration
 
         protected override void SaveSettings(IDictionary<string, string> settingsToSave)
         {
-            log.InfoFormat("Saving configuration settings to file {0}", configurationFile);
             base.SaveSettings(settingsToSave);
         }
 
