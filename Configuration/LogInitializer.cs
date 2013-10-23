@@ -37,9 +37,7 @@ namespace Octopus.Shared.Configuration
 
             var logDirectory = configuration.Value.LogsDirectory;
 
-            log.TraceFormat("Logs will be written to: {0}", logDirectory);
             fileSystem.EnsureDirectoryExists(logDirectory);
-
             OctopusLogsDirectoryRenderer.LogsDirectory = logDirectory;
 
             log.VerboseFormat("Octopus version: {0}", Assembly.GetExecutingAssembly().GetInformationalVersion());
