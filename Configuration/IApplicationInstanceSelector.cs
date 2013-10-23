@@ -12,5 +12,6 @@ namespace Octopus.Shared.Configuration
         void DeleteInstance(string instanceName);
 
         LoadedApplicationInstance Current { get; }
+        event Action Loaded;
     }
 }

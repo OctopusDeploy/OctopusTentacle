@@ -24,8 +24,16 @@ namespace Octopus.Shared.Configuration
 
         public void Start()
         {
+            selector.Loaded += InitializeLogs;
+            InitializeLogs();
+        }
+
+        void InitializeLogs()
+        {
             if (selector.Current == null)
                 return;
+
+            selector.Loaded -= InitializeLogs;
 
             var logDirectory = configuration.Value.LogsDirectory;
 
@@ -34,7 +42,7 @@ namespace Octopus.Shared.Configuration
 
             OctopusLogsDirectoryRenderer.LogsDirectory = logDirectory;
 
-            log.InfoFormat("Octopus version: {0}", Assembly.GetExecutingAssembly().GetInformationalVersion());
+            log.VerboseFormat("Octopus version: {0}", Assembly.GetExecutingAssembly().GetInformationalVersion());
         }
     }
 }

@@ -21,6 +21,7 @@ namespace Octopus.Shared.Configuration
         }
 
         public LoadedApplicationInstance Current { get; private set; }
+        public event Action Loaded;
 
         public void DeleteDefaultInstance()
         {
@@ -86,6 +87,13 @@ namespace Octopus.Shared.Configuration
                 throw new Exception("");
             }
             Current = new LoadedApplicationInstance(applicationName, record.InstanceName, new XmlFileKeyValueStore(record.ConfigurationFilePath, log));
+            OnLoaded();
+        }
+
+        protected virtual void OnLoaded()
+        {
+            Action handler = Loaded;
+            if (handler != null) handler();
         }
     }
 }

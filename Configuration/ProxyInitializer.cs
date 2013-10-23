@@ -19,9 +19,17 @@ namespace Octopus.Shared.Configuration
 
         public void Start()
         {
+            selector.Loaded += InitializeProxy;
+            InitializeProxy();
+        }
+
+        void InitializeProxy()
+        {
             if (selector.Current == null)
                 return;
 
+            selector.Loaded -= InitializeProxy;
+            
             try
             {
                 if (proxyConfiguration.Value.UseDefaultProxy)
