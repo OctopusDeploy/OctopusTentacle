@@ -11,7 +11,6 @@ namespace Octopus.Shared.Startup
         {
             return builder.RegisterType<TCommand>()
                 .As<ICommand>()
-                .AsSelf()
                 .WithMetadata<ICommandMetadata>(m => m.For(x => x.Name, name).For(x => x.Aliases, aliases).For(x => x.Description, description));
         }
     }

@@ -12,7 +12,7 @@ namespace Octopus.Shared.Startup
 
             builder.RegisterMetadataRegistrationSources();
             builder.RegisterCommand<HelpCommand>("help", "Prints this help text", "h", "?");
-            builder.RegisterType<CommandLocator>().As<ICommandLocator>();
+            builder.RegisterType<CommandLocator>().As<ICommandLocator>().SingleInstance();
             builder.RegisterType<ServiceInstaller>().As<IServiceInstaller>();
         }
     }
