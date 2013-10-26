@@ -64,7 +64,7 @@ namespace Octopus.Shared.Integration.Scripting.PowerShell
             {
                 writer.WriteLine("## Dependencies:");
 
-                writer.WriteLine("[System.Reflection.Assembly]::Load(\"System.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\") | Out-Null");
+                writer.WriteLine("Add-Type -AssemblyName System.Security");
 
                 writer.WriteLine("## Variables:");
                 
