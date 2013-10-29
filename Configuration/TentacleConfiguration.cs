@@ -142,12 +142,14 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var encoded = settings.Get("Cert-" + CertificateExpectations.TentacleCertificateFullName, protectionScope: DataProtectionScope.LocalMachine);
-                return string.IsNullOrWhiteSpace(encoded) ? GenerateNewCertificate() : CertificateEncoder.FromBase64String(encoded);
+                var thumbprint = settings.Get("Tentacle.CertificateThumbprint");
+                var encoded = settings.Get("Tentacle.Certificate", protectionScope: DataProtectionScope.LocalMachine);
+                return string.IsNullOrWhiteSpace(encoded) ? GenerateNewCertificate() : CertificateEncoder.FromBase64String(thumbprint, encoded);
             }
-            set
+            private set
             {
-                settings.Set("Cert-" + CertificateExpectations.TentacleCertificateFullName, CertificateEncoder.ToBase64String(value), DataProtectionScope.LocalMachine);
+                settings.Set("Tentacle.Certificate", CertificateEncoder.ToBase64String(value), DataProtectionScope.LocalMachine);
+                settings.Set("Tentacle.CertificateThumbprint", value.Thumbprint);
             }
         }
 
