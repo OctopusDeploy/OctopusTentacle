@@ -41,7 +41,7 @@ namespace Octopus.Shared.Communications
             base.Load(builder);
 
             var logger = Log.Octopus();
-            Pipefish.Diagnostics.Log.OnDebug(logger.Trace);
+            Pipefish.Diagnostics.Log.OnDebug(logger.Info);
             Pipefish.Diagnostics.Log.OnError((e, m) => logger.Error(e.UnpackFromContainers(), m));
 
             builder.RegisterAssemblyTypes(assemblies)
@@ -82,6 +82,8 @@ namespace Octopus.Shared.Communications
                 .OnActivating(e =>
                 {
                     // This can probably get baked into a built-in class.
+
+                    Log.Octopus().Info("Resolving for " + e.Instance);
 
                     var storage = e.Context.Resolve<IActorStorage>();
                     foreach (var actor in e.Context.Resolve<IEnumerable<Meta<IActor>>>())

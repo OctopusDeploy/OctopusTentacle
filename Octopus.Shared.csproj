@@ -95,7 +95,7 @@
     </Reference>
     <Reference Include="Pipefish.Transport.SecureTcp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.Transport.SecureTcp.0.1.0.117\lib\Pipefish.Transport.SecureTcp.dll</HintPath>
+      <HintPath>..\packages\Pipefish.Transport.SecureTcp.0.1.0.125\lib\Pipefish.Transport.SecureTcp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
