@@ -11,7 +11,7 @@ namespace Octopus.Shared.Startup
         protected AbstractStandardCommand(IApplicationInstanceSelector instanceSelector)
         {
             this.instanceSelector = instanceSelector;
-            Options.Add("instance=", "Name of the instance to create", v => instanceName = v);
+            Options.Add("instance=", "Name of the instance to use", v => instanceName = v);
         }
 
         protected override void Start()

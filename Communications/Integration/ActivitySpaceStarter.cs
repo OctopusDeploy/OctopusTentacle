@@ -30,7 +30,11 @@ namespace Octopus.Shared.Communications.Integration
             // but the concurrency involved requires some more careful thought.
             IActor clock;
             if (space.TryGetActor(WellKnownActors.Clock, out clock))
-                space.Detach(clock);
+            {
+                var disp = clock as IDisposable;
+                if (disp != null)
+                    disp.Dispose();
+            }
 
             space.Dispose();
         }

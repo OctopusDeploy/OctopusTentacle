@@ -1,5 +1,4 @@
 using System;
-using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
 using Octopus.Shared.Configuration;
 
@@ -12,7 +11,7 @@ namespace Octopus.Shared.Startup
         string instanceName;
         string config;
 
-        public CreateInstanceCommand(IOctopusFileSystem fileSystem, IApplicationInstanceSelector instanceSelector, ILog log)
+        public CreateInstanceCommand(IOctopusFileSystem fileSystem, IApplicationInstanceSelector instanceSelector)
         {
             this.fileSystem = fileSystem;
             this.instanceSelector = instanceSelector;
