@@ -144,6 +144,7 @@
     <Compile Include="Bcl\IO\StreamDisposalChain.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
+    <Compile Include="Communications\Commands\DecryptCommand.cs" />
     <Compile Include="Communications\Commands\ResetCommand.cs" />
     <Compile Include="Communications\Encryption\EncryptedStorageStream.cs" />
     <Compile Include="Communications\Conversations\ActiveConversation.cs" />
