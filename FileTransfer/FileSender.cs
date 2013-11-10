@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 using Octopus.Platform.Deployment.Logging;
@@ -9,6 +10,7 @@ using Pipefish.Messages;
 
 namespace Octopus.Shared.FileTransfer
 {
+    [Description("Send File")]
     public class FileSender : 
         PersistentActor<FileSendData>,
         ICreatedBy<SendFileCommand>,

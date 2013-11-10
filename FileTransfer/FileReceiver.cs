@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 using Octopus.Platform.Deployment.Configuration;
@@ -9,6 +10,7 @@ using Pipefish.Supervision;
 
 namespace Octopus.Shared.FileTransfer
 {
+    [Description("Receive File")]
     public class FileReceiver : PersistentActor<FileReceiveData>,
                                 ICreatedBy<BeginFileTransferCommand>,
                                 IReceiveAsync<SendNextChunkReply>
