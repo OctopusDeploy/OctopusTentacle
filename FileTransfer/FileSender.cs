@@ -6,6 +6,7 @@ using Octopus.Platform.Deployment.Logging;
 using Octopus.Platform.Deployment.Messages.FileTransfer;
 using Octopus.Platform.Util;
 using Pipefish;
+using Pipefish.Errors;
 using Pipefish.Messages;
 
 namespace Octopus.Shared.FileTransfer
@@ -88,7 +89,12 @@ namespace Octopus.Shared.FileTransfer
 
         Intervention SendFileFailure(Guid id, Error error)
         {
-            supervised.Activity.ErrorFormat("Upload of file {0} with hash {1} to {2} failed", Data.LocalFilename, Data.Hash, Data.Destination);
+            // File receiver, for whatever reason, isnt' an activity. This ensures
+            // we log its failures correctly, while we should convert the receiver to a
+            // SupervisedActivity.
+
+            var message = string.Format("Upload of file {0} with hash {1} to {2} failed", Data.LocalFilename, Data.Hash, Data.Destination);
+            supervised.Fail(message, error.ToException());
             return Intervention.NotHandled;
         }
 
