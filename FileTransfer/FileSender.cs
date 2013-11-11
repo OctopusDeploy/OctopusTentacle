@@ -46,7 +46,7 @@ namespace Octopus.Shared.FileTransfer
 
             supervised.Activity.Verbose("Requesting upload...");
 
-            var begin = Dispatch(message.RemoteSquid, new BeginFileTransferCommand(Path.GetFileName(Data.LocalFilename), Data.Hash, Data.ExpectedSize));
+            var begin = Dispatch(message.RemoteSquid, new BeginFileTransferCommand(Path.GetFileName(Data.LocalFilename), Data.Hash, Data.ExpectedSize), isTracked: true);
             supervised.BeginOperation(SendFile, begin.Id);
         }
 
