@@ -73,7 +73,7 @@ namespace Octopus.Shared.Conventions.Implementations
             var configurationFilePath = context.Variables.Get("OctopusAzureConfigurationFile");
             if (!string.IsNullOrWhiteSpace(configurationFilePath) && !fileSystem.FileExists(configurationFilePath))
             {
-                throw new ActivityFailedException("The specified Azure service configuraton file does not exist: " + configurationFilePath);
+                throw new ControlledFailureException("The specified Azure service configuraton file does not exist: " + configurationFilePath);
             }
 
             if (string.IsNullOrWhiteSpace(configurationFilePath))
@@ -109,7 +109,7 @@ namespace Octopus.Shared.Conventions.Implementations
                 context.Log.Verbose("Azure service configuration file not found: " + path);
             }
 
-            throw new ActivityFailedException("Could not find an Azure service configuration file in the package.");
+            throw new ControlledFailureException("Could not find an Azure service configuration file in the package.");
         }
 
         static XDocument LoadConfigurationFile(string configurationFilePath)

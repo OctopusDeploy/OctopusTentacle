@@ -90,7 +90,7 @@ namespace Octopus.Shared.Packages
 
             if (downloaded == null || downloadedTo == null)
             {
-                throw new ActivityFailedException("The package could not be downloaded from NuGet. Please see the below errors for details. If you are getting a package verification error, try switching to a Windows File Share package repository to see if that helps.");
+                throw new ControlledFailureException("The package could not be downloaded from NuGet. If you are getting a package verification error, try switching to a Windows File Share package repository to see if that helps.");
             }
 
             CheckWhetherThePackageHasDependencies(downloaded, log);
@@ -133,7 +133,7 @@ namespace Octopus.Shared.Packages
             var package = remoteRepository.FindPackage(packageMetadata.PackageId, new SemanticVersion(packageMetadata.Version), true, true);
 
             if (package == null)
-                throw new Exception(String.Format("Could not find package {0} {1} in feed: '{2}'", packageMetadata.PackageId, packageMetadata.Version, feed.FeedUri));
+                throw new ControlledFailureException(string.Format("Could not find package {0} {1} in feed: '{2}'", packageMetadata.PackageId, packageMetadata.Version, feed.FeedUri));
 
             return package;
         }

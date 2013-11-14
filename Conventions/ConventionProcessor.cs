@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Octopus.Platform.Deployment;
 using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
@@ -34,6 +35,11 @@ namespace Octopus.Shared.Conventions
                 context.Log.Error("Error running conventions; running rollback conventions...");
 
                 ex = ex.UnpackFromContainers();
+
+                // Not desirable to do this by default in UnpackFromContainers().
+                while (ex is ControlledFailureException && ex.InnerException != null)
+                    ex = ex.InnerException;
+
                 context.Variables.Set(SpecialVariables.LastError, ex.ToString());
                 context.Variables.Set(SpecialVariables.LastErrorMessage, ex.Message);
 
@@ -81,10 +87,18 @@ namespace Octopus.Shared.Conventions
                     conventionCallback(convention, childContext);
                     childContext.Log.EndOperation();
                 }
+                catch (ControlledFailureException ex)
+                {
+                    Log.Octopus().Verbose(ex);
+                    childContext.Log.Fatal(ex.Message);
+                    throw new ControlledFailureException("A convention could not be successfully applied.", ex);
+                }
                 catch (Exception ex)
                 {
                     childContext.Log.Fatal(ex);
-                    throw;
+                    // While not strictly a "controlled" failure, we're certain to have logged the
+                    // issue at this point.
+                    throw new ControlledFailureException("An error occurred in a convention.", ex);
                 }
             }
         }
