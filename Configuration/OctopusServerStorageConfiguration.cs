@@ -22,7 +22,6 @@ namespace Octopus.Shared.Configuration
             {
                 log.Info("Generating a new Master Key for this Octopus Server...");
                 MasterKey = MasterKeyEncryption.GenerateKey();
-                IsMasterKeyBackedUp = false;
                 Save();
                 log.Info("Master Key saved; use the Octopus Administration tool to back the key up.");
             }
@@ -73,12 +72,6 @@ namespace Octopus.Shared.Configuration
             {
                 settings.Set("Octopus.Storage.MasterKey", value, DataProtectionScope.LocalMachine);
             }
-        }
-
-        public bool IsMasterKeyBackedUp
-        {
-            get { return settings.Get("Octopus.Storage.IsMasterKeyBackedUp", false); }
-            set { settings.Set("Octopus.Storage.IsMasterKeyBackedUp", value); }
         }
 
         public void Save()
