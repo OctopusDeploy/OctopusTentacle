@@ -5,11 +5,11 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using Octopus.Platform.Diagnostics;
+using Octopus.Platform.Security.Masking;
 using Octopus.Platform.Util;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Startup;
 
-namespace Octopus.Tentacle.Commands
+namespace Octopus.Shared.Startup
 {
     public class ServiceCommand : AbstractStandardCommand
     {
@@ -39,8 +39,13 @@ namespace Octopus.Tentacle.Commands
             Options.Add("reconfigure", "Reconfigure the Windows Service", v => reconfigure = true);
             Options.Add("install", "Install the Windows Service", v => install = true);
             Options.Add("username=", "Username to run the service under (DOMAIN\\Username format). Only used when --install is used.", v => username = v);
-            Options.Add("password=", "Password for the username specified with --username. Only used when --install is used.", v => password = v);
             Options.Add("uninstall", "Uninstall the Windows Service", v => uninstall = true);
+            Options.Add("password=", "Password for the username specified with --username. Only used when --install is used.", v =>
+            {
+                MaskingContext.Permanent.MaskInstancesOf(password);
+                password = v;
+            });
+
         }
 
         protected override void Start()
