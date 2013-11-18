@@ -47,12 +47,12 @@ namespace Octopus.Shared.Configuration
 
         public string EmbeddedDatabaseStoragePath
         {
-            get { return Path.Combine(home.HomeDirectory, "Data"); }
+            get { return Path.Combine(home.HomeDirectory, "RavenDB"); }
         }
 
         public int EmbeddedDatabaseListenPort
         {
-            get { return settings.Get("Octopus.Storage.EmbeddedDatabaseListenPort", 10930); }
+            get { return settings.Get("Octopus.Storage.EmbeddedDatabaseListenPort", 10931); }
             set { settings.Set("Octopus.Storage.EmbeddedDatabaseListenPort", value); }
         }
 
