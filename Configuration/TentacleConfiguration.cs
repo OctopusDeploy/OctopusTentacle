@@ -135,7 +135,7 @@ namespace Octopus.Shared.Configuration
 
         public string JournalFilePath
         {
-            get { return Path.Combine(ApplicationDirectory, ".Tentacle\\Deployments.xml"); }
+            get { return Path.Combine(ApplicationDirectory, ".Tentacle\\DeploymentJournal.xml"); }
         }
 
         public X509Certificate2 TentacleCertificate
