@@ -74,6 +74,11 @@ namespace Octopus.Shared.Configuration
             }
         }
 
+        public string ActivityLogDirectory
+        {
+            get { return Path.Combine(home.HomeDirectory, "ActivityLogs"); }
+        }
+
         public void Save()
         {
             settings.Save();
