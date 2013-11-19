@@ -130,10 +130,18 @@ namespace Octopus.Shared.Packages
             log.VerboseFormat("Finding package (attempt {0} of {1})", attempt, NumberOfTimesToAttemptToDownloadPackage);
 
             var remoteRepository = packageRepositoryFactory.CreateRepository(feed.FeedUri, feed.GetCredentials(encryption));
-            var package = remoteRepository.FindPackage(packageMetadata.PackageId, new SemanticVersion(packageMetadata.Version), true, true);
+
+            var requiredVersion = new SemanticVersion(packageMetadata.Version);
+            var package = remoteRepository.FindPackage(packageMetadata.PackageId, requiredVersion, true, true);
 
             if (package == null)
                 throw new ControlledFailureException(string.Format("Could not find package {0} {1} in feed: '{2}'", packageMetadata.PackageId, packageMetadata.Version, feed.FeedUri));
+
+            if (!requiredVersion.Equals(package.Version))
+            {
+                var message = string.Format("The package version '{0}' returned from the package repository doesn't match the requested package version '{1}'.", package.Version, requiredVersion);
+                throw new ControlledFailureException(message);
+            }
 
             return package;
         }
