@@ -1,5 +1,6 @@
 using System;
 using Octopus.Platform.Diagnostics;
+using Octopus.Platform.Util;
 
 namespace Octopus.Shared.Startup
 {
@@ -23,10 +24,8 @@ namespace Octopus.Shared.Startup
                 Console.Title = displayName;
                 if (showLogo)
                 {                 
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine(new string('-', 79));
-                    Console.WriteLine("- " + displayName);
-                    Console.WriteLine(new string('-', 79));
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine(displayName + " version " + typeof(ConsoleHost).Assembly.GetFileVersion());
                     Console.WriteLine();
                     Console.ResetColor();
                 }
