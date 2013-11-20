@@ -28,6 +28,7 @@ namespace Octopus.Shared.Configuration
             var instance = instanceStore.GetDefaultInstance(applicationName);
             if (instance == null) return;
             instanceStore.DeleteInstance(instance);
+            log.Info("Deleted default instance");
         }
 
         public void DeleteInstance(string instanceName)
@@ -35,6 +36,7 @@ namespace Octopus.Shared.Configuration
             var instance = instanceStore.GetInstance(applicationName, instanceName);
             if (instance == null) return;
             instanceStore.DeleteInstance(instance);
+            log.Info("Deleted instance: " + instanceName);
         }
 
         public void LoadDefaultInstance()
