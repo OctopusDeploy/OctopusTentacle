@@ -153,7 +153,6 @@ namespace Octopus.Shared.Startup
             if (command == null)
             {
                 command = commandLocator.Find("help");
-                ((HelpCommand) command.Value).CommandName = commandName;
                 Environment.ExitCode = -1;
             }
 

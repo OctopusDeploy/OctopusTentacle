@@ -16,13 +16,6 @@ namespace Octopus.Shared.Startup
             this.commands = commands;
         }
 
-        public string CommandName { get; set; }
-
-        public OptionSet Options
-        {
-            get { return new OptionSet().WithExtras(extra => CommandName = extra.FirstOrDefault()); }
-        }
-
         public void WriteHelp(TextWriter writer)
         {
             
@@ -32,18 +25,20 @@ namespace Octopus.Shared.Startup
         {
             var executable = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullLocalPath());
 
-            if (string.IsNullOrEmpty(CommandName))
+            var commandName = commandLineArguments.Length > 0 ? commandLineArguments[0] : null;
+
+            if (string.IsNullOrEmpty(commandName))
             {
                 PrintGeneralHelp(executable);
             }
             else
             {
-                var command = commands.Find(CommandName);
+                var command = commands.Find(commandName);
 
                 if (command == null)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Command '{0}' is not supported", CommandName);
+                    Console.WriteLine("Command '{0}' is not supported", commandName);
                     Console.ResetColor();
                     PrintGeneralHelp(executable);
                 }
