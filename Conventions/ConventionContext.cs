@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Deployment.Packages;
@@ -12,20 +11,18 @@ namespace Octopus.Shared.Conventions
     {
         readonly ILog log;
         readonly CancellationToken cancellationToken;
-        readonly X509Certificate2 certificate;
         readonly Action<CreatedArtifact> storeCreatedArtifact;
         readonly PackageMetadata package;
         readonly VariableDictionary variables;
 
         public ConventionContext(PackageMetadata package, string directoryPath,
             VariableDictionary variables, ILog log, CancellationToken cancellationToken,
-            X509Certificate2 certificate, Action<CreatedArtifact> storeCreatedArtifact)
+            Action<CreatedArtifact> storeCreatedArtifact)
         {
             this.package = package;
             this.variables = variables;
             this.log = log;
             this.cancellationToken = cancellationToken;
-            this.certificate = certificate;
             this.storeCreatedArtifact = storeCreatedArtifact;
             PackageContentsDirectoryPath = directoryPath;
             StagingDirectoryPath = directoryPath;
@@ -39,11 +36,6 @@ namespace Octopus.Shared.Conventions
         public CancellationToken CancellationToken
         {
             get { return cancellationToken; }
-        }
-
-        public X509Certificate2 Certificate
-        {
-            get { return certificate; }
         }
 
         public string PackageContentsDirectoryPath { get; set; }

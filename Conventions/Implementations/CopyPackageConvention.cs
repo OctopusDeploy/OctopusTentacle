@@ -3,7 +3,6 @@ using System.IO;
 using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Util;
 using Octopus.Platform.Variables;
-using Octopus.Shared.Contracts;
 
 namespace Octopus.Shared.Conventions.Implementations
 {

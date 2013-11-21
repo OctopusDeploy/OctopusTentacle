@@ -1,12 +1,9 @@
 using System;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using Octopus.Platform.Deployment.Conventions;
 using Octopus.Platform.Deployment.Packages;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Variables;
-using Octopus.Shared.Contracts;
-using Octopus.Shared.Integration.Scripting;
 
 namespace Octopus.Shared.Conventions
 {
@@ -23,7 +20,6 @@ namespace Octopus.Shared.Conventions
 
         public PackageMetadata Package { get { return root.Package; } }
         public CancellationToken CancellationToken { get { return root.CancellationToken; } }
-        public X509Certificate2 Certificate { get { return root.Certificate; } }
         public string PackageContentsDirectoryPath { get { return root.PackageContentsDirectoryPath; } set { root.PackageContentsDirectoryPath = value; } }
         public string StagingDirectoryPath { get { return root.StagingDirectoryPath; } }
         public VariableDictionary Variables { get { return root.Variables; } }

@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Linq;
 using Octopus.Platform.Deployment.Conventions;
+using Octopus.Platform.Security.Certificates;
 using Octopus.Platform.Util;
 using Octopus.Platform.Variables;
-using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Azure;
 
 namespace Octopus.Shared.Conventions.Implementations
@@ -70,8 +70,12 @@ namespace Octopus.Shared.Conventions.Implementations
             var packageVersion = context.Variables.Get(SpecialVariables.Action.Package.NuGetPackageVersion);
             var packageHash = Hash(packageFilePath);            
             var fileName = Path.ChangeExtension(Path.GetFileName(packageFilePath), "." + packageVersion + "_" + packageHash + ".cspkg");
-            
-            var subscription = SubscriptionDataFactory.CreateFromAzureStep(context.Variables, context.Certificate);
+
+            var azureCertificate = CertificateEncoder.Import(
+                context.Variables.Get(SpecialVariables.Action.Azure.CertificateThumbprint),
+                Convert.FromBase64String(context.Variables.Get(SpecialVariables.Action.Azure.CertificateBytes)));
+
+            var subscription = SubscriptionDataFactory.CreateFromAzureStep(context.Variables, azureCertificate);
             return azurePackageUploader.Upload(subscription, packageFilePath, fileName, context.Log, context.CancellationToken);
         }
 

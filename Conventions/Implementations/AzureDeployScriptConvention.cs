@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Platform.Deployment.Conventions;
+using Octopus.Platform.Security.Certificates;
 using Octopus.Platform.Util;
 using Octopus.Platform.Variables;
-using Octopus.Shared.Contracts;
 
 namespace Octopus.Shared.Conventions.Implementations
 {
@@ -35,8 +35,12 @@ namespace Octopus.Shared.Conventions.Implementations
             {
                 CopyScriptFromTemplate(context, azurePowerShellFolder, "BootstrapDeployToAzure.ps1");
                 CopyScriptFromTemplate(context, azurePowerShellFolder, "DeployToAzure.ps1");
-         
-                fileSystem.WriteAllBytes(certificateFilePath, context.Certificate.Export(X509ContentType.Pfx, certificateFilePassword));
+
+                var azureCertificate = CertificateEncoder.Import(
+                    context.Variables.Get(SpecialVariables.Action.Azure.CertificateThumbprint),
+                    Convert.FromBase64String(context.Variables.Get(SpecialVariables.Action.Azure.CertificateBytes)));
+
+                fileSystem.WriteAllBytes(certificateFilePath, azureCertificate.Export(X509ContentType.Pfx, certificateFilePassword));
 
                 context.Variables.Set("OctopusAzureModulePath", Path.Combine(azurePowerShellFolder, "Azure.psd1"));
                 context.Variables.Set("OctopusAzureCertificateFileName", certificateFilePath);

@@ -6,10 +6,9 @@ using System.Xml;
 using System.Xml.Linq;
 using Octopus.Platform.Deployment;
 using Octopus.Platform.Deployment.Conventions;
+using Octopus.Platform.Security.Certificates;
 using Octopus.Platform.Util;
 using Octopus.Platform.Variables;
-using Octopus.Shared.Activities;
-using Octopus.Shared.Contracts;
 using Octopus.Shared.Integration.Azure;
 
 namespace Octopus.Shared.Conventions.Implementations
@@ -129,7 +128,11 @@ namespace Octopus.Shared.Conventions.Implementations
             var serviceName = context.Variables.Get(SpecialVariables.Action.Azure.CloudServiceName);
             var slot = context.Variables.Get(SpecialVariables.Action.Azure.Slot);
 
-            var subscriptionData = SubscriptionDataFactory.CreateFromAzureStep(context.Variables, context.Certificate);
+            var azureCertificate = CertificateEncoder.Import(
+                context.Variables.Get(SpecialVariables.Action.Azure.CertificateThumbprint),
+                Convert.FromBase64String(context.Variables.Get(SpecialVariables.Action.Azure.CertificateBytes)));
+
+            var subscriptionData = SubscriptionDataFactory.CreateFromAzureStep(context.Variables, azureCertificate);
             var remoteConfigurationFile = configurationRetriever.GetCurrentConfiguration(subscriptionData, serviceName, slot);
 
             if (remoteConfigurationFile == null)
