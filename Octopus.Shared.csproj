@@ -43,9 +43,6 @@
     <Reference Include="Autofac.Integration.Mef">
       <HintPath>..\packages\Autofac.Mef.3.0.1\lib\net40\Autofac.Integration.Mef.dll</HintPath>
     </Reference>
-    <Reference Include="edtFTPnetPRO">
-      <HintPath>..\packages\edtFTPnet-PRO.8.4.0\lib\edtFTPnetPRO.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Threading.Tasks">
       <HintPath>..\packages\Microsoft.Bcl.Async.1.0.16\lib\net40\Microsoft.Threading.Tasks.dll</HintPath>
     </Reference>
@@ -58,21 +55,8 @@
     <Reference Include="Microsoft.Web.Administration, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Web.Administration.7.0.0.0\lib\net20\Microsoft.Web.Administration.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Web.Publishing.Tasks, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Octopus.Dependencies.Transforms.1.0.3\lib\Microsoft.Web.Publishing.Tasks.Dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Web.XmlTransform">
       <HintPath>..\packages\Microsoft.Web.Xdt.1.0.0\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.WindowsAzure.Management">
-      <HintPath>..\packages\Octopus.Dependencies.AzureBinaries.2.0.0\lib\Microsoft.WindowsAzure.Management.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.WindowsAzure.ServiceManagement.Client">
-      <HintPath>..\packages\Octopus.Dependencies.AzureBinaries.2.0.0\lib\Microsoft.WindowsAzure.ServiceManagement.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.WindowsAzure.StorageClient, Version=1.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Dependencies.AzureBinaries.2.0.0\lib\Microsoft.WindowsAzure.StorageClient.dll</HintPath>
     </Reference>
     <Reference Include="Mindscape.Raygun4Net, Version=1.0.8.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -207,7 +191,6 @@
     <Compile Include="Communications\PipefishModule.cs" />
     <Compile Include="Communications\Integration\ActivitySpaceStarter.cs" />
     <Compile Include="Communications\Integration\AutofacActorFactory.cs" />
-    <Compile Include="Conventions\ChildConventionContext.cs" />
     <Compile Include="Diagnostics\ErrorReporter.cs" />
     <Compile Include="Diagnostics\IErrorReporter.cs" />
     <Compile Include="Diagnostics\OctopusLogsDirectoryRenderer.cs" />
@@ -215,64 +198,13 @@
     <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
     <Compile Include="Extensibility\OctopusPluginAttribute.cs" />
     <Compile Include="Extensibility\PluginsModule.cs" />
-    <Compile Include="Integration\Scripting\ScriptExecutionOutputFilter.cs" />
     <Compile Include="Internals\Options\Option.cs" />
     <Compile Include="Internals\Options\OptionAction.cs" />
     <Compile Include="Internals\Options\OptionContext.cs" />
     <Compile Include="Internals\Options\OptionException.cs" />
     <Compile Include="Internals\Options\OptionSet.cs" />
     <Compile Include="Internals\Options\OptionValueType.cs" />
-    <Compile Include="Conventions\ConventionContext.cs" />
-    <Compile Include="Conventions\ConventionPriority.cs" />
-    <Compile Include="Conventions\ConventionProcessor.cs" />
-    <Compile Include="Conventions\ConventionsModule.cs" />
-    <Compile Include="Conventions\Implementations\AzureDeployScriptConvention.cs" />
-    <Compile Include="Conventions\Implementations\AzureConfigurationConvention.cs" />
-    <Compile Include="Conventions\Implementations\AzureUploadConvention.cs" />
-    <Compile Include="Conventions\Implementations\CopyPackageConvention.cs" />
-    <Compile Include="Conventions\Implementations\DeletePackageFileConvention.cs" />
-    <Compile Include="Conventions\IConventionProcessor.cs" />
-    <Compile Include="Conventions\IInstallationConvention.cs" />
-    <Compile Include="Conventions\IisWebSiteConvention.cs" />
-    <Compile Include="Conventions\Implementations\FtpConvention.cs" />
-    <Compile Include="Conventions\IRollbackConvention.cs" />
-    <Compile Include="Conventions\Implementations\ScriptConvention.cs" />
-    <Compile Include="Conventions\Implementations\DeployFailedScriptConvention.cs" />
-    <Compile Include="Conventions\Implementations\DeployScriptConvention.cs" />
-    <Compile Include="Conventions\Implementations\PostDeployScriptConvention.cs" />
-    <Compile Include="Conventions\Implementations\PreDeployScriptConvention.cs" />
-    <Compile Include="Conventions\Implementations\XmlConfigTransformConvention.cs" />
-    <Compile Include="Conventions\Implementations\XmlConfigVariablesConventions.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
-    <Compile Include="Integration\Azure\AzureClientFactory.cs" />
-    <Compile Include="Integration\Azure\AzureConfigurationRetriever.cs" />
-    <Compile Include="Integration\Azure\AzureModule.cs" />
-    <Compile Include="Integration\Azure\AzurePackageUploader.cs" />
-    <Compile Include="Integration\Azure\BlobExtensions.cs" />
-    <Compile Include="Integration\Azure\IAzureClient.cs" />
-    <Compile Include="Integration\Azure\IAzureConfigurationRetriever.cs" />
-    <Compile Include="Integration\Azure\IAzurePackageUploader.cs" />
-    <Compile Include="Integration\Azure\SubscriptionDataFactory.cs" />
-    <Compile Include="Integration\Ftp\FtpModule.cs" />
-    <Compile Include="Integration\Ftp\FtpSynchronizationSettings.cs" />
-    <Compile Include="Integration\Ftp\FtpSynchronizer.cs" />
-    <Compile Include="Integration\Ftp\IFtpSynchronizer.cs" />
-    <Compile Include="Integration\Iis\IInternetInformationServer.cs" />
-    <Compile Include="Integration\Iis\IisModule.cs" />
-    <Compile Include="Integration\Iis\InternetInformationServer.cs" />
-    <Compile Include="Integration\Iis\WebServerSevenSupport.cs" />
-    <Compile Include="Integration\Iis\WebServerSixSupport.cs" />
-    <Compile Include="Integration\Iis\WebServerSupport.cs" />
-    <Compile Include="Integration\Scripting\PowerShell\FileBasedPowerShellRunner.cs" />
-    <Compile Include="Integration\Scripting\ScriptCS\ScriptCSRunner.cs" />
-    <Compile Include="Integration\Scripting\ScriptEngineSelector.cs" />
-    <Compile Include="Integration\Scripting\ScriptFailureException.cs" />
-    <Compile Include="Integration\Transforms\ParametersLoader.cs" />
-    <Compile Include="Integration\Transforms\ParametersParser.cs" />
-    <Compile Include="Integration\Transforms\ParametersTask.cs" />
-    <Compile Include="Integration\Transforms\TransformationLogger.cs" />
-    <Compile Include="Integration\Transforms\TransformationTask.cs" />
-    <Compile Include="Integration\Transforms\TransformResult.cs" />
     <Compile Include="Packages\FastLocalPackageRepository.cs" />
     <Compile Include="Packages\FeedCredentialsProvider.cs" />
     <Compile Include="Packages\FixedFilePathResolver.cs" />
@@ -305,8 +237,6 @@
     <Compile Include="Security\CertificatesModule.cs" />
     <Compile Include="Security\MasterKey\MasterKeyEncryption.cs" />
     <Compile Include="Security\MasterKey\StoredMasterKeyEncryption.cs" />
-    <Compile Include="ServiceMessages\ParseServiceMessageResult.cs" />
-    <Compile Include="Integration\Scripting\ScriptServiceMessageNames.cs" />
     <Compile Include="Startup\AbstractCommand.cs" />
     <Compile Include="Startup\AbstractStandardCommand.cs" />
     <Compile Include="Startup\AutofacExtensions.cs" />
@@ -338,8 +268,6 @@
     <Compile Include="Time\SystemClock.cs" />
     <Compile Include="Time\TimeModule.cs" />
     <Compile Include="Time\IClock.cs" />
-    <Compile Include="ServiceMessages\ServiceMessage.cs" />
-    <Compile Include="ServiceMessages\ServiceMessageParser.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
