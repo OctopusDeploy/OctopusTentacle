@@ -27,7 +27,7 @@ namespace Octopus.Shared.Integration.Scripting.ScriptCS
             try
             {
                 var commandArguments = new StringBuilder();
-                commandArguments.AppendFormat("-s \"{0}\"", bootstrapFile);
+                commandArguments.AppendFormat("\"{0}\"", bootstrapFile);
 
                 var filter = new ScriptExecutionOutputFilter(arguments.Log);
 
