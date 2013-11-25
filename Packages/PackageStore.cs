@@ -72,7 +72,7 @@ namespace Octopus.Shared.Packages
             var root = GetPackageRoot(prefix);
             fileSystem.EnsureDirectoryExists(root);
 
-            var files = fileSystem.EnumerateFiles(root, name + "*.nupkg");
+            var files = fileSystem.EnumerateFilesRecursively(root, name + "*.nupkg");
 
             foreach (var file in files)
             {
