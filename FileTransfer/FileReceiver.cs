@@ -62,7 +62,7 @@ namespace Octopus.Shared.FileTransfer
                     {
                         file.Dispose();
                         fileSystem.DeleteFile(Data.LocalPath, DeletionOptions.TryThreeTimesIgnoreFailure);
-                        supervised.Fail("The file corrupted during transfer");
+                        supervised.Fail(string.Format("The file corrupted during transfer. Expeted hash: {0}, got hash: {1}", Data.Hash, hash));
                         return;
                     }
                 }
