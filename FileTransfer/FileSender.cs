@@ -19,7 +19,7 @@ namespace Octopus.Shared.FileTransfer
         IReceive<FileTransferCompleteEvent>
     {
         readonly IOctopusFileSystem fileSystem;
-        const int ChunkSize = 128 * 1024;
+        const int ChunkSize = 1024 * 1024;
         readonly ISupervisedActivity supervised;
 
         const string SendFile = "Send File";
