@@ -81,6 +81,7 @@ namespace Octopus.Shared.Packages
             IPackage downloaded = null;
             string downloadedTo = null;
 
+            Exception downloadException = null;
             for (var i = 1; i <= NumberOfTimesToAttemptToDownloadPackage; i++)
             {
                 try
@@ -90,13 +91,17 @@ namespace Octopus.Shared.Packages
                 }
                 catch (Exception dataException)
                 {
-                    log.Error(dataException, "Unable to download package: " + dataException.Message);
+                    log.VerboseFormat(dataException, "Attempt {0} of {1}: Unable to download package: {2}", i, NumberOfTimesToAttemptToDownloadPackage, dataException.Message);
+                    downloadException = dataException;
                     Thread.Sleep(i * 1000);
                 }
             }
 
             if (downloaded == null || downloadedTo == null)
             {
+                if (downloadException != null)
+                    log.ErrorFormat(downloadException, "Unable to download package: ", downloadException.Message);
+
                 throw new ControlledFailureException("The package could not be downloaded from NuGet. If you are getting a package verification error, try switching to a Windows File Share package repository to see if that helps.");
             }
 
