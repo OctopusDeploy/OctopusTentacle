@@ -34,6 +34,13 @@ namespace Octopus.Shared.Packages
 
         public StoredPackage Download(PackageMetadata package, IFeed feed, PackageCachePolicy cachePolicy, IActivity log)
         {
+            if (package == null) throw new ArgumentNullException("package");
+            if (feed == null) throw new ArgumentNullException("feed");
+            if (log == null) throw new ArgumentNullException("log");
+
+            if (string.IsNullOrWhiteSpace(package.Version))
+                throw new ArgumentException("A version must be specified when downloading a package.");
+
             StoredPackage storedPackage = null;
 
             if (cachePolicy == PackageCachePolicy.UseCache)
