@@ -9,10 +9,12 @@ namespace Octopus.Shared.Communications.Integration
     public class ActivitySpaceStarter : IActivitySpaceStarter
     {
         readonly ActivitySpace space;
+        readonly ShutdownToken shutdown;
 
-        public ActivitySpaceStarter(ActivitySpace space)
+        public ActivitySpaceStarter(ActivitySpace space, ShutdownToken shutdown)
         {
             this.space = space;
+            this.shutdown = shutdown;
         }
 
         public void Start()
@@ -24,6 +26,8 @@ namespace Octopus.Shared.Communications.Integration
         public void Stop()
         {
             Log.Octopus().Verbose("Stopping activity space");
+
+            shutdown.RequestShutdown();
             
             // Stop the clock thread.
             // It would be nice to detach all actors automatically when disposing the space,

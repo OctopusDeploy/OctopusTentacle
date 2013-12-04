@@ -119,6 +119,8 @@ namespace Octopus.Shared.Communications
                 .SingleInstance();
 
             builder.RegisterType<EncryptedStorageStream>().As<IStorageStreamTransform>();
+
+            builder.RegisterType<ShutdownToken>().SingleInstance();
         }
 
         static bool IsCreatedByMessage(Type t)
