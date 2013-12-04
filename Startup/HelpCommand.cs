@@ -65,13 +65,6 @@ namespace Octopus.Shared.Startup
             Console.WriteLine();
 
             command.WriteHelp(Console.Out);
-
-            Console.WriteLine();
-            Console.Write("Or use ");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("help <command>");
-            Console.ResetColor();
-            Console.WriteLine(" for more details.");
         }
 
         void PrintGeneralHelp(string executable)
