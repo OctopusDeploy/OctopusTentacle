@@ -36,6 +36,11 @@ namespace Octopus.Shared.Packages
                     return null;
             }
 
+            return new DynamicCachedCredential(url);
+        }
+
+        ICredentials GetCurrentCredentials(string url)
+        {
             ICredentials credential;
             if (!Credentials.TryGetValue(url, out credential))
             {
@@ -66,6 +71,22 @@ namespace Octopus.Shared.Packages
             public void Reset()
             {
                 currentCount = 0;
+            }
+        }
+
+        class DynamicCachedCredential : ICredentials
+        {
+            readonly string url;
+
+            public DynamicCachedCredential(string url)
+            {
+                this.url = url;
+            }
+
+            public NetworkCredential GetCredential(Uri uri, string authType)
+            {
+                var credential = Instance.GetCurrentCredentials(url);
+                return credential.GetCredential(uri, authType);
             }
         }
     }
