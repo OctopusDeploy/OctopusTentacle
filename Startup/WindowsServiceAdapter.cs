@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.ServiceProcess;
 using System.Threading;
 using Octopus.Platform.Diagnostics;
-using Octopus.Shared.Diagnostics;
+using Octopus.Platform.Diagnostics.KnowledgeBase;
 
 namespace Octopus.Shared.Startup
 {
@@ -45,6 +45,14 @@ namespace Octopus.Shared.Startup
             }
             catch (Exception ex)
             {
+                ExceptionKnowledgeBaseEntry entry;
+                if (ExceptionKnowledgeBase.TryInterpret(ex, out entry))
+                {
+                    var message = entry.ToString();
+                    Log.Octopus().Error(ex, message);
+                    throw new Exception(message, ex) { HelpLink = entry.HelpLink };
+                }
+
                 Log.Octopus().Error(ex);
                 throw;
             }
