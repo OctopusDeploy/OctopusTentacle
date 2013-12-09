@@ -160,6 +160,12 @@ namespace Octopus.Shared.Configuration
             return certificate;
         }
 
+        public void ImportCertificate(X509Certificate2 certificate)
+        {
+            if (certificate == null) throw new ArgumentNullException("certificate");
+            TentacleCertificate = certificate;
+        }
+
         public string ServicesHostName
         {
             get { return settings.Get("Tentacle.Services.HostName", "localhost"); }
