@@ -26,10 +26,9 @@ namespace Octopus.Shared.Startup
         string username;
         string password;
 
-        public ServiceCommand(IApplicationInstanceSelector instanceSelector, string serviceName, string serviceDescription, Assembly assemblyContainingService, ILog log) : base(instanceSelector)
+        public ServiceCommand(IApplicationInstanceSelector instanceSelector, string serviceDescription, Assembly assemblyContainingService, ILog log) : base(instanceSelector)
         {
             this.instanceSelector = instanceSelector;
-            this.serviceName = serviceName;
             this.serviceDescription = serviceDescription;
             this.assemblyContainingService = assemblyContainingService;
             this.log = log;
@@ -52,14 +51,9 @@ namespace Octopus.Shared.Startup
         {
             base.Start();
 
+            var thisServiceName = ServiceName.GetWindowsServiceName(instanceSelector.Current.ApplicationName, instanceSelector.Current.InstanceName);
             var instance = instanceSelector.Current.InstanceName;
-            var applicationName = instanceSelector.Current.ApplicationName.ToString();
-            var thisServiceName = serviceName;
             var exePath = assemblyContainingService.FullLocalPath();
-            if (instance != applicationName)
-            {
-                thisServiceName += ": " + instance;
-            }
 
             var controller = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == thisServiceName);
 

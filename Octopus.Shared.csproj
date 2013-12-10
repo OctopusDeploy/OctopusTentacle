@@ -154,6 +154,7 @@
     <Compile Include="Configuration\ProxyConfiguration.cs" />
     <Compile Include="Configuration\ProxyInitializer.cs" />
     <Compile Include="Configuration\ServerConfigurationModule.cs" />
+    <Compile Include="Configuration\ServiceName.cs" />
     <Compile Include="Configuration\TentacleConfiguration.cs" />
     <Compile Include="Configuration\TentacleConfigurationModule.cs" />
     <Compile Include="Configuration\UpgradeCheckConfiguration.cs" />
@@ -236,6 +237,7 @@
     <Compile Include="Startup\CreateInstanceCommand.cs" />
     <Compile Include="Startup\DeleteInstanceCommand.cs" />
     <Compile Include="Startup\LsaUtility.cs" />
+    <Compile Include="Startup\ProxyConfigurationCommand.cs" />
     <Compile Include="Startup\ServiceCommand.cs" />
     <Compile Include="Startup\WindowsServiceHost.cs" />
     <Compile Include="Startup\CommandModule.cs" />
