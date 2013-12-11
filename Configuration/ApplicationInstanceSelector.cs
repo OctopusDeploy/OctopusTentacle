@@ -44,7 +44,7 @@ namespace Octopus.Shared.Configuration
             var instance = instanceStore.GetDefaultInstance(applicationName);
             if (instance == null)
             {
-                throw new Exception(applicationName + " has not been configured.");
+                throw new Exception("The default instance of " + applicationName + " has not been created.");
             }
 
             Load(instance);
@@ -55,7 +55,7 @@ namespace Octopus.Shared.Configuration
             var instance = instanceStore.GetInstance(applicationName, instanceName);
             if (instance == null)
             {
-                throw new Exception("Instance " + instanceName + " of application " + applicationName + " has not been configured.");
+                throw new Exception("Instance " + instanceName + " of application " + applicationName + " has not been created.");
             }
 
             Load(instance);
