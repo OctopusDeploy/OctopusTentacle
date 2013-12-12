@@ -14,7 +14,6 @@ namespace Octopus.Shared.Startup
     public class ServiceCommand : AbstractStandardCommand
     {
         readonly IApplicationInstanceSelector instanceSelector;
-        readonly string serviceName;
         readonly string serviceDescription;
         readonly Assembly assemblyContainingService;
         readonly ILog log;
