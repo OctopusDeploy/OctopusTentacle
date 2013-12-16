@@ -2,7 +2,7 @@
 
 namespace Octopus.Shared.Internals.CertificateGeneration
 {
-    public abstract class CryptKey : DisposeableObject
+    public abstract class CryptKey : FinalizableObject
     {
         readonly CryptContext ctx;
         readonly IntPtr handle;

@@ -217,7 +217,7 @@
     <Compile Include="Internals\CertificateGeneration\SelfSignedCertProperties.cs" />
     <Compile Include="Internals\CertificateGeneration\CryptContext.cs" />
     <Compile Include="Internals\CertificateGeneration\CryptKey.cs" />
-    <Compile Include="Internals\CertificateGeneration\DisposeableObject.cs" />
+    <Compile Include="Internals\CertificateGeneration\FinalizableObject.cs" />
     <Compile Include="Internals\CertificateGeneration\KeyExchangeKey.cs" />
     <Compile Include="Internals\CertificateGeneration\KeyType.cs" />
     <Compile Include="Internals\CertificateGeneration\SignatureKey.cs" />

@@ -16,7 +16,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         {
             if (win32ErrorCode > 0)
                 return (int) ((((uint) win32ErrorCode) & 0x0000FFFF) | 0x80070000U);
-            else return win32ErrorCode;
+            return win32ErrorCode;
         }
     }
 }

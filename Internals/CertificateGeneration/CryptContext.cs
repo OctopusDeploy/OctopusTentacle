@@ -6,7 +6,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
 {
     // This class has just enough functionality for generating self-signed certs.
     // In the future, I may expand it to do other things.
-    public class CryptContext : DisposeableObject
+    public class CryptContext : FinalizableObject
     {
         IntPtr handle = IntPtr.Zero;
 

@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 namespace Octopus.Shared.Internals.CertificateGeneration
 {
     [StructLayout(LayoutKind.Sequential)]
-    public abstract class DisposeableObject : IDisposable
+    public abstract class FinalizableObject : IDisposable
     {
         bool disposed;
 
-        ~DisposeableObject()
+        ~FinalizableObject()
         {
             CleanUp(false);
         }
