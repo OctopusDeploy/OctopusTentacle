@@ -117,7 +117,7 @@ namespace Octopus.Shared.Packages
             var dependencies = downloaded.DependencySets.SelectMany(ds => ds.Dependencies).Count();
             if (dependencies > 0)
             {
-                log.WarnFormat("NuGet packages with dependencies are not currently supported, and dependencies won't be installed on the Tentacle. The package '{0} {1}' appears to have the following dependencies: {2}. For more information please see {3}",
+                log.InfoFormat("NuGet packages with dependencies are not currently supported, and dependencies won't be installed on the Tentacle. The package '{0} {1}' appears to have the following dependencies: {2}. For more information please see {3}",
                                downloaded.Id,
                                downloaded.Version,
                                string.Join(", ", downloaded.DependencySets.SelectMany(ds => ds.Dependencies).Select(dependency => dependency.ToString())),
