@@ -50,7 +50,6 @@ namespace Octopus.Shared.Startup
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 log.VerboseFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
-                ReportError(args.Exception);
                 args.SetObserved();
             };
             
@@ -58,7 +57,6 @@ namespace Octopus.Shared.Startup
             {
                 var exception = (Exception)args.ExceptionObject;
                 log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception.Message);
-                ReportError(exception);
             };
 
             int exitCode;
@@ -98,14 +96,11 @@ namespace Octopus.Shared.Startup
                     }
                 }
 
-                ReportError(ex);
-
                 exitCode = 43;
             }
             catch (Exception ex)
             {
                 log.Fatal(ex);
-                ReportError(ex);
                 exitCode = 100;
             }
 
@@ -169,22 +164,6 @@ namespace Octopus.Shared.Startup
             var builder = new ContainerBuilder();
             builder.RegisterModule(new CommandModule());
             builder.Update(container);
-        }
-
-        void ReportError(Exception ex)
-        {
-            if (container != null)
-            {
-                try
-                {
-                    var reporter = container.Resolve<IErrorReporter>();
-                    reporter.ReportError(ex);
-                }
-                // ReSharper disable once EmptyGeneralCatchClause
-                catch
-                {
-                }
-            }
         }
 
         static string ExtractCommandName(ref string[] args)

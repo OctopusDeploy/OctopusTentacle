@@ -11,7 +11,6 @@ namespace Octopus.Shared.Diagnostics
             var logAdapter = new LogAdapter();
             Log.SetFactory(() => logAdapter);
             builder.Register(c => Log.Octopus()).As<ILog>();
-            builder.RegisterType<ErrorReporter>().As<IErrorReporter>();
         }
     }
 }
