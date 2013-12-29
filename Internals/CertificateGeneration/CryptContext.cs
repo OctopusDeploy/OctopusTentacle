@@ -17,7 +17,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         {
             ContainerName = Guid.NewGuid().ToString();
             ProviderType = 1; // default RSA provider
-            Flags = 8 | 32; // create new keyset
+            Flags = 8; // create new keyset
         }
 
         public IntPtr Handle
@@ -51,8 +51,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
                           {
                               ContainerName = ContainerName,
                               KeySpec = (int) KeyType.Exchange,
-                              ProviderType = 1,
-                              Flags = 32
+                              ProviderType = 1
                               // default RSA provider
                           };
 
