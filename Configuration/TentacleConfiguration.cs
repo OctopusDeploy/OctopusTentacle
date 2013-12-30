@@ -144,7 +144,7 @@ namespace Octopus.Shared.Configuration
             {
                 var thumbprint = settings.Get("Tentacle.CertificateThumbprint");
                 var encoded = settings.Get("Tentacle.Certificate", protectionScope: DataProtectionScope.LocalMachine);
-                return string.IsNullOrWhiteSpace(encoded) ? GenerateNewCertificate() : CertificateEncoder.FromBase64String(thumbprint, encoded);
+                return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint, encoded);
             }
             private set
             {
