@@ -17,7 +17,12 @@ namespace Octopus.Shared.Configuration
         {
             this.application = application;
             this.settings = settings;
-            defaultHome = Path.Combine(Directory.GetDirectoryRoot(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)), "Octopus");
+            
+            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            if (string.IsNullOrWhiteSpace(programFiles)) // 32 bit
+                programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+
+            defaultHome = Path.Combine(Directory.GetDirectoryRoot(programFiles), "Octopus");
         }
 
         public string ApplicationSpecificHomeDirectory
