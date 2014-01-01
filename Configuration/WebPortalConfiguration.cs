@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net;
+using Octopus.Platform.Configuration;
 using Octopus.Platform.Deployment.Configuration;
 
 namespace Octopus.Shared.Configuration
