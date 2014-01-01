@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Autofac;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
 
 namespace Octopus.Shared.Startup
@@ -20,7 +19,7 @@ namespace Octopus.Shared.Startup
         IContainer container;
         ICommand commandInstance;
         string[] commandLineArguments;
-        bool forceConsole = false;
+        bool forceConsole;
         bool showLogo = true;
 
         protected OctopusProgram(string displayName, string[] commandLineArguments)
