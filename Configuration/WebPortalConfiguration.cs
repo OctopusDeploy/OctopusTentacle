@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Net;
 using Octopus.Platform.Configuration;
 using Octopus.Platform.Deployment.Configuration;
@@ -40,6 +39,16 @@ namespace Octopus.Shared.Configuration
         {
             get { return settings.Get("Octopus.WebPortal.AuthenticationMode", AuthenticationMode.UsernamePassword); }
             set { settings.Set("Octopus.WebPortal.AuthenticationMode", value); }
+        }
+
+        /// <summary>
+        /// Gets or sets the domain that users will be authenticated against. If null, the current domain will be used.
+        /// Valid only when <see cref="AuthenticationMode"/> is <see cref="Octopus.Platform.Configuration.AuthenticationMode.Domain"/>.
+        /// </summary>
+        public string AuthenticationDomain
+        {
+            get { return settings.Get("Octopus.WebPortal.AuthenticationDomain"); }
+            set { settings.Set("Octopus.WebPortal.AuthenticationDomain", value); }
         }
 
         public void Save()
