@@ -48,7 +48,10 @@ namespace Octopus.Shared.Configuration
         public string AuthenticationDomain
         {
             get { return settings.Get("Octopus.WebPortal.AuthenticationDomain"); }
-            set { settings.Set("Octopus.WebPortal.AuthenticationDomain", value); }
+            set {
+                var val = string.IsNullOrWhiteSpace(value) ? null : value;
+                settings.Set("Octopus.WebPortal.AuthenticationDomain", val);
+            }
         }
 
         public void Save()
