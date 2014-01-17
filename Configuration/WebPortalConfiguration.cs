@@ -41,19 +41,6 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Octopus.WebPortal.AuthenticationMode", value); }
         }
 
-        /// <summary>
-        /// Gets or sets the domain that users will be authenticated against. If null, the current domain will be used.
-        /// Valid only when <see cref="AuthenticationMode"/> is <see cref="Octopus.Platform.Configuration.AuthenticationMode.Domain"/>.
-        /// </summary>
-        public string AuthenticationDomain
-        {
-            get { return settings.Get("Octopus.WebPortal.AuthenticationDomain"); }
-            set {
-                var val = string.IsNullOrWhiteSpace(value) ? null : value;
-                settings.Set("Octopus.WebPortal.AuthenticationDomain", val);
-            }
-        }
-
         public void Save()
         {
             settings.Save();
