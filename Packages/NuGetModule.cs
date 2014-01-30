@@ -1,8 +1,8 @@
 using System;
 using Autofac;
 using NuGet;
+using Octopus.Platform.Deployment.BuiltInFeed;
 using Octopus.Platform.Diagnostics;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Packages
 {
@@ -17,7 +17,10 @@ namespace Octopus.Shared.Packages
             builder.Register(c =>
             {
                 MachineCache.Default.Clear();
-                return new OctopusPackageRepositoryFactory(c.Resolve<ILog>());
+                return new OctopusPackageRepositoryFactory(c.Resolve<ILog>())
+                {
+                    BuiltInRepositoryFactory = c.ResolveOptional<IBuiltInPackageRepositoryFactory>()
+                };
             }).As<IPackageRepositoryFactory>();
         }
     }

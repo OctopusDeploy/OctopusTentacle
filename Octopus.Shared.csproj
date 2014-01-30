@@ -70,6 +70,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NuGet.Core.2.7.2\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
+    <Reference Include="NuGet.Lucene">
+      <HintPath>..\Temp\NuGet.Lucene-40Port\NuGet.Lucene.dll</HintPath>
+    </Reference>
     <Reference Include="Pipefish, Version=1.0.0.172, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Pipefish.1.0.0.172\lib\Pipefish.dll</HintPath>

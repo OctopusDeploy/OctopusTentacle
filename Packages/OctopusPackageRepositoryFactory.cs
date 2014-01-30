@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using NuGet;
+using Octopus.Platform.Deployment.BuiltInFeed;
 using Octopus.Platform.Diagnostics;
 
 namespace Octopus.Shared.Packages
@@ -8,16 +9,21 @@ namespace Octopus.Shared.Packages
     public class OctopusPackageRepositoryFactory : IPackageRepositoryFactory
     {
         readonly ILog log;
-        
+
         public OctopusPackageRepositoryFactory(ILog log)
         {
             this.log = log;
         }
 
+        public IBuiltInPackageRepositoryFactory BuiltInRepositoryFactory { get; set; }
+
         public IPackageRepository CreateRepository(string packageSource)
         {
             if (packageSource == null)
                 throw new ArgumentNullException("packageSource");
+
+            if (BuiltInRepositoryFactory != null && BuiltInRepositoryFactory.IsBuiltInSource(packageSource))
+                return BuiltInRepositoryFactory.CreateRepository();
 
             var uri = new Uri(packageSource);
             if (uri.IsFile)
