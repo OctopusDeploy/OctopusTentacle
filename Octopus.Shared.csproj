@@ -73,13 +73,13 @@
     <Reference Include="NuGet.Lucene">
       <HintPath>..\Temp\NuGet.Lucene-40Port\NuGet.Lucene.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish, Version=1.0.0.172, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Pipefish, Version=2.0.1.174, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.1.0.0.172\lib\Pipefish.dll</HintPath>
+      <HintPath>..\packages\Pipefish.2.0.1.174\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="Pipefish.Transport.SecureTcp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.Transport.SecureTcp.0.1.0.171\lib\Pipefish.Transport.SecureTcp.dll</HintPath>
+      <HintPath>..\packages\Pipefish.Transport.SecureTcp.2.0.1.174\lib\Pipefish.Transport.SecureTcp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
