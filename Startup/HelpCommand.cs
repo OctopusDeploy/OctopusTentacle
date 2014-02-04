@@ -21,7 +21,7 @@ namespace Octopus.Shared.Startup
             
         }
 
-        public void Start(string[] commandLineArguments, ICommandRuntime commandRuntime)
+        public void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
             var executable = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullLocalPath());
 
@@ -44,7 +44,7 @@ namespace Octopus.Shared.Startup
                 }
                 else
                 {
-                    PrintCommandHelp(executable, command.Value, command.Metadata);
+                    PrintCommandHelp(executable, command.Value, command.Metadata, commonOptions);
                 }
             }
         }
@@ -53,7 +53,7 @@ namespace Octopus.Shared.Startup
         {
         }
 
-        void PrintCommandHelp(string executable, ICommand command, ICommandMetadata metadata)
+        void PrintCommandHelp(string executable, ICommand command, ICommandMetadata metadata, OptionSet commonOptions)
         {
             Console.ResetColor();
             Console.Write("Usage: ");
@@ -65,6 +65,15 @@ namespace Octopus.Shared.Startup
             Console.WriteLine();
 
             command.WriteHelp(Console.Out);
+
+            if (commonOptions.Any())
+            {
+                Console.WriteLine();
+                Console.WriteLine("Or one of the common options: ");
+                Console.WriteLine();
+
+                commonOptions.WriteOptionDescriptions(Console.Out);
+            }
         }
 
         void PrintGeneralHelp(string executable)

@@ -27,8 +27,8 @@ namespace Octopus.Shared.Startup
             this.commandLineArguments = commandLineArguments;
             this.displayName = displayName;
             commonOptions = new OptionSet();
-            commonOptions.Add("console", v => forceConsole = true);
-            commonOptions.Add("nologo", v => showLogo = false);
+            commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
+            commonOptions.Add("nologo", "Don't print title or version information", v => showLogo = false);
         }
 
         protected OptionSet CommonOptions { get { return commonOptions; } }
@@ -153,7 +153,7 @@ namespace Octopus.Shared.Startup
             commandInstance = command.Value;
             
             log.TraceFormat("Using command: {0}", commandInstance.GetType().Name);
-            commandInstance.Start(commandLineArguments, commandRuntime);
+            commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions);
         }
 
         protected abstract IContainer BuildContainer();

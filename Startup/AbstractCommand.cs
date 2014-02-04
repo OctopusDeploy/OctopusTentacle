@@ -32,7 +32,7 @@ namespace Octopus.Shared.Startup
             Options.WriteOptionDescriptions(writer);
         }
 
-        void ICommand.Start(string[] commandLineArguments, ICommandRuntime commandRuntime)
+        void ICommand.Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
             Runtime = commandRuntime;
 
