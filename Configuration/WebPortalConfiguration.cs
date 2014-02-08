@@ -33,6 +33,15 @@ namespace Octopus.Shared.Configuration
         }
 
         /// <summary>
+        /// Gets or sets whether guest login is enabled.
+        /// </summary>
+        public bool GuestLoginEnabled
+        {
+            get { return settings.Get("Octopus.WebPortal.GuestLoginEnabled", false); }
+            set { settings.Set("Octopus.WebPortal.GuestLoginEnabled", value); }
+        }
+
+        /// <summary>
         /// Gets or sets which authentication mode to use.
         /// </summary>
         public AuthenticationMode AuthenticationMode
