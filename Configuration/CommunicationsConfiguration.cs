@@ -16,13 +16,17 @@ namespace Octopus.Shared.Configuration
 
             if (string.IsNullOrWhiteSpace(Squid))
             {
-                var newSquid = "SQ-" +
-                               Environment.MachineName + "-" +
-                               Guid.NewGuid().GetHashCode().ToString("X8");
-                Squid = NormalizeSquid(newSquid);
-
+                Squid = NewSquid();
                 settings.Save();
             }
+        }
+
+        public static string NewSquid()
+        {
+            var newSquid = "SQ-" +
+                           Environment.MachineName + "-" +
+                           Guid.NewGuid().GetHashCode().ToString("X8");
+            return NormalizeSquid(newSquid);
         }
 
         static string NormalizeSquid(string squid)
