@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -18,7 +19,7 @@ namespace Octopus.Shared.Configuration
 
             XmlSettingsRoot settings;
             var serializer = new XmlSerializer(typeof(XmlSettingsRoot));
-            using (var xmlReader = new XmlTextReader(new StreamReader(OpenForReading())))
+            using (var xmlReader = new XmlTextReader(new StreamReader(OpenForReading(), Encoding.UTF8)))
             {
                 settings = (XmlSettingsRoot)serializer.Deserialize(xmlReader);
             }
@@ -35,7 +36,7 @@ namespace Octopus.Shared.Configuration
             using (var stream = OpenForWriting())
             {
                 stream.SetLength(0);
-                using (var xmlWriter = new XmlTextWriter(new StreamWriter(stream)))
+                using (var xmlWriter = new XmlTextWriter(new StreamWriter(stream, Encoding.UTF8)))
                 {
                     xmlWriter.Formatting = Formatting.Indented;
 
