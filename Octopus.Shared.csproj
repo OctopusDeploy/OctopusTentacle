@@ -77,6 +77,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Pipefish.2.0.1.182\lib\Pipefish.dll</HintPath>
     </Reference>
+    <Reference Include="Pipefish.Transport.SecureTcp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Pipefish.Transport.SecureTcp.2.0.1.182\lib\Pipefish.Transport.SecureTcp.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
