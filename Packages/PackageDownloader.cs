@@ -127,21 +127,25 @@ namespace Octopus.Shared.Packages
 
         void AttemptToFindAndDownloadPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, IActivity log, string cacheDirectory, out IPackage downloadedPackage, out string path)
         {
-            var package = FindPackage(attempt, packageMetadata, feed, log);
+            NuGet.PackageDownloader downloader;
+            var package = FindPackage(attempt, packageMetadata, feed, log, out downloader);
 
             var fullPathToDownloadTo = GetFilePathToDownloadPackageTo(cacheDirectory, package);
 
-            DownloadPackage(package, fullPathToDownloadTo, log);
+            DownloadPackage(package, fullPathToDownloadTo, log, downloader);
 
             path = fullPathToDownloadTo;
             downloadedPackage = new ZipPackage(fullPathToDownloadTo);
         }
 
-        IPackage FindPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, IActivity log)
+        IPackage FindPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, IActivity log, out NuGet.PackageDownloader downloader)
         {
             log.VerboseFormat("Finding package (attempt {0} of {1})", attempt, NumberOfTimesToAttemptToDownloadPackage);
 
             var remoteRepository = packageRepositoryFactory.CreateRepository(feed.FeedUri, feed.GetCredentials(encryption));
+
+            var dspr = remoteRepository as DataServicePackageRepository;
+            downloader = dspr != null ? dspr.PackageDownloader : null;
 
             var requiredVersion = new SemanticVersion(packageMetadata.Version);
             var package = remoteRepository.FindPackage(packageMetadata.PackageId, requiredVersion, true, true);
@@ -158,10 +162,19 @@ namespace Octopus.Shared.Packages
             return package;
         }
 
-        static void DownloadPackage(IPackage package, string fullPathToDownloadTo, IActivity log)
+        void DownloadPackage(IPackage package, string fullPathToDownloadTo, IActivity log, NuGet.PackageDownloader directDownloader)
         {
             log.VerboseFormat("Found package {0} version {1}", package.Id, package.Version);
             log.Verbose("Downloading to: " + fullPathToDownloadTo);
+
+            var dsp = package as DataServicePackage;
+            if(dsp != null && directDownloader != null)
+            {
+                log.Verbose("A direct download is possible; bypassing the NuGet machine cache");
+                using (var targetFile = fileSystem.OpenFile(fullPathToDownloadTo, FileMode.CreateNew))
+                    directDownloader.DownloadPackage(dsp.DownloadUrl, dsp, targetFile);
+                return;
+            }
 
             var physical = new PhysicalFileSystem(Path.GetDirectoryName(fullPathToDownloadTo));
             var local = new LocalPackageRepository(new FixedFilePathResolver(package.Id, fullPathToDownloadTo), physical);
