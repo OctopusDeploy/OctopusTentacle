@@ -24,8 +24,6 @@ namespace Octopus.Shared.Diagnostics
                     return LogLevel.Debug;
                 case TraceCategory.Info:
                     return LogLevel.Info;
-                case TraceCategory.Alert:
-                    return LogLevel.Info;
                 case TraceCategory.Warning:
                     return LogLevel.Warn;
                 case TraceCategory.Error:
