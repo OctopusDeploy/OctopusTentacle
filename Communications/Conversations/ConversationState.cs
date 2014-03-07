@@ -55,6 +55,11 @@ namespace Octopus.Shared.Communications.Conversations
                         Log.Octopus().Warn("It looks as though conversations with " + remoteSpace + " are leaking");
                     }
                 }
+                else
+                {
+                    // When a conversation is active, any incoming message will automatically 'reset' the polling sequence back to the start
+                    connection.SetPollingSequence(conversationPollingSequence);
+                }
             }
         }
 

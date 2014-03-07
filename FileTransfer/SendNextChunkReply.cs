@@ -4,7 +4,6 @@ using Pipefish;
 
 namespace Octopus.Shared.FileTransfer
 {
-    [ExpectReply]
     public class SendNextChunkReply : IMessage
     {
         public byte[] Data { get; private set; }
