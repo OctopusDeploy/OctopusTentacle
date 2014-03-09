@@ -101,6 +101,7 @@
     <Reference Include="System.Web" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -176,6 +177,10 @@
     <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
     <Compile Include="Internals\DiffMatchPatch\Operation.cs" />
     <Compile Include="Internals\DiffMatchPatch\Patch.cs" />
+    <Compile Include="Licensing\ILicenseVerificationCertificateProvider.cs" />
+    <Compile Include="Licensing\ILicenseVerifier.cs" />
+    <Compile Include="Licensing\LicenseVerificationCertificateProvider.cs" />
+    <Compile Include="Licensing\LicenseVerifier.cs" />
     <Compile Include="OctopusFileSystemModule.cs" />
     <Compile Include="Communications\PipefishModule.cs" />
     <Compile Include="Communications\Integration\ActivitySpaceStarter.cs" />
