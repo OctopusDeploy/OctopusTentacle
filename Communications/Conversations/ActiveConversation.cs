@@ -6,11 +6,13 @@ namespace Octopus.Shared.Communications.Conversations
     {
         public Guid InitiatingMessageId { get; private set; }
         public string InitiatingMessageType { get; private set; }
+        public DateTime StartedAtUtc { get; private set; }
 
         public ActiveConversation(Guid initiatingMessageId, string initiatingMessageType)
         {
             InitiatingMessageId = initiatingMessageId;
             InitiatingMessageType = initiatingMessageType;
+            StartedAtUtc = DateTime.UtcNow;
         }
     }
 }
