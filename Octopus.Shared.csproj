@@ -119,6 +119,7 @@
     <Compile Include="Communications\Commands\DecryptCommand.cs" />
     <Compile Include="Communications\Commands\ResetCommand.cs" />
     <Compile Include="Communications\Commands\ShowMasterKeyCommand.cs" />
+    <Compile Include="Communications\Conversations\ActiveConversationDescription.cs" />
     <Compile Include="Communications\Encryption\EncryptedStorageStream.cs" />
     <Compile Include="Communications\Conversations\ActiveConversation.cs" />
     <Compile Include="Communications\Conversations\ConversationState.cs" />

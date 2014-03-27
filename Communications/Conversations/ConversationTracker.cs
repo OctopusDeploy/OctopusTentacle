@@ -61,5 +61,14 @@ namespace Octopus.Shared.Communications.Conversations
             if (conversations.TryGetValue(message.To.Space, out state))
                 state.TryRevoke(message);
         }
+
+        public IList<ActiveConversationDescription> GetActiveConversationsWith(string squid)
+        {
+            ConversationState state;
+            if (!conversations.TryGetValue(squid, out state))
+                return new List<ActiveConversationDescription>();
+
+            return state.GetActiveConversations();
+        }
     }
 }

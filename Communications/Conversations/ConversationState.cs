@@ -93,5 +93,17 @@ namespace Octopus.Shared.Communications.Conversations
                 }
             }
         }
+
+        public IList<ActiveConversationDescription> GetActiveConversations()
+        {
+            lock (sync)
+            {
+                return conversations.Values
+                    .Select(c => new ActiveConversationDescription(
+                        c.StartedAtUtc, c.InitiatingMessageId, "Expecting reply to: " + c.InitiatingMessageType))
+                    .OrderBy(c => c.StartedAtUtc)
+                    .ToList();
+            }
+        }
     }
 }
