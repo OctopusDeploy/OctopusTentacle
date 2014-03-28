@@ -9,5 +9,6 @@ namespace Octopus.Shared.FileTransfer
         public long NextChunkIndex { get; set; }
         public long ExpectedSize { get; set; }
         public string Destination { get; set; }
+        public DateTime? LastProgressReport { get; set; }
     }
 }

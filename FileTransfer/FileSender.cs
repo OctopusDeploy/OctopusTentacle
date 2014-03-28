@@ -24,6 +24,8 @@ namespace Octopus.Shared.FileTransfer
 
         const string SendFile = "Send File";
 
+        static readonly TimeSpan ProgressReportInterval = TimeSpan.FromSeconds(10);
+
         public FileSender(IOctopusFileSystem fileSystem)
         {
             this.fileSystem = fileSystem;
@@ -63,9 +65,13 @@ namespace Octopus.Shared.FileTransfer
 
             using (var file = fileSystem.OpenFile(Data.LocalFilename, FileAccess.Read))
             {
-                var percentage = (int)((double)nextChunkOffset / Data.ExpectedSize * 100.00);
-                supervised.Activity.UpdateProgressFormat(percentage, "Uploaded {0} of {1}", (nextChunkOffset > 0 ? nextChunkOffset - 1 : 0).ToFileSizeString(), Data.ExpectedSize.ToFileSizeString());
-                
+                if (!Data.LastProgressReport.HasValue || Data.LastProgressReport.Value + ProgressReportInterval < DateTime.UtcNow)
+                {
+                    var percentage = (int)((double)nextChunkOffset / Data.ExpectedSize * 100.00);
+                    supervised.Activity.UpdateProgressFormat(percentage, "Uploaded {0} of {1}", (nextChunkOffset > 0 ? nextChunkOffset - 1 : 0).ToFileSizeString(), Data.ExpectedSize.ToFileSizeString());
+                    Data.LastProgressReport = DateTime.UtcNow;
+                }
+
                 file.Seek(nextChunkOffset, SeekOrigin.Begin);
                 var bytes = new byte[ChunkSize];
                 var read = await file.ReadAsync(bytes, 0, ChunkSize);
