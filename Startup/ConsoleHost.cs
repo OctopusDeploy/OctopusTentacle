@@ -1,4 +1,5 @@
 using System;
+using NLog;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Diagnostics.KnowledgeBase;
 using Octopus.Platform.Util;
@@ -7,7 +8,6 @@ namespace Octopus.Shared.Startup
 {
     public class ConsoleHost : ICommandHost, ICommandRuntime
     {
-        readonly ILog log = Log.Octopus();
         readonly string displayName;
         readonly bool showLogo;
 
@@ -39,11 +39,15 @@ namespace Octopus.Shared.Startup
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(new string('-', 79));
-                Console.WriteLine("A fatal exception occurred");
-                Console.WriteLine(ex);
+                Console.WriteLine("Error: " + ex.Message);
                 Console.WriteLine(new string('-', 79));
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("Full error details are available in the log files.");
+                Console.Write("See: ");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("http://g.octopushq.com/LogFiles");
                 Console.ResetColor();
 
                 ExceptionKnowledgeBaseEntry entry;
@@ -69,7 +73,7 @@ namespace Octopus.Shared.Startup
                     Console.ResetColor();
                 }
 
-                log.Fatal(ex);
+                LogManager.GetLogger("SkipConsole").Fatal(ex);
                 throw;
             }
         }
