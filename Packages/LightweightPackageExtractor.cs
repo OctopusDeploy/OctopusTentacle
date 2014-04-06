@@ -23,8 +23,9 @@ namespace Octopus.Shared.Packages
             this.fileSystem = fileSystem;
         }
 
-        public void Install(string packageFile, string directory)
+        public void Install(string packageFile, string directory, out int filesExtracted)
         {
+            filesExtracted = 0;
             using (var package = Package.Open(packageFile, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 var files =
@@ -34,6 +35,7 @@ namespace Octopus.Shared.Packages
 
                 foreach (var part in files)
                 {
+                    filesExtracted++;
                     var path = UriUtility.GetPath(part.Uri);
                     path = Path.Combine(directory, path);
 
