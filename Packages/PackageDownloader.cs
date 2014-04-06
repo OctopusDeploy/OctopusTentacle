@@ -2,10 +2,12 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Autofac.Features.Metadata;
 using NuGet;
 using Octopus.Platform.Deployment;
 using Octopus.Platform.Deployment.Logging;
 using Octopus.Platform.Deployment.Packages;
+using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Packages;
 using Octopus.Platform.Security.MasterKey;
 using Octopus.Platform.Util;
@@ -107,9 +109,22 @@ namespace Octopus.Shared.Packages
 
             CheckWhetherThePackageHasDependencies(downloaded, log);
 
+            EnsureVersionNumberMatchesIntended(downloaded, metadata, log);
+
             var size = fileSystem.GetFileSize(downloadedTo);
             var hash = HashCalculator.Hash(downloaded.GetStream());
             return new StoredPackage(metadata.PackageId, metadata.Version, downloadedTo, hash, size);
+        }
+
+        void EnsureVersionNumberMatchesIntended(IPackage downloaded, PackageMetadata metadata, IActivity log)
+        {
+            var downloadedVersion = downloaded.Version.ToString();
+            var metadataVersion = metadata.Version;
+
+            if (!string.Equals(downloadedVersion, metadataVersion, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Exception(string.Format("We were requested to download version '{0}' of the NuGet package, and instead got version '{1}'. Differences in the formatting of version numbers can cause problems in later steps of the deployment. Please ensure your package version numbers do not have any leading zeroes. Please contact the Octopus Deploy support team if you need more information.", metadataVersion, downloadedVersion));
+            }
         }
 
         static void CheckWhetherThePackageHasDependencies(IPackageMetadata downloaded, IActivity log)
