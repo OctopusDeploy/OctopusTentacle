@@ -107,6 +107,11 @@ namespace Octopus.Shared.Packages
                 throw new ControlledFailureException("The package could not be downloaded from NuGet. If you are getting a package verification error, try switching to a Windows File Share package repository to see if that helps.");
             }
 
+            if (downloaded.Version.ToString() != metadata.Version)
+                throw new ControlledFailureException(string.Format(
+                    "Octopus requested version {0} of {1}, but the NuGet server returned a package with version {2}.",
+                    metadata.Version, metadata.PackageId, downloaded.Version));
+
             CheckWhetherThePackageHasDependencies(downloaded, log);
 
             EnsureVersionNumberMatchesIntended(downloaded, metadata, log);
