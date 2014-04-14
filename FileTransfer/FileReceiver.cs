@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 using Octopus.Platform.Deployment.Configuration;
+using Octopus.Platform.Deployment.Messages.FileTransfer;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
 using Pipefish;
@@ -13,7 +14,8 @@ namespace Octopus.Shared.FileTransfer
     [Description("Receive File")]
     public class FileReceiver : PersistentActor<FileReceiveData>,
                                 ICreatedBy<BeginFileTransferCommand>,
-                                IReceiveAsync<SendNextChunkReply>
+                                IReceiveAsync<SendNextChunkReply>,
+                                IReceive<ChunkAlreadySentAcknowledgement>
     {
         readonly IFileStorageConfiguration fileStorageConfiguration;
         readonly IOctopusFileSystem fileSystem;
@@ -72,6 +74,11 @@ namespace Octopus.Shared.FileTransfer
             }
 
             supervised.Notify(new SendNextChunkRequest());
+        }
+
+        public void Receive(ChunkAlreadySentAcknowledgement message)
+        {
+            // Just to satisfy the conversation tracker
         }
     }
 }

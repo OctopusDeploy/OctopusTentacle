@@ -8,6 +8,7 @@ using Octopus.Platform.Util;
 using Pipefish;
 using Pipefish.Errors;
 using Pipefish.Messages;
+using Pipefish.Transport.SecureTcp.MessageExchange;
 
 namespace Octopus.Shared.FileTransfer
 {
@@ -16,6 +17,7 @@ namespace Octopus.Shared.FileTransfer
         PersistentActor<FileSendData>,
         ICreatedBy<SendFileCommand>,
         IReceiveAsync<SendNextChunkRequest>,
+        IReceiveAsync<EagerTransferReceipt>,
         IReceive<FileTransferCompleteEvent>
     {
         readonly IOctopusFileSystem fileSystem;
@@ -44,7 +46,8 @@ namespace Octopus.Shared.FileTransfer
                 Hash = message.Hash ?? CalculateHash(message.LocalFilename),
                 NextChunkIndex = 0,
                 ExpectedSize = message.ExpectedSize ?? fileSystem.GetFileSize(message.LocalFilename),
-                Destination = message.RemoteSquid
+                Destination = message.RemoteSquid,
+                EagerChunksAhead = 0
             };
 
             supervised.Activity.Verbose("Requesting upload...");
@@ -59,7 +62,25 @@ namespace Octopus.Shared.FileTransfer
                 return HashCalculator.Hash(file);
         }
 
+        public Task ReceiveAsync(EagerTransferReceipt message)
+        {
+            Data.EagerChunksAhead++;
+            return ReplyWithNextChunk(message);
+        }
+
         public async Task ReceiveAsync(SendNextChunkRequest message)
+        {
+            if (Data.EagerChunksAhead > 0)
+            {
+                Reply(message, new ChunkAlreadySentAcknowledgement(), isTracked: true);
+                Data.EagerChunksAhead--;
+                return;
+            }
+
+            await ReplyWithNextChunk(message);
+        }
+
+        async Task ReplyWithNextChunk(IMessage message)
         {
             var nextChunkOffset = Data.NextChunkIndex * ChunkSize;
 
@@ -80,7 +101,7 @@ namespace Octopus.Shared.FileTransfer
                 var chunk = new SendNextChunkReply(bytes, read != ChunkSize);
 
                 Data.NextChunkIndex++;
-                Reply(message, chunk);
+                Reply(message, chunk, isTracked: true);
             }
         }
 
@@ -103,6 +124,5 @@ namespace Octopus.Shared.FileTransfer
             supervised.Fail(message, error.ToException());
             return Intervention.NotHandled;
         }
-
     }
 }
