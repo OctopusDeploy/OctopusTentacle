@@ -6,6 +6,7 @@ using Octopus.Platform.Deployment.Logging;
 using Octopus.Platform.Deployment.Messages.FileTransfer;
 using Octopus.Platform.Util;
 using Pipefish;
+using Pipefish.Core;
 using Pipefish.Errors;
 using Pipefish.Messages;
 using Pipefish.Transport.SecureTcp.MessageExchange;
@@ -70,6 +71,9 @@ namespace Octopus.Shared.FileTransfer
 
         public async Task ReceiveAsync(SendNextChunkRequest message)
         {
+            if (Data.ReceiverId == null)
+                Data.ReceiverId = message.GetMessage().From;
+
             if (Data.EagerChunksAhead > 0)
             {
                 Reply(message, new ChunkAlreadySentAcknowledgement(), isTracked: true);
@@ -82,6 +86,9 @@ namespace Octopus.Shared.FileTransfer
 
         async Task ReplyWithNextChunk(IMessage message)
         {
+            if (Data.ReceiverId == null)
+                throw new InvalidOperationException("Receiver ID has not been set.");
+
             var nextChunkOffset = Data.NextChunkIndex * ChunkSize;
 
             using (var file = fileSystem.OpenFile(Data.LocalFilename, FileAccess.Read))
@@ -100,8 +107,13 @@ namespace Octopus.Shared.FileTransfer
                     Array.Resize(ref bytes, read);
                 var chunk = new SendNextChunkReply(bytes, read != ChunkSize);
 
+                var reply = new Message(Id, Data.ReceiverId.Value, chunk);
+                reply.Headers[Pipefish.Core.ProtocolExtensions.InReplyToHeader] = message.GetMessage().Id.ToString();
+                reply.SetSupportsEagerTransferReceipt(true);
+                reply.SetIsTracked(true);
+                Space.Send(reply);
+
                 Data.NextChunkIndex++;
-                Reply(message, chunk, isTracked: true);
             }
         }
 
