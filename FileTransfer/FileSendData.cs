@@ -12,6 +12,7 @@ namespace Octopus.Shared.FileTransfer
         public string Destination { get; set; }
         public DateTime? LastProgressReport { get; set; }
         public int EagerChunksAhead { get; set; }
+        public int MaxEagerChunksAhead { get; set; }
         public ActorId? ReceiverId { get; set; }
     }
 }
