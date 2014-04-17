@@ -122,6 +122,7 @@ namespace Octopus.Shared.FileTransfer
                 reply.Headers[Pipefish.Core.ProtocolExtensions.InReplyToHeader] = message.GetMessage().Id.ToString();
                 reply.SetSupportsEagerTransferReceipt(!suppressEagerTransfer);
                 reply.SetIsTracked(true);
+                reply.SetIsEphemeral(true);
                 Space.Send(reply);
 
                 Data.NextChunkIndex++;
