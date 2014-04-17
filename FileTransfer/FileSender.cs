@@ -63,12 +63,6 @@ namespace Octopus.Shared.FileTransfer
                 return HashCalculator.Hash(file);
         }
 
-        public Task ReceiveAsync(EagerTransferReceipt message)
-        {
-            Data.EagerChunksAhead++;
-            Data.MaxEagerChunksAhead = Math.Max(Data.EagerChunksAhead, Data.MaxEagerChunksAhead);
-            return ReplyWithNextChunk(message);
-        }
 
         public async Task ReceiveAsync(SendNextChunkRequest message)
         {
@@ -82,10 +76,17 @@ namespace Octopus.Shared.FileTransfer
                 return;
             }
 
-            await ReplyWithNextChunk(message);
+            await ReplyWithNextChunk(message, !message.SupportsEagerTransfer);
         }
 
-        async Task ReplyWithNextChunk(IMessage message)
+        public Task ReceiveAsync(EagerTransferReceipt message)
+        {
+            Data.EagerChunksAhead++;
+            Data.MaxEagerChunksAhead = Math.Max(Data.EagerChunksAhead, Data.MaxEagerChunksAhead);
+            return ReplyWithNextChunk(message);
+        }
+
+        async Task ReplyWithNextChunk(IMessage message, bool suppressEagerTransfer = false)
         {
             if (Data.ReceiverId == null)
                 throw new InvalidOperationException("Receiver ID has not been set.");
@@ -106,11 +107,16 @@ namespace Octopus.Shared.FileTransfer
                 var read = await file.ReadAsync(bytes, 0, ChunkSize);
                 if (read != ChunkSize)
                     Array.Resize(ref bytes, read);
-                var chunk = new SendNextChunkReply(bytes, read != ChunkSize);
+
+                var isLastChunk = nextChunkOffset + read == Data.ExpectedSize;
+                if (isLastChunk)
+                    supervised.Activity.Verbose("Sending the last file chunk");
+
+                var chunk = new SendNextChunkReply(bytes, isLastChunk);
 
                 var reply = new Message(Id, Data.ReceiverId.Value, chunk);
                 reply.Headers[Pipefish.Core.ProtocolExtensions.InReplyToHeader] = message.GetMessage().Id.ToString();
-                reply.SetSupportsEagerTransferReceipt(true);
+                reply.SetSupportsEagerTransferReceipt(!suppressEagerTransfer);
                 reply.SetIsTracked(true);
                 Space.Send(reply);
 

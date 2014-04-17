@@ -44,7 +44,7 @@ namespace Octopus.Shared.FileTransfer
             };
             
             Log.Octopus().InfoFormat("Beginning transfer of {0}", Data.LocalPath);
-            supervised.Notify(new SendNextChunkRequest());
+            supervised.Notify(new SendNextChunkRequest { SupportsEagerTransfer = true });
         }
 
         public async Task ReceiveAsync(SendNextChunkReply message)
@@ -73,7 +73,7 @@ namespace Octopus.Shared.FileTransfer
                 return;
             }
 
-            supervised.Notify(new SendNextChunkRequest());
+            supervised.Notify(new SendNextChunkRequest { SupportsEagerTransfer = true });
         }
 
         public void Receive(ChunkAlreadySentAcknowledgement message)
@@ -82,4 +82,3 @@ namespace Octopus.Shared.FileTransfer
         }
     }
 }
-

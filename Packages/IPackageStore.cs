@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using Octopus.Platform.Deployment.Packages;
-using Octopus.Shared.Contracts;
 
 namespace Octopus.Shared.Packages
 {
@@ -10,8 +9,8 @@ namespace Octopus.Shared.Packages
         bool DoesPackageExist(PackageMetadata metadata);
         bool DoesPackageExist(string prefix, PackageMetadata metadata);
 
-        Stream CreateFileForPackage(PackageMetadata metadata);
-        Stream CreateFileForPackage(string prefix, PackageMetadata metadata);
+        string GetFilenameForPackage(PackageMetadata package, string prefix = null);
+        Stream CreateFileForPackage(PackageMetadata metadata, string prefix = null);
 
         string GetPackagesDirectory();
         string GetPackagesDirectory(string prefix);
