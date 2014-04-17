@@ -131,7 +131,7 @@ namespace Octopus.Shared.FileTransfer
             supervised.Activity.UpdateProgressFormat(100, "Uploaded {0}", Data.ExpectedSize.ToFileSizeString());
             supervised.Activity.VerboseFormat("File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
             if (Data.MaxEagerChunksAhead > 0)
-                supervised.Activity.VerboseFormat("Eager transfer succeeded in pushing {0} chunks ({1} bytes) ahead of the receiver's acknowledgement", Data.MaxEagerChunksAhead, Data.MaxEagerChunksAhead * ChunkSize);
+                supervised.Activity.VerboseFormat("Eager transfer succeeded in pushing {0} chunks ({1} bytes) ahead of the receiver's acknowledgement", Data.MaxEagerChunksAhead, Data.MaxEagerChunksAhead * (long)ChunkSize);
 
             supervised.Succeed(new FileSentEvent(message.DestinationPath));
         }
