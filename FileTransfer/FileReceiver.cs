@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 using Octopus.Platform.Deployment.Configuration;
+using Octopus.Platform.Deployment.Messages.FileTransfer;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
 using Pipefish;
@@ -13,7 +14,8 @@ namespace Octopus.Shared.FileTransfer
     [Description("Receive File")]
     public class FileReceiver : PersistentActor<FileReceiveData>,
                                 ICreatedBy<BeginFileTransferCommand>,
-                                IReceiveAsync<SendNextChunkReply>
+                                IReceiveAsync<SendNextChunkReply>,
+                                IReceive<ChunkAlreadySentAcknowledgement>
     {
         readonly IFileStorageConfiguration fileStorageConfiguration;
         readonly IOctopusFileSystem fileSystem;
@@ -42,7 +44,7 @@ namespace Octopus.Shared.FileTransfer
             };
             
             Log.Octopus().InfoFormat("Beginning transfer of {0}", Data.LocalPath);
-            supervised.Notify(new SendNextChunkRequest());
+            supervised.Notify(new SendNextChunkRequest { SupportsEagerTransfer = true });
         }
 
         public async Task ReceiveAsync(SendNextChunkReply message)
@@ -62,7 +64,7 @@ namespace Octopus.Shared.FileTransfer
                     {
                         file.Dispose();
                         fileSystem.DeleteFile(Data.LocalPath, DeletionOptions.TryThreeTimesIgnoreFailure);
-                        supervised.Fail(string.Format("The file corrupted during transfer. Expeted hash: {0}, got hash: {1}", Data.Hash, hash));
+                        supervised.Fail(string.Format("The file corrupted during transfer. Expected hash: {0}, got hash: {1}", Data.Hash, hash));
                         return;
                     }
                 }
@@ -71,8 +73,12 @@ namespace Octopus.Shared.FileTransfer
                 return;
             }
 
-            supervised.Notify(new SendNextChunkRequest());
+            supervised.Notify(new SendNextChunkRequest { SupportsEagerTransfer = true });
+        }
+
+        public void Receive(ChunkAlreadySentAcknowledgement message)
+        {
+            // Just to satisfy the conversation tracker
         }
     }
 }
-

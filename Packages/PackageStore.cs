@@ -3,7 +3,6 @@ using System.IO;
 using NuGet;
 using Octopus.Platform.Deployment.Packages;
 using Octopus.Platform.Util;
-using Octopus.Shared.Contracts;
 
 namespace Octopus.Shared.Packages
 {
@@ -29,20 +28,22 @@ namespace Octopus.Shared.Packages
             return package != null;
         }
 
-        public Stream CreateFileForPackage(PackageMetadata metadata)
-        {
-            return CreateFileForPackage(null, metadata);
-        }
-
-        public Stream CreateFileForPackage(string prefix, PackageMetadata metadata)
+        public string GetFilenameForPackage(PackageMetadata metadata, string prefix = null)
         {
             var name = GetNameOfPackage(metadata);
-
             var fullPath = Path.Combine(GetPackageRoot(prefix), name + BitConverter.ToString(Guid.NewGuid().ToByteArray()).Replace("-", string.Empty) + ".nupkg");
 
             fileSystem.EnsureDirectoryExists(rootDirectory);
-            fileSystem.EnsureDiskHasEnoughFreeSpace(rootDirectory, metadata.Size);
 
+            return fullPath;
+        }
+
+        public Stream CreateFileForPackage(PackageMetadata metadata, string prefix = null)
+        {
+            var fullPath = GetFilenameForPackage(metadata, prefix);
+
+            fileSystem.EnsureDiskHasEnoughFreeSpace(rootDirectory, metadata.Size);
+            
             return fileSystem.OpenFile(fullPath, FileAccess.Write);
         }
 
