@@ -70,7 +70,7 @@ namespace Octopus.Shared.FileTransfer
             if (Data.ReceiverId == null)
                 Data.ReceiverId = message.GetMessage().From;
 
-            if (Data.EagerChunksAhead > 0 || IsFinished)
+            if (Data.ExpectedSize != 0 && (Data.EagerChunksAhead > 0 || IsFinished))
             {
                 Reply(message, new ChunkAlreadySentAcknowledgement(), isTracked: true);
                 Data.EagerChunksAhead--;
