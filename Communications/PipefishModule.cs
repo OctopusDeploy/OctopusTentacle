@@ -83,7 +83,7 @@ namespace Octopus.Shared.Communications
                 {
                     // This can probably get baked into a built-in class.
 
-                    Log.Octopus().Info("Resolving for " + e.Instance);
+                    Log.Octopus().VerboseFormat("Resolving activity space infrastructure for {0}", e.Instance.Name);
 
                     var storage = e.Context.Resolve<IActorStorage>();
                     foreach (var actor in e.Context.Resolve<IEnumerable<Meta<IActor>>>())
