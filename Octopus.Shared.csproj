@@ -113,6 +113,7 @@
     </Compile>
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
+    <Compile Include="Bcl\IO\IOUtil.cs" />
     <Compile Include="Bcl\IO\StreamDisposalChain.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
