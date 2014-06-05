@@ -7,6 +7,8 @@ using Octopus.Platform.Deployment.Messages.FileTransfer;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
 using Pipefish;
+using Pipefish.Errors;
+using Pipefish.Messages;
 using Pipefish.Supervision;
 
 namespace Octopus.Shared.FileTransfer
@@ -15,7 +17,8 @@ namespace Octopus.Shared.FileTransfer
     public class FileReceiver : PersistentActor<FileReceiveData>,
                                 ICreatedBy<BeginFileTransferCommand>,
                                 IReceiveAsync<SendNextChunkReply>,
-                                IReceive<ChunkAlreadySentAcknowledgement>
+                                IReceive<ChunkAlreadySentAcknowledgement>,
+                                IHandleFailed<SendNextChunkRequest>
     {
         readonly IFileStorageConfiguration fileStorageConfiguration;
         readonly IOctopusFileSystem fileSystem;
@@ -44,7 +47,7 @@ namespace Octopus.Shared.FileTransfer
             };
             
             Log.Octopus().InfoFormat("Beginning transfer of {0}", Data.LocalPath);
-            supervised.Notify(new SendNextChunkRequest { SupportsEagerTransfer = true });
+            supervised.Notify(new SendNextChunkRequest { SupportsEagerTransfer = true }, isTracked: true);
         }
 
         public async Task ReceiveAsync(SendNextChunkReply message)
@@ -73,12 +76,20 @@ namespace Octopus.Shared.FileTransfer
                 return;
             }
 
-            supervised.Notify(new SendNextChunkRequest { SupportsEagerTransfer = true });
+            supervised.Notify(new SendNextChunkRequest { SupportsEagerTransfer = true }, isTracked: true);
         }
 
         public void Receive(ChunkAlreadySentAcknowledgement message)
         {
             // Just to satisfy the conversation tracker
+        }
+
+        // By doing this we have another chance to get our failure back to the
+        // sender (i.e. two successive failures will sink us without a trace, but
+        // a single failure will be relayed and cause proper termination).
+        public void HandleFailed(SendNextChunkRequest failedMessage, Error error)
+        {
+            supervised.Fail("Request to send next chunk failed", error.ToException());
         }
     }
 }

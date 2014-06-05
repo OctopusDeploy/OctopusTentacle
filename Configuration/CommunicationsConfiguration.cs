@@ -64,6 +64,12 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Octopus.Communications.ServicesPort", value); }
         }
 
+        public long FileTransferChunkSizeBytes
+        {
+            get { return settings.Get("Octopus.Communications.FileTransferChunkSizeBytes", 1024 * 1024); }
+            set { settings.Set("Octopus.Communications.FileTransferChunkSizeBytes", value); }
+        }
+
         public void Save()
         {
             settings.Save();
