@@ -128,6 +128,7 @@ namespace Octopus.Shared.FileTransfer
                 reply.SetSupportsEagerTransferReceipt(!suppressEagerTransfer);
                 reply.SetIsTracked(true);
                 reply.SetIsEphemeral(true);
+                reply.SetExpiresAt(DateTime.UtcNow.AddMinutes(10));
                 Space.Send(reply);
 
                 Data.NextChunkIndex++;
