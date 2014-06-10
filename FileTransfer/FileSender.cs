@@ -29,6 +29,7 @@ namespace Octopus.Shared.FileTransfer
         readonly long chunkSize;
 
         const string SendFile = "Send File";
+        const long EagerPrefetchLimit = 5;
 
         static readonly TimeSpan ProgressReportInterval = TimeSpan.FromSeconds(10);
 
@@ -87,7 +88,7 @@ namespace Octopus.Shared.FileTransfer
 
         public async Task ReceiveAsync(EagerTransferReceipt message)
         {
-            if (!IsFinished)
+            if (!IsFinished && Data.EagerChunksAhead <= EagerPrefetchLimit)
             {
                 Data.EagerChunksAhead++;
                 Data.MaxEagerChunksAhead = Math.Max(Data.EagerChunksAhead, Data.MaxEagerChunksAhead);
@@ -128,7 +129,7 @@ namespace Octopus.Shared.FileTransfer
                 reply.SetSupportsEagerTransferReceipt(!suppressEagerTransfer);
                 reply.SetIsTracked(true);
                 reply.SetIsEphemeral(true);
-                reply.SetExpiresAt(DateTime.UtcNow.AddMinutes(10));
+                reply.SetExpiresAt(DateTime.UtcNow.AddMinutes(10  + (5 * Data.EagerChunksAhead)));
                 Space.Send(reply);
 
                 Data.NextChunkIndex++;
