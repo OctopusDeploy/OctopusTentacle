@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
+using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Deployment.Logging;
 using Octopus.Platform.Deployment.Messages.FileTransfer;
 using Octopus.Platform.Util;
@@ -19,19 +20,24 @@ namespace Octopus.Shared.FileTransfer
         ICreatedBy<SendFileCommand>,
         IReceiveAsync<SendNextChunkRequest>,
         IReceiveAsync<EagerTransferReceipt>,
-        IReceive<FileTransferCompleteEvent>
+        IReceive<FileTransferCompleteEvent>,
+        IHandleFailed<ChunkAlreadySentAcknowledgement>,
+        IHandleFailed<SendNextChunkReply>
     {
         readonly IOctopusFileSystem fileSystem;
-        const long ChunkSize = 1024 * 1024 * 20; // 20 MB chunks, yeah!
         readonly ISupervisedActivity supervised;
+        readonly long chunkSize;
 
         const string SendFile = "Send File";
+        const long EagerPrefetchLimit = 5;
 
         static readonly TimeSpan ProgressReportInterval = TimeSpan.FromSeconds(10);
 
-        public FileSender(IOctopusFileSystem fileSystem)
+        public FileSender(IOctopusFileSystem fileSystem, ICommunicationsConfiguration comms)
         {
             this.fileSystem = fileSystem;
+            chunkSize = comms.FileTransferChunkSizeBytes;
+
             supervised = RegisterAspect(new SupervisedActivity(config =>
             {
                 config.Operation(SendFile).OnItemFailure(SendFileFailure);
@@ -63,7 +69,7 @@ namespace Octopus.Shared.FileTransfer
                 return HashCalculator.Hash(file);
         }
 
-        bool IsFinished { get { return Data.NextChunkIndex * ChunkSize >= Data.ExpectedSize; } }
+        bool IsFinished { get { return Data.NextChunkIndex * chunkSize >= Data.ExpectedSize; } }
 
         public async Task ReceiveAsync(SendNextChunkRequest message)
         {
@@ -82,7 +88,7 @@ namespace Octopus.Shared.FileTransfer
 
         public async Task ReceiveAsync(EagerTransferReceipt message)
         {
-            if (!IsFinished)
+            if (!IsFinished && Data.EagerChunksAhead <= EagerPrefetchLimit)
             {
                 Data.EagerChunksAhead++;
                 Data.MaxEagerChunksAhead = Math.Max(Data.EagerChunksAhead, Data.MaxEagerChunksAhead);
@@ -95,7 +101,7 @@ namespace Octopus.Shared.FileTransfer
             if (Data.ReceiverId == null)
                 throw new InvalidOperationException("Receiver ID has not been set.");
 
-            var nextChunkOffset = Data.NextChunkIndex * ChunkSize;
+            var nextChunkOffset = Data.NextChunkIndex * chunkSize;
 
             using (var file = fileSystem.OpenFile(Data.LocalFilename, FileAccess.Read))
             {
@@ -107,9 +113,9 @@ namespace Octopus.Shared.FileTransfer
                 }
 
                 file.Seek(nextChunkOffset, SeekOrigin.Begin);
-                var bytes = new byte[ChunkSize];
-                var read = await file.ReadAsync(bytes, 0, (int)ChunkSize);
-                if (read != ChunkSize)
+                var bytes = new byte[chunkSize];
+                var read = await file.ReadAsync(bytes, 0, (int)chunkSize);
+                if (read != chunkSize)
                     Array.Resize(ref bytes, read);
 
                 var isLastChunk = nextChunkOffset + read == Data.ExpectedSize;
@@ -123,6 +129,7 @@ namespace Octopus.Shared.FileTransfer
                 reply.SetSupportsEagerTransferReceipt(!suppressEagerTransfer);
                 reply.SetIsTracked(true);
                 reply.SetIsEphemeral(true);
+                reply.SetExpiresAt(DateTime.UtcNow.AddMinutes(10  + (5 * Data.EagerChunksAhead)));
                 Space.Send(reply);
 
                 Data.NextChunkIndex++;
@@ -136,7 +143,7 @@ namespace Octopus.Shared.FileTransfer
             supervised.Activity.UpdateProgressFormat(100, "Uploaded {0}", Data.ExpectedSize.ToFileSizeString());
             supervised.Activity.VerboseFormat("File {0} with hash {1} successfully uploaded to {2}", Data.LocalFilename, Data.Hash, remoteSpace);
             if (Data.MaxEagerChunksAhead > 0)
-                supervised.Activity.VerboseFormat("Eager transfer succeeded in pushing {0} chunks ({1} bytes) ahead of the receiver's acknowledgement", Data.MaxEagerChunksAhead, Data.MaxEagerChunksAhead * ChunkSize);
+                supervised.Activity.VerboseFormat("Eager transfer succeeded in pushing {0} chunks ({1} bytes) ahead of the receiver's acknowledgement", Data.MaxEagerChunksAhead, Data.MaxEagerChunksAhead * chunkSize);
 
             supervised.Succeed(new FileSentEvent(message.DestinationPath));
         }
@@ -150,6 +157,17 @@ namespace Octopus.Shared.FileTransfer
             var message = string.Format("Upload of file {0} with hash {1} to {2} failed", Data.LocalFilename, Data.Hash, Data.Destination);
             supervised.Fail(message, error.ToException());
             return Intervention.NotHandled;
+        }
+
+        public void HandleFailed(ChunkAlreadySentAcknowledgement failedMessage, Error error)
+        {
+            supervised.Activity.Warn(error.ToException(), "An acknowlegement during file transfer could not be sent; this can indicate network connection quality issues.");
+            // Ignore; this message's only purpose was to satisfy conversation tracking
+        }
+
+        public void HandleFailed(SendNextChunkReply failedMessage, Error error)
+        {
+            supervised.Fail("A request for the next file chunk could not be delivered.", error.ToException());
         }
     }
 }
