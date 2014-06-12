@@ -9,6 +9,8 @@ namespace Octopus.Shared.Configuration
         readonly IKeyValueStore settings;
         readonly IHomeConfiguration homeConfiguration;
 
+        public const string SquidSettingKey = "Octopus.Communications.Squid";
+
         public CommunicationsConfiguration(IKeyValueStore settings, IHomeConfiguration homeConfiguration)
         {
             this.settings = settings;
@@ -36,8 +38,8 @@ namespace Octopus.Shared.Configuration
 
         public string Squid
         {
-            get { return settings.Get("Octopus.Communications.Squid"); }
-            set { settings.Set("Octopus.Communications.Squid", value); }
+            get { return settings.Get(SquidSettingKey); }
+            set { settings.Set(SquidSettingKey, value); }
         }
 
         public string ActorStateDirectory
