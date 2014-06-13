@@ -115,6 +115,7 @@
     <Compile Include="Bcl\IO\StreamDisposalChain.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
+    <Compile Include="Communications\Agentless\AgentlessOverrideAttribute.cs" />
     <Compile Include="Communications\Commands\DecryptCommand.cs" />
     <Compile Include="Communications\Commands\ResetCommand.cs" />
     <Compile Include="Communications\Commands\ShowMasterKeyCommand.cs" />
@@ -129,6 +130,7 @@
     <Compile Include="Communications\Handshaking\IHandshakeReceiver.cs" />
     <Compile Include="Communications\Integration\IActivitySpaceStarter.cs" />
     <Compile Include="Communications\Integration\ShutdownToken.cs" />
+    <Compile Include="Communications\Agentless\ProtocolExtensions.cs" />
     <Compile Include="Configuration\AbstractKeyValueStore.cs" />
     <Compile Include="Configuration\ApplicationInstanceRecord.cs" />
     <Compile Include="Configuration\ApplicationInstanceSelector.cs" />

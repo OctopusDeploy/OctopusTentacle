@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using Autofac;
+using Autofac.Features.Metadata;
 using Octopus.Platform.Diagnostics;
 using Pipefish;
 using Pipefish.Core;
 using Pipefish.Hosting;
+using Pipefish.Persistence;
+using Pipefish.Standard;
 
 namespace Octopus.Shared.Communications.Integration
 {
@@ -41,6 +46,26 @@ namespace Octopus.Shared.Communications.Integration
             }
 
             space.Dispose();
+        }
+
+        public static void LoadWellKnownActors(ActivitySpace space, IComponentContext scope)
+        {
+            Log.Octopus().VerboseFormat("Resolving activity space infrastructure for {0}", space.Name);
+
+            var storage = scope.Resolve<IActorStorage>();
+            foreach (var actor in scope.Resolve<IEnumerable<Meta<IActor>>>())
+            {
+                var actorName = (string)actor.Metadata["Name"];
+
+                var peristent = actor.Value as IPersistentActor;
+                if (peristent != null)
+                {
+                    var state = storage.GetStorageFor(actorName);
+                    peristent.AttachStorage(state);
+                }
+
+                space.Attach(actorName, actor.Value);
+            }
         }
     }
 }

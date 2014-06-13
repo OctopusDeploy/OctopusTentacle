@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Autofac;
 using Autofac.Core;
-using Autofac.Features.Metadata;
 using NuGet;
-using Octopus.Platform.Deployment;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
+using Octopus.Shared.Communications.Agentless;
 using Octopus.Shared.Communications.Encryption;
 using Octopus.Shared.Communications.Integration;
 using Octopus.Shared.FileTransfer;
@@ -18,7 +16,6 @@ using Pipefish.Core;
 using Pipefish.Hosting;
 using Pipefish.Persistence;
 using Pipefish.Persistence.Filesystem;
-using Pipefish.Standard;
 using Pipefish.Transport;
 using Pipefish.Transport.Filesystem;
 using Pipefish.Util.Storage;
@@ -50,7 +47,7 @@ namespace Octopus.Shared.Communications
                     .GetInterfaces()
                     .Where(IsCreatedByMessage)
                     .Select(i => new KeyedService(
-                        MessageTypeName.For(i.GetGenericArguments()[0]),
+                        KeyFor(t, MessageTypeName.For(i.GetGenericArguments()[0])),
                         typeof(IActor))));
 
             builder.RegisterType<AutofacActorFactory>().As<IActorFactory>();
@@ -63,43 +60,10 @@ namespace Octopus.Shared.Communications
             builder.RegisterType<MessageInspectorCollection>()
                 .Named<IMessageInspector>("collection");
 
-            builder.RegisterAssemblyTypes(assemblies)
-                .As<IAspect>()
-                .As(t =>
-                {
-                    var implements = t.GetCustomAttribute<AspectImplementsAttribute>();
-                    if (implements == null)
-                        return new Type[0];
-
-                    return implements.ImplementedTypes;
-                })
-                .AsSelf()
-                .InstancePerDependency();
-
             builder.Register(c => new ActivitySpace(c.Resolve<ICommunicationsConfiguration>().Squid, c.Resolve<IMessageStore>(), c.ResolveNamed<IMessageInspector>("collection")))
                 .AsSelf()
                 .As<IActivitySpace>()
-                .OnActivating(e =>
-                {
-                    // This can probably get baked into a built-in class.
-
-                    Log.Octopus().VerboseFormat("Resolving activity space infrastructure for {0}", e.Instance.Name);
-
-                    var storage = e.Context.Resolve<IActorStorage>();
-                    foreach (var actor in e.Context.Resolve<IEnumerable<Meta<IActor>>>())
-                    {
-                        var actorName = (string)actor.Metadata["Name"];
-
-                        var peristent = actor.Value as IPersistentActor;
-                        if (peristent != null)
-                        {
-                            var state = storage.GetStorageFor(actorName);
-                            peristent.AttachStorage(state);
-                        }
-
-                        e.Instance.Attach(actorName, actor.Value);
-                    }
-                })
+                .OnActivating(e => ActivitySpaceStarter.LoadWellKnownActors(e.Instance, e.Context))
                 .SingleInstance();
 
             builder.RegisterType<ActivitySpaceStarter>()
@@ -121,6 +85,14 @@ namespace Octopus.Shared.Communications
             builder.RegisterType<EncryptedStorageStream>().As<IStorageStreamTransform>();
 
             builder.RegisterType<ShutdownToken>().SingleInstance();
+        }
+
+        static string KeyFor(Type type, string createdByMessageTypeName)
+        {
+            var attr = type.GetCustomAttribute<AgentlessOverrideAttribute>();
+            if (attr == null)
+                return createdByMessageTypeName;
+            return createdByMessageTypeName + "+" + attr.CommunicationStyle;
         }
 
         static bool IsCreatedByMessage(Type t)
