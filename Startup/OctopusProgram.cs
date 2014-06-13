@@ -48,7 +48,7 @@ namespace Octopus.Shared.Startup
         {
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
-                log.VerboseFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
+                log.InfoFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
                 args.SetObserved();
             };
             

@@ -163,6 +163,7 @@
     <Compile Include="Configuration\XmlKeyValueStore.cs" />
     <Compile Include="Configuration\XmlSetting.cs" />
     <Compile Include="Configuration\XmlSettingsRoot.cs" />
+    <Compile Include="Configuration\XmlStreamReadOnlyKeyValueStore.cs" />
     <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Diagnostics\LogAdapter.cs" />
     <Compile Include="Diagnostics\RecentInMemoryTarget.cs" />
