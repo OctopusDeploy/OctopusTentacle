@@ -128,6 +128,7 @@
     <Compile Include="Communications\Handshaking\HandshakeRequest.cs" />
     <Compile Include="Communications\Handshaking\HandshakeResponse.cs" />
     <Compile Include="Communications\Handshaking\IHandshakeReceiver.cs" />
+    <Compile Include="Communications\Identity\Squid.cs" />
     <Compile Include="Communications\Integration\IActivitySpaceStarter.cs" />
     <Compile Include="Communications\Integration\ShutdownToken.cs" />
     <Compile Include="Communications\Agentless\ProtocolExtensions.cs" />
