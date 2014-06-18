@@ -1,31 +1,42 @@
 ﻿using System;
 using Octopus.Platform.Model;
+using Octopus.Platform.Model.Endpoints;
 using Pipefish.Core;
+using Pipefish.Util;
 
 namespace Octopus.Shared.Communications.Agentless
 {
     public static class ProtocolExtensions
     {
-        public const string ConnectionParametersHeaderName = "Connection-Parameters";
+        public const string AgentlessEndpointHeaderName = "Agentless-Endpoint";
         public const string ForwardToTransientActorHeaderName = "Forward-To-Transient-Actor" + Pipefish.Core.ProtocolExtensions.NonForwardSuffix;
         public const string ForwardToTransientCommunicationStyleHeaderName = "Forward-To-Transient-Style" + Pipefish.Core.ProtocolExtensions.NonForwardSuffix;
-        public const string ForwardToTransientConnectionParametersHeaderName = "Forward-To-Transient-Connection" + Pipefish.Core.ProtocolExtensions.NonForwardSuffix;
+        public const string ForwardToTransientEndpointHeaderName = "Forward-To-Transient-Endpoint" + Pipefish.Core.ProtocolExtensions.NonForwardSuffix;
 
-        public static void SetConnectionParameters(this Message message, string connectionParameters)
+        public static void SetAgentlessEndpoint(this Message message, string serializedEndpoint)
         {
-            message.Headers.Add(ConnectionParametersHeaderName, connectionParameters);
+            message.Headers.Add(AgentlessEndpointHeaderName, serializedEndpoint);
         }
 
-        public static bool TryGetConnectionParameters(this Message message, out string connectionParameters)
+        public static bool TryGetAgentlessEndpoint<TEndpoint>(this Message message, out TEndpoint endpoint)
+            where TEndpoint : Endpoint
         {
-            return message.Headers.TryGetValue(ConnectionParametersHeaderName, out connectionParameters);
+            string serializedEndpoint;
+            if (!message.Headers.TryGetValue(AgentlessEndpointHeaderName, out serializedEndpoint))
+            {
+                endpoint = null;
+                return false;
+            }
+
+            endpoint = Json.Deserialize<TEndpoint>(serializedEndpoint);
+            return true;
         }
 
-        public static void SetForwardToTransient(this Message message, ActorId actorId, CommunicationStyle communicationStyle, string connectionParameters)
+        public static void SetForwardToTransient(this Message message, ActorId actorId, CommunicationStyle communicationStyle, Endpoint endpoint)
         {
             message.Headers.Add(ForwardToTransientActorHeaderName, actorId.ToString());
             message.Headers.Add(ForwardToTransientCommunicationStyleHeaderName, communicationStyle.ToString());
-            message.Headers.Add(ForwardToTransientConnectionParametersHeaderName, connectionParameters);
+            message.Headers.Add(ForwardToTransientEndpointHeaderName, Json.Serialize(endpoint));
         }
 
         public static bool TryGetForwardToTransientActor(this Message message, out ActorId actorId)
@@ -54,9 +65,9 @@ namespace Octopus.Shared.Communications.Agentless
             return true;
         }
 
-        public static bool TryGetForwardToTransientConnection(this Message message, out string connectionParameters)
+        public static bool TryGetForwardToTransientEndpoint(this Message message, out string serializedEndpoint)
         {
-            return message.Headers.TryGetValue(ForwardToTransientActorHeaderName, out connectionParameters);
+            return message.Headers.TryGetValue(ForwardToTransientEndpointHeaderName, out serializedEndpoint);
         }
     }
 }
