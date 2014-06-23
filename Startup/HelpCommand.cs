@@ -53,7 +53,7 @@ namespace Octopus.Shared.Startup
         {
         }
 
-        void PrintCommandHelp(string executable, ICommand command, ICommandMetadata metadata, OptionSet commonOptions)
+        void PrintCommandHelp(string executable, ICommand command, CommandMetadata metadata, OptionSet commonOptions)
         {
             Console.ResetColor();
             Console.Write("Usage: ");

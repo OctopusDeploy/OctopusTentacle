@@ -6,19 +6,19 @@ namespace Octopus.Shared.Startup
 {
     public class CommandLocator : ICommandLocator
     {
-        readonly IEnumerable<Lazy<ICommand, ICommandMetadata>> commands;
+        readonly IEnumerable<Lazy<ICommand, CommandMetadata>> commands;
 
-        public CommandLocator(IEnumerable<Lazy<ICommand, ICommandMetadata>> commands)
+        public CommandLocator(IEnumerable<Lazy<ICommand, CommandMetadata>> commands)
         {
             this.commands = commands;
         }
 
-        public ICommandMetadata[] List()
+        public CommandMetadata[] List()
         {
             return commands.Select(x => x.Metadata).ToArray();
         }
 
-        public Lazy<ICommand, ICommandMetadata> Find(string name)
+        public Lazy<ICommand, CommandMetadata> Find(string name)
         {
             var matchingCommands =
                 from command in commands

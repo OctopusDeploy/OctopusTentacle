@@ -4,7 +4,7 @@ namespace Octopus.Shared.Startup
 {
     public interface ICommandLocator
     {
-        ICommandMetadata[] List();
-        Lazy<ICommand, ICommandMetadata> Find(string name);
+        CommandMetadata[] List();
+        Lazy<ICommand, CommandMetadata> Find(string name);
     }
 }
