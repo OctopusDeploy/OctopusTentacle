@@ -67,9 +67,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NuGet.Core.2.8.2\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish, Version=2.0.2.3, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.2.0.2.3\lib\Pipefish.dll</HintPath>
+    <Reference Include="Pipefish">
+      <HintPath>..\packages\Pipefish.2.0.2.7\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="Pipefish.Transport.SecureTcp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
