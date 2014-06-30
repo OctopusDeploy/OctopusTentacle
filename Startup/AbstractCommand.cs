@@ -11,6 +11,16 @@ namespace Octopus.Shared.Startup
 
         protected OptionSet Options { get { return options; }}
 
+        readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
+
+        protected TOptionSet AddOptionSet<TOptionSet>(TOptionSet commandOptions)
+            where TOptionSet : class, ICommandOptions
+        {
+            if (commandOptions == null) throw new ArgumentNullException("commandOptions");
+            optionSets.Add(commandOptions);
+            return commandOptions;
+        }
+
         protected virtual void UnrecognizedArguments(IList<string> arguments)
         {
             if (arguments.Count > 0)
@@ -38,6 +48,9 @@ namespace Octopus.Shared.Startup
 
             var unrecognized = options.Parse(commandLineArguments);
             UnrecognizedArguments(unrecognized);
+
+            foreach (var opset in optionSets)
+                opset.Validate();
 
             Start();
         }

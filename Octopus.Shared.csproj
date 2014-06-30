@@ -234,6 +234,7 @@
     <Compile Include="Startup\CommandLocator.cs" />
     <Compile Include="Startup\CreateInstanceCommand.cs" />
     <Compile Include="Startup\DeleteInstanceCommand.cs" />
+    <Compile Include="Startup\ICommandOptions.cs" />
     <Compile Include="Startup\LsaUtility.cs" />
     <Compile Include="Startup\ProxyConfigurationCommand.cs" />
     <Compile Include="Startup\ServiceCommand.cs" />
