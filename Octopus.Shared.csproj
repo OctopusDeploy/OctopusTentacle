@@ -42,6 +42,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Autofac.3.5.0\lib\net40\Autofac.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
     <Reference Include="MarkdownSharp">
       <HintPath>..\packages\MarkdownSharp.1.13.0.0\lib\35\MarkdownSharp.dll</HintPath>
     </Reference>
@@ -111,6 +114,7 @@
     </Compile>
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
+    <Compile Include="PackageConversion\Archives\ZipToTarConverter.cs" />
     <Compile Include="Bcl\IO\IOUtil.cs" />
     <Compile Include="Bcl\IO\StreamDisposalChain.cs" />
     <Compile Include="Caching\ICache.cs" />
@@ -201,6 +205,7 @@
     <Compile Include="Internals\Options\OptionSet.cs" />
     <Compile Include="Internals\Options\OptionValueType.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
+    <Compile Include="PackageConversion\Streams\StreamExtensions.cs" />
     <Compile Include="Packages\FastLocalPackageRepository.cs" />
     <Compile Include="Packages\FeedCredentialsProvider.cs" />
     <Compile Include="Packages\FixedFilePathResolver.cs" />
