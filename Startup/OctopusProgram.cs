@@ -54,8 +54,8 @@ namespace Octopus.Shared.Startup
             
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
-                var exception = (Exception)args.ExceptionObject;
-                log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception.Message);
+                var exception = args.ExceptionObject as Exception; // May not actually be one.
+                log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception == null ? args.ExceptionObject : exception.Message);
             };
 
             int exitCode;
