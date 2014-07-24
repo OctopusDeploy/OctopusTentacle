@@ -16,6 +16,7 @@ namespace Octopus.Shared.Communications.Conversations
 
         readonly object sync = new object();
         readonly IDictionary<Guid, ActiveConversation> conversations = new Dictionary<Guid, ActiveConversation>();
+        readonly HashSet<string> synonyms = new HashSet<string>();
         IList<TimeSpan> preConversationPollingSequence;
 
         public ConversationState(string remoteSpace, IPollingConnection connection, IEnumerable<TimeSpan> conversationPollingSequence)
@@ -44,7 +45,7 @@ namespace Octopus.Shared.Communications.Conversations
                     conversations.Add(message.Id, new ActiveConversation(message.Id, message.MessageType));
                     if (conversations.Count == 1)
                     {
-                        Log.Octopus().Verbose("A new conversation is beginning with " + remoteSpace);
+                        Log.Octopus().Verbose("A new conversation is beginning with " + Description);
                         preConversationPollingSequence = connection.GetPollingSequence();
                     }
 
@@ -52,7 +53,7 @@ namespace Octopus.Shared.Communications.Conversations
 
                     if (conversations.Count > 100)
                     {
-                        Log.Octopus().Warn("It looks as though conversations with " + remoteSpace + " are leaking");
+                        Log.Octopus().Warn("It looks as though conversations with " + Description + " are leaking");
                     }
                 }
                 else
@@ -60,6 +61,19 @@ namespace Octopus.Shared.Communications.Conversations
                     // When a conversation is active, any incoming message will automatically 'reset' the polling sequence back to the start
                     connection.SetPollingSequence(conversationPollingSequence);
                 }
+            }
+        }
+
+        string Description
+        {
+            get
+            {
+                var result = remoteSpace;
+                if (synonyms.Count > 0)
+                {
+                    result += " (hosting " + string.Join(", ", synonyms) + ")";
+                }
+                return result;
             }
         }
 
@@ -103,6 +117,22 @@ namespace Octopus.Shared.Communications.Conversations
                         c.StartedAtUtc, c.InitiatingMessageId, "Expecting reply to: " + c.InitiatingMessageType))
                     .OrderBy(c => c.StartedAtUtc)
                     .ToList();
+            }
+        }
+
+        public void AddSynonym(string synonym)
+        {
+            lock (sync)
+            {
+                synonyms.Add(synonym);
+            }
+        }
+
+        public void RemoveSynonym(string synonym)
+        {
+            lock (sync)
+            {
+                synonyms.Remove(synonym);
             }
         }
     }

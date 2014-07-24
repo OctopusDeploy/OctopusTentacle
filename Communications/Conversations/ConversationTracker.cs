@@ -30,7 +30,12 @@ namespace Octopus.Shared.Communications.Conversations
         public bool StopTracking(string squid)
         {
             ConversationState state;
-            return conversations.TryRemove(squid, out state);
+            if (conversations.TryRemove(squid, out state))
+            {
+                state.RemoveSynonym(squid);
+                return true;
+            }
+            return false;
         }
 
         public void OnReceiving(IActor actor, Message message)
@@ -69,6 +74,16 @@ namespace Octopus.Shared.Communications.Conversations
                 return new List<ActiveConversationDescription>();
 
             return state.GetActiveConversations();
+        }
+
+        public void AddSynonym(string synonym, string squid)
+        {
+            ConversationState state;
+            if (conversations.TryGetValue(squid, out state))
+            {
+                if (conversations.TryAdd(synonym, state))
+                    state.AddSynonym(synonym);
+            }
         }
     }
 }
