@@ -41,7 +41,6 @@ namespace Octopus.Shared.Configuration
 
         protected virtual void SaveSettings(IDictionary<string, string> settingsToSave)
         {
-            throw new NotSupportedException("This Octopus Deploy configuration provider does not support saving changes.");
         }
     }
 }
