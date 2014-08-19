@@ -6,6 +6,6 @@ namespace Octopus.Shared.Configuration
     {
         OctopusServer,
         Tentacle,
-        BundledTentacle
+        Siphon
     }
 }
