@@ -16,6 +16,9 @@ namespace Octopus.Shared.Configuration
                 case ApplicationName.Tentacle:
                     name = "OctopusDeploy Tentacle";
                     break;
+                case ApplicationName.Siphon:
+                    name = "OctopusDeploy Siphon";
+                    break;
             }
 
             var defaultInstanceName = ApplicationInstanceRecord.GetDefaultInstance(application);
