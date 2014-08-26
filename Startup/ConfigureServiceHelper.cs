@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
@@ -31,6 +32,7 @@ namespace Octopus.Shared.Startup
 
         public void ConfigureService()
         {
+
             var controller = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == thisServiceName);
 
             if (serviceConfigurationState.Stop) {
