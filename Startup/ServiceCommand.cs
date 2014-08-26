@@ -37,8 +37,6 @@ namespace Octopus.Shared.Startup
             });
 
         }
-
-        // TODO: Daniel
         protected override void Start()
         {
             base.Start();
