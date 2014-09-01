@@ -85,7 +85,7 @@ namespace Octopus.Shared.Configuration
         void Load(ApplicationInstanceRecord record)
         {
             if (record == null) throw new ArgumentNullException("record");
-            Current = new LoadedApplicationInstance(applicationName, record.InstanceName, new XmlFileKeyValueStore(record.ConfigurationFilePath));
+            Current = new LoadedApplicationInstance(applicationName, record.InstanceName, record.ConfigurationFilePath, new XmlFileKeyValueStore(record.ConfigurationFilePath));
             OnLoaded();
         }
 

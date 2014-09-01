@@ -7,12 +7,14 @@ namespace Octopus.Shared.Configuration
     {
         readonly ApplicationName applicationName;
         readonly string instanceName;
+        readonly string configurationPath;
         readonly IKeyValueStore configuration;
 
-        public LoadedApplicationInstance(ApplicationName applicationName, string instanceName, IKeyValueStore configuration)
+        public LoadedApplicationInstance(ApplicationName applicationName, string instanceName, string configurationPath, IKeyValueStore configuration)
         {
             this.applicationName = applicationName;
             this.instanceName = instanceName;
+            this.configurationPath = configurationPath;
             this.configuration = configuration;
         }
 
@@ -29,6 +31,11 @@ namespace Octopus.Shared.Configuration
         public IKeyValueStore Configuration
         {
             get { return configuration; }
+        }
+
+        public string ConfigurationPath
+        {
+            get { return configurationPath; }
         }
     }
 }
