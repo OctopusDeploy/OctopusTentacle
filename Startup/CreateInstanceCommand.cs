@@ -10,6 +10,7 @@ namespace Octopus.Shared.Startup
         readonly IApplicationInstanceSelector instanceSelector;
         string instanceName;
         string config;
+        bool hosted;
 
         public CreateInstanceCommand(IOctopusFileSystem fileSystem, IApplicationInstanceSelector instanceSelector)
         {
@@ -17,6 +18,7 @@ namespace Octopus.Shared.Startup
             this.instanceSelector = instanceSelector;
             Options.Add("instance=", "Name of the instance to create", v => instanceName = v);
             Options.Add("config=", "Path to configuration file to create", v => config = v);
+            Options.Add("hosted", "Indicated the configuration path is that of the server and all settings will be derived", v => hosted = true);
         }
 
         protected override void Start()
