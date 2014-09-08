@@ -4,7 +4,7 @@ namespace Octopus.Shared.Conventions
 {
     public static class HostedSiphonConventions
     {
-        static string postfix = "Siphon";
+        static string postfix = " Siphon";
 
         public static string GetHostedApplicationName(string octopusApplicationName)
         {
