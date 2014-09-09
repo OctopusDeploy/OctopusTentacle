@@ -278,6 +278,8 @@
     <Compile Include="Time\TimeModule.cs" />
     <Compile Include="Time\IClock.cs" />
     <Compile Include="Variables\VariableFunctionsModule.cs" />
+    <Compile Include="Versioning\AppVersion.cs" />
+    <Compile Include="Versioning\VersioningModule.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

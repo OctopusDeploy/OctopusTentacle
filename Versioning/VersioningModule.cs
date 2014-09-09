@@ -1,0 +1,22 @@
+﻿using System;
+using System.Reflection;
+using Autofac;
+using Module = Autofac.Module;
+
+namespace Octopus.Shared.Versioning
+{
+    public class VersioningModule : Module
+    {
+        readonly Assembly versionedAssembly;
+
+        public VersioningModule(Assembly versionedAssembly)
+        {
+            this.versionedAssembly = versionedAssembly;
+        }
+
+        protected override void Load(ContainerBuilder builder)
+        {
+            builder.Register(c => new AppVersion(versionedAssembly));
+        }
+    }
+}
