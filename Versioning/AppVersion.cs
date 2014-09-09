@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using Octopus.Platform.Util;
 
 namespace Octopus.Shared.Versioning
 {
@@ -14,9 +15,15 @@ namespace Octopus.Shared.Versioning
         }
 
         public AppVersion(Assembly assembly)
-            : this(assembly.GetName().Version)
+            : this(assembly.GetFileVersion())
         {
         }
+
+        public AppVersion(string version)
+            : this(new Version(version))
+        {
+        }
+
 
         public AppVersion(Version version)
         {
