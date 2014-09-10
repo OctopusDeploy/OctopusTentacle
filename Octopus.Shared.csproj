@@ -294,6 +294,10 @@
       <Project>{55BB6AE9-4FCC-4DB4-8B87-707271AF17A9}</Project>
       <Name>Octopus.Platform.Deployment</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Octopus.Platform.Variables\Octopus.Platform.Variables.csproj">
+      <Project>{EF3A1C61-8CF9-422E-AE07-8C82A8D9231B}</Project>
+      <Name>Octopus.Platform.Variables</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Octopus.Platform\Octopus.Platform.csproj">
       <Project>{F4754A78-708D-4D87-B912-EC2062AF0B2F}</Project>
       <Name>Octopus.Platform</Name>
