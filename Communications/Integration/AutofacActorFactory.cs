@@ -18,7 +18,7 @@ namespace Octopus.Shared.Communications.Integration
             this.subsetSuffix = subsetSuffix;
         }
 
-        public IActor CreateActorFor(string messageType)
+        public Tuple<IActor,Action> CreateActorFor(string messageType)
         {
             Func<Owned<IActor>> factory;
             if (subsetSuffix == null || !actorsCreatedByMessageType.TryGetValue(messageType + "+" + subsetSuffix, out factory))
@@ -27,8 +27,8 @@ namespace Octopus.Shared.Communications.Integration
                     throw new ArgumentException("No actor is registered for creation on " + messageType);
             }
             
-            // Disposal needs to be accounted for here
-            return factory.Invoke().Value;
+            var owned = factory.Invoke();
+            return Tuple.Create<IActor, Action>(owned.Value, owned.Dispose);
         }
     }
 }

@@ -64,7 +64,7 @@ namespace Octopus.Shared.Communications.Integration
                     peristent.AttachStorage(state);
                 }
 
-                space.Attach(actorName, actor.Value);
+                space.Attach(actorName, actor.Value, () => { });
             }
         }
     }
