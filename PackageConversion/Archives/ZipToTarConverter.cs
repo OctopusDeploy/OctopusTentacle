@@ -15,7 +15,7 @@ namespace Octopus.Shared.PackageConversion.Archives
 
             // We use the entry length to mark progress because inputStream.Length includes header sizes.
             var entries = zipInputStream.Cast<ZipEntry>().ToArray();
-            var totalZipEntryLength = entries.Aggregate(0L, (l, entry) => l += entry.CompressedSize);
+            var totalZipEntryLength = entries.Aggregate(0L, (l, entry) => l + entry.CompressedSize);
             var remainder = totalZipEntryLength;
 
             foreach (ZipEntry zipEntry in entries)
