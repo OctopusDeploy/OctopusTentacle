@@ -116,6 +116,7 @@
     </Compile>
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
+    <Compile Include="Conventions\OctopusName.cs" />
     <Compile Include="Tools\CommandLine.cs" />
     <Compile Include="Conventions\HostedSiphonConventions.cs" />
     <Compile Include="PackageConversion\Archives\ZipToTarConverter.cs" />
