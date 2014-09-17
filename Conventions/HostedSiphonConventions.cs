@@ -2,19 +2,19 @@
 
 namespace Octopus.Shared.Conventions
 {
-    public static class HostedSiphonConventions
+    public static class HostedRelayConventions
     {
-        static string postfix = " Siphon";
+        static string postfix = " Relay";
 
         public static string GetHostedApplicationName(string octopusApplicationName)
         {
             return octopusApplicationName + postfix;
         }
 
-        public static string GetServerApplicationNameFromHosted(string siphonApplicationName)
+        public static string GetServerApplicationNameFromHosted(string relayApplicationName)
         {
-            var index = siphonApplicationName.IndexOf(postfix, System.StringComparison.Ordinal);
-            return siphonApplicationName.Substring(0, index);
+            var index = relayApplicationName.IndexOf(postfix, System.StringComparison.Ordinal);
+            return relayApplicationName.Substring(0, index);
         }
     }
 }

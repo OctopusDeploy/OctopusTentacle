@@ -24,12 +24,12 @@ namespace Octopus.Shared.Tools
                 "Tentacle.exe");
         }
 
-        public static string PathToSiphonExe()
+        public static string PathToRelayExe()
         {
             return GetPathToExecutable(
-                "Siphon",
-                "..\\..\\Octopus.Siphon\\bin\\Siphon.exe",
-                "Siphon.exe");
+                "Relay",
+                "..\\..\\Octopus.Relay\\bin\\Relay.exe",
+                "Relay.exe");
         }
 
         static string GetPathToExecutable(string executableDescription, params string[] searchPaths)
