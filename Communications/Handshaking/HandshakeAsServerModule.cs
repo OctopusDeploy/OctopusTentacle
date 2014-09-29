@@ -38,7 +38,7 @@ namespace Octopus.Shared.Communications.Handshaking
             var content = Json.Deserialize<HandshakeRequest>(new StreamReader(request.Content));
             handshakeReceiver.HandshakeReceived(request.ClientThumbprint, content.Squid);
 
-            var responseContent = new HandshakeResponse { Squid = communicationsConfiguration.Squid };
+            var responseContent = new HandshakeResponse { Squid = communicationsConfiguration.Squid, Hostname = Environment.MachineName };
             response.SendText(Json.Serialize(responseContent), contentType: "application/json");
         }
     }
