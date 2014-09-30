@@ -17,12 +17,13 @@ namespace Octopus.Shared.Communications.Integration
             this.actorsCreatedByMessageType = actorsCreatedByMessageType;
         }
 
-        public IActor CreateActorFor(string messageType)
+        public Tuple<IActor, Action> CreateActorFor(string messageType)
         {
             try
             {
                 // Disposal needs to be accounted for here
-                return actorsCreatedByMessageType[messageType].Invoke().Value;
+                var owned = actorsCreatedByMessageType[messageType].Invoke();
+                return Tuple.Create<IActor, Action>(owned.Value, owned.Dispose);
             }
             catch (ComponentNotRegisteredException cex)
             {                

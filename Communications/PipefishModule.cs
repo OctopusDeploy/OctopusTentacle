@@ -97,7 +97,7 @@ namespace Octopus.Shared.Communications
                             peristent.AttachStorage(state);
                         }
 
-                        e.Instance.Attach(actorName, actor.Value);
+                        e.Instance.Attach(actorName, actor.Value, () => {});
                     }
                 })
                 .SingleInstance();
