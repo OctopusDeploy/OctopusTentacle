@@ -50,6 +50,15 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Octopus.WebPortal.AuthenticationMode", value); }
         }
 
+        /// <summary>
+        /// Gets or sets the active directory container, if not specified default container is used
+        /// </summary>
+        public string ActiveDirectoryContainer
+        {
+            get { return settings.Get("Octopus.WebPortal.ActiveDirectoryContainer", String.Empty); }
+            set { settings.Set("Octopus.WebPortal.ActiveDirectoryContainer", value); }
+        }
+
         public void Save()
         {
             settings.Save();
