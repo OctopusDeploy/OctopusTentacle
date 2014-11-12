@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
 using Octopus.Platform.Deployment.Configuration;
 
 namespace Octopus.Shared.Configuration
@@ -27,6 +28,12 @@ namespace Octopus.Shared.Configuration
         {
             get { return settings.Get("Octopus.PackageCache.DaysToCachePackages", 20); }
             set { settings.Set("Octopus.PackageCache.DaysToCachePackages", value); }
+        }
+
+        public int MaxConcurrentTasks
+        {
+            get { return settings.Get("Octopus.Tasks.MaxConcurrentTasks", 0); }
+            set { settings.Set("Octopus.Tasks.MaxConcurrentTasks", value); }
         }
 
         public void Save()
