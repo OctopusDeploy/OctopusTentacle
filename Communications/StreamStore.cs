@@ -56,16 +56,18 @@ namespace Octopus.Shared.Communications
             {
                 try
                 {
+                    // Try our best to do a 'move' since it is less work for the disk
                     fileSystem.MoveFile(path, newFilePath);
                     success = true;
                     break;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     Thread.Sleep(1000 * i * i);
                 }
             }
 
+            // Sometimes virus scanners etc. lock the file; if so, let's just copy and try to delete the original
             if (!success)
             {
                 fileSystem.CopyFile(path, newFilePath);
