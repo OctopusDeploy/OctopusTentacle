@@ -6,9 +6,11 @@ using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Deployment.Messages.FileTransfer;
 using Octopus.Platform.Diagnostics;
 using Octopus.Platform.Util;
+using Octopus.Shared.Communications;
 using Pipefish;
 using Pipefish.Errors;
 using Pipefish.Messages;
+using Pipefish.Streaming;
 using Pipefish.Supervision;
 
 namespace Octopus.Shared.FileTransfer
@@ -18,18 +20,22 @@ namespace Octopus.Shared.FileTransfer
                                 ICreatedBy<BeginFileTransferCommand>,
                                 IReceiveAsync<SendNextChunkReply>,
                                 IReceive<ChunkAlreadySentAcknowledgement>,
+                                IReceive<StreamCompleteRequest>,
                                 IHandleFailed<SendNextChunkRequest>
     {
         readonly IFileStorageConfiguration fileStorageConfiguration;
         readonly IOctopusFileSystem fileSystem;
+        readonly IOctopusStreamStore streamStore;
         readonly ISupervised supervised;
 
         public FileReceiver(
             IFileStorageConfiguration fileStorageConfiguration,
-            IOctopusFileSystem fileSystem)
+            IOctopusFileSystem fileSystem,
+            IOctopusStreamStore streamStore)
         {
             this.fileStorageConfiguration = fileStorageConfiguration;
             this.fileSystem = fileSystem;
+            this.streamStore = streamStore;
             supervised = RegisterAspect(new Supervised(config=>
                 config.OnProcessTimeout(() => Log.Octopus().ErrorFormat("Transfer of {0} did not complete before the process timeout", Data.LocalPath))));
         }
@@ -45,9 +51,17 @@ namespace Octopus.Shared.FileTransfer
                 LocalPath = path,
                 Hash = message.Hash
             };
-            
-            Log.Octopus().InfoFormat("Beginning transfer of {0}", Data.LocalPath);
-            supervised.Notify(new SendNextChunkRequest { SupportsEagerTransfer = true }, isTracked: true);
+
+            if (message.SupportsStreaming)
+            {
+                Log.Octopus().InfoFormat("Beginning streaming transfer of {0}", Data.LocalPath);
+                supervised.Notify(new SendStreamRequest());
+            }
+            else
+            {
+                Log.Octopus().InfoFormat("Beginning chunked transfer of {0}", Data.LocalPath);
+                supervised.Notify(new SendNextChunkRequest { SupportsEagerTransfer = true }, isTracked: true);
+            }
         }
 
         public async Task ReceiveAsync(SendNextChunkReply message)
@@ -77,6 +91,25 @@ namespace Octopus.Shared.FileTransfer
             }
 
             supervised.Notify(new SendNextChunkRequest { SupportsEagerTransfer = true }, isTracked: true);
+        }
+
+        public void Receive(StreamCompleteRequest message)
+        {
+            streamStore.Move(message.Receipt.Identifier, Data.LocalPath);
+
+            using (var file = fileSystem.OpenFile(Data.LocalPath, FileAccess.Read))
+            {
+                var hash = HashCalculator.Hash(file);
+                if (hash != Data.Hash)
+                {
+                    file.Dispose();
+                    fileSystem.DeleteFile(Data.LocalPath, DeletionOptions.TryThreeTimesIgnoreFailure);
+                    supervised.Fail(string.Format("The file corrupted during transfer. Expected hash: {0}, got hash: {1}", Data.Hash, hash));
+                    return;
+                }
+            }
+
+            supervised.Succeed(new FileTransferCompleteEvent(Data.LocalPath));
         }
 
         public void Receive(ChunkAlreadySentAcknowledgement message)

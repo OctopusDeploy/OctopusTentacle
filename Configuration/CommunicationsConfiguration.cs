@@ -47,6 +47,11 @@ namespace Octopus.Shared.Configuration
             get { return EnsureExists(Path.Combine(homeConfiguration.ApplicationSpecificHomeDirectory, "Actors")); }
         }
 
+        public string StreamsDirectory
+        {
+            get { return EnsureExists(Path.Combine(homeConfiguration.ApplicationSpecificHomeDirectory, "Streams")); }
+        }
+
         public string MessagesDirectory
         {
             get { return EnsureExists(Path.Combine(homeConfiguration.ApplicationSpecificHomeDirectory, "Messages")); }

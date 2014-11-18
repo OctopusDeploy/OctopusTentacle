@@ -129,8 +129,11 @@
     <Compile Include="Communications\Handshaking\HandshakeRequest.cs" />
     <Compile Include="Communications\Handshaking\HandshakeResponse.cs" />
     <Compile Include="Communications\Handshaking\IHandshakeReceiver.cs" />
+    <Compile Include="Communications\InMemoryMessageStore.cs" />
     <Compile Include="Communications\Integration\IActivitySpaceStarter.cs" />
     <Compile Include="Communications\Integration\ShutdownToken.cs" />
+    <Compile Include="Communications\IOctopusStreamStore.cs" />
+    <Compile Include="Communications\StreamStore.cs" />
     <Compile Include="Configuration\AbstractKeyValueStore.cs" />
     <Compile Include="Configuration\ApplicationInstanceRecord.cs" />
     <Compile Include="Configuration\ApplicationInstanceSelector.cs" />
@@ -176,6 +179,8 @@
     <Compile Include="FileTransfer\FileTransferCompleteEvent.cs" />
     <Compile Include="FileTransfer\SendNextChunkReply.cs" />
     <Compile Include="FileTransfer\SendNextChunkRequest.cs" />
+    <Compile Include="FileTransfer\SendStreamRequest.cs" />
+    <Compile Include="FileTransfer\StreamCompleteRequest.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
     <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
