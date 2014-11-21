@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
 using Pipefish.Core;
 using Pipefish.Transport;
 
@@ -8,11 +11,31 @@ namespace Octopus.Shared.Communications
     public class InMemoryMessageStore : IMessageStore
     {
         readonly ConcurrentDictionary<string, IMessageStoreSubscription> queues = new ConcurrentDictionary<string, IMessageStoreSubscription>();
+        readonly object sync = new object();
+        readonly Dictionary<string, Queue<Message>> messagesSentBeforeSubscribers = new Dictionary<string, Queue<Message>>();
+        
+        public InMemoryMessageStore()
+        {
+        }
 
         public void Subscribe(IMessageStoreSubscription subscription)
         {
-            if (!queues.TryAdd(subscription.Name, subscription))
-                throw new InvalidOperationException("Space already subscribed");
+            Queue<Message> sentEarly = null;
+            lock (sync)
+            {
+                if (!queues.TryAdd(subscription.Name, subscription))
+                    throw new InvalidOperationException("Space already subscribed");
+
+                if (messagesSentBeforeSubscribers.TryGetValue(subscription.Name, out sentEarly))
+                {
+                    messagesSentBeforeSubscribers.Remove(subscription.Name);
+                }
+            }
+
+            while (sentEarly != null && sentEarly.Count > 0)
+            {
+                subscription.Accept(sentEarly.Dequeue());
+            }
         }
 
         public bool Unsubscribe(string space)
@@ -41,9 +64,18 @@ namespace Octopus.Shared.Communications
         public void Store(Message message)
         {
             IMessageStoreSubscription subscribedQueue;
-            if (!queues.TryGetValue(message.To.Space, out subscribedQueue))
+            lock (sync)
             {
-                return;
+                if (!queues.TryGetValue(message.To.Space, out subscribedQueue))
+                {
+                    if (!messagesSentBeforeSubscribers.ContainsKey(message.To.Space))
+                    {
+                        messagesSentBeforeSubscribers[message.To.Space]= new Queue<Message>();
+                    }
+
+                    messagesSentBeforeSubscribers[message.To.Space].Enqueue(message);
+                    return;
+                }
             }
 
             subscribedQueue.Accept(message);
