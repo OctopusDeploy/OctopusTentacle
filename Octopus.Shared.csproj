@@ -73,12 +73,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NuGet.Core.2.8.2\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish">
-      <HintPath>..\packages\Pipefish.2.0.2.21\lib\Pipefish.dll</HintPath>
+    <Reference Include="Pipefish, Version=2.0.2.26, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Pipefish.2.0.2.26\lib\Pipefish.dll</HintPath>
     </Reference>
     <Reference Include="Pipefish.Transport.SecureTcp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.Transport.SecureTcp.2.0.2.21\lib\Pipefish.Transport.SecureTcp.dll</HintPath>
+      <HintPath>..\packages\Pipefish.Transport.SecureTcp.2.0.2.26\lib\Pipefish.Transport.SecureTcp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -140,6 +141,9 @@
     <Compile Include="Communications\Integration\IActivitySpaceStarter.cs" />
     <Compile Include="Communications\Integration\ShutdownToken.cs" />
     <Compile Include="Communications\Agentless\ProtocolExtensions.cs" />
+    <Compile Include="Communications\InMemoryMessageStore.cs" />
+    <Compile Include="Communications\IOctopusStreamStore.cs" />
+    <Compile Include="Communications\StreamStore.cs" />
     <Compile Include="Configuration\AbstractKeyValueStore.cs" />
     <Compile Include="Configuration\ApplicationInstanceRecord.cs" />
     <Compile Include="Configuration\ApplicationInstanceSelector.cs" />
@@ -176,6 +180,7 @@
     <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Diagnostics\LogAdapter.cs" />
     <Compile Include="Diagnostics\RecentInMemoryTarget.cs" />
+    <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="FileTransfer\BeginFileTransferCommand.cs" />
     <Compile Include="FileTransfer\FileReceiveData.cs" />
     <Compile Include="FileTransfer\FileReceiver.cs" />
@@ -184,6 +189,8 @@
     <Compile Include="FileTransfer\FileTransferCompleteEvent.cs" />
     <Compile Include="FileTransfer\SendNextChunkReply.cs" />
     <Compile Include="FileTransfer\SendNextChunkRequest.cs" />
+    <Compile Include="FileTransfer\SendStreamRequest.cs" />
+    <Compile Include="FileTransfer\StreamCompleteRequest.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
     <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />

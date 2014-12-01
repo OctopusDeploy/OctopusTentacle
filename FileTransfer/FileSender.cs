@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Security;
 using System.Threading.Tasks;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Deployment.Logging;
@@ -10,6 +11,7 @@ using Pipefish;
 using Pipefish.Core;
 using Pipefish.Errors;
 using Pipefish.Messages;
+using Pipefish.Transport;
 using Pipefish.Transport.SecureTcp.MessageExchange;
 
 namespace Octopus.Shared.FileTransfer
@@ -18,6 +20,7 @@ namespace Octopus.Shared.FileTransfer
     public class FileSender : 
         PersistentActor<FileSendData>,
         ICreatedBy<SendFileCommand>,
+        IReceive<SendStreamRequest>,
         IReceiveAsync<SendNextChunkRequest>,
         IReceiveAsync<EagerTransferReceipt>,
         IReceive<FileTransferCompleteEvent>,
@@ -25,6 +28,7 @@ namespace Octopus.Shared.FileTransfer
         IHandleFailed<SendNextChunkReply>
     {
         readonly IOctopusFileSystem fileSystem;
+        readonly IDistributor distributor;
         readonly ISupervisedActivity supervised;
         readonly long chunkSize;
 
@@ -33,9 +37,10 @@ namespace Octopus.Shared.FileTransfer
 
         static readonly TimeSpan ProgressReportInterval = TimeSpan.FromSeconds(10);
 
-        public FileSender(IOctopusFileSystem fileSystem, ICommunicationsConfiguration comms)
+        public FileSender(IOctopusFileSystem fileSystem, ICommunicationsConfiguration comms, IDistributor distributor)
         {
             this.fileSystem = fileSystem;
+            this.distributor = distributor;
             chunkSize = comms.FileTransferChunkSizeBytes;
 
             supervised = RegisterAspect(new SupervisedActivity(config =>
@@ -59,7 +64,10 @@ namespace Octopus.Shared.FileTransfer
 
             supervised.Activity.Verbose("Requesting upload...");
 
-            var begin = Dispatch(message.RemoteSquid, new BeginFileTransferCommand(Path.GetFileName(Data.LocalFilename), Data.Hash, Data.ExpectedSize), isTracked: true);
+            var streamClient = distributor.GetStreamClient(Data.Destination);
+            var streamingSupported = streamClient != null && streamClient.IsStreamingSupported();
+
+            var begin = Dispatch(message.RemoteSquid, new BeginFileTransferCommand(Path.GetFileName(Data.LocalFilename), Data.Hash, Data.ExpectedSize) { SupportsStreaming = streamingSupported }, isTracked: true);
             supervised.BeginOperation(SendFile, begin.Id);
         }
 
@@ -70,6 +78,57 @@ namespace Octopus.Shared.FileTransfer
         }
 
         bool IsFinished { get { return Data.NextChunkIndex * chunkSize >= Data.ExpectedSize; } }
+
+        public void Receive(SendStreamRequest message)
+        {
+            if (Data.ReceiverId == null)
+                Data.ReceiverId = message.GetMessage().From;
+
+            supervised.Activity.UpdateProgressFormat(1, "Begin streaming {0}", Data.ExpectedSize.ToFileSizeString());
+
+            var streamClient = distributor.GetStreamClient(Data.Destination);
+            var streamReceipt = streamClient.Send(stream =>
+            {
+                using (var file = fileSystem.OpenFile(Data.LocalFilename, FileAccess.Read))
+                {
+                    var buffer = new byte[1024*1024];
+
+                    var lastPercentReported = 0;
+                    var readSoFar = 0L;
+                    while (true)
+                    {
+                        var read = file.Read(buffer, 0, buffer.Length);
+                        if (read == 0)
+                        {
+                            break;
+                        }
+
+                        readSoFar += read;
+
+                        stream.Write(buffer, 0, read);
+
+                        var percentage = (int) ((double) readSoFar/Data.ExpectedSize*100.00);
+                        if (percentage > lastPercentReported)
+                        {
+                            supervised.Activity.UpdateProgressFormat(percentage, "Uploaded {0} of {1}", readSoFar.ToFileSizeString(), Data.ExpectedSize.ToFileSizeString());
+                            Data.LastProgressReport = DateTime.UtcNow;
+                            lastPercentReported = percentage;
+                        }
+                    }
+                }
+                stream.Flush();
+            }, Data.ExpectedSize);
+
+            supervised.Activity.Verbose("Stream transfer complete, sending stream receipt");
+
+            var chunk = new StreamCompleteRequest(streamReceipt);
+
+            var reply = new Message(Id, Data.ReceiverId.Value, chunk);
+            reply.Headers[Pipefish.Core.ProtocolExtensions.InReplyToHeader] = message.GetMessage().Id.ToString();
+            reply.SetIsTracked(true);
+            reply.SetIsEphemeral(true);
+            Space.Send(reply);
+        }
 
         public async Task ReceiveAsync(SendNextChunkRequest message)
         {
