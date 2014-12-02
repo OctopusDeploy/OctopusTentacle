@@ -17,5 +17,7 @@ namespace Octopus.Shared.FileTransfer
             Hash = hash;
             ExpectedSize = expectedSize;
         }
+
+        public bool SupportsStreaming { get; set; }
     }
 }

@@ -166,16 +166,22 @@ namespace Octopus.Shared.Configuration
             TentacleCertificate = certificate;
         }
 
-        public string ServicesHostName
+        public string ListenIpAddress
         {
-            get { return settings.Get("Tentacle.Services.HostName", "localhost"); }
-            set { settings.Set("Tentacle.Services.HostName", value); }
+            get { return settings.Get("Tentacle.Services.ListenIP", string.Empty); }
+            set { settings.Set("Tentacle.Services.ListenIP", value); }
         }
 
         public string Squid
         {
             get { return communicationsConfiguration.Squid; }
             set { communicationsConfiguration.Squid = value; }
+        }
+
+        public bool NoListen
+        {
+            get { return settings.Get("Tentacle.Services.NoListen", false); }
+            set { settings.Set("Tentacle.Services.NoListen", value); }
         }
 
         public void Save()

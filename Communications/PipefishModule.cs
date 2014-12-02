@@ -16,6 +16,7 @@ using Pipefish.Core;
 using Pipefish.Hosting;
 using Pipefish.Persistence;
 using Pipefish.Persistence.Filesystem;
+using Pipefish.Streaming;
 using Pipefish.Transport;
 using Pipefish.Transport.Filesystem;
 using Pipefish.Util.Storage;
@@ -70,10 +71,14 @@ namespace Octopus.Shared.Communications
                 .As<IActivitySpaceStarter>()
                 .SingleInstance();
 
-            builder.Register(c => new DirectoryMessageStore(
-                    c.Resolve<ICommunicationsConfiguration>().MessagesDirectory,
-                    c.Resolve<IStorageStreamTransform>()))
+            builder.Register(c => new InMemoryMessageStore())
                 .As<IMessageStore>()
+                .SingleInstance();
+
+            builder.Register(c => new StreamStore(
+                    c.Resolve<ICommunicationsConfiguration>().StreamsDirectory, c.Resolve<IOctopusFileSystem>()))
+                .As<IOctopusStreamStore>()
+                .As<IStreamStore>()
                 .SingleInstance();
 
             builder.Register(c => new DirectoryActorStorage(
