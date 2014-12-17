@@ -179,7 +179,6 @@
     <Compile Include="Configuration\XmlStreamReadOnlyKeyValueStore.cs" />
     <Compile Include="Contracts\SuffixAttribute.cs" />
     <Compile Include="Diagnostics\LogAdapter.cs" />
-    <Compile Include="Diagnostics\RecentInMemoryTarget.cs" />
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="FileTransfer\BeginFileTransferCommand.cs" />
     <Compile Include="FileTransfer\FileReceiveData.cs" />
