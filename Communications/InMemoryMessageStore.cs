@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using Pipefish.Core;
 using Pipefish.Transport;
 
@@ -24,7 +22,7 @@ namespace Octopus.Shared.Communications
             lock (sync)
             {
                 if (!queues.TryAdd(subscription.Name, subscription))
-                    throw new InvalidOperationException("Space already subscribed");
+                    return;
 
                 if (messagesSentBeforeSubscribers.TryGetValue(subscription.Name, out sentEarly))
                 {
