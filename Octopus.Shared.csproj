@@ -79,10 +79,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Pipefish.Transport.SecureTcp.2.0.2.28\lib\Pipefish.Transport.SecureTcp.dll</HintPath>
     </Reference>
+    <Reference Include="Sprache, Version=2.0.0.44, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Sprache.2.0.0.44\lib\portable-net4+netcore45+win8+wp8+sl5+MonoAndroid1+MonoTouch1\Sprache.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Services.Client" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.IO">
@@ -134,11 +139,33 @@
     <Compile Include="ControlledFailureException.cs" />
     <Compile Include="Conventions\HostedSiphonConventions.cs" />
     <Compile Include="Conventions\OctopusName.cs" />
+    <Compile Include="Diagnostics\AbstractLog.cs" />
+    <Compile Include="Diagnostics\ILog.cs" />
+    <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledge.cs" />
+    <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBase.cs" />
+    <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBaseEntry.cs" />
+    <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBuilder.cs" />
+    <Compile Include="Diagnostics\Log.cs" />
+    <Compile Include="Diagnostics\NullLog.cs" />
+    <Compile Include="Diagnostics\PrefixedLogDecorator.cs" />
+    <Compile Include="Diagnostics\TraceCategory.cs" />
+    <Compile Include="Endpoints\AgentlessEndpoint.cs" />
+    <Compile Include="Endpoints\CloudServiceEndpoint.cs" />
+    <Compile Include="Endpoints\Endpoint.cs" />
+    <Compile Include="Endpoints\FtpEndpoint.cs" />
+    <Compile Include="Endpoints\IEndpointWithAccount.cs" />
+    <Compile Include="Endpoints\IEndpointWithHostname.cs" />
+    <Compile Include="Endpoints\ListeningTentacleEndpoint.cs" />
+    <Compile Include="Endpoints\OfflineDropEndpoint.cs" />
+    <Compile Include="Endpoints\PollingTentacleEndpoint.cs" />
+    <Compile Include="Endpoints\SshEndpoint.cs" />
+    <Compile Include="Endpoints\TentacleEndpoint.cs" />
     <Compile Include="Guidance\FailedItem.cs" />
     <Compile Include="Guidance\Guided.cs" />
     <Compile Include="Guidance\GuidedOperationItem.cs" />
     <Compile Include="Guidance\GuidedOperationState.cs" />
     <Compile Include="Guidance\IGuided.cs" />
+    <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Logging\Activity.cs" />
     <Compile Include="Logging\ChildActivityLog.cs" />
     <Compile Include="Logging\DetachedActivityLog.cs" />
@@ -223,9 +250,27 @@
     <Compile Include="Messages\Upgrade\UpgradeTentacleCommand.cs" />
     <Compile Include="Messages\WellKnownOctopusActors.cs" />
     <Compile Include="NoState.cs" />
+    <Compile Include="Packages\IFeed.cs" />
     <Compile Include="Packages\NuGetFeedProperties.cs" />
     <Compile Include="Packages\PackageMetadata.cs" />
     <Compile Include="Packages\StoredPackage.cs" />
+    <Compile Include="Security\Certificates\CertificateEncoder.cs" />
+    <Compile Include="Security\Masking\MaskedException.cs" />
+    <Compile Include="Security\Masking\MaskingContext.cs" />
+    <Compile Include="Security\Masking\SensitiveDataMask.cs" />
+    <Compile Include="Security\Masking\VariableDictionaryExtensions.cs" />
+    <Compile Include="Security\MasterKey\EncryptionUnsupported.cs" />
+    <Compile Include="Security\MasterKey\IMasterKeyEncryption.cs" />
+    <Compile Include="Security\MasterKey\MasterKeyEncryptionExtensions.cs" />
+    <Compile Include="Security\MasterKey\WriteOnlyEncryption.cs" />
+    <Compile Include="Security\Permissions\AuthorizationRequest.cs" />
+    <Compile Include="Security\Permissions\AuthorizationResult.cs" />
+    <Compile Include="Security\Permissions\AuthorizationScopeAssertion.cs" />
+    <Compile Include="Security\Permissions\GrantRestrictionScope.cs" />
+    <Compile Include="Security\Permissions\IPermissionSet.cs" />
+    <Compile Include="Security\Permissions\PermissionInfo.cs" />
+    <Compile Include="Security\Permissions\RestrictedGrant.cs" />
+    <Compile Include="Security\Permissions\WildcardDocumentId.cs" />
     <Compile Include="Tools\CommandLine.cs" />
     <Compile Include="PackageConversion\Archives\ZipToTarConverter.cs" />
     <Compile Include="Bcl\IO\IOUtil.cs" />
@@ -391,9 +436,75 @@
     <Compile Include="Time\SystemClock.cs" />
     <Compile Include="Time\TimeModule.cs" />
     <Compile Include="Time\IClock.cs" />
+    <Compile Include="Util\AmazingConverter.cs" />
+    <Compile Include="Util\AssemblyExtensions.cs" />
+    <Compile Include="Util\CleanId.cs" />
+    <Compile Include="Util\CliBuilder.cs" />
+    <Compile Include="Util\CmdResult.cs" />
+    <Compile Include="Util\CommandLineInvocation.cs" />
+    <Compile Include="Util\CommandLineRunner.cs" />
+    <Compile Include="Util\DateTimeExtensions.cs" />
+    <Compile Include="Util\DeletionOptions.cs" />
+    <Compile Include="Util\ExceptionExtensions.cs" />
+    <Compile Include="Util\FileInfoAdapter.cs" />
+    <Compile Include="Util\Guard.cs" />
+    <Compile Include="Util\HashCalculator.cs" />
+    <Compile Include="Util\Humanize.cs" />
+    <Compile Include="Util\ICommandLineRunner.cs" />
+    <Compile Include="Util\IFileInfo.cs" />
+    <Compile Include="Util\IOctopusFileSystem.cs" />
+    <Compile Include="Util\ListExtensions.cs" />
+    <Compile Include="Util\NumericExtensions.cs" />
+    <Compile Include="Util\ObjectFormatter.cs" />
+    <Compile Include="Util\OctopusPhysicalFileSystem.cs" />
+    <Compile Include="Util\OutboundLinks.cs" />
+    <Compile Include="Util\PasswordHasher.cs" />
+    <Compile Include="Util\PathHelper.cs" />
+    <Compile Include="Util\PathSegmentValidator.cs" />
+    <Compile Include="Util\RandomStringGenerator.cs" />
+    <Compile Include="Util\RemotedObject.cs" />
+    <Compile Include="Util\RuntimeUtility.cs" />
+    <Compile Include="Util\SilentProcessRunner.cs" />
+    <Compile Include="Util\SlugGenerator.cs" />
+    <Compile Include="Util\StringExtensions.cs" />
+    <Compile Include="Util\TypeExtensions.cs" />
+    <Compile Include="Util\Uniquifier.cs" />
+    <Compile Include="Variables\Constants.cs" />
+    <Compile Include="Variables\DefineAttribute.cs" />
+    <Compile Include="Variables\SpecialVariables.cs" />
+    <Compile Include="Variables\Templates\AnalysisContext.cs" />
+    <Compile Include="Variables\Templates\TemplateAnalyzer.cs" />
+    <Compile Include="Variables\Templates\PropertyListBinder.cs" />
+    <Compile Include="Variables\Templates\Binding.cs" />
+    <Compile Include="Variables\Templates\BuiltInFunctions.cs" />
+    <Compile Include="Variables\Templates\EvaluationContext.cs" />
+    <Compile Include="Variables\Templates\TemplateEvaluator.cs" />
+    <Compile Include="Variables\Templates\ConditionalToken.cs" />
+    <Compile Include="Variables\Templates\ContentExpression.cs" />
+    <Compile Include="Variables\Templates\DependencyWildcard.cs" />
+    <Compile Include="Variables\Templates\FunctionCallExpression.cs" />
+    <Compile Include="Variables\Templates\Identifier.cs" />
+    <Compile Include="Variables\Templates\IInputToken.cs" />
+    <Compile Include="Variables\Templates\Indexer.cs" />
+    <Compile Include="Variables\Templates\RepetitionToken.cs" />
+    <Compile Include="Variables\Templates\SubstitutionToken.cs" />
+    <Compile Include="Variables\Templates\SymbolExpression.cs" />
+    <Compile Include="Variables\Templates\SymbolExpressionStep.cs" />
+    <Compile Include="Variables\Templates\TemplateToken.cs" />
+    <Compile Include="Variables\Templates\TextToken.cs" />
+    <Compile Include="Variables\Templates\Template.cs" />
+    <Compile Include="Variables\Templates\TemplateParser.cs" />
+    <Compile Include="Variables\Variable.cs" />
+    <Compile Include="Variables\VariableCategory.cs" />
+    <Compile Include="Variables\VariableDefinition.cs" />
+    <Compile Include="Variables\VariableDictionary.cs" />
+    <Compile Include="Variables\VariableDictionaryExtensions.cs" />
+    <Compile Include="Variables\VariableDomain.cs" />
+    <Compile Include="Variables\VariableEvaluator.cs" />
     <Compile Include="Variables\VariableFunctionsModule.cs" />
     <Compile Include="Versioning\AppVersion.cs" />
     <Compile Include="Versioning\VersioningModule.cs" />
+    <Compile Include="Web\WebRoutes.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -403,10 +514,6 @@
     <ProjectReference Include="..\Octopus.Client\Octopus.Client.csproj">
       <Project>{FAF9A6DD-C669-4F5B-88AF-8AB2B8F3B7C4}</Project>
       <Name>Octopus.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Octopus.Platform\Octopus.Platform.csproj">
-      <Project>{F4754A78-708D-4D87-B912-EC2062AF0B2F}</Project>
-      <Name>Octopus.Platform</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -418,7 +525,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Endpoints\Discovery\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
