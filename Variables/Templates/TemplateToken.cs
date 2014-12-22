@@ -1,7 +1,7 @@
 ﻿using System;
 using Sprache;
 
-namespace Octopus.Platform.Variables.Templates.Parser.Ast
+namespace Octopus.Shared.Variables.Templates
 {
     public abstract class TemplateToken : IInputToken
     {

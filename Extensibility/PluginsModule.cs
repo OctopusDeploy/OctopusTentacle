@@ -3,7 +3,6 @@ using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using Autofac;
-using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Extensibility

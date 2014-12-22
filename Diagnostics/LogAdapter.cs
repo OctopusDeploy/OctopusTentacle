@@ -1,7 +1,6 @@
 using System;
 using NLog;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Security.Masking;
+using Octopus.Shared.Security.Masking;
 
 namespace Octopus.Shared.Diagnostics
 {

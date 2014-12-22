@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Octopus.Client.Model;
-using Octopus.Platform.Model;
 
-namespace Octopus.Platform.Security.Permissions
+namespace Octopus.Shared.Security.Permissions
 {
     public class RestrictedGrant
     {

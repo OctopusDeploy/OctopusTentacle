@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Octopus.Platform.Deployment.Configuration
+namespace Octopus.Shared.Configuration
 {
     /// <summary>
     /// Machine-wide Tentacle configuration settings (backed by the Windows Registry).

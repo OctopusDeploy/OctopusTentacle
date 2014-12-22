@@ -1,7 +1,7 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
+using Octopus.Shared.Logging;
 
-namespace Octopus.Platform.Deployment.Messages.Upgrade
+namespace Octopus.Shared.Messages.Upgrade
 {
     public class StartOutdatedTentacleUpgradeCommand : ICorrelatedMessage
     {

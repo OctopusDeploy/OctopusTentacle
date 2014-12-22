@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Licensing
+namespace Octopus.Shared.Licensing
 {
     [AttributeUsage(AttributeTargets.Assembly)]
     public class AssemblyBuildDateAttribute : Attribute

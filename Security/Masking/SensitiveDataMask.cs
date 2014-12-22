@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Octopus.Platform.Security.Masking
+namespace Octopus.Shared.Security.Masking
 {
     public class SensitiveDataMask
     {

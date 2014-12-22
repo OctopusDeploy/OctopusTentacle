@@ -1,9 +1,8 @@
 ﻿using System;
 using Octopus.Client.Model;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Model;
+using Octopus.Shared.Logging;
 
-namespace Octopus.Platform.Deployment.Messages.Health
+namespace Octopus.Shared.Messages.Health
 {
     public class StartTentacleHealthCheckRequest : IReusableMessage
     {

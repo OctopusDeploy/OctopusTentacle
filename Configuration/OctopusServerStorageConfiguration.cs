@@ -1,8 +1,7 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
-using Octopus.Platform.Deployment.Configuration;
-using Octopus.Platform.Diagnostics;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security.MasterKey;
 
 namespace Octopus.Shared.Configuration

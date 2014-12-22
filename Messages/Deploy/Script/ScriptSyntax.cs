@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Script
+namespace Octopus.Shared.Messages.Deploy.Script
 {
     public enum ScriptSyntax
     {

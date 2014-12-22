@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.Discovery
+namespace Octopus.Shared.Messages.Discovery
 {
     public class SshEndpointDiscoveryReply : IMessage
     {

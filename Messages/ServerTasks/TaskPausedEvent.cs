@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.ServerTasks
+namespace Octopus.Shared.Messages.ServerTasks
 {
     public class TaskPausedEvent : IMessage
     {

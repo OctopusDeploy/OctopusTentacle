@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Octopus.Platform.Diagnostics.KnowledgeBase
+namespace Octopus.Shared.Diagnostics.KnowledgeBase
 {
     class ExceptionKnowledgeBuilder
     {

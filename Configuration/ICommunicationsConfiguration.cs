@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Deployment.Configuration
+namespace Octopus.Shared.Configuration
 {
     /// <summary>
     /// Configures how the local instance communicates with other instances.

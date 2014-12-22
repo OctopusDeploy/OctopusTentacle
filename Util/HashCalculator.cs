@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public static class HashCalculator
     {

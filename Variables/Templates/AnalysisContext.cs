@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Platform.Variables.Templates.Parser.Ast;
 
-namespace Octopus.Platform.Variables.Templates.Analyzer
+namespace Octopus.Shared.Variables.Templates
 {
     class AnalysisContext
     {

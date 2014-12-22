@@ -4,9 +4,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using Octopus.Client.Model;
-using Octopus.Platform.Model;
 
-namespace Octopus.Platform.Variables
+namespace Octopus.Shared.Variables
 {
     // ReSharper disable MemberHidesStaticFromOuterClass
 

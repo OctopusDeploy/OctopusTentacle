@@ -1,6 +1,5 @@
 ﻿using System;
 using Autofac;
-using Octopus.Platform.Diagnostics;
 
 namespace Octopus.Shared.Diagnostics
 {

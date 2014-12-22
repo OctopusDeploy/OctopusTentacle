@@ -9,7 +9,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using Microsoft.Win32;
-using Octopus.Platform.Util;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {

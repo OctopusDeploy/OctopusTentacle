@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
-using Octopus.Platform.Util;
+using Octopus.Shared.Util;
 
-namespace Octopus.Platform.Diagnostics
+namespace Octopus.Shared.Diagnostics
 {
     public abstract class AbstractLog : ILog
     {

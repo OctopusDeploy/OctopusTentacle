@@ -1,7 +1,6 @@
 using System;
 using System.Security.Cryptography;
 using System.Text;
-using Octopus.Platform.Deployment.Configuration;
 using Pipefish.Util;
 
 namespace Octopus.Shared.Configuration

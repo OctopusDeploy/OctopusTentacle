@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Deployment.Configuration
+namespace Octopus.Shared.Configuration
 {
     /// <summary>
     /// Configures the local instance when acting as a TCP server.

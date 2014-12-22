@@ -1,6 +1,6 @@
 using System;
 
-namespace Octopus.Platform.Deployment.Configuration
+namespace Octopus.Shared.Configuration
 {
     public interface IOctopusServerStorageConfiguration : IModifiableConfiguration, IMasterKeyConfiguration
     {

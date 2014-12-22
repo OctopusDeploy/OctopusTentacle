@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Win32;
-using Octopus.Platform.Diagnostics;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {

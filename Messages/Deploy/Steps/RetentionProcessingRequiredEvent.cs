@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Steps
+namespace Octopus.Shared.Messages.Deploy.Steps
 {
     public class RetentionProcessingRequiredEvent : IMessage
     {

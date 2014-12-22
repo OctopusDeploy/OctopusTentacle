@@ -1,7 +1,7 @@
 using System;
 using Octopus.Client.Model;
 
-namespace Octopus.Platform.Security.Permissions
+namespace Octopus.Shared.Security.Permissions
 {
     public class AuthorizationScopeAssertion
     {

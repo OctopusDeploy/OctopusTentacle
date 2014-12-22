@@ -2,7 +2,7 @@
 using Pipefish;
 using Pipefish.Supervision;
 
-namespace Octopus.Platform.Deployment.Logging
+namespace Octopus.Shared.Logging
 {
     public interface ISupervisedActivity : ISupervised
     {

@@ -4,9 +4,9 @@ using System.Data.Services.Client;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using Octopus.Platform.Util;
+using Octopus.Shared.Util;
 
-namespace Octopus.Platform.Diagnostics.KnowledgeBase
+namespace Octopus.Shared.Diagnostics.KnowledgeBase
 {
     public static class ExceptionKnowledgeBase
     {

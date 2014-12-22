@@ -1,7 +1,7 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
+using Octopus.Shared.Logging;
 
-namespace Octopus.Platform.Deployment.Messages.Deletion
+namespace Octopus.Shared.Messages.Deletion
 {
     public class StartDocumentDeletionCommand : ICorrelatedMessage
     {

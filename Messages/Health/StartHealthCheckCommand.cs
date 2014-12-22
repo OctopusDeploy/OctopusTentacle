@@ -1,8 +1,7 @@
 ﻿using System;
-using System.ComponentModel.Design;
-using Octopus.Platform.Deployment.Logging;
+using Octopus.Shared.Logging;
 
-namespace Octopus.Platform.Deployment.Messages.Health
+namespace Octopus.Shared.Messages.Health
 {
     public class StartHealthCheckCommand : ICorrelatedMessage
     {

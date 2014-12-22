@@ -1,8 +1,8 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Messages.Deploy.Script;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Messages.Deploy.Script;
 
-namespace Octopus.Platform.Deployment.Messages.RunScript
+namespace Octopus.Shared.Messages.RunScript
 {
     public class StartRunScriptCommand : ICorrelatedMessage
     {

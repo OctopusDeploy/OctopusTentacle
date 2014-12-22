@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Diagnostics.KnowledgeBase
+namespace Octopus.Shared.Diagnostics.KnowledgeBase
 {
     class ExceptionKnowledge
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.Upgrade
+namespace Octopus.Shared.Messages.Upgrade
 {
     public class TentacleUpgradedEvent : IMessage
     {

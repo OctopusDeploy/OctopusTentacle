@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Deployment
+namespace Octopus.Shared
 {
     public class NoState
     {

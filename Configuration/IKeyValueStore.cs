@@ -1,7 +1,7 @@
 using System;
 using System.Security.Cryptography;
 
-namespace Octopus.Platform.Deployment.Configuration
+namespace Octopus.Shared.Configuration
 {
     public interface IKeyValueStore
     {

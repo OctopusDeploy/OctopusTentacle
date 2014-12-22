@@ -1,7 +1,7 @@
 ﻿using System;
 using NuGet;
 
-namespace Octopus.Platform.Deployment.BuiltInFeed
+namespace Octopus.Shared.BuiltInFeed
 {
     public interface IBuiltInPackageRepositoryFactory
     {

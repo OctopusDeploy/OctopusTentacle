@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using Octopus.Client.Model;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Messages.Deploy.Script;
-using Octopus.Platform.Model;
-using Octopus.Platform.Variables;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Messages.Deploy.Script;
+using Octopus.Shared.Variables;
 
-namespace Octopus.Platform.Deployment.Messages.RunScript
+namespace Octopus.Shared.Messages.RunScript
 {
     public class RunScriptOnTentacleCommand : ICorrelatedMessage
     {

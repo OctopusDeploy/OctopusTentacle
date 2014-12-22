@@ -1,8 +1,8 @@
 using System;
-using Octopus.Platform.Deployment.Logging;
+using Octopus.Shared.Logging;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages
+namespace Octopus.Shared.Messages
 {
     public interface ICorrelatedMessage : IMessage
     {

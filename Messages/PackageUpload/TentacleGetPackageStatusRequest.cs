@@ -1,9 +1,9 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Messages.Conversations;
-using Octopus.Platform.Deployment.Packages;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Messages.Conversations;
+using Octopus.Shared.Packages;
 
-namespace Octopus.Platform.Deployment.Messages.PackageUpload
+namespace Octopus.Shared.Messages.PackageUpload
 {
     [ExpectReply]
     public class TentacleGetPackageStatusRequest : ICorrelatedMessage

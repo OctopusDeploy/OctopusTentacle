@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.Restart
+namespace Octopus.Shared.Messages.Restart
 {
     public class TentacleRestartedEvent : IMessage
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.Agentless
+namespace Octopus.Shared.Messages.Agentless
 {
     public class AgentSynchronizedPackageEvent : IMessage
     {

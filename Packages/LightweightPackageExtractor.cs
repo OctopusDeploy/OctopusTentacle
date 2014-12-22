@@ -3,8 +3,8 @@ using System.IO;
 using System.IO.Packaging;
 using System.Linq;
 using NuGet;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Util;
+using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Packages
 {

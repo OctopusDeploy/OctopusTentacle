@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.Health
+namespace Octopus.Shared.Messages.Health
 {
     public class TentacleReportHealthReply : IMessage
     {

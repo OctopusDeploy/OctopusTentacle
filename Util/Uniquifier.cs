@@ -1,6 +1,6 @@
 using System;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public class Uniquifier
     {

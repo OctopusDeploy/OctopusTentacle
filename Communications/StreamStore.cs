@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Threading;
-using Octopus.Platform.Util;
+using Octopus.Shared.Util;
 using Pipefish.Streaming;
 
 namespace Octopus.Shared.Communications

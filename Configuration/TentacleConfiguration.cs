@@ -5,10 +5,9 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
-using Octopus.Platform.Deployment.Configuration;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Security.Certificates;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
+using Octopus.Shared.Security.Certificates;
 using Octopus.Shared.Security.MasterKey;
 
 namespace Octopus.Shared.Configuration

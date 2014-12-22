@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Steps
+namespace Octopus.Shared.Messages.Deploy.Steps
 {
     public class TentacleArtifact
     {

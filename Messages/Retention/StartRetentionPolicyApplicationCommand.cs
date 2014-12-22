@@ -1,7 +1,7 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
+using Octopus.Shared.Logging;
 
-namespace Octopus.Platform.Deployment.Messages.Retention
+namespace Octopus.Shared.Messages.Retention
 {
     public class StartRetentionPolicyApplicationCommand : ICorrelatedMessage
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using Autofac;
 using MarkdownSharp;
-using Octopus.Platform.Variables.Templates.Evaluator;
+using Octopus.Shared.Variables.Templates;
 
 namespace Octopus.Shared.Variables
 {

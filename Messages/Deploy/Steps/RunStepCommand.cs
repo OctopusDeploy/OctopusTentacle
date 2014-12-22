@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Platform.Deployment.Logging;
+using Octopus.Shared.Logging;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Steps
+namespace Octopus.Shared.Messages.Deploy.Steps
 {
     public class RunStepCommand : IReusableMessage
     {

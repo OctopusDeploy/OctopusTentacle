@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
 using Octopus.Client.Model;
-using Octopus.Platform.Deployment.Configuration;
-using Octopus.Platform.Model;
-using Octopus.Platform.Security.MasterKey;
+using Octopus.Shared.Configuration;
 
 namespace Octopus.Shared.Security.MasterKey
 {

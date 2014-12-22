@@ -1,9 +1,8 @@
 using System;
 using Octopus.Client.Model;
-using Octopus.Platform.Model;
-using Octopus.Platform.Util;
+using Octopus.Shared.Util;
 
-namespace Octopus.Platform.Deployment.Configuration
+namespace Octopus.Shared.Configuration
 {
     /// <summary>
     /// Describes an Octopus server that the Tentacle communicates with.

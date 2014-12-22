@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Deployment.Messages.Guidance
+namespace Octopus.Shared.Messages.Guidance
 {
     public enum FailureGuidance
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using Sprache;
 
-namespace Octopus.Platform.Variables.Templates.Parser.Ast
+namespace Octopus.Shared.Variables.Templates
 {
     /// <summary>
     /// The top-level "thing that has a textual value" that

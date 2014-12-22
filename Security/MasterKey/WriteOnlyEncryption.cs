@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
 using Octopus.Client.Model;
-using Octopus.Platform.Model;
 
-namespace Octopus.Platform.Security.MasterKey
+namespace Octopus.Shared.Security.MasterKey
 {
     public class WriteOnlyEncryption : IMasterKeyEncryption
     {

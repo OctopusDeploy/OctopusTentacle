@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Octopus.Platform.Util;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tools
 {

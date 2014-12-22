@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Messages.Guidance;
-using Octopus.Platform.Util;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Messages.Guidance;
+using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Core;
 using Pipefish.Errors;
 using Pipefish.Hosting;
 using Pipefish.Messages;
 
-namespace Octopus.Platform.Deployment.Guidance
+namespace Octopus.Shared.Guidance
 {
     public class Guided : PersistentAspect<GuidedOperationState>,
                           IGuided,

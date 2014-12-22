@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public class CmdResult
     {

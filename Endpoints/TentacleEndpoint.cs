@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Platform.Variables;
+using Octopus.Shared.Variables;
 
-namespace Octopus.Platform.Model.Endpoints
+namespace Octopus.Shared.Endpoints
 {
     public abstract class TentacleEndpoint : Endpoint
     {

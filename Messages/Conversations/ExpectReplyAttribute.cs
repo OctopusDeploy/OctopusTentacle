@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Deployment.Messages.Conversations
+namespace Octopus.Shared.Messages.Conversations
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class ExpectReplyAttribute : Attribute

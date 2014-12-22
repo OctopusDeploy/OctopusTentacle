@@ -1,6 +1,6 @@
 using System;
 
-namespace Octopus.Platform.Security.Permissions
+namespace Octopus.Shared.Security.Permissions
 {
     public class AuthorizationResult
     {

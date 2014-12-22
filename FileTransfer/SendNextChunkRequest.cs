@@ -1,5 +1,5 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Messages.Conversations;
+using Octopus.Shared.Messages.Conversations;
 using Pipefish;
 
 namespace Octopus.Shared.FileTransfer

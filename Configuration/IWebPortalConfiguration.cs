@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using Octopus.Client.Model;
 
-namespace Octopus.Platform.Deployment.Configuration
+namespace Octopus.Shared.Configuration
 {
     public interface IWebPortalConfiguration : IModifiableConfiguration
     {

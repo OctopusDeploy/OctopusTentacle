@@ -1,9 +1,9 @@
 using System;
 using System.Reflection;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Security.Masking;
-using Octopus.Platform.Util;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Security.Masking;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {

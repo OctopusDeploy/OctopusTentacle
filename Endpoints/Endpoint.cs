@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Octopus.Platform.Security.Masking;
-using Octopus.Platform.Util;
-using Octopus.Platform.Variables;
+using Octopus.Shared.Security.Masking;
+using Octopus.Shared.Util;
+using Octopus.Shared.Variables;
 
-namespace Octopus.Platform.Model.Endpoints
+namespace Octopus.Shared.Endpoints
 {
     public abstract class Endpoint
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace Octopus.Platform.Deployment.Configuration
+namespace Octopus.Shared.Configuration
 {
     /// <summary>
     /// Octopus and Tentacle machine-wide proxy settings (backed by the Windows Registry).

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Octopus.Platform.Deployment.Messages;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Util;
+using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Messages;
+using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Core;
 using Pipefish.Errors;
@@ -11,7 +11,7 @@ using Pipefish.Messages.Delivery;
 using Pipefish.Standard;
 using Pipefish.Supervision;
 
-namespace Octopus.Platform.Deployment.Logging
+namespace Octopus.Shared.Logging
 {
     // A supervised activity is an actor that 'owns' the activity
     // correlated with its initiating message. If the actor fails,

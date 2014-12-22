@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
-using Octopus.Platform.Variables;
+using Octopus.Shared.Variables;
 
-namespace Octopus.Platform.Security.Masking
+namespace Octopus.Shared.Security.Masking
 {
     public static class VariableDictionaryExtensions
     {

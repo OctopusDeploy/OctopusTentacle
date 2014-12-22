@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Octopus.Platform.Deployment.Messages.TentaclePackageRetention
+namespace Octopus.Shared.Messages.TentaclePackageRetention
 {
     public class RequiredRetentionProcessing
     {

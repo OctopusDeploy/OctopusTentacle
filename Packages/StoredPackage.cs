@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace Octopus.Platform.Deployment.Packages
+namespace Octopus.Shared.Packages
 {
     public class StoredPackage : IEquatable<StoredPackage>
     {

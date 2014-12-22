@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Model.Endpoints
+namespace Octopus.Shared.Endpoints
 {
     public interface IEndpointWithHostname
     {

@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Logging
+namespace Octopus.Shared.Logging
 {
     public class ProgressMessageEvent : IMessage
     {

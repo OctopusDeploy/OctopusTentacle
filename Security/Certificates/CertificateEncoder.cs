@@ -6,9 +6,9 @@ using System.Security.AccessControl;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
-using Octopus.Platform.Diagnostics;
+using Octopus.Shared.Diagnostics;
 
-namespace Octopus.Platform.Security.Certificates
+namespace Octopus.Shared.Security.Certificates
 {
     public static class CertificateEncoder
     {

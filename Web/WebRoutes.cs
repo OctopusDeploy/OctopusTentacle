@@ -2,7 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Octopus.Platform.Web
+namespace Octopus.Shared.Web
 {
     public static class WebRoutes
     {

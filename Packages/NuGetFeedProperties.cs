@@ -1,9 +1,8 @@
 using System;
 using System.Net;
-using Octopus.Platform.Packages;
-using Octopus.Platform.Security.MasterKey;
+using Octopus.Shared.Security.MasterKey;
 
-namespace Octopus.Platform.Deployment.Packages
+namespace Octopus.Shared.Packages
 {
     public class NuGetFeedProperties : IFeed
     {

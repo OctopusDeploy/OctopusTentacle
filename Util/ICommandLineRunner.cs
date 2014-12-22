@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Platform.Diagnostics;
+using Octopus.Shared.Diagnostics;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public interface ICommandLineRunner
     {

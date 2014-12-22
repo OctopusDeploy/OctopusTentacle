@@ -4,13 +4,9 @@ using System.Linq;
 using System.Threading;
 using Autofac.Features.Metadata;
 using NuGet;
-using Octopus.Platform.Deployment;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Packages;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Packages;
-using Octopus.Platform.Security.MasterKey;
-using Octopus.Platform.Util;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Security.MasterKey;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Packages
 {

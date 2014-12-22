@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace Octopus.Platform.Variables.Templates.Parser.Ast
+namespace Octopus.Shared.Variables.Templates
 {
     /// <summary>
     /// Syntactically this appears as the <code>| FilterName</code> construct, where

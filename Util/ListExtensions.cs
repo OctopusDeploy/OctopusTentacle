@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 // ReSharper disable CheckNamespace
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public static class ListExtensions
 // ReSharper restore CheckNamespace

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public class SlugGenerator
     {

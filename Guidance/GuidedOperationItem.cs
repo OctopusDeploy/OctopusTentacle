@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Platform.Deployment.Messages;
-using Octopus.Platform.Deployment.Messages.Guidance;
+using Octopus.Shared.Messages;
+using Octopus.Shared.Messages.Guidance;
 
-namespace Octopus.Platform.Deployment.Guidance
+namespace Octopus.Shared.Guidance
 {
     public class GuidedOperationItem
     {

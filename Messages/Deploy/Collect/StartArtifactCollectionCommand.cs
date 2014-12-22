@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using Octopus.Client.Model;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Messages.Conversations;
-using Octopus.Platform.Deployment.Messages.Deploy.Steps;
-using Octopus.Platform.Model;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Messages.Conversations;
+using Octopus.Shared.Messages.Deploy.Steps;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Collect
+namespace Octopus.Shared.Messages.Deploy.Collect
 {
     [ExpectReply]
     public class StartArtifactCollectionCommand : ICorrelatedMessage

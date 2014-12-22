@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Collect
+namespace Octopus.Shared.Messages.Deploy.Collect
 {
     public class ArtifactsCollectedEvent : IMessage
     {

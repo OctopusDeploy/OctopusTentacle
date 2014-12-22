@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Variables.Templates.Parser.Ast
+namespace Octopus.Shared.Variables.Templates
 {
     /// <summary>
     /// Example: <code>#{Octopus.Action[Foo].Name</code>.

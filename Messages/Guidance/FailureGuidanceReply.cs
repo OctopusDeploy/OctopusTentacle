@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.Guidance
+namespace Octopus.Shared.Messages.Guidance
 {
     public class FailureGuidanceReply : IMessage
     {

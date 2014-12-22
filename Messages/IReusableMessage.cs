@@ -1,7 +1,7 @@
 using System;
-using Octopus.Platform.Deployment.Logging;
+using Octopus.Shared.Logging;
 
-namespace Octopus.Platform.Deployment.Messages
+namespace Octopus.Shared.Messages
 {
     // Currently the best option available for guided
     // retries to be able to sit as siblings in the

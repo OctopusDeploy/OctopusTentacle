@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Octopus.Platform.Deployment.Configuration;
+using Octopus.Shared.Configuration;
 using Pipefish.Transport.SecureTcp;
 using Pipefish.Transport.SecureTcp.Routing;
 using Pipefish.Transport.SecureTcp.Server;

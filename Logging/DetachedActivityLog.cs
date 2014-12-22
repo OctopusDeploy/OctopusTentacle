@@ -1,12 +1,12 @@
 ﻿using System;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Util;
+using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Core;
 using Pipefish.Errors;
 using Pipefish.Hosting;
 
-namespace Octopus.Platform.Deployment.Logging
+namespace Octopus.Shared.Logging
 {
     public class DetachedActivityLog : AbstractLog
     {

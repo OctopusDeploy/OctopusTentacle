@@ -1,10 +1,10 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Messages.Deploy.Steps;
-using Octopus.Platform.Deployment.Packages;
-using Octopus.Platform.Variables;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Messages.Deploy.Steps;
+using Octopus.Shared.Packages;
+using Octopus.Shared.Variables;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Package
+namespace Octopus.Shared.Messages.Deploy.Package
 {
     public class StartDeployPackageActionCommand : StartTentacleDeploymentActionCommand
     {

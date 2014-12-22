@@ -1,8 +1,8 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Packages;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Packages;
 
-namespace Octopus.Platform.Deployment.Messages.PackageUpload
+namespace Octopus.Shared.Messages.PackageUpload
 {
     public class UploadPackageCommand : IReusableMessage
     {

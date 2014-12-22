@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using Octopus.Platform.Variables.Templates.Parser.Ast;
 using Sprache;
 
-namespace Octopus.Platform.Variables.Templates.Parser
+namespace Octopus.Shared.Variables.Templates
 {
     public static class TemplateParser
     {

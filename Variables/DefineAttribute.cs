@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Variables
+namespace Octopus.Shared.Variables
 {
     public class DefineAttribute : Attribute
     {

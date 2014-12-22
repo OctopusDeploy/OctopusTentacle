@@ -1,7 +1,7 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
+using Octopus.Shared.Logging;
 
-namespace Octopus.Platform.Deployment.Messages.TestEmail
+namespace Octopus.Shared.Messages.TestEmail
 {
     public class StartEmailTestCommand : ICorrelatedMessage
     {

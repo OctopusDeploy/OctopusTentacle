@@ -1,6 +1,5 @@
 using System;
 using System.Security.Cryptography;
-using Octopus.Platform.Deployment.Configuration;
 
 namespace Octopus.Shared.Configuration
 {

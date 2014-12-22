@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 
 // ReSharper disable CheckNamespace
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public static class AssemblyExtensions
 // ReSharper restore CheckNamespace

@@ -1,7 +1,7 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Packages;
+using Octopus.Shared.Packages;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Steps
+namespace Octopus.Shared.Messages.Deploy.Steps
 {
     public class StepAction
     {

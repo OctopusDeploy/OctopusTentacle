@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using NuGet;
-using Octopus.Platform.Util;
+using Octopus.Shared.Util;
 
-namespace Octopus.Platform.Deployment.Packages
+namespace Octopus.Shared.Packages
 {
     public class PackageMetadata : IEquatable<PackageMetadata>
     {

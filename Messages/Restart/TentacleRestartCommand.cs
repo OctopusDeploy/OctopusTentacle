@@ -1,8 +1,8 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Messages.Conversations;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Messages.Conversations;
 
-namespace Octopus.Platform.Deployment.Messages.Restart
+namespace Octopus.Shared.Messages.Restart
 {
     [ExpectReply]
     public class TentacleRestartCommand : ICorrelatedMessage

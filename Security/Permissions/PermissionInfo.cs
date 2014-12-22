@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Octopus.Client.Model;
 
-namespace Octopus.Platform.Security.Permissions
+namespace Octopus.Shared.Security.Permissions
 {
     public static class PermissionInfo
     {

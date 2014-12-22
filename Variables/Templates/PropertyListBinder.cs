@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Platform.Variables.Templates.Evaluator;
-using Octopus.Platform.Variables.Templates.Parser;
-using Octopus.Platform.Variables.Templates.Parser.Ast;
 
-namespace Octopus.Platform.Variables.Templates.Binder
+namespace Octopus.Shared.Variables.Templates
 {
     public static class PropertyListBinder
     {

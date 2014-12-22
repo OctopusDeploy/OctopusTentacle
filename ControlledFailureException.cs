@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Deployment
+namespace Octopus.Shared
 {
     /// <summary>
     /// A controlled failure is one whereby Octopus must abort the task at

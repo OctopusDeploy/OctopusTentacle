@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Octopus.Platform.Security.Permissions
+namespace Octopus.Shared.Security.Permissions
 {
     public class AuthorizationRequest
     {

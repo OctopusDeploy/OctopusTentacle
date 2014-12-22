@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Octopus.Platform.Variables.Templates.Parser.Ast;
 
-namespace Octopus.Platform.Variables.Templates.Evaluator
+namespace Octopus.Shared.Variables.Templates
 {
     class EvaluationContext
     {

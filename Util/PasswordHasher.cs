@@ -3,7 +3,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     /// <summary>
     /// Secure password hasher using the inbuilt .NET implementation of PBKDF2 (<see cref="Rfc2898DeriveBytes"/>). Simialr to BCrypt, the hash string returned

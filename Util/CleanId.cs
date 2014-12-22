@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     /// <summary>
     ///  A string guaranteed to hold a trimmed, lowercase, non-whitespace value.

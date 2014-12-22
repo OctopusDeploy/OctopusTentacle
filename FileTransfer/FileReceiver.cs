@@ -2,11 +2,11 @@
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
-using Octopus.Platform.Deployment.Configuration;
-using Octopus.Platform.Deployment.Messages.FileTransfer;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Util;
 using Octopus.Shared.Communications;
+using Octopus.Shared.Configuration;
+using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Messages.FileTransfer;
+using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Errors;
 using Pipefish.Messages;

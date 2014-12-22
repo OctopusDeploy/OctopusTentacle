@@ -1,8 +1,8 @@
 using System;
 using Autofac;
 using NuGet;
-using Octopus.Platform.Deployment.BuiltInFeed;
-using Octopus.Platform.Diagnostics;
+using Octopus.Shared.BuiltInFeed;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Packages
 {

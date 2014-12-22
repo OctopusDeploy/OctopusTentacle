@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Messages.Conversations;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Messages.Conversations;
 
-namespace Octopus.Platform.Deployment.Messages.Guidance
+namespace Octopus.Shared.Messages.Guidance
 {
     [ExpectReply]
     public class FailureGuidanceRequest : ICorrelatedMessage

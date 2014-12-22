@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Octopus.Platform.Deployment.Guidance
+namespace Octopus.Shared.Guidance
 {
     public interface IGuided
     {

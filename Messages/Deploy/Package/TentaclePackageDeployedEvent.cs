@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Platform.Deployment.Messages.Deploy.Steps;
-using Octopus.Platform.Variables;
+using Octopus.Shared.Messages.Deploy.Steps;
+using Octopus.Shared.Variables;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Package
+namespace Octopus.Shared.Messages.Deploy.Package
 {
     public class TentaclePackageDeployedEvent : IMessageWithTentacleArtifacts
     {

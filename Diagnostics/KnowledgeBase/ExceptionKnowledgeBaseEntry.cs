@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace Octopus.Platform.Diagnostics.KnowledgeBase
+namespace Octopus.Shared.Diagnostics.KnowledgeBase
 {
     public class ExceptionKnowledgeBaseEntry
     {

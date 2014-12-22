@@ -2,13 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Octopus.Platform.Variables.Templates.Analyzer;
-using Octopus.Platform.Variables.Templates.Binder;
-using Octopus.Platform.Variables.Templates.Evaluator;
-using Octopus.Platform.Variables.Templates.Parser;
-using Octopus.Platform.Variables.Templates.Parser.Ast;
+using Octopus.Shared.Variables.Templates;
 
-namespace Octopus.Platform.Variables
+namespace Octopus.Shared.Variables
 {
     /// <summary>
     /// This class once served as the bridge between the "v1" regex-based

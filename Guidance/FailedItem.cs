@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish.Messages;
 
-namespace Octopus.Platform.Deployment.Guidance
+namespace Octopus.Shared.Guidance
 {
     public class FailedItem
     {

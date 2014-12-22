@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Platform.Variables;
+using Octopus.Shared.Variables;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Steps
+namespace Octopus.Shared.Messages.Deploy.Steps
 {
     public interface IMessageWithTentacleArtifacts : IMessage
     {

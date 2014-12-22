@@ -1,10 +1,10 @@
 ﻿using System;
 using Newtonsoft.Json;
-using Octopus.Platform.Deployment.Messages;
+using Octopus.Shared.Messages;
 using Pipefish;
 using Pipefish.Core;
 
-namespace Octopus.Platform.Deployment.Logging
+namespace Octopus.Shared.Logging
 {
     public class LoggerReference
     {

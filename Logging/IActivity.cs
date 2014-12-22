@@ -1,7 +1,7 @@
 ﻿using System;
-using Octopus.Platform.Diagnostics;
+using Octopus.Shared.Diagnostics;
 
-namespace Octopus.Platform.Deployment.Logging
+namespace Octopus.Shared.Logging
 {
     public interface IActivity : ILog
     {

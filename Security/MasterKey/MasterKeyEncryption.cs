@@ -2,7 +2,6 @@
 using System.IO;
 using System.Security.Cryptography;
 using Octopus.Client.Model;
-using Octopus.Platform.Model;
 using Octopus.Shared.Bcl.IO;
 
 namespace Octopus.Shared.Security.MasterKey

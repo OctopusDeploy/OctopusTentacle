@@ -1,8 +1,8 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Messages.Deploy.Steps;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Messages.Deploy.Steps;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Manual
+namespace Octopus.Shared.Messages.Deploy.Manual
 {
     public class StartManualActionCommand : StartDeploymentActionCommand
     {

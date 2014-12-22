@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Packages;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Packages;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Acquire
+namespace Octopus.Shared.Messages.Deploy.Acquire
 {
     public class DownloadAndPushPackageToTentaclesCommand : IReusableMessage
     {

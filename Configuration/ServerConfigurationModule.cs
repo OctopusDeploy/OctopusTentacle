@@ -1,6 +1,5 @@
 using System;
 using Autofac;
-using Octopus.Platform.Deployment.Configuration;
 
 namespace Octopus.Shared.Configuration
 {

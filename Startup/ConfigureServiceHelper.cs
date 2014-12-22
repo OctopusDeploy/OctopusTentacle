@@ -5,8 +5,8 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Util;
+using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {

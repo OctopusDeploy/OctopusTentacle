@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 
-namespace Octopus.Platform.Security.Masking
+namespace Octopus.Shared.Security.Masking
 {
     public static class MaskingContext
     {

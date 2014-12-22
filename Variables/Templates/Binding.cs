@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Octopus.Platform.Variables.Templates.Evaluator
+namespace Octopus.Shared.Variables.Templates
 {
     public class Binding : Dictionary<string, Binding>
     {

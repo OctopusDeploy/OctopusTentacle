@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Octopus.Platform.Variables.Templates.Parser.Ast
+namespace Octopus.Shared.Variables.Templates
 {
     /// <summary>
     /// Example: <code>#{if Octopus.IsCool}...#{/if}</code>

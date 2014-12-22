@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.PackageUpload
+namespace Octopus.Shared.Messages.PackageUpload
 {
     public class TentaclePackageStatusReply : IMessage
     {

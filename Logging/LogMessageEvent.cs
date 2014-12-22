@@ -1,9 +1,9 @@
 ﻿using System;
 using Newtonsoft.Json;
-using Octopus.Platform.Diagnostics;
+using Octopus.Shared.Diagnostics;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Logging
+namespace Octopus.Shared.Logging
 {
     public class LogMessageEvent : IMessage
     {

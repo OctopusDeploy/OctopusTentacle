@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Reflection;
-using Octopus.Platform.Deployment.Messages;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Util;
+using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Messages;
+using Octopus.Shared.Util;
 using Pipefish;
 using Pipefish.Core;
 using Pipefish.Errors;
 using Pipefish.Hosting;
 
-namespace Octopus.Platform.Deployment.Logging
+namespace Octopus.Shared.Logging
 {
     public class Activity : PersistentAspect<LoggerReference>, IActivity
     {

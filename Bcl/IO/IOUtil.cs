@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using Octopus.Platform.Util;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Bcl.IO
 {

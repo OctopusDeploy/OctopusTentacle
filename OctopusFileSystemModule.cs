@@ -1,6 +1,6 @@
 ﻿using System;
 using Autofac;
-using Octopus.Platform.Util;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared
 {

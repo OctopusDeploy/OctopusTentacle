@@ -1,8 +1,8 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Messages.Conversations;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Messages.Conversations;
 
-namespace Octopus.Platform.Deployment.Messages.Health
+namespace Octopus.Shared.Messages.Health
 {
     [ExpectReply]
     public class TentacleReportHealthRequest : ICorrelatedMessage

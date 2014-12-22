@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IdentityModel.Selectors;
 using System.IdentityModel.Tokens;
 using System.Security.Cryptography.X509Certificates;
-using Octopus.Platform.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Security

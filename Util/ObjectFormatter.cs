@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public static class ObjectFormatter
     {

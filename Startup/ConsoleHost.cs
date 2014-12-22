@@ -1,8 +1,7 @@
 using System;
 using NLog;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Diagnostics.KnowledgeBase;
-using Octopus.Platform.Util;
+using Octopus.Shared.Diagnostics.KnowledgeBase;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {

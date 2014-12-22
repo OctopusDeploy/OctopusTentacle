@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace Octopus.Platform.Variables.Templates.Evaluator
+namespace Octopus.Shared.Variables.Templates
 {
     public static class BuiltInFunctions
     {

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Octopus.Platform.Variables
+namespace Octopus.Shared.Variables
 {
     public class VariableDictionary : IEnumerable<Variable>
     {

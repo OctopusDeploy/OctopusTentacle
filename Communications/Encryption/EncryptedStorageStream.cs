@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Octopus.Platform.Security.MasterKey;
+using Octopus.Shared.Security.MasterKey;
 using Pipefish.Util.Storage;
 
 namespace Octopus.Shared.Communications.Encryption

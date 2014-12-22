@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Octopus.Platform.Security.Masking
+namespace Octopus.Shared.Security.Masking
 {
     public class MaskedException : Exception
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Deployment.Messages
+namespace Octopus.Shared.Messages
 {
     public static class WellKnownOctopusActors
     {

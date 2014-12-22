@@ -5,9 +5,9 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Octopus.Platform.Diagnostics;
+using Octopus.Shared.Diagnostics;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public class OctopusPhysicalFileSystem : IOctopusFileSystem
     {

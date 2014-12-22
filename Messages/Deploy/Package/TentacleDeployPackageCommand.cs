@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Messages.Conversations;
-using Octopus.Platform.Deployment.Packages;
-using Octopus.Platform.Variables;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Messages.Conversations;
+using Octopus.Shared.Packages;
+using Octopus.Shared.Variables;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy.Package
+namespace Octopus.Shared.Messages.Deploy.Package
 {
     [ExpectReply]
     public class TentacleDeployPackageCommand : IReusableMessage

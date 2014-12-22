@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Platform.Variables;
+using Octopus.Shared.Variables;
 
-namespace Octopus.Platform.Model.Endpoints
+namespace Octopus.Shared.Endpoints
 {
     /// <summary>
     /// Contains the information necessary to communicate with an SSH endpoint

@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.Interruptions
+namespace Octopus.Shared.Messages.Interruptions
 {
     public class InterruptionSubmittedEvent : IMessage
     {

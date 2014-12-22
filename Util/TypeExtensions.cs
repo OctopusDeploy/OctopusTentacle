@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public static class TypeExtensions
     {

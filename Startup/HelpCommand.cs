@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Octopus.Platform.Util;
 using Octopus.Shared.Internals.Options;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {

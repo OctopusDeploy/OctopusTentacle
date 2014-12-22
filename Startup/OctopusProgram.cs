@@ -5,9 +5,9 @@ using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Util;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {

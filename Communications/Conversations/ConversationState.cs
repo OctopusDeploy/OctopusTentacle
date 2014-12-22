@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Platform.Deployment.Messages.Conversations;
-using Octopus.Platform.Diagnostics;
+using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Messages.Conversations;
 using Pipefish.Core;
 using Pipefish.Transport.SecureTcp.MessageExchange.Client;
 

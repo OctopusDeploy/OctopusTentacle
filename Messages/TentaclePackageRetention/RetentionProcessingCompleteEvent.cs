@@ -1,7 +1,7 @@
 ﻿using System;
 using Pipefish;
 
-namespace Octopus.Platform.Deployment.Messages.TentaclePackageRetention
+namespace Octopus.Shared.Messages.TentaclePackageRetention
 {
     public class RetentionProcessingCompleteEvent : IMessage
     {

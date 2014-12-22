@@ -1,6 +1,6 @@
 using System;
-using Octopus.Platform.Util;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {

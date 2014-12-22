@@ -1,8 +1,8 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Packages;
+using Octopus.Shared.Logging;
+using Octopus.Shared.Packages;
 
-namespace Octopus.Platform.Deployment.Messages.Upgrade
+namespace Octopus.Shared.Messages.Upgrade
 {
     public class UpgradeTentacleCommand : IReusableMessage
     {

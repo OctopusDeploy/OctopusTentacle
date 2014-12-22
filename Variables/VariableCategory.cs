@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace Octopus.Platform.Variables
+namespace Octopus.Shared.Variables
 {
     public enum VariableCategory
     {

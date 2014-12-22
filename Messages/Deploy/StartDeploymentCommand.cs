@@ -1,7 +1,7 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Logging;
+using Octopus.Shared.Logging;
 
-namespace Octopus.Platform.Deployment.Messages.Deploy
+namespace Octopus.Shared.Messages.Deploy
 {
     public class StartDeploymentCommand : ICorrelatedMessage
     {

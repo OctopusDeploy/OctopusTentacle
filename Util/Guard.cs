@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     [DebuggerNonUserCode]
     public static class Guard

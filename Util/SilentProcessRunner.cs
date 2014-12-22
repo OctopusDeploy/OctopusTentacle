@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.IO.IsolatedStorage;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using Octopus.Platform.Diagnostics;
+using Octopus.Shared.Diagnostics;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public static class SilentProcessRunner
     {

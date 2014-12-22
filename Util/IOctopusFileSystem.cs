@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public interface IOctopusFileSystem
     {

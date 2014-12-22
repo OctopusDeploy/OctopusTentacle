@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Autofac;
 using Autofac.Features.Metadata;
-using Octopus.Platform.Diagnostics;
+using Octopus.Shared.Diagnostics;
 using Pipefish;
 using Pipefish.Core;
 using Pipefish.Hosting;

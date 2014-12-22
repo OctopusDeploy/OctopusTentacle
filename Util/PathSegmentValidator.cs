@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public class PathSegmentValidator
     {

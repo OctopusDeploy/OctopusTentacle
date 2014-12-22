@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public static class ExceptionExtensions
     {

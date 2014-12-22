@@ -1,8 +1,6 @@
 using System;
-using Octopus.Platform.Deployment.Logging;
-using Octopus.Platform.Deployment.Packages;
-using Octopus.Platform.Packages;
 using Octopus.Shared.Contracts;
+using Octopus.Shared.Logging;
 
 namespace Octopus.Shared.Packages
 {

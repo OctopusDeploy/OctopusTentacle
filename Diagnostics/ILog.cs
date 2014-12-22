@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Platform.Diagnostics
+namespace Octopus.Shared.Diagnostics
 {
     public interface ILog
     {

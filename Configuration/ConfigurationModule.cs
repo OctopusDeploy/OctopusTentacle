@@ -1,10 +1,8 @@
 using System;
 using Autofac;
-using Octopus.Platform.Deployment.Configuration;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Security.MasterKey;
-using Octopus.Platform.Util;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security.MasterKey;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {

@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Octopus.Platform.Util
+namespace Octopus.Shared.Util
 {
     public class FileInfoAdapter : IFileInfo
     {

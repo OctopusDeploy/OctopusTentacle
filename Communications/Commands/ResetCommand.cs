@@ -1,9 +1,8 @@
 ﻿using System;
-using Octopus.Platform.Deployment.Configuration;
-using Octopus.Platform.Diagnostics;
-using Octopus.Platform.Util;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Startup;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Communications.Commands
 {
