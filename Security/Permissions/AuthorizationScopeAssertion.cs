@@ -1,4 +1,5 @@
 using System;
+using Octopus.Client.Model;
 
 namespace Octopus.Platform.Security.Permissions
 {

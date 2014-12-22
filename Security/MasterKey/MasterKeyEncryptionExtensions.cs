@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Octopus.Client.Model;
 using Octopus.Platform.Model;
 
 namespace Octopus.Platform.Security.MasterKey

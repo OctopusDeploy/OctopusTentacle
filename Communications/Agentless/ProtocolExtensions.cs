@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Client.Model;
 using Octopus.Platform.Model;
 using Octopus.Platform.Model.Endpoints;
 using Pipefish.Core;

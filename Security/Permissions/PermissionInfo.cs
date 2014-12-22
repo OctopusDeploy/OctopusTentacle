@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using Octopus.Client.Model;
 
 namespace Octopus.Platform.Security.Permissions
 {

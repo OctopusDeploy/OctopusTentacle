@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Octopus.Client.Model;
 using Octopus.Platform.Deployment.Logging;
 using Octopus.Platform.Deployment.Messages.Deploy.Script;
 using Octopus.Platform.Model;

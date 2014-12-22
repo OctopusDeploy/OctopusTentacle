@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Client.Model;
 using Octopus.Platform.Deployment.Logging;
 using Octopus.Platform.Model;
 
