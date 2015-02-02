@@ -7,9 +7,9 @@ namespace Octopus.Shared.Diagnostics
     {
         protected override void Load(ContainerBuilder builder)
         {
-            var logAdapter = new LogAdapter();
-            Log.SetFactory(() => logAdapter);
-            builder.Register(c => Log.Octopus()).As<ILog>();
+            var log = Log.Octopus();
+            Log.Appenders.Add(new NLogAppender());
+            builder.Register(c => log).As<ILog>().SingleInstance();
         }
     }
 }

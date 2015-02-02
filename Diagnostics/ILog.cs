@@ -1,9 +1,71 @@
 ﻿using System;
+using System.Collections.Generic;
+using Octopus.Shared.Logging;
 
 namespace Octopus.Shared.Diagnostics
 {
     public interface ILog
     {
+        LogCorrelator Current { get; }
+
+        /// <summary>
+        /// Opens a new child block for logging.
+        /// </summary>
+        /// <param name="messageText">Title of the new block.</param>
+        /// <returns>An <see cref="IDisposable"/> that will automatically revert the current block when disposed.</returns>
+        IDisposable OpenBlock(string messageText);
+
+        /// <summary>
+        /// Opens a new child block for logging.
+        /// </summary>
+        /// <param name="messageFormat">Format string for the message.</param>
+        /// <param name="args">Arguments for the format string.</param>
+        /// <returns>An <see cref="IDisposable"/> that will automatically revert the current block when disposed.</returns>
+        IDisposable OpenBlock(string messageFormat, params object[] args);
+
+        /// <summary>
+        /// Plans a new block of log output that will be used in the future. This is typically used for high-level log information, such as the steps in a big deployment process.
+        /// </summary>
+        /// <param name="messageText">Title of the new block.</param>
+        /// <returns>An <see cref="IDisposable"/> that will automatically revert the current block when disposed.</returns>
+        LogCorrelator PlanFutureBlock(string messageText);
+
+        /// <summary>
+        /// Plans a new block of log output that will be used in the future. This is typically used for high-level log information, such as the steps in a big deployment process.
+        /// </summary>
+        /// <param name="messageFormat">Format string for the message.</param>
+        /// <param name="args">Arguments for the format string.</param>
+        /// <returns>An <see cref="IDisposable"/> that will automatically revert the current block when disposed.</returns>
+        LogCorrelator PlanFutureBlock(string messageFormat, params object[] args);
+
+        /// <summary>
+        /// Switches to a new logging context on the current thread, allowing you to begin logging within a block previously begun using <see cref="OpenBlock"/> or <see cref="PlanFutureBlock"/>.
+        /// </summary>
+        /// <param name="logger">The <see cref="LogCorrelator"/> to switch to.</param>
+        /// <returns>An <see cref="IDisposable"/> that will automatically revert the current block when disposed.</returns>
+        IDisposable WithinBlock(LogCorrelator logger);
+
+        /// <summary>
+        /// Marks the current block as abandoned. Abandoned blocks won't be shown in the task log.
+        /// </summary>
+        void Abandon();
+
+        /// <summary>
+        /// If a block was previously abandoned using <see cref="Abandon"/>, calling <see cref="Reinstate"/> will un-abandon it.
+        /// </summary>
+        void Reinstate();
+
+        /// <summary>
+        /// Marks the current block as finished. If there were any errors, it will be finished with errors. If there were no errors, it will be assumed to be successful.
+        /// </summary>
+        void Finish();
+
+        /// <summary>
+        /// Imports a set of log events into the current context.
+        /// </summary>
+        /// <param name="logEvents">The set of log events.</param>
+        void Merge(IEnumerable<LogEvent> logEvents);
+
         bool IsVerboseEnabled { get; }
         bool IsErrorEnabled { get; }
         bool IsFatalEnabled { get; }
@@ -11,13 +73,13 @@ namespace Octopus.Shared.Diagnostics
         bool IsTraceEnabled { get; }
         bool IsWarnEnabled { get; }
 
-        bool IsEnabled(TraceCategory category);
+        bool IsEnabled(LogCategory category);
         
-        void Write(TraceCategory category, string messageText);
-        void Write(TraceCategory category, Exception error);
-        void Write(TraceCategory category, Exception error, string messageText);
-        void WriteFormat(TraceCategory category, string messageFormat, params object[] args);
-        void WriteFormat(TraceCategory category, Exception error, string messageFormat, params object[] args);
+        void Write(LogCategory category, string messageText);
+        void Write(LogCategory category, Exception error);
+        void Write(LogCategory category, Exception error, string messageText);
+        void WriteFormat(LogCategory category, string messageFormat, params object[] args);
+        void WriteFormat(LogCategory category, Exception error, string messageFormat, params object[] args);
 
         void Trace(string messageText);
         void TraceFormat(string messageFormat, params object[] args);
@@ -54,10 +116,6 @@ namespace Octopus.Shared.Diagnostics
         void Fatal(Exception error, string messageText);
         void FatalFormat(string messageFormat, params object[] args);
         void FatalFormat(Exception error, string format, params object[] args);
-
-        ILog BeginOperation(string messageText);
-        ILog BeginOperationFormat(string messageFormat, params object[] args);
-        void EndOperation();
 
         void UpdateProgress(int progressPercentage, string messageText);
         void UpdateProgressFormat(int progressPercentage, string messageFormat, params object[] args);

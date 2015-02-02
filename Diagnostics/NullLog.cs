@@ -1,30 +1,42 @@
 using System;
+using System.Collections.Generic;
+using Octopus.Shared.Logging;
 
 namespace Octopus.Shared.Diagnostics
 {
     public class NullLog : AbstractLog
     {
-        protected override void WriteEvent(TraceCategory category, Exception error, string messageText)
+        LogCorrelator current;
+
+        public NullLog()
         {
-            
+            current = LogCorrelator.CreateNew("Null");
         }
 
-        public override ILog BeginOperation(string messageText)
-        {
-            return this;
-        }
-
-        public override void EndOperation()
-        {            
-        }
-
-        public override void UpdateProgress(int progressPercentage, string messageText)
+        protected override void WriteEvent(LogEvent logEvent)
         {
         }
 
-        public override bool IsEnabled(TraceCategory category)
+        protected override void WriteEvents(IList<LogEvent> logEvents)
         {
-            return false;
+        }
+
+        public override IDisposable WithinBlock(LogCorrelator logger)
+        {
+            return new NullDisposable();
+        }
+
+        public override LogCorrelator Current
+        {
+            get { return current; }
+        }
+
+        public class NullDisposable : IDisposable
+        {
+            public void Dispose()
+            {
+                
+            }
         }
     }
 }

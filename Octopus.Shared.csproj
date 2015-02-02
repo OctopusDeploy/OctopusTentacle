@@ -139,14 +139,16 @@
     <Compile Include="Conventions\OctopusName.cs" />
     <Compile Include="Diagnostics\AbstractLog.cs" />
     <Compile Include="Diagnostics\ILog.cs" />
+    <Compile Include="Diagnostics\ILogAppender.cs" />
     <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledge.cs" />
     <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBase.cs" />
     <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBaseEntry.cs" />
     <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBuilder.cs" />
     <Compile Include="Diagnostics\Log.cs" />
+    <Compile Include="Diagnostics\LogEvent.cs" />
+    <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
-    <Compile Include="Diagnostics\PrefixedLogDecorator.cs" />
-    <Compile Include="Diagnostics\TraceCategory.cs" />
+    <Compile Include="Diagnostics\LogCategory.cs" />
     <Compile Include="Endpoints\AgentlessEndpoint.cs" />
     <Compile Include="Endpoints\CloudServiceEndpoint.cs" />
     <Compile Include="Endpoints\Endpoint.cs" />
@@ -159,8 +161,7 @@
     <Compile Include="Endpoints\SshEndpoint.cs" />
     <Compile Include="Endpoints\TentacleEndpoint.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
-    <Compile Include="Logging\IActivityLog.cs" />
-    <Compile Include="Logging\LoggerReference.cs" />
+    <Compile Include="Logging\LogCorrelator.cs" />
     <Compile Include="Logging\ProgressMessageCategory.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="NoState.cs" />
@@ -226,7 +227,6 @@
     <Compile Include="Configuration\XmlSettingsRoot.cs" />
     <Compile Include="Configuration\XmlStreamReadOnlyKeyValueStore.cs" />
     <Compile Include="Contracts\IEchoService.cs" />
-    <Compile Include="Diagnostics\LogAdapter.cs" />
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
