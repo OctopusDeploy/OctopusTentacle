@@ -75,13 +75,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NuGet.Core.2.8.2\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Pipefish">
-      <HintPath>..\packages\Pipefish.2.0.2.28\lib\Pipefish.dll</HintPath>
-    </Reference>
-    <Reference Include="Pipefish.Transport.SecureTcp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Pipefish.Transport.SecureTcp.2.0.2.28\lib\Pipefish.Transport.SecureTcp.dll</HintPath>
-    </Reference>
     <Reference Include="Sprache, Version=2.0.0.44, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Sprache.2.0.0.44\lib\portable-net4+netcore45+win8+wp8+sl5+MonoAndroid1+MonoTouch1\Sprache.dll</HintPath>
@@ -164,95 +157,11 @@
     <Compile Include="Endpoints\PollingTentacleEndpoint.cs" />
     <Compile Include="Endpoints\SshEndpoint.cs" />
     <Compile Include="Endpoints\TentacleEndpoint.cs" />
-    <Compile Include="Guidance\FailedItem.cs" />
-    <Compile Include="Guidance\Guided.cs" />
-    <Compile Include="Guidance\GuidedOperationItem.cs" />
-    <Compile Include="Guidance\GuidedOperationState.cs" />
-    <Compile Include="Guidance\IGuided.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
-    <Compile Include="Logging\Activity.cs" />
-    <Compile Include="Logging\ChildActivityLog.cs" />
-    <Compile Include="Logging\DetachedActivityLog.cs" />
-    <Compile Include="Logging\IActivity.cs" />
-    <Compile Include="Logging\ISupervisedActivity.cs" />
+    <Compile Include="Logging\IActivityLog.cs" />
     <Compile Include="Logging\LoggerReference.cs" />
-    <Compile Include="Logging\LogMessageEvent.cs" />
     <Compile Include="Logging\ProgressMessageCategory.cs" />
-    <Compile Include="Logging\ProgressMessageEvent.cs" />
-    <Compile Include="Logging\SupervisedActivity.cs" />
-    <Compile Include="Messages\Agentless\AgentSynchronizedPackageEvent.cs" />
-    <Compile Include="Messages\Agentless\AgentSynchronizePackageCommand.cs" />
-    <Compile Include="Messages\Backup\StartBackupCommand.cs" />
-    <Compile Include="Messages\Conversations\ExpectReplyAttribute.cs" />
-    <Compile Include="Messages\Deletion\StartDocumentDeletionCommand.cs" />
-    <Compile Include="Messages\Deploy\Acquire\AcquiredPackage.cs" />
-    <Compile Include="Messages\Deploy\Acquire\AcquirePackagesCommand.cs" />
-    <Compile Include="Messages\Deploy\Acquire\DownloadAndPushPackageToTentaclesCommand.cs" />
-    <Compile Include="Messages\Deploy\Acquire\DownloadPackageOnTentaclesCommand.cs" />
-    <Compile Include="Messages\Deploy\Acquire\PackageAcquiredEvent.cs" />
-    <Compile Include="Messages\Deploy\Acquire\PackagesAcquiredEvent.cs" />
-    <Compile Include="Messages\Deploy\Acquire\TentacleDownloadPackageCommand.cs" />
-    <Compile Include="Messages\Deploy\Acquire\TentaclePackageDownloadedEvent.cs" />
-    <Compile Include="Messages\Deploy\Collect\ArtifactsCollectedEvent.cs" />
-    <Compile Include="Messages\Deploy\Collect\StartArtifactCollectionCommand.cs" />
-    <Compile Include="Messages\Deploy\Email\StartEmailActionCommand.cs" />
-    <Compile Include="Messages\Deploy\Manual\StartManualActionCommand.cs" />
-    <Compile Include="Messages\Deploy\Package\StartDeployPackageActionCommand.cs" />
-    <Compile Include="Messages\Deploy\Package\TentacleDeployPackageCommand.cs" />
-    <Compile Include="Messages\Deploy\Package\TentaclePackageDeployedEvent.cs" />
-    <Compile Include="Messages\Deploy\Script\ScriptSyntax.cs" />
-    <Compile Include="Messages\Deploy\Script\StartScriptActionCommand.cs" />
-    <Compile Include="Messages\Deploy\Script\TentacleRunScriptCommand.cs" />
-    <Compile Include="Messages\Deploy\Script\TentacleScriptRunEvent.cs" />
-    <Compile Include="Messages\Deploy\StartDeploymentCommand.cs" />
-    <Compile Include="Messages\Deploy\Steps\IMessageWithTentacleArtifacts.cs" />
-    <Compile Include="Messages\Deploy\Steps\OutputVariablesCollectedEvent.cs" />
-    <Compile Include="Messages\Deploy\Steps\RetentionProcessingRequiredEvent.cs" />
-    <Compile Include="Messages\Deploy\Steps\RunStepCommand.cs" />
-    <Compile Include="Messages\Deploy\Steps\StartDeploymentActionCommand.cs" />
-    <Compile Include="Messages\Deploy\Steps\StartTentacleDeploymentActionCommand.cs" />
-    <Compile Include="Messages\Deploy\Steps\StepAction.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
-    <Compile Include="Messages\Discovery\SshEndpointDiscoveryReply.cs" />
-    <Compile Include="Messages\Discovery\SshEndpointDiscoveryRequest.cs" />
-    <Compile Include="Messages\FileTransfer\ChunkAlreadySentAcknowledgement.cs" />
-    <Compile Include="Messages\FileTransfer\FileSentEvent.cs" />
-    <Compile Include="Messages\FileTransfer\SendFileCommand.cs" />
-    <Compile Include="Messages\Guidance\FailureGuidance.cs" />
-    <Compile Include="Messages\Guidance\FailureGuidanceReply.cs" />
-    <Compile Include="Messages\Guidance\FailureGuidanceRequest.cs" />
-    <Compile Include="Messages\Health\StartHealthCheckCommand.cs" />
-    <Compile Include="Messages\Health\StartTentacleHealthCheckRequest.cs" />
-    <Compile Include="Messages\Health\TentacleReportHealthReply.cs" />
-    <Compile Include="Messages\Health\TentacleReportHealthRequest.cs" />
-    <Compile Include="Messages\ICorrelatedMessage.cs" />
-    <Compile Include="Messages\Interruptions\InterruptionSubmittedEvent.cs" />
-    <Compile Include="Messages\IReusableMessage.cs" />
-    <Compile Include="Messages\PackageUpload\PackageUploadedEvent.cs" />
-    <Compile Include="Messages\PackageUpload\TentacleGetPackageStatusRequest.cs" />
-    <Compile Include="Messages\PackageUpload\TentaclePackageStatusReply.cs" />
-    <Compile Include="Messages\PackageUpload\TentaclePackageStoredEvent.cs" />
-    <Compile Include="Messages\PackageUpload\TentacleStorePackageCommand.cs" />
-    <Compile Include="Messages\PackageUpload\UploadPackageCommand.cs" />
-    <Compile Include="Messages\Restart\TentacleRestartCommand.cs" />
-    <Compile Include="Messages\Restart\TentacleRestartedEvent.cs" />
-    <Compile Include="Messages\Retention\ApplyRetentionPolicyCommand.cs" />
-    <Compile Include="Messages\Retention\StartRetentionPolicyApplicationCommand.cs" />
-    <Compile Include="Messages\RunScript\RunScriptOnTentacleCommand.cs" />
-    <Compile Include="Messages\RunScript\StartRunScriptCommand.cs" />
-    <Compile Include="Messages\ServerTasks\ExecuteTaskCommand.cs" />
-    <Compile Include="Messages\ServerTasks\StartTaskCommand.cs" />
-    <Compile Include="Messages\ServerTasks\TaskCompletedEvent.cs" />
-    <Compile Include="Messages\ServerTasks\TaskPausedEvent.cs" />
-    <Compile Include="Messages\TentaclePackageRetention\PerformRetentionProcessingCommand.cs" />
-    <Compile Include="Messages\TentaclePackageRetention\RequiredRetentionProcessing.cs" />
-    <Compile Include="Messages\TentaclePackageRetention\RetentionProcessingCompleteEvent.cs" />
-    <Compile Include="Messages\TentaclePackageRetention\TentaclePerformRetentionProcessingCommand.cs" />
-    <Compile Include="Messages\TestEmail\StartEmailTestCommand.cs" />
-    <Compile Include="Messages\Upgrade\StartOutdatedTentacleUpgradeCommand.cs" />
-    <Compile Include="Messages\Upgrade\TentacleUpgradedEvent.cs" />
-    <Compile Include="Messages\Upgrade\UpgradeTentacleCommand.cs" />
-    <Compile Include="Messages\WellKnownOctopusActors.cs" />
     <Compile Include="NoState.cs" />
     <Compile Include="Packages\IFeed.cs" />
     <Compile Include="Packages\NuGetFeedProperties.cs" />
@@ -281,26 +190,7 @@
     <Compile Include="Bcl\IO\StreamDisposalChain.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
-    <Compile Include="Communications\Agentless\AgentlessOverrideAttribute.cs" />
-    <Compile Include="Communications\Commands\DecryptCommand.cs" />
-    <Compile Include="Communications\Commands\ResetCommand.cs" />
     <Compile Include="Communications\Commands\ShowMasterKeyCommand.cs" />
-    <Compile Include="Communications\Conversations\ActiveConversationDescription.cs" />
-    <Compile Include="Communications\Encryption\EncryptedStorageStream.cs" />
-    <Compile Include="Communications\Conversations\ActiveConversation.cs" />
-    <Compile Include="Communications\Conversations\ConversationState.cs" />
-    <Compile Include="Communications\Conversations\ConversationTracker.cs" />
-    <Compile Include="Communications\Handshaking\HandshakeAsServerModule.cs" />
-    <Compile Include="Communications\Handshaking\HandshakeRequest.cs" />
-    <Compile Include="Communications\Handshaking\HandshakeResponse.cs" />
-    <Compile Include="Communications\Handshaking\IHandshakeReceiver.cs" />
-    <Compile Include="Communications\Identity\Squid.cs" />
-    <Compile Include="Communications\Integration\IActivitySpaceStarter.cs" />
-    <Compile Include="Communications\Integration\ShutdownToken.cs" />
-    <Compile Include="Communications\Agentless\ProtocolExtensions.cs" />
-    <Compile Include="Communications\InMemoryMessageStore.cs" />
-    <Compile Include="Communications\IOctopusStreamStore.cs" />
-    <Compile Include="Communications\StreamStore.cs" />
     <Compile Include="Configuration\AbstractKeyValueStore.cs" />
     <Compile Include="Configuration\ApplicationInstanceRecord.cs" />
     <Compile Include="Configuration\ApplicationInstanceSelector.cs" />
@@ -337,16 +227,6 @@
     <Compile Include="Contracts\IEchoService.cs" />
     <Compile Include="Diagnostics\LogAdapter.cs" />
     <Compile Include="EnumerableExtensions.cs" />
-    <Compile Include="FileTransfer\BeginFileTransferCommand.cs" />
-    <Compile Include="FileTransfer\FileReceiveData.cs" />
-    <Compile Include="FileTransfer\FileReceiver.cs" />
-    <Compile Include="FileTransfer\FileSendData.cs" />
-    <Compile Include="FileTransfer\FileSender.cs" />
-    <Compile Include="FileTransfer\FileTransferCompleteEvent.cs" />
-    <Compile Include="FileTransfer\SendNextChunkReply.cs" />
-    <Compile Include="FileTransfer\SendNextChunkRequest.cs" />
-    <Compile Include="FileTransfer\SendStreamRequest.cs" />
-    <Compile Include="FileTransfer\StreamCompleteRequest.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
     <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
@@ -357,9 +237,6 @@
     <Compile Include="Licensing\LicenseVerificationCertificateProvider.cs" />
     <Compile Include="Licensing\LicenseVerifier.cs" />
     <Compile Include="OctopusFileSystemModule.cs" />
-    <Compile Include="Communications\PipefishModule.cs" />
-    <Compile Include="Communications\Integration\ActivitySpaceStarter.cs" />
-    <Compile Include="Communications\Integration\AutofacActorFactory.cs" />
     <Compile Include="Diagnostics\OctopusLogsDirectoryRenderer.cs" />
     <Compile Include="Extensibility\IOctopusExtension.cs" />
     <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />

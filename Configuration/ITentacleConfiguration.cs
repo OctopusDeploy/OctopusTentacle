@@ -79,12 +79,6 @@ namespace Octopus.Shared.Configuration
         string ListenIpAddress { get; set; }
 
         /// <summary>
-        /// Gets or sets the SQUID uniquely identifying the local instance. This value must be unique
-        /// among all entities in an Octopus network.
-        /// </summary>
-        string Squid { get; set; }
-
-        /// <summary>
         /// Even in polling mode, by default Tentacle will listen on a TCP port for connections, just in case you 
         /// also want it to be a listening Tentacle. Set this flag to true to stop Tentacle listening on a port.
         /// </summary>

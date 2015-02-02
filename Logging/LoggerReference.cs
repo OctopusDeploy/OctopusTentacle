@@ -1,8 +1,5 @@
 ﻿using System;
 using Newtonsoft.Json;
-using Octopus.Shared.Messages;
-using Pipefish;
-using Pipefish.Core;
 
 namespace Octopus.Shared.Logging
 {
@@ -56,14 +53,14 @@ namespace Octopus.Shared.Logging
         {
             if (spaceName == null) throw new ArgumentNullException("spaceName");
             var correlationId = GenerateId();
-            return new LoggerReference(new ActorId(WellKnownActors.Anonymous, spaceName).ToString(), correlationId);
+            return new LoggerReference(spaceName, correlationId);
         }
 
         public static LoggerReference CreateNew(string spaceName, string correlationId)
         {
             if (spaceName == null) throw new ArgumentNullException("spaceName");
             if (correlationId == null) throw new ArgumentNullException("correlationId");
-            return new LoggerReference(new ActorId(WellKnownOctopusActors.Logger, spaceName).ToString(), correlationId);
+            return new LoggerReference(spaceName, correlationId);
         }
     }
 }

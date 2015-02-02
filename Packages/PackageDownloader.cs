@@ -2,9 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Autofac.Features.Metadata;
 using NuGet;
-using Octopus.Shared.Logging;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security.MasterKey;
 using Octopus.Shared.Util;
 
@@ -17,20 +16,23 @@ namespace Octopus.Shared.Packages
         readonly IPackageRepositoryFactory packageRepositoryFactory;
         readonly IOctopusFileSystem fileSystem;
         readonly IMasterKeyEncryption encryption;
+        readonly ILog log;
 
         public PackageDownloader(
             IPackageStore packageStore,
             IPackageRepositoryFactory packageRepositoryFactory, 
             IOctopusFileSystem fileSystem,
-            IMasterKeyEncryption encryption)
+            IMasterKeyEncryption encryption,
+            ILog log)
         {
             this.packageStore = packageStore;
             this.packageRepositoryFactory = packageRepositoryFactory;
             this.fileSystem = fileSystem;
             this.encryption = encryption;
+            this.log = log;
         }
 
-        public StoredPackage Download(PackageMetadata package, IFeed feed, PackageCachePolicy cachePolicy, IActivity log)
+        public StoredPackage Download(PackageMetadata package, IFeed feed, PackageCachePolicy cachePolicy)
         {
             if (package == null) throw new ArgumentNullException("package");
             if (feed == null) throw new ArgumentNullException("feed");
@@ -43,12 +45,12 @@ namespace Octopus.Shared.Packages
 
             if (cachePolicy == PackageCachePolicy.UseCache)
             {
-                storedPackage = AttemptToGetPackageFromCache(package, feed, log);
+                storedPackage = AttemptToGetPackageFromCache(package, feed);
             }
 
             if (storedPackage == null)
             {
-                storedPackage = AttemptToDownload(package, feed, log);
+                storedPackage = AttemptToDownload(package, feed);
             }
             else
             {
@@ -60,14 +62,14 @@ namespace Octopus.Shared.Packages
             return storedPackage;
         }
 
-        StoredPackage AttemptToGetPackageFromCache(PackageMetadata metadata, IFeed feed, IActivity log)
+        StoredPackage AttemptToGetPackageFromCache(PackageMetadata metadata, IFeed feed)
         {
             log.VerboseFormat("Checking package cache for package {0} {1}", metadata.PackageId, metadata.Version);
 
             return packageStore.GetPackage(feed.Id, metadata);
         }
 
-        StoredPackage AttemptToDownload(PackageMetadata metadata, IFeed feed, IActivity log)
+        StoredPackage AttemptToDownload(PackageMetadata metadata, IFeed feed)
         {
             log.InfoFormat("Downloading NuGet package {0} {1} from feed: '{2}'", metadata.PackageId, metadata.Version, feed.FeedUri);
 
@@ -84,7 +86,7 @@ namespace Octopus.Shared.Packages
             {
                 try
                 {
-                    AttemptToFindAndDownloadPackage(i, metadata, feed, log, cacheDirectory, out downloaded, out downloadedTo);
+                    AttemptToFindAndDownloadPackage(i, metadata, feed, cacheDirectory, out downloaded, out downloadedTo);
                     break;
                 }
                 catch (Exception dataException)
@@ -108,14 +110,14 @@ namespace Octopus.Shared.Packages
                     "Octopus requested version {0} of {1}, but the NuGet server returned a package with version {2}",
                     metadata.Version, metadata.PackageId, downloaded.Version));
 
-            CheckWhetherThePackageHasDependencies(downloaded, log);
+            CheckWhetherThePackageHasDependencies(downloaded);
 
             var size = fileSystem.GetFileSize(downloadedTo);
             var hash = HashCalculator.Hash(downloaded.GetStream());
             return new StoredPackage(metadata.PackageId, metadata.Version, downloadedTo, hash, size);
         }
 
-        static void CheckWhetherThePackageHasDependencies(IPackageMetadata downloaded, IActivity log)
+        void CheckWhetherThePackageHasDependencies(IPackageMetadata downloaded)
         {
             var dependencies = downloaded.DependencySets.SelectMany(ds => ds.Dependencies).Count();
             if (dependencies > 0)
@@ -128,20 +130,20 @@ namespace Octopus.Shared.Packages
             }
         }
 
-        void AttemptToFindAndDownloadPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, IActivity log, string cacheDirectory, out IPackage downloadedPackage, out string path)
+        void AttemptToFindAndDownloadPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, string cacheDirectory, out IPackage downloadedPackage, out string path)
         {
             NuGet.PackageDownloader downloader;
-            var package = FindPackage(attempt, packageMetadata, feed, log, out downloader);
+            var package = FindPackage(attempt, packageMetadata, feed, out downloader);
 
             var fullPathToDownloadTo = GetFilePathToDownloadPackageTo(cacheDirectory, package);
 
-            DownloadPackage(package, fullPathToDownloadTo, log, downloader);
+            DownloadPackage(package, fullPathToDownloadTo, downloader);
 
             path = fullPathToDownloadTo;
             downloadedPackage = new ZipPackage(fullPathToDownloadTo);
         }
 
-        IPackage FindPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, IActivity log, out NuGet.PackageDownloader downloader)
+        IPackage FindPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, out NuGet.PackageDownloader downloader)
         {
             log.VerboseFormat("Finding package (attempt {0} of {1})", attempt, NumberOfTimesToAttemptToDownloadPackage);
 
@@ -165,7 +167,7 @@ namespace Octopus.Shared.Packages
             return package;
         }
 
-        void DownloadPackage(IPackage package, string fullPathToDownloadTo, IActivity log, NuGet.PackageDownloader directDownloader)
+        void DownloadPackage(IPackage package, string fullPathToDownloadTo, NuGet.PackageDownloader directDownloader)
         {
             log.VerboseFormat("Found package {0} version {1}", package.Id, package.Version);
             log.Verbose("Downloading to: " + fullPathToDownloadTo);

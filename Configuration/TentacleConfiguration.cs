@@ -171,12 +171,6 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Tentacle.Services.ListenIP", value); }
         }
 
-        public string Squid
-        {
-            get { return communicationsConfiguration.Squid; }
-            set { communicationsConfiguration.Squid = value; }
-        }
-
         public bool NoListen
         {
             get { return settings.Get("Tentacle.Services.NoListen", false); }

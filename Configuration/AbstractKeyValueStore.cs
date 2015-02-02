@@ -1,7 +1,7 @@
 using System;
 using System.Security.Cryptography;
 using System.Text;
-using Pipefish.Util;
+using Newtonsoft.Json;
 
 namespace Octopus.Shared.Configuration
 {
@@ -39,7 +39,7 @@ namespace Octopus.Shared.Configuration
             if (typeof(TData) == typeof(string))
                 return (TData)(object)s;
 
-            return Json.Deserialize<TData>(s);
+            return JsonConvert.DeserializeObject<TData>(s);
         }
 
         public void Set(string name, string value, DataProtectionScope? protectionScope = null)
@@ -73,7 +73,7 @@ namespace Octopus.Shared.Configuration
             if (typeof(TData) == typeof(string))
                 Set(name, (string)(object)value, protectionScope);
             else
-                Set(name, Json.Serialize(value), protectionScope);
+                Set(name, JsonConvert.SerializeObject(value), protectionScope);
         }
 
         public abstract void Save();

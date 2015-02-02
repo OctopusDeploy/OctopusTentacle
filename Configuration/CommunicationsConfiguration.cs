@@ -14,18 +14,6 @@ namespace Octopus.Shared.Configuration
         {
             this.settings = settings;
             this.homeConfiguration = homeConfiguration;
-
-            if (string.IsNullOrWhiteSpace(Squid))
-            {
-                Squid = Communications.Identity.Squid.NewSquid();
-                settings.Save();
-            }
-        }
-
-        public string Squid
-        {
-            get { return settings.Get(SquidSettingKey); }
-            set { settings.Set(SquidSettingKey, value); }
         }
 
         public string ActorStateDirectory
