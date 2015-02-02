@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Halibut;
 using Octopus.Shared.Variables;
 
 namespace Octopus.Shared.Endpoints
@@ -14,9 +15,16 @@ namespace Octopus.Shared.Endpoints
         {
         }
 
+        public Uri Uri { get { return GetEndpointProperty<Uri>(); } set { SetEndpointProperty(value); } }
+
         public override string ToString()
         {
             return "polling endpoint";
+        }
+
+        public override ServiceEndPoint GetServiceEndPoint()
+        {
+            return new ServiceEndPoint(Uri, Thumbprint);
         }
     }
 }

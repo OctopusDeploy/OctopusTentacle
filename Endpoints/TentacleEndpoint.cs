@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Halibut;
 using Octopus.Shared.Variables;
 
 namespace Octopus.Shared.Endpoints
@@ -13,5 +14,6 @@ namespace Octopus.Shared.Endpoints
 
         public string Thumbprint { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
 
+        public abstract ServiceEndPoint GetServiceEndPoint();
     }
 }

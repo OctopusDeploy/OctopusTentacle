@@ -15,8 +15,7 @@ namespace Octopus.Agent.Communications.TcpServer
 
         public IServiceLease CreateService(string serviceName)
         {
-            var serviceType = Type.GetType(serviceName);
-            var service = scope.Resolve(serviceType);
+            var service = scope.ResolveNamed<object>(serviceName);
             return new Lease(service);
         }
 

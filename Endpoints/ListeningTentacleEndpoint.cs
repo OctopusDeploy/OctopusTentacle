@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Halibut;
 using Octopus.Shared.Variables;
 
 namespace Octopus.Shared.Endpoints
@@ -22,5 +23,10 @@ namespace Octopus.Shared.Endpoints
         }
 
         public string Host { get { return Uri.Host; } }
+
+        public override ServiceEndPoint GetServiceEndPoint()
+        {
+            return new ServiceEndPoint(Uri, Thumbprint);
+        }
     }
 }
