@@ -25,11 +25,11 @@ using Module = Autofac.Module;
 
 namespace Octopus.Shared.Communications
 {
-    public class PipefishModule : Module
+    public class HalibutModule : Module
     {
         readonly Assembly[] assemblies;
 
-        public PipefishModule(params Assembly[] assemblies)
+        public HalibutModule(params Assembly[] assemblies)
         {
             this.assemblies = assemblies.Concat(new[] { typeof(Actor).Assembly, typeof(FileSender).Assembly }).ToArray();
         }
@@ -75,11 +75,6 @@ namespace Octopus.Shared.Communications
                 .As<IMessageStore>()
                 .SingleInstance();
 
-            builder.Register(c => new StreamStore(
-                    c.Resolve<ICommunicationsConfiguration>().StreamsDirectory, c.Resolve<IOctopusFileSystem>()))
-                .As<IOctopusStreamStore>()
-                .As<IStreamStore>()
-                .SingleInstance();
 
             builder.Register(c => new DirectoryActorStorage(
                     c.Resolve<ICommunicationsConfiguration>().ActorStateDirectory,

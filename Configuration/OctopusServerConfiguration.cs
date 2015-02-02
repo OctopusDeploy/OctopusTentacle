@@ -50,6 +50,8 @@ namespace Octopus.Shared.Configuration
         /// </summary>
         public string Squid { get; set; }
 
+        public string SubscriptionId { get; set; }
+
         /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>

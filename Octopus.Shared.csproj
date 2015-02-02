@@ -42,6 +42,9 @@
     <Reference Include="Autofac">
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
     </Reference>
+    <Reference Include="Halibut">
+      <HintPath>..\packages\Halibut.1.0.1.8\lib\Halibut.dll</HintPath>
+    </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
@@ -120,6 +123,7 @@
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
     <Compile Include="BuiltInFeed\IBuiltInPackageRepositoryFactory.cs" />
+    <Compile Include="Communications\AutofacServiceFactory.cs" />
     <Compile Include="Configuration\ICommunicationsConfiguration.cs" />
     <Compile Include="Configuration\IDeploymentProcessConfiguration.cs" />
     <Compile Include="Configuration\IFileStorageConfiguration.cs" />
@@ -330,7 +334,7 @@
     <Compile Include="Configuration\XmlSetting.cs" />
     <Compile Include="Configuration\XmlSettingsRoot.cs" />
     <Compile Include="Configuration\XmlStreamReadOnlyKeyValueStore.cs" />
-    <Compile Include="Contracts\SuffixAttribute.cs" />
+    <Compile Include="Contracts\IEchoService.cs" />
     <Compile Include="Diagnostics\LogAdapter.cs" />
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="FileTransfer\BeginFileTransferCommand.cs" />
