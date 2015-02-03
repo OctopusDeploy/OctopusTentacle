@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Tasks
@@ -52,11 +53,16 @@ namespace Octopus.Shared.Tasks
 
             if (errors.Count > 0)
             {
+                if (errors.All(e => e is TaskCanceledException))
+                {
+                    throw new TaskCanceledException("One or more child activities were canceled.");
+                }
+
                 throw new ActivityFailedException("One or more child activities failed.");
             }
         }
 
-        public class OctoThreadClosure<T> 
+        class OctoThreadClosure<T> 
         {
             readonly Planned<T> item;
             readonly Action<T> executeCallback;
@@ -67,7 +73,7 @@ namespace Octopus.Shared.Tasks
                 this.executeCallback = executeCallback;
             }
 
-            public Exception Exception { get; set; }
+            public Exception Exception { get; private set; }
 
             public void Execute()
             {
@@ -76,15 +82,24 @@ namespace Octopus.Shared.Tasks
                     try
                     {
                         executeCallback(item.WorkItem);
+                        Log.Finish();
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex);
+                        if (ex is ActivityFailedException)
+                        {
+                            Log.Error(ex.Message);
+                        }
+                        else if (ex is TaskCanceledException)
+                        {
+                            Log.Info(ex.Message);
+                        }
+                        else
+                        {
+                            Log.Error(ex);
+                        }
+
                         Exception = ex;
-                    }
-                    finally
-                    {
-                        Log.Finish();
                     }
                 }
             }

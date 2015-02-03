@@ -4,11 +4,23 @@ namespace Octopus.Shared.Contracts
 {
     public class RunScriptRequest
     {
-        public RunScriptRequest(string scriptBody)
+        readonly string scriptBody;
+        readonly string syntax;
+
+        public RunScriptRequest(string scriptBody, string syntax)
         {
-            ScriptBody = scriptBody;
+            this.scriptBody = scriptBody;
+            this.syntax = syntax;
         }
 
-        public string ScriptBody { get; set; }
+        public string ScriptBody
+        {
+            get { return scriptBody; }
+        }
+
+        public string Syntax
+        {
+            get { return syntax; }
+        }
     }
 }

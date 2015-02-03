@@ -58,10 +58,19 @@ namespace Octopus.Shared.Tasks
                     }
                     catch (Exception e)
                     {
+                        ex = e;
                         var root = e.UnpackFromContainers();
-                        if (!(root is TaskCanceledException || root is ThreadAbortException))
+
+                        if (root is ActivityFailedException)
                         {
-                            ex = e;
+                            log.Error(root.Message);
+                        }
+                        else if (root is TaskCanceledException || root is ThreadAbortException)
+                        {
+                            // These happen as part of cancellation. It's enough to just return them, without logging them.
+                        }
+                        else
+                        {
                             log.Error(ex);
                         }
                     }
@@ -118,7 +127,10 @@ namespace Octopus.Shared.Tasks
 
         void CompleteTask(Exception error)
         {
-            log.Finish();
+            if (error == null)
+            {
+                log.Finish();
+            }
 
             complete.Set();
 
