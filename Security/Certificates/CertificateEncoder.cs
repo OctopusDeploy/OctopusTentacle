@@ -12,7 +12,7 @@ namespace Octopus.Shared.Security.Certificates
 {
     public static class CertificateEncoder
     {
-        static readonly ILog Log = Diagnostics.Log.Octopus();
+        static readonly ILog Log = Diagnostics.Log.System();
 
         public static X509Certificate2 FromBase64String(string thumbprint, string certificateString)
         {

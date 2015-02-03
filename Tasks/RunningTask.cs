@@ -12,7 +12,6 @@ namespace Octopus.Shared.Tasks
     public class RunningTask : ITaskContext, IRunningTask
     {
         readonly string taskId;
-        readonly string description;
         readonly Type rootTaskControllerType;
         readonly object arguments;
         readonly ILifetimeScope lifetimeScope;
@@ -26,7 +25,6 @@ namespace Octopus.Shared.Tasks
         public RunningTask(string taskId, string description, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback)
         {
             this.taskId = taskId;
-            this.description = description;
             this.rootTaskControllerType = rootTaskControllerType;
             this.arguments = arguments;
             this.lifetimeScope = lifetimeScope;
@@ -47,8 +45,6 @@ namespace Octopus.Shared.Tasks
             {
                 using (var workScope = lifetimeScope.BeginLifetimeScope())
                 {
-                    log.Info(description);
-
                     Exception ex = null;
                     try
                     {
@@ -123,6 +119,8 @@ namespace Octopus.Shared.Tasks
 
         void CompleteTask(Exception error)
         {
+            log.Finish();
+
             complete.Set();
 
             if (completeCallback != null)

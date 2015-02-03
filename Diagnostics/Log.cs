@@ -9,7 +9,7 @@ namespace Octopus.Shared.Diagnostics
     public class Log : AbstractLog
     {
         static readonly Log Instance = new Log();
-        static readonly ConcurrentBag<ILogAppender> appenders = new ConcurrentBag<ILogAppender>();
+        static readonly List<ILogAppender> appenders = new List<ILogAppender>();
         readonly ThreadLocal<LogCorrelator> correlator;
 
         static Log()
@@ -21,7 +21,7 @@ namespace Octopus.Shared.Diagnostics
             correlator = new ThreadLocal<LogCorrelator>(() => LogCorrelator.CreateNew("system/" + Environment.MachineName));
         }
 
-        public static ConcurrentBag<ILogAppender> Appenders
+        public static List<ILogAppender> Appenders
         {
             get { return appenders; }
         }
@@ -29,6 +29,11 @@ namespace Octopus.Shared.Diagnostics
         public static ILog Octopus()
         {
             return Instance;
+        }
+
+        public static ILog System()
+        {
+            return new Log();
         }
 
         protected override void WriteEvent(LogEvent logEvent)

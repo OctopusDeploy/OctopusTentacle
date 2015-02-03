@@ -58,7 +58,7 @@ namespace Octopus.Shared.Diagnostics
 
         public void Merge(IEnumerable<LogEvent> logEvents)
         {
-            WriteEvents(logEvents.Where(l => l != null).ToList());
+            WriteEvents(logEvents.Where(l => l != null).Select(l => new LogEvent(Current.CorrelationId + "/" + l.CorrelationId, l.Category, l.MessageText, l.Error, l.Occurred, l.ProgressPercentage)).ToList());
         }
 
         public virtual bool IsEnabled(LogCategory category)
