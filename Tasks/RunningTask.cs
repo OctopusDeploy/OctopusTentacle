@@ -2,10 +2,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using Halibut.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Logging;
-using ILog = Octopus.Shared.Diagnostics.ILog;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tasks
 {
