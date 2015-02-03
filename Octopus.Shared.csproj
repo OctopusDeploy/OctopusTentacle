@@ -193,9 +193,12 @@
     <Compile Include="Security\Permissions\PermissionInfo.cs" />
     <Compile Include="Security\Permissions\RestrictedGrant.cs" />
     <Compile Include="Security\Permissions\WildcardDocumentId.cs" />
+    <Compile Include="Tasks\ActivityFailedException.cs" />
     <Compile Include="Tasks\ITaskContext.cs" />
     <Compile Include="Tasks\IRunningTask.cs" />
     <Compile Include="Tasks\ITaskController.cs" />
+    <Compile Include="Tasks\OctoParallel.cs" />
+    <Compile Include="Tasks\Planned.cs" />
     <Compile Include="Tasks\RunningTask.cs" />
     <Compile Include="Tasks\TaskCompletionHandler.cs" />
     <Compile Include="Tasks\TaskControllerAttribute.cs" />
