@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Newtonsoft.Json;
 
 namespace Octopus.Shared.Diagnostics
@@ -11,6 +12,8 @@ namespace Octopus.Shared.Diagnostics
         readonly Exception error;
         readonly DateTimeOffset occurred;
         readonly int progressPercentage;
+        readonly long sequence;
+        static long nextSequence;
 
         public LogEvent(string correlationId, LogCategory category, string messageText, Exception error) : this(correlationId, category, messageText, error, 0)
         {
@@ -20,20 +23,30 @@ namespace Octopus.Shared.Diagnostics
         {
         }
 
-        [JsonConstructor]
         public LogEvent(string correlationId, LogCategory category, string messageText, Exception error, DateTimeOffset occurred) : this(correlationId, category, messageText, error, occurred, 0)
         {
         }
 
-        [JsonConstructor]
-        public LogEvent(string correlationId, LogCategory category, string messageText, Exception error, DateTimeOffset occurred, int progressPercentage)
+        public LogEvent(string correlationId, LogCategory category, string messageText, Exception error, DateTimeOffset occurred, int progressPercentage) : this(0, correlationId, category, messageText, error, occurred, progressPercentage)
         {
+            sequence = Interlocked.Increment(ref nextSequence);
+        }
+
+        [JsonConstructor]
+        LogEvent(int sequence, string correlationId, LogCategory category, string messageText, Exception error, DateTimeOffset occurred, int progressPercentage)
+        {
+            this.sequence = sequence;
             this.correlationId = correlationId;
             this.category = category;
             this.messageText = messageText;
             this.error = error;
             this.occurred = occurred;
             this.progressPercentage = progressPercentage;
+        }
+
+        public long Sequence
+        {
+            get { return sequence; }
         }
 
         public string CorrelationId
