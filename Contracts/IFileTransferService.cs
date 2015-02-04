@@ -5,7 +5,7 @@ namespace Octopus.Shared.Contracts
 {
     public interface IFileTransferService
     {
-        void UploadFile(string remotePath, DataStream stream);
+        void UploadFile(string remotePath, DataStream upload);
         DataStream DownloadFile(string remotePath);
     }
 }
