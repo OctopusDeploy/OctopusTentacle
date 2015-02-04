@@ -79,12 +79,15 @@ namespace Octopus.Shared.Util
 
         public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error)
         {
+            return ExecuteCommand(executable, arguments, workingDirectory, output, error, CancellationToken.None);
+        }
+
+        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error, CancellationToken cancel)
+        {
             try
             {
                 using (var process = new Process())
                 {
-                    var outLines = new List<string>();
-
                     process.StartInfo.FileName = executable;
                     process.StartInfo.Arguments = arguments;
                     process.StartInfo.WorkingDirectory = workingDirectory;
@@ -107,7 +110,6 @@ namespace Octopus.Shared.Util
                             else
                             {
                                 output(e.Data);
-                                outLines.Add(e.Data);
                             }
                         };
 
@@ -120,26 +122,36 @@ namespace Octopus.Shared.Util
                             else
                             {
                                 error(e.Data);
-                                outLines.Add(e.Data);
                             }
                         };
 
                         process.Start();
 
+                        var running = true;
+
+                        cancel.Register(() =>
+                        {
+                            if (!running)
+                                return;
+                            try
+                            {
+                                process.Kill();
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        });
+
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
                         process.WaitForExit();
+
+                        running = false;
+
                         outputWaitHandle.WaitOne();
                         errorWaitHandle.WaitOne();
 
-                        if (Debugger.IsAttached && process.ExitCode != 0)
-                        {
-                            foreach (var msg in outLines)
-                            {
-                                Debug.WriteLine(msg);
-                            }
-                        }
                         return process.ExitCode;
                     }
                 }

@@ -2,9 +2,9 @@ using System;
 
 namespace Octopus.Shared.Contracts
 {
-    public class TaskTicket : IEquatable<TaskTicket>
+    public class ProcessTicket : IEquatable<ProcessTicket>
     {
-        public TaskTicket(string taskId)
+        public ProcessTicket(string taskId)
         {
             if (taskId == null) throw new ArgumentNullException("taskId");
             TaskId = taskId;
@@ -12,7 +12,7 @@ namespace Octopus.Shared.Contracts
 
         public string TaskId { get; set; }
 
-        public bool Equals(TaskTicket other)
+        public bool Equals(ProcessTicket other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -39,7 +39,7 @@ namespace Octopus.Shared.Contracts
             {
                 return false;
             }
-            return Equals((TaskTicket) obj);
+            return Equals((ProcessTicket) obj);
         }
 
         public override int GetHashCode()
@@ -47,12 +47,12 @@ namespace Octopus.Shared.Contracts
             return (TaskId != null ? TaskId.GetHashCode() : 0);
         }
 
-        public static bool operator ==(TaskTicket left, TaskTicket right)
+        public static bool operator ==(ProcessTicket left, ProcessTicket right)
         {
             return Equals(left, right);
         }
 
-        public static bool operator !=(TaskTicket left, TaskTicket right)
+        public static bool operator !=(ProcessTicket left, ProcessTicket right)
         {
             return !Equals(left, right);
         }

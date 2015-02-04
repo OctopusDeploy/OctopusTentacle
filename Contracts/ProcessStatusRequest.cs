@@ -2,18 +2,18 @@ using System;
 
 namespace Octopus.Shared.Contracts
 {
-    public class TaskCompleteRequest
+    public class ProcessStatusRequest
     {
-        readonly TaskTicket ticket;
+        readonly ProcessTicket ticket;
         readonly long lastLogSequence;
 
-        public TaskCompleteRequest(TaskTicket ticket, long lastLogSequence)
+        public ProcessStatusRequest(ProcessTicket ticket, long lastLogSequence)
         {
             this.ticket = ticket;
             this.lastLogSequence = lastLogSequence;
         }
 
-        public TaskTicket Ticket
+        public ProcessTicket Ticket
         {
             get { return ticket; }
         }
