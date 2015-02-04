@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
+using Halibut;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Logging;
 using Octopus.Shared.Util;
@@ -62,6 +63,10 @@ namespace Octopus.Shared.Tasks
                         var root = e.UnpackFromContainers();
 
                         if (root is ActivityFailedException)
+                        {
+                            log.Error(root.Message);
+                        }
+                        else if (root is HalibutClientException)
                         {
                             log.Error(root.Message);
                         }

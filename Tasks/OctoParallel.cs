@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Halibut;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Tasks
@@ -87,6 +88,10 @@ namespace Octopus.Shared.Tasks
                     catch (Exception ex)
                     {
                         if (ex is ActivityFailedException)
+                        {
+                            Log.Error(ex.Message);
+                        }
+                        else if (ex is HalibutClientException)
                         {
                             Log.Error(ex.Message);
                         }
