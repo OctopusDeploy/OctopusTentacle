@@ -136,7 +136,7 @@
     <Compile Include="Configuration\StorageMode.cs" />
     <Compile Include="Contracts\IFileTransferService.cs" />
     <Compile Include="Contracts\IScriptService.cs" />
-    <Compile Include="Contracts\RunScriptCommand.cs" />
+    <Compile Include="Contracts\StartScriptCommand.cs" />
     <Compile Include="Contracts\CancelScriptCommand.cs" />
     <Compile Include="Contracts\CompleteScriptCommand.cs" />
     <Compile Include="Contracts\ScriptStatusRequest.cs" />

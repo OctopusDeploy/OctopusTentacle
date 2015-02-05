@@ -2,11 +2,11 @@ using System;
 
 namespace Octopus.Shared.Contracts
 {
-    public class RunScriptCommand
+    public class StartScriptCommand
     {
         readonly string scriptBody;
 
-        public RunScriptCommand(string scriptBody)
+        public StartScriptCommand(string scriptBody)
         {
             this.scriptBody = scriptBody;
         }
