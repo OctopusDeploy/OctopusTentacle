@@ -44,7 +44,7 @@
     </Reference>
     <Reference Include="Halibut, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Halibut.1.0.1.9\lib\Halibut.dll</HintPath>
+      <HintPath>..\packages\Halibut.1.0.1.11\lib\Halibut.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
