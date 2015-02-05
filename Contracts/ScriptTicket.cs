@@ -1,10 +1,13 @@
 using System;
+using System.Threading;
 
 namespace Octopus.Shared.Contracts
 {
-    public class ProcessTicket : IEquatable<ProcessTicket>
+    public class ScriptTicket : IEquatable<ScriptTicket>
     {
-        public ProcessTicket(string taskId)
+        static long nextTaskId = 0;
+
+        public ScriptTicket(string taskId)
         {
             if (taskId == null) throw new ArgumentNullException("taskId");
             TaskId = taskId;
@@ -12,7 +15,7 @@ namespace Octopus.Shared.Contracts
 
         public string TaskId { get; set; }
 
-        public bool Equals(ProcessTicket other)
+        public bool Equals(ScriptTicket other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -39,7 +42,7 @@ namespace Octopus.Shared.Contracts
             {
                 return false;
             }
-            return Equals((ProcessTicket) obj);
+            return Equals((ScriptTicket) obj);
         }
 
         public override int GetHashCode()
@@ -47,12 +50,12 @@ namespace Octopus.Shared.Contracts
             return (TaskId != null ? TaskId.GetHashCode() : 0);
         }
 
-        public static bool operator ==(ProcessTicket left, ProcessTicket right)
+        public static bool operator ==(ScriptTicket left, ScriptTicket right)
         {
             return Equals(left, right);
         }
 
-        public static bool operator !=(ProcessTicket left, ProcessTicket right)
+        public static bool operator !=(ScriptTicket left, ScriptTicket right)
         {
             return !Equals(left, right);
         }
@@ -60,6 +63,11 @@ namespace Octopus.Shared.Contracts
         public override string ToString()
         {
             return TaskId;
+        }
+
+        public static ScriptTicket Create()
+        {
+            return new ScriptTicket("Script-" + DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss") + "-" + Interlocked.Increment(ref nextTaskId));
         }
     }
 }

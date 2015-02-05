@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -135,10 +137,17 @@ namespace Octopus.Shared.Util
                                 return;
                             try
                             {
-                                process.Kill();
+                                KillProcessAndChildren(process.Id);
                             }
                             catch (Exception)
                             {
+                                try
+                                {
+                                    process.Kill();
+                                }
+                                catch (Exception)
+                                {
+                                }
                             }
                         });
 
@@ -188,6 +197,30 @@ namespace Octopus.Shared.Util
 
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MAX_PATH)]
             public string CodePageName;
+        }
+
+        private static void KillProcessAndChildren(int pid)
+        {
+            using (var searcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid))
+            {
+                using (var moc = searcher.Get())
+                {
+                    foreach (var mo in moc.OfType<ManagementObject>())
+                    {
+                        KillProcessAndChildren(Convert.ToInt32(mo["ProcessID"]));
+                    }
+                }
+            }
+
+            try
+            {
+                var proc = Process.GetProcessById(pid);
+                proc.Kill();
+            }
+            catch (ArgumentException)
+            {
+                // Process already exited.
+            }
         }
     }
 }

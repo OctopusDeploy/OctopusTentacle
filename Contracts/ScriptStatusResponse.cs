@@ -51,15 +51,15 @@ namespace Octopus.Shared.Contracts
         }
     }
 
-    public class ProcessStatusResponse
+    public class ScriptStatusResponse
     {
-        readonly ProcessTicket ticket;
+        readonly ScriptTicket ticket;
         readonly ProcessState state;
         readonly int exitCode;
         readonly List<ProcessOutput> logs;
         readonly long nextLogSequence;
 
-        public ProcessStatusResponse(ProcessTicket ticket, ProcessState state, int exitCode, List<ProcessOutput> logs, long nextLogSequence)
+        public ScriptStatusResponse(ScriptTicket ticket, ProcessState state, int exitCode, List<ProcessOutput> logs, long nextLogSequence)
         {
             this.ticket = ticket;
             this.state = state;
@@ -68,7 +68,7 @@ namespace Octopus.Shared.Contracts
             this.nextLogSequence = nextLogSequence;
         }
 
-        public ProcessTicket Ticket
+        public ScriptTicket Ticket
         {
             get { return ticket; }
         }

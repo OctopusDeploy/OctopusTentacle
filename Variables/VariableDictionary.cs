@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace Octopus.Shared.Variables
 {
+    // TODO: This shouldn't need Variable objects anymore, it should be a simple string key/string value store
     public class VariableDictionary : IEnumerable<Variable>
     {
         readonly IDictionary<string, Variable> variables = new Dictionary<string, Variable>(StringComparer.OrdinalIgnoreCase);
