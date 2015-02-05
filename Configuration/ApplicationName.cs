@@ -5,7 +5,6 @@ namespace Octopus.Shared.Configuration
     public enum ApplicationName
     {
         OctopusServer,
-        Tentacle,
-        Relay
+        Tentacle
     }
 }

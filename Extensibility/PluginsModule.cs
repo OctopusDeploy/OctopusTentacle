@@ -18,7 +18,7 @@ namespace Octopus.Shared.Extensibility
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OctopusPlugins");
             if (!Directory.Exists(path))
             {
-                log.InfoFormat("Plugins directory does not exist: {0}", path);
+                log.VerboseFormat("Plugins directory does not exist: {0}", path);
                 return;
             }
             

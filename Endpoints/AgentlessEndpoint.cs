@@ -10,7 +10,5 @@ namespace Octopus.Shared.Endpoints
             : base(raw)
         {
         }
-
-        public string HostTentacleSquid { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
     }
 }

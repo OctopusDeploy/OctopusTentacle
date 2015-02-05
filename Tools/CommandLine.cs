@@ -24,14 +24,6 @@ namespace Octopus.Shared.Tools
                 "Tentacle.exe");
         }
 
-        public static string PathToRelayExe()
-        {
-            return GetPathToExecutable(
-                "Relay",
-                "..\\..\\Octopus.Relay\\bin\\Relay.exe",
-                "Relay.exe");
-        }
-
         static string GetPathToExecutable(string executableDescription, params string[] searchPaths)
         {
             var fullPaths = searchPaths.Select(ResolveAssemblyPath);

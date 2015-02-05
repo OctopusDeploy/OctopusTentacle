@@ -143,7 +143,6 @@
     <Compile Include="Contracts\ProcessStatusResponse.cs" />
     <Compile Include="Contracts\ProcessTicket.cs" />
     <Compile Include="ControlledFailureException.cs" />
-    <Compile Include="Conventions\HostedSiphonConventions.cs" />
     <Compile Include="Conventions\OctopusName.cs" />
     <Compile Include="Diagnostics\AbstractLog.cs" />
     <Compile Include="Diagnostics\ILog.cs" />
