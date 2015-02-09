@@ -6,7 +6,7 @@ using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Packages
 {
-    public class OctopusPackageRepositoryFactory : IPackageRepositoryFactory
+    public class OctopusPackageRepositoryFactory : IOctopusPackageRepositoryFactory
     {
         readonly ILog log;
 
@@ -17,7 +17,18 @@ namespace Octopus.Shared.Packages
 
         public IBuiltInPackageRepositoryFactory BuiltInRepositoryFactory { get; set; }
 
-        public IPackageRepository CreateRepository(string packageSource)
+        public INuGetRepository CreateRepository(string packageSource, ICredentials credentials)
+        {
+            Uri uri;
+            if (Uri.TryCreate(packageSource, UriKind.RelativeOrAbsolute, out uri))
+            {
+                FeedCredentialsProvider.Instance.SetCredentials(uri, credentials);
+            }
+
+            return CreateRepository(packageSource);
+        }
+
+        public INuGetRepository CreateRepository(string packageSource)
         {
             if (packageSource == null)
                 throw new ArgumentNullException("packageSource");
@@ -26,10 +37,9 @@ namespace Octopus.Shared.Packages
                 return BuiltInRepositoryFactory.CreateRepository();
 
             var uri = new Uri(packageSource);
-            if (uri.IsFile)
-                return new FastLocalPackageRepository(uri.LocalPath, log);
-
-            return new DataServicePackageRepository(CreateHttpClient(uri));
+            return uri.IsFile 
+                ? new ExternalNuGetRepositoryAdapter(new FastLocalPackageRepository(uri.LocalPath, log)) 
+                : new ExternalNuGetRepositoryAdapter(new DataServicePackageRepository(CreateHttpClient(uri)));
         }
 
         static IHttpClient CreateHttpClient(Uri uri)
@@ -41,11 +51,11 @@ namespace Octopus.Shared.Packages
 
         static void CustomizeRequest(WebRequest request)
         {
-            request.Timeout = 1000 * 60 * 10;
+            request.Timeout = 1000 * 60 * 100;
             var httpWebRequest = request as HttpWebRequest;
             if (httpWebRequest != null)
             {
-                httpWebRequest.ReadWriteTimeout = 1000 * 60 * 10;
+                httpWebRequest.ReadWriteTimeout = 1000 * 60 * 100;
             }
         }
     }

@@ -13,14 +13,14 @@ namespace Octopus.Shared.Packages
     {
         const int NumberOfTimesToAttemptToDownloadPackage = 5;
         readonly IPackageStore packageStore;
-        readonly IPackageRepositoryFactory packageRepositoryFactory;
+        readonly IOctopusPackageRepositoryFactory packageRepositoryFactory;
         readonly IOctopusFileSystem fileSystem;
         readonly IMasterKeyEncryption encryption;
         readonly ILog log;
 
         public PackageDownloader(
             IPackageStore packageStore,
-            IPackageRepositoryFactory packageRepositoryFactory, 
+            IOctopusPackageRepositoryFactory packageRepositoryFactory, 
             IOctopusFileSystem fileSystem,
             IMasterKeyEncryption encryption,
             ILog log)
@@ -143,7 +143,7 @@ namespace Octopus.Shared.Packages
             downloadedPackage = new ZipPackage(fullPathToDownloadTo);
         }
 
-        IPackage FindPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, out NuGet.PackageDownloader downloader)
+        INuGetPackage FindPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, out NuGet.PackageDownloader downloader)
         {
             log.VerboseFormat("Finding package (attempt {0} of {1})", attempt, NumberOfTimesToAttemptToDownloadPackage);
 
@@ -152,8 +152,8 @@ namespace Octopus.Shared.Packages
             var dspr = remoteRepository as DataServicePackageRepository;
             downloader = dspr != null ? dspr.PackageDownloader : null;
 
-            var requiredVersion = new SemanticVersion(packageMetadata.Version);
-            var package = remoteRepository.FindPackage(packageMetadata.PackageId, requiredVersion, true, true);
+            var requiredVersion = new Client.Model.SemanticVersion(packageMetadata.Version);
+            var package = remoteRepository.GetPackage(packageMetadata.PackageId, requiredVersion);
 
             if (package == null)
                 throw new ControlledFailureException(string.Format("Could not find package {0} {1} in feed: '{2}'", packageMetadata.PackageId, packageMetadata.Version, feed.FeedUri));
@@ -167,8 +167,14 @@ namespace Octopus.Shared.Packages
             return package;
         }
 
-        void DownloadPackage(IPackage package, string fullPathToDownloadTo, NuGet.PackageDownloader directDownloader)
+        void DownloadPackage(INuGetPackage nuGetPackage, string fullPathToDownloadTo, NuGet.PackageDownloader directDownloader)
         {
+            var external = nuGetPackage as IExternalPackage;
+            if (external == null)
+                throw new Exception("Unexpected package: " + nuGetPackage.GetType());
+
+            var package = external.GetRealPackage();
+
             log.VerboseFormat("Found package {0} version {1}", package.Id, package.Version);
             log.Verbose("Downloading to: " + fullPathToDownloadTo);
 
