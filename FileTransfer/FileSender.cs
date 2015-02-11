@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Platform.Deployment.Configuration;
 using Octopus.Platform.Deployment.Logging;
@@ -11,6 +12,7 @@ using Pipefish;
 using Pipefish.Core;
 using Pipefish.Errors;
 using Pipefish.Messages;
+using Pipefish.Streaming;
 using Pipefish.Transport;
 using Pipefish.Transport.SecureTcp.MessageExchange;
 
@@ -84,8 +86,41 @@ namespace Octopus.Shared.FileTransfer
             if (Data.ReceiverId == null)
                 Data.ReceiverId = message.GetMessage().From;
 
-            supervised.Activity.UpdateProgressFormat(1, "Begin streaming {0}", Data.ExpectedSize.ToFileSizeString());
+            StreamReceipt receipt = null;
+            for (var i = 1; receipt == null && i <= 5; i++)
+            {
+                try
+                {
+                    supervised.Activity.UpdateProgressFormat(1, "Begin streaming {0}", Data.ExpectedSize.ToFileSizeString());
+                    receipt = SendStream();
+                }
+                catch (Exception ex)
+                {
+                    if (i < 5)
+                    {
+                        supervised.Activity.Info("Failed to send stream: " + ex.Message);
+                        Thread.Sleep(2000);
+                        supervised.Activity.Info("Retry attempt #" + i);
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
 
+            supervised.Activity.Verbose("Stream transfer complete, sending stream receipt");
+            var chunk = new StreamCompleteRequest(receipt);
+
+            var reply = new Message(Id, Data.ReceiverId.Value, chunk);
+            reply.Headers[Pipefish.Core.ProtocolExtensions.InReplyToHeader] = message.GetMessage().Id.ToString();
+            reply.SetIsTracked(true);
+            reply.SetIsEphemeral(true);
+            Space.Send(reply);
+        }
+
+        StreamReceipt SendStream()
+        {
             var streamClient = distributor.GetStreamClient(Data.Destination);
             var streamReceipt = streamClient.Send(stream =>
             {
@@ -119,15 +154,7 @@ namespace Octopus.Shared.FileTransfer
                 stream.Flush();
             }, Data.ExpectedSize);
 
-            supervised.Activity.Verbose("Stream transfer complete, sending stream receipt");
-
-            var chunk = new StreamCompleteRequest(streamReceipt);
-
-            var reply = new Message(Id, Data.ReceiverId.Value, chunk);
-            reply.Headers[Pipefish.Core.ProtocolExtensions.InReplyToHeader] = message.GetMessage().Id.ToString();
-            reply.SetIsTracked(true);
-            reply.SetIsEphemeral(true);
-            Space.Send(reply);
+            return streamReceipt;
         }
 
         public async Task ReceiveAsync(SendNextChunkRequest message)
