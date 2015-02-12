@@ -6,5 +6,7 @@ namespace Octopus.Shared.Tasks
     {
         void Start();
         void Cancel();
+        bool IsPaused();
+        void Pause();
     }
 }
