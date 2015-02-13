@@ -8,13 +8,25 @@ namespace Octopus.Shared.Tasks
     {
         public static Planned<T> Create<T>(T item, string name)
         {
-            var logCorrelator = Log.Octopus().PlanFutureBlock(name);
-            return Create(item, name, logCorrelator);
+            return Create(item, name, null);
+        }
+
+        public static Planned<T> CreateUnplanned<T>(T item, string name)
+        {
+            return Create(item, name, CreateUnplanned(name));
         }
 
         public static Planned<T> Create<T>(T item, string name, LogCorrelator logCorrelator)
         {
             return new Planned<T>(item, name, logCorrelator);
+        }
+
+        static LogCorrelator CreateUnplanned(string name)
+        {
+            using (Log.Octopus().OpenBlock(name))
+            {
+                return Log.Octopus().Current;
+            }
         }
     }
 
@@ -28,7 +40,7 @@ namespace Octopus.Shared.Tasks
         {
             this.workItem = workItem;
             this.name = name;
-            this.logCorrelator = logCorrelator;
+            this.logCorrelator = logCorrelator ?? Log.Octopus().PlanFutureBlock(name);
         }
 
         public T WorkItem

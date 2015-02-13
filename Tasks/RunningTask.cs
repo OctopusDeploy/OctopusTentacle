@@ -12,6 +12,7 @@ namespace Octopus.Shared.Tasks
     public class RunningTask : ITaskContext, IRunningTask
     {
         readonly string taskId;
+        readonly string description;
         readonly Type rootTaskControllerType;
         readonly object arguments;
         readonly ILifetimeScope lifetimeScope;
@@ -21,10 +22,12 @@ namespace Octopus.Shared.Tasks
         readonly Thread workThread;
         readonly ILog log = Log.Octopus();
         readonly LogCorrelator taskLogCorrelator;
+        bool isPaused;
 
         public RunningTask(string taskId, string description, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback)
         {
             this.taskId = taskId;
+            this.description = description;
             this.rootTaskControllerType = rootTaskControllerType;
             this.arguments = arguments;
             this.lifetimeScope = lifetimeScope;
@@ -43,6 +46,8 @@ namespace Octopus.Shared.Tasks
         {
             using (log.WithinBlock(taskLogCorrelator))
             {
+                log.Info(description);
+
                 using (var workScope = lifetimeScope.BeginLifetimeScope())
                 {
                     Exception ex = null;
@@ -114,7 +119,17 @@ namespace Octopus.Shared.Tasks
 
         public string Id
         {
-            get {  return taskId; }
+            get { return taskId; }
+        }
+
+        public void Pause()
+        {
+            isPaused = true;
+        }
+
+        public bool IsPaused()
+        {
+            return isPaused;
         }
 
         public bool IsCancellationRequested
