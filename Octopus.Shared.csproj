@@ -116,6 +116,7 @@
     </Compile>
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
+    <Compile Include="Artifacts\IArtifactStore.cs" />
     <Compile Include="BuiltInFeed\IBuiltInPackageRepositoryFactory.cs" />
     <Compile Include="Communications\AutofacServiceFactory.cs" />
     <Compile Include="Configuration\ICommunicationsConfiguration.cs" />

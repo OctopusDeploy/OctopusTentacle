@@ -112,6 +112,11 @@ namespace Octopus.Shared.Tasks
             }
         }
 
+        public string Id
+        {
+            get {  return taskId; }
+        }
+
         public bool IsCancellationRequested
         {
             get { return cancel.IsCancellationRequested; }
