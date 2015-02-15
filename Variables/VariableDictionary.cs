@@ -101,20 +101,20 @@ namespace Octopus.Shared.Variables
             return null;
         }
 
-        public IEnumerable<string> GetStrings(string variableName, params char[] separators)
+        public List<string> GetStrings(string variableName, params char[] separators)
         {
             separators = separators ?? new char[0];
             if (separators.Length == 0) separators = new[] { ',' };
 
             var value = Get(variableName);
             if (string.IsNullOrWhiteSpace(value))
-                return Enumerable.Empty<string>();
+                return new List<string>();
 
             var values = value.Split(separators)
                 .Select(v => v.Trim())
                 .Where(v => v != "");
 
-            return values.ToArray();
+            return values.ToList();
         }
 
         public IEnumerable<string> GetPaths(string variableName)
