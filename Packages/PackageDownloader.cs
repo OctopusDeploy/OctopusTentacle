@@ -1,11 +1,11 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using NuGet;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security.MasterKey;
 using Octopus.Shared.Util;
+using SemanticVersion = Octopus.Client.Model.SemanticVersion;
 
 namespace Octopus.Shared.Packages
 {
@@ -13,14 +13,14 @@ namespace Octopus.Shared.Packages
     {
         const int NumberOfTimesToAttemptToDownloadPackage = 5;
         readonly IPackageStore packageStore;
-        readonly IPackageRepositoryFactory packageRepositoryFactory;
+        readonly IOctopusPackageRepositoryFactory packageRepositoryFactory;
         readonly IOctopusFileSystem fileSystem;
         readonly IMasterKeyEncryption encryption;
         readonly ILog log;
 
         public PackageDownloader(
             IPackageStore packageStore,
-            IPackageRepositoryFactory packageRepositoryFactory, 
+            IOctopusPackageRepositoryFactory packageRepositoryFactory, 
             IOctopusFileSystem fileSystem,
             IMasterKeyEncryption encryption,
             ILog log)
@@ -78,7 +78,7 @@ namespace Octopus.Shared.Packages
             fileSystem.EnsureDirectoryExists(cacheDirectory);
             fileSystem.EnsureDiskHasEnoughFreeSpace(cacheDirectory);
 
-            IPackage downloaded = null;
+            INuGetPackage downloaded = null;
             string downloadedTo = null;
 
             Exception downloadException = null;
@@ -113,24 +113,24 @@ namespace Octopus.Shared.Packages
             CheckWhetherThePackageHasDependencies(downloaded);
 
             var size = fileSystem.GetFileSize(downloadedTo);
-            var hash = HashCalculator.Hash(downloaded.GetStream());
+            var hash = downloaded.CalculateHash();
             return new StoredPackage(metadata.PackageId, metadata.Version, downloadedTo, hash, size);
         }
 
-        void CheckWhetherThePackageHasDependencies(IPackageMetadata downloaded)
+        void CheckWhetherThePackageHasDependencies(INuGetPackage downloaded)
         {
-            var dependencies = downloaded.DependencySets.SelectMany(ds => ds.Dependencies).Count();
-            if (dependencies > 0)
+            var dependencies = downloaded.GetDependencies();
+            if (dependencies.Count > 0)
             {
                 log.InfoFormat("NuGet packages with dependencies are not currently supported, and dependencies won't be installed on the Tentacle. The package '{0} {1}' appears to have the following dependencies: {2}. For more information please see {3}",
-                               downloaded.Id,
+                               downloaded.PackageId,
                                downloaded.Version,
-                               string.Join(", ", downloaded.DependencySets.SelectMany(ds => ds.Dependencies).Select(dependency => dependency.ToString())),
+                               string.Join(", ", dependencies),
                                OutboundLinks.WhyAmINotAllowedToUseDependencies);
             }
         }
 
-        void AttemptToFindAndDownloadPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, string cacheDirectory, out IPackage downloadedPackage, out string path)
+        void AttemptToFindAndDownloadPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, string cacheDirectory, out INuGetPackage downloadedPackage, out string path)
         {
             NuGet.PackageDownloader downloader;
             var package = FindPackage(attempt, packageMetadata, feed, out downloader);
@@ -140,10 +140,10 @@ namespace Octopus.Shared.Packages
             DownloadPackage(package, fullPathToDownloadTo, downloader);
 
             path = fullPathToDownloadTo;
-            downloadedPackage = new ZipPackage(fullPathToDownloadTo);
+            downloadedPackage = new ExternalNuGetPackageAdapter(new ZipPackage(fullPathToDownloadTo));
         }
 
-        IPackage FindPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, out NuGet.PackageDownloader downloader)
+        INuGetPackage FindPackage(int attempt, PackageMetadata packageMetadata, IFeed feed, out NuGet.PackageDownloader downloader)
         {
             log.VerboseFormat("Finding package (attempt {0} of {1})", attempt, NumberOfTimesToAttemptToDownloadPackage);
 
@@ -153,7 +153,7 @@ namespace Octopus.Shared.Packages
             downloader = dspr != null ? dspr.PackageDownloader : null;
 
             var requiredVersion = new SemanticVersion(packageMetadata.Version);
-            var package = remoteRepository.FindPackage(packageMetadata.PackageId, requiredVersion, true, true);
+            var package = remoteRepository.GetPackage(packageMetadata.PackageId, requiredVersion);
 
             if (package == null)
                 throw new ControlledFailureException(string.Format("Could not find package {0} {1} in feed: '{2}'", packageMetadata.PackageId, packageMetadata.Version, feed.FeedUri));
@@ -167,8 +167,14 @@ namespace Octopus.Shared.Packages
             return package;
         }
 
-        void DownloadPackage(IPackage package, string fullPathToDownloadTo, NuGet.PackageDownloader directDownloader)
+        void DownloadPackage(INuGetPackage nuGetPackage, string fullPathToDownloadTo, NuGet.PackageDownloader directDownloader)
         {
+            var external = nuGetPackage as IExternalPackage;
+            if (external == null)
+                throw new Exception("Unexpected package: " + nuGetPackage.GetType());
+
+            var package = external.GetRealPackage();
+
             log.VerboseFormat("Found package {0} version {1}", package.Id, package.Version);
             log.Verbose("Downloading to: " + fullPathToDownloadTo);
 
@@ -186,9 +192,9 @@ namespace Octopus.Shared.Packages
             local.AddPackage(package);
         }
 
-        static string GetFilePathToDownloadPackageTo(string cacheDirectory, IPackageMetadata package)
+        static string GetFilePathToDownloadPackageTo(string cacheDirectory, INuGetPackage package)
         {
-            var name = package.Id + "." + package.Version + "_" + BitConverter.ToString(Guid.NewGuid().ToByteArray()).Replace("-", string.Empty) + Constants.PackageExtension;
+            var name = package.PackageId + "." + package.Version + "_" + BitConverter.ToString(Guid.NewGuid().ToByteArray()).Replace("-", string.Empty) + Constants.PackageExtension;
             return Path.Combine(cacheDirectory, name);
         }
     }

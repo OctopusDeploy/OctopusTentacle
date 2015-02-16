@@ -19,9 +19,9 @@ namespace Octopus.Shared.Packages
                 MachineCache.Default.Clear();
                 return new OctopusPackageRepositoryFactory(c.Resolve<ILog>())
                 {
-                    BuiltInRepositoryFactory = c.ResolveOptional<IBuiltInPackageRepositoryFactory>()
+                    BuiltInRepository = c.ResolveOptional<IBuiltInPackageRepository>()
                 };
-            }).As<IPackageRepositoryFactory>();
+            }).As<IOctopusPackageRepositoryFactory>();
         }
     }
 }
