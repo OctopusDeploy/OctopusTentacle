@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Octopus.Shared.Packages
 {
-    public interface INuGetRepository
+    public interface INuGetFeed
     {
         INuGetPackage GetPackage(string packageId, Client.Model.SemanticVersion version);
         List<INuGetPackage> GetVersions(string packageId, out int total, int skip = 0, int take = 30, bool allowPreRelease = true);

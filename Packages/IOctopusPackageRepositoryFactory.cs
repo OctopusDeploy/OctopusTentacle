@@ -5,7 +5,7 @@ namespace Octopus.Shared.Packages
 {
     public interface IOctopusPackageRepositoryFactory
     {
-        INuGetRepository CreateRepository(string packageSource);
-        INuGetRepository CreateRepository(string packageSource, ICredentials credentials);
+        INuGetFeed CreateRepository(string packageSource);
+        INuGetFeed CreateRepository(string packageSource, ICredentials credentials);
     }
 }

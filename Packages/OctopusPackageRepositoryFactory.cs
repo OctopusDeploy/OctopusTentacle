@@ -15,9 +15,9 @@ namespace Octopus.Shared.Packages
             this.log = log;
         }
 
-        public IBuiltInPackageRepositoryFactory BuiltInRepositoryFactory { get; set; }
+        public IBuiltInPackageRepository BuiltInRepository { get; set; }
 
-        public INuGetRepository CreateRepository(string packageSource, ICredentials credentials)
+        public INuGetFeed CreateRepository(string packageSource, ICredentials credentials)
         {
             Uri uri;
             if (Uri.TryCreate(packageSource, UriKind.RelativeOrAbsolute, out uri))
@@ -28,18 +28,18 @@ namespace Octopus.Shared.Packages
             return CreateRepository(packageSource);
         }
 
-        public INuGetRepository CreateRepository(string packageSource)
+        public INuGetFeed CreateRepository(string packageSource)
         {
             if (packageSource == null)
                 throw new ArgumentNullException("packageSource");
 
-            if (BuiltInRepositoryFactory != null && BuiltInRepositoryFactory.IsBuiltInSource(packageSource))
-                return BuiltInRepositoryFactory.CreateRepository();
+            if (BuiltInRepository != null && BuiltInRepository.IsBuiltInSource(packageSource))
+                return BuiltInRepository.CreateRepository();
 
             var uri = new Uri(packageSource);
             return uri.IsFile 
-                ? new ExternalNuGetRepositoryAdapter(new FastLocalPackageRepository(uri.LocalPath, log)) 
-                : new ExternalNuGetRepositoryAdapter(new DataServicePackageRepository(CreateHttpClient(uri)));
+                ? new ExternalNuGetFeedAdapter(new FastLocalPackageRepository(uri.LocalPath)) 
+                : new ExternalNuGetFeedAdapter(new DataServicePackageRepository(CreateHttpClient(uri)));
         }
 
         static IHttpClient CreateHttpClient(Uri uri)

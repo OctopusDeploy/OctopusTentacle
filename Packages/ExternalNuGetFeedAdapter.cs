@@ -6,11 +6,11 @@ using NuGet;
 
 namespace Octopus.Shared.Packages
 {
-    public class ExternalNuGetRepositoryAdapter : INuGetRepository
+    public class ExternalNuGetFeedAdapter : INuGetFeed
     {
         readonly IPackageRepository repository;
 
-        public ExternalNuGetRepositoryAdapter(IPackageRepository repository)
+        public ExternalNuGetFeedAdapter(IPackageRepository repository)
         {
             this.repository = repository;
         }

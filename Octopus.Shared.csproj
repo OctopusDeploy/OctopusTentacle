@@ -116,7 +116,9 @@
     </Compile>
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
-    <Compile Include="BuiltInFeed\IBuiltInPackageRepositoryFactory.cs" />
+    <Compile Include="BuiltInFeed\IBuiltInPackageRepository.cs" />
+    <Compile Include="BuiltInFeed\RepositoryStatistics.cs" />
+    <Compile Include="BuiltInFeed\SynchronizationState.cs" />
     <Compile Include="Communications\AutofacServiceFactory.cs" />
     <Compile Include="Configuration\ICommunicationsConfiguration.cs" />
     <Compile Include="Configuration\IDeploymentProcessConfiguration.cs" />
@@ -173,11 +175,12 @@
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="NoState.cs" />
     <Compile Include="Packages\ExternalNuGetPackageAdapter.cs" />
-    <Compile Include="Packages\ExternalNuGetRepositoryAdapter.cs" />
+    <Compile Include="Packages\ExternalNuGetFeedAdapter.cs" />
+    <Compile Include="Packages\FastLocalPackageRepository.cs" />
     <Compile Include="Packages\IExternalPackage.cs" />
     <Compile Include="Packages\IFeed.cs" />
+    <Compile Include="Packages\INuGetFeed.cs" />
     <Compile Include="Packages\INuGetPackage.cs" />
-    <Compile Include="Packages\INuGetRepository.cs" />
     <Compile Include="Packages\IOctopusPackageRepositoryFactory.cs" />
     <Compile Include="Packages\NuGetFeedProperties.cs" />
     <Compile Include="Packages\NuGetPackageComparer.cs" />
@@ -274,7 +277,6 @@
     <Compile Include="Internals\Options\OptionValueType.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
     <Compile Include="PackageConversion\Streams\StreamExtensions.cs" />
-    <Compile Include="Packages\FastLocalPackageRepository.cs" />
     <Compile Include="Packages\FeedCredentialsProvider.cs" />
     <Compile Include="Packages\FixedFilePathResolver.cs" />
     <Compile Include="Packages\IPackageDownloader.cs" />
