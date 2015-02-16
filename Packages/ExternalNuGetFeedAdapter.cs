@@ -15,6 +15,11 @@ namespace Octopus.Shared.Packages
             this.repository = repository;
         }
 
+        public IPackageRepository Repository
+        {
+            get { return repository; }
+        }
+
         public INuGetPackage GetPackage(string packageId, Client.Model.SemanticVersion version)
         {
             var result = GetSinglePackage(packageId, version);
