@@ -21,7 +21,7 @@ namespace Octopus.Shared.Packages
                 {
                     BuiltInRepositoryFactory = c.ResolveOptional<IBuiltInPackageRepositoryFactory>()
                 };
-            }).As<IPackageRepositoryFactory>();
+            }).As<IOctopusPackageRepositoryFactory>();
         }
     }
 }
