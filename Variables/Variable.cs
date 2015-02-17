@@ -20,6 +20,11 @@ namespace Octopus.Shared.Variables
         public string Value { get; set; }
         public bool IsSensitive { get; set; }
 
+        public bool IsPrintable
+        {
+            get { return !Name.Contains("CustomScripts."); }
+        }
+
         public bool HasReferences()
         {
             Template result;

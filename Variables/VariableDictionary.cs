@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Octopus.Shared.Variables.Templates;
 
 namespace Octopus.Shared.Variables
@@ -15,7 +16,8 @@ namespace Octopus.Shared.Variables
         /// <summary>
         /// Initializes a new instance of the <see cref="VariableDictionary"/> class.
         /// </summary>
-        public VariableDictionary() : this((IEnumerable<Variable>)null)
+        public VariableDictionary()
+            : this((IEnumerable<Variable>)null)
         {
         }
 
@@ -93,8 +95,8 @@ namespace Octopus.Shared.Variables
         {
             var variable = FindRaw(variableName);
 
-            return EvaluateVariable(variable);
-        }
+            return EvaluateVariable(new Variable(variable.Name, variable.Value, variable.IsSensitive));
+       }
 
         /// <summary>
         /// Performs a case-insensitive lookup of a variable by name, returning null if the variable is not defined.
@@ -116,7 +118,7 @@ namespace Octopus.Shared.Variables
             if (!variables.TryGetValue(variableName, out variable) || variable == null)
                 return null;
 
-            return EvaluateVariable(variable).Value;
+            return EvaluateVariable(new Variable(variable.Name, variable.Value, variable.IsSensitive)).Value;
         }
 
         Variable EvaluateVariable(Variable variable)
@@ -129,7 +131,7 @@ namespace Octopus.Shared.Variables
             node.ParseDependencies(variables, ignoreMissingTokens);
 
             node.CheckForCycles();
-            
+
             return node.Evaluate();
         }
 
@@ -162,7 +164,7 @@ namespace Octopus.Shared.Variables
             {
                 value = defaultValueIfUnset;
             }
-            
+
             return value;
         }
 
@@ -214,7 +216,42 @@ namespace Octopus.Shared.Variables
         {
             return variables.TryGetValue(name, out item);
         }
+
+        public string PrintRawVariables(string message)
+        {
+            var rawVariables = variables.Select(v => FindRaw(v.Key));
+            return PrintVariables(message, rawVariables);
+        }
+
+        public string PrintEvaluatedVariables(string message)
+        {
+            var evaluatedVariables = variables.Select(v => Find(v.Key));
+            return PrintVariables(message, evaluatedVariables);
+        }
+
+        static string PrintVariables(string message, IEnumerable<Variable> printVariables)
+        {
+            var block = new StringBuilder();
+            block.Append(message);
+            block.AppendLine();
+
+            foreach (var variable in printVariables.OrderBy(v => v.Name))
+            {
+                if (!variable.IsPrintable)
+                    continue;
+
+                if (variable.IsSensitive)
+                    block.AppendFormat(" - [{0}] = ********", variable.Name);
+                else
+                    block.AppendFormat(" - [{0}] = '{1}'", variable.Name, variable.Value);
+
+                block.AppendLine();
+            }
+
+            return block.ToString();
+        }
     }
+
     class VariableNode
     {
         readonly Variable variable;
@@ -257,7 +294,7 @@ namespace Octopus.Shared.Variables
                     var toEnd = name.EndsWith("*");
                     foreach (var dependency in variables.Where(v => IsCollectionDependency(parts, v.Key, toEnd)))
                     {
-                        AddDependency(new VariableNode(dependency.Value));
+                        AddDependency(new VariableNode(new Variable(dependency.Value.Name, dependency.Value.Value, dependency.Value.IsSensitive)));
                     }
                 }
                 else
@@ -272,7 +309,9 @@ namespace Octopus.Shared.Variables
                     }
                     else
                     {
-                        AddDependency(new VariableNode(dependency));
+                        var variableNode = new VariableNode(new Variable(dependency.Name, dependency.Value, dependency.IsSensitive));
+                        variableNode.ParseDependencies(variables, ignoreMissingTokens);
+                        AddDependency(variableNode);
                     }
                 }
             }
