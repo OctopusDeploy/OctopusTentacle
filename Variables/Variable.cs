@@ -1,4 +1,5 @@
 using System;
+using Octopus.Shared.Variables.Templates;
 
 namespace Octopus.Shared.Variables
 {
@@ -18,6 +19,15 @@ namespace Octopus.Shared.Variables
         public string Name { get; set; }
         public string Value { get; set; }
         public bool IsSensitive { get; set; }
+
+        public bool HasReferences()
+        {
+            Template result;
+            string parserError;
+            return TemplateParser.TryParseTemplate(Value, out result, out parserError) &&
+                (result.Tokens.Length > 1 ||
+                 result.Tokens.Length == 1 && !(result.Tokens[0] is TextToken));
+        }
 
         public override string ToString()
         {
