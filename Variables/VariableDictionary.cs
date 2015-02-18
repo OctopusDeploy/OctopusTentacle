@@ -95,7 +95,7 @@ namespace Octopus.Shared.Variables
         {
             var variable = FindRaw(variableName);
 
-            return EvaluateVariable(new Variable(variable.Name, variable.Value, variable.IsSensitive));
+            return EvaluateVariable(variable);
        }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace Octopus.Shared.Variables
             if (!variables.TryGetValue(variableName, out variable) || variable == null)
                 return null;
 
-            return EvaluateVariable(new Variable(variable.Name, variable.Value, variable.IsSensitive)).Value;
+            return EvaluateVariable(variable).Value;
         }
 
         Variable EvaluateVariable(Variable variable)
@@ -260,7 +260,7 @@ namespace Octopus.Shared.Variables
 
         public VariableNode(Variable variable)
         {
-            this.variable = variable;
+            this.variable = variable.Clone();
             string parserError;
             TemplateParser.TryParseTemplate(Value, out template, out parserError);
         }
@@ -294,7 +294,7 @@ namespace Octopus.Shared.Variables
                     var toEnd = name.EndsWith("*");
                     foreach (var dependency in variables.Where(v => IsCollectionDependency(parts, v.Key, toEnd)))
                     {
-                        AddDependency(new VariableNode(new Variable(dependency.Value.Name, dependency.Value.Value, dependency.Value.IsSensitive)));
+                        AddDependency(new VariableNode(dependency.Value));
                     }
                 }
                 else
@@ -309,7 +309,7 @@ namespace Octopus.Shared.Variables
                     }
                     else
                     {
-                        var variableNode = new VariableNode(new Variable(dependency.Name, dependency.Value, dependency.IsSensitive));
+                        var variableNode = new VariableNode(dependency);
                         variableNode.ParseDependencies(variables, ignoreMissingTokens);
                         AddDependency(variableNode);
                     }

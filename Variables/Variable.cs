@@ -38,5 +38,10 @@ namespace Octopus.Shared.Variables
         {
             return string.Format("{0} = {1}", Name, IsSensitive ? "********" : Value);
         }
+
+        public Variable Clone()
+        {
+            return new Variable(Name, Value, IsSensitive);
+        }
     }
 }
