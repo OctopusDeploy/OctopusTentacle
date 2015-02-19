@@ -57,10 +57,7 @@ namespace Octopus.Shared.Packages
 
         public long GetSize()
         {
-            using (var stream = wrapped.GetStream())
-            {
-                return stream.Length;
-            }
+            return wrapped.GetStream().Length;
         }
 
         public List<string> GetDependencies()
@@ -70,10 +67,7 @@ namespace Octopus.Shared.Packages
 
         public string CalculateHash()
         {
-            using (var stream = wrapped.GetStream())
-            {
-                return HashCalculator.Hash(stream);
-            }
+            return HashCalculator.Hash(wrapped.GetStream());            
         }
 
         public IPackage GetRealPackage()
