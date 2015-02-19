@@ -125,14 +125,33 @@ namespace Octopus.Shared.Variables
         {
             if (variable == null) return null;
 
-            var node = new VariableNode(variable);
+            var nodes = variables.Select(v => new VariableNode(v.Value)).ToList();
             var ignoreMissingTokens = GetFlag(Constants.IgnoreMissingVariableTokens, true);
 
-            node.ParseDependencies(variables, ignoreMissingTokens);
+            nodes.ForEach(n => n.ParseDependencies(nodes, ignoreMissingTokens));
 
-            node.CheckForCycles();
+            nodes.ForEach(n => n.CheckForCycles());
+
+            var node = nodes.FirstOrDefault(n => n.Name == variable.Name);
+            if (node == null) return null;
 
             return node.Evaluate();
+        }
+
+        static void CheckForCycles(IEnumerable<VariableNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                node.CheckForCycles();
+            }
+        }
+
+        static void ParseDependencies(List<VariableNode> nodes, bool ignoreMissingTokens)
+        {
+            foreach (var node in nodes)
+            {
+                node.ParseDependencies(nodes, ignoreMissingTokens);
+            }
         }
 
         public IEnumerable<string> GetStrings(string variableName, params char[] separators)
@@ -279,7 +298,7 @@ namespace Octopus.Shared.Variables
             }
         }
 
-        public void ParseDependencies(IDictionary<string, Variable> variables, bool ignoreMissingTokens)
+        public void ParseDependencies(List<VariableNode> nodes, bool ignoreMissingTokens)
         {
             ClearDependencies();
 
@@ -292,14 +311,14 @@ namespace Octopus.Shared.Variables
                 {
                     var parts = name.Split(new[] { '*' }, StringSplitOptions.RemoveEmptyEntries);
                     var toEnd = name.EndsWith("*");
-                    foreach (var dependency in variables.Where(v => IsCollectionDependency(parts, v.Key, toEnd)))
+                    foreach (var dependency in nodes.Where(v => IsCollectionDependency(parts, v.Name, toEnd)))
                     {
-                        AddDependency(new VariableNode(dependency.Value));
+                        AddDependency(dependency);
                     }
                 }
                 else
                 {
-                    var dependency = variables.FirstOrDefault(x => string.Equals(x.Key, name, StringComparison.InvariantCultureIgnoreCase)).Value;
+                    var dependency = nodes.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.InvariantCultureIgnoreCase));
                     if (dependency == null)
                     {
                         if (!ignoreMissingTokens)
@@ -309,9 +328,7 @@ namespace Octopus.Shared.Variables
                     }
                     else
                     {
-                        var variableNode = new VariableNode(dependency);
-                        variableNode.ParseDependencies(variables, ignoreMissingTokens);
-                        AddDependency(variableNode);
+                        AddDependency(dependency);
                     }
                 }
             }
