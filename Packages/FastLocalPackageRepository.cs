@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using NuGet;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Packages
 {
@@ -15,12 +14,9 @@ namespace Octopus.Shared.Packages
     /// </summary>
     public class FastLocalPackageRepository : LocalPackageRepository
     {
-        readonly ILog log;
-
-        public FastLocalPackageRepository(string physicalPath, ILog log)
+        public FastLocalPackageRepository(string physicalPath)
             : base(physicalPath)
         {
-            this.log = log;
         }
 
         protected override IPackage OpenPackage(string path)
@@ -33,7 +29,6 @@ namespace Octopus.Shared.Packages
             }
             catch (Exception ex)
             {
-                log.Warn(ex, "Unable to read NuGet package file: " + fullPath + " -- it will be ignored. Error: " + ex.Message);
                 return new NullPackage();
             }
         }
