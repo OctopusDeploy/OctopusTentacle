@@ -117,7 +117,6 @@
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
     <Compile Include="Artifacts\IArtifactStore.cs" />
-    <Compile Include="BuiltInFeed\IBuiltInPackageRepositoryFactory.cs" />
     <Compile Include="BuiltInFeed\IBuiltInPackageRepository.cs" />
     <Compile Include="BuiltInFeed\RepositoryStatistics.cs" />
     <Compile Include="BuiltInFeed\SynchronizationState.cs" />
