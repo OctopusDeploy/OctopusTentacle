@@ -121,6 +121,11 @@ namespace Octopus.Shared.Tasks
             }
         }
 
+        public string Id
+        {
+            get { return taskId; }
+        }
+
         public void Pause()
         {
             isPaused = true;
