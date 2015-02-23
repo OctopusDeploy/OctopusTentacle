@@ -11,8 +11,7 @@ namespace Octopus.Shared.Tasks
 {
     public class RunningTask : ITaskContext, IRunningTask
     {
-        public const string TaskCancellationTimeoutName = "TaskCancellationTimeout";
-        static readonly TimeSpan DefaultCancellationTime = TimeSpan.FromSeconds(30);
+        public static readonly TimeSpan DefaultCancellationTime = TimeSpan.FromSeconds(30);
 
         readonly string taskId;
         readonly string description;
@@ -28,7 +27,7 @@ namespace Octopus.Shared.Tasks
         readonly TimeSpan taskCancellationTimeout;
         bool isPaused;
 
-        public RunningTask(string taskId, string description, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback)
+        public RunningTask(string taskId, string description, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback, TimeSpan taskCancellationTimeout)
         {
             this.taskId = taskId;
             this.description = description;
@@ -36,15 +35,7 @@ namespace Octopus.Shared.Tasks
             this.arguments = arguments;
             this.lifetimeScope = lifetimeScope;
             this.completeCallback = completeCallback;
-
-            try
-            {
-                taskCancellationTimeout = lifetimeScope.ResolveNamed<TimeSpan>(TaskCancellationTimeoutName);
-            }
-            catch (Exception)
-            {
-                taskCancellationTimeout = DefaultCancellationTime;
-            }
+            this.taskCancellationTimeout = taskCancellationTimeout;
             
             taskLogCorrelator = LogCorrelator.CreateNew(taskId);
             workThread = new Thread(RunMainThread) {Name = taskId + ": " + description};
