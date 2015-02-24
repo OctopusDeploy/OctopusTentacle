@@ -44,7 +44,7 @@
     </Reference>
     <Reference Include="Halibut, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Halibut.1.0.1.13\lib\Halibut.dll</HintPath>
+      <HintPath>..\packages\Halibut.1.0.1.14\lib\Halibut.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
@@ -116,7 +116,10 @@
     </Compile>
     <Compile Include="Activities\ActivitySerializer.cs" />
     <Compile Include="Activities\ActivityStatus.cs" />
-    <Compile Include="BuiltInFeed\IBuiltInPackageRepositoryFactory.cs" />
+    <Compile Include="Artifacts\IArtifactStore.cs" />
+    <Compile Include="BuiltInFeed\IBuiltInPackageRepository.cs" />
+    <Compile Include="BuiltInFeed\RepositoryStatistics.cs" />
+    <Compile Include="BuiltInFeed\SynchronizationState.cs" />
     <Compile Include="Communications\AutofacServiceFactory.cs" />
     <Compile Include="Configuration\ICommunicationsConfiguration.cs" />
     <Compile Include="Configuration\IDeploymentProcessConfiguration.cs" />
@@ -172,8 +175,16 @@
     <Compile Include="Logging\ProgressMessageCategory.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="NoState.cs" />
+    <Compile Include="Packages\ExternalNuGetPackageAdapter.cs" />
+    <Compile Include="Packages\ExternalNuGetFeedAdapter.cs" />
+    <Compile Include="Packages\FastLocalPackageRepository.cs" />
+    <Compile Include="Packages\IExternalPackage.cs" />
     <Compile Include="Packages\IFeed.cs" />
+    <Compile Include="Packages\INuGetFeed.cs" />
+    <Compile Include="Packages\INuGetPackage.cs" />
+    <Compile Include="Packages\IOctopusPackageRepositoryFactory.cs" />
     <Compile Include="Packages\NuGetFeedProperties.cs" />
+    <Compile Include="Packages\NuGetPackageComparer.cs" />
     <Compile Include="Packages\PackageMetadata.cs" />
     <Compile Include="Packages\StoredPackage.cs" />
     <Compile Include="Security\Certificates\CertificateEncoder.cs" />
@@ -267,13 +278,11 @@
     <Compile Include="Internals\Options\OptionValueType.cs" />
     <Compile Include="Diagnostics\LoggingModule.cs" />
     <Compile Include="PackageConversion\Streams\StreamExtensions.cs" />
-    <Compile Include="Packages\FastLocalPackageRepository.cs" />
     <Compile Include="Packages\FeedCredentialsProvider.cs" />
     <Compile Include="Packages\FixedFilePathResolver.cs" />
     <Compile Include="Packages\IPackageDownloader.cs" />
     <Compile Include="Packages\IPackageExtractor.cs" />
     <Compile Include="Packages\LightweightPackageExtractor.cs" />
-    <Compile Include="Packages\NuGetExtensions.cs" />
     <Compile Include="Packages\NuGetModule.cs" />
     <Compile Include="Packages\OctopusPackageRepositoryFactory.cs" />
     <Compile Include="Packages\PackageCachePolicy.cs" />
@@ -396,9 +405,7 @@
     <Compile Include="Variables\VariableCategory.cs" />
     <Compile Include="Variables\VariableDefinition.cs" />
     <Compile Include="Variables\VariableDictionary.cs" />
-    <Compile Include="Variables\VariableDictionaryExtensions.cs" />
     <Compile Include="Variables\VariableDomain.cs" />
-    <Compile Include="Variables\VariableEvaluator.cs" />
     <Compile Include="Variables\VariableFunctionsModule.cs" />
     <Compile Include="Versioning\AppVersion.cs" />
     <Compile Include="Versioning\VersioningModule.cs" />
