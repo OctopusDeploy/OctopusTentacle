@@ -38,7 +38,8 @@ namespace Octopus.Shared.Configuration
             fileSystem.EnsureDirectoryExists(logDirectory);
             OctopusLogsDirectoryRenderer.LogsDirectory = logDirectory;
 
-            log.VerboseFormat("Octopus version: {0}", Assembly.GetExecutingAssembly().GetInformationalVersion());
+            var assembly = Assembly.GetExecutingAssembly();
+            log.InfoFormat("{0} version: {1}", assembly.GetName().Name, assembly.GetInformationalVersion());
         }
     }
 }

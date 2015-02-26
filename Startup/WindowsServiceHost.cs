@@ -16,14 +16,14 @@ namespace Octopus.Shared.Startup
             {
                 log.Trace("Starting the Windows Service");
                 start(this);
-                log.Trace("The Windows Service has started");
+                log.Info("The Windows Service has started");
             });
 
             var stopService = new Action(delegate
             {
-                log.Trace("Stopping the Windows Service");
+                log.Info("Stopping the Windows Service");
                 shutdown();
-                log.Trace("The Windows Service has stopped");
+                log.Info("The Windows Service has stopped");
             });
 
             var adapter = new WindowsServiceAdapter(startService, stopService);
