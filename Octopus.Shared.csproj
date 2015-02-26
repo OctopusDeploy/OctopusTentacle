@@ -345,6 +345,7 @@
     <Compile Include="Time\IClock.cs" />
     <Compile Include="Util\AmazingConverter.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
+    <Compile Include="Util\CallbackDisposable.cs" />
     <Compile Include="Util\CleanId.cs" />
     <Compile Include="Util\CliBuilder.cs" />
     <Compile Include="Util\CmdResult.cs" />
