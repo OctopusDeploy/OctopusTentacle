@@ -34,6 +34,7 @@ namespace Octopus.Shared.Tasks
                 var thread = new Thread(closure.Execute);
                 thread.Name = currentThreadName + " -> " + item.Name;
                 threads.Add(Tuple.Create(thread, closure));
+                thread.IsBackground = true;
                 thread.Start();
             }
 
