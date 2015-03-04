@@ -9,6 +9,7 @@ using SemanticVersion = Octopus.Client.Model.SemanticVersion;
 
 namespace Octopus.Shared.Packages
 {
+    //TODO: Extract download specific code to Octopus.Deploy.PackageDownloader.exe
     public class PackageDownloader : IPackageDownloader
     {
         const int NumberOfTimesToAttemptToDownloadPackage = 5;
