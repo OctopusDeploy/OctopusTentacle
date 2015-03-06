@@ -1,44 +1,41 @@
 ﻿using System;
 using System.IO;
 using Octopus.Client.Model;
-using Octopus.Shared.Configuration;
 
 namespace Octopus.Shared.Security.MasterKey
 {
     public class StoredMasterKeyEncryption : IMasterKeyEncryption
     {
-        readonly IMasterKeyConfiguration configuration;
+        readonly byte[] masterKey;
 
-        public StoredMasterKeyEncryption(IMasterKeyConfiguration configuration)
+        public StoredMasterKeyEncryption(byte[] masterKey)
         {
-            this.configuration = configuration;
+            this.masterKey = masterKey;
         }
-
-        byte[] MasterKey { get { return configuration.MasterKey; } }
 
         public EncryptedBytes ToCiphertext(byte[] plaintext)
         {
-            return MasterKeyEncryption.ToCiphertext(MasterKey, plaintext);
+            return MasterKeyEncryption.ToCiphertext(masterKey, plaintext);
         }
 
         public byte[] ToPlaintext(EncryptedBytes encrypted)
         {
-            return MasterKeyEncryption.ToPlaintext(MasterKey, encrypted);
+            return MasterKeyEncryption.ToPlaintext(masterKey, encrypted);
         }
 
         public Stream ReadAsCiphertext(Stream plaintext)
         {
-            return MasterKeyEncryption.ReadAsCiphertext(MasterKey, plaintext);
+            return MasterKeyEncryption.ReadAsCiphertext(masterKey, plaintext);
         }
 
         public Stream ReadAsPlaintext(Stream ciphertext)
         {
-            return MasterKeyEncryption.ReadAsPlaintext(MasterKey, ciphertext);
+            return MasterKeyEncryption.ReadAsPlaintext(masterKey, ciphertext);
         }
 
         public Stream WriteCiphertextTo(Stream stream)
         {
-            return MasterKeyEncryption.WriteCiphertextTo(MasterKey, stream);
+            return MasterKeyEncryption.WriteCiphertextTo(masterKey, stream);
         }
     }
 }
