@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Octopus.Shared.Security.Masking;
 using Octopus.Shared.Util;
 using Octopus.Shared.Variables;
@@ -17,7 +16,7 @@ namespace Octopus.Shared.Endpoints
             this.raw = raw;
         }
 
-        protected T GetEndpointProperty<T>([CallerMemberName] string name = null)
+        protected T GetEndpointProperty<T>(string name)
         {
             if (name == null) throw new ArgumentNullException("name");
             
@@ -28,7 +27,7 @@ namespace Octopus.Shared.Endpoints
             return (T)AmazingConverter.Convert(rawValue.Value, typeof(T));
         }
 
-        protected void SetEndpointProperty<T>(T value, bool isSensitive = false, [CallerMemberName] string name = null)
+        protected void SetEndpointProperty<T>(string name, T value, bool isSensitive = false)
         {
             if (name == null) throw new ArgumentNullException("name");
             var svalue = (string)AmazingConverter.Convert(value, typeof(string));

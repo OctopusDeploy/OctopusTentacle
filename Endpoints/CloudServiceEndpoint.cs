@@ -17,16 +17,16 @@ namespace Octopus.Shared.Endpoints
         {
         }
 
-        public string SubscriptionId { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
-        public string CloudServiceName { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
-        public string StorageAccountName { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
-        public string Slot { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
-        public bool SwapIfPossible { get { return GetEndpointProperty<bool>(); } set { SetEndpointProperty(value); } }
-        public bool UseCurrentInstanceCount { get { return GetEndpointProperty<bool>(); } set { SetEndpointProperty(value); } }
-        public string CertificateBytes { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value, isSensitive: true); } }
-        public string CertificateThumbprint { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
-        public string ManagementEndpoint { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
-        public string AccountId { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
+        public string SubscriptionId { get { return GetEndpointProperty<string>("SubscriptionId"); } set { SetEndpointProperty("SubscriptionId", value); } }
+        public string CloudServiceName { get { return GetEndpointProperty<string>("CloudServiceName"); } set { SetEndpointProperty("CloudServiceName", value); } }
+        public string StorageAccountName { get { return GetEndpointProperty<string>("StorageAccountName"); } set { SetEndpointProperty("StorageAccountName", value); } }
+        public string Slot { get { return GetEndpointProperty<string>("Slot"); } set { SetEndpointProperty("Slot", value); } }
+        public bool SwapIfPossible { get { return GetEndpointProperty<bool>("SwapIfPossible"); } set { SetEndpointProperty("SwapIfPossible", value); } }
+        public bool UseCurrentInstanceCount { get { return GetEndpointProperty<bool>("UseCurrentInstanceCount"); } set { SetEndpointProperty("UseCurrentInstanceCount", value); } }
+        public string CertificateBytes { get { return GetEndpointProperty<string>("CertificateBytes"); } set { SetEndpointProperty("CertificateBytes", value, isSensitive: true); } }
+        public string CertificateThumbprint { get { return GetEndpointProperty<string>("CertificateThumbprint"); } set { SetEndpointProperty("CertificateThumbprint", value); } }
+        public string ManagementEndpoint { get { return GetEndpointProperty<string>("ManagementEndpoint"); } set { SetEndpointProperty("ManagementEndpoint", value); } }
+        public string AccountId { get { return GetEndpointProperty<string>("AccountId"); } set { SetEndpointProperty("AccountId", value); } }
 
         public override string ToString()
         {

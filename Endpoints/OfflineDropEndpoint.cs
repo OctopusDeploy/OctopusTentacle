@@ -14,7 +14,7 @@ namespace Octopus.Shared.Endpoints
         {
         }
 
-        public string DropFolderPath { get { return GetEndpointProperty<string>(); } set {SetEndpointProperty(value);} }
+        public string DropFolderPath { get { return GetEndpointProperty<string>("DropFolderPath"); } set { SetEndpointProperty("DropFolderPath", value); } }
 
         public override string ToString()
         {

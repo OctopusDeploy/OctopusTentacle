@@ -12,7 +12,7 @@ namespace Octopus.Shared.Endpoints
         {
         }
 
-        public string Thumbprint { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
+        public string Thumbprint { get { return GetEndpointProperty<string>("Thumbprint"); } set { SetEndpointProperty("Thumbprint", value); } }
 
         public abstract ServiceEndPoint GetServiceEndPoint();
     }

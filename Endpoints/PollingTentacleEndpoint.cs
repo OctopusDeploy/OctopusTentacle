@@ -15,7 +15,7 @@ namespace Octopus.Shared.Endpoints
         {
         }
 
-        public Uri Uri { get { return GetEndpointProperty<Uri>(); } set { SetEndpointProperty(value); } }
+        public Uri Uri { get { return GetEndpointProperty<Uri>("Uri"); } set { SetEndpointProperty("Uri", value); } }
 
         public override string ToString()
         {

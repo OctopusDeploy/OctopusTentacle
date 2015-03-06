@@ -16,16 +16,16 @@ namespace Octopus.Shared.Endpoints
         {
         }
 
-        public string AccountId { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
-        public string Host { get { return GetEndpointProperty<string>(); } set { SetEndpointProperty(value); } }
-        public string Username  { get { return GetEndpointProperty<string>(); } set {SetEndpointProperty(value);} }
-        public string Password  { get { return GetEndpointProperty<string>(); } set {SetEndpointProperty(value, isSensitive: true);} }
-        public bool UseFtps  { get { return GetEndpointProperty<bool>(); } set {SetEndpointProperty(value);} }
-        public int? Port  { get { return GetEndpointProperty<int?>(); } set {SetEndpointProperty(value);} }
-        public string RootDirectory  { get { return GetEndpointProperty<string>(); } set {SetEndpointProperty(value);} }
-        public bool DeleteDestinationFiles  { get { return GetEndpointProperty<bool>(); } set {SetEndpointProperty(value);} }
-        public bool UseActiveMode  { get { return GetEndpointProperty<bool>(); } set {SetEndpointProperty(value);} }
-        public int? SocketTimeoutMinutes  { get { return GetEndpointProperty<int?>(); } set {SetEndpointProperty(value);} }
+        public string AccountId { get { return GetEndpointProperty<string>("AccountId"); } set { SetEndpointProperty("AccountId", value); } }
+        public string Host { get { return GetEndpointProperty<string>("Host"); } set { SetEndpointProperty("Host", value); } }
+        public string Username { get { return GetEndpointProperty<string>("Username"); } set { SetEndpointProperty("Username", value); } }
+        public string Password { get { return GetEndpointProperty<string>("Password"); } set { SetEndpointProperty("Password", value, isSensitive: true); } }
+        public bool UseFtps { get { return GetEndpointProperty<bool>("UseFtps"); } set { SetEndpointProperty("UseFtps", value); } }
+        public int? Port { get { return GetEndpointProperty<int?>("Port"); } set { SetEndpointProperty("Port", value); } }
+        public string RootDirectory { get { return GetEndpointProperty<string>("RootDirectory"); } set { SetEndpointProperty("RootDirectory", value); } }
+        public bool DeleteDestinationFiles { get { return GetEndpointProperty<bool>("DeleteDestinationFiles"); } set { SetEndpointProperty("DeleteDestinationFiles", value); } }
+        public bool UseActiveMode { get { return GetEndpointProperty<bool>("UseActiveMode"); } set { SetEndpointProperty("UseActiveMode", value); } }
+        public int? SocketTimeoutMinutes { get { return GetEndpointProperty<int?>("SocketTimeoutMinutes"); } set { SetEndpointProperty("SocketTimeoutMinutes", value); } }
 
         public override string ToString()
         {
