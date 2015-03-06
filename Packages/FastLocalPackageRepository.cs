@@ -27,7 +27,7 @@ namespace Octopus.Shared.Packages
             {
                 return new ZipPackage(fullPath);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new NullPackage();
             }
