@@ -1,19 +1,40 @@
 ﻿using System;
-using System.Collections.Generic;
 using Halibut;
-using Octopus.Shared.Variables;
+using Octopus.Client.Model;
 
 namespace Octopus.Shared.Endpoints
 {
     public abstract class TentacleEndpoint : Endpoint
     {
-        protected TentacleEndpoint(IDictionary<string, Variable> raw)
-            : base(raw)
+        readonly CommunicationStyle communicationStyle;
+
+        protected TentacleEndpoint(CommunicationStyle communicationStyle)
         {
+            this.communicationStyle = communicationStyle;
         }
 
-        public string Thumbprint { get { return GetEndpointProperty<string>("Thumbprint"); } set { SetEndpointProperty("Thumbprint", value); } }
+        protected TentacleEndpoint(CommunicationStyle communicationStyle, Uri uri, string thumbprint) : this (communicationStyle)
+        {
+            Uri = uri;
+            Thumbprint = thumbprint;
+        }
 
-        public abstract ServiceEndPoint GetServiceEndPoint();
+        public override CommunicationStyle CommunicationStyle
+        {
+            get { return communicationStyle; }
+        }
+
+        public string Thumbprint { get; set; }
+        public Uri Uri { get; set; }
+
+        public ServiceEndPoint GetServiceEndPoint()
+        {
+            return new ServiceEndPoint(Uri, Thumbprint);
+        }
+
+        public override string ToString()
+        {
+            return Uri.ToString();
+        }
     }
 }

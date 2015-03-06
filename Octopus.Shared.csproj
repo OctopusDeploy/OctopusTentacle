@@ -141,10 +141,8 @@
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
     <Compile Include="Diagnostics\LogCategory.cs" />
-    <Compile Include="Endpoints\AgentlessEndpoint.cs" />
     <Compile Include="Endpoints\CloudServiceEndpoint.cs" />
     <Compile Include="Endpoints\Endpoint.cs" />
-    <Compile Include="Endpoints\FtpEndpoint.cs" />
     <Compile Include="Endpoints\IEndpointWithAccount.cs" />
     <Compile Include="Endpoints\IEndpointWithHostname.cs" />
     <Compile Include="Endpoints\ListeningTentacleEndpoint.cs" />
@@ -170,6 +168,7 @@
     <Compile Include="Packages\PackageMetadata.cs" />
     <Compile Include="Packages\StoredPackage.cs" />
     <Compile Include="Security\Certificates\CertificateEncoder.cs" />
+    <Compile Include="Security\EncryptedAttribute.cs" />
     <Compile Include="Security\Masking\MaskedException.cs" />
     <Compile Include="Security\Masking\MaskingContext.cs" />
     <Compile Include="Security\Masking\SensitiveDataMask.cs" />

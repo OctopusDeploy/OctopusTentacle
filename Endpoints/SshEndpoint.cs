@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using Octopus.Shared.Variables;
+using Octopus.Client.Model;
+using Octopus.Shared.Security;
 
 namespace Octopus.Shared.Endpoints
 {
@@ -9,24 +9,25 @@ namespace Octopus.Shared.Endpoints
     /// </summary>
     /// <remarks>If a private key file is provided it will be used; otherwise we
     /// fall back to username/password.</remarks>
-    public class SshEndpoint : AgentlessEndpoint, IEndpointWithAccount, IEndpointWithHostname
+    public class SshEndpoint : Endpoint, IEndpointWithAccount, IEndpointWithHostname
     {
-        [Obsolete("Serialization constructor")]
-        public SshEndpoint() : this(new Dictionary<string, Variable>()) { }
-
-        public SshEndpoint(IDictionary<string, Variable> raw)
-            : base(raw)
+        public override CommunicationStyle CommunicationStyle
         {
+            get { return CommunicationStyle.Ssh; }
         }
 
-        public string Host { get { return GetEndpointProperty<string>("Host"); } set { SetEndpointProperty("Host", value); } }
-        public int Port { get { return GetEndpointProperty<int>("Port"); } set { SetEndpointProperty("Port", value); } }
-        public string Username { get { return GetEndpointProperty<string>("Username"); } set { SetEndpointProperty("Username", value); } }
-        public string Fingerprint { get { return GetEndpointProperty<string>("Fingerprint"); } set { SetEndpointProperty("Fingerprint", value); } }
-        public string Password { get { return GetEndpointProperty<string>("Password"); } set { SetEndpointProperty("Password", value, isSensitive: true); } }
-        public string PrivateKeyFile { get { return GetEndpointProperty<string>("PrivateKeyFile"); } set { SetEndpointProperty("PrivateKeyFile", value, isSensitive: true); } }
-        public string PrivateKeyPassphrase { get { return GetEndpointProperty<string>("PrivateKeyPassphrase"); } set { SetEndpointProperty("PrivateKeyPassphrase", value, isSensitive: true); } }
-        public string AccountId { get { return GetEndpointProperty<string>("AccountId"); } set { SetEndpointProperty("AccountId", value); } }
+        public string Host { get; set; }
+        public int Port { get; set; }
+        public string Username { get; set; }
+        public string Fingerprint { get; set; }
+
+        [Encrypted]
+        public string Password { get; set; }
+        public string PrivateKeyFile { get; set; }
+        
+        [Encrypted]
+        public string PrivateKeyPassphrase { get; set; }
+        public string AccountId { get; set; }
 
         public override string ToString()
         {

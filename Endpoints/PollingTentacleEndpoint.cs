@@ -1,30 +1,18 @@
 using System;
-using System.Collections.Generic;
-using Halibut;
-using Octopus.Shared.Variables;
+using Newtonsoft.Json;
+using Octopus.Client.Model;
 
 namespace Octopus.Shared.Endpoints
 {
-    /// <summary>
-    /// Contains the information necessary to communicate with a polling tentacle.
-    /// </summary>
     public class PollingTentacleEndpoint : TentacleEndpoint
     {
-        public PollingTentacleEndpoint(IDictionary<string, Variable> raw)
-            : base(raw)
+        public PollingTentacleEndpoint() : base(CommunicationStyle.TentacleActive)
         {
         }
 
-        public Uri Uri { get { return GetEndpointProperty<Uri>("Uri"); } set { SetEndpointProperty("Uri", value); } }
-
-        public override string ToString()
+        [JsonConstructor]
+        public PollingTentacleEndpoint(Uri uri, string thumbprint) : base(CommunicationStyle.TentacleActive, uri, thumbprint)
         {
-            return "polling endpoint";
-        }
-
-        public override ServiceEndPoint GetServiceEndPoint()
-        {
-            return new ServiceEndPoint(Uri, Thumbprint);
         }
     }
 }

@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using Octopus.Shared.Variables;
+using Octopus.Client.Model;
 
 namespace Octopus.Shared.Endpoints
 {
-    public class OfflineDropEndpoint : AgentlessEndpoint
+    public class OfflineDropEndpoint : Endpoint
     {
-        [Obsolete("Serialization constructor")]
-        public OfflineDropEndpoint() : this(new Dictionary<string, Variable>()) { }
-
-        public OfflineDropEndpoint(IDictionary<string, Variable> raw)
-            : base(raw)
+        public override CommunicationStyle CommunicationStyle
         {
+            get { return CommunicationStyle.OfflineDrop; }
         }
 
-        public string DropFolderPath { get { return GetEndpointProperty<string>("DropFolderPath"); } set { SetEndpointProperty("DropFolderPath", value); } }
+        public string DropFolderPath { get; set; }
 
         public override string ToString()
         {
