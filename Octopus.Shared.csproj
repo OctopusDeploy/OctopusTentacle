@@ -169,6 +169,7 @@
     <Compile Include="Packages\PackageAcquirer.cs" />
     <Compile Include="Packages\PackageAcquisition.cs" />
     <Compile Include="Packages\PackageMetadata.cs" />
+    <Compile Include="Packages\PackageToAcquire.cs" />
     <Compile Include="Packages\StoredPackage.cs" />
     <Compile Include="Security\Certificates\CertificateEncoder.cs" />
     <Compile Include="Security\EncryptedAttribute.cs" />

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using Octopus.Client.Model;
 using Octopus.Shared.BuiltInFeed;
 using Octopus.Shared.Diagnostics;
@@ -13,6 +14,7 @@ namespace Octopus.Shared.Packages
         readonly IBuiltInPackageRepository packageRepository;
         readonly IPackageDownloader packageDownloader;
         readonly INuGetFeed nugetFeed;
+        readonly object downloadSync = new object();
 
         public PackageAcquirer(IBuiltInPackageRepository packageRepository, IPackageDownloader packageDownloader)
         {
@@ -21,7 +23,7 @@ namespace Octopus.Shared.Packages
             nugetFeed = packageRepository.CreateRepository();
         }
 
-        public Stream Download(PackageMetadata package, IFeed feed,PackageCachePolicy packageCachePolicy)
+        public Stream Download(PackageMetadata package, IFeed feed, PackageCachePolicy packageCachePolicy)
         {
             return packageRepository.IsBuiltInSource(feed.FeedUri)
                 ? GetPackageFromBuiltInFeed(package)
@@ -43,8 +45,11 @@ namespace Octopus.Shared.Packages
 
         Stream GetPackageFromExternalFeed(IFeed feed, PackageMetadata package, PackageCachePolicy packageCachePolicy)
         {
-            var downloadedPackage = packageDownloader.Download(package, feed, packageCachePolicy);
-
+            StoredPackage downloadedPackage;
+            lock (downloadSync)
+            {
+                downloadedPackage = packageDownloader.Download(package, feed, packageCachePolicy);
+            }
             return new FileStream(downloadedPackage.FullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
     }
