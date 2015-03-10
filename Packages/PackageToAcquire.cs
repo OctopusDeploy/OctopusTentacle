@@ -12,15 +12,17 @@ namespace Octopus.Shared.Packages
         {
             packageStream = new Lazy<byte[]>(() =>
             {
-                var downloadedPackage = packageAcquirer.Download(package, feed, packageCachePolicy);
-                var length = downloadedPackage.Length;
-                var buffer = new byte[1024*128];
-                while (length > 0)
+                using (var downloadedPackage = packageAcquirer.Download(package, feed, packageCachePolicy))
                 {
-                    var read = downloadedPackage.Read(buffer, 0, (int) Math.Min(buffer.Length, length));
-                    length -= read;
+                    var length = downloadedPackage.Length;
+                    var buffer = new byte[1024*128];
+                    while (length > 0)
+                    {
+                        var read = downloadedPackage.Read(buffer, 0, (int) Math.Min(buffer.Length, length));
+                        length -= read;
+                    }
+                    return buffer;
                 }
-                return buffer;
             });
         }
 
