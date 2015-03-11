@@ -112,11 +112,11 @@ namespace Octopus.Shared.Variables
             return null;
         }
 
-        public string Get(string variableName)
+        public string Get(string variableName, string defaultValue = null)
         {
             Variable variable;
             if (!variables.TryGetValue(variableName, out variable) || variable == null)
-                return null;
+                return defaultValue;
 
             return EvaluateVariable(variable).Value;
         }
