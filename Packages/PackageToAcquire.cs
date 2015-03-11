@@ -5,11 +5,18 @@ namespace Octopus.Shared.Packages
 {
     public class PackageToAcquire
     {
+        readonly PackageAcquisitionKey packageAcquisitionKey;
         readonly Lazy<StoredPackage> onlyDownloadPackageOnce;
 
-        public PackageToAcquire(IPackageDownloader downloader, PackageMetadata package, IFeed feed, PackageCachePolicy packageCachePolicy)
+        public PackageToAcquire(IPackageDownloader downloader, PackageMetadata package, IFeed feed, PackageCachePolicy packageCachePolicy, PackageAcquisitionKey packageAcquisitionKey)
         {
+            this.packageAcquisitionKey = packageAcquisitionKey;
             onlyDownloadPackageOnce = new Lazy<StoredPackage>(() => downloader.Download(package, feed, packageCachePolicy));
+        }
+
+        public PackageAcquisitionKey PackageAcquisitionKey
+        {
+            get { return packageAcquisitionKey; }
         }
 
         public Stream Download()
