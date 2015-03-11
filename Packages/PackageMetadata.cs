@@ -15,11 +15,16 @@ namespace Octopus.Shared.Packages
         {
         }
 
-        public PackageMetadata(string packageId, string version, long size)
+        public PackageMetadata(string packageId, string version, long size) : this(packageId, version, size, null)
+        {
+        }
+
+        public PackageMetadata(string packageId, string version, long size, string hash)
         {
             PackageId = packageId;
             Version = version;
             Size = size;
+            Hash = hash;
         }
 
         public string PackageId { get; set; }

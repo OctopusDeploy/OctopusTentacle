@@ -12,6 +12,7 @@ namespace Octopus.Shared.Packages
         readonly bool preferDownloadOnAgent;
         readonly PackageCachePolicy packageCachePolicy;
         readonly IEnumerable<string> targetRoles;
+        PackageAcquisitionKey key;
 
         public PackageAcquisition(string actionId, PackageMetadata package, string feedId, bool preferDownloadOnAgent, IEnumerable<string> targetRoles, PackageCachePolicy packageCachePolicy)
         {
@@ -21,6 +22,7 @@ namespace Octopus.Shared.Packages
             this.preferDownloadOnAgent = preferDownloadOnAgent;
             this.packageCachePolicy = packageCachePolicy;
             this.targetRoles = targetRoles.ToArray();
+            key = new PackageAcquisitionKey(package.PackageId, package.Version, feedId);
         }
 
         public PackageMetadata Package
@@ -28,9 +30,6 @@ namespace Octopus.Shared.Packages
             get { return package; }
         }
 
-        public IFeed Feed { get; set; }
-        
-        public string FeedName { get; set; }
         public bool PreferDownloadOnAgent
         {
             get { return preferDownloadOnAgent; }
@@ -54,6 +53,11 @@ namespace Octopus.Shared.Packages
         public string FeedId
         {
             get { return feedId; }
+        }
+
+        public PackageAcquisitionKey GetUniqueSourcePackageKey()
+        {
+            return key;
         }
     }
 }

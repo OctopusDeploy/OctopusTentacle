@@ -163,11 +163,10 @@
     <Compile Include="Packages\INuGetFeed.cs" />
     <Compile Include="Packages\INuGetPackage.cs" />
     <Compile Include="Packages\IOctopusPackageRepositoryFactory.cs" />
-    <Compile Include="Packages\IPackageAcquirer.cs" />
     <Compile Include="Packages\NuGetFeedProperties.cs" />
     <Compile Include="Packages\NuGetPackageComparer.cs" />
-    <Compile Include="Packages\PackageAcquirer.cs" />
     <Compile Include="Packages\PackageAcquisition.cs" />
+    <Compile Include="Packages\PackageAcquisitionKey.cs" />
     <Compile Include="Packages\PackageMetadata.cs" />
     <Compile Include="Packages\PackageToAcquire.cs" />
     <Compile Include="Packages\StoredPackage.cs" />

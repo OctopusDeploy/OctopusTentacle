@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using NuGet;
+using Octopus.Shared.BuiltInFeed;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security.MasterKey;
 using Octopus.Shared.Util;
@@ -9,12 +10,12 @@ using SemanticVersion = Octopus.Client.Model.SemanticVersion;
 
 namespace Octopus.Shared.Packages
 {
-    //TODO: Extract download specific code to Octopus.Deploy.PackageDownloader.exe
     public class PackageDownloader : IPackageDownloader
     {
         const int NumberOfTimesToAttemptToDownloadPackage = 5;
         readonly IPackageStore packageStore;
         readonly IOctopusPackageRepositoryFactory packageRepositoryFactory;
+        readonly IBuiltInPackageRepository builtInPackageRepository;
         readonly IOctopusFileSystem fileSystem;
         readonly IMasterKeyEncryption encryption;
         readonly ILog log;
@@ -22,12 +23,14 @@ namespace Octopus.Shared.Packages
         public PackageDownloader(
             IPackageStore packageStore,
             IOctopusPackageRepositoryFactory packageRepositoryFactory, 
+            IBuiltInPackageRepository builtInPackageRepository,
             IOctopusFileSystem fileSystem,
             IMasterKeyEncryption encryption,
             ILog log)
         {
             this.packageStore = packageStore;
             this.packageRepositoryFactory = packageRepositoryFactory;
+            this.builtInPackageRepository = builtInPackageRepository;
             this.fileSystem = fileSystem;
             this.encryption = encryption;
             this.log = log;
@@ -35,32 +38,41 @@ namespace Octopus.Shared.Packages
 
         public StoredPackage Download(PackageMetadata package, IFeed feed, PackageCachePolicy cachePolicy)
         {
-            if (package == null) throw new ArgumentNullException("package");
-            if (feed == null) throw new ArgumentNullException("feed");
-            if (log == null) throw new ArgumentNullException("log");
-
-            if (string.IsNullOrWhiteSpace(package.Version))
-                throw new ArgumentException("A version must be specified when downloading a package.");
-
-            StoredPackage storedPackage = null;
-
-            if (cachePolicy == PackageCachePolicy.UseCache)
-            {
-                storedPackage = AttemptToGetPackageFromCache(package, feed);
-            }
-
-            if (storedPackage == null)
-            {
-                storedPackage = AttemptToDownload(package, feed);
-            }
-            else
-            {
-                log.Verbose("Package was found in cache. No need to download. Using file: " + storedPackage.FullPath);
-            }
+            var storedPackage = builtInPackageRepository.IsBuiltInSource(feed.FeedUri) 
+                ? GetPackageFromBuiltInRepository(package, builtInPackageRepository.CreateRepository()) 
+                : DownloadFromExternalSource(package, feed, cachePolicy);
 
             log.Verbose("SHA1 hash of package is: " + storedPackage.Hash);
 
             return storedPackage;
+        }
+
+        StoredPackage DownloadFromExternalSource(PackageMetadata package, IFeed feed, PackageCachePolicy cachePolicy)
+        {
+            if (cachePolicy == PackageCachePolicy.UseCache)
+            {
+                var cached = AttemptToGetPackageFromCache(package, feed);
+                if (cached != null)
+                {
+                    log.Verbose("Package was found in cache. No need to download. Using file: " + cached.FullPath);
+                    return cached;
+                }
+            }
+
+            return AttemptToDownload(package, feed);
+        }
+
+        StoredPackage GetPackageFromBuiltInRepository(PackageMetadata package, INuGetFeed feed)
+        {
+            log.Info("Looking up the package location from the built-in package repository...");
+
+            var nugetPackage = feed.GetPackage(package.PackageId, new SemanticVersion(package.Version));
+            if (nugetPackage == null) throw new ControlledFailureException(String.Format("The package {0} could not be located in the built-in repository.", package.PackageId));
+
+            var hash = nugetPackage.CalculateHash().ToLowerInvariant();
+
+            var path = builtInPackageRepository.GetFilePath(nugetPackage);
+            return new StoredPackage(new PackageMetadata(nugetPackage.PackageId, nugetPackage.Version.ToString(), nugetPackage.GetSize(), hash), path);
         }
 
         StoredPackage AttemptToGetPackageFromCache(PackageMetadata metadata, IFeed feed)

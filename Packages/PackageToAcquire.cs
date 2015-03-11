@@ -1,34 +1,20 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
 
 namespace Octopus.Shared.Packages
 {
     public class PackageToAcquire
     {
-        readonly Lazy<byte[]> packageStream;
+        readonly Lazy<StoredPackage> onlyDownloadPackageOnce;
 
-        public PackageToAcquire(IPackageAcquirer packageAcquirer, PackageMetadata package, IFeed feed, PackageCachePolicy packageCachePolicy)
+        public PackageToAcquire(IPackageDownloader downloader, PackageMetadata package, IFeed feed, PackageCachePolicy packageCachePolicy)
         {
-            packageStream = new Lazy<byte[]>(() =>
-            {
-                using (var downloadedPackage = packageAcquirer.Download(package, feed, packageCachePolicy))
-                {
-                    var length = downloadedPackage.Length;
-                    var buffer = new byte[1024*128];
-                    while (length > 0)
-                    {
-                        var read = downloadedPackage.Read(buffer, 0, (int) Math.Min(buffer.Length, length));
-                        length -= read;
-                    }
-                    return buffer;
-                }
-            });
+            onlyDownloadPackageOnce = new Lazy<StoredPackage>(() => downloader.Download(package, feed, packageCachePolicy));
         }
 
-        public byte[] Download()
+        public Stream Download()
         {
-            return packageStream.Value;
+            return new FileStream(onlyDownloadPackageOnce.Value.FullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
     }
 }
