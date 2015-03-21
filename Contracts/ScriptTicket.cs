@@ -67,7 +67,7 @@ namespace Octopus.Shared.Contracts
 
         public static ScriptTicket Create()
         {
-            return new ScriptTicket("Script-" + DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss") + "-" + Interlocked.Increment(ref nextTaskId));
+            return new ScriptTicket(DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss") + "-" + Interlocked.Increment(ref nextTaskId));
         }
     }
 }

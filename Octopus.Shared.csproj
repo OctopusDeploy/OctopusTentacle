@@ -127,6 +127,7 @@
     <Compile Include="Contracts\ScriptStatusRequest.cs" />
     <Compile Include="Contracts\ScriptStatusResponse.cs" />
     <Compile Include="Contracts\ScriptTicket.cs" />
+    <Compile Include="Contracts\UploadResult.cs" />
     <Compile Include="ControlledFailureException.cs" />
     <Compile Include="Conventions\OctopusName.cs" />
     <Compile Include="Diagnostics\AbstractLog.cs" />
@@ -155,6 +156,7 @@
     <Compile Include="Logging\ProgressMessageCategory.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="NoState.cs" />
+    <Compile Include="Packages\StagedPackage.cs" />
     <Compile Include="Packages\ExternalNuGetPackageAdapter.cs" />
     <Compile Include="Packages\ExternalNuGetFeedAdapter.cs" />
     <Compile Include="Packages\FastLocalPackageRepository.cs" />
