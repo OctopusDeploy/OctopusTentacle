@@ -8,6 +8,6 @@ namespace Octopus.Shared.Packages
     {
         string Id { get; }
         string FeedUri { get; }
-        ICredentials GetCredentials(IMasterKeyEncryption encryption);
+        ICredentials GetCredentials();
     }
 }

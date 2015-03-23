@@ -11,7 +11,7 @@ namespace Octopus.Shared.Packages
         public string FeedUsername { get; set; }
         public string FeedPassword { get; set; }
 
-        public ICredentials GetCredentials(IMasterKeyEncryption encryption)
+        public ICredentials GetCredentials()
         {
             return string.IsNullOrWhiteSpace(FeedUsername) 
                 ? CredentialCache.DefaultNetworkCredentials 

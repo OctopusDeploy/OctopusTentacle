@@ -160,7 +160,7 @@ namespace Octopus.Shared.Packages
         {
             log.VerboseFormat("Finding package (attempt {0} of {1})", attempt, NumberOfTimesToAttemptToDownloadPackage);
 
-            var remoteRepository = packageRepositoryFactory.CreateRepository(feed.FeedUri, feed.GetCredentials(encryption));
+            var remoteRepository = packageRepositoryFactory.CreateRepository(feed.FeedUri, feed.GetCredentials());
 
             var dspr = remoteRepository as DataServicePackageRepository;
             downloader = dspr != null ? dspr.PackageDownloader : null;
