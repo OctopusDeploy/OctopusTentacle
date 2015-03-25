@@ -53,7 +53,6 @@ namespace Octopus.Shared.Variables
         public static readonly string BypassDeploymentMutex = "OctopusBypassDeploymentMutex";
         public static readonly string UpdateEnvironmentVariables = "UpdateEnvironmentVariables";
 
-
         // Set by Octopus Server to DeploymentEnvironment.UseGuidedFailure || DeploymentUseGuidedFailure,
         // but overridable by user
         [Define(Category=VariableCategory.Hidden)] 
@@ -83,6 +82,13 @@ namespace Octopus.Shared.Variables
         
         [Define(Category=VariableCategory.Hidden)] 
         public static readonly string DeleteScriptsOnCleanup = "OctopusDeleteScriptsOnCleanup";
+
+        [Define(Category=VariableCategory.Hidden)] 
+        public static readonly string StagedPackageHash = "StagedPackage.Hash";
+        [Define(Category=VariableCategory.Hidden)]
+        public static readonly string StagedPackageSize = "StagedPackage.Size";
+        [Define(Category = VariableCategory.Hidden)]
+        public static readonly string StagedPackageFullPathOnRemoteMachine = "StagedPackage.FullPathOnRemoteMachine";
 
         public static class Acquire
         {
