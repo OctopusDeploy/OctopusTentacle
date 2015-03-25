@@ -35,13 +35,13 @@ namespace Octopus.Shared.Variables
         public static readonly string TreatWarningsAsErrors = "OctopusTreatWarningsAsErrors";
 
         [Define(Category=VariableCategory.Hidden)] 
-        public static readonly string PrintVariables = Constants.PrintVariables;
+        public static readonly string PrintVariables = "OctopusPrintVariables";
 
         [Define(Category=VariableCategory.Hidden)] 
         public static readonly string PrintEvaluatedVariables = "OctopusPrintEvaluatedVariables";
 
         [Define(Category=VariableCategory.Hidden)]
-        public static readonly string IgnoreMissingVariableTokens = Constants.IgnoreMissingVariableTokens;
+        public static readonly string IgnoreMissingVariableTokens = "OctopusIgnoreMissingVariableTokens";
         
         [Define(Category=VariableCategory.Hidden)] 
         public static readonly string UseLegacyIisSupport = "OctopusUseLegacyIisSupport";
@@ -721,23 +721,23 @@ namespace Octopus.Shared.Variables
             return !name.Contains("CustomScripts.");
         }
 
-        public static class Endpoint
-        {
-            [Define(Pattern = "Octopus.Endpoint._type_._property_", Description = "Properties describing the endpoint being deployed", Example = "ftp.example.com")]
-            public static Variable Prefix(CommunicationStyle communicationStyle, Variable endpointProperty)
-            {
-                return new Variable("Octopus.Endpoint." + communicationStyle + "." + endpointProperty.Name, endpointProperty.Value, endpointProperty.IsSensitive);
-            }
+        //public static class Endpoint
+        //{
+        //    [Define(Pattern = "Octopus.Endpoint._type_._property_", Description = "Properties describing the endpoint being deployed", Example = "ftp.example.com")]
+        //    public static Variable Prefix(CommunicationStyle communicationStyle, Variable endpointProperty)
+        //    {
+        //        return new Variable("Octopus.Endpoint." + communicationStyle + "." + endpointProperty.Name, endpointProperty.Value, endpointProperty.IsSensitive);
+        //    }
 
-            public static class Configure
-            {
-                public const string Actor = "Octopus.Endpoint.Configure.Actor";
-            }
+        //    public static class Configure
+        //    {
+        //        public const string Actor = "Octopus.Endpoint.Configure.Actor";
+        //    }
 
-            public static class Invoke
-            {
-                public const string Actor = "Octopus.Endpoint.Invoke.Actor";
-            }
-        }
+        //    public static class Invoke
+        //    {
+        //        public const string Actor = "Octopus.Endpoint.Invoke.Actor";
+        //    }
+        //}
     }
 }

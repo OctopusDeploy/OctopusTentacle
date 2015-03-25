@@ -67,6 +67,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NuGet.Core.2.8.3\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
+    <Reference Include="Octostache">
+      <HintPath>..\packages\Octostache.1.0.2.14\lib\net40\Octostache.dll</HintPath>
+    </Reference>
     <Reference Include="Sprache, Version=2.0.0.45, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Sprache.2.0.0.45\lib\portable-net4+netcore45+win8+wp8+sl5+MonoAndroid1+MonoTouch1\Sprache.dll</HintPath>
@@ -177,7 +180,6 @@
     <Compile Include="Security\Masking\MaskedException.cs" />
     <Compile Include="Security\Masking\MaskingContext.cs" />
     <Compile Include="Security\Masking\SensitiveDataMask.cs" />
-    <Compile Include="Security\Masking\VariableDictionaryExtensions.cs" />
     <Compile Include="Security\MasterKey\EncryptionUnsupported.cs" />
     <Compile Include="Security\MasterKey\IMasterKeyEncryption.cs" />
     <Compile Include="Security\MasterKey\MasterKeyEncryptionExtensions.cs" />
@@ -363,37 +365,11 @@
     <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Util\TypeExtensions.cs" />
     <Compile Include="Util\Uniquifier.cs" />
-    <Compile Include="Variables\Constants.cs" />
     <Compile Include="Variables\DefineAttribute.cs" />
     <Compile Include="Variables\SpecialVariables.cs" />
-    <Compile Include="Variables\Templates\AnalysisContext.cs" />
-    <Compile Include="Variables\Templates\TemplateAnalyzer.cs" />
-    <Compile Include="Variables\Templates\PropertyListBinder.cs" />
-    <Compile Include="Variables\Templates\Binding.cs" />
-    <Compile Include="Variables\Templates\BuiltInFunctions.cs" />
-    <Compile Include="Variables\Templates\EvaluationContext.cs" />
-    <Compile Include="Variables\Templates\TemplateEvaluator.cs" />
-    <Compile Include="Variables\Templates\ConditionalToken.cs" />
-    <Compile Include="Variables\Templates\ContentExpression.cs" />
-    <Compile Include="Variables\Templates\DependencyWildcard.cs" />
-    <Compile Include="Variables\Templates\FunctionCallExpression.cs" />
-    <Compile Include="Variables\Templates\Identifier.cs" />
-    <Compile Include="Variables\Templates\IInputToken.cs" />
-    <Compile Include="Variables\Templates\Indexer.cs" />
-    <Compile Include="Variables\Templates\RepetitionToken.cs" />
-    <Compile Include="Variables\Templates\SubstitutionToken.cs" />
-    <Compile Include="Variables\Templates\SymbolExpression.cs" />
-    <Compile Include="Variables\Templates\SymbolExpressionStep.cs" />
-    <Compile Include="Variables\Templates\TemplateToken.cs" />
-    <Compile Include="Variables\Templates\TextToken.cs" />
-    <Compile Include="Variables\Templates\Template.cs" />
-    <Compile Include="Variables\Templates\TemplateParser.cs" />
-    <Compile Include="Variables\Variable.cs" />
     <Compile Include="Variables\VariableCategory.cs" />
     <Compile Include="Variables\VariableDefinition.cs" />
-    <Compile Include="Variables\VariableDictionary.cs" />
     <Compile Include="Variables\VariableDomain.cs" />
-    <Compile Include="Variables\VariableFunctionsModule.cs" />
     <Compile Include="Versioning\AppVersion.cs" />
     <Compile Include="Versioning\VersioningModule.cs" />
     <Compile Include="Web\WebRoutes.cs" />
