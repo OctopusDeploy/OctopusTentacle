@@ -1,15 +1,19 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+// ReSharper disable ReplaceWithStringIsNullOrEmpty
 
 namespace Octopus.Shared.Security.Masking
 {
+    // TODO: Rabin-Karp or something else might make this perform much better
+    // http://en.wikipedia.org/wiki/Rabin%E2%80%93Karp_algorithm
     public class SensitiveDataMask
     {
-        readonly ConcurrentDictionary<string, bool> sensitiveData = new ConcurrentDictionary<string, bool>();
+        readonly SortedList<int, string> valuesLongestToShortest = new SortedList<int, string>();  
+        readonly SortedList<int, string> valuesShortestToLongest = new SortedList<int, string>();  
         const string Mask = "********";
+        readonly StringBuilder builder = new StringBuilder();
+        readonly object sync = new object();
 
         public SensitiveDataMask()
         {
@@ -23,58 +27,49 @@ namespace Octopus.Shared.Security.Masking
 
         public void MaskInstancesOf(string sensitive)
         {
-            if (string.IsNullOrWhiteSpace(sensitive) || sensitive.Length < 4) return;
-            sensitiveData.TryAdd(sensitive, true);
+            if (string.IsNullOrWhiteSpace(sensitive) || sensitive.Length < 4) 
+                return;
+
+            lock (sync)
+            {
+                valuesLongestToShortest.Add(-sensitive.Length, sensitive);
+                valuesShortestToLongest.Add(sensitive.Length, sensitive);
+            }
         }
 
         public string ApplyTo(string raw)
         {
-            if (string.IsNullOrWhiteSpace(raw))
+            if (raw == null || raw.Length == 0 || raw.Length < 4 || valuesLongestToShortest.Count == 0)
                 return raw;
 
-            foreach (var sensitive in sensitiveData.Keys.OrderByDescending(o => o.Length))
+            lock (sync)
             {
-                if (raw.Contains(sensitive))
+                if (!HasSensitiveValues(raw))
+                    return raw;
+
+                // It's only worth allocating the new string if we actually found a match
+                builder.Clear();
+                builder.EnsureCapacity(raw.Length);
+                builder.Append(raw);
+                foreach (var sensitive in valuesLongestToShortest)
                 {
-                    var result = new StringBuilder(raw);
-                    
-                    foreach (var sensitive2 in sensitiveData.Keys.OrderByDescending(o => o.Length))
-                        result.Replace(sensitive2, Mask);
-
-                    return result.ToString();
+                    builder.Replace(sensitive.Value, Mask);
                 }
+
+                return builder.ToString();
             }
-
-            return raw;
         }
 
-        public Exception ApplyTo(Exception exception)
+        bool HasSensitiveValues(string raw)
         {
-            if (exception == null) return null;
-
-            if (RequiresMask(exception))
-                return new MaskedException(ApplyTo(exception.ToString()));
-
-            return exception;
-        }
-
-        bool RequiresMask(Exception exception)
-        {
-            foreach (var sensitive in sensitiveData.Keys)
-                if (exception.Message.Contains(sensitive))
-                    return true;
-
-            if (exception.InnerException != null &&
-                RequiresMask(exception.InnerException))
-                return true;
-
-            var agg = exception as AggregateException;
-            if (agg != null)
+            foreach (var sensitive in valuesShortestToLongest)
             {
-                if (agg.InnerExceptions.Any(RequiresMask))
-                    return true;
+                if (!raw.Contains(sensitive.Value))
+                {
+                    continue;
+                }
+                return true;
             }
-
             return false;
         }
     }
