@@ -19,7 +19,7 @@ namespace Octopus.Shared.Diagnostics
             if (!logEvent.CorrelationId.StartsWith("system/"))
                 return;
 
-            logger.WriteEvent(LogCategoryToLogLevel(logEvent.Category), MaskingContext.ApplyTo(logEvent.Error), MaskingContext.ApplyTo(logEvent.MessageText));
+            logger.WriteEvent(LogCategoryToLogLevel(logEvent.Category), logEvent.Error, logEvent.MessageText);
         }
 
         public void WriteEvents(IList<LogEvent> logEvents)

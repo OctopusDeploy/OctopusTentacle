@@ -2,7 +2,6 @@ using System;
 using System.Reflection;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Security.Masking;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
@@ -33,7 +32,6 @@ namespace Octopus.Shared.Startup
             Options.Add("password=", "Password for the username specified with --username. Only used when --install is used.", v =>
             {
                 serviceConfigurationState.Password = v;
-                MaskingContext.Permanent.MaskInstancesOf(v);
             });
 
         }
