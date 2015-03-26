@@ -31,6 +31,11 @@ namespace Octopus.Shared.Diagnostics
             get { return current; }
         }
 
+        public override void Mask(IList<string> sensitiveValues)
+        {
+            
+        }
+
         public class NullDisposable : IDisposable
         {
             public void Dispose()

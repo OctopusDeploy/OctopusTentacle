@@ -9,6 +9,12 @@ namespace Octopus.Shared.Diagnostics
         LogCorrelator Current { get; }
 
         /// <summary>
+        /// Ensures that if any of the supplied strings are ever logged, their value will be masked.
+        /// </summary>
+        /// <param name="sensitiveValues">The values to mask.</param>
+        void Mask(IList<string> sensitiveValues);
+
+        /// <summary>
         /// Opens a new child block for logging.
         /// </summary>
         /// <param name="messageText">Title of the new block.</param>

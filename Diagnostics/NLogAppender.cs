@@ -30,6 +30,11 @@ namespace Octopus.Shared.Diagnostics
             }
         }
 
+        public void Mask(string correlationId, IList<string> sensitiveValues)
+        {
+            
+        }
+
         static LogLevel LogCategoryToLogLevel(LogCategory category)
         {
             switch (category)

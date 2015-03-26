@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Octopus.Shared.Logging;
@@ -62,6 +61,14 @@ namespace Octopus.Shared.Diagnostics
         public override LogCorrelator Current
         {
             get { return correlator.Value; }
+        }
+
+        public override void Mask(IList<string> sensitiveValues)
+        {
+            foreach (var appender in appenders)
+            {
+                appender.Mask(Current.CorrelationId, sensitiveValues);
+            }
         }
 
         class RevertLogContext : IDisposable

@@ -13,6 +13,8 @@ namespace Octopus.Shared.Diagnostics
         public abstract IDisposable WithinBlock(LogCorrelator logger);
         public abstract LogCorrelator Current { get; }
 
+        public abstract void Mask(IList<string> sensitiveValues);
+
         public IDisposable OpenBlock(string messageText)
         {
             var child = Current.CreateChild();

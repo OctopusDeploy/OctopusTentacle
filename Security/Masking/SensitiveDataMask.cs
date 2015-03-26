@@ -9,8 +9,8 @@ namespace Octopus.Shared.Security.Masking
     // http://en.wikipedia.org/wiki/Rabin%E2%80%93Karp_algorithm
     public class SensitiveDataMask
     {
-        readonly SortedList<int, string> valuesLongestToShortest = new SortedList<int, string>();  
-        readonly SortedList<int, string> valuesShortestToLongest = new SortedList<int, string>();  
+        readonly List<string> valuesLongestToShortest = new List<string>();
+        readonly List<string> valuesShortestToLongest = new List<string>();  
         const string Mask = "********";
         readonly StringBuilder builder = new StringBuilder();
         readonly object sync = new object();
@@ -32,8 +32,11 @@ namespace Octopus.Shared.Security.Masking
 
             lock (sync)
             {
-                valuesLongestToShortest.Add(-sensitive.Length, sensitive);
-                valuesShortestToLongest.Add(sensitive.Length, sensitive);
+                valuesLongestToShortest.Add(sensitive);
+                valuesShortestToLongest.Add(sensitive);
+
+                valuesLongestToShortest.Sort(StringLengthComparer.LongestToShortest);
+                valuesShortestToLongest.Sort(StringLengthComparer.ShortestToLongest);
             }
         }
 
@@ -53,7 +56,7 @@ namespace Octopus.Shared.Security.Masking
                 builder.Append(raw);
                 foreach (var sensitive in valuesLongestToShortest)
                 {
-                    builder.Replace(sensitive.Value, Mask);
+                    builder.Replace(sensitive, Mask);
                 }
 
                 return builder.ToString();
@@ -64,13 +67,30 @@ namespace Octopus.Shared.Security.Masking
         {
             foreach (var sensitive in valuesShortestToLongest)
             {
-                if (!raw.Contains(sensitive.Value))
+                if (!raw.Contains(sensitive))
                 {
                     continue;
                 }
                 return true;
             }
             return false;
+        }
+
+        class StringLengthComparer : IComparer<string>
+        {
+            readonly int multiplier;
+            public static readonly StringLengthComparer LongestToShortest = new StringLengthComparer(-1);
+            public static readonly StringLengthComparer ShortestToLongest = new StringLengthComparer(1);
+
+            StringLengthComparer(int multiplier)
+            {
+                this.multiplier = multiplier;
+            }
+
+            public int Compare(string x, string y)
+            {
+                return (x.Length.CompareTo(y.Length)) * multiplier;
+            }
         }
     }
 }
