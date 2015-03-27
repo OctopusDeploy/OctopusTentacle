@@ -58,6 +58,15 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Octopus.WebPortal.ActiveDirectoryContainer", value); }
         }
 
+        /// <summary>
+        /// Gets or sets whether to enable CORS.
+        /// </summary>
+        public bool EnableCors
+        {
+            get { return settings.Get("Octopus.WebPortal.EnableCors", false); }
+            set { settings.Set("Octopus.WebPortal.EnableCors", value); }
+        }
+
         public void Save()
         {
             settings.Save();

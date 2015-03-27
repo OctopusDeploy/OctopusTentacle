@@ -30,5 +30,10 @@ namespace Octopus.Shared.Configuration
         /// Gets or sets the active directory container, if not specified default container is used
         /// </summary>
         string ActiveDirectoryContainer { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether to enable CORS.
+        /// </summary>
+        bool EnableCors { get; set; }
     }
 }
