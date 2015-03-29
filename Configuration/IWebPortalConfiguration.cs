@@ -32,8 +32,8 @@ namespace Octopus.Shared.Configuration
         string ActiveDirectoryContainer { get; set; }
 
         /// <summary>
-        /// Gets or sets whether to enable CORS.
+        /// Gets or sets an optional whitelist of allowed domains (empty or null turns CORS off)
         /// </summary>
-        bool EnableCors { get; set; }
+        string CorsWhitelist { get; set; }
     }
 }

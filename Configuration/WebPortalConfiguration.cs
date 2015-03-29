@@ -59,12 +59,12 @@ namespace Octopus.Shared.Configuration
         }
 
         /// <summary>
-        /// Gets or sets whether to enable CORS.
+        /// Gets or sets an optional whitelist of allowed domains (empty will disable CORS)
         /// </summary>
-        public bool EnableCors
+        public string CorsWhitelist
         {
-            get { return settings.Get("Octopus.WebPortal.EnableCors", false); }
-            set { settings.Set("Octopus.WebPortal.EnableCors", value); }
+            get { return settings.Get("Octopus.WebPortal.CorsWhitelist", string.Empty); }
+            set { settings.Set("Octopus.WebPortal.CorsWhitelist", value); }
         }
 
         public void Save()
