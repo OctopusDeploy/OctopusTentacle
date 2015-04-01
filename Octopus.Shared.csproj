@@ -159,6 +159,7 @@
     <Compile Include="Logging\ProgressMessageCategory.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="NoState.cs" />
+    <Compile Include="Packages\NugetExtensions.cs" />
     <Compile Include="Packages\StagedPackage.cs" />
     <Compile Include="Packages\ExternalNuGetPackageAdapter.cs" />
     <Compile Include="Packages\ExternalNuGetFeedAdapter.cs" />
