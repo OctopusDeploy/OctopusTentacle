@@ -11,8 +11,6 @@ namespace Octopus.Shared.Tasks
 {
     public class RunningTask : ITaskContext, IRunningTask
     {
-        public static readonly TimeSpan DefaultCancellationTime = TimeSpan.FromSeconds(30);
-
         readonly string taskId;
         readonly string description;
         readonly Type rootTaskControllerType;
@@ -24,10 +22,9 @@ namespace Octopus.Shared.Tasks
         readonly Thread workThread;
         readonly ILog log = Log.Octopus();
         readonly LogCorrelator taskLogCorrelator;
-        readonly TimeSpan taskCancellationTimeout;
         bool isPaused;
 
-        public RunningTask(string taskId, string description, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback, TimeSpan taskCancellationTimeout)
+        public RunningTask(string taskId, string description, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback)
         {
             this.taskId = taskId;
             this.description = description;
@@ -35,7 +32,6 @@ namespace Octopus.Shared.Tasks
             this.arguments = arguments;
             this.lifetimeScope = lifetimeScope;
             this.completeCallback = completeCallback;
-            this.taskCancellationTimeout = taskCancellationTimeout;
             
             taskLogCorrelator = LogCorrelator.CreateNew(taskId);
             workThread = new Thread(RunMainThread) {Name = taskId + ": " + description};
@@ -107,17 +103,6 @@ namespace Octopus.Shared.Tasks
 
                 log.Info("Requesting cancellation...");
                 cancel.Cancel();
-
-                var finished = workThread.Join(taskCancellationTimeout);
-                if (finished)
-                {
-                    return;
-                }
-
-                log.Warn("Cancellation did not complete within a reasonable time. Aborting the thread.");
-                workThread.Abort();
-
-                CompleteTask(null);
             }
         }
 
