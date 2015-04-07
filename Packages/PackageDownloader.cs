@@ -42,7 +42,7 @@ namespace Octopus.Shared.Packages
                 ? GetPackageFromBuiltInRepository(package, builtInPackageRepository.CreateRepository()) 
                 : DownloadFromExternalSource(package, feed, cachePolicy);
 
-            log.Verbose("SHA1 hash of package is: " + storedPackage.Hash);
+            log.Verbose("SHA1 hash of package " + storedPackage.PackageId + " is: " + storedPackage.Hash);
 
             return storedPackage;
         }
@@ -54,7 +54,7 @@ namespace Octopus.Shared.Packages
                 var cached = AttemptToGetPackageFromCache(package, feed);
                 if (cached != null)
                 {
-                    log.Verbose("Package was found in cache. No need to download. Using file: " + cached.FullPath);
+                    log.Verbose("Package "+ package.PackageId + " version " + package.Version + " was found in cache. No need to download. Using file: " + cached.FullPath);
                     return cached;
                 }
             }
