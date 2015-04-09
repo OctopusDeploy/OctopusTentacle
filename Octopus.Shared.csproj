@@ -366,6 +366,7 @@
     <Compile Include="Util\TypeExtensions.cs" />
     <Compile Include="Util\Uniquifier.cs" />
     <Compile Include="Variables\DefineAttribute.cs" />
+    <Compile Include="Variables\DeprecatedAliasAttribute.cs" />
     <Compile Include="Variables\SpecialVariables.cs" />
     <Compile Include="Variables\VariableCategory.cs" />
     <Compile Include="Variables\VariableDefinition.cs" />
