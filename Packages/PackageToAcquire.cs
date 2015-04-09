@@ -19,6 +19,8 @@ namespace Octopus.Shared.Packages
             get { return packageAcquisitionKey; }
         }
 
+        public StoredPackage Package { get { return onlyDownloadPackageOnce.Value; } } 
+
         public Stream Download()
         {
             return new FileStream(onlyDownloadPackageOnce.Value.FullPath, FileMode.Open, FileAccess.Read, FileShare.Read);

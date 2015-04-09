@@ -1,29 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Octopus.Shared.Variables;
+using Octostache;
 
 namespace Octopus.Shared.Packages
 {
     public class PackageAcquisition
     {
-        readonly string actionId;
         readonly PackageMetadata package;
-        readonly string feedId;
         readonly NuGetFeedProperties feed;
         readonly bool preferDownloadOnAgent;
         readonly PackageCachePolicy packageCachePolicy;
         readonly IEnumerable<string> targetRoles;
-        PackageAcquisitionKey key;
+        readonly PackageAcquisitionKey key;
 
-        public PackageAcquisition(string actionId, PackageMetadata package, NuGetFeedProperties feed, bool preferDownloadOnAgent, IEnumerable<string> targetRoles, PackageCachePolicy packageCachePolicy)
+        public PackageAcquisition(string actionId, PackageMetadata package, NuGetFeedProperties feed, bool preferDownloadOnAgent, IEnumerable<string> targetRoles, PackageCachePolicy packageCachePolicy, VariableDictionary variables )
         {
-            this.actionId = actionId;
+            ActionId = actionId;
+            this.Variables = variables;
             this.package = package;
             this.feed = feed;
             this.preferDownloadOnAgent = preferDownloadOnAgent;
             this.packageCachePolicy = packageCachePolicy;
             this.targetRoles = targetRoles.ToArray();
-            key = new PackageAcquisitionKey(package.PackageId, package.Version, feedId);
+            key = new PackageAcquisitionKey(package.PackageId, package.Version, feed.Id);
         }
 
         public PackageMetadata Package
@@ -41,10 +42,7 @@ namespace Octopus.Shared.Packages
             get { return targetRoles; }
         }
 
-        public string ActionId
-        {
-            get { return actionId; }
-        }
+        public string ActionId { get; private set; }
 
         public PackageCachePolicy PackageCachePolicy
         {
@@ -60,5 +58,7 @@ namespace Octopus.Shared.Packages
         {
             return key;
         }
+
+        public VariableDictionary Variables { get; private set; }
     }
 }

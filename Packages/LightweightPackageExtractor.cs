@@ -26,35 +26,49 @@ namespace Octopus.Shared.Packages
 
         public void Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
         {
-            filesExtracted = 0;
-            using (var package = Package.Open(packageFile, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var package = Package.Open(packageFile, FileMode.Open, FileAccess.Read))
             {
-                var files =
-                    from part in package.GetParts()
-                    where IsPackageFile(part)
-                    select part;
+                Install(package, directory, log, suppressNestedScriptWarning, out filesExtracted);
+            }
+        }
 
-                foreach (var part in files)
+        public void Install(Stream packageFile, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
+        {
+            using (var package = Package.Open(packageFile, FileMode.Open, FileAccess.Read))
+            {
+                Install(package, directory, log, suppressNestedScriptWarning, out filesExtracted);
+            }
+        }
+
+        void Install(Package package, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
+        {
+            filesExtracted = 0;
+
+            var files =
+                from part in package.GetParts()
+                where IsPackageFile(part)
+                select part;
+
+            foreach (var part in files)
+            {
+                filesExtracted++;
+                var path = UriUtility.GetPath(part.Uri);
+
+                if (!suppressNestedScriptWarning)
                 {
-                    filesExtracted++;
-                    var path = UriUtility.GetPath(part.Uri);
-                    
-                    if (!suppressNestedScriptWarning)
-                    {
-                        WarnIfScriptInSubFolder(path, log);
-                    }
-                    
-                    path = Path.Combine(directory, path);
+                    WarnIfScriptInSubFolder(path, log);
+                }
 
-                    var parent = Path.GetDirectoryName(path);
-                    fileSystem.EnsureDirectoryExists(parent);
+                path = Path.Combine(directory, path);
 
-                    using (var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
-                    using (var stream = part.GetStream())
-                    {
-                        stream.CopyTo(fileStream);
-                        fileStream.Flush();
-                    }
+                var parent = Path.GetDirectoryName(path);
+                fileSystem.EnsureDirectoryExists(parent);
+
+                using (var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
+                using (var stream = part.GetStream())
+                {
+                    stream.CopyTo(fileStream);
+                    fileStream.Flush();
                 }
             }
         }
