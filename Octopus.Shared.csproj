@@ -254,10 +254,6 @@
     <Compile Include="Licensing\LicenseVerifier.cs" />
     <Compile Include="OctopusFileSystemModule.cs" />
     <Compile Include="Diagnostics\OctopusLogsDirectoryRenderer.cs" />
-    <Compile Include="Extensibility\IOctopusExtension.cs" />
-    <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
-    <Compile Include="Extensibility\OctopusPluginAttribute.cs" />
-    <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Internals\Options\Option.cs" />
     <Compile Include="Internals\Options\OptionAction.cs" />
     <Compile Include="Internals\Options\OptionContext.cs" />
