@@ -333,6 +333,7 @@
     <Compile Include="Time\SystemClock.cs" />
     <Compile Include="Time\TimeModule.cs" />
     <Compile Include="Time\IClock.cs" />
+    <Compile Include="Tools\OctoDiff.cs" />
     <Compile Include="Util\AmazingConverter.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Util\CallbackDisposable.cs" />
@@ -351,6 +352,7 @@
     <Compile Include="Util\ICommandLineRunner.cs" />
     <Compile Include="Util\IFileInfo.cs" />
     <Compile Include="Util\IOctopusFileSystem.cs" />
+    <Compile Include="Util\ISemaphore.cs" />
     <Compile Include="Util\ListExtensions.cs" />
     <Compile Include="Util\NumericExtensions.cs" />
     <Compile Include="Util\ObjectFormatter.cs" />
@@ -365,6 +367,7 @@
     <Compile Include="Util\SilentProcessRunner.cs" />
     <Compile Include="Util\SlugGenerator.cs" />
     <Compile Include="Util\StringExtensions.cs" />
+    <Compile Include="Util\SystemSemaphore.cs" />
     <Compile Include="Util\TypeExtensions.cs" />
     <Compile Include="Util\Uniquifier.cs" />
     <Compile Include="Variables\DefineAttribute.cs" />

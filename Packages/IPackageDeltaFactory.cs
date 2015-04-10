@@ -4,7 +4,7 @@ namespace Octopus.Shared.Packages
 {
     public interface IPackageDeltaFactory
     {
-        Stream BuildSignature(StoredPackage nearestPackage);
-        Stream BuildDelta(Stream newPackage, Stream signatureStream, string deltaFilePath);
+        string BuildSignature(string nearestPackageFilePath);
+        Stream BuildDelta(string newPackageFilePath, string signatureFilePath, string deltaFilePath);
     }
 }
