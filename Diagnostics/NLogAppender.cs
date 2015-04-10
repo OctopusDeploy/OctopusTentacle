@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using NLog;
-using Octopus.Shared.Security.Masking;
 
 namespace Octopus.Shared.Diagnostics
 {
