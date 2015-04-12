@@ -44,7 +44,7 @@
     </Reference>
     <Reference Include="Halibut, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Halibut.1.0.2.22\lib\Halibut.dll</HintPath>
+      <HintPath>..\packages\Halibut.1.0.2.23\lib\Halibut.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
@@ -63,9 +63,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NLog.3.2.0.0\lib\net40\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="NuGet.Core, Version=2.8.50926.602, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="NuGet.Core, Version=2.8.60318.667, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NuGet.Core.2.8.3\lib\net40-Client\NuGet.Core.dll</HintPath>
+      <HintPath>..\packages\NuGet.Core.2.8.5\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
     <Reference Include="Octostache">
       <HintPath>..\packages\Octostache.1.0.2.14\lib\net40\Octostache.dll</HintPath>
@@ -122,8 +122,12 @@
     <Compile Include="Configuration\IWebPortalConfiguration.cs" />
     <Compile Include="Configuration\OctopusServerConfiguration.cs" />
     <Compile Include="Configuration\StorageMode.cs" />
+    <Compile Include="Contracts\FullIsolationLevel.cs" />
     <Compile Include="Contracts\IFileTransferService.cs" />
     <Compile Include="Contracts\IScriptService.cs" />
+    <Compile Include="Contracts\NoIsolationLevel.cs" />
+    <Compile Include="Contracts\ScriptFile.cs" />
+    <Compile Include="Contracts\ScriptIsolationLevel.cs" />
     <Compile Include="Contracts\StartScriptCommand.cs" />
     <Compile Include="Contracts\CancelScriptCommand.cs" />
     <Compile Include="Contracts\CompleteScriptCommand.cs" />
