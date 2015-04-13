@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Tools;
@@ -29,21 +28,29 @@ namespace Octopus.Shared.Packages
             if (!File.Exists(fullPath))
             {
                 log.VerboseFormat("Building signature file: {0} ", fullPath);
-                using (semaphore.Acquire("Calamari:Signature: " + signatureFilePath, "Another process is currently building " + signatureFilePath))
+                log.VerboseFormat("  - Using nearest package: {0}", nearestPackageFilePath);
+                using (semaphore.Acquire("Calamari:Signature: " + signatureFilePath, "Another process is currently building " + fullPath))
                 {
-                    var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
-                        .Action(signatureCommandName)
-                        .Argument("basis-file", nearestPackageFilePath)
-                        .Argument("signature-file", signatureFilePath)
-                        .Build();
+                    try
+                    {
+                        var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
+                            .Action(signatureCommandName)
+                            .PositionalArgument(nearestPackageFilePath)
+                            .PositionalArgument(fullPath)
+                            .Build();
 
-                    var exitCode = octoDiff.ExecuteCommand(log);
-
-                    if(exitCode != 0)
+                        octoDiff.ExecuteCommand(currentWorkingDirectory)
+                            .Validate();
+                    }
+                    catch (CommandLineException)
+                    {
                         fileSystem.DeleteFile(signatureFilePath, DeletionOptions.TryThreeTimes);
+                        throw;
+                    }
                 }
             }
-            return signatureFilePath;
+
+            return fullPath;
         }
 
         public Stream BuildDelta(string newPackageFilePath, string signatureFilePath, string deltaFilePath)
@@ -52,23 +59,32 @@ namespace Octopus.Shared.Packages
             if (!File.Exists(fullPath))
             {
                 log.VerboseFormat("Building delta file: {0}", fullPath);
-                using (semaphore.Acquire("Calamari:Delta: " + deltaFilePath, "Another process is currently building delta file " + deltaFilePath))
+                log.VerboseFormat("  - Using package: {0}.", newPackageFilePath);
+                log.VerboseFormat("  - Using signature: {0}", signatureFilePath);
+                using (semaphore.Acquire("Calamari:Delta: " + deltaFilePath, "Another process is currently building delta file " + fullPath))
                 {
-                    var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
-                        .Action(deltaCommandName)
-                        .Argument("signature-file", signatureFilePath)
-                        .Argument("new-file", newPackageFilePath)
-                        .Argument("delta-file", deltaFilePath)
-                        .Build();
+                    try
+                    {
+                        var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
+                            .Action(deltaCommandName)
+                            .PositionalArgument(signatureFilePath)
+                            .PositionalArgument(newPackageFilePath)
+                            .PositionalArgument(fullPath)
+                            .Build();
 
-                    var exitCode = octoDiff.ExecuteCommand(log);
+                        octoDiff.ExecuteCommand(currentWorkingDirectory)
+                            .Validate();
 
-                    if (exitCode != 0)
-                        fileSystem.DeleteFile(deltaFilePath, DeletionOptions.TryThreeTimes);
+                    }
+                    catch (CommandLineException)
+                    {
+                        fileSystem.DeleteFile(fullPath, DeletionOptions.TryThreeTimes);
+                        throw;
+                    }
                 }
             }
 
-            return fileSystem.OpenFile(deltaFilePath, FileAccess.Read);
+            return fileSystem.OpenFile(fullPath, FileAccess.Read);
         }
     }
 }
