@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
 using Octodiff.Core;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Tools;
 using Octopus.Shared.Util;
-using Octopus.Shared.Variables;
-using Signature = System.Security.Cryptography.Xml.Signature;
 
 namespace Octopus.Shared.Packages
 {
@@ -55,7 +50,6 @@ namespace Octopus.Shared.Packages
     {
         readonly ILog log = Log.Octopus();
         readonly IOctopusFileSystem fileSystem;
-        readonly IPackageStore packageStore;
         readonly ISemaphore semaphore = new SystemSemaphore();
         readonly string octoDiffPath = "";
         readonly string signatureCommandName = "signature";
@@ -65,7 +59,6 @@ namespace Octopus.Shared.Packages
         public PackageDeltaFactory(IOctopusFileSystem fileSystem, IPackageStore packageStore)
         {
             this.fileSystem = fileSystem;
-            this.packageStore = packageStore;
             octoDiffPath = OctoDiff.GetFullPath();
             currentWorkingDirectory = packageStore.GetPackagesDirectory();
         }
