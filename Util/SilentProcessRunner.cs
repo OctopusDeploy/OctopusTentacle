@@ -135,21 +135,13 @@ namespace Octopus.Shared.Util
                         {
                             if (!running)
                                 return;
-                            try
-                            {
-                                KillProcessAndChildren(process.Id);
-                            }
-                            catch (Exception)
-                            {
-                                try
-                                {
-                                    process.Kill();
-                                }
-                                catch (Exception)
-                                {
-                                }
-                            }
+                            DoOurBestToCleanUp(process);
                         });
+
+                        if (cancel.IsCancellationRequested)
+                        {
+                            DoOurBestToCleanUp(process);
+                        }
 
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
@@ -168,6 +160,24 @@ namespace Octopus.Shared.Util
             catch (Exception ex)
             {
                 throw new Exception(string.Format("Error when attempting to execute {0}: {1}", executable, ex.Message), ex);
+            }
+        }
+
+        static void DoOurBestToCleanUp(Process process)
+        {
+            try
+            {
+                KillProcessAndChildren(process.Id);
+            }
+            catch (Exception)
+            {
+                try
+                {
+                    process.Kill();
+                }
+                catch (Exception)
+                {
+                }
             }
         }
 
