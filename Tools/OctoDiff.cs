@@ -11,7 +11,6 @@ namespace Octopus.Shared.Tools
     public class OctoDiff
     {
         static string octoDiffPath;
-        const string EnvOctoDiffPath = "Octodiff.exe";
 
         public static string GetFullPath()
         {
@@ -20,34 +19,15 @@ namespace Octopus.Shared.Tools
                 return octoDiffPath;
             }
 
-            try
-            {
-                var path = Assembly.GetExecutingAssembly().FullLocalPath();
-                octoDiffPath = Path.Combine(path, EnvOctoDiffPath);
+            var path = Assembly.GetExecutingAssembly().FullLocalPath();
+            octoDiffPath = Path.Combine(path, "Octodiff.exe");
 
-                if (!File.Exists(octoDiffPath))
-                {
-                    octoDiffPath = EnvOctoDiffPath;
-                }
-            }
-            catch (Exception)
+            if (!File.Exists(octoDiffPath))
             {
-                octoDiffPath = EnvOctoDiffPath;
+                throw new ApplicationException(String.Format("Unable to find Octodiff.exe in {0}.", path));
             }
 
             return octoDiffPath;
         }
-
-        public static string FormatCommandArguments(string command, params object[] args)
-        {
-            var commandArguments = new StringBuilder();
-
-            commandArguments.Append(command);
-            commandArguments.Append(" ");
-            commandArguments.Append(String.Join(" ", args));
-
-            return commandArguments.ToString();
-        }
-
     }
 }

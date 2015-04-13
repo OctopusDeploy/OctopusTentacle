@@ -12,7 +12,6 @@ namespace Octopus.Shared.Packages
         readonly ILog log = Log.Octopus();
         readonly IOctopusFileSystem fileSystem;
         readonly ISemaphore semaphore = new SystemSemaphore();
-        readonly string octoDiffPath = "";
         readonly string signatureCommandName = "signature";
         readonly string deltaCommandName = "delta";
         readonly string currentWorkingDirectory;
@@ -20,7 +19,6 @@ namespace Octopus.Shared.Packages
         public PackageDeltaFactory(IOctopusFileSystem fileSystem, IPackageStore packageStore)
         {
             this.fileSystem = fileSystem;
-            octoDiffPath = OctoDiff.GetFullPath();
             currentWorkingDirectory = packageStore.GetPackagesDirectory();
         }
 
@@ -33,15 +31,13 @@ namespace Octopus.Shared.Packages
                 log.VerboseFormat("Building signature file: {0} ", fullPath);
                 using (semaphore.Acquire("Calamari:Signature: " + signatureFilePath, "Another process is currently building " + signatureFilePath))
                 {
-                    var arguments = OctoDiff.FormatCommandArguments(signatureCommandName, nearestPackageFilePath, signatureFilePath);
-                    log.VerboseFormat("Running {0} {1}", octoDiffPath, arguments);
-                    
-                    var exitCode = SilentProcessRunner.ExecuteCommand(
-                        octoDiffPath,
-                        arguments,
-                        currentWorkingDirectory,
-                        output => log.Info(output),
-                        error => log.Error(error));
+                    var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
+                        .Action(signatureCommandName)
+                        .Argument("basis-file", nearestPackageFilePath)
+                        .Argument("signature-file", signatureFilePath)
+                        .Build();
+
+                    var exitCode = octoDiff.ExecuteCommand(log);
 
                     if(exitCode != 0)
                         fileSystem.DeleteFile(signatureFilePath, DeletionOptions.TryThreeTimes);
@@ -58,15 +54,14 @@ namespace Octopus.Shared.Packages
                 log.VerboseFormat("Building delta file: {0}", fullPath);
                 using (semaphore.Acquire("Calamari:Delta: " + deltaFilePath, "Another process is currently building delta file " + deltaFilePath))
                 {
-                    var arguments = OctoDiff.FormatCommandArguments(deltaCommandName, signatureFilePath, newPackageFilePath, deltaFilePath);
-                        log.VerboseFormat("Running {0} {1}", octoDiffPath, arguments);
-                    
-                    var exitCode = SilentProcessRunner.ExecuteCommand(
-                        octoDiffPath,
-                        arguments,
-                        currentWorkingDirectory,
-                        output => log.Info(output),
-                        error => log.Error(error));
+                    var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
+                        .Action(deltaCommandName)
+                        .Argument("signature-file", signatureFilePath)
+                        .Argument("new-file", newPackageFilePath)
+                        .Argument("delta-file", deltaFilePath)
+                        .Build();
+
+                    var exitCode = octoDiff.ExecuteCommand(log);
 
                     if (exitCode != 0)
                         fileSystem.DeleteFile(deltaFilePath, DeletionOptions.TryThreeTimes);
