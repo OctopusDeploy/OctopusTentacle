@@ -86,6 +86,12 @@ namespace Octopus.Shared.Util
             return "--" + Normalize(flagName);
         }
 
+        public CliBuilder PositionalArgument(object argValue)
+        {
+            arguments.Add(MakePositionalArg(argValue));
+            return this;
+        }
+
         public CliBuilder Argument(string argName, object argValue)
         {
             arguments.Add(MakeArg(argName, argValue));
@@ -96,6 +102,18 @@ namespace Octopus.Shared.Util
         {
             systemArguments.Add(MakeArg(argName, argValue));
             return this;
+        }
+
+        static string MakePositionalArg(object argValue)
+        {
+            var sval = "";
+            var f = argValue as IFormattable;
+            if (f != null)
+                sval = f.ToString(null, CultureInfo.InvariantCulture);
+            else if (argValue != null)
+                sval = argValue.ToString();
+
+            return string.Format("{0}", Escape(sval));
         }
 
         static string MakeArg(string argName, object argValue)
