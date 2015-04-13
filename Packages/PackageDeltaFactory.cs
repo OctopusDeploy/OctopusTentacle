@@ -27,9 +27,10 @@ namespace Octopus.Shared.Packages
         public string BuildSignature(string nearestPackageFilePath)
         {
             var signatureFilePath = Path.GetFileName(nearestPackageFilePath) + ".octosig";
-            if (!File.Exists(Path.Combine(currentWorkingDirectory, signatureFilePath)))
+            var fullPath = Path.Combine(currentWorkingDirectory, signatureFilePath);
+            if (!File.Exists(fullPath))
             {
-                log.VerboseFormat("Building signature file: {0} ", Path.Combine(currentWorkingDirectory, signatureFilePath));
+                log.VerboseFormat("Building signature file: {0} ", fullPath);
                 using (semaphore.Acquire("Calamari:Signature: " + signatureFilePath, "Another process is currently building " + signatureFilePath))
                 {
                     var arguments = OctoDiff.FormatCommandArguments(signatureCommandName, nearestPackageFilePath, signatureFilePath);
@@ -51,9 +52,10 @@ namespace Octopus.Shared.Packages
 
         public Stream BuildDelta(string newPackageFilePath, string signatureFilePath, string deltaFilePath)
         {
-            if (!File.Exists(Path.Combine(currentWorkingDirectory, deltaFilePath)))
+            var fullPath = Path.Combine(currentWorkingDirectory, deltaFilePath);
+            if (!File.Exists(fullPath))
             {
-                log.VerboseFormat("Building delta file: {0}", Path.Combine(currentWorkingDirectory, deltaFilePath));
+                log.VerboseFormat("Building delta file: {0}", fullPath);
                 using (semaphore.Acquire("Calamari:Delta: " + deltaFilePath, "Another process is currently building delta file " + deltaFilePath))
                 {
                     var arguments = OctoDiff.FormatCommandArguments(deltaCommandName, signatureFilePath, newPackageFilePath, deltaFilePath);
