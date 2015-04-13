@@ -32,24 +32,18 @@ namespace Octopus.Shared.Packages
                 log.VerboseFormat("Building signature file: {0} ", Path.Combine(currentWorkingDirectory, signatureFilePath));
                 using (semaphore.Acquire("Calamari:Signature: " + signatureFilePath, "Another process is currently building " + signatureFilePath))
                 {
-                    var exitCode = 0;
-                    var errors = new List<string>();
-                    try
-                    {
-                        var arguments = OctoDiff.FormatCommandArguments(signatureCommandName, nearestPackageFilePath, signatureFilePath);
-                        log.VerboseFormat("Running {0} {1}", octoDiffPath, arguments);
-                        exitCode = SilentProcessRunner.ExecuteCommand(
-                            octoDiffPath,
-                            arguments,
-                            currentWorkingDirectory,
-                            output => log.Info(output),
-                            errors.Add);
-                    }
-                    catch (Exception ex)
-                    {
-                        errors.Insert(0, "An exception was thrown when invoking " + octoDiffPath + " " + signatureCommandName + ": " + ex.Message);
-                        throw new CommandLineException(exitCode, errors);
-                    }
+                    var arguments = OctoDiff.FormatCommandArguments(signatureCommandName, nearestPackageFilePath, signatureFilePath);
+                    log.VerboseFormat("Running {0} {1}", octoDiffPath, arguments);
+                    
+                    var exitCode = SilentProcessRunner.ExecuteCommand(
+                        octoDiffPath,
+                        arguments,
+                        currentWorkingDirectory,
+                        output => log.Info(output),
+                        error => log.Error(error));
+
+                    if(exitCode != 0)
+                        fileSystem.DeleteFile(signatureFilePath, DeletionOptions.TryThreeTimes);
                 }
             }
             return signatureFilePath;
@@ -62,24 +56,18 @@ namespace Octopus.Shared.Packages
                 log.VerboseFormat("Building delta file: {0}", Path.Combine(currentWorkingDirectory, deltaFilePath));
                 using (semaphore.Acquire("Calamari:Delta: " + deltaFilePath, "Another process is currently building delta file " + deltaFilePath))
                 {
-                    var exitCode = 0;
-                    var errors = new List<string>();
-                    try
-                    {
-                        var arguments = OctoDiff.FormatCommandArguments(deltaCommandName, signatureFilePath, newPackageFilePath, deltaFilePath);
+                    var arguments = OctoDiff.FormatCommandArguments(deltaCommandName, signatureFilePath, newPackageFilePath, deltaFilePath);
                         log.VerboseFormat("Running {0} {1}", octoDiffPath, arguments);
-                        exitCode = SilentProcessRunner.ExecuteCommand(
-                            octoDiffPath,
-                            arguments,
-                            currentWorkingDirectory,
-                            output => log.Info(output),
-                            errors.Add);
-                    }
-                    catch (Exception ex)
-                    {
-                        errors.Insert(0, "An exception was thrown when invoking " + octoDiffPath + " " + deltaCommandName + ": " + ex.Message);
-                        throw new CommandLineException(exitCode, errors);
-                    }
+                    
+                    var exitCode = SilentProcessRunner.ExecuteCommand(
+                        octoDiffPath,
+                        arguments,
+                        currentWorkingDirectory,
+                        output => log.Info(output),
+                        error => log.Error(error));
+
+                    if (exitCode != 0)
+                        fileSystem.DeleteFile(deltaFilePath, DeletionOptions.TryThreeTimes);
                 }
             }
 
