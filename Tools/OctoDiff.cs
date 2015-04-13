@@ -19,7 +19,7 @@ namespace Octopus.Shared.Tools
                 return octoDiffPath;
             }
 
-            var path = Assembly.GetExecutingAssembly().FullLocalPath();
+            var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullLocalPath());
             octoDiffPath = Path.Combine(path, "Octodiff.exe");
 
             if (!File.Exists(octoDiffPath))
