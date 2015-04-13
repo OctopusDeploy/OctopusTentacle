@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Tools;
 using Octopus.Shared.Util;
@@ -31,21 +32,17 @@ namespace Octopus.Shared.Packages
                 log.VerboseFormat("  - Using nearest package: {0}", nearestPackageFilePath);
                 using (semaphore.Acquire("Calamari:Signature: " + signatureFilePath, "Another process is currently building " + fullPath))
                 {
-                    try
-                    {
-                        var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
-                            .Action(signatureCommandName)
-                            .PositionalArgument(nearestPackageFilePath)
-                            .PositionalArgument(fullPath)
-                            .Build();
+                    var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
+                        .Action(signatureCommandName)
+                        .PositionalArgument(nearestPackageFilePath)
+                        .PositionalArgument(fullPath)
+                        .Build();
 
-                        octoDiff.ExecuteCommand(currentWorkingDirectory)
-                            .Validate();
-                    }
-                    catch (CommandLineException)
+                    var cmdResult = octoDiff.ExecuteCommand(currentWorkingDirectory);
+                    if (cmdResult.ExitCode != 0)
                     {
                         fileSystem.DeleteFile(signatureFilePath, DeletionOptions.TryThreeTimes);
-                        throw;
+                        throw new CommandLineException(cmdResult.ExitCode, cmdResult.Errors.ToList());
                     }
                 }
             }
@@ -63,23 +60,19 @@ namespace Octopus.Shared.Packages
                 log.VerboseFormat("  - Using signature: {0}", signatureFilePath);
                 using (semaphore.Acquire("Calamari:Delta: " + deltaFilePath, "Another process is currently building delta file " + fullPath))
                 {
-                    try
-                    {
-                        var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
-                            .Action(deltaCommandName)
-                            .PositionalArgument(signatureFilePath)
-                            .PositionalArgument(newPackageFilePath)
-                            .PositionalArgument(fullPath)
-                            .Build();
+                    var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
+                        .Action(deltaCommandName)
+                        .PositionalArgument(signatureFilePath)
+                        .PositionalArgument(newPackageFilePath)
+                        .PositionalArgument(fullPath)
+                        .Build();
 
-                        octoDiff.ExecuteCommand(currentWorkingDirectory)
-                            .Validate();
+                    var cmdResult = octoDiff.ExecuteCommand(currentWorkingDirectory);
 
-                    }
-                    catch (CommandLineException)
+                    if (cmdResult.ExitCode != 0)
                     {
                         fileSystem.DeleteFile(fullPath, DeletionOptions.TryThreeTimes);
-                        throw;
+                        throw new CommandLineException(cmdResult.ExitCode, cmdResult.Errors.ToList());
                     }
                 }
             }
