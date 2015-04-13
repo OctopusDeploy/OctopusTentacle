@@ -30,7 +30,7 @@ namespace Octopus.Shared.Packages
             if (!File.Exists(Path.Combine(currentWorkingDirectory, signatureFilePath)))
             {
                 log.VerboseFormat("Building signature file: {0} ", Path.Combine(currentWorkingDirectory, signatureFilePath));
-                using (semaphore.Acquire("Building signature file: " + signatureFilePath, "Another process is currently building " + signatureFilePath))
+                using (semaphore.Acquire("Calamari:Signature: " + signatureFilePath, "Another process is currently building " + signatureFilePath))
                 {
                     var exitCode = 0;
                     var errors = new List<string>();
@@ -60,7 +60,7 @@ namespace Octopus.Shared.Packages
             if (!File.Exists(Path.Combine(currentWorkingDirectory, deltaFilePath)))
             {
                 log.VerboseFormat("Building delta file: {0}", Path.Combine(currentWorkingDirectory, deltaFilePath));
-                using (semaphore.Acquire("Building delta file: " + deltaFilePath, "Another process is currently building delta file " + deltaFilePath))
+                using (semaphore.Acquire("Calamari:Delta: " + deltaFilePath, "Another process is currently building delta file " + deltaFilePath))
                 {
                     var exitCode = 0;
                     var errors = new List<string>();
