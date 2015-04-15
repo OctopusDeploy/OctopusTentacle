@@ -14,6 +14,7 @@ namespace Octopus.Shared.Packages
         readonly ISemaphore semaphore = new SystemSemaphore();
         readonly string signatureCommandName = "signature";
         readonly string deltaCommandName = "delta";
+        readonly string partialFileExtension = ".partial";
         readonly string currentWorkingDirectory;
 
         public PackageDeltaFactory(IOctopusFileSystem fileSystem, IPackageStore packageStore)
@@ -24,60 +25,64 @@ namespace Octopus.Shared.Packages
 
         public string BuildSignature(string nearestPackageFilePath)
         {
-            var signatureFilePath = Path.GetFileName(nearestPackageFilePath) + ".octosig";
-            var fullPath = Path.Combine(currentWorkingDirectory, signatureFilePath);
-            if (!File.Exists(fullPath))
+            var signatureFileName = Path.GetFileName(nearestPackageFilePath) + ".octosig";
+            var fullSignatureFilePath = Path.Combine(currentWorkingDirectory, signatureFileName);
+            if (!File.Exists(fullSignatureFilePath))
             {
-                log.VerboseFormat("Building signature file: {0} ", fullPath);
+                log.VerboseFormat("Building signature file: {0} ", fullSignatureFilePath);
                 log.VerboseFormat("  - Using nearest package: {0}", nearestPackageFilePath);
-                using (semaphore.Acquire("Calamari:Signature: " + signatureFilePath, "Another process is currently building " + fullPath))
+                var tempSignatureFilePath = fullSignatureFilePath + partialFileExtension;
+                using (semaphore.Acquire("Calamari:Signature: " + signatureFileName, "Another process is currently building " + fullSignatureFilePath))
                 {
                     var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
                         .Action(signatureCommandName)
                         .PositionalArgument(nearestPackageFilePath)
-                        .PositionalArgument(fullPath)
+                        .PositionalArgument(tempSignatureFilePath)
                         .Build();
 
                     var cmdResult = octoDiff.ExecuteCommand(currentWorkingDirectory);
                     if (cmdResult.ExitCode != 0)
                     {
-                        fileSystem.DeleteFile(signatureFilePath, DeletionOptions.TryThreeTimes);
+                        fileSystem.DeleteFile(tempSignatureFilePath, DeletionOptions.TryThreeTimes);
                         throw new CommandLineException(cmdResult.ExitCode, cmdResult.Errors.ToList());
                     }
+                    File.Move(tempSignatureFilePath, fullSignatureFilePath);
                 }
             }
 
-            return fullPath;
+            return fullSignatureFilePath;
         }
 
-        public Stream BuildDelta(string newPackageFilePath, string signatureFilePath, string deltaFilePath)
+        public Stream BuildDelta(string newPackageFilePath, string signatureFilePath, string deltaFileName)
         {
-            var fullPath = Path.Combine(currentWorkingDirectory, deltaFilePath);
-            if (!File.Exists(fullPath))
+            var fullDeltaFilePath = Path.Combine(currentWorkingDirectory, deltaFileName);
+            if (!File.Exists(fullDeltaFilePath))
             {
-                log.VerboseFormat("Building delta file: {0}", fullPath);
+                var tempDeltaFilePath = fullDeltaFilePath + partialFileExtension;
+                log.VerboseFormat("Building delta file: {0}", fullDeltaFilePath);
                 log.VerboseFormat("  - Using package: {0}.", newPackageFilePath);
                 log.VerboseFormat("  - Using signature: {0}", signatureFilePath);
-                using (semaphore.Acquire("Calamari:Delta: " + deltaFilePath, "Another process is currently building delta file " + fullPath))
+                using (semaphore.Acquire("Calamari:Delta: " + deltaFileName, "Another process is currently building delta file " + fullDeltaFilePath))
                 {
                     var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
                         .Action(deltaCommandName)
                         .PositionalArgument(signatureFilePath)
                         .PositionalArgument(newPackageFilePath)
-                        .PositionalArgument(fullPath)
+                        .PositionalArgument(tempDeltaFilePath)
                         .Build();
 
                     var cmdResult = octoDiff.ExecuteCommand(currentWorkingDirectory);
 
                     if (cmdResult.ExitCode != 0)
                     {
-                        fileSystem.DeleteFile(fullPath, DeletionOptions.TryThreeTimes);
+                        fileSystem.DeleteFile(tempDeltaFilePath, DeletionOptions.TryThreeTimes);
                         throw new CommandLineException(cmdResult.ExitCode, cmdResult.Errors.ToList());
                     }
+                    File.Move(tempDeltaFilePath, fullDeltaFilePath);
                 }
             }
 
-            return fileSystem.OpenFile(fullPath, FileAccess.Read);
+            return fileSystem.OpenFile(fullDeltaFilePath, FileAccess.Read);
         }
     }
 }
