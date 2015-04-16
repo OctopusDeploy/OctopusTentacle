@@ -143,6 +143,15 @@ namespace Octopus.Shared.Variables
                 [Define(Description = "The version number of the last release of the project", Example = "1.2.2")]
                 public static string Number = "Octopus.Release.Previous.Number";
             }
+
+            public static class PreviousForEnvironment
+            {
+                [Define(Description = "The ID of the last release of the project to the current environment", Example = "releases-112")]
+                public static string Id = "Octopus.Release.PreviousForEnvironment.Id";
+
+                [Define(Description = "The version number of the last release of the project to the current environment", Example = "1.1.2")]
+                public static string Number = "Octopus.Release.PreviousForEnvironment.Number";
+            }
         }
         
         public static class Version
