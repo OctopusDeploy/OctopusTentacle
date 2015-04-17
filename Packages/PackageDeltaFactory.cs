@@ -12,9 +12,9 @@ namespace Octopus.Shared.Packages
         readonly ILog log = Log.Octopus();
         readonly IOctopusFileSystem fileSystem;
         readonly ISemaphore semaphore = new SystemSemaphore();
-        readonly string signatureCommandName = "signature";
-        readonly string deltaCommandName = "delta";
-        readonly string partialFileExtension = ".partial";
+        const string signatureCommandName = "signature";
+        const string deltaCommandName = "delta";
+        const string partialFileExtension = ".partial";
         readonly string currentWorkingDirectory;
 
         public PackageDeltaFactory(IOctopusFileSystem fileSystem, IPackageStore packageStore)
