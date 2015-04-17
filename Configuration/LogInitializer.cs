@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using Autofac;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;

@@ -59,11 +59,6 @@ namespace Octopus.Shared.Configuration
         string PackagesDirectory { get; }
 
         /// <summary>
-        /// Gets the directory to which job logs will be uploaded to on this machine.
-        /// </summary>
-        string LogsDirectory { get; }
-
-        /// <summary>
         /// Gets the file where deployment entries should be added.
         /// </summary>
         string JournalFilePath { get; }

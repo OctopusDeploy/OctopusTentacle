@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Security.Cryptography;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security.MasterKey;
@@ -9,13 +8,11 @@ namespace Octopus.Shared.Configuration
     public class OctopusServerStorageConfiguration : IOctopusServerStorageConfiguration
     {
         readonly IKeyValueStore settings;
-        readonly IHomeConfiguration home;
         readonly ILog log = Log.Octopus();
 
-        public OctopusServerStorageConfiguration(IKeyValueStore settings, IHomeConfiguration home)
+        public OctopusServerStorageConfiguration(IKeyValueStore settings)
         {
             this.settings = settings;
-            this.home = home;
 
             if (MasterKey == null)
             {
@@ -38,35 +35,6 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Octopus.Storage.ExternalDatabaseConnectionString", value); }
         }
 
-        public bool BackupsEnabledByDefault
-        {
-            get { return settings.Get("Octopus.Storage.BackupsEnabledByDefault", true); }
-            set { settings.Set("Octopus.Storage.BackupsEnabledByDefault", value); }
-        }
-
-        public StorageMode StorageMode
-        {
-            get { return settings.Get("Octopus.Storage.Mode", StorageMode.Embedded); }
-            set { settings.Set("Octopus.Storage.Mode", value); }
-        }
-
-        public string EmbeddedDatabaseStoragePath
-        {
-            get { return Path.Combine(home.HomeDirectory, "RavenDB"); }
-        }
-
-        public int EmbeddedDatabaseListenPort
-        {
-            get { return settings.Get("Octopus.Storage.EmbeddedDatabaseListenPort", 10931); }
-            set { settings.Set("Octopus.Storage.EmbeddedDatabaseListenPort", value); }
-        }
-
-        public string EmbeddedDatabaseListenHostname
-        {
-            get { return settings.Get("Octopus.Storage.EmbeddedDatabaseListenHostname", "localhost"); }
-            set { settings.Set("Octopus.Storage.EmbeddedDatabaseListenHostname", value); }
-        }
-
         public byte[] MasterKey
         {
             get
@@ -77,11 +45,6 @@ namespace Octopus.Shared.Configuration
             {
                 settings.Set("Octopus.Storage.MasterKey", value, DataProtectionScope.LocalMachine);
             }
-        }
-
-        public string ActivityLogDirectory
-        {
-            get { return Path.Combine(home.ApplicationSpecificHomeDirectory, "ActivityLogs"); }
         }
 
         public void Save()
