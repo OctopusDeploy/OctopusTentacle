@@ -1,13 +1,11 @@
 using System;
 using System.IO;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
     public class HomeConfiguration : IHomeConfiguration
     {
-        readonly ILog log = Log.Octopus();
         readonly ApplicationName application;
         readonly IKeyValueStore settings;
         readonly string defaultHome;

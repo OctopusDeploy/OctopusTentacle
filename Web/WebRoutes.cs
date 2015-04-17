@@ -43,11 +43,6 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/smtpconfiguration";
             }
 
-            public static class BackupConfiguration
-            {
-                public static string Template = "~/api/backupconfiguration";
-            }
-
             public static class BuiltInRepositoryConfiguration
             {
                 public static string Template = "~/api/repository/configuration";

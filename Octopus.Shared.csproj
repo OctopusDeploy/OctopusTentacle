@@ -108,7 +108,6 @@
     <Compile Include="Communications\AutofacServiceFactory.cs" />
     <Compile Include="Configuration\ICommunicationsConfiguration.cs" />
     <Compile Include="Configuration\IDeploymentProcessConfiguration.cs" />
-    <Compile Include="Configuration\IFileStorageConfiguration.cs" />
     <Compile Include="Configuration\IHomeConfiguration.cs" />
     <Compile Include="Configuration\IKeyValueStore.cs" />
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
@@ -116,7 +115,6 @@
     <Compile Include="Configuration\IModifiableConfiguration.cs" />
     <Compile Include="Configuration\IOctopusServerStorageConfiguration.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
-    <Compile Include="Configuration\ITcpServerCommunicationsConfiguration.cs" />
     <Compile Include="Configuration\ITentacleConfiguration.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\IWebPortalConfiguration.cs" />
@@ -221,7 +219,6 @@
     <Compile Include="Configuration\ConfigurationModule.cs" />
     <Compile Include="Configuration\DeploymentProcessConfiguration.cs" />
     <Compile Include="Configuration\DictionaryKeyValueStore.cs" />
-    <Compile Include="Configuration\FileStorageConfiguration.cs" />
     <Compile Include="Configuration\HomeConfiguration.cs" />
     <Compile Include="Configuration\IApplicationInstanceSelector.cs" />
     <Compile Include="Configuration\IApplicationInstanceStore.cs" />

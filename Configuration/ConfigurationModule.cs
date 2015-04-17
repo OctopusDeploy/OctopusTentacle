@@ -37,8 +37,7 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<LogInitializer>().As<IStartable>();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
             builder.RegisterType<ProxyInitializer>().As<IStartable>();
-            builder.RegisterType<CommunicationsConfiguration>().As<ICommunicationsConfiguration, ITcpServerCommunicationsConfiguration>().SingleInstance();
-            builder.RegisterType<FileStorageConfiguration>().As<IFileStorageConfiguration>().SingleInstance();
+            builder.RegisterType<CommunicationsConfiguration>().As<ICommunicationsConfiguration>().SingleInstance();
             builder.Register(c => new StoredMasterKeyEncryption(c.Resolve<IMasterKeyConfiguration>().MasterKey)).As<IMasterKeyEncryption>().SingleInstance();
         }
     }
