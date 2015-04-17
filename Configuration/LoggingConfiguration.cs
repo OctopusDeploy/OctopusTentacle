@@ -14,7 +14,10 @@ namespace Octopus.Shared.Configuration
 
         public string LogsDirectory
         {
-            get { return Path.Combine(home.HomeDirectory, "Logs"); }
+            get
+            {
+                return Path.Combine(home.HomeDirectory, "Logs");
+            }
         }
     }
 }

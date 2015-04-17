@@ -34,7 +34,7 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<UpgradeCheckConfiguration>().As<IUpgradeCheckConfiguration>().SingleInstance();
             builder.Register(c => new HomeConfiguration(applicationName, c.Resolve<IKeyValueStore>())).As<IHomeConfiguration>().SingleInstance();
             builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().SingleInstance();
-            builder.RegisterType<LogInitializer>().As<IStartable>();
+            builder.RegisterType<LogInitializer>().As<ILogInitializer>();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
             builder.RegisterType<ProxyInitializer>().As<IStartable>();
             builder.RegisterType<CommunicationsConfiguration>().As<ICommunicationsConfiguration>().SingleInstance();

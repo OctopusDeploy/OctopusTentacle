@@ -18,7 +18,7 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                return Path.Combine(home.HomeDirectory, "PackageCache");
+                return Path.Combine(home.ApplicationSpecificHomeDirectory, "PackageCache");
             }
         }
 

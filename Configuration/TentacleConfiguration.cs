@@ -15,13 +15,15 @@ namespace Octopus.Shared.Configuration
     public class TentacleConfiguration : ITentacleConfiguration, IMasterKeyConfiguration
     {
         readonly IKeyValueStore settings;
+        readonly IHomeConfiguration home;
         readonly ICommunicationsConfiguration communicationsConfiguration;
         readonly ICertificateGenerator certificateGenerator;
         readonly ILog log = Log.Octopus();
 
-        public TentacleConfiguration(IKeyValueStore settings, ICommunicationsConfiguration communicationsConfiguration, ICertificateGenerator certificateGenerator)
+        public TentacleConfiguration(IKeyValueStore settings, IHomeConfiguration home, ICommunicationsConfiguration communicationsConfiguration, ICertificateGenerator certificateGenerator)
         {
             this.settings = settings;
+            this.home = home;
             this.communicationsConfiguration = communicationsConfiguration;
             this.certificateGenerator = certificateGenerator;
 
@@ -124,17 +126,13 @@ namespace Octopus.Shared.Configuration
 
         public string PackagesDirectory
         {
-            get { return Path.Combine(ApplicationDirectory, ".Tentacle\\Packages"); }
-        }
-
-        public string LogsDirectory
-        {
-            get { return Path.Combine(ApplicationDirectory, ".Tentacle\\Logs"); }
+            // TODO: Still needed?
+            get { return Path.Combine(ApplicationDirectory, "Packages"); }
         }
 
         public string JournalFilePath
         {
-            get { return Path.Combine(ApplicationDirectory, ".Tentacle\\DeploymentJournal.xml"); }
+            get { return Path.Combine(home.HomeDirectory, "DeploymentJournal.xml"); }
         }
 
         public X509Certificate2 TentacleCertificate

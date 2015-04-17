@@ -1,5 +1,6 @@
 using System;
 using NLog;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Util;
 
@@ -44,9 +45,9 @@ namespace Octopus.Shared.Startup
                 Console.WriteLine(new string('-', 79));
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine("Full error details are available in the log files.");
-                Console.Write("See: ");
+                Console.Write("At: ");
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("http://g.octopushq.com/LogFiles");
+                Console.WriteLine(OctopusLogsDirectoryRenderer.LogsDirectory);
                 Console.ResetColor();
 
                 ExceptionKnowledgeBaseEntry entry;

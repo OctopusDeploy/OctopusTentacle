@@ -111,6 +111,7 @@
     <Compile Include="Configuration\IHomeConfiguration.cs" />
     <Compile Include="Configuration\IKeyValueStore.cs" />
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
+    <Compile Include="Configuration\ILogInitializer.cs" />
     <Compile Include="Configuration\IMasterKeyConfiguration.cs" />
     <Compile Include="Configuration\IModifiableConfiguration.cs" />
     <Compile Include="Configuration\IOctopusServerStorageConfiguration.cs" />
@@ -119,7 +120,6 @@
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\IWebPortalConfiguration.cs" />
     <Compile Include="Configuration\OctopusServerConfiguration.cs" />
-    <Compile Include="Configuration\StorageMode.cs" />
     <Compile Include="Contracts\FullIsolationLevel.cs" />
     <Compile Include="Contracts\IFileTransferService.cs" />
     <Compile Include="Contracts\IScriptService.cs" />
