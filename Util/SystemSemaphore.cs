@@ -14,7 +14,7 @@ namespace Octopus.Shared.Util
         public IDisposable Acquire(string name, string waitMessage)
         {
             var semaphore = new Semaphore(1, 1, name);
-            if (!semaphore.WaitOne(1000))
+            if (!semaphore.WaitOne(3000))
             {
                 log.Verbose(waitMessage);
                 semaphore.WaitOne();
