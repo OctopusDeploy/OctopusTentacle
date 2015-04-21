@@ -201,10 +201,13 @@
     <Compile Include="Tasks\IRunningTask.cs" />
     <Compile Include="Tasks\ITaskController.cs" />
     <Compile Include="Tasks\OctoParallel.cs" />
+    <Compile Include="Tasks\OctoThreadClosure.cs" />
+    <Compile Include="Tasks\ParallelWorkOrder.cs" />
     <Compile Include="Tasks\Planned.cs" />
     <Compile Include="Tasks\RunningTask.cs" />
     <Compile Include="Tasks\TaskCompletionHandler.cs" />
     <Compile Include="Tasks\TaskControllerAttribute.cs" />
+    <Compile Include="Tasks\WorkItem.cs" />
     <Compile Include="Tools\CommandLine.cs" />
     <Compile Include="PackageConversion\Archives\ZipToTarConverter.cs" />
     <Compile Include="Bcl\IO\IOUtil.cs" />
