@@ -434,6 +434,9 @@ namespace Octopus.Shared.Variables
                 public static readonly string IgnoreConfigTransformationErrors = "Octopus.Action.Package.IgnoreConfigTransformationErrors";
 
                 [Define(Category = VariableCategory.Hidden)]
+                public static readonly string SuppressConfigTransformationLogging = "Octopus.Action.Package.SuppressConfigTransformationLogging";
+
+                [Define(Category = VariableCategory.Hidden)]
                 public static readonly string AdditionalXmlConfigurationTransforms = "Octopus.Action.Package.AdditionalXmlConfigurationTransforms";
 
                 [Define(Category = VariableCategory.Action, Description = "If true, and the version of the package being deployed is already present on the machine, its re-deployment will be skipped (use with caution)", Example = "False", Domain = VariableDomain.Boolean)]
