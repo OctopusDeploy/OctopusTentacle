@@ -28,6 +28,16 @@ namespace Octopus.Shared.Diagnostics
             return OpenBlock(string.Format(messageFormat, args));
         }
 
+        public LogCorrelator PlanGroupedBlock(string messageText)
+        {
+            var child = Current.CreateChild();
+            using (WithinBlock(child))
+            {
+                Write(LogCategory.Info, messageText);
+            }
+            return child;
+        }
+
         public LogCorrelator PlanFutureBlock(string messageText)
         {
             var child = Current.CreateChild();

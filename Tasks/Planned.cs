@@ -11,6 +11,11 @@ namespace Octopus.Shared.Tasks
             return Create(item, name, null);
         }
 
+        public static Planned<T> CreateUnplannedGroup<T>(T item, string name, LogCorrelator logCorrelator)
+        {
+            return Create(item, name, logCorrelator);
+        }
+
         public static Planned<T> CreateUnplanned<T>(T item, string name)
         {
             return Create(item, name, CreateUnplanned(name));

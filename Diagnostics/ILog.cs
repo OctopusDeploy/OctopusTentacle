@@ -30,6 +30,13 @@ namespace Octopus.Shared.Diagnostics
         IDisposable OpenBlock(string messageFormat, params object[] args);
 
         /// <summary>
+        /// Plans a new block of output that will be used in the future for grouping child blocks for logging.
+        /// </summary>
+        /// <param name="messageText">Title of the new block.</param>
+        /// <returns>An <see cref="LogCorrelator"/> that will automatically revert the current block when disposed.</returns>
+        LogCorrelator PlanGroupedBlock(string messageText);
+
+        /// <summary>
         /// Plans a new block of log output that will be used in the future. This is typically used for high-level log information, such as the steps in a big deployment process.
         /// </summary>
         /// <param name="messageText">Title of the new block.</param>
