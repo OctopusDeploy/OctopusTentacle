@@ -10,7 +10,7 @@ namespace Octopus.Shared.Configuration
         string UniqueControllerName { get; set; }
 
         /// <summary>
-        /// Gets or sets the RavenDB connection string to use when  the <see cref="StorageMode"/> is <see cref="Configuration.StorageMode.External"/>.
+        /// Gets or sets the SQL Server connection string to use.
         /// </summary>
         string ExternalDatabaseConnectionString { get; set; }
     }
