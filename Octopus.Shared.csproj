@@ -145,15 +145,6 @@
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
     <Compile Include="Diagnostics\LogCategory.cs" />
-    <Compile Include="Endpoints\CloudServiceEndpoint.cs" />
-    <Compile Include="Endpoints\Endpoint.cs" />
-    <Compile Include="Endpoints\IEndpointWithAccount.cs" />
-    <Compile Include="Endpoints\IEndpointWithHostname.cs" />
-    <Compile Include="Endpoints\ListeningTentacleEndpoint.cs" />
-    <Compile Include="Endpoints\OfflineDropEndpoint.cs" />
-    <Compile Include="Endpoints\PollingTentacleEndpoint.cs" />
-    <Compile Include="Endpoints\SshEndpoint.cs" />
-    <Compile Include="Endpoints\TentacleEndpoint.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Logging\LogCorrelator.cs" />
     <Compile Include="Logging\ProgressMessageCategory.cs" />
@@ -401,6 +392,7 @@
     <Folder Include="Artifacts\" />
     <Folder Include="Endpoints\Discovery\" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

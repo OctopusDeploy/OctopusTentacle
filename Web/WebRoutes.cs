@@ -20,6 +20,12 @@ namespace Octopus.Shared.Web
                 public static string Index = "~/api/accounts{?skip}";
                 public static string Get = "~/api/accounts/{id}";
                 public static string PublicKey = "~/api/accounts/{id}/pk";
+
+                public static class Azure
+                {
+                    public static string WebSpaces = "~/api/accounts/{id}/webspaces";
+                    public static string WebSites = "~/api/accounts/{accountId}/webspaces{/webspaceName}/websites";
+                }
             }
 
             public static class ActionTemplates
