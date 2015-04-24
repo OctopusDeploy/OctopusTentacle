@@ -8,14 +8,14 @@ namespace Octopus.Shared.Tasks
     {
         public static void ForEach<T>(IEnumerable<Planned<T>> workItems, Action<T> executeCallback)
         {
-            ForEach<T>(workItems, null, executeCallback);
+            ForEach<T>(workItems, null, executeCallback, null);
         }
 
-        public static void ForEach<T>(IEnumerable<Planned<T>> workItems, int? maxParallelism, Action<T> executeCallback)
+        public static void ForEach<T>(IEnumerable<Planned<T>> workItems, int? maxParallelism, Action<T> executeCallback, ITaskContext taskContext)
         {
             var items = workItems.ToList();
 
-            var workOrder = new ParallelWorkOrder<T>(items, maxParallelism ?? int.MaxValue, executeCallback);
+            var workOrder = new ParallelWorkOrder<T>(items, maxParallelism ?? int.MaxValue, executeCallback, taskContext);
             workOrder.Execute();
         }
     }
