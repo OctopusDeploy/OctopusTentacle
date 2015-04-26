@@ -10,16 +10,16 @@ namespace Octopus.Shared.Tasks
     {
         private readonly int maxParallelism;
         private readonly Action<T> executeCallback;
-        readonly ITaskContext taskContext;
+        readonly CancellationToken cancellation;
         readonly List<WorkItem<T>> completed = new List<WorkItem<T>>();
         readonly List<WorkItem<T>> running = new List<WorkItem<T>>();
         readonly Queue<Planned<T>> pending = new Queue<Planned<T>>();
 
-        public ParallelWorkOrder(IEnumerable<Planned<T>> work, int maxParallelism, Action<T> executeCallback, ITaskContext taskContext)
+        public ParallelWorkOrder(IEnumerable<Planned<T>> work, int maxParallelism, Action<T> executeCallback, CancellationToken cancellation)
         {
             this.maxParallelism = maxParallelism;
             this.executeCallback = executeCallback;
-            this.taskContext = taskContext;
+            this.cancellation = cancellation;
             foreach (var item in work) pending.Enqueue(item);
         }
 
@@ -27,7 +27,7 @@ namespace Octopus.Shared.Tasks
         {
             while (pending.Count > 0 || running.Count > 0)
             {
-                if(taskContext != null) taskContext.EnsureNotCancelled();
+                cancellation.ThrowIfCancellationRequested();
                 CheckForCompletedTasks();
                 AssertAllCompletedTasksThusFarAreSuccessful();
                 ScheduleNextWork();
