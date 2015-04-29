@@ -18,5 +18,15 @@ namespace Octopus.Shared.Endpoints
                 return (typeof (CommunicationStyle).GetField(CommunicationStyle.ToString())).GetCustomAttributes(typeof (ScriptConsoleSupportedAttribute), false).Any();
             } 
         }
+
+        [JsonIgnore]
+        public bool TentacleUpgradeSupported
+        {
+            get
+            {
+                // If the CommunicationStyle is decorated with a TentacleUpgradeSupportedAttribute, then the endpoint may contain a tentacle that requires upgrading
+                return (typeof(CommunicationStyle).GetField(CommunicationStyle.ToString())).GetCustomAttributes(typeof(TentacleUpgradeSupportedAttribute), false).Any();
+            }
+        }
     }
 }
