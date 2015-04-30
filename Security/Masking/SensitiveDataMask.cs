@@ -21,6 +21,11 @@ namespace Octopus.Shared.Security.Masking
 
         public SensitiveDataMask(IEnumerable<string> instancesToMask)
         {
+            MaskInstancesOf(instancesToMask);
+        }
+
+        public void MaskInstancesOf(IEnumerable<string> instancesToMask)
+        {
             foreach (var instance in instancesToMask)
                 MaskInstancesOf(instance);
         }

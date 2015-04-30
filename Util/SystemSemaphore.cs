@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.Threading;
 using Octopus.Shared.Diagnostics;
 
@@ -11,16 +9,27 @@ namespace Octopus.Shared.Util
     {
         readonly ILog log = Log.Octopus();
 
+        public IDisposable Acquire(string name)
+        {
+            return Acquire(name, null);
+        }
+
         public IDisposable Acquire(string name, string waitMessage)
         {
-            var semaphore = new Semaphore(1, 1, name);
+            var semaphore = new Semaphore(1, 1, Normalize(name));
             if (!semaphore.WaitOne(3000))
             {
-                log.Verbose(waitMessage);
+                if (waitMessage != null)
+                    log.Verbose(waitMessage);
                 semaphore.WaitOne();
             }
 
             return new SemaphoreReleaser(semaphore);
+        }
+
+        static string Normalize(string name)
+        {
+            return name.Replace("\\", "_").Replace(":", "_").ToLowerInvariant();
         }
 
         class SemaphoreReleaser : IDisposable

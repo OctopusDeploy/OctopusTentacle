@@ -4,6 +4,7 @@ namespace Octopus.Shared.Util
 {
     public interface ISemaphore
     {
+        IDisposable Acquire(string name);
         IDisposable Acquire(string name, string waitMessage);
     }
 }
