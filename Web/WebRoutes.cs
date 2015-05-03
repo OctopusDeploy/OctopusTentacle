@@ -170,7 +170,7 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/tasks{/id}{?skip,active,environment,project,name}";
                 public static string Index = "~/api/tasks{?skip,active,environment,project,name}";
                 public static string Get = "~/api/tasks/{id}";
-                public static string Details = "~/api/tasks/{id}/details{?verbose}";
+                public static string Details = "~/api/tasks/{id}/details{?verbose,tail}";
                 public static string Raw = "~/api/tasks/{id}/raw";
                 public static string QueuedBehind = "~/api/tasks/{id}/queued-behind";
                 public static string Rerun = "~/api/tasks/rerun/{id}";
