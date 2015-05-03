@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-// ReSharper disable ReplaceWithStringIsNullOrEmpty
 
 namespace Octopus.Shared.Security.Masking
 {
@@ -26,6 +25,7 @@ namespace Octopus.Shared.Security.Masking
 
         public void MaskInstancesOf(IEnumerable<string> instancesToMask)
         {
+            if (instancesToMask == null) return;
             foreach (var instance in instancesToMask)
                 MaskInstancesOf(instance);
         }
@@ -47,7 +47,7 @@ namespace Octopus.Shared.Security.Masking
 
         public string ApplyTo(string raw)
         {
-            if (raw == null || raw.Length == 0 || raw.Length < 4 || valuesLongestToShortest.Count == 0)
+            if (string.IsNullOrEmpty(raw) || raw.Length < 4 || valuesLongestToShortest.Count == 0)
                 return raw;
 
             lock (sync)
@@ -72,11 +72,10 @@ namespace Octopus.Shared.Security.Masking
         {
             foreach (var sensitive in valuesShortestToLongest)
             {
-                if (!raw.Contains(sensitive))
+                if (raw.Contains(sensitive))
                 {
-                    continue;
+                    return true;
                 }
-                return true;
             }
             return false;
         }
