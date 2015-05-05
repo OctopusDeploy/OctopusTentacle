@@ -100,7 +100,6 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
-    <Compile Include="Artifacts\IArtifactStore.cs" />
     <Compile Include="BuiltInFeed\IBuiltInPackageRepository.cs" />
     <Compile Include="BuiltInFeed\RepositoryStatistics.cs" />
     <Compile Include="BuiltInFeed\SynchronizationState.cs" />
@@ -399,6 +398,7 @@
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Artifacts\" />
     <Folder Include="Endpoints\Discovery\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
