@@ -15,7 +15,7 @@ namespace Octopus.Shared.Contracts
         {
         }
 
-        [JsonConstructor]
+        [JsonConstructor] 
         public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation)
         {
             this.scriptBody = scriptBody;

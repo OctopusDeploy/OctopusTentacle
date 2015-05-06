@@ -383,6 +383,7 @@
     <Compile Include="Util\PasswordHasher.cs" />
     <Compile Include="Util\PathHelper.cs" />
     <Compile Include="Util\PathSegmentValidator.cs" />
+    <Compile Include="Util\PlatformTextFormatter.cs" />
     <Compile Include="Util\RandomStringGenerator.cs" />
     <Compile Include="Util\RemotedObject.cs" />
     <Compile Include="Util\RuntimeUtility.cs" />
