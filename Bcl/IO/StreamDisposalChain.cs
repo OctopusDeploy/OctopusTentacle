@@ -20,7 +20,13 @@ namespace Octopus.Shared.Bcl.IO
         {
             if (disposing)
             {
-                wrappedStream.Dispose();
+                try
+                {
+                    wrappedStream.Dispose();
+                }
+                catch (Exception)
+                {
+                }
                 foreach (var disposable in dependenciesInDisposalOrder)
                     disposable.Dispose();
             }

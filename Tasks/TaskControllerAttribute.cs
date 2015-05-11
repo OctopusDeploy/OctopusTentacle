@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Server.Orchestration
+namespace Octopus.Shared.Tasks
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class TaskControllerAttribute : Attribute
