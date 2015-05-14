@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -69,6 +70,35 @@ namespace Octopus.Shared.Util
             if (!Directory.Exists(argument))
             {
                 throw new ArgumentException(string.Format("Directory '{0}' not found", argument));
+            }
+        }
+
+        static Lazy<List<string>> specialLocations = new Lazy<List<string>>(() =>
+            {
+                var result = new List<string>();
+                foreach (var specialLocation in Enum.GetValues(typeof(Environment.SpecialFolder)))
+                {
+                    var location = Environment.GetFolderPath((Environment.SpecialFolder)specialLocation, Environment.SpecialFolderOption.None);
+                    result.Add(location);
+                }
+                result.Add("C:");
+                result.Add("C:\\");
+                return result;
+            }
+            );
+
+        /// <summary>
+        /// Throws if a directory has been specified that is not a good place to store files
+        /// </summary>
+        /// <remarks>
+        /// Use this to make sure the user doesn't export to somewhere stupid
+        /// </remarks>
+        public static void ArgumentNotSpecialLocation(string argument)
+        {
+            foreach (var path in specialLocations.Value)
+            {
+                if (string.Equals(argument, path, StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException(string.Format("Directory '{0}' is not a good place, pick a safe subdirectory", argument));
             }
         }
     }
