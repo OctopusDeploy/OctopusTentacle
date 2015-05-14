@@ -4,7 +4,6 @@ using System.Threading;
 using NuGet;
 using Octopus.Shared.BuiltInFeed;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Security.MasterKey;
 using Octopus.Shared.Util;
 using SemanticVersion = Octopus.Client.Model.SemanticVersion;
 
@@ -17,7 +16,6 @@ namespace Octopus.Shared.Packages
         readonly IOctopusPackageRepositoryFactory packageRepositoryFactory;
         readonly IBuiltInPackageRepository builtInPackageRepository;
         readonly IOctopusFileSystem fileSystem;
-        readonly IMasterKeyEncryption encryption;
         readonly ILog log;
 
         public PackageDownloader(
@@ -25,14 +23,12 @@ namespace Octopus.Shared.Packages
             IOctopusPackageRepositoryFactory packageRepositoryFactory, 
             IBuiltInPackageRepository builtInPackageRepository,
             IOctopusFileSystem fileSystem,
-            IMasterKeyEncryption encryption,
             ILog log)
         {
             this.packageStore = packageStore;
             this.packageRepositoryFactory = packageRepositoryFactory;
             this.builtInPackageRepository = builtInPackageRepository;
             this.fileSystem = fileSystem;
-            this.encryption = encryption;
             this.log = log;
         }
 
