@@ -125,6 +125,17 @@ namespace Octopus.Shared.Variables
             [Define(Description = "The roles applied to the machine", Example = "web-server,frontend", Domain = VariableDomain.List)]
             public static readonly string Roles = "Octopus.Machine.Roles";
             public static readonly string Hostname = "Octopus.Machine.Hostname";
+
+            public static readonly string CommunicationStyle = "Octopus.Machine.CommunicationStyle";
+
+            public static class Azure
+            {
+                public static readonly string SubscriptionId = "Octopus.Machine.Azure.SubscriptionId";
+                public static readonly string CertificateBytes = "Octopus.Machine.Azure.CertificateBytes";
+                public static readonly string CertificateThumbprint = "Octopus.Machine.Azure.CertificateThumbprint";
+                public static readonly string WebSpaceName = "Octopus.Machine.Azure.WebSpaceName";
+                public static readonly string WebAppName = "Octopus.Machine.Azure.WebAppName";
+            }
         }
 
         public static class Release
@@ -364,9 +375,6 @@ namespace Octopus.Shared.Variables
             [Define(Category = VariableCategory.Hidden)]
             public static readonly string IsFtpDeployment = "Octopus.Action.IsFtpDeployment";
 
-            [Define(Category = VariableCategory.Hidden)]
-            public static readonly string IsAzureDeployment = "Octopus.Action.IsAzureDeployment";
-
             [Define(Category = VariableCategory.Action, Description = "Machine roles targeted by the action", Example = "web-server,frontend", Domain = VariableDomain.List)]
             public static readonly string TargetRoles = "Octopus.Action.TargetRoles";
 
@@ -532,39 +540,6 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Action, Description = "The script being run in a script step", Example = "Write-Host 'Hello!'")]
                 public static readonly string ScriptBody = "Octopus.Action.Script.ScriptBody";
-            }
-
-            public static class Azure
-            {
-                [Define(Category = VariableCategory.Hidden)]
-                public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";
-
-                [Define(Category = VariableCategory.Hidden)]
-                public static readonly string Endpoint = "Octopus.Action.Azure.Endpoint";
-
-                [Define(Category = VariableCategory.Hidden)]
-                public static readonly string StorageAccountName = "Octopus.Action.Azure.StorageAccountName";
-
-                [Define(Category = VariableCategory.Hidden)]
-                public static readonly string CloudServiceName = "Octopus.Action.Azure.CloudServiceName";
-
-                [Define(Category = VariableCategory.Hidden)]
-                public static readonly string UploadedPackageUri = "Octopus.Action.Azure.UploadedPackageUri";
-
-                [Define(Category = VariableCategory.Hidden)]
-                public static readonly string Slot = "Octopus.Action.Azure.Slot";
-
-                [Define(Category = VariableCategory.Hidden)]
-                public static readonly string SwapIfPossible = "Octopus.Action.Azure.SwapIfPossible";
-
-                [Define(Category = VariableCategory.Hidden)]
-                public static readonly string UseCurrentInstanceCount = "Octopus.Action.Azure.UseCurrentInstanceCount";
-
-                [Define(Category = VariableCategory.Hidden)]
-                public static readonly string CertificateThumbprint = "Octopus.Action.Azure.CertificateThumbprint";
-
-                [Define(Category = VariableCategory.Hidden)]
-                public static readonly string CertificateBytes = "Octopus.Action.Azure.CertificateBytes";
             }
 
             public static class Manual

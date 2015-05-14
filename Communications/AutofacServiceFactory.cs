@@ -2,7 +2,7 @@ using System;
 using Autofac;
 using Halibut.ServiceModel;
 
-namespace Octopus.Agent.Communications.TcpServer
+namespace Octopus.Shared.Communications
 {
     public class AutofacServiceFactory : IServiceFactory
     {

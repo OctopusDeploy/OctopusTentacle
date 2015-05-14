@@ -42,9 +42,9 @@
     <Reference Include="Autofac">
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
     </Reference>
-    <Reference Include="Halibut, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Halibut.1.0.2.29\lib\Halibut.dll</HintPath>
+    <Reference Include="Halibut">
+      <HintPath>..\packages\Halibut.1.0.2.30\lib\Halibut.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
@@ -145,15 +145,6 @@
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
     <Compile Include="Diagnostics\LogCategory.cs" />
-    <Compile Include="Endpoints\CloudServiceEndpoint.cs" />
-    <Compile Include="Endpoints\Endpoint.cs" />
-    <Compile Include="Endpoints\IEndpointWithAccount.cs" />
-    <Compile Include="Endpoints\IEndpointWithHostname.cs" />
-    <Compile Include="Endpoints\ListeningTentacleEndpoint.cs" />
-    <Compile Include="Endpoints\OfflineDropEndpoint.cs" />
-    <Compile Include="Endpoints\PollingTentacleEndpoint.cs" />
-    <Compile Include="Endpoints\SshEndpoint.cs" />
-    <Compile Include="Endpoints\TentacleEndpoint.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Logging\LogCorrelator.cs" />
     <Compile Include="Logging\ProgressMessageCategory.cs" />
@@ -178,6 +169,38 @@
     <Compile Include="Packages\PackageMetadata.cs" />
     <Compile Include="Packages\PackageToAcquire.cs" />
     <Compile Include="Packages\StoredPackage.cs" />
+    <Compile Include="Properties\AspMvcActionAttribute.cs" />
+    <Compile Include="Properties\AspMvcActionSelectorAttribute.cs" />
+    <Compile Include="Properties\AspMvcAreaAttribute.cs" />
+    <Compile Include="Properties\AspMvcControllerAttribute.cs" />
+    <Compile Include="Properties\AspMvcDisplayTemplateAttribute.cs" />
+    <Compile Include="Properties\AspMvcEditorTemplateAttribute.cs" />
+    <Compile Include="Properties\AspMvcMasterAttribute.cs" />
+    <Compile Include="Properties\AspMvcModelTypeAttribute.cs" />
+    <Compile Include="Properties\AspMvcPartialViewAttribute.cs" />
+    <Compile Include="Properties\AspMvcSupressViewErrorAttribute.cs" />
+    <Compile Include="Properties\AspMvcTemplateAttribute.cs" />
+    <Compile Include="Properties\AspMvcViewAttribute.cs" />
+    <Compile Include="Properties\BaseTypeRequiredAttribute.cs" />
+    <Compile Include="Properties\CanBeNullAttribute.cs" />
+    <Compile Include="Properties\CannotApplyEqualityOperatorAttribute.cs" />
+    <Compile Include="Properties\ContractAnnotationAttribute.cs" />
+    <Compile Include="Properties\HtmlAttributeValueAttribute.cs" />
+    <Compile Include="Properties\HtmlElementAttributesAttribute.cs" />
+    <Compile Include="Properties\ImplicitUseKindFlags.cs" />
+    <Compile Include="Properties\ImplicitUseTargetFlags.cs" />
+    <Compile Include="Properties\InstantHandleAttribute.cs" />
+    <Compile Include="Properties\InvokerParameterNameAttribute.cs" />
+    <Compile Include="Properties\LocalizationRequiredAttribute.cs" />
+    <Compile Include="Properties\MeansImplicitUseAttribute.cs" />
+    <Compile Include="Properties\NotifyPropertyChangedInvocatorAttribute.cs" />
+    <Compile Include="Properties\NotNullAttribute.cs" />
+    <Compile Include="Properties\PathReferenceAttribute.cs" />
+    <Compile Include="Properties\PublicAPIAttribute.cs" />
+    <Compile Include="Properties\PureAttribute.cs" />
+    <Compile Include="Properties\RazorSectionAttribute.cs" />
+    <Compile Include="Properties\StringFormatMethodAttribute.cs" />
+    <Compile Include="Properties\UsedImplicitlyAttribute.cs" />
     <Compile Include="Security\Certificates\CertificateEncoder.cs" />
     <Compile Include="Security\EncryptedAttribute.cs" />
     <Compile Include="Security\Masking\MaskedException.cs" />
@@ -344,6 +367,7 @@
     <Compile Include="Util\DeletionOptions.cs" />
     <Compile Include="Util\ExceptionExtensions.cs" />
     <Compile Include="Util\FileInfoAdapter.cs" />
+    <Compile Include="Util\Glob.cs" />
     <Compile Include="Util\Guard.cs" />
     <Compile Include="Util\HashCalculator.cs" />
     <Compile Include="Util\Humanize.cs" />
@@ -359,6 +383,7 @@
     <Compile Include="Util\PasswordHasher.cs" />
     <Compile Include="Util\PathHelper.cs" />
     <Compile Include="Util\PathSegmentValidator.cs" />
+    <Compile Include="Util\PlatformTextFormatter.cs" />
     <Compile Include="Util\RandomStringGenerator.cs" />
     <Compile Include="Util\RemotedObject.cs" />
     <Compile Include="Util\RuntimeUtility.cs" />
@@ -370,6 +395,7 @@
     <Compile Include="Util\Uniquifier.cs" />
     <Compile Include="Variables\DefineAttribute.cs" />
     <Compile Include="Variables\DeprecatedAliasAttribute.cs" />
+    <Compile Include="Variables\EnvironmentVariables.cs" />
     <Compile Include="Variables\SpecialVariables.cs" />
     <Compile Include="Variables\VariableCategory.cs" />
     <Compile Include="Variables\VariableDefinition.cs" />
@@ -401,6 +427,7 @@
     <Folder Include="Artifacts\" />
     <Folder Include="Endpoints\Discovery\" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

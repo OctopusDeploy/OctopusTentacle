@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace Octopus.Shared.Util
 {
@@ -24,6 +25,14 @@ namespace Octopus.Shared.Util
             if (argument.Trim().Length == 0)
             {
                 throw new ArgumentException(string.Format("The parameter '{0}' cannot be empty.", parameterName), parameterName);
+            }
+        }
+
+        public static void FileExists(string argument)
+        {
+            if (!File.Exists(argument))
+            {
+                throw new ArgumentException(string.Format("Could not find file '{0}'", argument));
             }
         }
     }

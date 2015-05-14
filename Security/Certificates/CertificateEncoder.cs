@@ -60,7 +60,6 @@ namespace Octopus.Shared.Security.Certificates
                         certificate = LoadCertificateWithPrivateKey(file);
                     }
 
-                    Log.Info("Adding certificate to store");
                     store.Add(certificate);
 
                     return certificate;
