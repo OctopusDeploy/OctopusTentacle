@@ -35,5 +35,19 @@ namespace Octopus.Shared.Util
                 throw new ArgumentException(string.Format("Could not find file '{0}'", argument));
             }
         }
+
+        /// <summary>
+        /// Throws if a file exists
+        /// </summary>
+        /// <remarks>
+        /// Use this when the argument is a directory and you need to be sure they don't enter an existing filename
+        /// </remarks>
+        public static void FileDoesNotExist(string argument)
+        {
+            if (File.Exists(argument))
+            {
+                throw new ArgumentException(string.Format("Cannot create directory, file exists '{0}'", argument));
+            }
+        }
     }
 }

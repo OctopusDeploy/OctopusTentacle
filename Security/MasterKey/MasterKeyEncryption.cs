@@ -46,12 +46,12 @@ namespace Octopus.Shared.Security.MasterKey
             }
         }
 
-        public static EncryptedBytes ToCiphertext(byte[] masterKey, byte[] plaintext)
+        public static EncryptedBytes ToCiphertext(byte[] masterKey, byte[] plaintext, bool generateSalt = true)
         {
             if (masterKey == null) throw new ArgumentNullException("masterKey");
             if (plaintext == null) throw new ArgumentNullException("plaintext");
 
-            using (var algorithm = CreateAlgorithm(masterKey, generateSalt: true))
+            using (var algorithm = CreateAlgorithm(masterKey, generateSalt))
             {
                 var salt = algorithm.IV;
 
