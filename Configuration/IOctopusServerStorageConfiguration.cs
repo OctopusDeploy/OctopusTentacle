@@ -5,9 +5,9 @@ namespace Octopus.Shared.Configuration
     public interface IOctopusServerStorageConfiguration : IModifiableConfiguration, IMasterKeyConfiguration
     {
         /// <summary>
-        /// Gets or sets a unique name for this server.
+        /// Gets or sets a unique node name for this server.
         /// </summary>
-        string UniqueControllerName { get; set; }
+        string ServerNodeName { get; set; }
 
         /// <summary>
         /// Gets or sets the SQL Server connection string to use.
