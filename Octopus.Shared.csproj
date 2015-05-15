@@ -385,6 +385,7 @@
     <Compile Include="Util\PlatformTextFormatter.cs" />
     <Compile Include="Util\RandomStringGenerator.cs" />
     <Compile Include="Util\RemotedObject.cs" />
+    <Compile Include="Util\ReplaceStatus.cs" />
     <Compile Include="Util\RuntimeUtility.cs" />
     <Compile Include="Util\SilentProcessRunner.cs" />
     <Compile Include="Util\SlugGenerator.cs" />
