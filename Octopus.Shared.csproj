@@ -202,8 +202,6 @@
     <Compile Include="Properties\StringFormatMethodAttribute.cs" />
     <Compile Include="Properties\UsedImplicitlyAttribute.cs" />
     <Compile Include="Security\Certificates\CertificateEncoder.cs" />
-    <Compile Include="Security\EncryptedAttribute.cs" />
-    <Compile Include="Security\ExportSkippedAttribute.cs" />
     <Compile Include="Security\Masking\MaskedException.cs" />
     <Compile Include="Security\Masking\SensitiveDataMask.cs" />
     <Compile Include="Security\MasterKey\EncryptionUnsupported.cs" />
