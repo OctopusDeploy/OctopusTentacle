@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Octopus.Shared.Diagnostics;
+using System.Security.Cryptography;
 
 namespace Octopus.Shared.Util
 {
@@ -384,6 +385,68 @@ namespace Octopus.Shared.Util
             relativeOrAbsoluteFilePath = Path.GetFullPath(relativeOrAbsoluteFilePath);
             return relativeOrAbsoluteFilePath;
         }
+
+
+        /// <summary>
+        /// Creates, updates or skips a file based on a file content comparison
+        /// </summary>
+        /// <remarks>
+        /// Useful for cases where you do not want a file's timestamp to change when overwriting
+        /// it with identical contents or you want clearer logging as to what changed.
+        /// </remarks>
+        public ReplaceStatus Replace(string oldFilePath, Stream newStream)
+        {
+            if (!File.Exists(oldFilePath))
+            {
+                using (var fileStream = File.Create(oldFilePath))
+                {
+                    newStream.CopyTo(fileStream);
+                }
+                return ReplaceStatus.Created;
+            }
+            else
+            {
+                bool equal;
+                using (var oldStream = File.OpenRead(oldFilePath))
+                {
+                    equal = EqualHash(oldStream, newStream);
+                }
+
+                if (equal)
+                {
+                    return ReplaceStatus.Skipped;
+                }
+                else
+                {
+                    newStream.Seek(0, SeekOrigin.Begin);
+                    using (var oldStream = File.Create(oldFilePath))
+                    {
+                        newStream.CopyTo(oldStream);
+                    }
+                    return ReplaceStatus.Updated;
+                }
+            }
+
+        }
+
+        public bool EqualHash(Stream first, Stream second)
+        {
+            first.Seek(0, SeekOrigin.Begin);
+            second.Seek(0, SeekOrigin.Begin);
+
+            byte[] firstHash = MD5.Create().ComputeHash(first);
+            byte[] secondHash = MD5.Create().ComputeHash(second);
+
+            for (int i = 0; i < firstHash.Length; i++)
+            {
+                if (firstHash[i] != secondHash[i])
+                    return false;
+            }
+            return true;
+        }
+
+
+
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         [return: MarshalAs(UnmanagedType.Bool)]
