@@ -23,10 +23,10 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-        public string UniqueControllerName
+        public string ServerNodeName
         {
-            get { return settings.Get("Octopus.Server.UniqueControllerName", Environment.MachineName); }
-            set { settings.Set("Octopus.Server.UniqueControllerName", value); }
+            get { return settings.Get("Octopus.Server.NodeName", Environment.MachineName); }
+            set { settings.Set("Octopus.Server.NodeName", value); }
         }
 
         public string ExternalDatabaseConnectionString

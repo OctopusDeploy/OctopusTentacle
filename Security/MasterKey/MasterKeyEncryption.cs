@@ -146,5 +146,14 @@ namespace Octopus.Shared.Security.MasterKey
             return new StreamDisposalChain(new CryptoStream(stream, encryptor, CryptoStreamMode.Write), encryptor, algorithm);
         }
 
+        public static bool IsValidMasterKey(byte[] masterKey)
+        {
+            const string plaintext = "Hello World!";
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plaintext);
+            var encrypted = ToCiphertext(masterKey, plainTextBytes);
+            var decrypted = ToPlaintext(masterKey, encrypted);
+            var decryptedString = System.Text.Encoding.UTF8.GetString(decrypted);
+            return plaintext.Equals(decryptedString);
+        }
     }
 }
