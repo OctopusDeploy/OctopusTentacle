@@ -16,6 +16,14 @@ namespace Octopus.Shared.Tools
                 "Octopus.Server.exe");
         }
 
+        public static string PathToOctopusMigratorExe()
+        {
+            return GetPathToExecutable(
+                "Octopus Migrator",
+                "..\\..\\Octopus.Migrator\\bin\\Octopus.Migrator.exe",
+                "Octopus.Migrator.exe");
+        }
+
         public static string PathToTentacleExe()
         {
             return GetPathToExecutable(
