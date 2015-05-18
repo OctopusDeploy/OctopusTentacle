@@ -375,6 +375,7 @@
     <Compile Include="Util\IOctopusFileSystem.cs" />
     <Compile Include="Util\ISemaphore.cs" />
     <Compile Include="Util\ListExtensions.cs" />
+    <Compile Include="Util\MimeTypes.cs" />
     <Compile Include="Util\NumericExtensions.cs" />
     <Compile Include="Util\ObjectFormatter.cs" />
     <Compile Include="Util\OctopusPhysicalFileSystem.cs" />
