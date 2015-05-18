@@ -396,6 +396,11 @@ namespace Octopus.Shared.Util
         /// </remarks>
         public ReplaceStatus Replace(string oldFilePath, Stream newStream)
         {
+            if (!DirectoryExists(Path.GetDirectoryName(oldFilePath)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(oldFilePath));
+            }
+
             if (!File.Exists(oldFilePath))
             {
                 using (var fileStream = File.Create(oldFilePath))
