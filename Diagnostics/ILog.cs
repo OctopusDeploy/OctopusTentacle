@@ -133,5 +133,7 @@ namespace Octopus.Shared.Diagnostics
 
         void UpdateProgress(int progressPercentage, string messageText);
         [StringFormatMethod("messageFormat")] void UpdateProgressFormat(int progressPercentage, string messageFormat, params object[] args);
+
+        void Flush();
     }
 }

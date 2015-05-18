@@ -87,5 +87,13 @@ namespace Octopus.Shared.Diagnostics
                 activityLog.WithinBlock(logger);
             }
         }
+
+        public override void Flush()
+        {
+            foreach (var appender in appenders)
+            {
+                appender.Flush();
+            }
+        }
     }
 }
