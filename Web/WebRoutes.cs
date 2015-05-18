@@ -23,6 +23,8 @@ namespace Octopus.Shared.Web
 
                 public static class Azure
                 {
+                    public static string CloudServices = "~/api/accounts/{id}/cloudServices";
+                    public static string StorageAccounts = "~/api/accounts/{id}/storageAccounts";
                     public static string WebSpaces = "~/api/accounts/{id}/webspaces";
                     public static string WebSites = "~/api/accounts/{accountId}/webspaces{/webspaceName}/websites";
                 }
