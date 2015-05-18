@@ -201,7 +201,7 @@ namespace Octopus.Shared.Security.Certificates
 
         public static byte[] Export(X509Certificate2 certificate)
         {
-            return certificate.Export(X509ContentType.SerializedCert);
+            return certificate.Export(X509ContentType.Pfx);
         }
 
         public static string ToBase64String(X509Certificate2 certificate)
