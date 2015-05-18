@@ -53,7 +53,9 @@ namespace Octopus.Shared.Startup
                     throw new Exception(message, ex) { HelpLink = entry.HelpLink };
                 }
 
-                Log.Octopus().Error(ex);
+                Log.Octopus().Fatal(ex);
+                Log.Octopus().Flush();
+
                 throw;
             }
         }

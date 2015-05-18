@@ -298,5 +298,7 @@ namespace Octopus.Shared.Diagnostics
         {
             UpdateProgress(progressPercentage, string.Format(messageFormat, args));
         }
+
+        public abstract void Flush();
     }
 }
