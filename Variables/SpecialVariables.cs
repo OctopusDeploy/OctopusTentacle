@@ -133,8 +133,15 @@ namespace Octopus.Shared.Variables
                 public static readonly string SubscriptionId = "Octopus.Machine.Azure.SubscriptionId";
                 public static readonly string CertificateBytes = "Octopus.Machine.Azure.CertificateBytes";
                 public static readonly string CertificateThumbprint = "Octopus.Machine.Azure.CertificateThumbprint";
+
                 public static readonly string WebSpaceName = "Octopus.Machine.Azure.WebSpaceName";
                 public static readonly string WebAppName = "Octopus.Machine.Azure.WebAppName";
+
+                public static readonly string CloudServiceName = "Octopus.Machine.Azure.CloudServiceName";
+                public static readonly string Slot = "Octopus.Machine.Azure.Slot";
+                public static readonly string SwapIfPossible = "Octopus.Machine.Azure.SwapIfPossible";
+                public static readonly string StorageAccountName = "Octopus.Machine.Azure.StorageAccountName";
+                public static readonly string UseCurrentInstanceCount = "Octopus.Machine.Azure.UseCurrentInstanceCount";
             }
         }
 
