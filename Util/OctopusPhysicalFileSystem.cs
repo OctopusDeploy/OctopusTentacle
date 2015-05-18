@@ -401,6 +401,7 @@ namespace Octopus.Shared.Util
                 using (var fileStream = File.Create(oldFilePath))
                 {
                     newStream.CopyTo(fileStream);
+                    fileStream.Flush();
                 }
                 return ReplaceStatus.Created;
             }
@@ -422,6 +423,7 @@ namespace Octopus.Shared.Util
                     using (var oldStream = File.Create(oldFilePath))
                     {
                         newStream.CopyTo(oldStream);
+                        newStream.Flush();
                     }
                     return ReplaceStatus.Updated;
                 }
