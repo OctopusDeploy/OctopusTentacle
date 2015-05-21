@@ -58,6 +58,13 @@ namespace Octopus.Shared.Util
             return this;
         }
 
+        public CliBuilder Flag(string flagName, bool condition)
+        {
+            if (condition)
+                arguments.Add(MakeFlag(flagName));
+            return this;
+        }
+
         public CliBuilder SystemFlag(string flagName)
         {
             systemArguments.Add(MakeFlag(flagName));
