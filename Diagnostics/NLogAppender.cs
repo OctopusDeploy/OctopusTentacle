@@ -34,6 +34,14 @@ namespace Octopus.Shared.Diagnostics
             
         }
 
+        public void Flush()
+        {
+            foreach (var target in LogManager.Configuration.AllTargets)
+            {
+                target.Flush(e => {});
+            }
+        }
+
         static LogLevel LogCategoryToLogLevel(LogCategory category)
         {
             switch (category)

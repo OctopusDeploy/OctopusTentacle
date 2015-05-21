@@ -43,5 +43,10 @@ namespace Octopus.Shared.Diagnostics
                 
             }
         }
+
+        public override void Flush()
+        {
+
+        }
     }
 }
