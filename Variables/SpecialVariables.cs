@@ -533,6 +533,12 @@ namespace Octopus.Shared.Variables
                 public static readonly string Body = "Octopus.Action.Email.Body";
             }
 
+            public static class CustomScripts
+            {
+                //[Define(Category = VariableCategory.Action, Description = "A prefix for custom scripts", Example = "...Predeploy.ps1")]
+                public static readonly string Prefix = "Octopus.Action.CustomScripts.";
+            }
+
             public static class Script
             {
                 [Define(Category = VariableCategory.Action, Description = "The syntax of the script being run in a script step", Example = "PowerShell")]
