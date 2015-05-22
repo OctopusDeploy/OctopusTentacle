@@ -42,5 +42,6 @@ namespace Octopus.Shared.Util
         void MoveFile(string sourceFile, string destinationFile);
         ReplaceStatus Replace(string path, Stream stream);
         bool EqualHash(Stream first, Stream second);
+        string ReadAllText(string scriptFile);
     }
 }

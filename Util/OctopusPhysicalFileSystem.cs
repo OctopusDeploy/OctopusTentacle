@@ -433,7 +433,11 @@ namespace Octopus.Shared.Util
                     return ReplaceStatus.Updated;
                 }
             }
+        }
 
+        public string ReadAllText(string scriptFile)
+        {
+            return File.ReadAllText(scriptFile);
         }
 
         public bool EqualHash(Stream first, Stream second)
@@ -452,14 +456,12 @@ namespace Octopus.Shared.Util
             return true;
         }
 
-
-
-
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool GetDiskFreeSpaceEx(string lpDirectoryName,
             out ulong lpFreeBytesAvailable,
             out ulong lpTotalNumberOfBytes,
             out ulong lpTotalNumberOfFreeBytes);
+
     }
 }
