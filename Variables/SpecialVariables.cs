@@ -535,7 +535,6 @@ namespace Octopus.Shared.Variables
 
             public static class CustomScripts
             {
-                //[Define(Category = VariableCategory.Action, Description = "A prefix for custom scripts", Example = "...Predeploy.ps1")]
                 public static readonly string Prefix = "Octopus.Action.CustomScripts.";
             }
 
