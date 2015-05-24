@@ -127,15 +127,6 @@ namespace Octopus.Shared.Variables
             public static readonly string Hostname = "Octopus.Machine.Hostname";
 
             public static readonly string CommunicationStyle = "Octopus.Machine.CommunicationStyle";
-
-            public static class Azure
-            {
-                public static readonly string SubscriptionId = "Octopus.Machine.Azure.SubscriptionId";
-                public static readonly string CertificateBytes = "Octopus.Machine.Azure.CertificateBytes";
-                public static readonly string CertificateThumbprint = "Octopus.Machine.Azure.CertificateThumbprint";
-                public static readonly string WebSpaceName = "Octopus.Machine.Azure.WebSpaceName";
-                public static readonly string WebAppName = "Octopus.Machine.Azure.WebAppName";
-            }
         }
 
         public static class Release
@@ -460,6 +451,8 @@ namespace Octopus.Shared.Variables
                     public static readonly string InstallationDirectoryPath = "Package.InstallationDirectoryPath";
                 }
 
+
+
                 public static class Ssh
                 {
                     [Define(Category = VariableCategory.Action, Description = "The root directory used for deployment on the target machine", Example = "/home/user/.tentacle/")]
@@ -591,6 +584,39 @@ namespace Octopus.Shared.Variables
                         public static readonly string EmailAddress = "Manual.ResponsibleUser.EmailAddress";
                     }
                 }
+            }
+
+            public static class Azure
+            {
+                [Define(Category = VariableCategory.Action, Description = "Azure account subscription ID", Example = "42d91e16-206f-4a14-abd2-24791cbbc522")]
+                public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";
+
+                [Define(Category = VariableCategory.Action, Description = "Thumprint of the certificate used for Azure authentication ", Example = "0320C45A19F9FAE120356EAB95AB2377C19FF3E2")]
+                public static readonly string CertificateThumbprint = "Octopus.Action.Azure.CertificateThumbprint";
+
+                [Define(Category = VariableCategory.Action, Description = "Base64-encoded certificate used for Azure authentication")]
+                public static readonly string CertificateBytes = "Octopus.Action.Azure.CertificateBytes";
+
+                [Define(Category = VariableCategory.Action, Description = "Azure WebSpace", Example = "EASTUSwebspace")]
+                public static readonly string WebSpaceName = "Octopus.Action.Azure.WebSpaceName";
+
+                [Define(Category = VariableCategory.Action, Description = "Azure WebApp name", Example = "AcmeOnline")]
+                public static readonly string WebAppName = "Octopus.Action.Azure.WebAppName";
+
+                [Define(Category = VariableCategory.Action, Description = "Azure Cloud Service name", Example = "AcmeService")]
+                public static readonly string CloudServiceName = "Octopus.Action.Azure.CloudServiceName";
+
+                [Define(Category = VariableCategory.Action, Description = "Azure Storage Account name", Example = "AcmePackageStore")]
+                public static readonly string StorageAccountName = "Octopus.Action.Azure.StorageAccountName";
+
+                [Define(Category = VariableCategory.Action, Description = "Azure deployment slot", Example = "Production")]
+                public static readonly string Slot = "Octopus.Action.Azure.Slot";
+
+                [Define(Category = VariableCategory.Action, Description = "Swap current Staging deployment if possible", Example = "False")]
+                public static readonly string SwapIfPossible = "Octopus.Action.Azure.SwapIfPossible";
+
+                [Define(Category = VariableCategory.Action, Description = "Replace instance counts in configuration file with those currently configured in Azure portal", Example = "False")]
+                public static readonly string UseCurrentInstanceCount = "Octopus.Action.Azure.UseCurrentInstanceCount";
             }
         }
 
