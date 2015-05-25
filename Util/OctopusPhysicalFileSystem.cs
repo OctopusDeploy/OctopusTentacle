@@ -127,6 +127,9 @@ namespace Octopus.Shared.Util
 
         public IEnumerable<string> EnumerateFilesRecursively(string parentDirectoryPath, params string[] searchPatterns)
         {
+            if (!DirectoryExists(parentDirectoryPath))
+                return Enumerable.Empty<string>();
+
             return searchPatterns.Length == 0
                 ? Directory.EnumerateFiles(parentDirectoryPath, "*", SearchOption.AllDirectories)
                 : searchPatterns.SelectMany(pattern => Directory.EnumerateFiles(parentDirectoryPath, pattern, SearchOption.AllDirectories));
@@ -134,11 +137,17 @@ namespace Octopus.Shared.Util
 
         public IEnumerable<string> EnumerateDirectories(string parentDirectoryPath)
         {
+            if (!DirectoryExists(parentDirectoryPath))
+                return Enumerable.Empty<string>();
+
             return Directory.EnumerateDirectories(parentDirectoryPath);
         }
 
         public IEnumerable<string> EnumerateDirectoriesRecursively(string parentDirectoryPath)
         {
+            if (!DirectoryExists(parentDirectoryPath))
+                return Enumerable.Empty<string>();
+
             return Directory.EnumerateDirectories(parentDirectoryPath, "*", SearchOption.AllDirectories);
         } 
 
