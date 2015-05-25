@@ -12,6 +12,7 @@ namespace Octopus.Shared.Util
         PropertyAdded,
         PropertyDeleted,
         PropertySkipped,
-        PropertyUpdated
+        PropertyUpdated,
+        Error
     }
 }
