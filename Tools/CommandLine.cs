@@ -39,7 +39,7 @@ namespace Octopus.Shared.Tools
             var found = fullPaths.FirstOrDefault(p => File.Exists(p));
             if (found == null)
             {
-                throw new FileNotFoundException("The " + executableDescription + " executable was not found at any of the following paths: " + Environment.NewLine + string.Join(Environment.NewLine, searchPaths));
+                throw new FileNotFoundException("The " + executableDescription + " executable was not found at any of the following paths: " + Environment.NewLine + string.Join(Environment.NewLine, fullPaths));
             }
 
             return found;
