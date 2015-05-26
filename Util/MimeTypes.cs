@@ -34,6 +34,7 @@ namespace Octopus.Shared.Util
                 case "image/png":
                     return ".png";
                 case "image/jpg":
+                case "image/jpeg":
                     return ".jpg";
                 default:
                     throw new Exception("Mimetype not currently mapped: '" + mimeType + "'");
