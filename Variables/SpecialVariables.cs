@@ -594,7 +594,7 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Thumprint of the certificate used for Azure authentication ", Example = "0320C45A19F9FAE120356EAB95AB2377C19FF3E2")]
                 public static readonly string CertificateThumbprint = "Octopus.Action.Azure.CertificateThumbprint";
 
-                [Define(Category = VariableCategory.Action, Description = "Base64-encoded certificate used for Azure authentication")]
+                [Define(Category = VariableCategory.Action, Description = "Base64-encoded certificate used for Azure authentication", Example = "no example provided")]
                 public static readonly string CertificateBytes = "Octopus.Action.Azure.CertificateBytes";
 
                 [Define(Category = VariableCategory.Action, Description = "Azure WebSpace", Example = "EASTUSwebspace")]
