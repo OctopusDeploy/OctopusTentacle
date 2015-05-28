@@ -24,9 +24,9 @@ namespace Octopus.Shared.Startup
                 Console.ResetColor();
                 Console.Title = displayName;
                 if (showLogo)
-                {                 
+                {
                     Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(displayName + " version " + typeof(ConsoleHost).Assembly.GetFileVersion());
+                    Console.WriteLine(displayName + " version " + typeof (ConsoleHost).Assembly.GetFileVersion());
                     Console.WriteLine();
                     Console.ResetColor();
                 }
@@ -36,6 +36,10 @@ namespace Octopus.Shared.Startup
                 Console.ResetColor();
                 shutdown();
                 Console.ResetColor();
+            }
+            catch (ControlledFailureException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

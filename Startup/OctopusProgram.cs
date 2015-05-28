@@ -66,6 +66,11 @@ namespace Octopus.Shared.Startup
                 host.Run(Start, Stop);
                 exitCode = Environment.ExitCode;
             }
+            catch (ControlledFailureException ex)
+            {
+                log.Fatal(ex.Message);
+                exitCode = 1;
+            }
             catch (ArgumentException ex)
             {
                 log.Fatal(ex.Message);
