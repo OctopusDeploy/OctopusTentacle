@@ -13,23 +13,22 @@ namespace Octopus.Shared.Scripts
 
         public static IDisposable Acquire(ScriptIsolationLevel isolation, Action<string> log)
         {
-            if (isolation == ScriptIsolationLevel.FullIsolation)
+            switch (isolation)
             {
-                if (!ReaderWriter.TryEnterWriteLock(100))
-                {
-                    Busy(log);
-                    ReaderWriter.EnterWriteLock();
-                }
-                return new CallbackDisposable(() => ReaderWriter.ExitWriteLock());
-            }
-            if (isolation == ScriptIsolationLevel.NoIsolation)
-            {
-                if (!ReaderWriter.TryEnterReadLock(100))
-                {
-                    Busy(log);
-                    ReaderWriter.EnterReadLock();
-                }
-                return new CallbackDisposable(() => ReaderWriter.ExitReadLock());
+                case ScriptIsolationLevel.FullIsolation:
+                    if (!ReaderWriter.TryEnterWriteLock(100))
+                    {
+                        Busy(log);
+                        ReaderWriter.EnterWriteLock();
+                    }
+                    return new CallbackDisposable(() => ReaderWriter.ExitWriteLock());
+                case ScriptIsolationLevel.NoIsolation:
+                    if (!ReaderWriter.TryEnterReadLock(100))
+                    {
+                        Busy(log);
+                        ReaderWriter.EnterReadLock();
+                    }
+                    return new CallbackDisposable(() => ReaderWriter.ExitReadLock());
             }
 
             throw new NotSupportedException("Unknown isolation level: " + isolation);
