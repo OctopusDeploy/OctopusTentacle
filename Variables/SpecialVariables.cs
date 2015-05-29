@@ -129,6 +129,12 @@ namespace Octopus.Shared.Variables
             public static readonly string CommunicationStyle = "Octopus.Machine.CommunicationStyle";
         }
 
+        public static class Account
+        {
+            [Define(Description = "The name of the account", Example = "OctopusDeployAdmin")]
+            public static readonly string Name = "Octopus.Account.Name";
+        }
+
         public static class Release
         {
             [Define(Description = "The version number of the release", Example = "1.2.3")]
