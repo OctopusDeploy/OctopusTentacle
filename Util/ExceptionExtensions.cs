@@ -74,7 +74,7 @@ namespace Octopus.Shared.Util
         {
             error = error.UnpackFromContainers();
 
-            if (error is TaskCanceledException)
+            if (error is TaskCanceledException || error is OperationCanceledException)
                 return "The task was canceled.";
 
             return error.Message;
