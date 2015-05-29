@@ -7,14 +7,15 @@ namespace Octopus.Shared.Scripts
 {
     public class RunningScript
     {
-        readonly CancellationTokenSource cancel = new CancellationTokenSource();
         readonly IScriptWorkspace workspace;
         readonly IScriptLog log;
+        readonly CancellationToken token;
 
-        public RunningScript(IScriptWorkspace workspace, IScriptLog log)
+        public RunningScript(IScriptWorkspace workspace, IScriptLog log, CancellationToken token)
         {
             this.workspace = workspace;
             this.log = log;
+            this.token = token;
             State = ProcessState.Pending;
         }
 
@@ -36,7 +37,7 @@ namespace Octopus.Shared.Scripts
                     var exitCode = SilentProcessRunner.ExecuteCommand(powerShellPath, PowerShell.FormatCommandArguments(workspace.BootstrapScriptFilePath, false), workspace.WorkingDirectory,
                         output => writer.WriteOutput(ProcessOutputSource.StdOut, output),
                         output => writer.WriteOutput(ProcessOutputSource.StdErr, output),
-                        cancel.Token);
+                        token);
 
                     ExitCode = exitCode;
                     State = ProcessState.Complete;
@@ -48,11 +49,6 @@ namespace Octopus.Shared.Scripts
                     State = ProcessState.Complete;
                 }
             }
-        }
-
-        public void Cancel()
-        {
-            cancel.Cancel();
         }
     }
 }
