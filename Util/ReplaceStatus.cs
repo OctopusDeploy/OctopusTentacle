@@ -2,17 +2,34 @@
 
 namespace Octopus.Shared.Util
 {
-    public enum ReplaceStatus
+    public struct ReplaceStatus : IEquatable<ReplaceStatus>
     {
-        Created,
-        Deleted,
-        Updated,
-        Skipped,
-        MissingDependencies,
-        PropertyAdded,
-        PropertyDeleted,
-        PropertySkipped,
-        PropertyUpdated,
-        Error
+        public readonly string Description;
+
+        public ReplaceStatus(string description)
+        {
+            this.Description = description;
+        }
+
+        public static readonly ReplaceStatus Created = new ReplaceStatus("Created");
+        public static readonly ReplaceStatus Deleted = new ReplaceStatus("Deleted");
+        public static readonly ReplaceStatus Updated = new ReplaceStatus("Updated");
+        public static readonly ReplaceStatus Skipped = new ReplaceStatus("Skipped");
+        public static readonly ReplaceStatus MissingDependencies = new ReplaceStatus("Missing dependencies");
+        public static readonly ReplaceStatus PropertyAdded = new ReplaceStatus("Property added");
+        public static readonly ReplaceStatus PropertyDeleted = new ReplaceStatus("Property deleted");
+        public static readonly ReplaceStatus PropertySkipped = new ReplaceStatus("Property skipped");
+        public static readonly ReplaceStatus PropertyUpdated = new ReplaceStatus("Property updated");
+        public static readonly ReplaceStatus Error = new ReplaceStatus("Error");
+
+        public bool Equals(ReplaceStatus other)
+        {
+            return this.Description == other.Description;
+        }
+
+        public override string ToString()
+        {
+            return Description;
+        }
     }
 }
