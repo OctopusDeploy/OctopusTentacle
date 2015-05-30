@@ -133,6 +133,9 @@ namespace Octopus.Shared.Variables
         {
             [Define(Description = "The name of the account", Example = "OctopusDeployAdmin")]
             public static readonly string Name = "Octopus.Account.Name";
+
+            [Define(Description = "The account-type", Example = "UsernamePassword")]
+            public static readonly string AccountType = "Octopus.Account.AccountType";
         }
 
         public static class Release
