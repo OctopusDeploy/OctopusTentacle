@@ -11,7 +11,7 @@ namespace Octopus.Shared.Contracts
         readonly List<ScriptFile> files = new List<ScriptFile>();
 
         public StartScriptCommand(string scriptBody, params ScriptFile[] additionalFiles)
-            : this(scriptBody, null, additionalFiles)
+            : this(scriptBody, ScriptIsolationLevel.NoIsolation, additionalFiles)
         {
         }
 
@@ -19,7 +19,7 @@ namespace Octopus.Shared.Contracts
         public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation)
         {
             this.scriptBody = scriptBody;
-            this.isolation = isolation ?? new NoIsolationLevel();
+            this.isolation = isolation;
         }
 
         public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, params ScriptFile[] additionalFiles)

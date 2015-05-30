@@ -118,10 +118,8 @@
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\IWebPortalConfiguration.cs" />
     <Compile Include="Configuration\OctopusServerConfiguration.cs" />
-    <Compile Include="Contracts\FullIsolationLevel.cs" />
     <Compile Include="Contracts\IFileTransferService.cs" />
     <Compile Include="Contracts\IScriptService.cs" />
-    <Compile Include="Contracts\NoIsolationLevel.cs" />
     <Compile Include="Contracts\ScriptFile.cs" />
     <Compile Include="Contracts\ScriptIsolationLevel.cs" />
     <Compile Include="Contracts\StartScriptCommand.cs" />
@@ -201,6 +199,14 @@
     <Compile Include="Properties\RazorSectionAttribute.cs" />
     <Compile Include="Properties\StringFormatMethodAttribute.cs" />
     <Compile Include="Properties\UsedImplicitlyAttribute.cs" />
+    <Compile Include="Scripts\IScriptLog.cs" />
+    <Compile Include="Scripts\IScriptLogWriter.cs" />
+    <Compile Include="Scripts\IScriptWorkspace.cs" />
+    <Compile Include="Scripts\IScriptWorkspaceFactory.cs" />
+    <Compile Include="Scripts\PowerShell.cs" />
+    <Compile Include="Scripts\ScriptIsolationMutex.cs" />
+    <Compile Include="Scripts\ScriptWorkspace.cs" />
+    <Compile Include="Scripts\ScriptWorkspaceFactory.cs" />
     <Compile Include="Security\Certificates\CertificateEncoder.cs" />
     <Compile Include="Security\Masking\MaskedException.cs" />
     <Compile Include="Security\Masking\SensitiveDataMask.cs" />
@@ -224,6 +230,7 @@
     <Compile Include="Tasks\OctoThreadClosure.cs" />
     <Compile Include="Tasks\ParallelWorkOrder.cs" />
     <Compile Include="Tasks\Planned.cs" />
+    <Compile Include="Scripts\RunningScript.cs" />
     <Compile Include="Tasks\RunningTask.cs" />
     <Compile Include="Tasks\TaskCompletionHandler.cs" />
     <Compile Include="Tasks\TaskControllerAttribute.cs" />
