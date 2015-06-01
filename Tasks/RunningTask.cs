@@ -75,7 +75,7 @@ namespace Octopus.Shared.Tasks
                         {
                             log.Error(root.Message);
                         }
-                        else if (root is TaskCanceledException || root is ThreadAbortException)
+                        else if (root is TaskCanceledException || root is ThreadAbortException || root is OperationCanceledException)
                         {
                             // These happen as part of cancellation. It's enough to just return them, without logging them.
                         }

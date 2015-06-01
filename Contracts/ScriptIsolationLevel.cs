@@ -2,7 +2,9 @@ using System;
 
 namespace Octopus.Shared.Contracts
 {
-    public abstract class ScriptIsolationLevel
+    public enum ScriptIsolationLevel
     {
+        NoIsolation,
+        FullIsolation
     }
 }

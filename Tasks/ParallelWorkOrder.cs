@@ -73,7 +73,7 @@ namespace Octopus.Shared.Tasks
             if (errors.Count <= 0) 
                 return;
 
-            if (errors.All(e => e is TaskCanceledException))
+            if (errors.Any(e => e is TaskCanceledException || e is OperationCanceledException))
             {
                 throw new TaskCanceledException("One or more child activities were canceled.");
             }
