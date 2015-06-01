@@ -429,7 +429,7 @@ namespace Octopus.Shared.Util
 
                 if (equal)
                 {
-                    return ReplaceStatus.Skipped;
+                    return ReplaceStatus.Unchanged;
                 }
                 else
                 {
