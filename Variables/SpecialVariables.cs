@@ -646,17 +646,9 @@ namespace Octopus.Shared.Variables
 
         public static bool AppliesToActionType(string actionType, string variableName)
         {
-            if (actionType == "Octopus.Ftp")
-            {
-                return variableName.Contains(".Ftp.") || variableName.Contains(".Package.");
-            }
             if (actionType == "Octopus.Manual")
             {
                 return variableName.Contains(".Manual.");
-            }
-            if (actionType == "Octopus.Azure")
-            {
-                return variableName.Contains(".Azure.") || variableName.Contains(".Package.");
             }
             if (actionType == "Octopus.Email")
             {
