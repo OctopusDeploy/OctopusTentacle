@@ -1,6 +1,5 @@
 using System;
 using System.Net;
-using Octopus.Shared.Security.MasterKey;
 
 namespace Octopus.Shared.Packages
 {

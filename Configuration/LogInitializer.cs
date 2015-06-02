@@ -1,6 +1,4 @@
 using System;
-using System.Diagnostics;
-using Autofac;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
@@ -8,7 +6,6 @@ namespace Octopus.Shared.Configuration
 {
     public class LogInitializer : ILogInitializer
     {
-        readonly ILog log = Log.Octopus();
         readonly IApplicationInstanceSelector selector;
         readonly Lazy<ILoggingConfiguration> configuration;
         readonly IOctopusFileSystem fileSystem;
