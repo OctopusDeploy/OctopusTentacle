@@ -12,9 +12,9 @@ namespace Octopus.Shared.Packages
     {
         readonly ILog log = Log.Octopus();
         readonly IOctopusFileSystem fileSystem;
-        const string signatureCommandName = "signature";
-        const string deltaCommandName = "delta";
-        const string partialFileExtension = ".partial";
+        const string SignatureCommandName = "signature";
+        const string DeltaCommandName = "delta";
+        const string PartialFileExtension = ".partial";
         readonly string currentWorkingDirectory;
 
         public PackageDeltaFactory(IOctopusFileSystem fileSystem, IHomeConfiguration config)
@@ -40,9 +40,9 @@ namespace Octopus.Shared.Packages
                 log.VerboseFormat("Building signature file: {0} ", fullSignatureFilePath);
                 log.VerboseFormat("  - Using nearest package: {0}", nearestPackageFilePath);
 
-                var tempSignatureFilePath = fullSignatureFilePath + partialFileExtension;
+                var tempSignatureFilePath = fullSignatureFilePath + PartialFileExtension;
                 var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
-                    .Action(signatureCommandName)
+                    .Action(SignatureCommandName)
                     .PositionalArgument(nearestPackageFilePath)
                     .PositionalArgument(tempSignatureFilePath)
                     .Build();
@@ -74,9 +74,9 @@ namespace Octopus.Shared.Packages
                 log.VerboseFormat("  - Using package: {0}.", newPackageFilePath);
                 log.VerboseFormat("  - Using signature: {0}", signatureFilePath);
 
-                var tempDeltaFilePath = fullDeltaFilePath + partialFileExtension;
+                var tempDeltaFilePath = fullDeltaFilePath + PartialFileExtension;
                 var octoDiff = new CliBuilder(OctoDiff.GetFullPath())
-                    .Action(deltaCommandName)
+                    .Action(DeltaCommandName)
                     .PositionalArgument(signatureFilePath)
                     .PositionalArgument(newPackageFilePath)
                     .PositionalArgument(tempDeltaFilePath)
