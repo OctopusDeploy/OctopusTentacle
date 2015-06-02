@@ -8,7 +8,6 @@ namespace Octopus.Shared.Tasks
     public class OctoThreadClosure<T>
     {
         readonly ILog log = Log.Octopus();
-
         readonly Planned<T> item;
         readonly Action<T> executeCallback;
 

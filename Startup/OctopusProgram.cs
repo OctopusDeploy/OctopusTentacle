@@ -31,7 +31,10 @@ namespace Octopus.Shared.Startup
             commonOptions.Add("nologo", "Don't print title or version information", v => showLogo = false);
         }
 
-        protected OptionSet CommonOptions { get { return commonOptions; } }
+        protected OptionSet CommonOptions
+        {
+            get { return commonOptions; }
+        }
 
         public IContainer Container
         {
@@ -51,7 +54,7 @@ namespace Octopus.Shared.Startup
                 log.InfoFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
                 args.SetObserved();
             };
-            
+
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var exception = args.ExceptionObject as Exception; // May not actually be one.
@@ -90,7 +93,7 @@ namespace Octopus.Shared.Startup
                 {
                     log.Error(loaderException);
 
-                    if (!(loaderException is FileNotFoundException)) 
+                    if (!(loaderException is FileNotFoundException))
                         continue;
 
                     var exFileNotFound = loaderException as FileNotFoundException;
@@ -126,7 +129,7 @@ namespace Octopus.Shared.Startup
                 log.Trace("The program is running interactively; using a console host");
                 return new ConsoleHost(displayName, showLogo);
             }
-            
+
             log.Trace("The program is not running interactively; using a Windows Service host");
             return new WindowsServiceHost();
         }
@@ -146,7 +149,7 @@ namespace Octopus.Shared.Startup
             var commandLocator = container.Resolve<ICommandLocator>();
 
             var commandName = ExtractCommandName(ref commandLineArguments);
-            
+
             log.TraceFormat("Finding the implementation for command: {0}", commandName);
             var command = commandLocator.Find(commandName);
             if (command == null)
@@ -156,7 +159,7 @@ namespace Octopus.Shared.Startup
             }
 
             commandInstance = command.Value;
-            
+
             log.TraceFormat("Using command: {0}", commandInstance.GetType().Name);
             commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions);
         }
@@ -184,7 +187,7 @@ namespace Octopus.Shared.Startup
                 log.TraceFormat("Sending stop signal to current command");
                 commandInstance.Stop();
             }
-                
+
             log.TraceFormat("Disposing of the container");
             container.Dispose();
         }

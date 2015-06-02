@@ -9,7 +9,7 @@ namespace Octopus.Shared.Tasks
     {
         public static void ForEach<T>(IEnumerable<Planned<T>> workItems, Action<T> executeCallback)
         {
-            ForEach<T>(workItems, null, executeCallback, CancellationToken.None);
+            ForEach(workItems, null, executeCallback, CancellationToken.None);
         }
 
         public static void ForEach<T>(IEnumerable<Planned<T>> workItems, int? maxParallelism, Action<T> executeCallback, CancellationToken cancellation)

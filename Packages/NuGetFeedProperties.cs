@@ -12,8 +12,8 @@ namespace Octopus.Shared.Packages
 
         public ICredentials GetCredentials()
         {
-            return string.IsNullOrWhiteSpace(FeedUsername) 
-                ? CredentialCache.DefaultNetworkCredentials 
+            return string.IsNullOrWhiteSpace(FeedUsername)
+                ? CredentialCache.DefaultNetworkCredentials
                 : new NetworkCredential(FeedUsername, FeedPassword);
         }
     }

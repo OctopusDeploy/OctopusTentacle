@@ -10,7 +10,7 @@ namespace Octopus.Shared.Startup
         readonly IApplicationInstanceSelector instanceSelector;
         string instanceName;
         string config;
-        
+
         public CreateInstanceCommand(IOctopusFileSystem fileSystem, IApplicationInstanceSelector instanceSelector)
         {
             this.fileSystem = fileSystem;

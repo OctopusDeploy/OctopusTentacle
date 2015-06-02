@@ -37,8 +37,8 @@ namespace Octopus.Shared.Packages
                 return BuiltInRepository.CreateRepository();
 
             var uri = new Uri(packageSource);
-            return uri.IsFile 
-                ? new ExternalNuGetFeedAdapter(new FastLocalPackageRepository(uri.LocalPath)) 
+            return uri.IsFile
+                ? new ExternalNuGetFeedAdapter(new FastLocalPackageRepository(uri.LocalPath))
                 : new ExternalNuGetFeedAdapter(new DataServicePackageRepository(CreateHttpClient(uri)));
         }
 
@@ -51,11 +51,11 @@ namespace Octopus.Shared.Packages
 
         static void CustomizeRequest(WebRequest request)
         {
-            request.Timeout = 1000 * 60 * 100;
+            request.Timeout = 1000*60*100;
             var httpWebRequest = request as HttpWebRequest;
             if (httpWebRequest != null)
             {
-                httpWebRequest.ReadWriteTimeout = 1000 * 60 * 100;
+                httpWebRequest.ReadWriteTimeout = 1000*60*100;
             }
         }
     }

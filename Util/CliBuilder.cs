@@ -7,10 +7,16 @@ namespace Octopus.Shared.Util
     public class CliBuilder
     {
         readonly string executable;
-        string action;
         readonly List<string> arguments = new List<string>();
         readonly List<string> systemArguments = new List<string>();
+        string action;
         bool ignoreFailedExitCode;
+
+        public CliBuilder(string executable)
+        {
+            if (executable == null) throw new ArgumentNullException("executable");
+            this.executable = executable;
+        }
 
         public static CliBuilder ForTool(string executable, string action, string instance)
         {
@@ -30,12 +36,6 @@ namespace Octopus.Shared.Util
         public static CliBuilder RestartService(string executable, string instance)
         {
             return StopService(executable, instance).Flag("start");
-        }
-
-        public CliBuilder(string executable)
-        {
-            if (executable == null) throw new ArgumentNullException("executable");
-            this.executable = executable;
         }
 
         public CliBuilder Action(string actionName)

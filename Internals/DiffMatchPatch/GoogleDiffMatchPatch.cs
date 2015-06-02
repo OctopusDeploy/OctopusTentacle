@@ -9,6 +9,11 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
 {
     public class GoogleDiffMatchPatch
     {
+        // The number of bits in an int.
+        readonly short Match_MaxBits = 32;
+        // Define some regex patterns for matching boundaries.
+        readonly Regex BLANKLINEEND = new Regex("\\n\\r?\\n\\Z");
+        readonly Regex BLANKLINESTART = new Regex("\\A\\r?\\n\\r?\\n");
         // Defaults.
         // Set these on your diff_match_patch instance to override the defaults.
 
@@ -29,10 +34,6 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
         public float Patch_DeleteThreshold = 0.5f;
         // Chunk size for context length.
         public short Patch_Margin = 4;
-
-        // The number of bits in an int.
-        short Match_MaxBits = 32;
-
         //  DIFF FUNCTIONS
 
         /**
@@ -71,7 +72,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             else
             {
                 deadline = DateTime.Now +
-                           new TimeSpan(((long) (Diff_Timeout*1000))*10000);
+                    new TimeSpan(((long)(Diff_Timeout*1000))*10000);
             }
             return DiffMain(text1, text2, checklines, deadline);
         }
@@ -91,7 +92,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          */
 
         List<Diff> DiffMain(string text1, string text2, bool checklines,
-                             DateTime deadline)
+            DateTime deadline)
         {
             // Check for null inputs not needed since null can't be passed in C#.
 
@@ -149,7 +150,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          */
 
         List<Diff> diff_compute(string text1, string text2,
-                                bool checklines, DateTime deadline)
+            bool checklines, DateTime deadline)
         {
             var diffs = new List<Diff>();
 
@@ -174,8 +175,8 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             {
                 // Shorter text is inside the longer text (speedup).
                 var op = (text1.Length > text2.Length)
-                             ? Operation.DELETE
-                             : Operation.INSERT;
+                    ? Operation.DELETE
+                    : Operation.INSERT;
                 diffs.Add(new Diff(op, longtext.Substring(0, i)));
                 diffs.Add(new Diff(Operation.EQUAL, shorttext));
                 diffs.Add(new Diff(op, longtext.Substring(i + shorttext.Length)));
@@ -230,13 +231,13 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          */
 
         List<Diff> diff_lineMode(string text1, string text2,
-                                 DateTime deadline)
+            DateTime deadline)
         {
             // Scan the text on a line-by-line basis first.
             var b = diff_linesToChars(text1, text2);
-            text1 = (string) b[0];
-            text2 = (string) b[1];
-            var linearray = (List<string>) b[2];
+            text1 = (string)b[0];
+            text2 = (string)b[1];
+            var linearray = (List<string>)b[2];
 
             var diffs = DiffMain(text1, text2, false, deadline);
 
@@ -271,7 +272,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                         {
                             // Delete the offending records and add the merged ones.
                             diffs.RemoveRange(pointer - count_delete - count_insert,
-                                              count_delete + count_insert);
+                                count_delete + count_insert);
                             pointer = pointer - count_delete - count_insert;
                             var a =
                                 DiffMain(text_delete, text_insert, false, deadline);
@@ -302,7 +303,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          */
 
         protected List<Diff> diff_bisect(string text1, string text2,
-                                         DateTime deadline)
+            DateTime deadline)
         {
             // Cache the text lengths to prevent multiple calls.
             var text1_length = text1.Length;
@@ -352,7 +353,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                     }
                     var y1 = x1 - k1;
                     while (x1 < text1_length && y1 < text2_length
-                           && text1[x1] == text2[y1])
+                        && text1[x1] == text2[y1])
                     {
                         x1++;
                         y1++;
@@ -399,8 +400,8 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                     }
                     var y2 = x2 - k2;
                     while (x2 < text1_length && y2 < text2_length
-                           && text1[text1_length - x2 - 1]
-                           == text2[text2_length - y2 - 1])
+                        && text1[text1_length - x2 - 1]
+                            == text2[text2_length - y2 - 1])
                     {
                         x2++;
                         y2++;
@@ -454,7 +455,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          */
 
         List<Diff> diff_bisectSplit(string text1, string text2,
-                                    int x, int y, DateTime deadline)
+            int x, int y, DateTime deadline)
         {
             var text1a = text1.Substring(0, x);
             var text2a = text2.Substring(0, y);
@@ -505,7 +506,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          */
 
         string diff_linesToCharsMunge(string text, List<string> lineArray,
-                                      Dictionary<string, int> lineHash)
+            Dictionary<string, int> lineHash)
         {
             var lineStart = 0;
             var lineEnd = -1;
@@ -526,13 +527,13 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
 
                 if (lineHash.ContainsKey(line))
                 {
-                    chars.Append(((char) lineHash[line]));
+                    chars.Append(((char)lineHash[line]));
                 }
                 else
                 {
                     lineArray.Add(line);
                     lineHash.Add(line, lineArray.Count - 1);
-                    chars.Append(((char) (lineArray.Count - 1)));
+                    chars.Append(((char)(lineArray.Count - 1)));
                 }
             }
             return chars.ToString();
@@ -546,7 +547,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          */
 
         protected void diff_charsToLines(ICollection<Diff> diffs,
-                                         List<string> lineArray)
+            List<string> lineArray)
         {
             StringBuilder text;
             foreach (var diff in diffs)
@@ -688,16 +689,16 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
 
             // First check if the second quarter is the seed for a half-match.
             var hm1 = diff_halfMatchI(longtext, shorttext,
-                                      (longtext.Length + 3)/4);
+                (longtext.Length + 3)/4);
             // Check again based on the third quarter.
             var hm2 = diff_halfMatchI(longtext, shorttext,
-                                      (longtext.Length + 1)/2);
+                (longtext.Length + 1)/2);
             string[] hm;
             if (hm1 == null && hm2 == null)
             {
                 return null;
             }
-            else if (hm2 == null)
+            if (hm2 == null)
             {
                 hm = hm1;
             }
@@ -717,10 +718,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                 return hm;
                 //return new string[]{hm[0], hm[1], hm[2], hm[3], hm[4]};
             }
-            else
-            {
-                return new[] {hm[2], hm[3], hm[0], hm[1], hm[4]};
-            }
+            return new[] {hm[2], hm[3], hm[0], hm[1], hm[4]};
         }
 
         /**
@@ -743,16 +741,16 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             string best_longtext_a = string.Empty, best_longtext_b = string.Empty;
             string best_shorttext_a = string.Empty, best_shorttext_b = string.Empty;
             while (j < shorttext.Length && (j = shorttext.IndexOf(seed, j + 1,
-                                                                  StringComparison.Ordinal)) != -1)
+                StringComparison.Ordinal)) != -1)
             {
                 var prefixLength = diff_commonPrefix(longtext.Substring(i),
-                                                     shorttext.Substring(j));
+                    shorttext.Substring(j));
                 var suffixLength = diff_commonSuffix(longtext.Substring(0, i),
-                                                     shorttext.Substring(0, j));
+                    shorttext.Substring(0, j));
                 if (best_common.Length < suffixLength + prefixLength)
                 {
                     best_common = shorttext.Substring(j - suffixLength, suffixLength)
-                                  + shorttext.Substring(j, prefixLength);
+                        + shorttext.Substring(j, prefixLength);
                     best_longtext_a = longtext.Substring(0, i - suffixLength);
                     best_longtext_b = longtext.Substring(i + prefixLength);
                     best_shorttext_a = shorttext.Substring(0, j - suffixLength);
@@ -762,15 +760,12 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             if (best_common.Length*2 >= longtext.Length)
             {
                 return new[]
-                       {
-                           best_longtext_a, best_longtext_b,
-                           best_shorttext_a, best_shorttext_b, best_common
-                       };
+                {
+                    best_longtext_a, best_longtext_b,
+                    best_shorttext_a, best_shorttext_b, best_common
+                };
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         /**
@@ -819,13 +814,13 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                     // Eliminate an equality that is smaller or equal to the edits on both
                     // sides of it.
                     if (lastequality != null && (lastequality.Length
-                                                 <= Math.Max(length_insertions1, length_deletions1))
+                        <= Math.Max(length_insertions1, length_deletions1))
                         && (lastequality.Length
                             <= Math.Max(length_insertions2, length_deletions2)))
                     {
                         // Duplicate record.
                         diffs.Insert(equalities.Peek(),
-                                     new Diff(Operation.DELETE, lastequality));
+                            new Diff(Operation.DELETE, lastequality));
                         // Change second copy to insert.
                         diffs[equalities.Peek() + 1].operation = Operation.INSERT;
                         // Throw away the equality we just deleted.
@@ -877,7 +872,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                             // Overlap found.
                             // Insert an equality and trim the surrounding edits.
                             diffs.Insert(pointer, new Diff(Operation.EQUAL,
-                                                           insertion.Substring(0, overlap_length1)));
+                                insertion.Substring(0, overlap_length1)));
                             diffs[pointer - 1].text =
                                 deletion.Substring(0, deletion.Length - overlap_length1);
                             diffs[pointer + 1].text = insertion.Substring(overlap_length1);
@@ -892,7 +887,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                             // Reverse overlap found.
                             // Insert an equality and swap and trim the surrounding edits.
                             diffs.Insert(pointer, new Diff(Operation.EQUAL,
-                                                           deletion.Substring(0, overlap_length2)));
+                                deletion.Substring(0, overlap_length2)));
                             diffs[pointer - 1].operation = Operation.INSERT;
                             diffs[pointer - 1].text =
                                 insertion.Substring(0, insertion.Length - overlap_length2);
@@ -944,15 +939,15 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                     var bestEdit = edit;
                     var bestEquality2 = equality2;
                     var bestScore = diff_cleanupSemanticScore(equality1, edit) +
-                                    diff_cleanupSemanticScore(edit, equality2);
+                        diff_cleanupSemanticScore(edit, equality2);
                     while (edit.Length != 0 && equality2.Length != 0
-                           && edit[0] == equality2[0])
+                        && edit[0] == equality2[0])
                     {
                         equality1 += edit[0];
                         edit = edit.Substring(1) + equality2[0];
                         equality2 = equality2.Substring(1);
                         var score = diff_cleanupSemanticScore(equality1, edit) +
-                                    diff_cleanupSemanticScore(edit, equality2);
+                            diff_cleanupSemanticScore(edit, equality2);
                         // The >= encourages trailing rather than leading whitespace on
                         // edits.
                         if (score >= bestScore)
@@ -1030,32 +1025,28 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                 // Five points for blank lines.
                 return 5;
             }
-            else if (lineBreak1 || lineBreak2)
+            if (lineBreak1 || lineBreak2)
             {
                 // Four points for line breaks.
                 return 4;
             }
-            else if (nonAlphaNumeric1 && !whitespace1 && whitespace2)
+            if (nonAlphaNumeric1 && !whitespace1 && whitespace2)
             {
                 // Three points for end of sentences.
                 return 3;
             }
-            else if (whitespace1 || whitespace2)
+            if (whitespace1 || whitespace2)
             {
                 // Two points for whitespace.
                 return 2;
             }
-            else if (nonAlphaNumeric1 || nonAlphaNumeric2)
+            if (nonAlphaNumeric1 || nonAlphaNumeric2)
             {
                 // One point for non-alphanumeric.
                 return 1;
             }
             return 0;
         }
-
-        // Define some regex patterns for matching boundaries.
-        readonly Regex BLANKLINEEND = new Regex("\\n\\r?\\n\\Z");
-        readonly Regex BLANKLINESTART = new Regex("\\A\\r?\\n\\r?\\n");
 
         /**
          * Reduce the number of edits by eliminating operationally trivial
@@ -1128,7 +1119,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                     {
                         // Duplicate record.
                         diffs.Insert(equalities.Peek(),
-                                     new Diff(Operation.DELETE, lastequality));
+                            new Diff(Operation.DELETE, lastequality));
                         // Change second copy to insert.
                         diffs[equalities.Peek() + 1].operation = Operation.INSERT;
                         equalities.Pop(); // Throw away the equality we just deleted.
@@ -1203,7 +1194,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                                 {
                                     if ((pointer - count_delete - count_insert) > 0 &&
                                         diffs[pointer - count_delete - count_insert - 1].operation
-                                        == Operation.EQUAL)
+                                            == Operation.EQUAL)
                                     {
                                         diffs[pointer - count_delete - count_insert - 1].text
                                             += text_insert.Substring(0, commonlength);
@@ -1211,7 +1202,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                                     else
                                     {
                                         diffs.Insert(0, new Diff(Operation.EQUAL,
-                                                                 text_insert.Substring(0, commonlength)));
+                                            text_insert.Substring(0, commonlength)));
                                         pointer++;
                                     }
                                     text_insert = text_insert.Substring(commonlength);
@@ -1222,38 +1213,38 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                                 if (commonlength != 0)
                                 {
                                     diffs[pointer].text = text_insert.Substring(text_insert.Length
-                                                                                - commonlength) + diffs[pointer].text;
+                                        - commonlength) + diffs[pointer].text;
                                     text_insert = text_insert.Substring(0, text_insert.Length
-                                                                           - commonlength);
+                                        - commonlength);
                                     text_delete = text_delete.Substring(0, text_delete.Length
-                                                                           - commonlength);
+                                        - commonlength);
                                 }
                             }
                             // Delete the offending records and add the merged ones.
                             if (count_delete == 0)
                             {
                                 diffs.Splice(pointer - count_insert,
-                                             count_delete + count_insert,
-                                             new Diff(Operation.INSERT, text_insert));
+                                    count_delete + count_insert,
+                                    new Diff(Operation.INSERT, text_insert));
                             }
                             else if (count_insert == 0)
                             {
                                 diffs.Splice(pointer - count_delete,
-                                             count_delete + count_insert,
-                                             new Diff(Operation.DELETE, text_delete));
+                                    count_delete + count_insert,
+                                    new Diff(Operation.DELETE, text_delete));
                             }
                             else
                             {
                                 diffs.Splice(pointer - count_delete - count_insert,
-                                             count_delete + count_insert,
-                                             new Diff(Operation.DELETE, text_delete),
-                                             new Diff(Operation.INSERT, text_insert));
+                                    count_delete + count_insert,
+                                    new Diff(Operation.DELETE, text_delete),
+                                    new Diff(Operation.INSERT, text_insert));
                             }
                             pointer = pointer - count_delete - count_insert +
-                                      (count_delete != 0 ? 1 : 0) + (count_insert != 0 ? 1 : 0) + 1;
+                                (count_delete != 0 ? 1 : 0) + (count_insert != 0 ? 1 : 0) + 1;
                         }
                         else if (pointer != 0
-                                 && diffs[pointer - 1].operation == Operation.EQUAL)
+                            && diffs[pointer - 1].operation == Operation.EQUAL)
                         {
                             // Merge this equality with the previous one.
                             diffs[pointer - 1].text += diffs[pointer].text;
@@ -1288,25 +1279,25 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                 {
                     // This is a single edit surrounded by equalities.
                     if (diffs[pointer].text.EndsWith(diffs[pointer - 1].text,
-                                                     StringComparison.Ordinal))
+                        StringComparison.Ordinal))
                     {
                         // Shift the edit over the previous equality.
                         diffs[pointer].text = diffs[pointer - 1].text +
-                                              diffs[pointer].text.Substring(0, diffs[pointer].text.Length -
-                                                                               diffs[pointer - 1].text.Length);
+                            diffs[pointer].text.Substring(0, diffs[pointer].text.Length -
+                                diffs[pointer - 1].text.Length);
                         diffs[pointer + 1].text = diffs[pointer - 1].text
-                                                  + diffs[pointer + 1].text;
+                            + diffs[pointer + 1].text;
                         diffs.Splice(pointer - 1, 1);
                         changes = true;
                     }
                     else if (diffs[pointer].text.StartsWith(diffs[pointer + 1].text,
-                                                            StringComparison.Ordinal))
+                        StringComparison.Ordinal))
                     {
                         // Shift the edit over the next equality.
                         diffs[pointer - 1].text += diffs[pointer + 1].text;
                         diffs[pointer].text =
                             diffs[pointer].text.Substring(diffs[pointer + 1].text.Length)
-                            + diffs[pointer + 1].text;
+                                + diffs[pointer + 1].text;
                         diffs.Splice(pointer + 1, 1);
                         changes = true;
                     }
@@ -1488,7 +1479,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                 {
                     case Operation.INSERT:
                         text.Append("+").Append(HttpUtility.UrlEncode(aDiff.text,
-                                                                      new UTF8Encoding()).Replace('+', ' ')).Append("\t");
+                            new UTF8Encoding()).Replace('+', ' ')).Append("\t");
                         break;
                     case Operation.DELETE:
                         text.Append("-").Append(aDiff.text.Length).Append("\t");
@@ -1522,7 +1513,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             var diffs = new List<Diff>();
             var pointer = 0; // Cursor in text1
             var tokens = delta.Split(new[] {"\t"},
-                                     StringSplitOptions.None);
+                StringSplitOptions.None);
             foreach (var token in tokens)
             {
                 if (token.Length == 0)
@@ -1551,7 +1542,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                         diffs.Add(new Diff(Operation.INSERT, param));
                         break;
                     case '-':
-                        // Fall through.
+                    // Fall through.
                     case '=':
                         int n;
                         try
@@ -1577,8 +1568,8 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                         catch (ArgumentOutOfRangeException e)
                         {
                             throw new ArgumentException("Delta length (" + pointer
-                                                        + ") larger than source text length (" + text1.Length
-                                                        + ").", e);
+                                + ") larger than source text length (" + text1.Length
+                                + ").", e);
                         }
                         if (token[0] == '=')
                         {
@@ -1598,7 +1589,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             if (pointer != text1.Length)
             {
                 throw new ArgumentException("Delta length (" + pointer
-                                            + ") smaller than source text length (" + text1.Length + ").");
+                    + ") smaller than source text length (" + text1.Length + ").");
             }
             return diffs;
         }
@@ -1624,22 +1615,19 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                 // Shortcut (potentially not guaranteed by the algorithm)
                 return 0;
             }
-            else if (text.Length == 0)
+            if (text.Length == 0)
             {
                 // Nothing to match.
                 return -1;
             }
-            else if (loc + pattern.Length <= text.Length
-                     && text.Substring(loc, pattern.Length) == pattern)
+            if (loc + pattern.Length <= text.Length
+                && text.Substring(loc, pattern.Length) == pattern)
             {
                 // Perfect match at the perfect spot!  (Includes case of null pattern)
                 return loc;
             }
-            else
-            {
-                // Do a fuzzy compare.
-                return match_bitap(text, pattern, loc);
-            }
+            // Do a fuzzy compare.
+            return match_bitap(text, pattern, loc);
         }
 
         /**
@@ -1666,15 +1654,15 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             if (best_loc != -1)
             {
                 score_threshold = Math.Min(match_bitapScore(0, best_loc, loc,
-                                                            pattern), score_threshold);
+                    pattern), score_threshold);
                 // What about in the other direction? (speedup)
                 best_loc = text.LastIndexOf(pattern,
-                                            Math.Min(loc + pattern.Length, text.Length),
-                                            StringComparison.Ordinal);
+                    Math.Min(loc + pattern.Length, text.Length),
+                    StringComparison.Ordinal);
                 if (best_loc != -1)
                 {
                     score_threshold = Math.Min(match_bitapScore(0, best_loc, loc,
-                                                                pattern), score_threshold);
+                        pattern), score_threshold);
                 }
             }
 
@@ -1734,7 +1722,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                     {
                         // Subsequent passes: fuzzy match.
                         rd[j] = ((rd[j + 1] << 1) | 1) & charMatch
-                                | (((last_rd[j + 1] | last_rd[j]) << 1) | 1) | last_rd[j + 1];
+                            | (((last_rd[j + 1] | last_rd[j]) << 1) | 1) | last_rd[j + 1];
                     }
                     if ((rd[j] & matchmask) != 0)
                     {
@@ -1780,14 +1768,14 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
 
         double match_bitapScore(int e, int x, int loc, string pattern)
         {
-            var accuracy = (float) e/pattern.Length;
+            var accuracy = (float)e/pattern.Length;
             var proximity = Math.Abs(loc - x);
             if (Match_Distance == 0)
             {
                 // Dodge divide by zero error.
                 return proximity == 0 ? accuracy : 1.0;
             }
-            return accuracy + (proximity/(float) Match_Distance);
+            return accuracy + (proximity/(float)Match_Distance);
         }
 
         /**
@@ -1838,26 +1826,26 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             // Look for the first and last matches of pattern in text.  If two
             // different matches are found, increase the pattern length.
             while (text.IndexOf(pattern, StringComparison.Ordinal)
-                   != text.LastIndexOf(pattern, StringComparison.Ordinal)
-                   && pattern.Length < Match_MaxBits - Patch_Margin - Patch_Margin)
+                != text.LastIndexOf(pattern, StringComparison.Ordinal)
+                && pattern.Length < Match_MaxBits - Patch_Margin - Patch_Margin)
             {
                 padding += Patch_Margin;
                 pattern = text.JavaSubstring(Math.Max(0, patch.start2 - padding),
-                                             Math.Min(text.Length, patch.start2 + patch.length1 + padding));
+                    Math.Min(text.Length, patch.start2 + patch.length1 + padding));
             }
             // Add one chunk for good luck.
             padding += Patch_Margin;
 
             // Add the prefix.
             var prefix = text.JavaSubstring(Math.Max(0, patch.start2 - padding),
-                                            patch.start2);
+                patch.start2);
             if (prefix.Length != 0)
             {
                 patch.diffs.Insert(0, new Diff(Operation.EQUAL, prefix));
             }
             // Add the suffix.
             var suffix = text.JavaSubstring(patch.start2 + patch.length1,
-                                            Math.Min(text.Length, patch.start2 + patch.length1 + padding));
+                Math.Min(text.Length, patch.start2 + patch.length1 + padding));
             if (suffix.Length != 0)
             {
                 patch.diffs.Add(new Diff(Operation.EQUAL, suffix));
@@ -1918,7 +1906,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          */
 
         public List<Patch> patch_make(string text1, string text2,
-                                      List<Diff> diffs)
+            List<Diff> diffs)
         {
             return patch_make(text1, diffs);
         }
@@ -1967,7 +1955,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                         patch.length1 += aDiff.text.Length;
                         patch.diffs.Add(aDiff);
                         postpatch_text = postpatch_text.Remove(char_count2,
-                                                               aDiff.text.Length);
+                            aDiff.text.Length);
                         break;
                     case Operation.EQUAL:
                         if (aDiff.text.Length <= 2*Patch_Margin
@@ -2085,12 +2073,12 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                     // patch_splitMax will only provide an oversized pattern
                     // in the case of a monster delete.
                     start_loc = match_main(text,
-                                           text1.Substring(0, Match_MaxBits), expected_loc);
+                        text1.Substring(0, Match_MaxBits), expected_loc);
                     if (start_loc != -1)
                     {
                         end_loc = match_main(text,
-                                             text1.Substring(text1.Length - Match_MaxBits),
-                                             expected_loc + text1.Length - Match_MaxBits);
+                            text1.Substring(text1.Length - Match_MaxBits),
+                            expected_loc + text1.Length - Match_MaxBits);
                         if (end_loc == -1 || start_loc >= end_loc)
                         {
                             // Can't find valid trailing context.  Drop this patch.
@@ -2118,18 +2106,18 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                     if (end_loc == -1)
                     {
                         text2 = text.JavaSubstring(start_loc,
-                                                   Math.Min(start_loc + text1.Length, text.Length));
+                            Math.Min(start_loc + text1.Length, text.Length));
                     }
                     else
                     {
                         text2 = text.JavaSubstring(start_loc,
-                                                   Math.Min(end_loc + Match_MaxBits, text.Length));
+                            Math.Min(end_loc + Match_MaxBits, text.Length));
                     }
                     if (text1 == text2)
                     {
                         // Perfect match, just shove the Replacement text in.
                         text = text.Substring(0, start_loc) + diff_text2(aPatch.diffs)
-                               + text.Substring(start_loc + text1.Length);
+                            + text.Substring(start_loc + text1.Length);
                     }
                     else
                     {
@@ -2137,8 +2125,8 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                         // indices.
                         var diffs = DiffMain(text1, text2, false);
                         if (text1.Length > Match_MaxBits
-                            && diff_levenshtein(diffs)/(float) text1.Length
-                            > Patch_DeleteThreshold)
+                            && diff_levenshtein(diffs)/(float)text1.Length
+                                > Patch_DeleteThreshold)
                         {
                             // The end points match, but the content is unacceptably bad.
                             results[x] = false;
@@ -2161,7 +2149,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                                     {
                                         // Deletion
                                         text = text.Remove(start_loc + index2, diff_xIndex(diffs,
-                                                                                           index1 + aDiff.text.Length) - index2);
+                                            index1 + aDiff.text.Length) - index2);
                                     }
                                 }
                                 if (aDiff.operation != Operation.DELETE)
@@ -2176,7 +2164,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             }
             // Strip the padding off.
             text = text.Substring(nullPadding.Length, text.Length
-                                                      - 2*nullPadding.Length);
+                - 2*nullPadding.Length);
             return new Object[] {text, results};
         }
 
@@ -2193,7 +2181,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             var nullPadding = string.Empty;
             for (short x = 1; x <= paddingLength; x++)
             {
-                nullPadding += (char) x;
+                nullPadding += (char)x;
             }
 
             // Bump all the patches forward.
@@ -2221,7 +2209,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                 var firstDiff = diffs.First();
                 var extraLength = paddingLength - firstDiff.text.Length;
                 firstDiff.text = nullPadding.Substring(firstDiff.text.Length)
-                                 + firstDiff.text;
+                    + firstDiff.text;
                 patch.start1 -= extraLength;
                 patch.start2 -= extraLength;
                 patch.length1 += extraLength;
@@ -2286,7 +2274,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                         patch.diffs.Add(new Diff(Operation.EQUAL, precontext));
                     }
                     while (bigpatch.diffs.Count != 0
-                           && patch.length1 < patch_size - Patch_Margin)
+                        && patch.length1 < patch_size - Patch_Margin)
                     {
                         var diff_type = bigpatch.diffs[0].operation;
                         var diff_text = bigpatch.diffs[0].text;
@@ -2300,8 +2288,8 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                             empty = false;
                         }
                         else if (diff_type == Operation.DELETE && patch.diffs.Count == 1
-                                 && patch.diffs.First().operation == Operation.EQUAL
-                                 && diff_text.Length > 2*patch_size)
+                            && patch.diffs.First().operation == Operation.EQUAL
+                            && diff_text.Length > 2*patch_size)
                         {
                             // This is a large deletion.  Let it pass in one chunk.
                             patch.length1 += diff_text.Length;
@@ -2314,7 +2302,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                         {
                             // Deletion or equality.  Only take as much as we can stomach.
                             diff_text = diff_text.Substring(0, Math.Min(diff_text.Length,
-                                                                        patch_size - patch.length1 - Patch_Margin));
+                                patch_size - patch.length1 - Patch_Margin));
                             patch.length1 += diff_text.Length;
                             start1 += diff_text.Length;
                             if (diff_type == Operation.EQUAL)
@@ -2341,7 +2329,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                     // Compute the head context for the next patch.
                     precontext = diff_text2(patch.diffs);
                     precontext = precontext.Substring(Math.Max(0,
-                                                               precontext.Length - Patch_Margin));
+                        precontext.Length - Patch_Margin));
 
                     string postcontext = null;
                     // Append the end context for this patch.
@@ -2361,7 +2349,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                         patch.length2 += postcontext.Length;
                         if (patch.diffs.Count != 0
                             && patch.diffs[patch.diffs.Count - 1].operation
-                            == Operation.EQUAL)
+                                == Operation.EQUAL)
                         {
                             patch.diffs[patch.diffs.Count - 1].text += postcontext;
                         }
@@ -2423,7 +2411,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                 if (!m.Success)
                 {
                     throw new ArgumentException("Invalid patch string: "
-                                                + text[textPointer]);
+                        + text[textPointer]);
                 }
                 patch = new Patch();
                 patches.Add(patch);

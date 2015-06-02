@@ -50,7 +50,7 @@ namespace Octopus.Shared.Startup
                 {
                     var message = entry.ToString();
                     Log.Octopus().Error(ex, message);
-                    throw new Exception(message, ex) { HelpLink = entry.HelpLink };
+                    throw new Exception(message, ex) {HelpLink = entry.HelpLink};
                 }
 
                 Log.Octopus().Fatal(ex);

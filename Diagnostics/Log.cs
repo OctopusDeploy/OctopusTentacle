@@ -25,6 +25,11 @@ namespace Octopus.Shared.Diagnostics
             get { return appenders; }
         }
 
+        public override LogCorrelator Current
+        {
+            get { return correlator.Value; }
+        }
+
         public static ILog Octopus()
         {
             return Instance;
@@ -58,16 +63,19 @@ namespace Octopus.Shared.Diagnostics
             return new RevertLogContext(this, oldValue);
         }
 
-        public override LogCorrelator Current
-        {
-            get { return correlator.Value; }
-        }
-
         public override void Mask(IList<string> sensitiveValues)
         {
             foreach (var appender in appenders)
             {
                 appender.Mask(Current.CorrelationId, sensitiveValues);
+            }
+        }
+
+        public override void Flush()
+        {
+            foreach (var appender in appenders)
+            {
+                appender.Flush();
             }
         }
 
@@ -85,14 +93,6 @@ namespace Octopus.Shared.Diagnostics
             public void Dispose()
             {
                 activityLog.WithinBlock(logger);
-            }
-        }
-
-        public override void Flush()
-        {
-            foreach (var appender in appenders)
-            {
-                appender.Flush();
             }
         }
     }

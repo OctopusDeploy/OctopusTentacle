@@ -32,7 +32,7 @@ namespace Octopus.Shared.Configuration
                     {
                         using (var instanceKey = applicationNameKey.OpenSubKey(instanceName, false))
                         {
-                            if (instanceKey == null) 
+                            if (instanceKey == null)
                                 continue;
 
                             var path = instanceKey.GetValue("ConfigurationFilePath");

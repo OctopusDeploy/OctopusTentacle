@@ -13,7 +13,6 @@ namespace Octopus.Shared.Configuration
         string CacheDirectory { get; }
 
         int DaysToCachePackages { get; set; }
-
         int MaxConcurrentTasks { get; set; }
     }
 }

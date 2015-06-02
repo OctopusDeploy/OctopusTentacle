@@ -2,6 +2,7 @@
 using System.Linq;
 
 // ReSharper disable CheckNamespace
+
 namespace Octopus.Shared.Util
 {
     public static class StringExtensions

@@ -15,7 +15,6 @@ namespace Octopus.Shared.Startup
         readonly string exePath;
         readonly string instance;
         readonly string serviceDescription;
-
         readonly ServiceConfigurationState serviceConfigurationState;
 
         public ConfigureServiceHelper(ILog log, string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)

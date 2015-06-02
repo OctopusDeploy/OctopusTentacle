@@ -9,7 +9,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
         readonly List<Func<Exception, IDictionary<string, object>, bool>> clauses = new List<Func<Exception, IDictionary<string, object>, bool>>();
         Func<IDictionary<string, object>, string> entrySummary = s => null;
         Func<IDictionary<string, object>, string> entryHelpText = s => null;
-        Func<IDictionary<string, object>, string> entryHelpLink = s => null;  
+        Func<IDictionary<string, object>, string> entryHelpLink = s => null;
 
         public ExceptionKnowledge Build()
         {
@@ -35,13 +35,17 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
         public ExceptionKnowledgeBuilder ExceptionIs<T>()
             where T : Exception
         {
-            return ExceptionIs<T>(ex => true, delegate { });
+            return ExceptionIs<T>(ex => true, delegate
+            {
+            });
         }
 
         public ExceptionKnowledgeBuilder ExceptionIs<T>(Func<T, bool> predicate)
             where T : Exception
         {
-            return ExceptionIs(predicate, delegate { });
+            return ExceptionIs(predicate, delegate
+            {
+            });
         }
 
         public ExceptionKnowledgeBuilder ExceptionIs<T>(Action<T, IDictionary<string, object>> getState)
@@ -56,14 +60,15 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             if (predicate == null) throw new ArgumentNullException("predicate");
             if (getState == null) throw new ArgumentNullException("getState");
 
-            clauses.Add((ex,s) => {
-                                      var tex = ex as T;
+            clauses.Add((ex, s) =>
+            {
+                var tex = ex as T;
 
-                                      if (tex == null || !predicate(tex))
-                                          return false;
+                if (tex == null || !predicate(tex))
+                    return false;
 
-                                      getState(tex, s);
-                                      return true;
+                getState(tex, s);
+                return true;
             });
 
             return this;
@@ -72,13 +77,17 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
         public ExceptionKnowledgeBuilder HasInnerException<T>()
             where T : Exception
         {
-            return HasInnerException<T>(ex => true, delegate { });
+            return HasInnerException<T>(ex => true, delegate
+            {
+            });
         }
 
         public ExceptionKnowledgeBuilder HasInnerException<T>(Func<T, bool> predicate)
             where T : Exception
         {
-            return HasInnerException(predicate, delegate { });
+            return HasInnerException(predicate, delegate
+            {
+            });
         }
 
         public ExceptionKnowledgeBuilder HasInnerException<T>(Action<T, IDictionary<string, object>> getState)

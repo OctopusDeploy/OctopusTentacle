@@ -12,26 +12,31 @@ namespace Octopus.Shared.Security.Permissions
         public RestrictedGrant(params string[] restrictions)
             : this((IEnumerable<string>)restrictions)
         {
-            
         }
 
         public RestrictedGrant(IEnumerable<string> restrictions)
         {
             if (restrictions == null) throw new ArgumentNullException("restrictions");
             this.restrictions = restrictions.Select(r =>
-                {
-                    string scopeGroup, suffix;
-                    DocumentIdParser.Split(r, out scopeGroup, out suffix);
-                    return new { ScopeGroup = scopeGroup, DocumentId = r };
-                })
+            {
+                string scopeGroup, suffix;
+                DocumentIdParser.Split(r, out scopeGroup, out suffix);
+                return new {ScopeGroup = scopeGroup, DocumentId = r};
+            })
                 .GroupBy(r => r.ScopeGroup, StringComparer.OrdinalIgnoreCase)
                 .Select(g => new GrantRestrictionScope(g.Key, g.Select(r => r.DocumentId)))
                 .ToDictionary(grs => grs.ScopeGroup, StringComparer.OrdinalIgnoreCase);
         }
 
-        public IEnumerable<string> Scopes { get { return restrictions.Keys; } }
+        public IEnumerable<string> Scopes
+        {
+            get { return restrictions.Keys; }
+        }
 
-        public IEnumerable<string> Restrictions { get { return restrictions.Values.SelectMany(r => r.DocumentIds); } } 
+        public IEnumerable<string> Restrictions
+        {
+            get { return restrictions.Values.SelectMany(r => r.DocumentIds); }
+        }
 
         public bool Allow(AuthorizationScopeAssertion assertion)
         {

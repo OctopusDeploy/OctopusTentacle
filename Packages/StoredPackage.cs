@@ -7,7 +7,7 @@ namespace Octopus.Shared.Packages
     {
         readonly PackageMetadata metadata;
         readonly string fullPath;
-        
+
         [JsonConstructor]
         public StoredPackage(PackageMetadata metadata, string fullPath)
         {
@@ -15,13 +15,13 @@ namespace Octopus.Shared.Packages
             this.fullPath = fullPath;
         }
 
-        public StoredPackage(string packageId, string version, string fullPath, long length) 
+        public StoredPackage(string packageId, string version, string fullPath, long length)
             : this(packageId, version, fullPath, null, length)
         {
         }
 
-        public StoredPackage(string packageId, string version, string fullPath, string hash, long length) 
-            : this(new PackageMetadata(packageId, version, length) { Hash = hash }, fullPath)
+        public StoredPackage(string packageId, string version, string fullPath, string hash, long length)
+            : this(new PackageMetadata(packageId, version, length) {Hash = hash}, fullPath)
         {
         }
 
@@ -70,8 +70,8 @@ namespace Octopus.Shared.Packages
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((StoredPackage) obj);
+            if (obj.GetType() != GetType()) return false;
+            return Equals((StoredPackage)obj);
         }
 
         public override int GetHashCode()

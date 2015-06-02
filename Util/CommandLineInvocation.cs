@@ -7,7 +7,7 @@ namespace Octopus.Shared.Util
         readonly string executable;
         readonly string arguments;
         readonly string systemArguments;
-        
+
         public CommandLineInvocation(string executable, string arguments, string systemArguments)
         {
             this.executable = executable;

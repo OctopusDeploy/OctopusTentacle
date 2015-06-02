@@ -7,7 +7,7 @@ namespace Octopus.Shared.Startup
     {
         readonly IApplicationInstanceSelector instanceSelector;
         string instanceName;
-        
+
         public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector)
         {
             this.instanceSelector = instanceSelector;

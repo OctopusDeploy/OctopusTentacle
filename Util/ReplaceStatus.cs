@@ -4,13 +4,6 @@ namespace Octopus.Shared.Util
 {
     public struct ReplaceStatus : IEquatable<ReplaceStatus>
     {
-        public readonly string Description;
-
-        public ReplaceStatus(string description)
-        {
-            this.Description = description;
-        }
-
         public static readonly ReplaceStatus Created = new ReplaceStatus("Created");
         public static readonly ReplaceStatus Deleted = new ReplaceStatus("Deleted");
         public static readonly ReplaceStatus Updated = new ReplaceStatus("Updated");
@@ -22,10 +15,16 @@ namespace Octopus.Shared.Util
         public static readonly ReplaceStatus PropertyUnchanged = new ReplaceStatus("Property unchanged");
         public static readonly ReplaceStatus PropertyUpdated = new ReplaceStatus("Property updated");
         public static readonly ReplaceStatus Error = new ReplaceStatus("Error");
+        public readonly string Description;
+
+        public ReplaceStatus(string description)
+        {
+            Description = description;
+        }
 
         public bool Equals(ReplaceStatus other)
         {
-            return this.Description == other.Description;
+            return Description == other.Description;
         }
 
         public override string ToString()

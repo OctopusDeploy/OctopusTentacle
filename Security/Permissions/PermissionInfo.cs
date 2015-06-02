@@ -14,16 +14,16 @@ namespace Octopus.Shared.Security.Permissions
             return typeof (Permission)
                 .GetFields(BindingFlags.Static | BindingFlags.Public)
                 .Where(f => f.GetCustomAttributes(typeof (DescriptionAttribute), false).Length > 0)
-                .Select(f => (Permission) f.GetValue(null))
+                .Select(f => (Permission)f.GetValue(null))
                 .ToList();
-        } 
+        }
 
         public static IList<string> GetSupportedRestrictions(Permission permission)
         {
             // ReSharper disable once PossibleNullReferenceException
-            var restrictable = typeof(Permission)
+            var restrictable = typeof (Permission)
                 .GetField(permission.ToString(), BindingFlags.Static | BindingFlags.Public)
-                .GetCustomAttributes(typeof(SupportsRestrictionAttribute), false)
+                .GetCustomAttributes(typeof (SupportsRestrictionAttribute), false)
                 .Cast<SupportsRestrictionAttribute>()
                 .SingleOrDefault();
 
@@ -36,9 +36,9 @@ namespace Octopus.Shared.Security.Permissions
         public static string GetDescription(Permission permission)
         {
             // ReSharper disable once PossibleNullReferenceException
-            var description = typeof(Permission)
+            var description = typeof (Permission)
                 .GetField(permission.ToString(), BindingFlags.Static | BindingFlags.Public)
-                .GetCustomAttributes(typeof(DescriptionAttribute), false)
+                .GetCustomAttributes(typeof (DescriptionAttribute), false)
                 .Cast<DescriptionAttribute>()
                 .SingleOrDefault();
 

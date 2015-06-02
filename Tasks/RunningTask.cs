@@ -32,9 +32,29 @@ namespace Octopus.Shared.Tasks
             this.arguments = arguments;
             this.lifetimeScope = lifetimeScope;
             this.completeCallback = completeCallback;
-            
+
             taskLogCorrelator = LogCorrelator.CreateNew(taskId);
             workThread = new Thread(RunMainThread) {Name = taskId + ": " + description};
+        }
+
+        public string Id
+        {
+            get { return taskId; }
+        }
+
+        public string TaskId
+        {
+            get { return taskId; }
+        }
+
+        public bool IsCancellationRequested
+        {
+            get { return cancel.IsCancellationRequested; }
+        }
+
+        public CancellationToken CancellationToken
+        {
+            get { return cancel.Token; }
         }
 
         public void Start()
@@ -58,7 +78,7 @@ namespace Octopus.Shared.Tasks
                         builder.RegisterInstance(arguments).AsSelf().AsImplementedInterfaces();
                         builder.Update(workScope.ComponentRegistry);
 
-                        var controller = (ITaskController) workScope.Resolve(rootTaskControllerType);
+                        var controller = (ITaskController)workScope.Resolve(rootTaskControllerType);
 
                         controller.Execute();
                     }
@@ -106,11 +126,6 @@ namespace Octopus.Shared.Tasks
             }
         }
 
-        public string Id
-        {
-            get { return taskId; }
-        }
-
         public void Pause()
         {
             isPaused = true;
@@ -119,21 +134,6 @@ namespace Octopus.Shared.Tasks
         public bool IsPaused()
         {
             return isPaused;
-        }
-
-        public string TaskId
-        {
-            get { return taskId; }
-        }
-
-        public bool IsCancellationRequested
-        {
-            get { return cancel.IsCancellationRequested; }
-        }
-
-        public CancellationToken CancellationToken
-        {
-            get { return cancel.Token; }
         }
 
         public void EnsureNotCancelled()

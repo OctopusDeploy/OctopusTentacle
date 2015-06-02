@@ -10,7 +10,7 @@ namespace Octopus.Shared.Util
         public static string DisplayName(this MemberInfo typeOrMember)
         {
             if (typeOrMember == null) throw new ArgumentNullException("typeOrMember");
-            var da = typeOrMember.GetCustomAttributes(typeof(DescriptionAttribute), false).Cast<DescriptionAttribute>().SingleOrDefault();
+            var da = typeOrMember.GetCustomAttributes(typeof (DescriptionAttribute), false).Cast<DescriptionAttribute>().SingleOrDefault();
             if (da != null)
                 return da.Description;
             return typeOrMember.Name;

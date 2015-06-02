@@ -14,14 +14,14 @@ namespace Octopus.Shared.Tasks
             this.closure = closure;
         }
 
-        public bool HasCompleted()
-        {
-            return thread.ThreadState == ThreadState.Stopped;
-        }
-
         public Exception Exception
         {
             get { return closure.Exception; }
+        }
+
+        public bool HasCompleted()
+        {
+            return thread.ThreadState == ThreadState.Stopped;
         }
     }
 }

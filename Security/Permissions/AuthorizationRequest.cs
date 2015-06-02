@@ -6,7 +6,7 @@ namespace Octopus.Shared.Security.Permissions
 {
     public class AuthorizationRequest
     {
-        readonly Dictionary<string, AuthorizationScopeAssertion> scopeAssertions = new Dictionary<string, AuthorizationScopeAssertion>(StringComparer.InvariantCultureIgnoreCase); 
+        readonly Dictionary<string, AuthorizationScopeAssertion> scopeAssertions = new Dictionary<string, AuthorizationScopeAssertion>(StringComparer.InvariantCultureIgnoreCase);
 
         public AuthorizationRequest(IEnumerable<string> regardingDocumentIds)
         {

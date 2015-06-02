@@ -34,7 +34,7 @@ namespace Octopus.Shared.Caching
         {
             lock (syncRoot)
             {
-                var enumerable = ((IEnumerable<KeyValuePair<string, object>>) implementation);
+                var enumerable = ((IEnumerable<KeyValuePair<string, object>>)implementation);
                 var keysToRemove = enumerable.Select(kvp => kvp.Key).ToList();
 
                 foreach (var key in keysToRemove)

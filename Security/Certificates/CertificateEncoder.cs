@@ -79,10 +79,10 @@ namespace Octopus.Shared.Security.Certificates
         {
             return TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, true)
                 ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, true)
-                ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, true)
-                ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, false)
-                ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, false)
-                ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, false);
+                    ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, true)
+                        ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, false)
+                            ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, false)
+                                ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, false);
         }
 
         static bool CheckThatCertificateWasLoadedWithPrivateKey(X509Certificate2 certificate)
@@ -96,7 +96,7 @@ namespace Octopus.Shared.Security.Certificates
 
                     try
                     {
-                        string privateKeyPath = CryptUtils.GetKeyFilePath(certificate);
+                        var privateKeyPath = CryptUtils.GetKeyFilePath(certificate);
                         message.AppendLine("The private key file should be located at: " + privateKeyPath);
                         if (!File.Exists(privateKeyPath))
                         {
@@ -181,8 +181,8 @@ namespace Octopus.Shared.Security.Certificates
 
         public static X509Certificate2 FromBase64StringPublicKeyOnly(string certificateString)
         {
-            byte[] raw = Convert.FromBase64String(certificateString);
-            string file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
+            var raw = Convert.FromBase64String(certificateString);
+            var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
             try
             {
                 File.WriteAllBytes(file, raw);
@@ -206,8 +206,8 @@ namespace Octopus.Shared.Security.Certificates
 
         public static string ToBase64String(X509Certificate2 certificate)
         {
-            byte[] exported = Export(certificate);
-            string encoded = Convert.ToBase64String(exported);
+            var exported = Export(certificate);
+            var encoded = Convert.ToBase64String(exported);
             return encoded;
         }
 
@@ -218,23 +218,23 @@ namespace Octopus.Shared.Security.Certificates
         {
             public static string GetKeyFilePath(X509Certificate2 certificate2)
             {
-                string keyFileName = GetKeyFileName(certificate2);
-                string keyFileDirectory = GetKeyFileDirectory(keyFileName);
+                var keyFileName = GetKeyFileName(certificate2);
+                var keyFileDirectory = GetKeyFileDirectory(keyFileName);
 
                 return Path.Combine(keyFileDirectory, keyFileName);
             }
 
             static string GetKeyFileName(X509Certificate2 cert)
             {
-                IntPtr zero = IntPtr.Zero;
-                bool flag = false;
-                uint dwFlags = 0u;
-                int num = 0;
+                var zero = IntPtr.Zero;
+                var flag = false;
+                var dwFlags = 0u;
+                var num = 0;
                 string text = null;
                 if (CryptAcquireCertificatePrivateKey(cert.Handle, dwFlags, IntPtr.Zero, ref zero, ref num, ref flag))
                 {
-                    IntPtr intPtr = IntPtr.Zero;
-                    int num2 = 0;
+                    var intPtr = IntPtr.Zero;
+                    var num2 = 0;
                     try
                     {
                         if (CryptGetProvParam(zero, CryptGetProvParamType.PP_UNIQUE_CONTAINER, IntPtr.Zero, ref num2, 0u))
@@ -269,21 +269,21 @@ namespace Octopus.Shared.Security.Certificates
 
             static string GetKeyFileDirectory(string keyFileName)
             {
-                string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-                string text = folderPath + "\\Microsoft\\Crypto\\RSA\\MachineKeys";
-                string[] array = Directory.GetFiles(text, keyFileName);
+                var folderPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+                var text = folderPath + "\\Microsoft\\Crypto\\RSA\\MachineKeys";
+                var array = Directory.GetFiles(text, keyFileName);
                 string result;
                 if (array.Length <= 0)
                 {
-                    string folderPath2 = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                    string path = folderPath2 + "\\Microsoft\\Crypto\\RSA\\";
+                    var folderPath2 = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    var path = folderPath2 + "\\Microsoft\\Crypto\\RSA\\";
                     array = Directory.GetDirectories(path);
                     if (array.Length > 0)
                     {
-                        string[] array2 = array;
-                        for (int i = 0; i < array2.Length; i++)
+                        var array2 = array;
+                        for (var i = 0; i < array2.Length; i++)
                         {
-                            string text2 = array2[i];
+                            var text2 = array2[i];
                             array = Directory.GetFiles(text2, keyFileName);
                             if (array.Length != 0)
                             {

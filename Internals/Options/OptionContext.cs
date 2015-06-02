@@ -14,9 +14,7 @@ namespace Octopus.Shared.Internals.Options
         }
 
         public Option Option { get; set; }
-
         public string OptionName { get; set; }
-
         public int OptionIndex { get; set; }
 
         public OptionSet OptionSet

@@ -9,15 +9,15 @@ namespace Octopus.Shared.Startup
     public class LsaUtility
     {
         [DllImport("advapi32.dll", PreserveSig = true)]
-        private static extern UInt32 LsaOpenPolicy(
+        static extern UInt32 LsaOpenPolicy(
             ref LSA_UNICODE_STRING SystemName,
             ref LSA_OBJECT_ATTRIBUTES ObjectAttributes,
             Int32 DesiredAccess,
             out IntPtr PolicyHandle
-        );
+            );
 
         [DllImport("advapi32.dll", SetLastError = true, PreserveSig = true)]
-        private static extern int LsaAddAccountRights(
+        static extern int LsaAddAccountRights(
             IntPtr PolicyHandle,
             IntPtr AccountSid,
             LSA_UNICODE_STRING[] UserRights,
@@ -27,63 +27,23 @@ namespace Octopus.Shared.Startup
         public static extern void FreeSid(IntPtr pSid);
 
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true, PreserveSig = true)]
-        private static extern bool LookupAccountName(
+        static extern bool LookupAccountName(
             string lpSystemName, string lpAccountName,
             IntPtr psid,
             ref int cbsid,
             StringBuilder domainName, ref int cbdomainLength, ref int use);
 
         [DllImport("advapi32.dll")]
-        private static extern bool IsValidSid(IntPtr pSid);
+        static extern bool IsValidSid(IntPtr pSid);
 
         [DllImport("advapi32.dll")]
-        private static extern int LsaClose(IntPtr ObjectHandle);
+        static extern int LsaClose(IntPtr ObjectHandle);
 
         [DllImport("kernel32.dll")]
-        private static extern int GetLastError();
+        static extern int GetLastError();
 
         [DllImport("advapi32.dll")]
-        private static extern int LsaNtStatusToWinError(long status);
-
-        // define the structures
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct LSA_UNICODE_STRING
-        {
-            public UInt16 Length;
-            public UInt16 MaximumLength;
-            public IntPtr Buffer;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct LSA_OBJECT_ATTRIBUTES
-        {
-            public int Length;
-            public IntPtr RootDirectory;
-            public LSA_UNICODE_STRING ObjectName;
-            public UInt32 Attributes;
-            public IntPtr SecurityDescriptor;
-            public IntPtr SecurityQualityOfService;
-        }
-
-        // enum all policies
-
-        private enum LSA_AccessPolicy : long
-        {
-            POLICY_VIEW_LOCAL_INFORMATION = 0x00000001L,
-            POLICY_VIEW_AUDIT_INFORMATION = 0x00000002L,
-            POLICY_GET_PRIVATE_INFORMATION = 0x00000004L,
-            POLICY_TRUST_ADMIN = 0x00000008L,
-            POLICY_CREATE_ACCOUNT = 0x00000010L,
-            POLICY_CREATE_SECRET = 0x00000020L,
-            POLICY_CREATE_PRIVILEGE = 0x00000040L,
-            POLICY_SET_DEFAULT_QUOTA_LIMITS = 0x00000080L,
-            POLICY_SET_AUDIT_REQUIREMENTS = 0x00000100L,
-            POLICY_AUDIT_LOG_ADMIN = 0x00000200L,
-            POLICY_SERVER_ADMIN = 0x00000400L,
-            POLICY_LOOKUP_NAMES = 0x00000800L,
-            POLICY_NOTIFICATION = 0x00001000L
-        }
+        static extern int LsaNtStatusToWinError(long status);
 
         /// <summary>Adds a privilege to an account</summary>
         /// <param name="accountName">Name of an account - "domain\account" or only "account"</param>
@@ -94,13 +54,13 @@ namespace Octopus.Shared.Startup
             long winErrorCode = 0; //contains the last error
 
             //pointer an size for the SID
-            IntPtr sid = IntPtr.Zero;
-            int sidSize = 0;
+            var sid = IntPtr.Zero;
+            var sidSize = 0;
             //StringBuilder and size for the domain name
-            StringBuilder domainName = new StringBuilder();
-            int nameSize = 0;
+            var domainName = new StringBuilder();
+            var nameSize = 0;
             //account-type variable for lookup
-            int accountType = 0;
+            var accountType = 0;
 
             //get required buffer size
             LookupAccountName(String.Empty, accountName, sid, ref sidSize, domainName, ref nameSize, ref accountType);
@@ -110,12 +70,12 @@ namespace Octopus.Shared.Startup
             sid = Marshal.AllocHGlobal(sidSize);
 
             //lookup the SID for the account
-            bool result = LookupAccountName(String.Empty, accountName, sid, ref sidSize, domainName, ref nameSize, ref accountType);
+            var result = LookupAccountName(String.Empty, accountName, sid, ref sidSize, domainName, ref nameSize, ref accountType);
 
             //say what you're doing
             Console.WriteLine("LookupAccountName result = " + result);
             Console.WriteLine("IsValidSid: " + IsValidSid(sid));
-            Console.WriteLine("LookupAccountName domainName: " + domainName.ToString());
+            Console.WriteLine("LookupAccountName domainName: " + domainName);
 
             if (!result)
             {
@@ -124,30 +84,29 @@ namespace Octopus.Shared.Startup
             }
             else
             {
-
                 //initialize an empty unicode-string
-                LSA_UNICODE_STRING systemName = new LSA_UNICODE_STRING();
+                var systemName = new LSA_UNICODE_STRING();
                 //combine all policies
-                int access = (int)(
+                var access = (int)(
                     LSA_AccessPolicy.POLICY_AUDIT_LOG_ADMIN |
-                    LSA_AccessPolicy.POLICY_CREATE_ACCOUNT |
-                    LSA_AccessPolicy.POLICY_CREATE_PRIVILEGE |
-                    LSA_AccessPolicy.POLICY_CREATE_SECRET |
-                    LSA_AccessPolicy.POLICY_GET_PRIVATE_INFORMATION |
-                    LSA_AccessPolicy.POLICY_LOOKUP_NAMES |
-                    LSA_AccessPolicy.POLICY_NOTIFICATION |
-                    LSA_AccessPolicy.POLICY_SERVER_ADMIN |
-                    LSA_AccessPolicy.POLICY_SET_AUDIT_REQUIREMENTS |
-                    LSA_AccessPolicy.POLICY_SET_DEFAULT_QUOTA_LIMITS |
-                    LSA_AccessPolicy.POLICY_TRUST_ADMIN |
-                    LSA_AccessPolicy.POLICY_VIEW_AUDIT_INFORMATION |
-                    LSA_AccessPolicy.POLICY_VIEW_LOCAL_INFORMATION
+                        LSA_AccessPolicy.POLICY_CREATE_ACCOUNT |
+                        LSA_AccessPolicy.POLICY_CREATE_PRIVILEGE |
+                        LSA_AccessPolicy.POLICY_CREATE_SECRET |
+                        LSA_AccessPolicy.POLICY_GET_PRIVATE_INFORMATION |
+                        LSA_AccessPolicy.POLICY_LOOKUP_NAMES |
+                        LSA_AccessPolicy.POLICY_NOTIFICATION |
+                        LSA_AccessPolicy.POLICY_SERVER_ADMIN |
+                        LSA_AccessPolicy.POLICY_SET_AUDIT_REQUIREMENTS |
+                        LSA_AccessPolicy.POLICY_SET_DEFAULT_QUOTA_LIMITS |
+                        LSA_AccessPolicy.POLICY_TRUST_ADMIN |
+                        LSA_AccessPolicy.POLICY_VIEW_AUDIT_INFORMATION |
+                        LSA_AccessPolicy.POLICY_VIEW_LOCAL_INFORMATION
                     );
                 //initialize a pointer for the policy handle
-                IntPtr policyHandle = IntPtr.Zero;
+                var policyHandle = IntPtr.Zero;
 
                 //these attributes are not used, but LsaOpenPolicy wants them to exists
-                LSA_OBJECT_ATTRIBUTES ObjectAttributes = new LSA_OBJECT_ATTRIBUTES();
+                var ObjectAttributes = new LSA_OBJECT_ATTRIBUTES();
                 ObjectAttributes.Length = 0;
                 ObjectAttributes.RootDirectory = IntPtr.Zero;
                 ObjectAttributes.Attributes = 0;
@@ -155,7 +114,7 @@ namespace Octopus.Shared.Startup
                 ObjectAttributes.SecurityQualityOfService = IntPtr.Zero;
 
                 //get a policy handle
-                uint resultPolicy = LsaOpenPolicy(ref systemName, ref ObjectAttributes, access, out policyHandle);
+                var resultPolicy = LsaOpenPolicy(ref systemName, ref ObjectAttributes, access, out policyHandle);
                 winErrorCode = LsaNtStatusToWinError(resultPolicy);
 
                 if (winErrorCode != 0)
@@ -168,11 +127,11 @@ namespace Octopus.Shared.Startup
                     //we can add rights to the account.
 
                     //initialize an unicode-string for the privilege name
-                    LSA_UNICODE_STRING[] userRights = new LSA_UNICODE_STRING[1];
+                    var userRights = new LSA_UNICODE_STRING[1];
                     userRights[0] = new LSA_UNICODE_STRING();
                     userRights[0].Buffer = Marshal.StringToHGlobalUni(privilegeName);
-                    userRights[0].Length = (UInt16)(privilegeName.Length * UnicodeEncoding.CharSize);
-                    userRights[0].MaximumLength = (UInt16)((privilegeName.Length + 1) * UnicodeEncoding.CharSize);
+                    userRights[0].Length = (UInt16)(privilegeName.Length*UnicodeEncoding.CharSize);
+                    userRights[0].MaximumLength = (UInt16)((privilegeName.Length + 1)*UnicodeEncoding.CharSize);
 
                     //add the right to the account
                     long res = LsaAddAccountRights(policyHandle, sid, userRights, 1);
@@ -190,5 +149,44 @@ namespace Octopus.Shared.Startup
             return winErrorCode;
         }
 
+        // define the structures
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct LSA_UNICODE_STRING
+        {
+            public UInt16 Length;
+            public UInt16 MaximumLength;
+            public IntPtr Buffer;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct LSA_OBJECT_ATTRIBUTES
+        {
+            public int Length;
+            public IntPtr RootDirectory;
+            public readonly LSA_UNICODE_STRING ObjectName;
+            public UInt32 Attributes;
+            public IntPtr SecurityDescriptor;
+            public IntPtr SecurityQualityOfService;
+        }
+
+        // enum all policies
+
+        enum LSA_AccessPolicy : long
+        {
+            POLICY_VIEW_LOCAL_INFORMATION = 0x00000001L,
+            POLICY_VIEW_AUDIT_INFORMATION = 0x00000002L,
+            POLICY_GET_PRIVATE_INFORMATION = 0x00000004L,
+            POLICY_TRUST_ADMIN = 0x00000008L,
+            POLICY_CREATE_ACCOUNT = 0x00000010L,
+            POLICY_CREATE_SECRET = 0x00000020L,
+            POLICY_CREATE_PRIVILEGE = 0x00000040L,
+            POLICY_SET_DEFAULT_QUOTA_LIMITS = 0x00000080L,
+            POLICY_SET_AUDIT_REQUIREMENTS = 0x00000100L,
+            POLICY_AUDIT_LOG_ADMIN = 0x00000200L,
+            POLICY_SERVER_ADMIN = 0x00000400L,
+            POLICY_LOOKUP_NAMES = 0x00000800L,
+            POLICY_NOTIFICATION = 0x00001000L
+        }
     }
 }

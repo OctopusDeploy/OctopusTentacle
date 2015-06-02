@@ -6,11 +6,10 @@ namespace Octopus.Shared.Security.Masking
     public class MaskedException : Exception
     {
         const string DefaultMessage = "Sensitive data in the original exception has been masked";
-
         readonly string originalException;
 
         public MaskedException(string originalException)
-            : this (null, originalException)
+            : this(null, originalException)
         {
         }
 

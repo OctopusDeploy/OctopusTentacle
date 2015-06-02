@@ -15,7 +15,7 @@ namespace Octopus.Shared.Contracts
         {
         }
 
-        [JsonConstructor] 
+        [JsonConstructor]
         public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation)
         {
             this.scriptBody = scriptBody;
@@ -27,7 +27,7 @@ namespace Octopus.Shared.Contracts
         {
             if (additionalFiles != null)
             {
-                files.AddRange(additionalFiles);                
+                files.AddRange(additionalFiles);
             }
         }
 

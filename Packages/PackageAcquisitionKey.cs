@@ -53,11 +53,11 @@ namespace Octopus.Shared.Packages
             {
                 return true;
             }
-            if (obj.GetType() != this.GetType())
+            if (obj.GetType() != GetType())
             {
                 return false;
             }
-            return Equals((PackageAcquisitionKey) obj);
+            return Equals((PackageAcquisitionKey)obj);
         }
 
         public override int GetHashCode()

@@ -24,7 +24,6 @@ namespace Octopus.Shared.Versioning
         {
         }
 
-
         public AppVersion(Version version)
         {
             Major = version.Major;

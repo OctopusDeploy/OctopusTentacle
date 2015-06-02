@@ -8,7 +8,8 @@ namespace Octopus.Shared.Properties
     /// should be used instead. However, using '==' or '!=' for comparison
     /// with <c>null</c> is always permitted.
     /// </summary>
-    /// <example><code>
+    /// <example>
+    ///     <code>
     /// [CannotApplyEqualityOperator]
     /// class NoEquality { }
     /// class UsesNoEquality {
@@ -20,9 +21,12 @@ namespace Octopus.Shared.Properties
     ///     }
     ///   }
     /// }
-    /// </code></example>
+    /// </code>
+    /// </example>
     [AttributeUsage(
         AttributeTargets.Interface | AttributeTargets.Class |
-        AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
-    public sealed class CannotApplyEqualityOperatorAttribute : Attribute { }
+            AttributeTargets.Struct)]
+    public sealed class CannotApplyEqualityOperatorAttribute : Attribute
+    {
+    }
 }

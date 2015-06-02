@@ -25,13 +25,13 @@ namespace Octopus.Shared.Diagnostics
 
                 LogsDirectory = specialFolder;
             }
-            // ReSharper disable once EmptyGeneralCatchClause
+                // ReSharper disable once EmptyGeneralCatchClause
             catch
             {
             }
         }
 
-        public static string LogsDirectory = null;
+        public static string LogsDirectory;
 
         protected override void Append(StringBuilder builder, LogEventInfo logEvent)
         {

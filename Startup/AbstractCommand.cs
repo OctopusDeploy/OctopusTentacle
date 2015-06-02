@@ -8,10 +8,14 @@ namespace Octopus.Shared.Startup
     public abstract class AbstractCommand : ICommand
     {
         readonly OptionSet options = new OptionSet();
-
-        protected OptionSet Options { get { return options; }}
-
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
+
+        protected OptionSet Options
+        {
+            get { return options; }
+        }
+
+        protected ICommandRuntime Runtime { get; private set; }
 
         protected TOptionSet AddOptionSet<TOptionSet>(TOptionSet commandOptions)
             where TOptionSet : class, ICommandOptions
@@ -28,8 +32,6 @@ namespace Octopus.Shared.Startup
                 throw new ArgumentException("Unrecognized command line arguments: " + string.Join(" ", arguments));
             }
         }
-
-        protected ICommandRuntime Runtime { get; private set; }
 
         protected abstract void Start();
 

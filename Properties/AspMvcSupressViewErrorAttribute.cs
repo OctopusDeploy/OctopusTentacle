@@ -7,5 +7,7 @@ namespace Octopus.Shared.Properties
     /// for MVC views within a class or a method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public sealed class AspMvcSupressViewErrorAttribute : Attribute { }
+    public sealed class AspMvcSupressViewErrorAttribute : Attribute
+    {
+    }
 }

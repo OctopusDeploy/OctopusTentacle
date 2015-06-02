@@ -6,8 +6,8 @@ namespace Octopus.Shared.Scripts
 {
     public class PowerShell
     {
-        static string powerShellPath;
         const string EnvPowerShellPath = "PowerShell.exe";
+        static string powerShellPath;
 
         public static string GetFullPath()
         {

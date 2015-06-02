@@ -6,6 +6,6 @@ namespace Octopus.Shared.Internals.Options
     {
         None,
         Optional,
-        Required,
+        Required
     }
 }

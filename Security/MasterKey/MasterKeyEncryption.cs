@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using Octopus.Client.Model;
 using Octopus.Shared.Bcl.IO;
 
@@ -10,40 +11,37 @@ namespace Octopus.Shared.Security.MasterKey
     {
         public const int KeySizeBits = 128, BlockSizeBits = 128, IVSizeBits = BlockSizeBits;
 
+        public static Type AlgorithmType
+        {
+            get { return typeof (AesCryptoServiceProvider); }
+        }
+
         public static byte[] GenerateKey()
         {
-            var key = new byte[KeySizeBits / 8];
+            var key = new byte[KeySizeBits/8];
             using (var provider = new RNGCryptoServiceProvider())
                 provider.GetBytes(key);
             return key;
         }
 
         public static SymmetricAlgorithm CreateAlgorithm(byte[] key, bool generateSalt = false)
-        { 
+        {
             // If generateSalt is true, we'll let the algorithm generate the salt itself,
             // since that will use the underlying provider.
 
             var algorithm = new AesCryptoServiceProvider
             {
-                Padding = PaddingMode.PKCS7, 
-                KeySize = KeySizeBits, 
-                Key = key, 
-                BlockSize = BlockSizeBits, 
-                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7,
+                KeySize = KeySizeBits,
+                Key = key,
+                BlockSize = BlockSizeBits,
+                Mode = CipherMode.CBC
             };
 
             if (!generateSalt)
-                algorithm.IV = new byte[BlockSizeBits / 8];
+                algorithm.IV = new byte[BlockSizeBits/8];
 
             return algorithm;
-        }
-
-        public static Type AlgorithmType
-        {
-            get
-            {
-                return typeof(AesCryptoServiceProvider);
-            }
         }
 
         public static EncryptedBytes ToCiphertext(byte[] masterKey, byte[] plaintext, bool generateSalt = true)
@@ -98,7 +96,7 @@ namespace Octopus.Shared.Security.MasterKey
             // This can be done lazily by creating a "salted stream" class that prepends the salt, but
             // for now we'll buffer it.
 
-            using (var algorithm = CreateAlgorithm(masterKey, generateSalt: true))
+            using (var algorithm = CreateAlgorithm(masterKey, true))
             {
                 var salt = algorithm.IV;
 
@@ -121,9 +119,9 @@ namespace Octopus.Shared.Security.MasterKey
             if (masterKey == null) throw new ArgumentNullException("masterKey");
             if (ciphertext == null) throw new ArgumentNullException("ciphertext");
 
-            var salt = new byte[IVSizeBits / 8];
+            var salt = new byte[IVSizeBits/8];
             var read = ciphertext.Read(salt, 0, salt.Length);
-            if (read != IVSizeBits / 8)
+            if (read != IVSizeBits/8)
                 throw new InvalidOperationException("The ciphertext stream does not contain a salt value");
 
             var algorithm = CreateAlgorithm(masterKey);
@@ -138,7 +136,7 @@ namespace Octopus.Shared.Security.MasterKey
             if (masterKey == null) throw new ArgumentNullException("masterKey");
             if (stream == null) throw new ArgumentNullException("stream");
 
-            var algorithm = CreateAlgorithm(masterKey, generateSalt: true);
+            var algorithm = CreateAlgorithm(masterKey, true);
             var salt = algorithm.IV;
             stream.Write(salt, 0, salt.Length);
 
@@ -149,10 +147,10 @@ namespace Octopus.Shared.Security.MasterKey
         public static bool IsValidMasterKey(byte[] masterKey)
         {
             const string plaintext = "Hello World!";
-            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plaintext);
+            var plainTextBytes = Encoding.UTF8.GetBytes(plaintext);
             var encrypted = ToCiphertext(masterKey, plainTextBytes);
             var decrypted = ToPlaintext(masterKey, encrypted);
-            var decryptedString = System.Text.Encoding.UTF8.GetString(decrypted);
+            var decryptedString = Encoding.UTF8.GetString(decrypted);
             return plaintext.Equals(decryptedString);
         }
     }

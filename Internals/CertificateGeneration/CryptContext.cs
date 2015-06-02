@@ -48,12 +48,12 @@ namespace Octopus.Shared.Internals.CertificateGeneration
             var asnNameHandle = GCHandle.Alloc(asnName, GCHandleType.Pinned);
 
             var kpi = new Win32Native.CryptKeyProviderInformation
-                          {
-                              ContainerName = ContainerName,
-                              KeySpec = (int) KeyType.Exchange,
-                              ProviderType = 1
-                              // default RSA provider
-                          };
+            {
+                ContainerName = ContainerName,
+                KeySpec = (int)KeyType.Exchange,
+                ProviderType = 1
+                // default RSA provider
+            };
 
             var certContext = Win32Native.CertCreateSelfSignCertificate(
                 handle,
@@ -89,10 +89,10 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         {
             ThrowIfDisposedOrNotOpen();
 
-            var flags = (exportable ? 1U : 0U) | ((uint) keyBitLength) << 16;
+            var flags = (exportable ? 1U : 0U) | ((uint)keyBitLength) << 16;
 
             IntPtr keyHandle;
-            var result = Win32Native.CryptGenKey(handle, (int) KeyType.Exchange, flags, out keyHandle);
+            var result = Win32Native.CryptGenKey(handle, (int)KeyType.Exchange, flags, out keyHandle);
             if (!result)
                 Win32ErrorHelper.ThrowExceptionIfGetLastErrorIsNotZero();
 
@@ -103,10 +103,10 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         {
             ThrowIfDisposedOrNotOpen();
 
-            var flags = (exportable ? 1U : 0U) | ((uint) keyBitLength) << 16;
+            var flags = (exportable ? 1U : 0U) | ((uint)keyBitLength) << 16;
 
             IntPtr keyHandle;
-            var result = Win32Native.CryptGenKey(handle, (int) KeyType.Signature, flags, out keyHandle);
+            var result = Win32Native.CryptGenKey(handle, (int)KeyType.Signature, flags, out keyHandle);
             if (!result)
                 Win32ErrorHelper.ThrowExceptionIfGetLastErrorIsNotZero();
 

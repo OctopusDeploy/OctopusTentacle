@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -6,18 +7,22 @@ using System.Text;
 namespace Octopus.Shared.Util
 {
     /// <summary>
-    /// Secure password hasher using the inbuilt .NET implementation of PBKDF2 (<see cref="Rfc2898DeriveBytes"/>). Simialr to BCrypt, the hash string returned
-    /// contains the number of iterations and the salt to use. If the number of iterations change in future, old passwords can still be verified.
+    /// Secure password hasher using the inbuilt .NET implementation of PBKDF2 (<see cref="Rfc2898DeriveBytes" />). Simialr
+    /// to BCrypt, the hash string returned
+    /// contains the number of iterations and the salt to use. If the number of iterations change in future, old passwords
+    /// can still be verified.
     /// </summary>
     public class PasswordHasher
     {
-        private static readonly RandomNumberGenerator RandomSource = RandomNumberGenerator.Create();
-        private const int SaltSize = 16;
-        private const int HashIterations = 1000;
+        const int SaltSize = 16;
+        const int HashIterations = 1000;
+        static readonly RandomNumberGenerator RandomSource = RandomNumberGenerator.Create();
 
         /// <summary>
-        /// Generates a new salt, and then hashes the salt and password. The resulting string contains the number of iterations used, the generated salt, and the hashed password. 
-        /// Do NOT use this function when comparing a password hash since it will get a new salt each time. Instead, use <see cref="VerifyPassword"/>.
+        /// Generates a new salt, and then hashes the salt and password. The resulting string contains the number of iterations
+        /// used, the generated salt, and the hashed password.
+        /// Do NOT use this function when comparing a password hash since it will get a new salt each time. Instead, use
+        /// <see cref="VerifyPassword" />.
         /// </summary>
         /// <param name="plainTextPassword">The new plain text password to hash.</param>
         public static string HashPassword(string plainTextPassword)
@@ -29,7 +34,8 @@ namespace Octopus.Shared.Util
         }
 
         /// <summary>
-        /// Verifies a password against the current password hash. Since the hash contains the number of iterations and the salt, this is all the information we need to compare.
+        /// Verifies a password against the current password hash. Since the hash contains the number of iterations and the
+        /// salt, this is all the information we need to compare.
         /// </summary>
         /// <param name="candidatePlainTextPassword">The user-provided password to check.</param>
         /// <param name="knownHash">The hash of our existing password.</param>
@@ -70,7 +76,7 @@ namespace Octopus.Shared.Util
             var parts = hash.Split('$');
             if (parts.Length == 3)
             {
-                iterations = int.Parse(parts[0], System.Globalization.NumberStyles.HexNumber);
+                iterations = int.Parse(parts[0], NumberStyles.HexNumber);
                 salt = Convert.FromBase64String(parts[1]);
                 hashedPassword = Convert.FromBase64String(parts[2]);
                 return true;

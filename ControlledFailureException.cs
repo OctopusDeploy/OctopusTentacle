@@ -17,6 +17,7 @@ namespace Octopus.Shared
             : base(message)
         {
         }
+
         public ControlledFailureException(string message, Exception innerException)
             : base(message, innerException)
         {

@@ -4,7 +4,7 @@ namespace Octopus.Shared.Properties
 {
     [AttributeUsage(
         AttributeTargets.Parameter | AttributeTargets.Field |
-        AttributeTargets.Property, Inherited = true)]
+            AttributeTargets.Property)]
     public sealed class HtmlAttributeValueAttribute : Attribute
     {
         public HtmlAttributeValueAttribute([NotNull] string name)
@@ -12,6 +12,7 @@ namespace Octopus.Shared.Properties
             Name = name;
         }
 
-        [NotNull] public string Name { get; private set; }
+        [NotNull]
+        public string Name { get; private set; }
     }
 }

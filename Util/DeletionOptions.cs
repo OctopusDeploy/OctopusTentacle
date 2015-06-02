@@ -4,12 +4,19 @@ namespace Octopus.Shared.Util
 {
     public class DeletionOptions : IEquatable<DeletionOptions>
     {
-        public static DeletionOptions TryThreeTimes { get { return new DeletionOptions { RetryAttempts = 3, ThrowOnFailure = true };}}
-        public static DeletionOptions TryThreeTimesIgnoreFailure { get { return new DeletionOptions { RetryAttempts = 3, ThrowOnFailure = false };}}
-
         DeletionOptions()
         {
             SleepBetweenAttemptsMilliseconds = 100;
+        }
+
+        public static DeletionOptions TryThreeTimes
+        {
+            get { return new DeletionOptions {RetryAttempts = 3, ThrowOnFailure = true}; }
+        }
+
+        public static DeletionOptions TryThreeTimesIgnoreFailure
+        {
+            get { return new DeletionOptions {RetryAttempts = 3, ThrowOnFailure = false}; }
         }
 
         public int RetryAttempts { get; private set; }
@@ -28,14 +35,14 @@ namespace Octopus.Shared.Util
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((DeletionOptions) obj);
+            return Equals((DeletionOptions)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                int hashCode = RetryAttempts;
+                var hashCode = RetryAttempts;
                 hashCode = (hashCode*397) ^ SleepBetweenAttemptsMilliseconds;
                 hashCode = (hashCode*397) ^ ThrowOnFailure.GetHashCode();
                 return hashCode;

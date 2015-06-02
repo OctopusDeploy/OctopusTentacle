@@ -41,20 +41,20 @@ namespace Octopus.Shared.Util
 
             if (simpleNoun.EndsWith("s"))
                 return simpleNoun;
-            
+
             return simpleNoun + "s";
         }
 
         public static string ReadableJoin<T>(this IEnumerable<T> list, string junction = "and")
         {
             if (list == null) throw new ArgumentNullException("list");
-            
+
             var result = new StringBuilder();
             object prev = null;
 
             string separator = "", final = "";
             var enumerator = list.GetEnumerator();
-            while(enumerator.MoveNext())
+            while (enumerator.MoveNext())
             {
                 if (prev != null)
                 {

@@ -12,7 +12,7 @@ namespace Octopus.Shared.Tools
         {
             return GetPathToExecutable(
                 "Octopus Server",
-                "..\\..\\Octopus.Server\\bin\\Octopus.Server.exe", 
+                "..\\..\\Octopus.Server\\bin\\Octopus.Server.exe",
                 "Octopus.Server.exe");
         }
 

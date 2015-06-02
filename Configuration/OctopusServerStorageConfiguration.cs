@@ -37,14 +37,8 @@ namespace Octopus.Shared.Configuration
 
         public byte[] MasterKey
         {
-            get
-            {
-                return settings.Get<byte[]>("Octopus.Storage.MasterKey", protectionScope: DataProtectionScope.LocalMachine);
-            }
-            set
-            {
-                settings.Set("Octopus.Storage.MasterKey", value, DataProtectionScope.LocalMachine);
-            }
+            get { return settings.Get<byte[]>("Octopus.Storage.MasterKey", protectionScope: DataProtectionScope.LocalMachine); }
+            set { settings.Set("Octopus.Storage.MasterKey", value, DataProtectionScope.LocalMachine); }
         }
 
         public void Save()

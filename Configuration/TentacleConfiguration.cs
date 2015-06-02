@@ -37,69 +37,13 @@ namespace Octopus.Shared.Configuration
 
         public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers
         {
-            get
-            {
-                return settings.Get("Tentacle.Communication.TrustedOctopusServers", new OctopusServerConfiguration[0]);
-            }
-            private set
-            {
-                settings.Set("Tentacle.Communication.TrustedOctopusServers", (value ?? new OctopusServerConfiguration[0]).ToArray());
-            }
-        }
-
-        public bool AddOrUpdateTrustedOctopusServer(OctopusServerConfiguration machine)
-        {
-            if (machine == null) throw new ArgumentNullException("machine");
-            var result = false;
-
-            if (!string.IsNullOrWhiteSpace(machine.Squid))
-                machine.Squid = NormalizeSquid(machine.Squid);
-
-            var all = TrustedOctopusServers.ToList();
-            
-            var existing = all.SingleOrDefault(m => string.Compare(m.Thumbprint, machine.Thumbprint, StringComparison.OrdinalIgnoreCase) == 0);
-
-            if (existing != null)
-            {
-                result = true;
-                all.Remove(existing);
-            }      
-
-            all.Add(machine);
-            TrustedOctopusServers = all;
-
-            return result;
-        }
-
-        static string NormalizeSquid(string squid)
-        {
-            return squid.ToUpperInvariant();
-        }
-
-        public void ResetTrustedOctopusServers()
-        {
-            TrustedOctopusServers = Enumerable.Empty<OctopusServerConfiguration>();
-        }
-
-        public void RemoveTrustedOctopusServersWithThumbprint(string toRemove)
-        {
-            if (toRemove == null) throw new ArgumentNullException("toRemove");
-            TrustedOctopusServers = TrustedOctopusServers.Where(t => t.Thumbprint != toRemove);
-        }
-
-        public void UpdateTrustedServerThumbprint(string old, string @new)
-        {
-            var existing = TrustedOctopusServers.SingleOrDefault(m => m.Thumbprint == old);
-            if (existing != null)
-                existing.Thumbprint = @new;
+            get { return settings.Get("Tentacle.Communication.TrustedOctopusServers", new OctopusServerConfiguration[0]); }
+            private set { settings.Set("Tentacle.Communication.TrustedOctopusServers", (value ?? new OctopusServerConfiguration[0]).ToArray()); }
         }
 
         public IEnumerable<string> TrustedOctopusThumbprints
         {
-            get
-            {
-                return TrustedOctopusServers.Select(s => s.Thumbprint);
-            }
+            get { return TrustedOctopusServers.Select(s => s.Thumbprint); }
         }
 
         public int ServicesPortNumber
@@ -150,19 +94,6 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-        public X509Certificate2 GenerateNewCertificate()
-        {
-            var certificate = certificateGenerator.GenerateNew(CertificateExpectations.TentacleCertificateFullName);
-            TentacleCertificate = certificate;
-            return certificate;
-        }
-
-        public void ImportCertificate(X509Certificate2 certificate)
-        {
-            if (certificate == null) throw new ArgumentNullException("certificate");
-            TentacleCertificate = certificate;
-        }
-
         public string ListenIpAddress
         {
             get { return settings.Get("Tentacle.Services.ListenIP", string.Empty); }
@@ -173,11 +104,6 @@ namespace Octopus.Shared.Configuration
         {
             get { return settings.Get("Tentacle.Services.NoListen", false); }
             set { settings.Set("Tentacle.Services.NoListen", value); }
-        }
-
-        public void Save()
-        {
-            settings.Save();
         }
 
         public OctopusServerConfiguration LastReceivedHandshake
@@ -199,6 +125,71 @@ namespace Octopus.Shared.Configuration
         {
             get { return settings.Get<byte[]>("Octopus.Storage.MasterKey", protectionScope: DataProtectionScope.LocalMachine); }
             set { settings.Set("Octopus.Storage.MasterKey", value, DataProtectionScope.LocalMachine); }
+        }
+
+        public bool AddOrUpdateTrustedOctopusServer(OctopusServerConfiguration machine)
+        {
+            if (machine == null) throw new ArgumentNullException("machine");
+            var result = false;
+
+            if (!string.IsNullOrWhiteSpace(machine.Squid))
+                machine.Squid = NormalizeSquid(machine.Squid);
+
+            var all = TrustedOctopusServers.ToList();
+
+            var existing = all.SingleOrDefault(m => string.Compare(m.Thumbprint, machine.Thumbprint, StringComparison.OrdinalIgnoreCase) == 0);
+
+            if (existing != null)
+            {
+                result = true;
+                all.Remove(existing);
+            }
+
+            all.Add(machine);
+            TrustedOctopusServers = all;
+
+            return result;
+        }
+
+        static string NormalizeSquid(string squid)
+        {
+            return squid.ToUpperInvariant();
+        }
+
+        public void ResetTrustedOctopusServers()
+        {
+            TrustedOctopusServers = Enumerable.Empty<OctopusServerConfiguration>();
+        }
+
+        public void RemoveTrustedOctopusServersWithThumbprint(string toRemove)
+        {
+            if (toRemove == null) throw new ArgumentNullException("toRemove");
+            TrustedOctopusServers = TrustedOctopusServers.Where(t => t.Thumbprint != toRemove);
+        }
+
+        public void UpdateTrustedServerThumbprint(string old, string @new)
+        {
+            var existing = TrustedOctopusServers.SingleOrDefault(m => m.Thumbprint == old);
+            if (existing != null)
+                existing.Thumbprint = @new;
+        }
+
+        public X509Certificate2 GenerateNewCertificate()
+        {
+            var certificate = certificateGenerator.GenerateNew(CertificateExpectations.TentacleCertificateFullName);
+            TentacleCertificate = certificate;
+            return certificate;
+        }
+
+        public void ImportCertificate(X509Certificate2 certificate)
+        {
+            if (certificate == null) throw new ArgumentNullException("certificate");
+            TentacleCertificate = certificate;
+        }
+
+        public void Save()
+        {
+            settings.Save();
         }
     }
 }

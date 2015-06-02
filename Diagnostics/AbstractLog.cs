@@ -8,11 +8,41 @@ namespace Octopus.Shared.Diagnostics
 {
     public abstract class AbstractLog : ILog
     {
+        public abstract LogCorrelator Current { get; }
+
+        public bool IsVerboseEnabled
+        {
+            get { return IsEnabled(LogCategory.Verbose); }
+        }
+
+        public bool IsErrorEnabled
+        {
+            get { return IsEnabled(LogCategory.Error); }
+        }
+
+        public bool IsFatalEnabled
+        {
+            get { return IsEnabled(LogCategory.Fatal); }
+        }
+
+        public bool IsInfoEnabled
+        {
+            get { return IsEnabled(LogCategory.Info); }
+        }
+
+        public bool IsTraceEnabled
+        {
+            get { return IsEnabled(LogCategory.Trace); }
+        }
+
+        public bool IsWarnEnabled
+        {
+            get { return IsEnabled(LogCategory.Warning); }
+        }
+
         protected abstract void WriteEvent(LogEvent logEvent);
         protected abstract void WriteEvents(IList<LogEvent> logEvents);
         public abstract IDisposable WithinBlock(LogCorrelator logger);
-        public abstract LogCorrelator Current { get; }
-
         public abstract void Mask(IList<string> sensitiveValues);
 
         public IDisposable OpenBlock(string messageText)
@@ -78,13 +108,6 @@ namespace Octopus.Shared.Diagnostics
             return true;
         }
 
-        public bool IsVerboseEnabled { get { return IsEnabled(LogCategory.Verbose); } }
-        public bool IsErrorEnabled { get { return IsEnabled(LogCategory.Error); } }
-        public bool IsFatalEnabled { get { return IsEnabled(LogCategory.Fatal); } }
-        public bool IsInfoEnabled { get { return IsEnabled(LogCategory.Info); } }
-        public bool IsTraceEnabled { get { return IsEnabled(LogCategory.Trace); } }
-        public bool IsWarnEnabled { get { return IsEnabled(LogCategory.Warning); } }
-
         public void Write(LogCategory category, string messageText)
         {
             if (IsEnabled(category))
@@ -119,9 +142,9 @@ namespace Octopus.Shared.Diagnostics
 
         public void WriteFormat(LogCategory category, Exception error, string messageFormat, params object[] args)
         {
-            if (!IsEnabled(category)) 
+            if (!IsEnabled(category))
                 return;
-            
+
             var message = SafeFormat(messageFormat, args);
 
             WriteEvent(new LogEvent(Current.CorrelationId, category, message, error != null ? error.UnpackFromContainers() : null));

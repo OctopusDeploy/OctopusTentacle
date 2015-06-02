@@ -18,7 +18,7 @@ namespace Octopus.Shared.PackageConversion.Archives
             var totalZipEntryLength = entries.Aggregate(0L, (l, entry) => l + entry.CompressedSize);
             var remainder = totalZipEntryLength;
 
-            foreach (ZipEntry zipEntry in entries)
+            foreach (var zipEntry in entries)
             {
                 var entryFileName = zipEntry.Name;
                 var tarEntry = TarEntry.CreateTarEntry(entryFileName);
@@ -32,11 +32,11 @@ namespace Octopus.Shared.PackageConversion.Archives
                     {
                         // Tar it up
                         zipStream.CopyTo(tarOutputStream);
-                        
+
                         remainder -= zipEntry.CompressedSize;
                         if (progress != null)
                         {
-                            progress(remainder / (float)totalZipEntryLength, remainder, totalZipEntryLength);
+                            progress(remainder/(float)totalZipEntryLength, remainder, totalZipEntryLength);
                         }
                     }
                 }
@@ -50,6 +50,5 @@ namespace Octopus.Shared.PackageConversion.Archives
             tarOutputStream.IsStreamOwner = false;
             tarOutputStream.Close();
         }
-
     }
 }

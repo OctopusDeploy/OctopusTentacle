@@ -13,12 +13,13 @@ namespace Octopus.Shared.Configuration
         bool UseDefaultProxy { get; set; }
 
         /// <summary>
-        /// Gets or sets a custom username for the proxy. If empty, we should assume to use the default Windows network credentials if <see cref="UseDefaultProxy"/> is true.
+        /// Gets or sets a custom username for the proxy. If empty, we should assume to use the default Windows network
+        /// credentials if <see cref="UseDefaultProxy" /> is true.
         /// </summary>
         string CustomProxyUsername { get; set; }
 
         /// <summary>
-        /// Gets or sets the password to go with <see cref="CustomProxyUsername"/>. 
+        /// Gets or sets the password to go with <see cref="CustomProxyUsername" />.
         /// </summary>
         string CustomProxyPassword { get; set; }
     }

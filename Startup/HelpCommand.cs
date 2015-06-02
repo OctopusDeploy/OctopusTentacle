@@ -10,7 +10,7 @@ namespace Octopus.Shared.Startup
     public class HelpCommand : ICommand
     {
         readonly ICommandLocator commands;
-        
+
         public HelpCommand(ICommandLocator commands)
         {
             this.commands = commands;
@@ -18,7 +18,6 @@ namespace Octopus.Shared.Startup
 
         public void WriteHelp(TextWriter writer)
         {
-            
         }
 
         public void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)

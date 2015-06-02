@@ -18,7 +18,7 @@ namespace Octopus.Shared.Configuration
             }
 
             XmlSettingsRoot settings;
-            var serializer = new XmlSerializer(typeof(XmlSettingsRoot));
+            var serializer = new XmlSerializer(typeof (XmlSettingsRoot));
             using (var xmlReader = new XmlTextReader(new StreamReader(OpenForReading(), Encoding.UTF8)))
             {
                 settings = (XmlSettingsRoot)serializer.Deserialize(xmlReader);
@@ -32,7 +32,7 @@ namespace Octopus.Shared.Configuration
 
         protected override void SaveSettings(IDictionary<string, string> settingsToSave)
         {
-            var serializer = new XmlSerializer(typeof(XmlSettingsRoot));
+            var serializer = new XmlSerializer(typeof (XmlSettingsRoot));
             using (var stream = OpenForWriting())
             {
                 stream.SetLength(0);
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Configuration
                     var settings = new XmlSettingsRoot();
                     foreach (var key in settingsToSave.Keys.OrderBy(k => k))
                     {
-                        settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key] });
+                        settings.Settings.Add(new XmlSetting {Key = key, Value = settingsToSave[key]});
                     }
 
                     serializer.Serialize(xmlWriter, settings);

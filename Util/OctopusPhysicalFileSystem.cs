@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Threading;
 using Octopus.Shared.Diagnostics;
-using System.Security.Cryptography;
 
 namespace Octopus.Shared.Util
 {
@@ -71,7 +71,7 @@ namespace Octopus.Shared.Util
                         {
                             throw;
                         }
-                        
+
                         break;
                     }
                 }
@@ -120,8 +120,8 @@ namespace Octopus.Shared.Util
 
         public IEnumerable<string> EnumerateFiles(string parentDirectoryPath, params string[] searchPatterns)
         {
-            return searchPatterns.Length == 0 
-                ? Directory.EnumerateFiles(parentDirectoryPath, "*", SearchOption.TopDirectoryOnly) 
+            return searchPatterns.Length == 0
+                ? Directory.EnumerateFiles(parentDirectoryPath, "*", SearchOption.TopDirectoryOnly)
                 : searchPatterns.SelectMany(pattern => Directory.EnumerateFiles(parentDirectoryPath, pattern, SearchOption.TopDirectoryOnly));
         }
 
@@ -149,7 +149,7 @@ namespace Octopus.Shared.Util
                 return Enumerable.Empty<string>();
 
             return Directory.EnumerateDirectories(parentDirectoryPath, "*", SearchOption.AllDirectories);
-        } 
+        }
 
         public long GetFileSize(string path)
         {
@@ -259,7 +259,7 @@ namespace Octopus.Shared.Util
                 }
                 else
                 {
-                    PurgeDirectory(directory, include, options, cancel, includeTarget: true);
+                    PurgeDirectory(directory, include, options, cancel, true);
                 }
             }
 
@@ -350,7 +350,7 @@ namespace Octopus.Shared.Util
                 }
                 catch
                 {
-                    Thread.Sleep(1000 + (2000 * i));
+                    Thread.Sleep(1000 + (2000*i));
 
                     if (i == overwriteFileRetryAttempts - 1)
                     {
@@ -362,7 +362,7 @@ namespace Octopus.Shared.Util
 
         public void EnsureDiskHasEnoughFreeSpace(string directoryPath)
         {
-            EnsureDiskHasEnoughFreeSpace(directoryPath, 500 * 1024 * 1024);
+            EnsureDiskHasEnoughFreeSpace(directoryPath, 500*1024*1024);
         }
 
         public void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
@@ -372,12 +372,12 @@ namespace Octopus.Shared.Util
             ulong totalNumberOfFreeBytes;
 
             var success = GetDiskFreeSpaceEx(directoryPath, out freeBytesAvailable, out totalNumberOfBytes, out totalNumberOfFreeBytes);
-            if (!success) 
+            if (!success)
                 return;
 
             // Always make sure at least 500MB are available regardless of what we need 
             var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;
-            required = Math.Max(required, 500L * 1024 * 1024);
+            required = Math.Max(required, 500L*1024*1024);
             if (totalNumberOfFreeBytes < required)
             {
                 throw new IOException(string.Format("The drive containing the directory '{0}' on machine '{1}' does not have enough free disk space available for this operation to proceed. The disk only has {2} available; please free up at least {3}.", directoryPath, Environment.MachineName, totalNumberOfFreeBytes.ToFileSizeString(), required.ToFileSizeString()));
@@ -394,7 +394,6 @@ namespace Octopus.Shared.Util
             relativeOrAbsoluteFilePath = Path.GetFullPath(relativeOrAbsoluteFilePath);
             return relativeOrAbsoluteFilePath;
         }
-
 
         /// <summary>
         /// Creates, updates or skips a file based on a file content comparison
@@ -419,29 +418,23 @@ namespace Octopus.Shared.Util
                 }
                 return ReplaceStatus.Created;
             }
-            else
+            bool equal;
+            using (var oldStream = File.OpenRead(oldFilePath))
             {
-                bool equal;
-                using (var oldStream = File.OpenRead(oldFilePath))
-                {
-                    equal = EqualHash(oldStream, newStream);
-                }
-
-                if (equal)
-                {
-                    return ReplaceStatus.Unchanged;
-                }
-                else
-                {
-                    newStream.Seek(0, SeekOrigin.Begin);
-                    using (var oldStream = File.Create(oldFilePath))
-                    {
-                        newStream.CopyTo(oldStream);
-                        newStream.Flush();
-                    }
-                    return ReplaceStatus.Updated;
-                }
+                equal = EqualHash(oldStream, newStream);
             }
+
+            if (equal)
+            {
+                return ReplaceStatus.Unchanged;
+            }
+            newStream.Seek(0, SeekOrigin.Begin);
+            using (var oldStream = File.Create(oldFilePath))
+            {
+                newStream.CopyTo(oldStream);
+                newStream.Flush();
+            }
+            return ReplaceStatus.Updated;
         }
 
         public string ReadAllText(string scriptFile)
@@ -454,10 +447,10 @@ namespace Octopus.Shared.Util
             first.Seek(0, SeekOrigin.Begin);
             second.Seek(0, SeekOrigin.Begin);
 
-            byte[] firstHash = MD5.Create().ComputeHash(first);
-            byte[] secondHash = MD5.Create().ComputeHash(second);
+            var firstHash = MD5.Create().ComputeHash(first);
+            var secondHash = MD5.Create().ComputeHash(second);
 
-            for (int i = 0; i < firstHash.Length; i++)
+            for (var i = 0; i < firstHash.Length; i++)
             {
                 if (firstHash[i] != secondHash[i])
                     return false;
@@ -471,6 +464,5 @@ namespace Octopus.Shared.Util
             out ulong lpFreeBytesAvailable,
             out ulong lpTotalNumberOfBytes,
             out ulong lpTotalNumberOfFreeBytes);
-
     }
 }

@@ -81,7 +81,7 @@ namespace Octopus.Shared.Web
 
             public static class MaintenanceConfiguration
             {
-				public static string Template = "~/api/maintenanceconfiguration";
+                public static string Template = "~/api/maintenanceconfiguration";
             }
 
             public static class Teams
@@ -172,7 +172,7 @@ namespace Octopus.Shared.Web
                 public static string GetReleases = "~/api/projects/{id}/releases{/version}{?skip}";
                 public static string Pulse = "~/api/projects/pulse{?projectIds}";
             }
-            
+
             public static class Tasks
             {
                 public static string Template = "~/api/tasks{/id}{?skip,active,environment,project,name}";
@@ -303,9 +303,8 @@ namespace Octopus.Shared.Web
             public static class Packages
             {
                 public static string Search = "~/api/feeds/{id}/packages{?packageId,partialMatch,includeMultipleVersions,includeNotes,includePreRelease,take}";
-                public static string Versions = "~/api/feeds/{id}/packages{?packageIds}";                
+                public static string Versions = "~/api/feeds/{id}/packages{?packageIds}";
                 public static string Notes = "~/api/feeds/{id}/packages/notes{?packageId,version}";
-
                 public static string Template = "~/api/packages{/id}{?nuGetPackageId,filter,latest,skip,take,includeNotes}";
                 public static string Get = "~/api/packages/{id}{?includeNotes}";
                 public static string Raw = "~/api/packages/{id}/raw";
@@ -320,12 +319,12 @@ namespace Octopus.Shared.Web
             {
                 public static string Show = "~/app#/tasks/{id}";
             }
-            
+
             public static class Projects
             {
                 public static string Show = "~/app#/projects/{id}";
             }
-            
+
             public static class Deployments
             {
                 public static string Show = "~/app#/deployments/{id}";
@@ -357,7 +356,7 @@ namespace Octopus.Shared.Web
                 {
                     return "https://www.gravatar.com/avatar/" + HexMd5(email.Trim().ToLowerInvariant()) + "?d=blank";
                 }
-                
+
                 static string HexMd5(string s)
                 {
                     var md5 = MD5.Create();

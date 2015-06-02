@@ -8,9 +8,23 @@ namespace Octopus.Shared.Util
     [DebuggerNonUserCode]
     public static class Guard
     {
+        static readonly Lazy<List<string>> specialLocations = new Lazy<List<string>>(() =>
+        {
+            var result = new List<string>();
+            foreach (var specialLocation in Enum.GetValues(typeof (Environment.SpecialFolder)))
+            {
+                var location = Environment.GetFolderPath((Environment.SpecialFolder)specialLocation, Environment.SpecialFolderOption.None);
+                result.Add(location);
+            }
+            result.Add("C:");
+            result.Add("C:\\");
+            return result;
+        }
+            );
+
         public static void ArgumentNotNull(object argument, string parameterName)
         {
-            if (argument == null) 
+            if (argument == null)
                 throw new ArgumentNullException(parameterName);
         }
 
@@ -40,8 +54,7 @@ namespace Octopus.Shared.Util
             {
                 if (string.IsNullOrWhiteSpace(errorMessage))
                     throw new ArgumentException(errorMessage);
-                else
-                    throw new ArgumentException(string.Format("Could not find file '{0}'", argument));
+                throw new ArgumentException(string.Format("Could not find file '{0}'", argument));
             }
         }
 
@@ -72,20 +85,6 @@ namespace Octopus.Shared.Util
                 throw new ArgumentException(string.Format("Directory '{0}' not found", argument));
             }
         }
-
-        static Lazy<List<string>> specialLocations = new Lazy<List<string>>(() =>
-            {
-                var result = new List<string>();
-                foreach (var specialLocation in Enum.GetValues(typeof(Environment.SpecialFolder)))
-                {
-                    var location = Environment.GetFolderPath((Environment.SpecialFolder)specialLocation, Environment.SpecialFolderOption.None);
-                    result.Add(location);
-                }
-                result.Add("C:");
-                result.Add("C:\\");
-                return result;
-            }
-            );
 
         /// <summary>
         /// Throws if a directory has been specified that is not a good place to store files

@@ -42,7 +42,7 @@ namespace Octopus.Shared.Packages
             var fullPath = GetFilenameForPackage(metadata, prefix);
 
             fileSystem.EnsureDiskHasEnoughFreeSpace(rootDirectory, metadata.Size);
-            
+
             return fileSystem.OpenFile(fullPath, FileAccess.Write);
         }
 
@@ -106,7 +106,7 @@ namespace Octopus.Shared.Packages
                 string hash;
 
                 var size = fileSystem.GetFileSize(filePath);
-                
+
                 using (var stream = fileSystem.OpenFile(filePath, FileAccess.Read, FileShare.ReadWrite))
                 {
                     hash = HashCalculator.Hash(stream);

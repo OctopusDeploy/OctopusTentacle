@@ -28,11 +28,8 @@ namespace Octopus.Shared.Packages
         }
 
         public string PackageId { get; set; }
-
         public string Version { get; set; }
-
         public long Size { get; set; }
-
         public string Hash { get; set; }
 
         public bool Equals(PackageMetadata other)
@@ -46,15 +43,15 @@ namespace Octopus.Shared.Packages
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((PackageMetadata) obj);
+            if (obj.GetType() != GetType()) return false;
+            return Equals((PackageMetadata)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                int hashCode = (PackageId != null ? PackageId.GetHashCode() : 0);
+                var hashCode = (PackageId != null ? PackageId.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Version != null ? Version.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ Size.GetHashCode();
                 hashCode = (hashCode*397) ^ (Hash != null ? Hash.GetHashCode() : 0);
@@ -90,7 +87,7 @@ namespace Octopus.Shared.Packages
                 hash = HashCalculator.Hash(fileStream);
             }
 
-            return new PackageMetadata(id, version, file.Length) { Hash = hash };
+            return new PackageMetadata(id, version, file.Length) {Hash = hash};
         }
 
         public override string ToString()

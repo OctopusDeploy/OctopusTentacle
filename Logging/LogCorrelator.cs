@@ -5,8 +5,8 @@ namespace Octopus.Shared.Logging
 {
     public class LogCorrelator
     {
-        private readonly string correlationId;
-        
+        readonly string correlationId;
+
         [JsonConstructor]
         public LogCorrelator(string correlationId = null)
         {

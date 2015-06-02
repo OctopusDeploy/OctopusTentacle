@@ -10,5 +10,7 @@ namespace Octopus.Shared.Properties
     /// <c>System.Web.Mvc.Html.RenderPartialExtensions.RenderPartial(HtmlHelper, String)</c>
     /// </summary>
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Method)]
-    public sealed class AspMvcPartialViewAttribute : PathReferenceAttribute { }
+    public sealed class AspMvcPartialViewAttribute : PathReferenceAttribute
+    {
+    }
 }

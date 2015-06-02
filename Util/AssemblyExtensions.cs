@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 
 // ReSharper disable CheckNamespace
+
 namespace Octopus.Shared.Util
 {
     public static class AssemblyExtensions

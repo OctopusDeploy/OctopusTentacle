@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NuGet;
+using SemanticVersion = Octopus.Client.Model.SemanticVersion;
 
 namespace Octopus.Shared.Packages
 {
@@ -20,7 +21,7 @@ namespace Octopus.Shared.Packages
             get { return repository; }
         }
 
-        public INuGetPackage GetPackage(string packageId, Client.Model.SemanticVersion version)
+        public INuGetPackage GetPackage(string packageId, SemanticVersion version)
         {
             var result = GetSinglePackage(packageId, version);
             return result == null ? null : WrapPackage(result);
@@ -40,15 +41,15 @@ namespace Octopus.Shared.Packages
             return packages;
         }
 
-        public Stream GetPackageRaw(string packageId, Client.Model.SemanticVersion version)
+        public Stream GetPackageRaw(string packageId, SemanticVersion version)
         {
             var result = GetSinglePackage(packageId, version);
             return result == null ? null : result.GetStream();
         }
 
-        IPackage GetSinglePackage(string packageId, Client.Model.SemanticVersion version)
+        IPackage GetSinglePackage(string packageId, SemanticVersion version)
         {
-            return repository.FindPackage(packageId, new SemanticVersion(version.ToString()));
+            return repository.FindPackage(packageId, new NuGet.SemanticVersion(version.ToString()));
         }
 
         IEnumerable<IPackage> FindPackageNamed(string packageId, int take)

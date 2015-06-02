@@ -7,13 +7,13 @@ using System.Reflection;
 namespace Octopus.Shared.Util
 {
     /// <summary>
-    /// The one and only <see cref="AmazingConverter"/>. Can convert from absolutely anything to absolutely 
+    /// The one and only <see cref="AmazingConverter" />. Can convert from absolutely anything to absolutely
     /// anything.
     /// </summary>
     public static class AmazingConverter
     {
         /// <summary>
-        /// If it can be converted, the <see cref="AmazingConverter"/> will figure out how. Given a source
+        /// If it can be converted, the <see cref="AmazingConverter" /> will figure out how. Given a source
         /// object, tries its best to convert it to the target type.
         /// </summary>
         /// <param name="source">The source.</param>
@@ -36,8 +36,8 @@ namespace Octopus.Shared.Util
                 return source;
 
             // Enums!
-            if (targetType.IsEnum && sourceType == typeof(string))
-                return Enum.Parse(targetType, (string)source, ignoreCase: true);
+            if (targetType.IsEnum && sourceType == typeof (string))
+                return Enum.Parse(targetType, (string)source, true);
 
             // Try type descriptors
             var targetConverter = TypeDescriptor.GetConverter(targetType);
@@ -59,7 +59,7 @@ namespace Octopus.Shared.Util
 
             if (implicitAssignment != null)
             {
-                return implicitAssignment.Invoke(null, new[] { source });
+                return implicitAssignment.Invoke(null, new[] {source});
             }
 
             var enumerable = source as IEnumerable;
@@ -80,13 +80,13 @@ namespace Octopus.Shared.Util
                 }
             }
 
-            if (targetType == typeof(string))
+            if (targetType == typeof (string))
             {
                 return source.ToString();
             }
 
             var s = source as string;
-            if (s != null && targetType == typeof(Uri))
+            if (s != null && targetType == typeof (Uri))
                 return new Uri(s);
 
             // Hope and pray

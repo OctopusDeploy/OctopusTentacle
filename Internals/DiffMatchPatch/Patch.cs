@@ -12,7 +12,6 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
         public int start2;
         public int length1;
         public int length2;
-
         /**
          * Emmulate GNU diff's format.
          * Header: @@ -382,8 +481,9 @@
@@ -67,7 +66,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                 }
 
                 text.Append(HttpUtility.UrlEncode(aDiff.text,
-                                                  new UTF8Encoding()).Replace('+', ' ')).Append("\n");
+                    new UTF8Encoding()).Replace('+', ' ')).Append("\n");
             }
 
             return GoogleDiffMatchPatch.unescapeForEncodeUriCompatability(

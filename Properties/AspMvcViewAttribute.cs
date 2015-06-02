@@ -9,5 +9,7 @@ namespace Octopus.Shared.Properties
     /// <c>System.Web.Mvc.Controller.View(Object)</c>
     /// </summary>
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Method)]
-    public sealed class AspMvcViewAttribute : PathReferenceAttribute { }
+    public sealed class AspMvcViewAttribute : PathReferenceAttribute
+    {
+    }
 }

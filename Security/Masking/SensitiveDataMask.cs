@@ -8,9 +8,9 @@ namespace Octopus.Shared.Security.Masking
     // http://en.wikipedia.org/wiki/Rabin%E2%80%93Karp_algorithm
     public class SensitiveDataMask
     {
-        readonly List<string> valuesLongestToShortest = new List<string>();
-        readonly List<string> valuesShortestToLongest = new List<string>();  
         const string Mask = "********";
+        readonly List<string> valuesLongestToShortest = new List<string>();
+        readonly List<string> valuesShortestToLongest = new List<string>();
         readonly StringBuilder builder = new StringBuilder();
         readonly object sync = new object();
 
@@ -32,7 +32,7 @@ namespace Octopus.Shared.Security.Masking
 
         public void MaskInstancesOf(string sensitive)
         {
-            if (string.IsNullOrWhiteSpace(sensitive) || sensitive.Length < 4) 
+            if (string.IsNullOrWhiteSpace(sensitive) || sensitive.Length < 4)
                 return;
 
             lock (sync)
@@ -82,9 +82,9 @@ namespace Octopus.Shared.Security.Masking
 
         class StringLengthComparer : IComparer<string>
         {
-            readonly int multiplier;
             public static readonly StringLengthComparer LongestToShortest = new StringLengthComparer(-1);
             public static readonly StringLengthComparer ShortestToLongest = new StringLengthComparer(1);
+            readonly int multiplier;
 
             StringLengthComparer(int multiplier)
             {
@@ -93,7 +93,7 @@ namespace Octopus.Shared.Security.Masking
 
             public int Compare(string x, string y)
             {
-                return (x.Length.CompareTo(y.Length)) * multiplier;
+                return (x.Length.CompareTo(y.Length))*multiplier;
             }
         }
     }

@@ -91,7 +91,7 @@ namespace Octopus.Shared.Configuration
 
         protected virtual void OnLoaded()
         {
-            Action handler = Loaded;
+            var handler = Loaded;
             if (handler != null) handler();
         }
     }

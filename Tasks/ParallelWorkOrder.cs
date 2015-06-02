@@ -8,8 +8,8 @@ namespace Octopus.Shared.Tasks
 {
     public class ParallelWorkOrder<T>
     {
-        private readonly int maxParallelism;
-        private readonly Action<T> executeCallback;
+        readonly int maxParallelism;
+        readonly Action<T> executeCallback;
         readonly CancellationToken cancellation;
         readonly List<WorkItem<T>> completed = new List<WorkItem<T>>();
         readonly List<WorkItem<T>> running = new List<WorkItem<T>>();
@@ -49,7 +49,6 @@ namespace Octopus.Shared.Tasks
                 thread.IsBackground = true;
                 thread.Start();
             }
-
         }
 
         void CheckForCompletedTasks()
@@ -70,7 +69,7 @@ namespace Octopus.Shared.Tasks
         {
             var errors = (from pair in completed where pair.Exception != null select pair.Exception).ToList();
 
-            if (errors.Count <= 0) 
+            if (errors.Count <= 0)
                 return;
 
             if (errors.Any(e => e is TaskCanceledException || e is OperationCanceledException))

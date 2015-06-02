@@ -12,9 +12,24 @@ namespace Octopus.Shared.Util
             this.info = info;
         }
 
-        public string FullPath { get { return info.FullName; } }
-        public string Extension { get { return info.Extension; } }
-        public DateTime LastAccessTimeUtc { get { return info.LastAccessTimeUtc; } }
-        public DateTime LastWriteTimeUtc { get { return info.LastWriteTimeUtc; } }
+        public string FullPath
+        {
+            get { return info.FullName; }
+        }
+
+        public string Extension
+        {
+            get { return info.Extension; }
+        }
+
+        public DateTime LastAccessTimeUtc
+        {
+            get { return info.LastAccessTimeUtc; }
+        }
+
+        public DateTime LastWriteTimeUtc
+        {
+            get { return info.LastWriteTimeUtc; }
+        }
     }
 }

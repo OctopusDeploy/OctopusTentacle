@@ -27,7 +27,6 @@ namespace Octopus.Shared.Startup
         }
 
         public ServiceAccount DefaultAccount { get; set; }
-
         public string Description { get; set; }
     }
 }

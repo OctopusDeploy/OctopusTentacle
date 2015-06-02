@@ -36,7 +36,7 @@ namespace Octopus.Shared.Configuration
             if (s == null)
                 return defaultValue;
 
-            if (typeof(TData) == typeof(string))
+            if (typeof (TData) == typeof (string))
                 return (TData)(object)s;
 
             return JsonConvert.DeserializeObject<TData>(s);
@@ -57,10 +57,10 @@ namespace Octopus.Shared.Configuration
             if (protectionScope != null)
             {
                 v = Convert.ToBase64String(
-                        ProtectedData.Protect(
-                            Encoding.UTF8.GetBytes(v),
-                            null,
-                            protectionScope.Value));
+                    ProtectedData.Protect(
+                        Encoding.UTF8.GetBytes(v),
+                        null,
+                        protectionScope.Value));
             }
 
             Write(name, v);
@@ -70,7 +70,7 @@ namespace Octopus.Shared.Configuration
         {
             if (name == null) throw new ArgumentNullException("name");
 
-            if (typeof(TData) == typeof(string))
+            if (typeof (TData) == typeof (string))
                 Set(name, (string)(object)value, protectionScope);
             else
                 Set(name, JsonConvert.SerializeObject(value), protectionScope);

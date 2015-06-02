@@ -5,6 +5,13 @@ namespace Octopus.Shared.Packages
 {
     public class NuGetPackageComparer
     {
+        static readonly IEqualityComparer<INuGetPackage> PackageIdComparerInstance = new PackageIdEqualityComparer();
+
+        public static IEqualityComparer<INuGetPackage> PackageId
+        {
+            get { return PackageIdComparerInstance; }
+        }
+
         sealed class PackageIdEqualityComparer : IEqualityComparer<INuGetPackage>
         {
             public bool Equals(INuGetPackage x, INuGetPackage y)
@@ -32,13 +39,6 @@ namespace Octopus.Shared.Packages
             {
                 return (obj.PackageId != null ? obj.PackageId.GetHashCode() : 0);
             }
-        }
-
-        static readonly IEqualityComparer<INuGetPackage> PackageIdComparerInstance = new PackageIdEqualityComparer();
-
-        public static IEqualityComparer<INuGetPackage> PackageId
-        {
-            get { return PackageIdComparerInstance; }
         }
     }
 }

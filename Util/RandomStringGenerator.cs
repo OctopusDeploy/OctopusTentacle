@@ -30,15 +30,14 @@ namespace Octopus.Shared.Util
             do
             {
                 rngCsp.GetBytes(randomNumber);
-            }
-            while (!IsFairRoll(randomNumber[0], numberSides));
-            return (byte)((randomNumber[0] % numberSides) + 1);
+            } while (!IsFairRoll(randomNumber[0], numberSides));
+            return (byte)((randomNumber[0]%numberSides) + 1);
         }
 
         static bool IsFairRoll(byte roll, int numSides)
         {
-            var fullSetsOfValues = Byte.MaxValue / numSides;
-            return roll < numSides * fullSetsOfValues;
-        }   
+            var fullSetsOfValues = Byte.MaxValue/numSides;
+            return roll < numSides*fullSetsOfValues;
+        }
     }
 }

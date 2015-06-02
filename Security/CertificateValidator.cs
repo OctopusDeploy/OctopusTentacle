@@ -28,12 +28,12 @@ namespace Octopus.Shared.Security
                 return;
 
             log.Error("Could not establish a trust relationship because the other party was using the wrong certificate; the thumbprint of the certificate they provided was: " + key + " while we would have accepted: " + string.Join(", ", thumbprintsAllowed));
-                
+
             if (direction == CertificateValidationDirection.TheyCalledUs)
             {
                 throw new SecurityTokenValidationException("The certificate thumbprint provided by the remote client is not in our list of trusted certificates. We can't accept requests from that client. The client identified itself with the thumbprint: " + key);
             }
-            
+
             throw new SecurityTokenValidationException("The certificate thumbprint given by the remote server is not what we expected. The remote server identified as: " + key + " while we expected: " + string.Join(", ", thumbprintsAllowed));
         }
     }

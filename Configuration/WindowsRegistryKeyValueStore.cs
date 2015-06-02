@@ -10,10 +10,10 @@ namespace Octopus.Shared.Configuration
     /// </summary>
     public class WindowsRegistryKeyValueStore : DictionaryKeyValueStore
     {
-        readonly ILog log;
         const RegistryHive Hive = RegistryHive.LocalMachine;
         const RegistryView View = RegistryView.Registry64;
         const string KeyName = "Software\\Octopus";
+        readonly ILog log;
 
         public WindowsRegistryKeyValueStore(ILog log)
         {
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Configuration
         protected override void SaveSettings(IDictionary<string, string> settingsToSave)
         {
             log.Info("Saving configuration settings to the Windows registry...");
-            
+
             using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
             {
                 using (var subKey = rootKey.OpenSubKey(KeyName, true))

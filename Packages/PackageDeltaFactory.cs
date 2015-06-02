@@ -10,11 +10,11 @@ namespace Octopus.Shared.Packages
 {
     public class PackageDeltaFactory : IPackageDeltaFactory
     {
-        readonly ILog log = Log.Octopus();
-        readonly IOctopusFileSystem fileSystem;
         const string SignatureCommandName = "signature";
         const string DeltaCommandName = "delta";
         const string PartialFileExtension = ".partial";
+        readonly ILog log = Log.Octopus();
+        readonly IOctopusFileSystem fileSystem;
         readonly string currentWorkingDirectory;
 
         public PackageDeltaFactory(IOctopusFileSystem fileSystem, IHomeConfiguration config)

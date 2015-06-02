@@ -14,9 +14,9 @@ namespace Octopus.Shared.Bcl.IO
             using (var file = fileSystem.OpenFile(path, FileAccess.Read))
             {
                 if (file.Length == 0)
-                    return new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                    return new UTF8Encoding(false);
 
-                using (var reader = new StreamReader(file, detectEncodingFromByteOrderMarks: true))
+                using (var reader = new StreamReader(file, true))
                 {
                     reader.ReadLine();
                     var encoding = reader.CurrentEncoding;
@@ -36,7 +36,7 @@ namespace Octopus.Shared.Bcl.IO
                             }
                         }
                     }
-                    return new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                    return new UTF8Encoding(false);
                 }
             }
         }

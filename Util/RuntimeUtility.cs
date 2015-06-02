@@ -8,6 +8,6 @@ namespace Octopus.Shared.Util
         {
             // Class "ReflectionContext" exists from .NET 4.5 onwards.
             return Type.GetType("System.Reflection.ReflectionContext", false) != null;
-        } 
+        }
     }
 }

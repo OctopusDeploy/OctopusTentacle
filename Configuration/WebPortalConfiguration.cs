@@ -23,7 +23,8 @@ namespace Octopus.Shared.Configuration
         }
 
         /// <summary>
-        /// Gets or sets whether SSL will be forced (connections to any non-HTTPS prefix will be redirected to the first HTTPS prefix).
+        /// Gets or sets whether SSL will be forced (connections to any non-HTTPS prefix will be redirected to the first HTTPS
+        /// prefix).
         /// </summary>
         public bool ForceSsl
         {

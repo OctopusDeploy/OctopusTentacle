@@ -8,9 +8,9 @@ using NuGet;
 namespace Octopus.Shared.Packages
 {
     /// <summary>
-    /// The local package repository (used for reading packages from the file system) is broken in NuGet.Core because 
+    /// The local package repository (used for reading packages from the file system) is broken in NuGet.Core because
     /// when a package is being written, it refuses to read the packages. This implementation wraps it by ignoring packages
-    /// that can't be written (either because they are locked or only partially written). 
+    /// that can't be written (either because they are locked or only partially written).
     /// </summary>
     public class FastLocalPackageRepository : LocalPackageRepository
     {
@@ -71,6 +71,12 @@ namespace Octopus.Shared.Packages
             public Version MinClientVersion { get; private set; }
             public Uri ReportAbuseUrl { get; private set; }
             public int DownloadCount { get; private set; }
+            public bool IsAbsoluteLatestVersion { get; private set; }
+            public bool IsLatestVersion { get; private set; }
+            public bool Listed { get; private set; }
+            public DateTimeOffset? Published { get; private set; }
+            public IEnumerable<IPackageAssemblyReference> AssemblyReferences { get; private set; }
+
             public IEnumerable<IPackageFile> GetFiles()
             {
                 throw new NotImplementedException();
@@ -85,12 +91,6 @@ namespace Octopus.Shared.Packages
             {
                 throw new NotImplementedException();
             }
-
-            public bool IsAbsoluteLatestVersion { get; private set; }
-            public bool IsLatestVersion { get; private set; }
-            public bool Listed { get; private set; }
-            public DateTimeOffset? Published { get; private set; }
-            public IEnumerable<IPackageAssemblyReference> AssemblyReferences { get; private set; }
         }
     }
 }

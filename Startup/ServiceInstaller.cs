@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.ServiceProcess;
-using System.Text;
 using System.Threading;
 using Microsoft.Win32;
 using Octopus.Shared.Util;
@@ -26,7 +25,221 @@ namespace Octopus.Shared.Startup
     /// </remarks>
     public class ServiceInstaller : IServiceInstaller
     {
+        /// <summary>
+        /// </summary>
+        public enum ServiceBootFlag
+        {
+            /// <summary>
+            /// </summary>
+            Start = 0x00000000,
+
+            /// <summary>
+            /// </summary>
+            SystemStart = 0x00000001,
+
+            /// <summary>
+            /// </summary>
+            AutoStart = 0x00000002,
+
+            /// <summary>
+            /// </summary>
+            DemandStart = 0x00000003,
+
+            /// <summary>
+            /// </summary>
+            Disabled = 0x00000004
+        }
+
+        /// <summary>
+        /// </summary>
+        public enum ServiceControl
+        {
+            /// <summary>
+            /// </summary>
+            Stop = 0x00000001,
+
+            /// <summary>
+            /// </summary>
+            Pause = 0x00000002,
+
+            /// <summary>
+            /// </summary>
+            Continue = 0x00000003,
+
+            /// <summary>
+            /// </summary>
+            Interrogate = 0x00000004,
+
+            /// <summary>
+            /// </summary>
+            Shutdown = 0x00000005,
+
+            /// <summary>
+            /// </summary>
+            ParamChange = 0x00000006,
+
+            /// <summary>
+            /// </summary>
+            NetBindAdd = 0x00000007,
+
+            /// <summary>
+            /// </summary>
+            NetBindRemove = 0x00000008,
+
+            /// <summary>
+            /// </summary>
+            NetBindEnable = 0x00000009,
+
+            /// <summary>
+            /// </summary>
+            NetBindDisable = 0x0000000A
+        }
+
+        /// <summary>
+        /// </summary>
+        public enum ServiceError
+        {
+            /// <summary>
+            /// </summary>
+            Ignore = 0x00000000,
+
+            /// <summary>
+            /// </summary>
+            Normal = 0x00000001,
+
+            /// <summary>
+            /// </summary>
+            Severe = 0x00000002,
+
+            /// <summary>
+            /// </summary>
+            Critical = 0x00000003
+        }
+
+        [Flags]
+        public enum ServiceManagerRights
+        {
+            Connect = 0x0001,
+
+            /// <summary>
+            /// </summary>
+            CreateService = 0x0002,
+
+            /// <summary>
+            /// </summary>
+            EnumerateService = 0x0004,
+
+            /// <summary>
+            /// </summary>
+            Lock = 0x0008,
+
+            /// <summary>
+            /// </summary>
+            QueryLockStatus = 0x0010,
+
+            /// <summary>
+            /// </summary>
+            ModifyBootConfig = 0x0020,
+
+            /// <summary>
+            /// </summary>
+            StandardRightsRequired = 0xF0000,
+
+            /// <summary>
+            /// </summary>
+            AllAccess = (StandardRightsRequired | Connect | CreateService |
+                EnumerateService | Lock | QueryLockStatus | ModifyBootConfig)
+        }
+
+        /// <summary>
+        /// </summary>
+        [Flags]
+        public enum ServiceRights
+        {
+            /// <summary>
+            /// </summary>
+            QueryConfig = 0x1,
+
+            /// <summary>
+            /// </summary>
+            ChangeConfig = 0x2,
+
+            /// <summary>
+            /// </summary>
+            QueryStatus = 0x4,
+
+            /// <summary>
+            /// </summary>
+            EnumerateDependants = 0x8,
+
+            /// <summary>
+            /// </summary>
+            Start = 0x10,
+
+            /// <summary>
+            /// </summary>
+            Stop = 0x20,
+
+            /// <summary>
+            /// </summary>
+            PauseContinue = 0x40,
+
+            /// <summary>
+            /// </summary>
+            Interrogate = 0x80,
+
+            /// <summary>
+            /// </summary>
+            UserDefinedControl = 0x100,
+
+            /// <summary>
+            /// </summary>
+            Delete = 0x00010000,
+
+            /// <summary>
+            /// </summary>
+            StandardRightsRequired = 0xF0000,
+
+            /// <summary>
+            /// </summary>
+            AllAccess = (StandardRightsRequired | QueryConfig | ChangeConfig |
+                QueryStatus | EnumerateDependants | Start | Stop | PauseContinue |
+                Interrogate | UserDefinedControl)
+        }
+
+        /// <summary>
+        /// </summary>
+        public enum ServiceState
+        {
+            /// <summary>
+            /// </summary>
+            Unknown = -1, // The state cannot be (has not been) retrieved.
+
+            /// <summary>
+            /// </summary>
+            NotFound = 0, // The service is not known on the host server.
+
+            /// <summary>
+            /// </summary>
+            Stop = 1, // The service is NET stopped.
+
+            /// <summary>
+            /// </summary>
+            Run = 2, // The service is NET started.
+
+            /// <summary>
+            /// </summary>
+            Stopping = 3,
+
+            /// <summary>
+            /// </summary>
+            Starting = 4
+        }
+
         const int MaxAttemptsToStop = 3;
+        const uint ServiceNoChange = 0xffffffff;
+        const int STANDARD_RIGHTS_REQUIRED = 0xF0000;
+        const int SERVICE_WIN32_OWN_PROCESS = 0x00000010;
 
         public void Install(ServiceOptions options)
         {
@@ -90,7 +303,7 @@ namespace Octopus.Shared.Startup
             {
                 InstallAndStart(serviceName, serviceName, assemblyContainingInstaller.FullLocalPath(), options.DefaultAccount);
                 AddServiceDescriptionToRegistry(serviceName, options.Description);
-                Console.WriteLine("Service installed and started successfully");       
+                Console.WriteLine("Service installed and started successfully");
             }
         }
 
@@ -125,8 +338,6 @@ namespace Octopus.Shared.Startup
             actionThatMayRequireAdminPrivileges();
         }
 
-        const uint ServiceNoChange = 0xffffffff;
-
         [DllImport("Advapi32.dll", EntryPoint = "ChangeServiceConfigW", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
         internal static extern bool ChangeServiceConfig(
             SafeHandle hService,
@@ -142,310 +353,39 @@ namespace Octopus.Shared.Startup
             [In] string lpDisplayName
             );
 
-        [Flags]
-        public enum ServiceManagerRights
-        {
-            Connect = 0x0001,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            CreateService = 0x0002,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            EnumerateService = 0x0004,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Lock = 0x0008,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            QueryLockStatus = 0x0010,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            ModifyBootConfig = 0x0020,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            StandardRightsRequired = 0xF0000,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            AllAccess = (StandardRightsRequired | Connect | CreateService |
-                         EnumerateService | Lock | QueryLockStatus | ModifyBootConfig)
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        [Flags]
-        public enum ServiceRights
-        {
-            /// <summary>
-            /// 
-            /// </summary>
-            QueryConfig = 0x1,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            ChangeConfig = 0x2,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            QueryStatus = 0x4,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            EnumerateDependants = 0x8,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Start = 0x10,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Stop = 0x20,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            PauseContinue = 0x40,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Interrogate = 0x80,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            UserDefinedControl = 0x100,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Delete = 0x00010000,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            StandardRightsRequired = 0xF0000,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            AllAccess = (StandardRightsRequired | QueryConfig | ChangeConfig |
-                         QueryStatus | EnumerateDependants | Start | Stop | PauseContinue |
-                         Interrogate | UserDefinedControl)
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public enum ServiceBootFlag
-        {
-            /// <summary>
-            /// 
-            /// </summary>
-            Start = 0x00000000,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            SystemStart = 0x00000001,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            AutoStart = 0x00000002,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            DemandStart = 0x00000003,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Disabled = 0x00000004
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public enum ServiceState
-        {
-            /// <summary>
-            /// 
-            /// </summary>
-            Unknown = -1, // The state cannot be (has not been) retrieved.
-            /// <summary>
-            /// 
-            /// </summary>
-            NotFound = 0, // The service is not known on the host server.
-            /// <summary>
-            /// 
-            /// </summary>
-            Stop = 1, // The service is NET stopped.
-            /// <summary>
-            /// 
-            /// </summary>
-            Run = 2, // The service is NET started.
-            /// <summary>
-            /// 
-            /// </summary>
-            Stopping = 3,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Starting = 4,
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public enum ServiceControl
-        {
-            /// <summary>
-            /// 
-            /// </summary>
-            Stop = 0x00000001,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Pause = 0x00000002,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Continue = 0x00000003,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Interrogate = 0x00000004,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Shutdown = 0x00000005,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            ParamChange = 0x00000006,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            NetBindAdd = 0x00000007,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            NetBindRemove = 0x00000008,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            NetBindEnable = 0x00000009,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            NetBindDisable = 0x0000000A
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public enum ServiceError
-        {
-            /// <summary>
-            /// 
-            /// </summary>
-            Ignore = 0x00000000,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Normal = 0x00000001,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Severe = 0x00000002,
-
-            /// <summary>
-            /// 
-            /// </summary>
-            Critical = 0x00000003
-        }
-
-        const int STANDARD_RIGHTS_REQUIRED = 0xF0000;
-        const int SERVICE_WIN32_OWN_PROCESS = 0x00000010;
-
-        [StructLayout(LayoutKind.Sequential)]
-        class SERVICE_STATUS
-        {
-            public int dwServiceType;
-            public ServiceState dwCurrentState = 0;
-            public int dwControlsAccepted;
-            public int dwWin32ExitCode;
-            public int dwServiceSpecificExitCode;
-            public int dwCheckPoint;
-            public int dwWaitHint;
-        }
-
         [DllImport("advapi32.dll", EntryPoint = "OpenSCManagerA")]
         static extern IntPtr OpenSCManager(string lpMachineName, string
-                                                                     lpDatabaseName, ServiceManagerRights dwDesiredAccess);
+            lpDatabaseName, ServiceManagerRights dwDesiredAccess);
 
         [DllImport("advapi32.dll", EntryPoint = "OpenServiceA",
             CharSet = CharSet.Ansi)]
         static extern IntPtr OpenService(IntPtr hSCManager, string
-                                                                lpServiceName, ServiceRights dwDesiredAccess);
+            lpServiceName, ServiceRights dwDesiredAccess);
 
         [DllImport("advapi32.dll", EntryPoint = "CreateServiceA")]
         static extern IntPtr CreateService(IntPtr hSCManager, string
-                                                                  lpServiceName, string lpDisplayName, ServiceRights dwDesiredAccess, int
-                                                                                                                                          dwServiceType, ServiceBootFlag dwStartType, ServiceError dwErrorControl,
-                                           string lpBinaryPathName, string lpLoadOrderGroup, IntPtr lpdwTagId, string
-                                                                                                                   lpDependencies, string lp, string lpPassword);
+            lpServiceName, string lpDisplayName, ServiceRights dwDesiredAccess, int
+                dwServiceType, ServiceBootFlag dwStartType, ServiceError dwErrorControl,
+            string lpBinaryPathName, string lpLoadOrderGroup, IntPtr lpdwTagId, string
+                lpDependencies, string lp, string lpPassword);
 
         [DllImport("advapi32.dll")]
         static extern int CloseServiceHandle(IntPtr hSCObject);
 
         [DllImport("advapi32.dll")]
         static extern int QueryServiceStatus(IntPtr hService,
-                                             SERVICE_STATUS lpServiceStatus);
+            SERVICE_STATUS lpServiceStatus);
 
         [DllImport("advapi32.dll", SetLastError = true)]
         static extern int DeleteService(IntPtr hService);
 
         [DllImport("advapi32.dll")]
         static extern int ControlService(IntPtr hService, ServiceControl
-                                                              dwControl, SERVICE_STATUS lpServiceStatus);
+            dwControl, SERVICE_STATUS lpServiceStatus);
 
         [DllImport("advapi32.dll", EntryPoint = "StartServiceA")]
         static extern int StartService(IntPtr hService, int
-                                                            dwNumServiceArgs, int lpServiceArgVectors);
+            dwNumServiceArgs, int lpServiceArgVectors);
 
         /// <summary>
         /// Takes a service name and tries to stop and then uninstall the windows serviceError
@@ -458,8 +398,8 @@ namespace Octopus.Shared.Startup
             try
             {
                 var service = OpenService(scman, serviceName,
-                                          ServiceRights.StandardRightsRequired | ServiceRights.Stop |
-                                          ServiceRights.QueryStatus);
+                    ServiceRights.StandardRightsRequired | ServiceRights.Stop |
+                        ServiceRights.QueryStatus);
                 if (service == IntPtr.Zero)
                 {
                     Console.WriteLine("The service is not installed");
@@ -510,7 +450,8 @@ namespace Octopus.Shared.Startup
         }
 
         /// <summary>
-        /// Takes a service name, a service display name and the path to the service executable and installs / starts the windows service.
+        /// Takes a service name, a service display name and the path to the service executable and installs / starts the
+        /// windows service.
         /// </summary>
         /// <param name="serviceName">The service name that this service will have</param>
         /// <param name="displayName">The display name that this service will have</param>
@@ -590,7 +531,7 @@ namespace Octopus.Shared.Startup
             try
             {
                 var hService = OpenService(scman, name, ServiceRights.QueryStatus |
-                                                        ServiceRights.Stop);
+                    ServiceRights.Stop);
                 if (hService == IntPtr.Zero)
                 {
                     throw new ApplicationException("Could not open service.");
@@ -659,7 +600,7 @@ namespace Octopus.Shared.Startup
                     {
                         return false;
                     }
-                }          
+                }
             }
 
             return true;
@@ -782,7 +723,6 @@ namespace Octopus.Shared.Startup
                     }
                 }
             }
-            return;
         }
 
         /// <summary>
@@ -828,6 +768,18 @@ namespace Octopus.Shared.Startup
                 currentControlSet.Close();
             }
             system.Close();
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        class SERVICE_STATUS
+        {
+            public int dwServiceType;
+            public readonly ServiceState dwCurrentState = 0;
+            public int dwControlsAccepted;
+            public int dwWin32ExitCode;
+            public int dwServiceSpecificExitCode;
+            public int dwCheckPoint;
+            public int dwWaitHint;
         }
     }
 }

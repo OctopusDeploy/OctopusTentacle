@@ -31,7 +31,7 @@ namespace Octopus.Shared.Security.Permissions
 
         public string DocumentId
         {
-            get 
+            get
             {
                 if (isWildcard)
                     throw new InvalidOperationException("The scope is a wildcard");

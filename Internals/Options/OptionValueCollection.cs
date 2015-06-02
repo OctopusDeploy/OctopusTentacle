@@ -14,6 +14,39 @@ namespace Octopus.Shared.Internals.Options
             this.c = c;
         }
 
+        #region IEnumerable
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return values.GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerable<T>
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            return values.GetEnumerator();
+        }
+
+        #endregion
+
+        public List<string> ToList()
+        {
+            return new List<string>(values);
+        }
+
+        public string[] ToArray()
+        {
+            return values.ToArray();
+        }
+
+        public override string ToString()
+        {
+            return string.Join(", ", values.ToArray());
+        }
+
         #region ICollection
 
         void ICollection.CopyTo(Array array, int index)
@@ -68,24 +101,6 @@ namespace Octopus.Shared.Internals.Options
         public bool IsReadOnly
         {
             get { return false; }
-        }
-
-        #endregion
-
-        #region IEnumerable
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return values.GetEnumerator();
-        }
-
-        #endregion
-
-        #region IEnumerable<T>
-
-        public IEnumerator<string> GetEnumerator()
-        {
-            return values.GetEnumerator();
         }
 
         #endregion
@@ -162,7 +177,7 @@ namespace Octopus.Shared.Internals.Options
                 index >= values.Count)
                 throw new OptionException(string.Format(
                     c.OptionSet.MessageLocalizer("Missing required value for option '{0}'."), c.OptionName),
-                                          c.OptionName);
+                    c.OptionName);
         }
 
         public string this[int index]
@@ -176,20 +191,5 @@ namespace Octopus.Shared.Internals.Options
         }
 
         #endregion
-
-        public List<string> ToList()
-        {
-            return new List<string>(values);
-        }
-
-        public string[] ToArray()
-        {
-            return values.ToArray();
-        }
-
-        public override string ToString()
-        {
-            return string.Join(", ", values.ToArray());
-        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NuGet;
 using Octopus.Shared.Util;
+using SemanticVersion = Octopus.Client.Model.SemanticVersion;
 
 namespace Octopus.Shared.Packages
 {
@@ -20,9 +21,9 @@ namespace Octopus.Shared.Packages
             get { return wrapped.Id; }
         }
 
-        public Client.Model.SemanticVersion Version
+        public SemanticVersion Version
         {
-            get { return Client.Model.SemanticVersion.Parse(wrapped.Version.ToString()); }
+            get { return SemanticVersion.Parse(wrapped.Version.ToString()); }
         }
 
         public string Description
@@ -33,11 +34,6 @@ namespace Octopus.Shared.Packages
         public string ReleaseNotes
         {
             get { return wrapped.ReleaseNotes; }
-        }
-
-        public bool IsReleaseVersion()
-        {
-            return wrapped.IsReleaseVersion();
         }
 
         public DateTimeOffset? Published
@@ -53,6 +49,11 @@ namespace Octopus.Shared.Packages
         public string Summary
         {
             get { return wrapped.Summary; }
+        }
+
+        public bool IsReleaseVersion()
+        {
+            return wrapped.IsReleaseVersion();
         }
 
         public long GetSize()

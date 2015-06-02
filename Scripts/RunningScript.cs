@@ -21,12 +21,16 @@ namespace Octopus.Shared.Scripts
 
         public ProcessState State { get; private set; }
         public int ExitCode { get; private set; }
-        public IScriptLog Log { get { return log; } }
+
+        public IScriptLog Log
+        {
+            get { return log; }
+        }
 
         public void Execute()
         {
             var powerShellPath = PowerShell.GetFullPath();
-            
+
             using (var writer = log.CreateWriter())
             using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, message => writer.WriteOutput(ProcessOutputSource.StdOut, message)))
             {

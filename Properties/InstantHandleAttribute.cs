@@ -9,6 +9,8 @@ namespace Octopus.Shared.Properties
     /// If the parameter is an enumerable, indicates that it is enumerated
     /// while the method is executed
     /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter, Inherited = true)]
-    public sealed class InstantHandleAttribute : Attribute { }
+    [AttributeUsage(AttributeTargets.Parameter)]
+    public sealed class InstantHandleAttribute : Attribute
+    {
+    }
 }

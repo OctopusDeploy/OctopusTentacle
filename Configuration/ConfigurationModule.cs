@@ -9,7 +9,7 @@ namespace Octopus.Shared.Configuration
     public class ConfigurationModule : Module
     {
         readonly ApplicationName applicationName;
-        
+
         public ConfigurationModule(ApplicationName applicationName)
         {
             this.applicationName = applicationName;

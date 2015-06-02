@@ -1,27 +1,26 @@
 ﻿using System;
 using System.IO;
-using Octopus.Client.Model;
 using System.Security.Cryptography;
 using System.Text;
+using Octopus.Client.Model;
 
 namespace Octopus.Shared.Security.MasterKey
 {
     public class StoredMasterKeyEncryption : IMasterKeyEncryption
     {
+        const int passwordSaltIterations = 1000;
+        // Do not change these two values: will break export/import files
+        static readonly byte[] passwordPaddingSalt = Encoding.UTF8.GetBytes("Octopuss");
         readonly byte[] masterKey;
         readonly bool generateSalt;
 
-        // Do not change these two values: will break export/import files
-        static readonly byte[] passwordPaddingSalt = Encoding.UTF8.GetBytes("Octopuss");
-        const int passwordSaltIterations = 1000;
-        
         public StoredMasterKeyEncryption(byte[] masterKey)
         {
             this.masterKey = masterKey;
-            this.generateSalt = true;
+            generateSalt = true;
         }
 
-        private StoredMasterKeyEncryption(byte[] masterKey, bool generateSalt)
+        StoredMasterKeyEncryption(byte[] masterKey, bool generateSalt)
         {
             this.masterKey = masterKey;
             this.generateSalt = generateSalt;
@@ -36,7 +35,7 @@ namespace Octopus.Shared.Security.MasterKey
         public static StoredMasterKeyEncryption FromPassword(string password)
         {
             // See http://stackoverflow.com/a/18096278/224370
-            Rfc2898DeriveBytes pwdGen = new Rfc2898DeriveBytes(password, passwordPaddingSalt, passwordSaltIterations);
+            var pwdGen = new Rfc2898DeriveBytes(password, passwordPaddingSalt, passwordSaltIterations);
             var encryption = new StoredMasterKeyEncryption(pwdGen.GetBytes(16), false);
             return encryption;
         }

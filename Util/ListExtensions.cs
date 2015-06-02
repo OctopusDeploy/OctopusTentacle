@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 // ReSharper disable CheckNamespace
+
 namespace Octopus.Shared.Util
 {
     public static class ListExtensions
@@ -15,9 +16,9 @@ namespace Octopus.Shared.Util
             for (var i = 0; i < source.Count; i++)
             {
                 var item = source[i];
-                if (!remove(item)) 
+                if (!remove(item))
                     continue;
-            
+
                 source.RemoveAt(i);
                 i--;
             }

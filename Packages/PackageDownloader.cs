@@ -20,7 +20,7 @@ namespace Octopus.Shared.Packages
 
         public PackageDownloader(
             IPackageStore packageStore,
-            IOctopusPackageRepositoryFactory packageRepositoryFactory, 
+            IOctopusPackageRepositoryFactory packageRepositoryFactory,
             IBuiltInPackageRepository builtInPackageRepository,
             IOctopusFileSystem fileSystem,
             ILog log)
@@ -34,8 +34,8 @@ namespace Octopus.Shared.Packages
 
         public StoredPackage Download(PackageMetadata package, IFeed feed, PackageCachePolicy cachePolicy)
         {
-            var storedPackage = builtInPackageRepository.IsBuiltInSource(feed.FeedUri) 
-                ? GetPackageFromBuiltInRepository(package, builtInPackageRepository.CreateRepository()) 
+            var storedPackage = builtInPackageRepository.IsBuiltInSource(feed.FeedUri)
+                ? GetPackageFromBuiltInRepository(package, builtInPackageRepository.CreateRepository())
                 : DownloadFromExternalSource(package, feed, cachePolicy);
 
             log.Verbose("SHA1 hash of package " + storedPackage.PackageId + " is: " + storedPackage.Hash);
@@ -50,7 +50,7 @@ namespace Octopus.Shared.Packages
                 var cached = AttemptToGetPackageFromCache(package, feed);
                 if (cached != null)
                 {
-                    log.Verbose("Package "+ package.PackageId + " version " + package.Version + " was found in cache. No need to download. Using file: " + cached.FullPath);
+                    log.Verbose("Package " + package.PackageId + " version " + package.Version + " was found in cache. No need to download. Using file: " + cached.FullPath);
                     return cached;
                 }
             }
@@ -102,7 +102,7 @@ namespace Octopus.Shared.Packages
                 {
                     log.VerboseFormat(dataException, "Attempt {0} of {1}: Unable to download package: {2}", i, NumberOfTimesToAttemptToDownloadPackage, dataException.Message);
                     downloadException = dataException;
-                    Thread.Sleep(i * 1000);
+                    Thread.Sleep(i*1000);
                 }
             }
 
@@ -132,10 +132,10 @@ namespace Octopus.Shared.Packages
             if (dependencies.Count > 0)
             {
                 log.InfoFormat("NuGet packages with dependencies are not currently supported, and dependencies won't be installed on the Tentacle. The package '{0} {1}' appears to have the following dependencies: {2}. For more information please see {3}",
-                               downloaded.PackageId,
-                               downloaded.Version,
-                               string.Join(", ", dependencies),
-                               OutboundLinks.WhyAmINotAllowedToUseDependencies);
+                    downloaded.PackageId,
+                    downloaded.Version,
+                    string.Join(", ", dependencies),
+                    OutboundLinks.WhyAmINotAllowedToUseDependencies);
             }
         }
 
@@ -188,7 +188,7 @@ namespace Octopus.Shared.Packages
             log.Verbose("Downloading to: " + fullPathToDownloadTo);
 
             var dsp = package as DataServicePackage;
-            if(dsp != null && directDownloader != null)
+            if (dsp != null && directDownloader != null)
             {
                 log.Verbose("A direct download is possible; bypassing the NuGet machine cache");
                 using (var targetFile = fileSystem.OpenFile(fullPathToDownloadTo, FileMode.CreateNew))

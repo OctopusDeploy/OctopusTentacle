@@ -6,11 +6,16 @@ namespace Octopus.Shared.Diagnostics
 {
     public class NullLog : AbstractLog
     {
-        LogCorrelator current;
+        readonly LogCorrelator current;
 
         public NullLog()
         {
             current = LogCorrelator.CreateNew("Null");
+        }
+
+        public override LogCorrelator Current
+        {
+            get { return current; }
         }
 
         protected override void WriteEvent(LogEvent logEvent)
@@ -26,27 +31,19 @@ namespace Octopus.Shared.Diagnostics
             return new NullDisposable();
         }
 
-        public override LogCorrelator Current
-        {
-            get { return current; }
-        }
-
         public override void Mask(IList<string> sensitiveValues)
         {
-            
+        }
+
+        public override void Flush()
+        {
         }
 
         public class NullDisposable : IDisposable
         {
             public void Dispose()
             {
-                
             }
-        }
-
-        public override void Flush()
-        {
-
         }
     }
 }

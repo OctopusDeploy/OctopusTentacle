@@ -7,13 +7,13 @@ namespace Octopus.Shared.Packages
 {
     public class FeedCredentialsProvider : ICredentialProvider
     {
-        FeedCredentialsProvider()
-        {
-        }
-
         public static FeedCredentialsProvider Instance = new FeedCredentialsProvider();
         static readonly ConcurrentDictionary<string, ICredentials> Credentials = new ConcurrentDictionary<string, ICredentials>();
         static readonly ConcurrentDictionary<string, RetryTracker> Retries = new ConcurrentDictionary<string, RetryTracker>();
+
+        FeedCredentialsProvider()
+        {
+        }
 
         public void SetCredentials(Uri uri, ICredentials credential)
         {

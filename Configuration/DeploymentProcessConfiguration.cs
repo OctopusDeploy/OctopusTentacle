@@ -16,10 +16,7 @@ namespace Octopus.Shared.Configuration
 
         public string CacheDirectory
         {
-            get
-            {
-                return Path.Combine(home.ApplicationSpecificHomeDirectory, "PackageCache");
-            }
+            get { return Path.Combine(home.ApplicationSpecificHomeDirectory, "PackageCache"); }
         }
 
         public int DaysToCachePackages

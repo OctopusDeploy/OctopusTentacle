@@ -10,11 +10,10 @@ namespace Octopus.Shared.Packages
         SemanticVersion Version { get; }
         string Description { get; }
         string ReleaseNotes { get; }
-        bool IsReleaseVersion();
         DateTimeOffset? Published { get; }
         string Title { get; }
         string Summary { get; }
-
+        bool IsReleaseVersion();
         long GetSize();
         List<string> GetDependencies();
         string CalculateHash();

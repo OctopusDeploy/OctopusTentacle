@@ -7,17 +7,23 @@ namespace Octopus.Shared.Properties
     /// to not mark symbols marked with such attributes as unused
     /// (as well as by other usage inspections)
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Class)]
     public sealed class MeansImplicitUseAttribute : Attribute
     {
-        public MeansImplicitUseAttribute() 
-            : this(ImplicitUseKindFlags.Default, ImplicitUseTargetFlags.Default) { }
+        public MeansImplicitUseAttribute()
+            : this(ImplicitUseKindFlags.Default, ImplicitUseTargetFlags.Default)
+        {
+        }
 
         public MeansImplicitUseAttribute(ImplicitUseKindFlags useKindFlags)
-            : this(useKindFlags, ImplicitUseTargetFlags.Default) { }
+            : this(useKindFlags, ImplicitUseTargetFlags.Default)
+        {
+        }
 
         public MeansImplicitUseAttribute(ImplicitUseTargetFlags targetFlags)
-            : this(ImplicitUseKindFlags.Default, targetFlags) { }
+            : this(ImplicitUseKindFlags.Default, targetFlags)
+        {
+        }
 
         public MeansImplicitUseAttribute(
             ImplicitUseKindFlags useKindFlags, ImplicitUseTargetFlags targetFlags)
@@ -26,7 +32,10 @@ namespace Octopus.Shared.Properties
             TargetFlags = targetFlags;
         }
 
-        [UsedImplicitly] public ImplicitUseKindFlags UseKindFlags { get; private set; }
-        [UsedImplicitly] public ImplicitUseTargetFlags TargetFlags { get; private set; }
+        [UsedImplicitly]
+        public ImplicitUseKindFlags UseKindFlags { get; private set; }
+
+        [UsedImplicitly]
+        public ImplicitUseTargetFlags TargetFlags { get; private set; }
     }
 }

@@ -33,8 +33,8 @@ namespace Octopus.Shared.Startup
             {
                 serviceConfigurationState.Password = v;
             });
-
         }
+
         protected override void Start()
         {
             base.Start();
@@ -47,6 +47,5 @@ namespace Octopus.Shared.Startup
 
             serverInstaller.ConfigureService();
         }
-
     }
 }

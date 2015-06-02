@@ -9,15 +9,15 @@ using Octopus.Shared.Util;
 namespace Octopus.Shared.Packages
 {
     /// <summary>
-    /// Given a 180mb NuGet package, NuGet.Core's PackageManager uses 1.17GB of memory and 55 seconds to extract it. 
-    /// This is because it continually takes package files and copies them to byte arrays in memory to work with. 
-    /// This class simply uses the packaging API's directly to extract, and only uses 6mb and takes 10 seconds on the 
-    /// same 180mb file. 
+    /// Given a 180mb NuGet package, NuGet.Core's PackageManager uses 1.17GB of memory and 55 seconds to extract it.
+    /// This is because it continually takes package files and copies them to byte arrays in memory to work with.
+    /// This class simply uses the packaging API's directly to extract, and only uses 6mb and takes 10 seconds on the
+    /// same 180mb file.
     /// </summary>
     public class LightweightPackageExtractor : IPackageExtractor
     {
+        static readonly string[] ExcludePaths = {"_rels", "package\\services\\metadata"};
         readonly IOctopusFileSystem fileSystem;
-        static readonly string[] ExcludePaths = new[] {"_rels", "package\\services\\metadata"};
 
         public LightweightPackageExtractor(IOctopusFileSystem fileSystem)
         {
@@ -96,7 +96,7 @@ namespace Octopus.Shared.Packages
         {
             var path = UriUtility.GetPath(part.Uri);
             return !ExcludePaths.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)) &&
-                   !PackageUtility.IsManifest(path);
+                !PackageUtility.IsManifest(path);
         }
 
         static class UriUtility

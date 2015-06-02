@@ -7,7 +7,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
     {
         // JScript splice function
         public static List<T> Splice<T>(this List<T> input, int start, int count,
-                                        params T[] objects)
+            params T[] objects)
         {
             var deletedRange = input.GetRange(start, count);
             input.RemoveRange(start, count);

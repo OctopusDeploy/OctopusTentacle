@@ -7,14 +7,13 @@ using System.Xml.Linq;
 namespace Octopus.Shared.Licensing
 {
     /// <summary>
-    /// Checks that a license key has the correct signature and hasn't been tampered with. 
+    /// Checks that a license key has the correct signature and hasn't been tampered with.
     /// </summary>
     public class LicenseVerifier : ILicenseVerifier
     {
         // The encoding used to generate signatures has changed over time which prevents us from validating old signatures 
         // unless we use the right encoding
-        static readonly Encoding[] Encodings = new[] { Encoding.Default, Encoding.GetEncoding(1252), Encoding.ASCII, Encoding.UTF8, Encoding.UTF32 };
-
+        static readonly Encoding[] Encodings = {Encoding.Default, Encoding.GetEncoding(1252), Encoding.ASCII, Encoding.UTF8, Encoding.UTF32};
         readonly ILicenseVerificationCertificateProvider certificateProvider;
 
         public LicenseVerifier(ILicenseVerificationCertificateProvider certificateProvider)
@@ -32,7 +31,7 @@ namespace Octopus.Shared.Licensing
             var elements = string.Join("|", document.Root.Elements().Select(x => x.Name + ":" + x.Value.Trim()));
             var expectedSignature = document.Root.Attribute("Signature").Value;
 
-            return Encodings.Any(encoding => 
+            return Encodings.Any(encoding =>
                 CheckHash(encoding, elements, expectedSignature));
         }
 

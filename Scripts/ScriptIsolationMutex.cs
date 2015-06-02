@@ -9,7 +9,7 @@ namespace Octopus.Shared.Scripts
     {
         // Reader-writer locks allow multiple readers, but only one writer which blocks readers. This is perfect for our scenario, because 
         // we want to allow lots of scripts to run with the 'no' isolation level, but nothing should be running under the 'full' isolation level.
-        readonly static ReaderWriterLockSlim ReaderWriter = new ReaderWriterLockSlim();
+        static readonly ReaderWriterLockSlim ReaderWriter = new ReaderWriterLockSlim();
 
         public static IDisposable Acquire(ScriptIsolationLevel isolation, Action<string> log)
         {

@@ -22,7 +22,10 @@ namespace Octopus.Shared.Security.Permissions
             get { return scopeGroup; }
         }
 
-        public ReferenceCollection DocumentIds { get { return documentIds; } }
+        public ReferenceCollection DocumentIds
+        {
+            get { return documentIds; }
+        }
 
         public bool Allows(string documentId)
         {

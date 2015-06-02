@@ -7,12 +7,12 @@ namespace Octopus.Shared.Internals.Options
 {
     public abstract class Option
     {
+        static readonly char[] NameTerminator = {'=', ':'};
         readonly string prototype;
         readonly string description;
         readonly string[] names;
         readonly OptionValueType type;
         readonly int count;
-        string[] separators;
 
         protected Option(string prototype, string description)
             : this(prototype, description, 1)
@@ -37,7 +37,7 @@ namespace Octopus.Shared.Internals.Options
             if (count == 0 && type != OptionValueType.None)
                 throw new ArgumentException(
                     "Cannot provide maxValueCount of 0 for OptionValueType.Required or " +
-                    "OptionValueType.Optional.",
+                        "OptionValueType.Optional.",
                     "maxValueCount");
             if (type == OptionValueType.None && maxValueCount > 1)
                 throw new ArgumentException(
@@ -45,7 +45,7 @@ namespace Octopus.Shared.Internals.Options
                     "maxValueCount");
             if (Array.IndexOf(names, "<>") >= 0 &&
                 ((names.Length == 1 && type != OptionValueType.None) ||
-                 (names.Length > 1 && MaxValueCount > 1)))
+                    (names.Length > 1 && MaxValueCount > 1)))
                 throw new ArgumentException(
                     "The default option handler '<>' cannot require values.",
                     "prototype");
@@ -71,16 +71,23 @@ namespace Octopus.Shared.Internals.Options
             get { return count; }
         }
 
+        internal string[] Names
+        {
+            get { return names; }
+        }
+
+        internal string[] ValueSeparators { get; set; }
+
         public string[] GetNames()
         {
-            return (string[]) names.Clone();
+            return (string[])names.Clone();
         }
 
         public string[] GetValueSeparators()
         {
-            if (separators == null)
+            if (ValueSeparators == null)
                 return new string[0];
-            return (string[]) separators.Clone();
+            return (string[])ValueSeparators.Clone();
         }
 
         protected static T Parse<T>(string value, OptionContext c)
@@ -90,7 +97,7 @@ namespace Octopus.Shared.Internals.Options
             try
             {
                 if (value != null)
-                    t = (T) conv.ConvertFromString(value);
+                    t = (T)conv.ConvertFromString(value);
             }
             catch (Exception e)
             {
@@ -102,18 +109,6 @@ namespace Octopus.Shared.Internals.Options
             }
             return t;
         }
-
-        internal string[] Names
-        {
-            get { return names; }
-        }
-
-        internal string[] ValueSeparators
-        {
-            get { return separators; }
-        }
-
-        static readonly char[] NameTerminator = new[] {'=', ':'};
 
         OptionValueType ParsePrototype()
         {
@@ -148,11 +143,11 @@ namespace Octopus.Shared.Internals.Options
             if (count > 1)
             {
                 if (seps.Count == 0)
-                    separators = new[] {":", "="};
+                    ValueSeparators = new[] {":", "="};
                 else if (seps.Count == 1 && seps[0].Length == 0)
-                    separators = null;
+                    ValueSeparators = null;
                 else
-                    separators = seps.ToArray();
+                    ValueSeparators = seps.ToArray();
             }
 
             return type == '=' ? OptionValueType.Required : OptionValueType.Optional;

@@ -19,9 +19,15 @@ namespace Octopus.Shared.Packages
             get { return packageAcquisitionKey; }
         }
 
-        public StoredPackage Package { get { return onlyDownloadPackageOnce.Value; } }
-        
-        public string Hash { get { return onlyDownloadPackageOnce.Value.Hash; } }
+        public StoredPackage Package
+        {
+            get { return onlyDownloadPackageOnce.Value; }
+        }
+
+        public string Hash
+        {
+            get { return onlyDownloadPackageOnce.Value.Hash; }
+        }
 
         public Stream Download()
         {

@@ -11,12 +11,16 @@ namespace Octopus.Shared.Properties
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Method)]
     public sealed class AspMvcActionAttribute : Attribute
     {
-        public AspMvcActionAttribute() { }
+        public AspMvcActionAttribute()
+        {
+        }
+
         public AspMvcActionAttribute([NotNull] string anonymousProperty)
         {
             AnonymousProperty = anonymousProperty;
         }
 
-        [NotNull] public string AnonymousProperty { get; private set; }
+        [NotNull]
+        public string AnonymousProperty { get; private set; }
     }
 }

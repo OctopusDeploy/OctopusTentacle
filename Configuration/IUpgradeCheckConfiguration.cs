@@ -10,7 +10,7 @@ namespace Octopus.Shared.Configuration
         bool AllowCheckingForUpgrades { get; set; }
 
         /// <summary>
-        /// Gets or sets whether anonymous usage statistics (# of projects, # of users, etc.) should be sent 
+        /// Gets or sets whether anonymous usage statistics (# of projects, # of users, etc.) should be sent
         /// when checking for upgrades.
         /// </summary>
         bool IncludeUsageStatisticsWhenCheckingForUpgrades { get; set; }

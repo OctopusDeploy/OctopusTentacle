@@ -14,7 +14,7 @@ namespace Octopus.Shared.Packages
         readonly IEnumerable<string> targetRoles;
         readonly PackageAcquisitionKey key;
 
-        public PackageAcquisition(string actionId, PackageMetadata package, NuGetFeedProperties feed, bool preferDownloadOnAgent, IEnumerable<string> targetRoles, PackageCachePolicy packageCachePolicy, VariableDictionary variables )
+        public PackageAcquisition(string actionId, PackageMetadata package, NuGetFeedProperties feed, bool preferDownloadOnAgent, IEnumerable<string> targetRoles, PackageCachePolicy packageCachePolicy, VariableDictionary variables)
         {
             ActionId = actionId;
             Variables = variables;
@@ -53,11 +53,11 @@ namespace Octopus.Shared.Packages
             get { return feed; }
         }
 
+        public VariableDictionary Variables { get; private set; }
+
         public PackageAcquisitionKey GetUniqueSourcePackageKey()
         {
             return key;
         }
-
-        public VariableDictionary Variables { get; private set; }
     }
 }

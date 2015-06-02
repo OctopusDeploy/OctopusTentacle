@@ -16,6 +16,32 @@ namespace Octopus.Shared.Bcl.IO
             this.dependenciesInDisposalOrder = dependenciesInDisposalOrder;
         }
 
+        public override bool CanRead
+        {
+            get { return wrappedStream.CanRead; }
+        }
+
+        public override bool CanSeek
+        {
+            get { return wrappedStream.CanSeek; }
+        }
+
+        public override bool CanWrite
+        {
+            get { return wrappedStream.CanWrite; }
+        }
+
+        public override long Length
+        {
+            get { return wrappedStream.Length; }
+        }
+
+        public override long Position
+        {
+            get { return wrappedStream.Position; }
+            set { wrappedStream.Position = value; }
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -57,32 +83,6 @@ namespace Octopus.Shared.Bcl.IO
         public override void Write(byte[] buffer, int offset, int count)
         {
             wrappedStream.Write(buffer, offset, count);
-        }
-
-        public override bool CanRead
-        {
-            get { return wrappedStream.CanRead; }
-        }
-
-        public override bool CanSeek
-        {
-            get { return wrappedStream.CanSeek; }
-        }
-
-        public override bool CanWrite
-        {
-            get { return wrappedStream.CanWrite; }
-        }
-
-        public override long Length
-        {
-            get { return wrappedStream.Length; }
-        }
-
-        public override long Position
-        {
-            get { return wrappedStream.Position; }
-            set { wrappedStream.Position = value; }
         }
     }
 }

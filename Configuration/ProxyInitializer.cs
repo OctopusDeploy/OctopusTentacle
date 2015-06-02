@@ -28,7 +28,7 @@ namespace Octopus.Shared.Configuration
                 return;
 
             selector.Loaded -= InitializeProxy;
-            
+
             try
             {
                 if (proxyConfiguration.Value.UseDefaultProxy)

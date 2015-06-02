@@ -6,6 +6,8 @@ namespace Octopus.Shared.Security
 {
     public class CertificateGenerator : ICertificateGenerator
     {
+        public const int RecommendedKeyBitLength = 2048;
+
         public X509Certificate2 GenerateNew(string fullName)
         {
             return Generate(fullName, true);
@@ -16,8 +18,6 @@ namespace Octopus.Shared.Security
             return Generate(fullName, false);
         }
 
-        public const int RecommendedKeyBitLength = 2048;
-
         static X509Certificate2 Generate(string fullName, bool exportable)
         {
             using (var cryptography = new CryptContext())
@@ -26,13 +26,13 @@ namespace Octopus.Shared.Security
 
                 return cryptography.CreateSelfSignedCertificate(
                     new SelfSignedCertProperties
-                        {
-                            IsPrivateKeyExportable = exportable,
-                            KeyBitLength = RecommendedKeyBitLength,
-                            Name = new X500DistinguishedName(fullName),
-                            ValidFrom = DateTime.Today.AddDays(-1),
-                            ValidTo = DateTime.Today.AddYears(100)
-                        });
+                    {
+                        IsPrivateKeyExportable = exportable,
+                        KeyBitLength = RecommendedKeyBitLength,
+                        Name = new X500DistinguishedName(fullName),
+                        ValidFrom = DateTime.Today.AddDays(-1),
+                        ValidTo = DateTime.Today.AddYears(100)
+                    });
             }
         }
     }

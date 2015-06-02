@@ -10,10 +10,19 @@ namespace Octopus.Shared.Internals.Options
 {
     public class OptionSet : KeyedCollection<string, Option>
     {
+        const int OptionWidth = 29;
+        readonly Converter<string, string> localizer;
+
+        readonly Regex ValueOption = new Regex(
+            @"^(?<flag>--|-|/)(?<name>[^:=]+)((?<sep>[:=])(?<value>.*))?$");
+
         Action<string[]> leftovers;
 
         public OptionSet()
-            : this(delegate(string f) { return f; })
+            : this(delegate(string f)
+            {
+                return f;
+            })
         {
         }
 
@@ -22,8 +31,6 @@ namespace Octopus.Shared.Internals.Options
         {
             this.localizer = localizer;
         }
-
-        readonly Converter<string, string> localizer;
 
         public Converter<string, string> MessageLocalizer
         {
@@ -48,7 +55,7 @@ namespace Octopus.Shared.Internals.Options
 
             if (!Contains(option))
                 return null;
-                
+
             return base[option];
         }
 
@@ -104,24 +111,6 @@ namespace Octopus.Shared.Internals.Options
             return this;
         }
 
-        sealed class ActionOption : Option
-        {
-            readonly Action<OptionValueCollection> action;
-
-            public ActionOption(string prototype, string description, int count, Action<OptionValueCollection> action)
-                : base(prototype, description, count)
-            {
-                if (action == null)
-                    throw new ArgumentNullException("action");
-                this.action = action;
-            }
-
-            protected override void OnParseComplete(OptionContext c)
-            {
-                action(c.OptionValues);
-            }
-        }
-
         public OptionSet Add(string prototype, Action<string> action)
         {
             return Add(prototype, null, action);
@@ -132,7 +121,10 @@ namespace Octopus.Shared.Internals.Options
             if (action == null)
                 throw new ArgumentNullException("action");
             Option p = new ActionOption(prototype, description, 1,
-                                        delegate(OptionValueCollection v) { action(v[0]); });
+                delegate(OptionValueCollection v)
+                {
+                    action(v[0]);
+                });
             base.Add(p);
             return this;
         }
@@ -147,47 +139,12 @@ namespace Octopus.Shared.Internals.Options
             if (action == null)
                 throw new ArgumentNullException("action");
             Option p = new ActionOption(prototype, description, 2,
-                                        delegate(OptionValueCollection v) { action(v[0], v[1]); });
+                delegate(OptionValueCollection v)
+                {
+                    action(v[0], v[1]);
+                });
             base.Add(p);
             return this;
-        }
-
-        sealed class ActionOption<T> : Option
-        {
-            readonly Action<T> action;
-
-            public ActionOption(string prototype, string description, Action<T> action)
-                : base(prototype, description, 1)
-            {
-                if (action == null)
-                    throw new ArgumentNullException("action");
-                this.action = action;
-            }
-
-            protected override void OnParseComplete(OptionContext c)
-            {
-                action(Parse<T>(c.OptionValues[0], c));
-            }
-        }
-
-        sealed class ActionOption<TKey, TValue> : Option
-        {
-            readonly OptionAction<TKey, TValue> action;
-
-            public ActionOption(string prototype, string description, OptionAction<TKey, TValue> action)
-                : base(prototype, description, 2)
-            {
-                if (action == null)
-                    throw new ArgumentNullException("action");
-                this.action = action;
-            }
-
-            protected override void OnParseComplete(OptionContext c)
-            {
-                action(
-                    Parse<TKey>(c.OptionValues[0], c),
-                    Parse<TValue>(c.OptionValues[1], c));
-            }
         }
 
         public OptionSet Add<T>(string prototype, Action<T> action)
@@ -230,18 +187,18 @@ namespace Octopus.Shared.Internals.Options
             var unprocessed =
                 from argument in arguments
                 where ++c.OptionIndex >= 0 && (process || def != null)
-                          ? process
-                                ? argument == "--"
-                                      ? (process = false)
-                                      : !Parse(argument, c)
-                                            ? def != null
-                                                  ? Unprocessed(null, def, c, argument)
-                                                  : true
-                                            : false
-                                : def != null
-                                      ? Unprocessed(null, def, c, argument)
-                                      : true
-                          : true
+                    ? process
+                        ? argument == "--"
+                            ? (process = false)
+                            : !Parse(argument, c)
+                                ? def != null
+                                    ? Unprocessed(null, def, c, argument)
+                                    : true
+                                : false
+                        : def != null
+                            ? Unprocessed(null, def, c, argument)
+                            : true
+                    : true
                 select argument;
             var r = unprocessed.ToList();
             if (c.Option != null)
@@ -267,9 +224,6 @@ namespace Octopus.Shared.Internals.Options
             c.Option.Invoke(c);
             return false;
         }
-
-        readonly Regex ValueOption = new Regex(
-            @"^(?<flag>--|-|/)(?<name>[^:=]+)((?<sep>[:=])(?<value>.*))?$");
 
         protected bool GetOptionParts(string argument, out string flag, out string name, out string sep, out string value)
         {
@@ -337,8 +291,8 @@ namespace Octopus.Shared.Internals.Options
         {
             if (option != null)
                 foreach (var o in c.Option.ValueSeparators != null
-                                      ? option.Split(c.Option.ValueSeparators, StringSplitOptions.None)
-                                      : new[] {option})
+                    ? option.Split(c.Option.ValueSeparators, StringSplitOptions.None)
+                    : new[] {option})
                 {
                     c.OptionValues.Add(o);
                 }
@@ -350,7 +304,7 @@ namespace Octopus.Shared.Internals.Options
                 throw new OptionException(localizer(string.Format(
                     "Error: Found {0} option values when expecting {1}.",
                     c.OptionValues.Count, c.Option.MaxValueCount)),
-                                          c.OptionName);
+                    c.OptionName);
             }
         }
 
@@ -379,7 +333,7 @@ namespace Octopus.Shared.Internals.Options
             for (var i = 0; i < n.Length; ++i)
             {
                 Option p;
-                var opt = f + n[i].ToString();
+                var opt = f + n[i];
                 var rn = n[i].ToString();
                 if (!Contains(rn))
                 {
@@ -396,13 +350,13 @@ namespace Octopus.Shared.Internals.Options
                         break;
                     case OptionValueType.Optional:
                     case OptionValueType.Required:
-                        {
-                            var v = n.Substring(i + 1);
-                            c.Option = p;
-                            c.OptionName = opt;
-                            ParseValue(v.Length != 0 ? v : null, c);
-                            return true;
-                        }
+                    {
+                        var v = n.Substring(i + 1);
+                        c.Option = p;
+                        c.OptionName = opt;
+                        ParseValue(v.Length != 0 ? v : null, c);
+                        return true;
+                    }
                     default:
                         throw new InvalidOperationException("Unknown OptionValueType: " + p.OptionValueType);
                 }
@@ -417,8 +371,6 @@ namespace Octopus.Shared.Internals.Options
             c.OptionValues.Add(value);
             option.Invoke(c);
         }
-
-        const int OptionWidth = 29;
 
         public void WriteOptionDescriptions(TextWriter o)
         {
@@ -467,8 +419,8 @@ namespace Octopus.Shared.Internals.Options
             }
 
             for (i = GetNextOptionIndex(names, i + 1);
-                 i < names.Length;
-                 i = GetNextOptionIndex(names, i + 1))
+                i < names.Length;
+                i = GetNextOptionIndex(names, i + 1))
             {
                 Write(o, ref written, ", ");
                 Write(o, ref written, names[i].Length == 1 ? "-" : "--");
@@ -484,8 +436,8 @@ namespace Octopus.Shared.Internals.Options
                 }
                 Write(o, ref written, localizer("=" + GetArgumentName(0, p.MaxValueCount, p.Description)));
                 var sep = p.ValueSeparators != null && p.ValueSeparators.Length > 0
-                              ? p.ValueSeparators[0]
-                              : " ";
+                    ? p.ValueSeparators[0]
+                    : " ";
                 for (var c = 1; c < p.MaxValueCount; ++c)
                 {
                     Write(o, ref written, localizer(sep + GetArgumentName(c, p.MaxValueCount, p.Description)));
@@ -647,6 +599,62 @@ namespace Octopus.Shared.Internals.Options
             if (sep == -1 || end == description.Length)
                 return end;
             return sep;
+        }
+
+        sealed class ActionOption : Option
+        {
+            readonly Action<OptionValueCollection> action;
+
+            public ActionOption(string prototype, string description, int count, Action<OptionValueCollection> action)
+                : base(prototype, description, count)
+            {
+                if (action == null)
+                    throw new ArgumentNullException("action");
+                this.action = action;
+            }
+
+            protected override void OnParseComplete(OptionContext c)
+            {
+                action(c.OptionValues);
+            }
+        }
+
+        sealed class ActionOption<T> : Option
+        {
+            readonly Action<T> action;
+
+            public ActionOption(string prototype, string description, Action<T> action)
+                : base(prototype, description, 1)
+            {
+                if (action == null)
+                    throw new ArgumentNullException("action");
+                this.action = action;
+            }
+
+            protected override void OnParseComplete(OptionContext c)
+            {
+                action(Parse<T>(c.OptionValues[0], c));
+            }
+        }
+
+        sealed class ActionOption<TKey, TValue> : Option
+        {
+            readonly OptionAction<TKey, TValue> action;
+
+            public ActionOption(string prototype, string description, OptionAction<TKey, TValue> action)
+                : base(prototype, description, 2)
+            {
+                if (action == null)
+                    throw new ArgumentNullException("action");
+                this.action = action;
+            }
+
+            protected override void OnParseComplete(OptionContext c)
+            {
+                action(
+                    Parse<TKey>(c.OptionValues[0], c),
+                    Parse<TValue>(c.OptionValues[1], c));
+            }
         }
     }
 }

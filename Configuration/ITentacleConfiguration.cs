@@ -20,30 +20,6 @@ namespace Octopus.Shared.Configuration
         IEnumerable<string> TrustedOctopusThumbprints { get; }
 
         /// <summary>
-        /// Adds a trusted Octopus server.
-        /// </summary>
-        /// <param name="machine">Configuration for the server.</param>
-        bool AddOrUpdateTrustedOctopusServer(OctopusServerConfiguration machine);
-
-        /// <summary>
-        /// Remove all trusted Octopus servers.
-        /// </summary>
-        void ResetTrustedOctopusServers();
-
-        /// <summary>
-        /// Remove the trusted server with the matching thumbprint, if any.
-        /// </summary>
-        /// <param name="toRemove">Thumbprint to remove.</param>
-        void RemoveTrustedOctopusServersWithThumbprint(string toRemove);
-
-        /// <summary>
-        /// Update the thumbprint of an existing server.
-        /// </summary>
-        /// <param name="old">The old thumbprint.</param>
-        /// <param name="new">The new one.</param>
-        void UpdateTrustedServerThumbprint(string old, string @new);
-
-        /// <summary>
         /// Gets or sets the TCP port number used by the Tentacle distribution service (default is 10933).
         /// </summary>
         int ServicesPortNumber { get; set; }
@@ -74,7 +50,7 @@ namespace Octopus.Shared.Configuration
         string ListenIpAddress { get; set; }
 
         /// <summary>
-        /// Even in polling mode, by default Tentacle will listen on a TCP port for connections, just in case you 
+        /// Even in polling mode, by default Tentacle will listen on a TCP port for connections, just in case you
         /// also want it to be a listening Tentacle. Set this flag to true to stop Tentacle listening on a port.
         /// </summary>
         bool NoListen { get; set; }
@@ -84,8 +60,31 @@ namespace Octopus.Shared.Configuration
         /// </summary>
         OctopusServerConfiguration LastReceivedHandshake { get; set; }
 
-        X509Certificate2 GenerateNewCertificate();
+        /// <summary>
+        /// Adds a trusted Octopus server.
+        /// </summary>
+        /// <param name="machine">Configuration for the server.</param>
+        bool AddOrUpdateTrustedOctopusServer(OctopusServerConfiguration machine);
 
+        /// <summary>
+        /// Remove all trusted Octopus servers.
+        /// </summary>
+        void ResetTrustedOctopusServers();
+
+        /// <summary>
+        /// Remove the trusted server with the matching thumbprint, if any.
+        /// </summary>
+        /// <param name="toRemove">Thumbprint to remove.</param>
+        void RemoveTrustedOctopusServersWithThumbprint(string toRemove);
+
+        /// <summary>
+        /// Update the thumbprint of an existing server.
+        /// </summary>
+        /// <param name="old">The old thumbprint.</param>
+        /// <param name="new">The new one.</param>
+        void UpdateTrustedServerThumbprint(string old, string @new);
+
+        X509Certificate2 GenerateNewCertificate();
         void ImportCertificate(X509Certificate2 certificate);
     }
 }

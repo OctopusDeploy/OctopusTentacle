@@ -5,7 +5,7 @@ namespace Octopus.Shared.Contracts
 {
     public class ScriptTicket : IEquatable<ScriptTicket>
     {
-        static long nextTaskId = 0;
+        static long nextTaskId;
 
         public ScriptTicket(string taskId)
         {
@@ -38,11 +38,11 @@ namespace Octopus.Shared.Contracts
             {
                 return true;
             }
-            if (obj.GetType() != this.GetType())
+            if (obj.GetType() != GetType())
             {
                 return false;
             }
-            return Equals((ScriptTicket) obj);
+            return Equals((ScriptTicket)obj);
         }
 
         public override int GetHashCode()

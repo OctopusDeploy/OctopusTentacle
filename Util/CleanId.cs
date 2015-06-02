@@ -3,7 +3,7 @@
 namespace Octopus.Shared.Util
 {
     /// <summary>
-    ///  A string guaranteed to hold a trimmed, lowercase, non-whitespace value.
+    /// A string guaranteed to hold a trimmed, lowercase, non-whitespace value.
     /// </summary>
     public struct CleanId
     {

@@ -9,12 +9,16 @@ namespace Octopus.Shared.Properties
     [MeansImplicitUse]
     public sealed class PublicAPIAttribute : Attribute
     {
-        public PublicAPIAttribute() { }
+        public PublicAPIAttribute()
+        {
+        }
+
         public PublicAPIAttribute([NotNull] string comment)
         {
             Comment = comment;
         }
 
-        [NotNull] public string Comment { get; private set; }
+        [NotNull]
+        public string Comment { get; private set; }
     }
 }

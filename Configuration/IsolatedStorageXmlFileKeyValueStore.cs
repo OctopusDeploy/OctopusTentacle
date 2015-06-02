@@ -8,7 +8,7 @@ namespace Octopus.Shared.Configuration
     {
         readonly string isolatedStorageFileName;
         readonly IsolatedStorageFile isoStore;
-        
+
         public IsolatedStorageXmlFileKeyValueStore(string isolatedStorageFileName)
         {
             this.isolatedStorageFileName = isolatedStorageFileName;

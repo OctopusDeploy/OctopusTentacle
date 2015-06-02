@@ -11,7 +11,7 @@ namespace Octopus.Shared.Util
     /// </remarks>
     public class MimeType
     {
-        public static string ForExtension(string extension) 
+        public static string ForExtension(string extension)
         {
             switch (extension.ToLowerInvariant().TrimStart('.'))
             {
@@ -37,5 +37,5 @@ namespace Octopus.Shared.Util
                     throw new Exception("Mimetype not currently mapped: '" + mimeType + "'");
             }
         }
-    }; 
+    };
 }
