@@ -369,6 +369,7 @@ namespace Octopus.Shared.Variables
 
             public static class Package
             {
+                public static readonly string ActionTypeName = "Octopus.TentaclePackage";
                 [Define(Category = VariableCategory.Action, Description = "The ID of the NuGet package being deployed", Example = "OctoFx.RateService")] public static readonly string NuGetPackageId = "Octopus.Action.Package.NuGetPackageId";
                 [Define(Category = VariableCategory.Action, Description = "The version of the NuGet package being deployed", Example = "1.2.3")] public static readonly string NuGetPackageVersion = "Octopus.Action.Package.NuGetPackageVersion";
                 [Define(Category = VariableCategory.Action, Description = "If true, the package will be downloaded by the Tentacle, rather than pushed by the Octopus server", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string ShouldDownloadOnTentacle = "Octopus.Action.Package.DownloadOnTentacle";
@@ -409,6 +410,7 @@ namespace Octopus.Shared.Variables
 
             public static class Ftp
             {
+                public static readonly string ActionTypeName = "Octopus.Ftp";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Host = "Octopus.Action.Ftp.Host";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Username = "Octopus.Action.Ftp.Username";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Password = "Octopus.Action.Ftp.Password";
@@ -422,6 +424,7 @@ namespace Octopus.Shared.Variables
 
             public static class Email
             {
+                public static readonly string ActionTypeName = "Octopus.Email";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string To = "Octopus.Action.Email.To";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string CC = "Octopus.Action.Email.CC";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Bcc = "Octopus.Action.Email.Bcc";
@@ -437,13 +440,16 @@ namespace Octopus.Shared.Variables
 
             public static class Script
             {
+                public static readonly string ActionTypeName = "Octopus.Script";
                 [Define(Category = VariableCategory.Action, Description = "The syntax of the script being run in a script step", Example = "PowerShell")] public static readonly string Syntax = "Octopus.Action.Script.Syntax";
                 [Define(Category = VariableCategory.Action, Description = "The script being run in a script step", Example = "Write-Host 'Hello!'")] public static readonly string ScriptBody = "Octopus.Action.Script.ScriptBody";
             }
 
             public static class Manual
             {
-                [Define(Category = VariableCategory.Action, Description = "The instructions provided for a manual step", Example = "Don't break anything :)")] public static readonly string Instructions = "Octopus.Action.Manual.Instructions";
+                public static readonly string ActionTypeName = "Octopus.Manual";
+                [Define(Category = VariableCategory.Action, Description = "The instructions provided for a manual step", Example = "Don't break anything :)")]
+                public static readonly string Instructions = "Octopus.Action.Manual.Instructions";
                 [Define(Category = VariableCategory.Action, Description = "The teams responsible for completing a manual step", Example = "teams-123,teams-124", Domain = VariableDomain.List)] public static readonly string ResponsibleTeamIds = "Octopus.Action.Manual.ResponsibleTeamIds";
 
                 public static class Output
