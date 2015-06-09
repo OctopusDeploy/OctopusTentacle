@@ -47,6 +47,7 @@ namespace Octopus.Shared.Tasks
                 thread.Name = currentThreadName + " -> " + item.Name;
                 running.Add(new WorkItem<T>(thread, closure));
                 thread.IsBackground = true;
+                thread.Priority = ThreadPriority.BelowNormal;
                 thread.Start();
             }
         }
