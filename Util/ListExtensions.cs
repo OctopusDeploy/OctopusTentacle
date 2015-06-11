@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 // ReSharper disable CheckNamespace
 
@@ -30,6 +31,17 @@ namespace Octopus.Shared.Util
                 return;
 
             foreach (var item in itemsToAdd)
+            {
+                source.Add(item);
+            }
+        }
+
+        public static void AddRangeUnique<TElement>(this ICollection<TElement> source, IEnumerable<TElement> itemsToAdd)
+        {
+            if (itemsToAdd == null || source == null)
+                return;
+
+            foreach (var item in itemsToAdd.Where(item => !source.Contains(item)))
             {
                 source.Add(item);
             }
