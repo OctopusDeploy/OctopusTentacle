@@ -94,9 +94,9 @@ namespace Octopus.Shared.Util
             {
                 try
                 {
-                    if (Directory.Exists(path))
+                    var dir = new DirectoryInfo(path);
+                    if (dir.Exists)
                     {
-                        var dir = new DirectoryInfo(path);
                         dir.Attributes = dir.Attributes & ~FileAttributes.ReadOnly;
                         dir.Delete(true);
                     }
