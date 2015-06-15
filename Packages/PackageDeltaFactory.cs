@@ -45,13 +45,16 @@ namespace Octopus.Shared.Packages
                     .Action(SignatureCommandName)
                     .PositionalArgument(nearestPackageFilePath)
                     .PositionalArgument(tempSignatureFilePath)
+                    .Flag("progress")
                     .Build();
 
                 var cmdResult = octoDiff.ExecuteCommand(currentWorkingDirectory);
                 if (cmdResult.ExitCode != 0)
                 {
                     fileSystem.DeleteFile(tempSignatureFilePath, DeletionOptions.TryThreeTimes);
-                    throw new CommandLineException(cmdResult.ExitCode, cmdResult.Errors.ToList());
+                    log.Warn("The previous command returned a non-zero exit code of: " + cmdResult.ExitCode);
+                    log.Warn("The command that failed was: " + octoDiff);
+                    return null;
                 }
                 File.Move(tempSignatureFilePath, fullSignatureFilePath);
             }
@@ -80,14 +83,16 @@ namespace Octopus.Shared.Packages
                     .PositionalArgument(signatureFilePath)
                     .PositionalArgument(newPackageFilePath)
                     .PositionalArgument(tempDeltaFilePath)
+                    .Flag("progress")
                     .Build();
 
                 var cmdResult = octoDiff.ExecuteCommand(currentWorkingDirectory);
-
                 if (cmdResult.ExitCode != 0)
                 {
                     fileSystem.DeleteFile(tempDeltaFilePath, DeletionOptions.TryThreeTimes);
-                    throw new CommandLineException(cmdResult.ExitCode, cmdResult.Errors.ToList());
+                    log.Warn("The previous command returned a non-zero exit code of: " + cmdResult.ExitCode);
+                    log.Warn("The command that failed was: " + octoDiff);
+                    return null;
                 }
                 File.Move(tempDeltaFilePath, fullDeltaFilePath);
             }
