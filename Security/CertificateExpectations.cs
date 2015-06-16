@@ -6,9 +6,14 @@ namespace Octopus.Shared.Security
     {
         public const string OctopusCertificateName = "Octopus Portal";
         public const string OctopusCertificateFullName = "cn=" + OctopusCertificateName;
-        public const string OctopusAzureCertificateName = "Octopus Deploy";
-        public const string OctopusAzureCertificateFullName = "cn=" + OctopusAzureCertificateName;
+        const string OctopusAzureCertificateName = "Octopus Deploy";
+        const string OctopusAzureCertificateFullName = "cn=" + OctopusAzureCertificateName;
         public const string TentacleCertificateName = "Octopus Tentacle";
         public const string TentacleCertificateFullName = "cn=" + TentacleCertificateName;
+
+        public static string BuildOctopusAzureCertificateFullName(string azureAccountName)
+        {
+            return OctopusAzureCertificateFullName + " - " + azureAccountName;
+        }
     }
 }
