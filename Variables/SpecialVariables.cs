@@ -481,6 +481,7 @@ namespace Octopus.Shared.Variables
 
             public static class Azure
             {
+                [Define(Category = VariableCategory.Hidden)] public static readonly string PackageExtractionPath = "Octopus.Action.Azure.PackageExtractionPath";
                 [Define(Category = VariableCategory.Action, Description = "Azure account subscription ID", Example = "42d91e16-206f-4a14-abd2-24791cbbc522")] public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";
                 [Define(Category = VariableCategory.Action, Description = "Thumprint of the certificate used for Azure authentication ", Example = "0320C45A19F9FAE120356EAB95AB2377C19FF3E2")] public static readonly string CertificateThumbprint = "Octopus.Action.Azure.CertificateThumbprint";
                 [Define(Category = VariableCategory.Action, Description = "Base64-encoded certificate used for Azure authentication", Example = "no example provided")] public static readonly string CertificateBytes = "Octopus.Action.Azure.CertificateBytes";
