@@ -35,6 +35,16 @@ namespace Octopus.Shared.Configuration
             }
         }
 
+        [Obsolete("This configuration entry is obsolete as of 3.0. It is only used as a Subscription ID where one does not exist.")]
+        public string TentacleSquid
+        {
+            get
+            {
+                var squid = settings.Get("Octopus.Communications.Squid", (string)null);
+                return squid != null ? NormalizeSquid(squid) : null;
+            }
+        }
+
         public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers
         {
             get { return settings.Get("Tentacle.Communication.TrustedOctopusServers", new OctopusServerConfiguration[0]); }
