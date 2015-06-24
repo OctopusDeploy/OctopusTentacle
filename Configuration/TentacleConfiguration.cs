@@ -40,8 +40,7 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var squid = settings.Get("Octopus.Communications.Squid", (string)null);
-                return squid != null ? NormalizeSquid(squid) : null;
+                return settings.Get("Octopus.Communications.Squid", (string)null);
             }
         }
 
