@@ -498,7 +498,8 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Azure deployment slot", Example = "Production")] public static readonly string Slot = "Octopus.Action.Azure.Slot";
                 [Define(Category = VariableCategory.Action, Description = "Swap current Staging deployment if possible", Example = "False")] public static readonly string SwapIfPossible = "Octopus.Action.Azure.SwapIfPossible";
                 [Define(Category = VariableCategory.Action, Description = "Replace instance counts in configuration file with those currently configured in Azure portal", Example = "False")] public static readonly string UseCurrentInstanceCount = "Octopus.Action.Azure.UseCurrentInstanceCount";
-                [Define(Category= VariableCategory.Action, Description = "Log extracted Cloud Service Package", Example="False")] public static readonly string LogExtractedCspkg = "Octopus.Action.Azure.LogExtractedCspkg"; 
+                [Define(Category = VariableCategory.Action, Description = "Log extracted Cloud Service Package", Example="False")] public static readonly string LogExtractedCspkg = "Octopus.Action.Azure.LogExtractedCspkg";
+                [Define(Category = VariableCategory.Action, Description = "Relative path to the *.cscfg file", Example = "AcmeService-Production.cscfg")][DeprecatedAlias("OctopusAzureConfigurationFileName")] public static readonly string CloudServiceConfigurationFileRelativePath = "Octopus.Action.Azure.CloudServiceConfigurationFileRelativePath";
             }
         }
     }
