@@ -16,21 +16,23 @@ namespace Octopus.Shared.Security.Certificates
 
         public static X509Certificate2 FromBase64String(string thumbprint, string certificateString)
         {
-            if (thumbprint == null) throw new ArgumentNullException("thumbprint");
             if (certificateString == null) throw new ArgumentNullException("certificateString");
-            return DoFromBase64String(thumbprint, certificateString);
+            return DoFromBase64String(thumbprint, certificateString, new X509Store("Octopus", StoreLocation.CurrentUser));
+        }
+
+        public static X509Certificate2 FromBase64String(string thumbprint, string certificateString, StoreName storeName)
+        {
+            if (certificateString == null) throw new ArgumentNullException("certificateString");
+            return DoFromBase64String(thumbprint, certificateString, new X509Store(storeName, StoreLocation.CurrentUser));
         }
 
         public static X509Certificate2 FromBase64String(string certificateString)
         {
-            if (certificateString == null) throw new ArgumentNullException("certificateString");
-            return DoFromBase64String(null, certificateString);
+            return FromBase64String(null, certificateString);
         }
 
-        static X509Certificate2 DoFromBase64String(string thumbprint, string certificateString)
+        static X509Certificate2 DoFromBase64String(string thumbprint, string certificateString, X509Store store)
         {
-            var store = new X509Store("Octopus", StoreLocation.CurrentUser);
-
             store.Open(OpenFlags.ReadWrite);
             try
             {
