@@ -46,6 +46,10 @@ namespace Octopus.Shared.Tasks
                     {
                         log.Info(ex.Message);
                     }
+                    else if (ex is ControlledFailureException)
+                    {
+                        log.Error(ex.Message);
+                    }
                     else
                     {
                         log.Error(ex);
