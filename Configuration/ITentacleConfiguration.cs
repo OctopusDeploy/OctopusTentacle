@@ -9,6 +9,13 @@ namespace Octopus.Shared.Configuration
     /// </summary>
     public interface ITentacleConfiguration : IModifiableConfiguration
     {
+
+        /// <summary>
+        /// Gets the Squid for this tentacle.
+        /// </summary>
+        [Obsolete("This configuration entry is obsolete as of 3.0. It is only used as a Subscription ID where one does not exist.")]
+        string TentacleSquid { get; }
+
         /// <summary>
         /// Gets the list of Octopus servers that this Tentacle communicates with.
         /// </summary>
