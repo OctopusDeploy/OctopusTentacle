@@ -2,7 +2,7 @@
 
 namespace Octopus.Shared.Diagnostics.KnowledgeBase
 {
-    class ExceptionKnowledge
+    public class ExceptionKnowledge
     {
         readonly Func<Exception, ExceptionKnowledgeBaseEntry> tryMatch;
 
