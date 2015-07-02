@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -52,11 +53,13 @@ namespace Octopus.Shared.Startup
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 log.InfoFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
+                if (Debugger.IsAttached) Debugger.Break();
                 args.SetObserved();
             };
 
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
+                if (Debugger.IsAttached) Debugger.Break();
                 var exception = args.ExceptionObject as Exception; // May not actually be one.
                 log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception == null ? args.ExceptionObject : exception.Message);
             };
