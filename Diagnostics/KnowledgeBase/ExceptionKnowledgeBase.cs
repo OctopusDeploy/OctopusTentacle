@@ -81,13 +81,13 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             AddRule(r => r.ExceptionIs<ArgumentException>(
                 ex => ex.Message.Contains("The user name (UPN) could not be determined for principal: Administrator"))
                 .EntrySummaryIs("Some systems fail to correctly identify the 'Administrator' account")
-                .EntryHelpTextIs("Using a domain account called 'Administrator' can resolve to the wrong principal" +
-                    "on some systems; first, try qualifying the username with DOMAIN\\Administrator. If this" +
+                .EntryHelpTextIs("Using a domain account called 'Administrator' can resolve to the wrong principal " +
+                    "on some systems; first, try qualifying the username with DOMAIN\\Administrator. If this " +
                     "issue persists, you may need to use an administrative account with a different name.")
                 .EntryHelpLinkIs("http://g.octopushq.com/AdministratorAccountName"));
         }
 
-        static void AddRule(Action<ExceptionKnowledgeBuilder> buildRule)
+        public static void AddRule(Action<ExceptionKnowledgeBuilder> buildRule)
         {
             var builder = new ExceptionKnowledgeBuilder();
             buildRule(builder);

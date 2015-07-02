@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Octopus.Shared.Diagnostics.KnowledgeBase
 {
-    class ExceptionKnowledgeBuilder
+    public class ExceptionKnowledgeBuilder
     {
         readonly List<Func<Exception, IDictionary<string, object>, bool>> clauses = new List<Func<Exception, IDictionary<string, object>, bool>>();
         Func<IDictionary<string, object>, string> entrySummary = s => null;
