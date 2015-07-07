@@ -63,14 +63,6 @@ namespace Octopus.Shared.Diagnostics
             return new RevertLogContext(this, oldValue);
         }
 
-        public override void Mask(IList<string> sensitiveValues)
-        {
-            foreach (var appender in appenders)
-            {
-                appender.Mask(Current.CorrelationId, sensitiveValues);
-            }
-        }
-
         public override void Flush()
         {
             foreach (var appender in appenders)

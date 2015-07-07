@@ -29,10 +29,6 @@ namespace Octopus.Shared.Diagnostics
             }
         }
 
-        public void Mask(string correlationId, IList<string> sensitiveValues)
-        {
-        }
-
         public void Flush()
         {
             foreach (var target in LogManager.Configuration.AllTargets)

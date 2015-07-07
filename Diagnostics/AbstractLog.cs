@@ -43,7 +43,6 @@ namespace Octopus.Shared.Diagnostics
         protected abstract void WriteEvent(LogEvent logEvent);
         protected abstract void WriteEvents(IList<LogEvent> logEvents);
         public abstract IDisposable WithinBlock(LogCorrelator logger);
-        public abstract void Mask(IList<string> sensitiveValues);
 
         public IDisposable OpenBlock(string messageText)
         {
