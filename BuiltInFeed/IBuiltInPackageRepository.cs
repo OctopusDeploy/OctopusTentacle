@@ -12,5 +12,6 @@ namespace Octopus.Shared.BuiltInFeed
         void RemovePackage(INuGetPackage package);
         void AddPackage(IPackage package);
         string GetFilePath(INuGetPackage package);
+        void BeginSynchronizeIndex();
     }
 }
