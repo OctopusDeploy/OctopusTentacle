@@ -151,6 +151,7 @@
     <Compile Include="NoState.cs" />
     <Compile Include="Packages\NugetExtensions.cs" />
     <Compile Include="Packages\IPackageDeltaFactory.cs" />
+    <Compile Include="Packages\PackageAcquisition.cs" />
     <Compile Include="Packages\PackageDeltaFactory.cs" />
     <Compile Include="Packages\StagedPackage.cs" />
     <Compile Include="Packages\ExternalNuGetPackageAdapter.cs" />
@@ -163,7 +164,6 @@
     <Compile Include="Packages\IOctopusPackageRepositoryFactory.cs" />
     <Compile Include="Packages\NuGetFeedProperties.cs" />
     <Compile Include="Packages\NuGetPackageComparer.cs" />
-    <Compile Include="Packages\PackageAcquisition.cs" />
     <Compile Include="Packages\PackageAcquisitionKey.cs" />
     <Compile Include="Packages\PackageMetadata.cs" />
     <Compile Include="Packages\PackageToAcquire.cs" />
