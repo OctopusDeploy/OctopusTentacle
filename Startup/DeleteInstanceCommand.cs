@@ -20,36 +20,43 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
+            var isDefault = false;
             if (string.IsNullOrWhiteSpace(instanceName))
             {
+                isDefault = true;
                 instanceSelector.LoadDefaultInstance();
-                var connectionString = instanceSelector.Current.Configuration.Get("Octopus.Storage.ExternalDatabaseConnectionString");
-                var defaultInstanceName = instanceSelector.Current.InstanceName;
-                instanceSelector.DeleteDefaultInstance();
-                DeregisterInstance(connectionString, defaultInstanceName);
+                instanceName = instanceSelector.Current.InstanceName;
             }
             else
             {
                 instanceSelector.LoadInstance(instanceName);
-                var connectionString = instanceSelector.Current.Configuration.Get("Octopus.Storage.ExternalDatabaseConnectionString");
-                instanceSelector.DeleteInstance(instanceName);
-                DeregisterInstance(connectionString, instanceName);
             }
-        }
-
-        void DeregisterInstance(string connectionString, string serverName)
-        {
-            using (var connection = new SqlConnection(connectionString))
+            var connectionString = instanceSelector.Current.Configuration.Get("Octopus.Storage.ExternalDatabaseConnectionString");
+            var serverName = instanceSelector.Current.Configuration.Get("Octopus.Server.NodeName");
+            
+            if (!string.IsNullOrWhiteSpace(connectionString) && !string.IsNullOrWhiteSpace(serverName))
             {
-                connection.Open();
-                const string commandText = "DELETE FROM OctopusServerNode WHERE [Id] = @serverName";
-                using (var cmd = new SqlCommand(commandText, connection))
+                using (var connection = new SqlConnection(connectionString))
                 {
-                    cmd.Parameters.AddWithValue("serverName", serverName);
-                    cmd.ExecuteNonQuery();
+                    connection.Open();
+                    const string commandText = "DELETE FROM OctopusServerNode WHERE [Id] = @serverName";
+                    using (var cmd = new SqlCommand(commandText, connection))
+                    {
+                        cmd.Parameters.AddWithValue("serverName", serverName);
+                        cmd.ExecuteNonQuery();
+                    }
                 }
+                log.InfoFormat("Deregistered {0} from the database", instanceName);
             }
-            log.InfoFormat("Deregistered {0} from the database", serverName);
+
+            if (isDefault)
+            {
+                instanceSelector.DeleteDefaultInstance();
+            }
+            else
+            {
+                instanceSelector.DeleteInstance(instanceName);
+            }
         }
 
     }
