@@ -168,6 +168,11 @@
     <Compile Include="Packages\PackageMetadata.cs" />
     <Compile Include="Packages\PackageToAcquire.cs" />
     <Compile Include="Packages\StoredPackage.cs" />
+    <Compile Include="Pipeline\IPipelineComponent.cs" />
+    <Compile Include="Pipeline\IPipelineConsumer.cs" />
+    <Compile Include="Pipeline\IPipelineConsumerProducer.cs" />
+    <Compile Include="Pipeline\IPipelineProducer.cs" />
+    <Compile Include="Pipeline\Pipeline.cs" />
     <Compile Include="Properties\AspMvcActionAttribute.cs" />
     <Compile Include="Properties\AspMvcActionSelectorAttribute.cs" />
     <Compile Include="Properties\AspMvcAreaAttribute.cs" />
