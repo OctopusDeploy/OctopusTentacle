@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Logging
+namespace Octopus.Shared.Diagnostics
 {
     public enum ProgressMessageCategory
     {

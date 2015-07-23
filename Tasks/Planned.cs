@@ -1,6 +1,5 @@
 using System;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Logging;
 
 namespace Octopus.Shared.Tasks
 {
@@ -11,9 +10,9 @@ namespace Octopus.Shared.Tasks
             return Create(item, name, null);
         }
 
-        public static Planned<T> CreateUnplannedGroup<T>(T item, string name, LogCorrelator logCorrelator)
+        public static Planned<T> CreateUnplannedGroup<T>(T item, string name, LogContext logContext)
         {
-            return Create(item, name, logCorrelator);
+            return Create(item, name, logContext);
         }
 
         public static Planned<T> CreateUnplanned<T>(T item, string name)
@@ -21,16 +20,16 @@ namespace Octopus.Shared.Tasks
             return Create(item, name, CreateUnplanned(name));
         }
 
-        public static Planned<T> Create<T>(T item, string name, LogCorrelator logCorrelator)
+        public static Planned<T> Create<T>(T item, string name, LogContext logContext)
         {
-            return new Planned<T>(item, name, logCorrelator);
+            return new Planned<T>(item, name, logContext);
         }
 
-        static LogCorrelator CreateUnplanned(string name)
+        static LogContext CreateUnplanned(string name)
         {
             using (Log.Octopus().OpenBlock(name))
             {
-                return Log.Octopus().Current;
+                return Log.Octopus().CurrentContext;
             }
         }
     }
@@ -39,13 +38,13 @@ namespace Octopus.Shared.Tasks
     {
         readonly T workItem;
         readonly string name;
-        readonly LogCorrelator logCorrelator;
+        readonly LogContext logContext;
 
-        public Planned(T workItem, string name, LogCorrelator logCorrelator)
+        public Planned(T workItem, string name, LogContext logContext)
         {
             this.workItem = workItem;
             this.name = name;
-            this.logCorrelator = logCorrelator ?? Log.Octopus().PlanFutureBlock(name);
+            this.logContext = logContext ?? Log.Octopus().PlanFutureBlock(name);
         }
 
         public T WorkItem
@@ -58,9 +57,9 @@ namespace Octopus.Shared.Tasks
             get { return name; }
         }
 
-        public LogCorrelator LogCorrelator
+        public LogContext LogContext
         {
-            get { return logCorrelator; }
+            get { return logContext; }
         }
     }
 }

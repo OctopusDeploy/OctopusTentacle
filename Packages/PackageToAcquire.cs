@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Logging;
 
 namespace Octopus.Shared.Packages
 {
@@ -10,16 +9,16 @@ namespace Octopus.Shared.Packages
         readonly PackageAcquisitionKey packageAcquisitionKey;
         readonly Lazy<StoredPackage> onlyDownloadPackageOnce;
         readonly ILog log = Log.Octopus();
-        readonly LogCorrelator logCorrelator;
+        readonly LogContext logContext;
 
         public PackageToAcquire(IPackageDownloader downloader, PackageMetadata package, IFeed feed, PackageCachePolicy packageCachePolicy, PackageAcquisitionKey packageAcquisitionKey)
         {
             this.packageAcquisitionKey = packageAcquisitionKey;
-            logCorrelator = log.Current;
+            logContext = log.CurrentContext;
 
             onlyDownloadPackageOnce = new Lazy<StoredPackage>(() =>
             {
-                using (log.WithinBlock(logCorrelator))
+                using (log.WithinBlock(logContext))
                 return downloader.Download(package, feed, packageCachePolicy);
             });
         }

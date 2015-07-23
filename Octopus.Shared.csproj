@@ -149,8 +149,8 @@
     <Compile Include="Extensibility\OctopusPluginAttribute.cs" />
     <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
-    <Compile Include="Logging\LogCorrelator.cs" />
-    <Compile Include="Logging\ProgressMessageCategory.cs" />
+    <Compile Include="Diagnostics\LogContext.cs" />
+    <Compile Include="Diagnostics\ProgressMessageCategory.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="NoState.cs" />
     <Compile Include="Packages\NugetExtensions.cs" />

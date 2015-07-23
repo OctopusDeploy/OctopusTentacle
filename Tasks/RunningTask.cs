@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Autofac;
 using Halibut;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Logging;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tasks
@@ -21,7 +20,7 @@ namespace Octopus.Shared.Tasks
         readonly CancellationTokenSource cancel = new CancellationTokenSource();
         readonly Thread workThread;
         readonly ILog log = Log.Octopus();
-        readonly LogCorrelator taskLogCorrelator;
+        readonly LogContext taskLogContext;
         bool isPaused;
 
         public RunningTask(string taskId, string description, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback)
@@ -33,7 +32,7 @@ namespace Octopus.Shared.Tasks
             this.lifetimeScope = lifetimeScope;
             this.completeCallback = completeCallback;
 
-            taskLogCorrelator = LogCorrelator.CreateNew(taskId);
+            taskLogContext = LogContext.CreateNew(taskId);
             workThread = new Thread(RunMainThread) {Name = taskId + ": " + description};
         }
 
@@ -64,7 +63,7 @@ namespace Octopus.Shared.Tasks
 
         void RunMainThread()
         {
-            using (log.WithinBlock(taskLogCorrelator))
+            using (log.WithinBlock(taskLogContext))
             {
                 log.Info(description);
 
@@ -114,7 +113,7 @@ namespace Octopus.Shared.Tasks
 
         public void Cancel()
         {
-            using (log.WithinBlock(taskLogCorrelator))
+            using (log.WithinBlock(taskLogContext))
             {
                 if (cancel.IsCancellationRequested)
                 {

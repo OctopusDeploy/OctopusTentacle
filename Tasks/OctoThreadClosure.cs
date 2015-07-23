@@ -21,7 +21,7 @@ namespace Octopus.Shared.Tasks
 
         public void Execute()
         {
-            using (log.WithinBlock(item.LogCorrelator))
+            using (log.WithinBlock(item.LogContext))
             {
                 try
                 {

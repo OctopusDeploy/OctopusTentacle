@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Octopus.Shared.Logging;
 
 namespace Octopus.Shared.Diagnostics
 {
@@ -9,7 +8,7 @@ namespace Octopus.Shared.Diagnostics
     {
         static readonly Log Instance = new Log();
         static readonly List<ILogAppender> appenders = new List<ILogAppender>();
-        readonly ThreadLocal<LogCorrelator> correlator;
+        readonly ThreadLocal<LogContext> threadLocalLogContext;
 
         static Log()
         {
@@ -17,7 +16,7 @@ namespace Octopus.Shared.Diagnostics
 
         public Log()
         {
-            correlator = new ThreadLocal<LogCorrelator>(() => LogCorrelator.CreateNew("system/" + Environment.MachineName));
+            threadLocalLogContext = new ThreadLocal<LogContext>(() => LogContext.CreateNew("system/" + Environment.MachineName));
         }
 
         public static List<ILogAppender> Appenders
@@ -25,9 +24,9 @@ namespace Octopus.Shared.Diagnostics
             get { return appenders; }
         }
 
-        public override LogCorrelator Current
+        public override LogContext CurrentContext
         {
-            get { return correlator.Value; }
+            get { return threadLocalLogContext.Value; }
         }
 
         public static ILog Octopus()
@@ -56,10 +55,10 @@ namespace Octopus.Shared.Diagnostics
             }
         }
 
-        public override IDisposable WithinBlock(LogCorrelator logger)
+        public override IDisposable WithinBlock(LogContext logContext)
         {
-            var oldValue = correlator.Value;
-            correlator.Value = logger;
+            var oldValue = threadLocalLogContext.Value;
+            threadLocalLogContext.Value = logContext;
             return new RevertLogContext(this, oldValue);
         }
 
@@ -74,17 +73,17 @@ namespace Octopus.Shared.Diagnostics
         class RevertLogContext : IDisposable
         {
             readonly ILog activityLog;
-            readonly LogCorrelator logger;
+            readonly LogContext previous;
 
-            public RevertLogContext(ILog activityLog, LogCorrelator logger)
+            public RevertLogContext(ILog activityLog, LogContext previous)
             {
                 this.activityLog = activityLog;
-                this.logger = logger;
+                this.previous = previous;
             }
 
             public void Dispose()
             {
-                activityLog.WithinBlock(logger);
+                activityLog.WithinBlock(previous);
             }
         }
     }
