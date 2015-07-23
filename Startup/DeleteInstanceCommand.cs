@@ -31,23 +31,8 @@ namespace Octopus.Shared.Startup
             {
                 instanceSelector.LoadInstance(instanceName);
             }
-            var connectionString = instanceSelector.Current.Configuration.Get("Octopus.Storage.ExternalDatabaseConnectionString");
-            var serverName = instanceSelector.Current.Configuration.Get("Octopus.Server.NodeName");
-            
-            if (!string.IsNullOrWhiteSpace(connectionString) && !string.IsNullOrWhiteSpace(serverName))
-            {
-                using (var connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    const string commandText = "DELETE FROM OctopusServerNode WHERE [Id] = @serverName";
-                    using (var cmd = new SqlCommand(commandText, connection))
-                    {
-                        cmd.Parameters.AddWithValue("serverName", serverName);
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                log.InfoFormat("Deregistered {0} from the database", instanceName);
-            }
+
+            RemoveNodeFromDatabase();
 
             if (isDefault)
             {
@@ -59,5 +44,32 @@ namespace Octopus.Shared.Startup
             }
         }
 
+        private void RemoveNodeFromDatabase()
+        {
+            var connectionString = instanceSelector.Current.Configuration.Get("Octopus.Storage.ExternalDatabaseConnectionString");
+            var serverName = instanceSelector.Current.Configuration.Get("Octopus.Server.NodeName");
+
+            if (string.IsNullOrWhiteSpace(connectionString) || string.IsNullOrWhiteSpace(serverName))
+                return;
+
+            using (var connection = new SqlConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    const string commandText = "DELETE FROM OctopusServerNode WHERE [Id] = @serverName";
+                    using (var cmd = new SqlCommand(commandText, connection))
+                    {
+                        cmd.Parameters.AddWithValue("serverName", serverName);
+                        cmd.ExecuteNonQuery();
+                    }
+                    log.InfoFormat("Deregistered {0} from the database", instanceName);
+                }
+                catch (Exception)
+                {                    
+                    log.WarnFormat("Could not open the database. This instance has not been deregistered.");
+                }
+            }            
+        }
     }
 }
