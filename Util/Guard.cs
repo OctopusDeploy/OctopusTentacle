@@ -47,14 +47,14 @@ namespace Octopus.Shared.Util
         /// Throw if a file does not exist
         /// </summary>
         /// <param name="argument">file path</param>
-        /// <param name="errorMessage">Optional error message to replace the deafault could not find file</param>
+        /// <param name="errorMessage">Optional error message to replace the default could not find file</param>
         public static void FileExists(string argument, string errorMessage = null)
         {
             if (!File.Exists(argument))
             {
                 if (string.IsNullOrWhiteSpace(errorMessage))
-                    throw new ArgumentException(errorMessage);
-                throw new ArgumentException(string.Format("Could not find file '{0}'", argument));
+                    throw new FileNotFoundException(errorMessage);
+                throw new FileNotFoundException(string.Format("Could not find file '{0}'", argument));
             }
         }
 
@@ -82,7 +82,7 @@ namespace Octopus.Shared.Util
         {
             if (!Directory.Exists(argument))
             {
-                throw new ArgumentException(string.Format("Directory '{0}' not found", argument));
+                throw new DirectoryNotFoundException(string.Format("Directory '{0}' not found", argument));
             }
         }
 
