@@ -144,6 +144,10 @@
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
     <Compile Include="Diagnostics\LogCategory.cs" />
+    <Compile Include="Extensibility\IOctopusExtension.cs" />
+    <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
+    <Compile Include="Extensibility\OctopusPluginAttribute.cs" />
+    <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Logging\LogCorrelator.cs" />
     <Compile Include="Logging\ProgressMessageCategory.cs" />
