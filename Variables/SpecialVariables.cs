@@ -410,6 +410,7 @@ namespace Octopus.Shared.Variables
 
             public static class Ftp
             {
+                // deprecated step, do not use
                 public static readonly string ActionTypeName = "Octopus.Ftp";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Host = "Octopus.Action.Ftp.Host";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Username = "Octopus.Action.Ftp.Username";
@@ -487,6 +488,8 @@ namespace Octopus.Shared.Variables
 
             public static class Azure
             {
+                // do not reuse this value
+                public static readonly string ActionTypeNameForDeprecatedAzureStep = "Octopus.Azure";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string PackageExtractionPath = "Octopus.Action.Azure.PackageExtractionPath";
                 [Define(Category = VariableCategory.Action, Description = "Azure account subscription ID", Example = "42d91e16-206f-4a14-abd2-24791cbbc522")] public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";
                 [Define(Category = VariableCategory.Action, Description = "Thumprint of the certificate used for Azure authentication ", Example = "0320C45A19F9FAE120356EAB95AB2377C19FF3E2")] public static readonly string CertificateThumbprint = "Octopus.Action.Azure.CertificateThumbprint";
