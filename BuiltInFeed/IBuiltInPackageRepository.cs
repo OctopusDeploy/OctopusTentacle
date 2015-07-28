@@ -11,6 +11,7 @@ namespace Octopus.Shared.BuiltInFeed
         RepositoryStatistics GetStatistics();
         void RemovePackage(INuGetPackage package);
         void AddPackage(IPackage package);
+        void DeletePackagesWhere(Predicate<INuGetPackage> shouldDelete);
         string GetFilePath(INuGetPackage package);
         void BeginSynchronizeIndex();
     }
