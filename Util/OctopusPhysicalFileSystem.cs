@@ -194,7 +194,7 @@ namespace Octopus.Shared.Util
         static string GetTempBasePath()
         {
             var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            path = Path.Combine(path, Assembly.GetEntryAssembly().GetName().Name);
+            path = Path.Combine(path, Assembly.GetEntryAssembly() != null ? Assembly.GetEntryAssembly().GetName().Name : "Octopus");
             path = Path.Combine(path, "Temp");
             if (!Directory.Exists(path))
             {
