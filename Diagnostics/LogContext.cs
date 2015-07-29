@@ -77,7 +77,7 @@ namespace Octopus.Shared.Diagnostics
 
         public static LogContext CreateNew(string correlationId)
         {
-            if (correlationId == null) throw new ArgumentNullException(nameof(correlationId));
+            if (correlationId == null) throw new ArgumentNullException("correlationId");
             return new LogContext(correlationId);
         }
     }
