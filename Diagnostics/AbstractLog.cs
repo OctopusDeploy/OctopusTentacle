@@ -144,7 +144,7 @@ namespace Octopus.Shared.Diagnostics
             WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitizedMessage, error != null ? error.UnpackFromContainers() : null));
         }
 
-        string SafeFormat(string messageFormat, object[] args)
+        static string SafeFormat(string messageFormat, object[] args)
         {
             try
             {
