@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Newtonsoft.Json;
 
 namespace Octopus.Shared.Packages
@@ -100,6 +101,11 @@ namespace Octopus.Shared.Packages
         public override string ToString()
         {
             return PackageId + "." + Version + " (" + (Size/1024.00/1024.00).ToString("n2") + " MB)";
+        }
+
+        public Stream Open()
+        {
+            return new FileStream(FullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
     }
 }

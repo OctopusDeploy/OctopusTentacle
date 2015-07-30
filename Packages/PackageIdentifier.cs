@@ -2,13 +2,13 @@
 
 namespace Octopus.Shared.Packages
 {
-    public class PackageAcquisitionKey : IEquatable<PackageAcquisitionKey>
+    public class PackageIdentifier : IEquatable<PackageIdentifier>
     {
         readonly string packageId;
         readonly string version;
         readonly string feedId;
 
-        public PackageAcquisitionKey(string packageId, string version, string feedId)
+        public PackageIdentifier(string packageId, string version, string feedId)
         {
             this.packageId = packageId;
             this.version = version;
@@ -30,7 +30,7 @@ namespace Octopus.Shared.Packages
             get { return feedId; }
         }
 
-        public bool Equals(PackageAcquisitionKey other)
+        public bool Equals(PackageIdentifier other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -57,7 +57,7 @@ namespace Octopus.Shared.Packages
             {
                 return false;
             }
-            return Equals((PackageAcquisitionKey)obj);
+            return Equals((PackageIdentifier)obj);
         }
 
         public override int GetHashCode()
@@ -71,12 +71,12 @@ namespace Octopus.Shared.Packages
             }
         }
 
-        public static bool operator ==(PackageAcquisitionKey left, PackageAcquisitionKey right)
+        public static bool operator ==(PackageIdentifier left, PackageIdentifier right)
         {
             return Equals(left, right);
         }
 
-        public static bool operator !=(PackageAcquisitionKey left, PackageAcquisitionKey right)
+        public static bool operator !=(PackageIdentifier left, PackageIdentifier right)
         {
             return !Equals(left, right);
         }
