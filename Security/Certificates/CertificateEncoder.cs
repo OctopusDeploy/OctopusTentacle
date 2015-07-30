@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
@@ -60,6 +61,11 @@ namespace Octopus.Shared.Security.Certificates
                     if (CheckThatCertificateWasLoadedWithPrivateKey(certificate) == false)
                     {
                         certificate = LoadCertificateWithPrivateKey(file);
+                    }
+                    
+                    if (certificate == null)
+                    {
+                        throw new CryptographicException("Unable to load X509 Certificate file. The provided certificate or password may be invalid.");
                     }
 
                     store.Add(certificate);
@@ -194,11 +200,6 @@ namespace Octopus.Shared.Security.Certificates
             {
                 File.Delete(file);
             }
-        }
-
-        public static X509Certificate2 Import(string thumbprint, byte[] exported)
-        {
-            return FromBase64String(thumbprint, Convert.ToBase64String(exported));
         }
 
         public static byte[] Export(X509Certificate2 certificate)
