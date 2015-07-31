@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Shared.Logging;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Diagnostics
 {
     public abstract class AbstractLog : ILog
     {
-        public abstract LogCorrelator Current { get; }
+        public abstract LogContext CurrentContext { get; }
 
         public bool IsVerboseEnabled
         {
@@ -42,14 +41,14 @@ namespace Octopus.Shared.Diagnostics
 
         protected abstract void WriteEvent(LogEvent logEvent);
         protected abstract void WriteEvents(IList<LogEvent> logEvents);
-        public abstract IDisposable WithinBlock(LogCorrelator logger);
+        public abstract IDisposable WithinBlock(LogContext logContext);
 
         public IDisposable OpenBlock(string messageText)
         {
-            var child = Current.CreateChild();
-            var context = WithinBlock(child);
+            var child = CurrentContext.CreateChild();
+            var revertLogContext = WithinBlock(child);
             Write(LogCategory.Info, messageText);
-            return context;
+            return revertLogContext;
         }
 
         public IDisposable OpenBlock(string messageFormat, params object[] args)
@@ -57,9 +56,9 @@ namespace Octopus.Shared.Diagnostics
             return OpenBlock(string.Format(messageFormat, args));
         }
 
-        public LogCorrelator PlanGroupedBlock(string messageText)
+        public LogContext PlanGroupedBlock(string messageText)
         {
-            var child = Current.CreateChild();
+            var child = CurrentContext.CreateChild();
             using (WithinBlock(child))
             {
                 Write(LogCategory.Info, messageText);
@@ -67,9 +66,9 @@ namespace Octopus.Shared.Diagnostics
             return child;
         }
 
-        public LogCorrelator PlanFutureBlock(string messageText)
+        public LogContext PlanFutureBlock(string messageText)
         {
-            var child = Current.CreateChild();
+            var child = CurrentContext.CreateChild();
             using (WithinBlock(child))
             {
                 Write(LogCategory.Planned, messageText);
@@ -77,7 +76,7 @@ namespace Octopus.Shared.Diagnostics
             return child;
         }
 
-        public LogCorrelator PlanFutureBlock(string messageFormat, params object[] args)
+        public LogContext PlanFutureBlock(string messageFormat, params object[] args)
         {
             return PlanFutureBlock(string.Format(messageFormat, args));
         }
@@ -95,11 +94,6 @@ namespace Octopus.Shared.Diagnostics
         public void Finish()
         {
             Write(LogCategory.Finished, "Finished");
-        }
-
-        public void Merge(IEnumerable<LogEvent> logEvents)
-        {
-            WriteEvents(logEvents.Where(l => l != null).Select(l => new LogEvent(Current.CorrelationId + "/" + l.CorrelationId, l.Category, l.MessageText, l.Error, l.Occurred, l.ProgressPercentage)).ToList());
         }
 
         public virtual bool IsEnabled(LogCategory category)
@@ -130,7 +124,8 @@ namespace Octopus.Shared.Diagnostics
         {
             if (IsEnabled(category))
             {
-                WriteEvent(new LogEvent(Current.CorrelationId, category, messageText, error != null ? error.UnpackFromContainers() : null));
+                var sanitizedMessage = CurrentContext.SafeSanitize(messageText);
+                WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitizedMessage, error != null ? error.UnpackFromContainers() : null));
             }
         }
 
@@ -144,12 +139,12 @@ namespace Octopus.Shared.Diagnostics
             if (!IsEnabled(category))
                 return;
 
-            var message = SafeFormat(messageFormat, args);
+            var sanitizedMessage = CurrentContext.SafeSanitize(SafeFormat(messageFormat, args));
 
-            WriteEvent(new LogEvent(Current.CorrelationId, category, message, error != null ? error.UnpackFromContainers() : null));
+            WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitizedMessage, error != null ? error.UnpackFromContainers() : null));
         }
 
-        public static string SafeFormat(string messageFormat, object[] args)
+        static string SafeFormat(string messageFormat, object[] args)
         {
             try
             {
@@ -313,7 +308,8 @@ namespace Octopus.Shared.Diagnostics
 
         public void UpdateProgress(int progressPercentage, string messageText)
         {
-            WriteEvent(new LogEvent(Current.CorrelationId, LogCategory.Progress, messageText, null, progressPercentage));
+            var sanitizedMessage = CurrentContext.SafeSanitize(messageText);
+            WriteEvent(new LogEvent(CurrentContext.CorrelationId, LogCategory.Progress, sanitizedMessage, null, progressPercentage));
         }
 
         public void UpdateProgressFormat(int progressPercentage, string messageFormat, params object[] args)

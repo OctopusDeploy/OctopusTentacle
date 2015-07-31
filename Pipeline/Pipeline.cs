@@ -48,14 +48,14 @@ namespace Octopus.Shared.Pipeline
             this.CancellationTokenSource = previous.CancellationTokenSource;
         }
 
-        public static Pipeline<T> Start<T>(IPipelineProducer<T> producer, int bufferSize, CancellationTokenSource cancellationTokenSource)
+        public static Pipeline<T> Start<T>(IPipelineProducer<T> producer, int bufferSize, CancellationToken cancellationToken)
         {
-            return new Pipeline<T>(producer, bufferSize, cancellationTokenSource);
+            return new Pipeline<T>(producer, bufferSize, CancellationTokenSource.CreateLinkedTokenSource(cancellationToken));
         }
 
-        public static Pipeline<T> Start<T>(IEnumerable<T> enumerable, int bufferSize, CancellationTokenSource cancellationTokenSource)
+        public static Pipeline<T> Start<T>(IEnumerable<T> enumerable, int bufferSize, CancellationToken cancellationToken)
         {
-            return new Pipeline<T>(enumerable, bufferSize, cancellationTokenSource);
+            return new Pipeline<T>(enumerable, bufferSize, System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancellationToken));
         }
 
         protected IEnumerable<Task> AllTasks()
@@ -74,11 +74,12 @@ namespace Octopus.Shared.Pipeline
     public class Pipeline<T> : Pipeline, IEnumerable<T>
     {
         readonly BlockingCollection<T> buffer;
+        public Exception Exception { get; set; }
 
         /// <summary>
         /// Start a new pipeline
         /// </summary>
-        public Pipeline(IPipelineProducer<T> producer, int bufferSize, CancellationTokenSource cancellationTokenSource)
+        internal Pipeline(IPipelineProducer<T> producer, int bufferSize, CancellationTokenSource cancellationTokenSource)
             : base(new TaskFactory(TaskCreationOptions.LongRunning, TaskContinuationOptions.LongRunning), cancellationTokenSource)
         {
             buffer = new BlockingCollection<T>(bufferSize);
@@ -88,7 +89,7 @@ namespace Octopus.Shared.Pipeline
         /// <summary>
         /// Start a new pipeline from an Enumerable
         /// </summary>
-        public Pipeline(IEnumerable<T> enumerable, int bufferSize, CancellationTokenSource cancellationTokenSource)
+        internal Pipeline(IEnumerable<T> enumerable, int bufferSize, CancellationTokenSource cancellationTokenSource)
             : base(new TaskFactory(TaskCreationOptions.LongRunning, TaskContinuationOptions.LongRunning), cancellationTokenSource)
         {
             var cancellationToken = CancellationTokenSource.Token;
@@ -102,6 +103,9 @@ namespace Octopus.Shared.Pipeline
                         buffer.Add(item, cancellationToken);
                     }
                 }
+                catch (OperationCanceledException)
+                {
+                }
                 catch (Exception)
                 {
                     cancellationTokenSource.Cancel();
@@ -111,11 +115,11 @@ namespace Octopus.Shared.Pipeline
                 {
                     buffer.CompleteAdding();
                 }
-            }, cancellationToken);
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
         }
 
-        private Pipeline(BlockingCollection<T> buffer, TaskFactory taskFactory, Task nextTask, CancellationTokenSource cancellationTokenSource)
-            : base(taskFactory, cancellationTokenSource)
+        private Pipeline(Pipeline previous, BlockingCollection<T> buffer, Task nextTask)
+            : base(previous)
         {
             this.buffer = buffer;
             this.Task = nextTask;
@@ -129,7 +133,7 @@ namespace Octopus.Shared.Pipeline
         {
             var outputBuffer = new BlockingCollection<U>();
             var nextTask = step.Start(TaskFactory, buffer, outputBuffer, CancellationTokenSource.Token);
-            return new Pipeline<U>(outputBuffer, TaskFactory, nextTask, CancellationTokenSource);
+            return new Pipeline<U>(this, outputBuffer, nextTask);
         }
 
         /// <summary>
@@ -151,7 +155,7 @@ namespace Octopus.Shared.Pipeline
                     {
                         if (cancellationToken.IsCancellationRequested) break;
                         var converted = step(source);
-                        outputBuffer.Add(converted, CancellationTokenSource.Token);
+                        outputBuffer.Add(converted, cancellationToken);
                     }
                 }
                 catch (OperationCanceledException)
@@ -167,8 +171,8 @@ namespace Octopus.Shared.Pipeline
                 {
                     outputBuffer.CompleteAdding();
                 }
-            }, cancellationToken);
-            return new Pipeline<U>(outputBuffer, TaskFactory, nextTask, CancellationTokenSource);
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
+            return new Pipeline<U>(this, outputBuffer, nextTask);
         }
 
         /// <summary>
@@ -186,12 +190,61 @@ namespace Octopus.Shared.Pipeline
         /// </summary>
         public IEnumerator<T> GetEnumerator()
         {
-            return buffer.GetConsumingEnumerable(CancellationTokenSource.Token).GetEnumerator();
+            return new PipelineSink(this, buffer, CancellationTokenSource.Token);
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        private class PipelineSink : IEnumerator<T>
+        {
+            readonly Pipeline<T> pipeline;
+            readonly IEnumerator<T> enumerator; 
+
+            public PipelineSink(Pipeline<T> pipeline, BlockingCollection<T> source, CancellationToken cancellationToken)
+            {
+                this.pipeline = pipeline;
+                this.enumerator = source.GetConsumingEnumerable(cancellationToken).GetEnumerator();
+            }
+
+            public T Current
+            {
+                get { return enumerator.Current; }
+            }
+
+            public void Dispose()
+            {
+                enumerator.Dispose();
+            }
+
+            object System.Collections.IEnumerator.Current
+            {
+                get { return this.Current; }
+            }
+
+            public bool MoveNext()
+            {
+                try
+                {
+                    if (enumerator.MoveNext()) return true;
+                }
+                catch (OperationCanceledException)
+                {
+                }
+
+                // wait for pipeline to shutdown or throw any exceptions from earlier stages
+                var allTasks = pipeline.AllTasks().ToArray();
+                Task.WaitAll(allTasks);
+                Console.WriteLine("Completed "+allTasks.Count());
+                return false;
+            }
+
+            public void Reset()
+            {
+                enumerator.Reset();
+            }
         }
     }
 }

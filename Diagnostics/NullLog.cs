@@ -1,21 +1,20 @@
 using System;
 using System.Collections.Generic;
-using Octopus.Shared.Logging;
 
 namespace Octopus.Shared.Diagnostics
 {
     public class NullLog : AbstractLog
     {
-        readonly LogCorrelator current;
+        readonly LogContext currentContext;
 
         public NullLog()
         {
-            current = LogCorrelator.CreateNew("Null");
+            currentContext = LogContext.CreateNew("Null");
         }
 
-        public override LogCorrelator Current
+        public override LogContext CurrentContext
         {
-            get { return current; }
+            get { return currentContext; }
         }
 
         protected override void WriteEvent(LogEvent logEvent)
@@ -26,7 +25,7 @@ namespace Octopus.Shared.Diagnostics
         {
         }
 
-        public override IDisposable WithinBlock(LogCorrelator logger)
+        public override IDisposable WithinBlock(LogContext logContext)
         {
             return new NullDisposable();
         }

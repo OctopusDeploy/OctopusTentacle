@@ -8,7 +8,7 @@ namespace Octopus.Shared.Security.Masking
     // http://en.wikipedia.org/wiki/Rabin%E2%80%93Karp_algorithm
     public class SensitiveDataMask
     {
-        const string Mask = "********";
+        public static readonly string Mask = "********";
         readonly List<string> valuesLongestToShortest = new List<string>();
         readonly List<string> valuesShortestToLongest = new List<string>();
         readonly StringBuilder builder = new StringBuilder();

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Shared.Logging;
 using Octopus.Shared.Properties;
 
 namespace Octopus.Shared.Diagnostics
 {
     public interface ILog
     {
-        LogCorrelator Current { get; }
+        LogContext CurrentContext { get; }
         bool IsVerboseEnabled { get; }
         bool IsErrorEnabled { get; }
         bool IsFatalEnabled { get; }
@@ -35,8 +34,8 @@ namespace Octopus.Shared.Diagnostics
         /// Plans a new block of output that will be used in the future for grouping child blocks for logging.
         /// </summary>
         /// <param name="messageText">Title of the new block.</param>
-        /// <returns>An <see cref="LogCorrelator" /> that will automatically revert the current block when disposed.</returns>
-        LogCorrelator PlanGroupedBlock(string messageText);
+        /// <returns>An <see cref="LogContext" /> that will automatically revert the current block when disposed.</returns>
+        LogContext PlanGroupedBlock(string messageText);
 
         /// <summary>
         /// Plans a new block of log output that will be used in the future. This is typically used for high-level log
@@ -44,7 +43,7 @@ namespace Octopus.Shared.Diagnostics
         /// </summary>
         /// <param name="messageText">Title of the new block.</param>
         /// <returns>An <see cref="IDisposable" /> that will automatically revert the current block when disposed.</returns>
-        LogCorrelator PlanFutureBlock(string messageText);
+        LogContext PlanFutureBlock(string messageText);
 
         /// <summary>
         /// Plans a new block of log output that will be used in the future. This is typically used for high-level log
@@ -54,15 +53,15 @@ namespace Octopus.Shared.Diagnostics
         /// <param name="args">Arguments for the format string.</param>
         /// <returns>An <see cref="IDisposable" /> that will automatically revert the current block when disposed.</returns>
         [StringFormatMethod("messageFormat")]
-        LogCorrelator PlanFutureBlock(string messageFormat, params object[] args);
+        LogContext PlanFutureBlock(string messageFormat, params object[] args);
 
         /// <summary>
         /// Switches to a new logging context on the current thread, allowing you to begin logging within a block previously
         /// begun using <see cref="OpenBlock" /> or <see cref="PlanFutureBlock" />.
         /// </summary>
-        /// <param name="logger">The <see cref="LogCorrelator" /> to switch to.</param>
+        /// <param name="logContext">The <see cref="LogContext" /> to switch to.</param>
         /// <returns>An <see cref="IDisposable" /> that will automatically revert the current block when disposed.</returns>
-        IDisposable WithinBlock(LogCorrelator logger);
+        IDisposable WithinBlock(LogContext logContext);
 
         /// <summary>
         /// Marks the current block as abandoned. Abandoned blocks won't be shown in the task log.
@@ -80,12 +79,6 @@ namespace Octopus.Shared.Diagnostics
         /// errors, it will be assumed to be successful.
         /// </summary>
         void Finish();
-
-        /// <summary>
-        /// Imports a set of log events into the current context.
-        /// </summary>
-        /// <param name="logEvents">The set of log events.</param>
-        void Merge(IEnumerable<LogEvent> logEvents);
 
         bool IsEnabled(LogCategory category);
         void Write(LogCategory category, string messageText);
