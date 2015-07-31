@@ -237,7 +237,6 @@ namespace Octopus.Shared.Pipeline
                 // wait for pipeline to shutdown or throw any exceptions from earlier stages
                 var allTasks = pipeline.AllTasks().ToArray();
                 Task.WaitAll(allTasks);
-                Console.WriteLine("Completed "+allTasks.Count());
                 return false;
             }
 
