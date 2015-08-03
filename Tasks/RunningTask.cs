@@ -23,7 +23,7 @@ namespace Octopus.Shared.Tasks
         readonly LogContext taskLogContext;
         bool isPaused;
 
-        public RunningTask(string taskId, string description, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback)
+        public RunningTask(string taskId, string logCorrelationId, string description, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback)
         {
             this.taskId = taskId;
             this.description = description;
@@ -32,7 +32,7 @@ namespace Octopus.Shared.Tasks
             this.lifetimeScope = lifetimeScope;
             this.completeCallback = completeCallback;
 
-            taskLogContext = LogContext.CreateNew(taskId);
+            taskLogContext = LogContext.CreateNew(logCorrelationId);
             workThread = new Thread(RunMainThread) {Name = taskId + ": " + description};
         }
 
