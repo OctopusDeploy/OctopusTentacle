@@ -505,7 +505,10 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Azure account subscription ID", Example = "42d91e16-206f-4a14-abd2-24791cbbc522")] public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";
                 [Define(Category = VariableCategory.Action, Description = "Thumprint of the certificate used for Azure authentication ", Example = "0320C45A19F9FAE120356EAB95AB2377C19FF3E2")] public static readonly string CertificateThumbprint = "Octopus.Action.Azure.CertificateThumbprint";
                 [Define(Category = VariableCategory.Action, Description = "Base64-encoded certificate used for Azure authentication", Example = "no example provided")] public static readonly string CertificateBytes = "Octopus.Action.Azure.CertificateBytes";
-                [Define(Category = VariableCategory.Action, Description = "Azure WebSpace", Example = "EASTUSwebspace")] public static readonly string WebSpaceName = "Octopus.Action.Azure.WebSpaceName";
+
+                [Define(Category = VariableCategory.Action, Description = "Azure Resource Group", Example = "Default-Web-USEast")]
+                public static readonly string ResourceGroupName = "Octopus.Action.Azure.ResourceGroupName";
+
                 [Define(Category = VariableCategory.Action, Description = "Azure WebApp name", Example = "AcmeOnline")] public static readonly string WebAppName = "Octopus.Action.Azure.WebAppName";
                 [Define(Category = VariableCategory.Action, Description = "Azure Cloud Service name", Example = "AcmeService")] public static readonly string CloudServiceName = "Octopus.Action.Azure.CloudServiceName";
                 [Define(Category = VariableCategory.Action, Description = "Azure Storage Account name", Example = "AcmePackageStore")] public static readonly string StorageAccountName = "Octopus.Action.Azure.StorageAccountName";
