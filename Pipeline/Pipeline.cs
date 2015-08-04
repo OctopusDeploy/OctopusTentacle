@@ -252,13 +252,13 @@ namespace Octopus.Shared.Pipeline
         /// <summary>
         /// Segments the stream and returns each segment as it own Pipeline
         /// </summary>
-        public Pipeline<Pipeline<T>> SegmentParallel(Func<T, int> segmenter, int outerBufferSize, int innerBufferSize)
+        public Pipeline<Pipeline<T>> SegmentParallel<U>(Func<T, U> segmenter, int outerBufferSize, int innerBufferSize) where U:IEquatable<U>
         {
             var cancellationToken = CancellationTokenSource.Token;
             var outputBuffer = new BlockingCollection<Pipeline<T>>(outerBufferSize);
             var nextTask = TaskFactory.StartNew(() =>
             {
-                int? currentSegment = null;
+                var currentSegment = default(U);
                 BlockingCollection<T> currentCollection = null;
 
                 try
@@ -266,14 +266,17 @@ namespace Octopus.Shared.Pipeline
                     foreach (var source in buffer.GetConsumingEnumerable(cancellationToken))
                     {
                         if (cancellationToken.IsCancellationRequested) break;
+                        if (source == null) continue;
 
                         var segment = segmenter(source);
-                        if (currentSegment == null || currentSegment.Value != segment)
+                        if (currentCollection == null || !currentSegment.Equals(segment))
                         {
-                            currentSegment = segment;
                             // Starting a new segment
                             if (currentCollection != null)
+                            {
                                 currentCollection.CompleteAdding();
+                            }
+                            currentSegment = segment;
                             currentCollection = new BlockingCollection<T>(innerBufferSize);
                             var innerPipe = new Pipeline<T>(this, currentCollection, null);
                             outputBuffer.Add(innerPipe, cancellationToken);
@@ -293,7 +296,9 @@ namespace Octopus.Shared.Pipeline
                 finally
                 {
                     if (currentCollection != null)
+                    {
                         currentCollection.CompleteAdding();
+                    }
                     outputBuffer.CompleteAdding();
                 }
             }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
