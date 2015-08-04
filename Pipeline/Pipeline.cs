@@ -55,7 +55,7 @@ namespace Octopus.Shared.Pipeline
 
         public static Pipeline<T> Start<T>(IEnumerable<T> enumerable, int bufferSize, CancellationToken cancellationToken)
         {
-            return new Pipeline<T>(enumerable, bufferSize, System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancellationToken));
+            return new Pipeline<T>(enumerable, bufferSize, CancellationTokenSource.CreateLinkedTokenSource(cancellationToken));
         }
 
         protected IEnumerable<Task> AllTasks()
@@ -64,7 +64,10 @@ namespace Octopus.Shared.Pipeline
             int safety = 1000;
             while (builder != null)
             {
-                yield return builder.Task;
+                if (builder.Task != null)
+                {
+                    yield return builder.Task;
+                }
                 builder = builder.Previous;
                 if (safety-- == 0) throw new Exception("AllTasks got stuck");
             }
@@ -244,6 +247,57 @@ namespace Octopus.Shared.Pipeline
             {
                 enumerator.Reset();
             }
+        }
+
+        /// <summary>
+        /// Segments the stream and returns each segment as it own Pipeline
+        /// </summary>
+        public Pipeline<Pipeline<T>> SegmentParallel(Func<T, int> segmenter, int outerBufferSize, int innerBufferSize)
+        {
+            var cancellationToken = CancellationTokenSource.Token;
+            var outputBuffer = new BlockingCollection<Pipeline<T>>(outerBufferSize);
+            var nextTask = TaskFactory.StartNew(() =>
+            {
+                int? currentSegment = null;
+                BlockingCollection<T> currentCollection = null;
+
+                try
+                {
+                    foreach (var source in buffer.GetConsumingEnumerable(cancellationToken))
+                    {
+                        if (cancellationToken.IsCancellationRequested) break;
+
+                        var segment = segmenter(source);
+                        if (currentSegment == null || currentSegment.Value != segment)
+                        {
+                            currentSegment = segment;
+                            // Starting a new segment
+                            if (currentCollection != null)
+                                currentCollection.CompleteAdding();
+                            currentCollection = new BlockingCollection<T>(innerBufferSize);
+                            var innerPipe = new Pipeline<T>(this, currentCollection, null);
+                            outputBuffer.Add(innerPipe, cancellationToken);
+                        }
+                        currentCollection.Add(source, cancellationToken);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                catch (Exception)
+                {
+                    // Shut down the whole pipeline if any stage fails
+                    CancellationTokenSource.Cancel();
+                    throw;
+                }
+                finally
+                {
+                    if (currentCollection != null)
+                        currentCollection.CompleteAdding();
+                    outputBuffer.CompleteAdding();
+                }
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
+            return new Pipeline<Pipeline<T>>(this, outputBuffer, nextTask);
         }
     }
 }
