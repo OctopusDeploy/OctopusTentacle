@@ -498,6 +498,9 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string WebAppActionTypeName = "Octopus.AzureWebApp";
 
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string PowerShellActionTypeName = "Octopus.AzurePowerShell";
+
                 [Define(Category = VariableCategory.Action, Description = "The ID of the Octopus Azure subscription account", Example = "accounts-1")]
                 public static readonly string AccountId = "Octopus.Action.Azure.AccountId";
 
