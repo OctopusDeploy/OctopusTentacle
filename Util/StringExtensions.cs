@@ -35,5 +35,11 @@ namespace Octopus.Shared.Util
             if (str.Trim().Length <= characterCount) return str.Trim();
             else return str.Substring(0, characterCount - 3) + "...";
         }
+
+        public static string AndList(this string[] items)
+        {
+            if (items.Length == 1) return items[0];
+            return string.Join(", ", items.Take(items.Length - 1)) + " and " + items.Last();
+        }
     }
 }
