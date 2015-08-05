@@ -340,24 +340,38 @@ namespace Octopus.Shared.Util
             }
         }
 
-        public void CopyFile(string sourceFile, string targetFile, int overwriteFileRetryAttempts = 3)
+        public ReplaceStatus CopyFile(string sourceFile, string targetFile, int overwriteFileRetryAttempts = 3)
         {
+            var result = ReplaceStatus.Updated;
             for (var i = 0; i < overwriteFileRetryAttempts; i++)
             {
                 try
                 {
+                    FileInfo fi = new FileInfo(targetFile);
+                    if (fi.Exists)
+                    {
+                        if ((fi.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                        {
+                            fi.Attributes = fi.Attributes & ~FileAttributes.ReadOnly;
+                        }
+                    }
+                    else
+                    {
+                        result = ReplaceStatus.Created;
+                    }
                     File.Copy(sourceFile, targetFile, true);
+                    return result;
                 }
                 catch
                 {
-                    Thread.Sleep(1000 + (2000*i));
-
                     if (i == overwriteFileRetryAttempts - 1)
                     {
                         throw;
                     }
+                    Thread.Sleep(1000 + (2000 * i));
                 }
             }
+            throw new Exception("Internal error, cannot get here");
         }
 
         public void EnsureDiskHasEnoughFreeSpace(string directoryPath)
@@ -402,39 +416,70 @@ namespace Octopus.Shared.Util
         /// Useful for cases where you do not want a file's timestamp to change when overwriting
         /// it with identical contents or you want clearer logging as to what changed.
         /// </remarks>
-        public ReplaceStatus Replace(string oldFilePath, Stream newStream)
+        public ReplaceStatus Replace(string oldFilePath, Stream newStream, int overwriteFileRetryAttempts = 3)
         {
-            if (!DirectoryExists(Path.GetDirectoryName(oldFilePath)))
+            for (var i = 0; i < overwriteFileRetryAttempts; i++)
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(oldFilePath));
-            }
-
-            if (!File.Exists(oldFilePath))
-            {
-                using (var fileStream = File.Create(oldFilePath))
+                try
                 {
-                    newStream.CopyTo(fileStream);
-                    fileStream.Flush();
-                }
-                return ReplaceStatus.Created;
-            }
-            bool equal;
-            using (var oldStream = File.OpenRead(oldFilePath))
-            {
-                equal = EqualHash(oldStream, newStream);
-            }
+                    var oldDirectory = Path.GetDirectoryName(oldFilePath);
+                    if (!DirectoryExists(Path.GetDirectoryName(oldFilePath)))
+                    {
+                        Directory.CreateDirectory(oldDirectory);
+                    }
 
-            if (equal)
-            {
-                return ReplaceStatus.Unchanged;
+                    var fi = new FileInfo(oldFilePath);
+                    if (!fi.Exists)
+                    {
+                        // Getting unauthorized exception - file is readonly
+                        using (var fileStream = File.Create(oldFilePath))
+                        {
+                            newStream.CopyTo(fileStream);
+                            fileStream.Flush();
+                        }
+                        return ReplaceStatus.Created;
+                    }
+
+                    if ((fi.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                    {
+                        // Throw a more helpful message than .NET's
+                        // System.UnauthorizedAccessException: Access to the path ... is denied.
+                        throw new IOException("Cannot overwrite a directory with a file " + oldFilePath);
+                    }
+
+                    if ((fi.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                    {
+                        fi.Attributes = fi.Attributes & ~FileAttributes.ReadOnly;
+                    }
+
+                    bool equal;
+                    using (var oldStream = File.OpenRead(oldFilePath))
+                    {
+                        equal = EqualHash(oldStream, newStream);
+                    }
+
+                    if (equal)
+                    {
+                        return ReplaceStatus.Unchanged;
+                    }
+                    newStream.Seek(0, SeekOrigin.Begin);
+                    using (var oldStream = File.Create(oldFilePath))
+                    {
+                        newStream.CopyTo(oldStream);
+                        newStream.Flush();
+                    }
+                    return ReplaceStatus.Updated;
+                }
+                catch
+                {
+                    if (i == overwriteFileRetryAttempts - 1)
+                    {
+                        throw;
+                    }
+                    Thread.Sleep(1000 + (2000*i));
+                }
             }
-            newStream.Seek(0, SeekOrigin.Begin);
-            using (var oldStream = File.Create(oldFilePath))
-            {
-                newStream.CopyTo(oldStream);
-                newStream.Flush();
-            }
-            return ReplaceStatus.Updated;
+            throw new Exception("Internal error, cannot get here");
         }
 
         public string ReadAllText(string scriptFile)
