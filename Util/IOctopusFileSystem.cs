@@ -28,7 +28,7 @@ namespace Octopus.Shared.Util
         string CreateTemporaryDirectory();
         void CopyDirectory(string sourceDirectory, string targetDirectory, int overwriteFileRetryAttempts = 3);
         void CopyDirectory(string sourceDirectory, string targetDirectory, CancellationToken cancel, int overwriteFileRetryAttempts = 3);
-        void CopyFile(string sourceFile, string destinationFile, int overwriteFileRetryAttempts = 3);
+        ReplaceStatus CopyFile(string sourceFile, string destinationFile, int overwriteFileRetryAttempts = 3);
         void PurgeDirectory(string targetDirectory, DeletionOptions options);
         void PurgeDirectory(string targetDirectory, DeletionOptions options, CancellationToken cancel);
         void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, DeletionOptions options);
@@ -40,7 +40,7 @@ namespace Octopus.Shared.Util
         void WriteAllBytes(string filePath, byte[] data);
         string RemoveInvalidFileNameChars(string path);
         void MoveFile(string sourceFile, string destinationFile);
-        ReplaceStatus Replace(string path, Stream stream);
+        ReplaceStatus Replace(string path, Stream stream, int overwriteRetryAttempts = 3);
         bool EqualHash(Stream first, Stream second);
         string ReadAllText(string scriptFile);
     }
