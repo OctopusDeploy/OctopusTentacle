@@ -59,6 +59,7 @@ namespace Octopus.Shared.Util
                             File.SetAttributes(path, FileAttributes.Normal);
                         }
                         File.Delete(path);
+                        return;
                     }
                 }
                 catch
@@ -99,6 +100,7 @@ namespace Octopus.Shared.Util
                     {
                         dir.Attributes = dir.Attributes & ~FileAttributes.ReadOnly;
                         dir.Delete(true);
+                        return;
                     }
                 }
                 catch
@@ -111,7 +113,6 @@ namespace Octopus.Shared.Util
                         {
                             throw;
                         }
-
                         break;
                     }
                 }
