@@ -42,6 +42,15 @@ namespace Octopus.Shared.Configuration
         }
 
         /// <summary>
+        /// Gets or sets whether HTTP request logging is enabled.
+        /// </summary>
+        public bool RequestLoggingEnabled
+        {
+            get { return settings.Get("Octopus.WebPortal.RequestLoggingEnabled", false); }
+            set { settings.Set("Octopus.WebPortal.RequestLoggingEnabled", value); }
+        }
+
+        /// <summary>
         /// Gets or sets which authentication mode to use.
         /// </summary>
         public AuthenticationMode AuthenticationMode

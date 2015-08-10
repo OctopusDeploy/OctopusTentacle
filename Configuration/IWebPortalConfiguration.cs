@@ -23,6 +23,11 @@ namespace Octopus.Shared.Configuration
         bool GuestLoginEnabled { get; set; }
 
         /// <summary>
+        /// Gets or sets whether HTTP request logging is enabled.
+        /// </summary>
+        bool RequestLoggingEnabled { get; set; }
+
+        /// <summary>
         /// Gets or sets which authentication mode to use.
         /// </summary>
         AuthenticationMode AuthenticationMode { get; set; }
