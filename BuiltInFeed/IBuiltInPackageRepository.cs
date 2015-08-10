@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using NuGet;
 using Octopus.Shared.Packages;
 
@@ -13,6 +14,6 @@ namespace Octopus.Shared.BuiltInFeed
         void AddPackage(IPackage package);
         void DeletePackagesWhere(Predicate<INuGetPackage> shouldDelete);
         string GetFilePath(INuGetPackage package);
-        void BeginSynchronizeIndex();
+        Thread BeginSynchronizeIndex();
     }
 }
