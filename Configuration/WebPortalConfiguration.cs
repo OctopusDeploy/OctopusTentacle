@@ -77,6 +77,29 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Octopus.WebPortal.CorsWhitelist", value); }
         }
 
+        /// <summary>
+        /// Gets or sets the authentication scheme to use when authentication Domain users.
+        /// </summary>
+        public AuthenticationSchemes AuthenticationScheme
+        {
+            get { return settings.Get("Octopus.WebPortal.AuthenticationScheme", AuthenticationSchemes.Ntlm); }
+            set { settings.Set("Octopus.WebPortal.AuthenticationScheme", value); }
+        }
+
+        /// <summary>
+        /// Gets or sets the when the HTML-based username/password form will be presented for domain users. Defaults to true. 
+        /// </summary>
+        public bool AllowFormsAuthenticationForDomainUsers
+        {
+            get { return settings.Get("Octopus.WebPortal.AllowFormsAuthenticationForDomainUsers", true); }
+            set { settings.Set("Octopus.WebPortal.AllowFormsAuthenticationForDomainUsers", value); }
+        }
+
+        public bool IsFormsAuthAllowed()
+        {
+            return AuthenticationMode == AuthenticationMode.UsernamePassword || AllowFormsAuthenticationForDomainUsers;
+        }
+
         public void Save()
         {
             settings.Save();
