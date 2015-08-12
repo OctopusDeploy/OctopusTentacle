@@ -23,6 +23,11 @@ namespace Octopus.Shared.Configuration
         bool GuestLoginEnabled { get; set; }
 
         /// <summary>
+        /// Gets or sets whether HTTP request logging is enabled.
+        /// </summary>
+        bool RequestLoggingEnabled { get; set; }
+
+        /// <summary>
         /// Gets or sets which authentication mode to use.
         /// </summary>
         AuthenticationMode AuthenticationMode { get; set; }
@@ -36,5 +41,17 @@ namespace Octopus.Shared.Configuration
         /// Gets or sets an optional whitelist of allowed domains (empty or null turns CORS off)
         /// </summary>
         string CorsWhitelist { get; set; }
+
+        /// <summary>
+        /// Gets or sets the authentication scheme to use when authentication Domain users.
+        /// </summary>
+        AuthenticationSchemes AuthenticationScheme { get; set; }
+
+        /// <summary>
+        /// Gets or sets the when the HTML-based username/password form will be presented for domain users. Defaults to true. 
+        /// </summary>
+        bool AllowFormsAuthenticationForDomainUsers { get; set; }
+
+        bool IsFormsAuthAllowed();
     }
 }

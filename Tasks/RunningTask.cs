@@ -145,16 +145,23 @@ namespace Octopus.Shared.Tasks
 
         void CompleteTask(Exception error)
         {
-            if (error == null)
+            try
             {
-                log.Finish();
+                if (error == null)
+                {
+                    log.Finish();
+                }
+
+                complete.Set();
+
+                if (completeCallback != null)
+                {
+                    completeCallback(taskId, error);
+                }
             }
-
-            complete.Set();
-
-            if (completeCallback != null)
+            catch (Exception completeEx)
             {
-                completeCallback(taskId, error);
+                log.Error(completeEx, "Unable to mark task " + Id + " as complete: " + completeEx.Message);
             }
         }
     }
