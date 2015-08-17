@@ -152,6 +152,7 @@
     <Compile Include="Diagnostics\LogContext.cs" />
     <Compile Include="Diagnostics\ProgressMessageCategory.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
+    <Compile Include="Model\EncryptedAttribute.cs" />
     <Compile Include="NoState.cs" />
     <Compile Include="Packages\NugetExtensions.cs" />
     <Compile Include="Packages\IPackageDeltaFactory.cs" />
