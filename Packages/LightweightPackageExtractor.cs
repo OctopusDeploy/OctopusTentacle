@@ -26,15 +26,15 @@ namespace Octopus.Shared.Packages
 
         public void Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
         {
-            using (var package = Package.Open(packageFile, FileMode.Open, FileAccess.Read))
+            using (var package = Package.Open(packageFile, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 Install(package, directory, log, suppressNestedScriptWarning, out filesExtracted);
             }
         }
 
-        public void Install(Stream packageFile, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
+        public void Install(Stream packageStream, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
         {
-            using (var package = Package.Open(packageFile, FileMode.Open, FileAccess.Read))
+            using (var package = Package.Open(packageStream, FileMode.Open, FileAccess.Read))
             {
                 Install(package, directory, log, suppressNestedScriptWarning, out filesExtracted);
             }
