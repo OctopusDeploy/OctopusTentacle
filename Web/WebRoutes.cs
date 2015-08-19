@@ -1,6 +1,7 @@
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web.SessionState;
 
 namespace Octopus.Shared.Web
 {
@@ -309,6 +310,13 @@ namespace Octopus.Shared.Web
                 public static string Raw = "~/api/packages/{id}/raw";
                 public static string Upload = "~/api/packages/raw{?replace}";
                 public static string Bulk = "~/api/packages/bulk{?ids}";
+            }
+
+            public static class OctopusServerNodes
+            {
+                public static string Template = "~/api/octopusservernodes{/id}{?skip}";
+                public static string Index = "~/api/octopusservernodes{?skip}";
+                public static string Get = "~/api/octopusservernodes/{id}";
             }
         }
 
