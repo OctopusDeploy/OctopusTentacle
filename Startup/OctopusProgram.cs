@@ -6,7 +6,9 @@ using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
+using NLog;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Util;
 
@@ -110,7 +112,29 @@ namespace Octopus.Shared.Startup
             }
             catch (Exception ex)
             {
+                // Console logger has already output coloured explanation
+                var skipConsolerLogger = LogManager.GetLogger("SkipConsole");
+                skipConsolerLogger.Error(new string('=', 79));
                 log.Fatal(ex);
+
+                ExceptionKnowledgeBaseEntry entry;
+                if (ExceptionKnowledgeBase.TryInterpret(ex, out entry))
+                {
+                    skipConsolerLogger.Error(new string('=', 79));
+                    skipConsolerLogger.Error(entry.Summary);
+                    if (entry.HelpText != null || entry.HelpLink != null)
+                    {
+                        skipConsolerLogger.Error(new string('-', 79));
+                        if (entry.HelpText != null)
+                        {
+                            skipConsolerLogger.Error(entry.HelpText);
+                        }
+                        if (entry.HelpLink != null)
+                        {
+                            skipConsolerLogger.Error("See: {0}", entry.HelpLink);
+                        }
+                    }
+                }
                 exitCode = 100;
             }
 

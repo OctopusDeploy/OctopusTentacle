@@ -179,7 +179,21 @@ namespace Octopus.Shared.Util
 
         public Stream OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
         {
-            return new FileStream(path, mode, access, share);
+            try
+            {
+                return new FileStream(path, mode, access, share);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                var fileInfo = new FileInfo(path);
+                if (fileInfo.Exists && (fileInfo.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                {
+                    // Throw a more helpful message than .NET's
+                    // System.UnauthorizedAccessException: Access to the path ... is denied.
+                    throw new IOException(path + " is a directory not a file");
+                }
+                throw;
+            }
         }
 
         public Stream CreateTemporaryFile(string extension, out string path)

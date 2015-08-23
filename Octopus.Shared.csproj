@@ -67,9 +67,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NuGet.Core.2.8.5\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Octostache, Version=1.0.2.17, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Octostache.1.0.2.17\lib\net40\Octostache.dll</HintPath>
+    <Reference Include="Octostache, Version=1.0.2.18, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octostache.1.0.2.18\lib\net40\Octostache.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Sprache, Version=2.0.0.46, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

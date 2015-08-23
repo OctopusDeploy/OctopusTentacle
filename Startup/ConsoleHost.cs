@@ -64,7 +64,9 @@ namespace Octopus.Shared.Startup
                     {
                         Console.WriteLine(new string('-', 79));
                         if (entry.HelpText != null)
+                        {
                             Console.WriteLine(entry.HelpText);
+                        }
                         if (entry.HelpLink != null)
                         {
                             Console.Write("See: ");
@@ -77,7 +79,6 @@ namespace Octopus.Shared.Startup
                     Console.ResetColor();
                 }
 
-                LogManager.GetLogger("SkipConsole").Fatal(ex);
                 throw;
             }
         }
