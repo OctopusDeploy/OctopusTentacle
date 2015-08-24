@@ -34,7 +34,7 @@ namespace Octopus.Shared.Scripts
             return powerShellPath;
         }
 
-        public static string FormatCommandArguments(string bootstrapFile, bool allowInteractive)
+        public static string FormatCommandArguments(string bootstrapFile, string[] scriptArguments, bool allowInteractive)
         {
             var commandArguments = new StringBuilder();
 
@@ -46,7 +46,9 @@ namespace Octopus.Shared.Scripts
             commandArguments.Append("-NoLogo ");
             commandArguments.Append("-ExecutionPolicy Unrestricted ");
             var escapedBootstrapFile = bootstrapFile.Replace("'", "''");
-            commandArguments.AppendFormat("-Command \"$ErrorActionPreference = 'Stop'; . {{. '{0}'; if ((test-path variable:global:lastexitcode)) {{ exit $LastExitCode }}}}\"", escapedBootstrapFile);
+            commandArguments.AppendFormat("-Command \"$ErrorActionPreference = 'Stop'; . {{. '{0}' {1}; if ((test-path variable:global:lastexitcode)) {{ exit $LastExitCode }}}}\"",
+                escapedBootstrapFile,
+                string.Join(" ", scriptArguments ?? new string[0]));
             return commandArguments.ToString();
         }
     }
