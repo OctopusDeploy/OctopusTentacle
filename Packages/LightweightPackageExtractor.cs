@@ -2,7 +2,6 @@
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
-using NuGet;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
@@ -117,7 +116,7 @@ namespace Octopus.Shared.Packages
             public static bool IsManifest(string path)
             {
                 var extension = Path.GetExtension(path);
-                return extension != null && extension.Equals(Constants.ManifestExtension, StringComparison.OrdinalIgnoreCase);
+                return extension != null && extension.Equals(".nuspec", StringComparison.OrdinalIgnoreCase);
             }
         }
 
