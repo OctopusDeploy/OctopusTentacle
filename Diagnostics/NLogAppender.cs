@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using NLog;
 
 namespace Octopus.Shared.Diagnostics
@@ -69,7 +70,7 @@ namespace Octopus.Shared.Diagnostics
 
             LogEventInfo GetLogEvent(LogLevel level, Exception exception, string message)
             {
-                return LogEventInfo.Create(level, Name, message, exception);
+                return LogEventInfo.Create(level, Name, exception, CultureInfo.InvariantCulture, message);
             }
         }
     }
