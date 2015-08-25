@@ -24,8 +24,9 @@ namespace Octopus.Shared.Contracts
         }
 
         [JsonConstructor]
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation)
+        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, string[] arguments)
         {
+            this.arguments = arguments;
             this.scriptBody = scriptBody;
             this.isolation = isolation;
         }
@@ -37,9 +38,8 @@ namespace Octopus.Shared.Contracts
         }
 
         public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, string[] arguments, params ScriptFile[] additionalFiles)
-            : this(scriptBody, isolation)
+            : this(scriptBody, isolation, arguments)
         {
-            this.arguments = arguments;
             if (additionalFiles != null)
             {
                 files.AddRange(additionalFiles);
