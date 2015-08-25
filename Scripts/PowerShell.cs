@@ -39,9 +39,6 @@ namespace Octopus.Shared.Scripts
         {
             var commandArguments = new StringBuilder();
 
-            Log.Octopus().Warn(string.Format("-Command \"$ErrorActionPreference = 'Stop'; . {{. '{0}' {1}; if ((test-path variable:global:lastexitcode)) {{ exit $LastExitCode }}}}\"",
-                bootstrapFile.Replace("'", "''"),
-                string.Join(" ", scriptArguments ?? new string[0])));
             // This option is provided for debugging purposes; sometimes
             // PowerShell fails when in non-interactive mode without indicating why.
             if (!allowInteractive)
