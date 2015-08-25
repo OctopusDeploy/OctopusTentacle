@@ -210,6 +210,18 @@
     <Compile Include="Tasks\TaskControllerAttribute.cs" />
     <Compile Include="Tasks\WorkItem.cs" />
     <Compile Include="Tools\CommandLine.cs" />
+    <Compile Include="TransientFaultHandling\FixedInterval.cs" />
+    <Compile Include="TransientFaultHandling\ExponentialBackoff.cs" />
+    <Compile Include="TransientFaultHandling\Incremental.cs" />
+    <Compile Include="TransientFaultHandling\ITransientErrorDetectionStrategy.cs" />
+    <Compile Include="TransientFaultHandling\RetryingEventArgs.cs" />
+    <Compile Include="TransientFaultHandling\RetryLimitExceededException.cs" />
+    <Compile Include="TransientFaultHandling\RetryManager.cs" />
+    <Compile Include="TransientFaultHandling\RetryPolicy.cs" />
+    <Compile Include="TransientFaultHandling\RetryStrategy.cs" />
+    <Compile Include="TransientFaultHandling\ShouldRetry.cs" />
+    <Compile Include="TransientFaultHandling\TransientErrorCatchAllStrategy.cs" />
+    <Compile Include="TransientFaultHandling\TransientErrorIgnoreStrategy.cs" />
     <Compile Include="Util\IOUtil.cs" />
     <Compile Include="Util\StreamDisposalChain.cs" />
     <Compile Include="Caching\ICache.cs" />
@@ -394,7 +406,9 @@
   <ItemGroup>
     <Folder Include="Endpoints\Discovery\" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="TransientFaultHandling\License.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
