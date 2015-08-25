@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Bcl.IO
+namespace Octopus.Shared.Util
 {
     // Resharper gets this wrong, treating the name as if the type's an interface.
     // ReSharper disable once InconsistentNaming
