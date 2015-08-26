@@ -314,8 +314,8 @@ namespace Octopus.Shared.Web
 
             public static class OctopusServerNodes
             {
-                public static string Template = "~/api/octopusservernodes{/id}{?skip}";
-                public static string Index = "~/api/octopusservernodes{?skip}";
+                public static string Template = "~/api/octopusservernodes{/id}";
+                public static string Index = "~/api/octopusservernodes";
                 public static string Get = "~/api/octopusservernodes/{id}";
             }
         }
