@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Octopus.Client.Model;
-using Octopus.Shared.Bcl.IO;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Security.MasterKey
 {

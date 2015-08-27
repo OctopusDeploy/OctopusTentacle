@@ -100,5 +100,17 @@ namespace Octopus.Shared.Util
                     throw new ArgumentException(string.Format("Directory '{0}' is not a good place, pick a safe subdirectory", argument));
             }
         }
+
+        public static void ArgumentNotNegativeValue(long argumentValue, string argumentName)
+        {
+            if (argumentValue < 0)
+                throw new ArgumentOutOfRangeException(argumentName, $"Argument {argumentName} cannot be negative, but was: {argumentValue}");
+        }
+
+        public static void ArgumentNotGreaterThan(double argumentValue, double ceilingValue, string argumentName)
+        {
+            if (argumentValue > ceilingValue)
+                throw new ArgumentOutOfRangeException(argumentName, $"Argument {argumentName} cannot be greater than {ceilingValue} but was {argumentValue}");
+        }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Octopus.Shared.Bcl.IO
+namespace Octopus.Shared.Util
 {
     public class StreamDisposalChain : Stream
     {
