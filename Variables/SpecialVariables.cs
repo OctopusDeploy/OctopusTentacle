@@ -512,6 +512,7 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Azure WebApp name", Example = "AcmeOnline")] public static readonly string WebAppName = "Octopus.Action.Azure.WebAppName";
                 [Define(Category = VariableCategory.Action, Description = "Remove additional files on the destination that are not part of the deployment", Example = "False")] public static readonly string RemoveAdditionalFiles = "Octopus.Action.Azure.RemoveAdditionalFiles";
                 [Define(Category = VariableCategory.Action, Description = "Do not remove the contents of the App_Data folder", Example = "False")] public static readonly string PreserveAppData = "Octopus.Action.Azure.PreserveAppData";
+                [Define(Category = VariableCategory.Action, Description = "Physical path relative to site root", Example = "one\\two")] public static readonly string PhysicalPath = "Octopus.Action.Azure.PhysicalPath";
 
                 [Define(Category = VariableCategory.Action, Description = "Azure Cloud Service name", Example = "AcmeService")] public static readonly string CloudServiceName = "Octopus.Action.Azure.CloudServiceName";
                 [Define(Category = VariableCategory.Action, Description = "Azure Storage Account name", Example = "AcmePackageStore")] public static readonly string StorageAccountName = "Octopus.Action.Azure.StorageAccountName";
