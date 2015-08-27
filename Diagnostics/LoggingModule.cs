@@ -1,5 +1,4 @@
-﻿using System;
-using Autofac;
+﻿using Autofac;
 
 namespace Octopus.Shared.Diagnostics
 {
@@ -7,8 +6,13 @@ namespace Octopus.Shared.Diagnostics
     {
         protected override void Load(ContainerBuilder builder)
         {
+            // Only add the NLogAppender if it isn't already - otherwise we get twice the logs for the price of one
+            if (!Log.Appenders.Exists(a => a is NLogAppender))
+            {
+                Log.Appenders.Add(new NLogAppender());
+            }
+
             var log = Log.Octopus();
-            Log.Appenders.Add(new NLogAppender());
             builder.Register(c => log).As<ILog>().SingleInstance();
         }
     }
