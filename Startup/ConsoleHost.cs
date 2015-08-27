@@ -1,5 +1,4 @@
 using System;
-using NLog;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Util;
@@ -9,12 +8,10 @@ namespace Octopus.Shared.Startup
     public class ConsoleHost : ICommandHost, ICommandRuntime
     {
         readonly string displayName;
-        readonly bool showLogo;
 
-        public ConsoleHost(string displayName, bool showLogo)
+        public ConsoleHost(string displayName)
         {
             this.displayName = displayName;
-            this.showLogo = showLogo;
         }
 
         public void Run(Action<ICommandRuntime> start, Action shutdown)
@@ -23,13 +20,6 @@ namespace Octopus.Shared.Startup
             {
                 Console.ResetColor();
                 Console.Title = displayName;
-                if (showLogo)
-                {
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(displayName + " version " + typeof (ConsoleHost).Assembly.GetFileVersion());
-                    Console.WriteLine();
-                    Console.ResetColor();
-                }
 
                 start(this);
 
