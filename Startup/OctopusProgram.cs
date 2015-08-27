@@ -81,6 +81,7 @@ namespace Octopus.Shared.Startup
                     log.Info($"{displayName} version {version} ({informationalVersion})");
                 }
                 var host = SelectMostAppropriateHost();
+                AssertVersion(version);
                 host.Run(Start, Stop);
                 exitCode = Environment.ExitCode;
             }
@@ -148,6 +149,13 @@ namespace Octopus.Shared.Startup
             }
 
             return exitCode;
+        }
+
+        void AssertVersion(string versionString)
+        {
+            var parsed = Version.Parse(versionString);
+            if (parsed == Version.Parse("0.0.0.0") || parsed == Version.Parse("1.0.0.0"))
+                throw new Exception($"It looks like we've failed to correctly version our assemblies. The current version is {version} ({informationalVersion}).");
         }
 
         ICommandHost SelectMostAppropriateHost()
