@@ -1,8 +1,6 @@
 using System;
-using System.Reflection;
 using System.ServiceProcess;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {
@@ -19,9 +17,6 @@ namespace Octopus.Shared.Startup
                 log.Trace("Starting the Windows Service");
                 start(this);
                 log.Info("The Windows Service has started");
-
-                var assembly = Assembly.GetEntryAssembly();
-                log.InfoFormat("{0} version: {1}", assembly.GetName().Name, assembly.GetInformationalVersion());
             });
 
             var stopService = new Action(delegate
