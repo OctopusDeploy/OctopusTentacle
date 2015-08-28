@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
+using Octopus.Shared.Versioning;
 
 // ReSharper disable CheckNamespace
 
@@ -28,6 +29,11 @@ namespace Octopus.Shared.Util
         {
             var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.FullLocalPath());
             return fileVersionInfo.ProductVersion;
+        }
+
+        public static SemanticVersionInfo GetSemanticVersionInfo(this Assembly assembly)
+        {
+            return new SemanticVersionInfo(assembly);
         }
     }
 }

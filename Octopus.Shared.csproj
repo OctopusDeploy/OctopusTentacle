@@ -384,6 +384,7 @@
     <Compile Include="Variables\VariableDefinition.cs" />
     <Compile Include="Variables\VariableDomain.cs" />
     <Compile Include="Versioning\AppVersion.cs" />
+    <Compile Include="Versioning\SemanticVersionInfo.cs" />
     <Compile Include="Versioning\VersioningModule.cs" />
     <Compile Include="Web\WebRoutes.cs" />
   </ItemGroup>
