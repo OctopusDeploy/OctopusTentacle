@@ -1,6 +1,7 @@
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web.SessionState;
 
 namespace Octopus.Shared.Web
 {
@@ -66,7 +67,7 @@ namespace Octopus.Shared.Web
 
             public static class Machines
             {
-                public static string Template = "~/api/machines{/id}{?skip}";
+                public static string Template = "~/api/machines{/id}{?skip,thumbprint}";
                 public static string Index = "~/api/machines{?skip}";
                 public static string Get = "~/api/machines/{id}";
                 public static string GetConnection = "~/api/machines/{id}/connection";
@@ -174,8 +175,8 @@ namespace Octopus.Shared.Web
 
             public static class Tasks
             {
-                public static string Template = "~/api/tasks{/id}{?skip,active,environment,project,name}";
-                public static string Index = "~/api/tasks{?skip,active,environment,project,name}";
+                public static string Template = "~/api/tasks{/id}{?skip,active,environment,project,name,node}";
+                public static string Index = "~/api/tasks{?skip,active,environment,project,name,node}";
                 public static string Get = "~/api/tasks/{id}";
                 public static string Details = "~/api/tasks/{id}/details{?verbose,tail}";
                 public static string Raw = "~/api/tasks/{id}/raw";
@@ -309,6 +310,13 @@ namespace Octopus.Shared.Web
                 public static string Raw = "~/api/packages/{id}/raw";
                 public static string Upload = "~/api/packages/raw{?replace}";
                 public static string Bulk = "~/api/packages/bulk{?ids}";
+            }
+
+            public static class OctopusServerNodes
+            {
+                public static string Template = "~/api/octopusservernodes{/id}";
+                public static string Index = "~/api/octopusservernodes";
+                public static string Get = "~/api/octopusservernodes/{id}";
             }
         }
 

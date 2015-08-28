@@ -181,6 +181,7 @@
     <Compile Include="Scripts\ScriptIsolationMutex.cs" />
     <Compile Include="Scripts\ScriptWorkspace.cs" />
     <Compile Include="Scripts\ScriptWorkspaceFactory.cs" />
+    <Compile Include="Security\AesEncryption.cs" />
     <Compile Include="Security\Certificates\CertificateEncoder.cs" />
     <Compile Include="Security\Masking\MaskedException.cs" />
     <Compile Include="Security\Masking\SensitiveDataMask.cs" />

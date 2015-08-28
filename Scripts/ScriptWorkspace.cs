@@ -22,6 +22,8 @@ namespace Octopus.Shared.Scripts
 
         public ScriptIsolationLevel IsolationLevel { get; set; }
 
+        public string[] ScriptArguments { get; set; }
+
         public string WorkingDirectory
         {
             get { return workingDirectory; }

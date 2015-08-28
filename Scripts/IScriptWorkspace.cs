@@ -7,6 +7,7 @@ namespace Octopus.Shared.Scripts
     {
         string WorkingDirectory { get; }
         string BootstrapScriptFilePath { get; }
+        string[] ScriptArguments { get; set; }
         ScriptIsolationLevel IsolationLevel { get; set; }
         void BootstrapScript(string scriptBody);
         string ResolvePath(string fileName);
