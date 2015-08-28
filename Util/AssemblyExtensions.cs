@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.Diagnostics;
 using System.Reflection;
 
 // ReSharper disable CheckNamespace
@@ -20,24 +20,14 @@ namespace Octopus.Shared.Util
 
         public static string GetFileVersion(this Assembly assembly)
         {
-            var attribute = assembly.GetCustomAttributes(true).OfType<AssemblyFileVersionAttribute>().FirstOrDefault();
-            if (attribute != null)
-            {
-                return attribute.Version;
-            }
-
-            return "Unknown";
+            var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.FullLocalPath());
+            return fileVersionInfo.FileVersion;
         }
 
         public static string GetInformationalVersion(this Assembly assembly)
         {
-            var attribute = assembly.GetCustomAttributes(true).OfType<AssemblyInformationalVersionAttribute>().FirstOrDefault();
-            if (attribute != null)
-            {
-                return attribute.InformationalVersion;
-            }
-
-            return "Unknown";
+            var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.FullLocalPath());
+            return fileVersionInfo.ProductVersion;
         }
     }
 }

@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
-using NLog;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Internals.Options;
@@ -18,6 +17,8 @@ namespace Octopus.Shared.Startup
     {
         readonly ILog log = Log.Octopus();
         readonly string displayName;
+        readonly string version;
+        readonly string informationalVersion;
         readonly OptionSet commonOptions;
         IContainer container;
         ICommand commandInstance;
@@ -25,10 +26,12 @@ namespace Octopus.Shared.Startup
         bool forceConsole;
         bool showLogo = true;
 
-        protected OctopusProgram(string displayName, string[] commandLineArguments)
+        protected OctopusProgram(string displayName, string version, string informationalVersion, string[] commandLineArguments)
         {
             this.commandLineArguments = commandLineArguments;
             this.displayName = displayName;
+            this.version = version;
+            this.informationalVersion = informationalVersion;
             commonOptions = new OptionSet();
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
             commonOptions.Add("nologo", "Don't print title or version information", v => showLogo = false);
@@ -52,6 +55,9 @@ namespace Octopus.Shared.Startup
 
         public int Run()
         {
+            // Initialize logging as soon as possible - waiting for the Container to be built is too late
+            Log.Appenders.Add(new NLogAppender());
+
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 if (Debugger.IsAttached) Debugger.Break();
@@ -70,7 +76,12 @@ namespace Octopus.Shared.Startup
             try
             {
                 commandLineArguments = ProcessCommonOptions();
+                if (showLogo)
+                {
+                    log.Info($"{displayName} version {version} ({informationalVersion})");
+                }
                 var host = SelectMostAppropriateHost();
+                AssertVersion(version);
                 host.Run(Start, Stop);
                 exitCode = Environment.ExitCode;
             }
@@ -112,26 +123,25 @@ namespace Octopus.Shared.Startup
             }
             catch (Exception ex)
             {
-                // Console logger has already output coloured explanation
-                var skipConsolerLogger = LogManager.GetLogger("SkipConsole");
-                skipConsolerLogger.Error(new string('=', 79));
-                log.Fatal(ex);
+                var unpacked = ex.UnpackFromContainers();
+                log.Error(new string('=', 79));
+                log.Fatal(unpacked);
 
                 ExceptionKnowledgeBaseEntry entry;
-                if (ExceptionKnowledgeBase.TryInterpret(ex, out entry))
+                if (ExceptionKnowledgeBase.TryInterpret(unpacked, out entry))
                 {
-                    skipConsolerLogger.Error(new string('=', 79));
-                    skipConsolerLogger.Error(entry.Summary);
+                    log.Error(new string('=', 79));
+                    log.Error(entry.Summary);
                     if (entry.HelpText != null || entry.HelpLink != null)
                     {
-                        skipConsolerLogger.Error(new string('-', 79));
+                        log.Error(new string('-', 79));
                         if (entry.HelpText != null)
                         {
-                            skipConsolerLogger.Error(entry.HelpText);
+                            log.Error(entry.HelpText);
                         }
                         if (entry.HelpLink != null)
                         {
-                            skipConsolerLogger.Error("See: {0}", entry.HelpLink);
+                            log.Error($"See: {entry.HelpLink}");
                         }
                     }
                 }
@@ -141,6 +151,13 @@ namespace Octopus.Shared.Startup
             return exitCode;
         }
 
+        void AssertVersion(string versionString)
+        {
+            var parsed = Version.Parse(versionString);
+            if (parsed == Version.Parse("0.0.0.0") || parsed == Version.Parse("1.0.0.0"))
+                throw new Exception($"It looks like we've failed to correctly version our assemblies. The current version is {version} ({informationalVersion}).");
+        }
+
         ICommandHost SelectMostAppropriateHost()
         {
             log.Trace("Selecting the most appropriate host");
@@ -148,13 +165,13 @@ namespace Octopus.Shared.Startup
             if (forceConsole)
             {
                 log.Trace("The --console switch was passed; using a console host");
-                return new ConsoleHost(displayName, showLogo);
+                return new ConsoleHost(displayName);
             }
 
             if (Environment.UserInteractive)
             {
                 log.Trace("The program is running interactively; using a console host");
-                return new ConsoleHost(displayName, showLogo);
+                return new ConsoleHost(displayName);
             }
 
             log.Trace("The program is not running interactively; using a Windows Service host");
