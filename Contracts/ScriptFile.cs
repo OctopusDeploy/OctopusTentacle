@@ -1,5 +1,6 @@
 using System;
 using Halibut;
+using Newtonsoft.Json;
 
 namespace Octopus.Shared.Contracts
 {
@@ -7,11 +8,19 @@ namespace Octopus.Shared.Contracts
     {
         readonly string name;
         readonly DataStream contents;
+        readonly string encryptionPassword;
 
-        public ScriptFile(string name, DataStream contents)
+        [JsonConstructor]
+        public ScriptFile(string name, DataStream contents, string encryptionPassword)
         {
             this.name = name;
             this.contents = contents;
+            this.encryptionPassword = encryptionPassword;
+
+        }
+
+        public ScriptFile(string name, DataStream contents) : this(name, contents, null)
+        {
         }
 
         public string Name
@@ -22,6 +31,11 @@ namespace Octopus.Shared.Contracts
         public DataStream Contents
         {
             get { return contents; }
+        }
+
+        public string EncryptionPassword
+        {
+            get { return encryptionPassword; }
         }
     }
 }
