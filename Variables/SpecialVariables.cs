@@ -387,6 +387,7 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Hidden)] public static readonly string SuppressConfigTransformationLogging = "Octopus.Action.Package.SuppressConfigTransformationLogging";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string AdditionalXmlConfigurationTransforms = "Octopus.Action.Package.AdditionalXmlConfigurationTransforms";
                 [Define(Category = VariableCategory.Action, Description = "If true, and the version of the package being deployed is already present on the machine, its re-deployment will be skipped (use with caution)", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string SkipIfAlreadyInstalled = "Octopus.Action.Package.SkipIfAlreadyInstalled";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string IgnoreVariableReplacementErrors = "Octopus.Action.Package.IgnoreVariableReplacementErrors";
 
                 public class Output
                 {
