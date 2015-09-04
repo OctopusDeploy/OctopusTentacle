@@ -313,6 +313,19 @@ namespace Octopus.Shared.Util
             File.Move(sourceFile, destinationFile);
         }
 
+        public async void MoveFileAndBlockUntilFinished(string sourceFile, string destinationFile)
+        {
+            using (var sourceStream = File.Open(sourceFile, FileMode.Open))
+            {
+                using (var destinationStream = File.Create(destinationFile))
+                {
+                    await sourceStream.CopyToAsync(destinationStream);
+                    sourceStream.Close();
+                    DeleteFile(sourceFile);
+                }
+            }
+        }
+
         public void EnsureDirectoryExists(string directoryPath)
         {
             if (!DirectoryExists(directoryPath))
