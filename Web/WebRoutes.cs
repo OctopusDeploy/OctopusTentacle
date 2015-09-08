@@ -170,6 +170,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/projects/{id}";
                 public static string Logo = "~/api/projects/{id}/logo";
                 public static string GetReleases = "~/api/projects/{id}/releases{/version}{?skip}";
+                public static string GetBranches = "~/api/projects/{id}/branches{?skip}";
                 public static string Pulse = "~/api/projects/pulse{?projectIds}";
             }
 
@@ -317,6 +318,12 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/octopusservernodes{/id}";
                 public static string Index = "~/api/octopusservernodes";
                 public static string Get = "~/api/octopusservernodes/{id}";
+            }
+
+            public static class Branches
+            {
+                public static string Template = "~/api/branches{/id}";
+                public static string Get = "~/api/branches/{id}";
             }
         }
 
