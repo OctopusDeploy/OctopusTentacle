@@ -167,7 +167,8 @@ namespace Octopus.Shared.Variables
 
         public static class Acquire
         {
-            [Define(Description = "Controls the number of concurrent package acquisitions that will be allowed to run concurrently.", Example = "2")] public static readonly string MaxParallelism = "Octopus.Acquire.MaxParallelism";
+            [Define(Description = "Controls the number of package acquisitions that will be allowed to run concurrently.", Example = "2")] public static readonly string MaxParallelism = "Octopus.Acquire.MaxParallelism";
+            [Define(Description = "Toggle whether delta compression will be enabled when sending packages to targets.", Example = "false")] public static readonly string DeltaCompressionEnabled = "Octopus.Acquire.DeltaCompressionEnabled";
         }
 
         public static class Environment
