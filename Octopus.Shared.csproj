@@ -87,6 +87,8 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
     <Compile Include="Communications\AutofacServiceFactory.cs" />
+    <Compile Include="Configuration\AzurePowerShellModuleConfiguration.cs" />
+    <Compile Include="Configuration\IAzurePowerShellModuleConfiguration.cs" />
     <Compile Include="Configuration\ICommunicationsConfiguration.cs" />
     <Compile Include="Configuration\IDeploymentProcessConfiguration.cs" />
     <Compile Include="Configuration\IHomeConfiguration.cs" />

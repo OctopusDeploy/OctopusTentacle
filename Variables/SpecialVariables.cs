@@ -506,6 +506,9 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "The ID of the Octopus Azure subscription account", Example = "accounts-1")]
                 public static readonly string AccountId = "Octopus.Action.Azure.AccountId";
 
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string PowershellModulePath = "Octopus.Action.Azure.PowerShellModule";
+
                 [Define(Category = VariableCategory.Hidden)] public static readonly string PackageExtractionPath = "Octopus.Action.Azure.PackageExtractionPath";
                 [Define(Category = VariableCategory.Action, Description = "Azure account subscription ID", Example = "42d91e16-206f-4a14-abd2-24791cbbc522")] public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";
                 [Define(Category = VariableCategory.Action, Description = "Thumprint of the certificate used for Azure authentication ", Example = "0320C45A19F9FAE120356EAB95AB2377C19FF3E2")] public static readonly string CertificateThumbprint = "Octopus.Action.Azure.CertificateThumbprint";
