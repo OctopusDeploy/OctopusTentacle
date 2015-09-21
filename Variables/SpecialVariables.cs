@@ -167,7 +167,8 @@ namespace Octopus.Shared.Variables
 
         public static class Acquire
         {
-            [Define(Description = "Controls the number of concurrent package acquisitions that will be allowed to run concurrently.", Example = "2")] public static readonly string MaxParallelism = "Octopus.Acquire.MaxParallelism";
+            [Define(Description = "Controls the number of package acquisitions that will be allowed to run concurrently.", Example = "2")] public static readonly string MaxParallelism = "Octopus.Acquire.MaxParallelism";
+            [Define(Description = "Toggle whether delta compression will be enabled when sending packages to targets.", Example = "false")] public static readonly string DeltaCompressionEnabled = "Octopus.Acquire.DeltaCompressionEnabled";
         }
 
         public static class Environment
@@ -509,6 +510,9 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Action, Description = "The ID of the Octopus Azure subscription account", Example = "accounts-1")]
                 public static readonly string AccountId = "Octopus.Action.Azure.AccountId";
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string PowershellModulePath = "Octopus.Action.Azure.PowerShellModule";
 
                 [Define(Category = VariableCategory.Hidden)] public static readonly string PackageExtractionPath = "Octopus.Action.Azure.PackageExtractionPath";
                 [Define(Category = VariableCategory.Action, Description = "Azure account subscription ID", Example = "42d91e16-206f-4a14-abd2-24791cbbc522")] public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";

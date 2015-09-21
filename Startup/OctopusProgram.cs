@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
+using Octopus.Client.Model;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Internals.Options;
@@ -153,8 +154,8 @@ namespace Octopus.Shared.Startup
 
         void AssertVersion(string versionString)
         {
-            var parsed = Version.Parse(versionString);
-            if (parsed == Version.Parse("0.0.0.0") || parsed == Version.Parse("1.0.0.0"))
+            var parsed = SemanticVersion.Parse(versionString);
+            if (parsed.Version == Version.Parse("0.0.0.0") || parsed.Version == Version.Parse("1.0.0.0"))
                 throw new Exception($"It looks like we've failed to correctly version our assemblies. The current version is {version} ({informationalVersion}).");
         }
 
