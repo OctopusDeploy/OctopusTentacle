@@ -38,6 +38,12 @@ namespace Octopus.Shared.Web
                 public static string Usage = "~/api/actiontemplates/{id}/usage";
             }
 
+            public static class Alerts
+            {
+                public static string Template = "~/api/alerts{/id}{?skip}";
+                public static string Index = "~/api/alerts";
+            }
+
             public static class Artifacts
             {
                 public static string Template = "~/api/artifacts{/id}{?skip,regarding}";
@@ -176,8 +182,8 @@ namespace Octopus.Shared.Web
 
             public static class Tasks
             {
-                public static string Template = "~/api/tasks{/id}{?skip,active,environment,project,name,node}";
-                public static string Index = "~/api/tasks{?skip,active,environment,project,name,node}";
+                public static string Template = "~/api/tasks{/id}{?skip,active,environment,project,name,node,running}";
+                public static string Index = "~/api/tasks{?skip,active,environment,project,name,node,running}";
                 public static string Get = "~/api/tasks/{id}";
                 public static string Details = "~/api/tasks/{id}/details{?verbose,tail}";
                 public static string Raw = "~/api/tasks/{id}/raw";
