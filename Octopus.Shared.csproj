@@ -379,6 +379,7 @@
     <Compile Include="Util\SystemSemaphore.cs" />
     <Compile Include="Util\TypeExtensions.cs" />
     <Compile Include="Util\Uniquifier.cs" />
+    <Compile Include="Util\UriExtensions.cs" />
     <Compile Include="Variables\DefineAttribute.cs" />
     <Compile Include="Variables\DeprecatedAliasAttribute.cs" />
     <Compile Include="Variables\EnvironmentVariables.cs" />
