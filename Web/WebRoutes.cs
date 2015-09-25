@@ -177,6 +177,7 @@ namespace Octopus.Shared.Web
                 public static string Logo = "~/api/projects/{id}/logo";
                 public static string GetReleases = "~/api/projects/{id}/releases{/version}{?skip}";
                 public static string GetBranches = "~/api/projects/{id}/branches";
+                public static string OrderBranches = "~/api/projects/{id}/branches/order";
                 public static string Pulse = "~/api/projects/pulse{?projectIds}";
             }
 
