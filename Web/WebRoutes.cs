@@ -176,8 +176,8 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/projects/{id}";
                 public static string Logo = "~/api/projects/{id}/logo";
                 public static string GetReleases = "~/api/projects/{id}/releases{/version}{?skip}";
-                public static string GetBranches = "~/api/projects/{id}/branches";
-                public static string OrderBranches = "~/api/projects/{id}/branches/order";
+                public static string GetChannels = "~/api/projects/{id}/channels";
+                public static string OrderChannels = "~/api/projects/{id}/channels/order";
                 public static string Pulse = "~/api/projects/pulse{?projectIds}";
             }
 
@@ -232,7 +232,7 @@ namespace Octopus.Shared.Web
             {
                 public static string Template = "~/api/deploymentprocesses{/id}";
                 public static string Get = "~/api/deploymentprocesses/{id}";
-                public static string GetTemplate = "~/api/deploymentprocesses/{id}/template{?branch}";
+                public static string GetTemplate = "~/api/deploymentprocesses/{id}/template{?channel}";
             }
 
             public static class Dashboards
@@ -327,10 +327,10 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/octopusservernodes/{id}";
             }
 
-            public static class Branches
+            public static class Channels
             {
-                public static string Template = "~/api/branches{/id}";
-                public static string Get = "~/api/branches/{id}";
+                public static string Template = "~/api/channels{/id}";
+                public static string Get = "~/api/channels/{id}";
             }
         }
 
