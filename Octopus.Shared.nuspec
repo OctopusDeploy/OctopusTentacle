@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>Octopus.Shared</id>
+    <title>Octopus.Shared</title>
+    <version>1.0.0.0</version>
+    <authors>Octopus Deploy</authors>
+    <summary>Shared resources for Octopus Deploy.</summary>
+    <description>Octopus Deploy is a user-friendly automated deployment tool for .NET developers. 
+    
+This package contains the client library for the HTTP API in Octopus.</description>
+    <releaseNotes></releaseNotes>
+    <language>en-US</language>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <iconUrl>http://i.octopusdeploy.com/resources/Avatar3-32x32.png</iconUrl>
+    <projectUrl>http://octopusdeploy.com/</projectUrl>
+    <licenseUrl>http://octopusdeploy.com/pricing</licenseUrl>
+    <dependencies>
+      <dependency id="Newtonsoft.Json" version="6.0.3" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\**\Octopus.*.dll" target="lib/net40" />
+    <file src="bin\**\Octopus.*.xml" target="lib/net40" />
+    <file src="bin\**\Octopus.*.pdb" target="lib/net40" />
+  </files>
+</package>
