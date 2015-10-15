@@ -331,6 +331,7 @@ namespace Octopus.Shared.Web
             {
                 public static string Template = "~/api/channels{/id}";
                 public static string Get = "~/api/channels/{id}";
+                public static string VersionRuleTest = "~/api/channels/rule-test{?version,versionRange,preReleaseTag}";
             }
         }
 
