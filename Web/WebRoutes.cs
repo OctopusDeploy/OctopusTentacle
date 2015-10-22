@@ -118,7 +118,7 @@ namespace Octopus.Shared.Web
 
             public static class Releases
             {
-                public static string Template = "~/api/releases{/id}{?skip,force}";
+                public static string Template = "~/api/releases{/id}{?skip,ignoreChannelRules}";
                 public static string Index = "~/api/releases{?skip}";
                 public static string Get = "~/api/releases/{id}";
                 public static string Progression = "~/api/releases/{id}/progression";
