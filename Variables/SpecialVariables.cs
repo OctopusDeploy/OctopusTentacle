@@ -263,6 +263,13 @@ namespace Octopus.Shared.Variables
             public static readonly string DayOfYear = "Octopus.Date.DayOfYear";
         }
 
+        public static class Time
+        {
+            public static readonly string Hour = "Octopus.Time.Hour";
+            public static readonly string Minute = "Octopus.Time.Minute";
+            public static readonly string Second = "Octopus.Time.Second";
+        }
+
         public static class Deployment
         {
             [Define] public static readonly string Id = "Octopus.Deployment.Id";
