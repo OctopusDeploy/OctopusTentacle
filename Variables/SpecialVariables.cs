@@ -540,6 +540,9 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Hidden)] public static readonly string PackageExtractionPath = "Octopus.Action.Azure.PackageExtractionPath";
                 [Define(Category = VariableCategory.Action, Description = "Azure account subscription ID", Example = "42d91e16-206f-4a14-abd2-24791cbbc522")] public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";
+                [Define(Category = VariableCategory.Action, Description = "Azure AD application client ID", Example = "8104d344-fb8f-4a49-ba1a-a6df0790f302")] public static readonly string ClientId = "Octopus.Action.Azure.ClientId";
+                [Define(Category = VariableCategory.Action, Description = "Azure AD application tenant ID", Example = "b87c0ac7-dadf-4842-8a5f-3ba5da9ee8ba")] public static readonly string TenantId = "Octopus.Action.Azure.TenantId";
+                [Define(Category = VariableCategory.Action, Description = "Azure AD application password", Example = "correct horse battery staple")] public static readonly string Password = "Octopus.Action.Azure.Password";
                 [Define(Category = VariableCategory.Action, Description = "Thumprint of the certificate used for Azure authentication ", Example = "0320C45A19F9FAE120356EAB95AB2377C19FF3E2")] public static readonly string CertificateThumbprint = "Octopus.Action.Azure.CertificateThumbprint";
                 [Define(Category = VariableCategory.Action, Description = "Base64-encoded certificate used for Azure authentication", Example = "no example provided")] public static readonly string CertificateBytes = "Octopus.Action.Azure.CertificateBytes";
 
