@@ -532,6 +532,9 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string PowerShellActionTypeName = "Octopus.AzurePowerShell";
 
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string ResourceGroupActionTypeName = "Octopus.AzureResourceGroup";
+
                 [Define(Category = VariableCategory.Action, Description = "The ID of the Octopus Azure subscription account", Example = "accounts-1")]
                 public static readonly string AccountId = "Octopus.Action.Azure.AccountId";
 
@@ -558,6 +561,9 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Replace instance counts in configuration file with those currently configured in Azure portal", Example = "False")] public static readonly string UseCurrentInstanceCount = "Octopus.Action.Azure.UseCurrentInstanceCount";
                 [Define(Category = VariableCategory.Action, Description = "Log extracted Cloud Service Package", Example="False")] public static readonly string LogExtractedCspkg = "Octopus.Action.Azure.LogExtractedCspkg";
                 [Define(Category = VariableCategory.Action, Description = "Relative path to the *.cscfg file", Example = "AcmeService-Production.cscfg")][DeprecatedAlias("OctopusAzureConfigurationFileName")] public static readonly string CloudServiceConfigurationFileRelativePath = "Octopus.Action.Azure.CloudServiceConfigurationFileRelativePath";
+
+                [Define(Category = VariableCategory.Action, Description = "Resource Group template JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplate = "Octopus.Action.Azure.ResourceGroupTemplate";
+                [Define(Category = VariableCategory.Action, Description = "Resource Group template parameter JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplateParameters = "Octopus.Action.Azure.ResourceGroupTemplateParameters";
             }
         }
     }
