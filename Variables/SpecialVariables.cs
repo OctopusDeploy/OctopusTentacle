@@ -216,6 +216,12 @@ namespace Octopus.Shared.Variables
                 [Define(Description = "The ID of the last release of the project to the current environment", Example = "releases-112")] public static string Id = "Octopus.Release.PreviousForEnvironment.Id";
                 [Define(Description = "The version number of the last release of the project to the current environment", Example = "1.1.2")] public static string Number = "Octopus.Release.PreviousForEnvironment.Number";
             }
+
+            public static class Channel
+            {
+                [Define(Description = "The ID of the channel", Example = "Channels-122")] public static string Id = "Octopus.Release.Channel.Id";
+                [Define(Description = "The ID of the channel", Example = "Channels-122")] public static string Name = "Octopus.Release.Channel.Name";
+            }
         }
 
         public static class Version
@@ -232,6 +238,22 @@ namespace Octopus.Shared.Variables
             public static readonly string NextBuild = "Octopus.Version.NextBuild";
             public static readonly string NextRevision = "Octopus.Version.NextRevision";
             public static readonly string NextSuffix = "Octopus.Version.NextSuffix";
+
+            public static class Channel
+            {
+                public static readonly string LastMajor = "Octopus.Version.Channel.LastMajor";
+                public static readonly string LastMinor = "Octopus.Version.Channel.LastMinor";
+                public static readonly string LastPatch = "Octopus.Version.Channel.LastPatch";
+                public static readonly string LastBuild = "Octopus.Version.Channel.LastBuild";
+                public static readonly string LastRevision = "Octopus.Version.Channel.LastRevision";
+                public static readonly string LastSuffix = "Octopus.Version.Channel.LastSuffix";
+                public static readonly string NextMajor = "Octopus.Version.Channel.NextMajor";
+                public static readonly string NextMinor = "Octopus.Version.Channel.NextMinor";
+                public static readonly string NextPatch = "Octopus.Version.Channel.NextPatch";
+                public static readonly string NextBuild = "Octopus.Version.Channel.NextBuild";
+                public static readonly string NextRevision = "Octopus.Version.Channel.NextRevision";
+                public static readonly string NextSuffix = "Octopus.Version.Channel.NextSuffix";
+            }
         }
 
         public static class Date

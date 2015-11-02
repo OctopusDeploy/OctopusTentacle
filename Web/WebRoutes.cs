@@ -118,7 +118,7 @@ namespace Octopus.Shared.Web
 
             public static class Releases
             {
-                public static string Template = "~/api/releases{/id}{?skip}";
+                public static string Template = "~/api/releases{/id}{?skip,ignoreChannelRules}";
                 public static string Index = "~/api/releases{?skip}";
                 public static string Get = "~/api/releases/{id}";
                 public static string Progression = "~/api/releases/{id}/progression";
@@ -176,6 +176,8 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/projects/{id}";
                 public static string Logo = "~/api/projects/{id}/logo";
                 public static string GetReleases = "~/api/projects/{id}/releases{/version}{?skip}";
+                public static string GetChannels = "~/api/projects/{id}/channels";
+                public static string OrderChannels = "~/api/projects/{id}/channels/order";
                 public static string Pulse = "~/api/projects/pulse{?projectIds}";
             }
 
@@ -230,7 +232,7 @@ namespace Octopus.Shared.Web
             {
                 public static string Template = "~/api/deploymentprocesses{/id}";
                 public static string Get = "~/api/deploymentprocesses/{id}";
-                public static string GetTemplate = "~/api/deploymentprocesses/{id}/template";
+                public static string GetTemplate = "~/api/deploymentprocesses/{id}/template{?channel}";
             }
 
             public static class Dashboards
@@ -308,7 +310,7 @@ namespace Octopus.Shared.Web
 
             public static class Packages
             {
-                public static string Search = "~/api/feeds/{id}/packages{?packageId,partialMatch,includeMultipleVersions,includeNotes,includePreRelease,take}";
+                public static string Search = "~/api/feeds/{id}/packages{?packageId,partialMatch,includeMultipleVersions,includeNotes,includePreRelease,versionRange,preReleaseTag,take}";
                 public static string Versions = "~/api/feeds/{id}/packages{?packageIds}";
                 public static string Notes = "~/api/feeds/{id}/packages/notes{?packageId,version}";
                 public static string Template = "~/api/packages{/id}{?nuGetPackageId,filter,latest,skip,take,includeNotes}";
@@ -323,6 +325,13 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/octopusservernodes{/id}";
                 public static string Index = "~/api/octopusservernodes";
                 public static string Get = "~/api/octopusservernodes/{id}";
+            }
+
+            public static class Channels
+            {
+                public static string Template = "~/api/channels{/id}";
+                public static string Get = "~/api/channels/{id}";
+                public static string VersionRuleTest = "~/api/channels/rule-test{?version,versionRange,preReleaseTag}";
             }
         }
 

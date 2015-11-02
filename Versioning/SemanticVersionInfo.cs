@@ -57,7 +57,7 @@ namespace Octopus.Shared.Versioning
         /// </summary>
         public int BuildMetaData => int.Parse(gitVersionDetails.Value["BuildMetaData"]);
         /// <summary>
-        /// Example: "1.Branch.release/3.0.0.Sha.28c853159a46b5a87e6cc9c4f6e940c59d6bc68a"
+        /// Example: "1.Channel.release/3.0.0.Sha.28c853159a46b5a87e6cc9c4f6e940c59d6bc68a"
         /// </summary>
         public string FullBuildMetaData => gitVersionDetails.Value["FullBuildMetaData"];
         /// <summary>
@@ -86,7 +86,7 @@ namespace Octopus.Shared.Versioning
         /// </summary>
         public string FullSemVer => gitVersionDetails.Value["FullSemVer"];
         /// <summary>
-        /// Example: "3.0.0-beta.1+1.Branch.release/3.0.0.Sha.28c853159a46b5a87e6cc9c4f6e940c59d6bc68a"
+        /// Example: "3.0.0-beta.1+1.Channel.release/3.0.0.Sha.28c853159a46b5a87e6cc9c4f6e940c59d6bc68a"
         /// </summary>
         public string InformationalVersion => gitVersionDetails.Value["InformationalVersion"];
         /// <summary>
