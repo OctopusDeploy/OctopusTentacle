@@ -221,6 +221,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/variables/{id}";
                 public static string ScopeValues = "~/api/variables/scope-values/{ownerId}";
                 public static string Names = "~/api/variables/names{?project}";
+                public static string NonPrintableChars = "~/api/variables/nonPrintableChars";
             }
 
             public static class Progression
