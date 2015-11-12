@@ -36,7 +36,7 @@ namespace Octopus.Shared.Tasks
                     }
                     else if (ex is HalibutClientException)
                     {
-                        log.Error(ex.Message);
+                        log.Fatal(ex.Message);
                     }
                     else if (ex is TaskCanceledException)
                     {
