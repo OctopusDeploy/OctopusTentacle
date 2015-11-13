@@ -197,6 +197,7 @@ namespace Octopus.Shared.Web
             {
                 public static string Template = "~/api/events{/id}{?skip,regarding,modifier,user,from,to}";
                 public static string Index = "~/api/events{?skip,regarding,user,from,to}";
+                public static string Get = "~/api/events/{id}";
             }
 
             public static class Feeds
