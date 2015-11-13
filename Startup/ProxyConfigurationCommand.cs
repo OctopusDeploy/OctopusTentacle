@@ -9,34 +9,26 @@ namespace Octopus.Shared.Startup
     {
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly List<Action> operations = new List<Action>();
-        readonly ILog log;
 
         public ProxyConfigurationCommand(Lazy<IProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ILog log) : base(instanceSelector)
         {
             this.proxyConfiguration = proxyConfiguration;
-            this.log = log;
 
             Options.Add("proxyEnable=", "Whether to use the Internet Explorer proxy", v => QueueOperation(delegate
             {
-                proxyConfiguration.Value.UseDefaultProxy = bool.Parse(v);
+                var useDefaultProxy = bool.Parse(v);
+                proxyConfiguration.Value.UseDefaultProxy = useDefaultProxy;
                 log.Info("Use IE proxy: " + v);
             }));
             Options.Add("proxyUsername=", "Username to use when authenticating with the proxy", v => QueueOperation(delegate
             {
                 proxyConfiguration.Value.CustomProxyUsername = v;
-                log.Info("Proxy username: " + v);
+                log.Info(string.IsNullOrWhiteSpace(v) ? "Proxy username cleared" : "Proxy username set to: " + v);
             }));
             Options.Add("proxyPassword=", "Password to use when authenticating with the proxy", v => QueueOperation(delegate
             {
                 proxyConfiguration.Value.CustomProxyPassword = v;
-                if (string.IsNullOrWhiteSpace(v))
-                {
-                    log.Info("No proxy password used");
-                }
-                else
-                {
-                    log.Info("Proxy password set");
-                }
+                log.Info(string.IsNullOrWhiteSpace(v) ? "Proxy password cleared" : "Proxy password set to: *******");
             }));
         }
 
