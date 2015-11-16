@@ -108,6 +108,8 @@ namespace Octopus.Shared.Tasks
                         CompleteTask(ex);
                     }
                 }
+
+                log.Finish();
             }
         }
 
@@ -147,11 +149,6 @@ namespace Octopus.Shared.Tasks
         {
             try
             {
-                if (error == null)
-                {
-                    log.Finish();
-                }
-
                 complete.Set();
 
                 if (completeCallback != null)
