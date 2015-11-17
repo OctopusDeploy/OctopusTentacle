@@ -86,21 +86,13 @@ namespace Octopus.Shared.Tasks
                         ex = e;
                         var root = e.UnpackFromContainers();
 
-                        if (root is ActivityFailedException)
-                        {
-                            log.Error(root.Message);
-                        }
-                        else if (root is HalibutClientException)
-                        {
-                            log.Error(root.Message);
-                        }
-                        else if (root is TaskCanceledException || root is ThreadAbortException || root is OperationCanceledException)
+                        if (root is TaskCanceledException || root is ThreadAbortException || root is OperationCanceledException)
                         {
                             // These happen as part of cancellation. It's enough to just return them, without logging them.
                         }
                         else
                         {
-                            log.Error(ex);
+                            log.Fatal(root.Message);
                         }
                     }
                     finally
@@ -108,8 +100,10 @@ namespace Octopus.Shared.Tasks
                         CompleteTask(ex);
                     }
                 }
-
-                log.Finish();
+                if (!IsPaused())
+                {
+                    log.Finish();
+                }
             }
         }
 
