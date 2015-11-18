@@ -26,36 +26,25 @@ namespace Octopus.Shared.Tasks
                 try
                 {
                     executeCallback(item.WorkItem);
-                    log.Finish();
                 }
                 catch (Exception ex)
                 {
-                    if (ex is ActivityFailedException)
-                    {
-                        log.Error(ex.Message);
-                    }
-                    else if (ex is HalibutClientException)
-                    {
-                        log.Error(ex.Message);
-                    }
-                    else if (ex is TaskCanceledException)
+                    if (ex is TaskCanceledException || ex is OperationCanceledException)
                     {
                         log.Info(ex.Message);
-                    }
-                    else if (ex is OperationCanceledException)
-                    {
-                        log.Info(ex.Message);
-                    }
-                    else if (ex is ControlledFailureException)
+                    } else if (ex is ControlledFailureException)
                     {
                         log.Error(ex.Message);
                     }
                     else
                     {
-                        log.Error(ex);
+                        log.Fatal(ex.Message);
                     }
-
                     Exception = ex;
+                }
+                finally
+                {
+                    log.Finish();
                 }
             }
         }
