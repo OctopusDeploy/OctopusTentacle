@@ -2,6 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web.SessionState;
+using NLog;
 
 namespace Octopus.Shared.Web
 {
@@ -234,6 +235,7 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/deploymentprocesses{/id}";
                 public static string Get = "~/api/deploymentprocesses/{id}";
                 public static string GetTemplate = "~/api/deploymentprocesses/{id}/template{?channel}";
+                public static string ValidateAzureResourceGroup = "~/api/deploymentprocesses/{id}/validateAzureResourceGroup";
             }
 
             public static class Dashboards
