@@ -217,6 +217,12 @@ namespace Octopus.Shared.Variables
                 [Define(Description = "The version number of the last release of the project to the current environment", Example = "1.1.2")] public static string Number = "Octopus.Release.PreviousForEnvironment.Number";
             }
 
+            public static class CurrentForEnvironment
+            {
+                [Define(Description = "The ID of the release of the last successful deployment to the current environment", Example = "releases-112")] public static string Id = "Octopus.Release.CurrentForEnvironment.Id";
+                [Define(Description = "The version number of the release the last successful deployment to the current environment", Example = "1.1.2")] public static string Number = "Octopus.Release.CurrentForEnvironment.Number";
+            }
+
             public static class Channel
             {
                 [Define(Description = "The ID of the channel", Example = "Channels-122")] public static string Id = "Octopus.Release.Channel.Id";
