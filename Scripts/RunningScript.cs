@@ -32,7 +32,7 @@ namespace Octopus.Shared.Scripts
             var powerShellPath = PowerShell.GetFullPath();
 
             using (var writer = log.CreateWriter())
-            using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, message => writer.WriteOutput(ProcessOutputSource.StdOut, message)))
+            using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, GetType().Name, message => writer.WriteOutput(ProcessOutputSource.StdOut, message)))
             {
                 try
                 {
