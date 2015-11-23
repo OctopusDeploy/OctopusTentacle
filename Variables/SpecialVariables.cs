@@ -53,6 +53,11 @@ namespace Octopus.Shared.Variables
             return IsElementOf("Octopus.Action", variableName);
         }
 
+        public static bool IsIndexedActionVariable(string variableName, string key)
+        {
+            return variableName.StartsWith("Octopus.Action[" + key + "]");
+        }
+
         public static bool IsStepVariable(string variableName)
         {
             return IsElementOf("Octopus.Step", variableName);
@@ -65,21 +70,16 @@ namespace Octopus.Shared.Variables
 
         public static bool AppliesToActionType(string actionType, string variableName)
         {
-            if (actionType == "Octopus.Manual")
+            switch (actionType)
             {
-                return variableName.Contains(".Manual.");
-            }
-            if (actionType == "Octopus.Email")
-            {
-                return variableName.Contains(".Email.");
-            }
-            if (actionType == "Octopus.TentaclePackage")
-            {
-                return variableName.Contains(".Package.");
-            }
-            if (actionType == "Octopus.Script")
-            {
-                return variableName.Contains(".Script.");
+                case "Octopus.Manual":
+                    return variableName.Contains(".Manual.");
+                case "Octopus.Email":
+                    return variableName.Contains(".Email.");
+                case "Octopus.TentaclePackage":
+                    return variableName.Contains(".Package.");
+                case "Octopus.Script":
+                    return variableName.Contains(".Script.");
             }
             return false;
         }
