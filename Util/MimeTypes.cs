@@ -19,6 +19,8 @@ namespace Octopus.Shared.Util
                     return "image/png";
                 case "jpg":
                     return "image/jpeg";
+                case "gif":
+                    return "image/gif";
                 default:
                     throw new Exception("Mimetype not currently mapped for extension '" + extension + "'");
             }
@@ -33,6 +35,8 @@ namespace Octopus.Shared.Util
                 case "image/jpg":
                 case "image/jpeg":
                     return ".jpg";
+                case "image/gif":
+                    return ".gif";
                 default:
                     throw new Exception("Mimetype not currently mapped: '" + mimeType + "'");
             }

@@ -199,6 +199,7 @@ namespace Octopus.Shared.Web
             {
                 public static string Template = "~/api/events{/id}{?skip,regarding,modifier,user,from,to}";
                 public static string Index = "~/api/events{?skip,regarding,user,from,to}";
+                public static string Get = "~/api/events/{id}";
             }
 
             public static class Feeds
@@ -223,6 +224,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/variables/{id}";
                 public static string ScopeValues = "~/api/variables/scope-values/{ownerId}";
                 public static string Names = "~/api/variables/names{?project}";
+                public static string NonPrintableChars = "~/api/variables/nonPrintableChars";
             }
 
             public static class Progression
@@ -234,7 +236,7 @@ namespace Octopus.Shared.Web
             {
                 public static string Template = "~/api/deploymentprocesses{/id}";
                 public static string Get = "~/api/deploymentprocesses/{id}";
-                public static string GetTemplate = "~/api/deploymentprocesses/{id}/template{?channel}";
+                public static string GetTemplate = "~/api/deploymentprocesses/{id}/template{?channel,releaseId}";
                 public static string ValidateAzureResourceGroup = "~/api/deploymentprocesses/{id}/validateAzureResourceGroup";
             }
 

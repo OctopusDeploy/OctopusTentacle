@@ -39,6 +39,7 @@ namespace Octopus.Shared.Variables
         [Define(Category = VariableCategory.Hidden)] public static readonly string StagedPackageHash = "StagedPackage.Hash";
         [Define(Category = VariableCategory.Hidden)] public static readonly string StagedPackageSize = "StagedPackage.Size";
         [Define(Category = VariableCategory.Hidden)] public static readonly string StagedPackageFullPathOnRemoteMachine = "StagedPackage.FullPathOnRemoteMachine";
+        [Define(Category = VariableCategory.Hidden)] public static readonly string HasLatestCalamariVersion = "HasLatestCalamariVersion";
 
         static SpecialVariables()
         {
@@ -50,6 +51,11 @@ namespace Octopus.Shared.Variables
         public static bool IsActionVariable(string variableName)
         {
             return IsElementOf("Octopus.Action", variableName);
+        }
+
+        public static bool IsIndexedActionVariable(string variableName, string key)
+        {
+            return variableName.StartsWith("Octopus.Action[" + key + "]");
         }
 
         public static bool IsStepVariable(string variableName)
@@ -64,21 +70,16 @@ namespace Octopus.Shared.Variables
 
         public static bool AppliesToActionType(string actionType, string variableName)
         {
-            if (actionType == "Octopus.Manual")
+            switch (actionType)
             {
-                return variableName.Contains(".Manual.");
-            }
-            if (actionType == "Octopus.Email")
-            {
-                return variableName.Contains(".Email.");
-            }
-            if (actionType == "Octopus.TentaclePackage")
-            {
-                return variableName.Contains(".Package.");
-            }
-            if (actionType == "Octopus.Script")
-            {
-                return variableName.Contains(".Script.");
+                case "Octopus.Manual":
+                    return variableName.Contains(".Manual.");
+                case "Octopus.Email":
+                    return variableName.Contains(".Email.");
+                case "Octopus.TentaclePackage":
+                    return variableName.Contains(".Package.");
+                case "Octopus.Script":
+                    return variableName.Contains(".Script.");
             }
             return false;
         }
@@ -214,6 +215,12 @@ namespace Octopus.Shared.Variables
             {
                 [Define(Description = "The ID of the last release of the project to the current environment", Example = "releases-112")] public static string Id = "Octopus.Release.PreviousForEnvironment.Id";
                 [Define(Description = "The version number of the last release of the project to the current environment", Example = "1.1.2")] public static string Number = "Octopus.Release.PreviousForEnvironment.Number";
+            }
+
+            public static class CurrentForEnvironment
+            {
+                [Define(Description = "The ID of the release of the last successful deployment to the current environment", Example = "releases-112")] public static string Id = "Octopus.Release.CurrentForEnvironment.Id";
+                [Define(Description = "The version number of the release the last successful deployment to the current environment", Example = "1.1.2")] public static string Number = "Octopus.Release.CurrentForEnvironment.Number";
             }
 
             public static class Channel
