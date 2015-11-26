@@ -482,6 +482,8 @@ namespace Octopus.Shared.Variables
                 public static readonly string ActionTypeName = "Octopus.Script";
                 [Define(Category = VariableCategory.Action, Description = "The syntax of the script being run in a script step", Example = "PowerShell")] public static readonly string Syntax = "Octopus.Action.Script.Syntax";
                 [Define(Category = VariableCategory.Action, Description = "The script being run in a script step", Example = "Write-Host 'Hello!'")] public static readonly string ScriptBody = "Octopus.Action.Script.ScriptBody";
+                public static readonly string ScriptFileName = "Octopus.Action.Script.ScriptFileName";
+                public static readonly string ScriptSource = "Octopus.Action.Script.ScriptSource";
             }
 
             public static class Manual
