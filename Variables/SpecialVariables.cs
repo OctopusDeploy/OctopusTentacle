@@ -484,6 +484,11 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "The script being run in a script step", Example = "Write-Host 'Hello!'")] public static readonly string ScriptBody = "Octopus.Action.Script.ScriptBody";
             }
 
+            public static class ServerScript
+            {
+                public static readonly string ActionTypeName = "Octopus.ServerScript";
+            }
+
             public static class Manual
             {
                 public static readonly string ActionTypeName = "Octopus.Manual";
