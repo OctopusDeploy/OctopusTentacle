@@ -39,7 +39,7 @@ namespace Octopus.Shared.Security.Certificates
 
             if (CheckThatCertificateWasLoadedWithPrivateKey(x509Certificate) == false)
             {
-                throw new CryptographicException("Unable to load X509 Certificate file. The provided certificate or password may be invalid.");
+                throw new CryptographicException("Unable to load X509 Certificate file. The provided certificate does not include a private key.");
             }
 
             return x509Certificate;
