@@ -25,25 +25,25 @@ namespace Octopus.Shared.Packages
 
         public string[] SupportedExtensions { get { return new[] {".nupkg"}; } }
 
-        public void Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
+        public int Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning)
         {
             using (var package = Package.Open(packageFile, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                Install(package, directory, log, suppressNestedScriptWarning, out filesExtracted);
+                return Install(package, directory, log, suppressNestedScriptWarning);
             }
         }
 
-        public void Install(Stream packageStream, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
+        public int Install(Stream packageStream, string directory, ILog log, bool suppressNestedScriptWarning)
         {
             using (var package = Package.Open(packageStream, FileMode.Open, FileAccess.Read))
             {
-                Install(package, directory, log, suppressNestedScriptWarning, out filesExtracted);
+                return Install(package, directory, log, suppressNestedScriptWarning);
             }
         }
 
-        void Install(Package package, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
+        int Install(Package package, string directory, ILog log, bool suppressNestedScriptWarning)
         {
-            filesExtracted = 0;
+           var  filesExtracted = 0;
 
             var files =
                 from part in package.GetParts()
@@ -72,6 +72,7 @@ namespace Octopus.Shared.Packages
                     fileStream.Flush();
                 }
             }
+            return filesExtracted;
         }
 
         void WarnIfScriptInSubFolder(string path, ILog log)
