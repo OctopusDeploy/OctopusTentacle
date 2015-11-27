@@ -139,6 +139,7 @@
     <Compile Include="Model\EncryptedAttribute.cs" />
     <Compile Include="Packages\IPackageExtractor.cs" />
     <Compile Include="Packages\LightweightPackageExtractor.cs" />
+    <Compile Include="Packages\PackageMetadata.cs" />
     <Compile Include="Pipeline\IPipelineComponent.cs" />
     <Compile Include="Pipeline\IPipelineConsumer.cs" />
     <Compile Include="Pipeline\IPipelineConsumerProducer.cs" />

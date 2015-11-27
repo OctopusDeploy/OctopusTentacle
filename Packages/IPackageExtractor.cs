@@ -7,6 +7,9 @@ namespace Octopus.Shared.Packages
     public interface IPackageExtractor
     {
         string[] SupportedExtensions { get; }
+
+        PackageMetadata GetMetadata(string packageFile);
+        
         int Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning);
         int Install(Stream packageStream, string directory, ILog log, bool suppressNestedScriptWarning);
     }

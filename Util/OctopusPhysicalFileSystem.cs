@@ -196,6 +196,13 @@ namespace Octopus.Shared.Util
             }
         }
 
+        public Stream CreateTemporaryFile(out string path)
+        {
+            path = Path.Combine(GetTempBasePath(), Guid.NewGuid() + ".temp");
+
+            return OpenFile(path, FileAccess.ReadWrite, FileShare.Read);
+        }
+
         public Stream CreateTemporaryFile(string extension, out string path)
         {
             if (!extension.StartsWith("."))

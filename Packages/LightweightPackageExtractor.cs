@@ -15,7 +15,7 @@ namespace Octopus.Shared.Packages
     /// </summary>
     public class LightweightPackageExtractor : IPackageExtractor
     {
-        static readonly string[] ExcludePaths = {"_rels", "package\\services\\metadata"};
+        static readonly string[] ExcludePaths = {"_rels", Path.Combine("package", "services", "metadata")};
         readonly IOctopusFileSystem fileSystem;
 
         public LightweightPackageExtractor(IOctopusFileSystem fileSystem)
@@ -24,6 +24,11 @@ namespace Octopus.Shared.Packages
         }
 
         public string[] SupportedExtensions { get { return new[] {".nupkg"}; } }
+
+        public virtual PackageMetadata GetMetadata(string packageFile)
+        {
+            throw new NotImplementedException();
+        }
 
         public int Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning)
         {
