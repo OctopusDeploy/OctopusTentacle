@@ -23,6 +23,8 @@ namespace Octopus.Shared.Packages
             this.fileSystem = fileSystem;
         }
 
+        public string[] SupportedExtensions { get { return new[] {".nupkg"}; } }
+
         public void Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
         {
             using (var package = Package.Open(packageFile, FileMode.Open, FileAccess.Read, FileShare.Read))
