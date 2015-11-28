@@ -13,22 +13,16 @@ namespace Octopus.Shared.Packages
     /// This class simply uses the packaging API's directly to extract, and only uses 6mb and takes 10 seconds on the
     /// same 180mb file.
     /// </summary>
-    public class LightweightPackageExtractor : IPackageExtractor
+    public class LightweightPackageInstaller : IPackageInstaller
     {
         static readonly string[] ExcludePaths = {"_rels", Path.Combine("package", "services", "metadata")};
         readonly IOctopusFileSystem fileSystem;
 
-        public LightweightPackageExtractor(IOctopusFileSystem fileSystem)
+        public LightweightPackageInstaller(IOctopusFileSystem fileSystem)
         {
             this.fileSystem = fileSystem;
         }
 
-        public string[] SupportedExtensions { get { return new[] {".nupkg"}; } }
-
-        public virtual PackageMetadata GetMetadata(string packageFile)
-        {
-            throw new NotImplementedException();
-        }
 
         public int Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning)
         {
