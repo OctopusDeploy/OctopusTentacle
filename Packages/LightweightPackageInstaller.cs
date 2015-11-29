@@ -97,7 +97,7 @@ namespace Octopus.Shared.Packages
         {
             var path = UriUtility.GetPath(part.Uri);
             return !ExcludePaths.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)) &&
-                !PackageUtility.IsManifest(path);
+                !IsManifest(path);
         }
 
         static class UriUtility
@@ -113,13 +113,10 @@ namespace Octopus.Shared.Packages
             }
         }
 
-        static class PackageUtility
+        public static bool IsManifest(string path)
         {
-            public static bool IsManifest(string path)
-            {
-                var extension = Path.GetExtension(path);
-                return extension != null && extension.Equals(".nuspec", StringComparison.OrdinalIgnoreCase);
-            }
+            var extension = Path.GetExtension(path);
+            return extension != null && extension.Equals(".nuspec", StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion
