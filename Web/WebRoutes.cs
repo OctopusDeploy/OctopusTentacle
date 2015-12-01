@@ -237,7 +237,6 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/deploymentprocesses{/id}";
                 public static string Get = "~/api/deploymentprocesses/{id}";
                 public static string GetTemplate = "~/api/deploymentprocesses/{id}/template{?channel,releaseId}";
-                public static string ValidateAzureResourceGroup = "~/api/deploymentprocesses/{id}/validateAzureResourceGroup";
             }
 
             public static class Dashboards
