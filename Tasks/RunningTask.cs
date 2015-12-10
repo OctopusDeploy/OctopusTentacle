@@ -131,11 +131,11 @@ namespace Octopus.Shared.Tasks
             return isPaused;
         }
 
-        public void EnsureNotCancelled()
+        public void EnsureNotCanceled()
         {
             if (IsCancellationRequested)
             {
-                throw new TaskCanceledException("This task has been cancelled.");
+                throw new TaskCanceledException("This task has been canceled.");
             }
         }
 
