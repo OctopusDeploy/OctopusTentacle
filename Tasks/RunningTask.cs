@@ -100,7 +100,7 @@ namespace Octopus.Shared.Tasks
                         CompleteTask(ex);
                     }
                 }
-                if (!IsPaused())
+                if (!IsPaused() || IsCancellationRequested)
                 {
                     log.Finish();
                 }
@@ -111,7 +111,7 @@ namespace Octopus.Shared.Tasks
         {
             using (log.WithinBlock(taskLogContext))
             {
-                if (cancel.IsCancellationRequested)
+                if (IsCancellationRequested)
                 {
                     return;
                 }
