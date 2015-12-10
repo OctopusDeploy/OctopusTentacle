@@ -86,7 +86,7 @@ namespace Octopus.Shared.Tasks
                         ex = e;
                         var root = e.UnpackFromContainers();
 
-                        if (root is TaskCanceledException || root is ThreadAbortException || root is OperationCanceledException)
+                        if (root is OperationCanceledException || root is ThreadAbortException)
                         {
                             // These happen as part of cancellation. It's enough to just return them, without logging them.
                         }
