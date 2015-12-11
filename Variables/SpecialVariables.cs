@@ -53,6 +53,11 @@ namespace Octopus.Shared.Variables
             return IsElementOf("Octopus.Action", variableName);
         }
 
+        public static bool IsActionOutputVariable(string variableName)
+        {
+            return variableName.StartsWith("Octopus.Action[_name_].Output");
+        }
+
         public static bool IsIndexedActionVariable(string variableName, string key)
         {
             return variableName.StartsWith("Octopus.Action[" + key + "]");
@@ -86,9 +91,11 @@ namespace Octopus.Shared.Variables
 
         public static string IndexActionVariableByKey(string variableName, string key)
         {
-            return !IsActionVariable(variableName)
-                ? variableName
-                : variableName.Replace("Octopus.Action.", "Octopus.Action[" + key + "].");
+            return IsActionVariable(variableName)
+                ? variableName.Replace("Octopus.Action.", "Octopus.Action[" + key + "].")
+                : IsActionOutputVariable(variableName)
+                    ? variableName.Replace("_name_", key)
+                    : variableName;
         }
 
         public static string IndexStepVariableByKey(string variableName, string key)
