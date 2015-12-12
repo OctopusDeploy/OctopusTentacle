@@ -15,6 +15,36 @@ namespace Octopus.Shared.Security.Certificates
     {
         static readonly ILog Log = Diagnostics.Log.System();
 
+        public static X509Certificate2 FromPfxFile(string pfxFilePath, string password)
+        {
+            X509Certificate2Collection certificates = new X509Certificate2Collection();
+            if (string.IsNullOrEmpty(password))
+            {
+                Log.InfoFormat($"Importing the certificate stored in PFX file in {pfxFilePath}...");
+                certificates.Import(pfxFilePath, string.Empty, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+            }
+            else
+            {
+                Log.InfoFormat($"Importing the certificate stored in PFX file in {pfxFilePath} using the provided password...");
+                certificates.Import(pfxFilePath, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+            }
+
+            if (certificates.Count == 0)
+                throw new Exception($"The PFX file ({pfxFilePath}) does not contain any certificates.");
+
+            if (certificates.Count > 1)
+                Log.Info($"PFX file {pfxFilePath} contains multiple certificates, taking the first one.");
+
+            var x509Certificate = certificates[0];
+
+            if (CheckThatCertificateWasLoadedWithPrivateKey(x509Certificate) == false)
+            {
+                throw new CryptographicException("Unable to load X509 Certificate file. The X509 certificate file you provided does not include the private key. Please make sure the private key is included in your X509 certificate file and try again.");
+            }
+
+            return x509Certificate;
+        }
+
         public static X509Certificate2 FromBase64String(string thumbprint, string certificateString)
         {
             if (certificateString == null) throw new ArgumentNullException("certificateString");

@@ -8,7 +8,7 @@ namespace Octopus.Shared.Tasks
         string TaskId { get; }
         bool IsCancellationRequested { get; }
         CancellationToken CancellationToken { get; }
-        void EnsureNotCancelled();
+        void EnsureNotCanceled();
         void Pause();
         bool IsPaused();
     }
