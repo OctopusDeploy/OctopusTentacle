@@ -293,6 +293,7 @@ namespace Octopus.Shared.Variables
             [Define(Description = "Specific machines being targeted by the deployment, if any", Example = "machines-123,machines-124", Domain = VariableDomain.List)] public static readonly string SpecificMachines = "Octopus.Deployment.SpecificMachines";
             public static readonly string Machines = "Octopus.Deployment.Machines";
             [Define(Description = "The date and time at which the deployment was created", Example = "Tuesday 10th September 1:23 PM")] public static readonly string Created = "Octopus.Deployment.Created";
+            [Define(Description = "The UTC date and time at which the deployment was created", Example = "10/09/2015 3:23:00 AM +00:00")] public static readonly string CreatedUtc = "Octopus.Deployment.CreatedUtc";
             [Define(Description = "The error causing the deployment to fail, if any", Example = "Script returned exit code 123")] public static readonly string Error = "Octopus.Deployment.Error";
             [Define(Description = "A detailed description of the error causing the deployment to fail", Example = "System.IO.FileNotFoundException: file C:\\Missing.txt does not exist (at...)")] public static readonly string ErrorDetail = "Octopus.Deployment.ErrorDetail";
 
