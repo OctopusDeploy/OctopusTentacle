@@ -401,6 +401,12 @@ namespace Octopus.Shared.Variables
             [Define(Category = VariableCategory.Action, Description = "If set by the user, completes processing of the action without runnning further conventions/scripts", Example = "True", Domain = VariableDomain.Boolean)] public static readonly string SkipRemainingConventions = "Octopus.Action.SkipRemainingConventions";
             [Define(Category = VariableCategory.Hidden)] public static readonly string EnabledFeatures = "Octopus.Action.EnabledFeatures";
 
+            public static class Status
+            {
+                [Define(Category = VariableCategory.Step, Description = "If the action failed because of an error, a description of the error", Example = "The server could not be contacted")] public static readonly string Error = "Octopus.Action.Status.Error";
+                [Define(Category = VariableCategory.Step, Description = "If the action failed because of an error, a full description of the error", Example = "System.Net.SocketException: The server could not be contacted (at ...)")] public static readonly string ErrorDetail = "Octopus.Action.Status.ErrorDetail";
+            }
+
             public static class Output
             {
                 [Define(Category = VariableCategory.Output, Pattern = "Octopus.Action[_name_].Output._property_", Description = "The results of calling `Set-OctopusVariable` during an action are exposed for use in other actions using this pattern", Example = "Octopus.Action[Website].Output.WarmUpResponseTime")] public static readonly string Prefix = "Octopus.Action.Output";
