@@ -86,7 +86,7 @@ namespace Octopus.Shared.Tasks
                         ex = e;
                         var root = e.UnpackFromContainers();
 
-                        if (root is TaskCanceledException || root is ThreadAbortException || root is OperationCanceledException)
+                        if (root is OperationCanceledException || root is ThreadAbortException)
                         {
                             // These happen as part of cancellation. It's enough to just return them, without logging them.
                         }
@@ -100,7 +100,7 @@ namespace Octopus.Shared.Tasks
                         CompleteTask(ex);
                     }
                 }
-                if (!IsPaused())
+                if (!IsPaused() || IsCancellationRequested)
                 {
                     log.Finish();
                 }
@@ -111,7 +111,7 @@ namespace Octopus.Shared.Tasks
         {
             using (log.WithinBlock(taskLogContext))
             {
-                if (cancel.IsCancellationRequested)
+                if (IsCancellationRequested)
                 {
                     return;
                 }
@@ -131,11 +131,11 @@ namespace Octopus.Shared.Tasks
             return isPaused;
         }
 
-        public void EnsureNotCancelled()
+        public void EnsureNotCanceled()
         {
             if (IsCancellationRequested)
             {
-                throw new TaskCanceledException("This task has been cancelled.");
+                throw new TaskCanceledException("This task has been canceled.");
             }
         }
 
