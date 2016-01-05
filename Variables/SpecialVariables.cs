@@ -421,10 +421,10 @@ namespace Octopus.Shared.Variables
             public static class Package
             {
                 public static readonly string ActionTypeName = "Octopus.TentaclePackage";
-                [Define(Category = VariableCategory.Action, Description = "The ID of the NuGet package being deployed", Example = "OctoFx.RateService")] public static readonly string NuGetPackageId = "Octopus.Action.Package.NuGetPackageId";
-                [Define(Category = VariableCategory.Action, Description = "The version of the NuGet package being deployed", Example = "1.2.3")] public static readonly string NuGetPackageVersion = "Octopus.Action.Package.NuGetPackageVersion";
+                [Define(Category = VariableCategory.Action, Description = "The ID of the package being deployed", Example = "OctoFx.RateService")] public static readonly string NuGetPackageId = "Octopus.Action.Package.NuGetPackageId";
+                [Define(Category = VariableCategory.Action, Description = "The version of the package being deployed", Example = "1.2.3")] public static readonly string NuGetPackageVersion = "Octopus.Action.Package.NuGetPackageVersion";
                 [Define(Category = VariableCategory.Action, Description = "If true, the package will be downloaded by the Tentacle, rather than pushed by the Octopus server", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string ShouldDownloadOnTentacle = "Octopus.Action.Package.DownloadOnTentacle";
-                [Define(Category = VariableCategory.Action, Description = "The ID of the NuGet feed from which the package being deployed was pulled", Example = "feeds-123")] public static readonly string NuGetFeedId = "Octopus.Action.Package.NuGetFeedId";
+                [Define(Category = VariableCategory.Action, Description = "The ID of the package feed from which the package being deployed was pulled", Example = "feeds-123")] public static readonly string NuGetFeedId = "Octopus.Action.Package.NuGetFeedId";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string UpdateIisWebsite = "Octopus.Action.Package.UpdateIisWebsite";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string UpdateIisWebsiteName = "Octopus.Action.Package.UpdateIisWebsiteName";
                 [Define(Category = VariableCategory.Action, Description = "If set, a specific directory to which the package will be copied after extraction", Example = "C:\\InetPub\\WWWRoot\\OctoFx")] public static readonly string CustomInstallationDirectory = "Octopus.Action.Package.CustomInstallationDirectory";
