@@ -49,7 +49,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Halibut, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.2.1.0.49\lib\Halibut.dll</HintPath>
+      <HintPath>..\packages\Halibut.2.1.0.52\lib\Halibut.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
