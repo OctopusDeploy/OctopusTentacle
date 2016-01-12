@@ -53,6 +53,11 @@ namespace Octopus.Shared.Variables
             return IsElementOf("Octopus.Action", variableName);
         }
 
+        public static bool IsActionOutputVariable(string variableName)
+        {
+            return variableName.StartsWith("Octopus.Action[_name_].Output");
+        }
+
         public static bool IsIndexedActionVariable(string variableName, string key)
         {
             return variableName.StartsWith("Octopus.Action[" + key + "]");
@@ -86,9 +91,11 @@ namespace Octopus.Shared.Variables
 
         public static string IndexActionVariableByKey(string variableName, string key)
         {
-            return !IsActionVariable(variableName)
-                ? variableName
-                : variableName.Replace("Octopus.Action.", "Octopus.Action[" + key + "].");
+            return IsActionVariable(variableName)
+                ? variableName.Replace("Octopus.Action.", "Octopus.Action[" + key + "].")
+                : IsActionOutputVariable(variableName)
+                    ? variableName.Replace("_name_", key)
+                    : variableName;
         }
 
         public static string IndexStepVariableByKey(string variableName, string key)
@@ -286,6 +293,7 @@ namespace Octopus.Shared.Variables
             [Define(Description = "Specific machines being targeted by the deployment, if any", Example = "machines-123,machines-124", Domain = VariableDomain.List)] public static readonly string SpecificMachines = "Octopus.Deployment.SpecificMachines";
             public static readonly string Machines = "Octopus.Deployment.Machines";
             [Define(Description = "The date and time at which the deployment was created", Example = "Tuesday 10th September 1:23 PM")] public static readonly string Created = "Octopus.Deployment.Created";
+            [Define(Description = "The UTC date and time at which the deployment was created", Example = "10/09/2015 3:23:00 AM +00:00")] public static readonly string CreatedUtc = "Octopus.Deployment.CreatedUtc";
             [Define(Description = "The error causing the deployment to fail, if any", Example = "Script returned exit code 123")] public static readonly string Error = "Octopus.Deployment.Error";
             [Define(Description = "A detailed description of the error causing the deployment to fail", Example = "System.IO.FileNotFoundException: file C:\\Missing.txt does not exist (at...)")] public static readonly string ErrorDetail = "Octopus.Deployment.ErrorDetail";
 
@@ -392,6 +400,12 @@ namespace Octopus.Shared.Variables
             [Define(Category = VariableCategory.Action, Description = "Whether or not the action has been skipped in the current deployment", Example = "True", Domain = VariableDomain.Boolean)] public static readonly string IsSkipped = "Octopus.Action.IsSkipped";
             [Define(Category = VariableCategory.Action, Description = "If set by the user, completes processing of the action without runnning further conventions/scripts", Example = "True", Domain = VariableDomain.Boolean)] public static readonly string SkipRemainingConventions = "Octopus.Action.SkipRemainingConventions";
             [Define(Category = VariableCategory.Hidden)] public static readonly string EnabledFeatures = "Octopus.Action.EnabledFeatures";
+
+            public static class Status
+            {
+                [Define(Category = VariableCategory.Step, Description = "If the action failed because of an error, a description of the error", Example = "The server could not be contacted")] public static readonly string Error = "Octopus.Action.Status.Error";
+                [Define(Category = VariableCategory.Step, Description = "If the action failed because of an error, a full description of the error", Example = "System.Net.SocketException: The server could not be contacted (at ...)")] public static readonly string ErrorDetail = "Octopus.Action.Status.ErrorDetail";
+            }
 
             public static class Output
             {
@@ -558,6 +572,7 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Azure WebApp name", Example = "AcmeOnline")] public static readonly string WebAppName = "Octopus.Action.Azure.WebAppName";
                 [Define(Category = VariableCategory.Action, Description = "Remove additional files on the destination that are not part of the deployment", Example = "False")] public static readonly string RemoveAdditionalFiles = "Octopus.Action.Azure.RemoveAdditionalFiles";
                 [Define(Category = VariableCategory.Action, Description = "Do not remove the contents of the App_Data folder", Example = "False")] public static readonly string PreserveAppData = "Octopus.Action.Azure.PreserveAppData";
+                [Define(Category = VariableCategory.Action, Description = "Apply App Offline web deploy rule", Example = "False")] public static readonly string AppOffline = "Octopus.Action.Azure.AppOffline";
                 [Define(Category = VariableCategory.Action, Description = "Physical path relative to site root", Example = "one\\two")] public static readonly string PhysicalPath = "Octopus.Action.Azure.PhysicalPath";
 
                 [Define(Category = VariableCategory.Action, Description = "Azure Cloud Service name", Example = "AcmeService")] public static readonly string CloudServiceName = "Octopus.Action.Azure.CloudServiceName";

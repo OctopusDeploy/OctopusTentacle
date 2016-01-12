@@ -29,7 +29,7 @@ namespace Octopus.Shared.Tasks
                 }
                 catch (Exception ex)
                 {
-                    if (ex is TaskCanceledException || ex is OperationCanceledException)
+                    if (ex is OperationCanceledException)
                     {
                         log.Info(ex.Message);
                     } else if (ex is ControlledFailureException)
