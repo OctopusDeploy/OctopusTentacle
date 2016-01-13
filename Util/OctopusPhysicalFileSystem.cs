@@ -502,6 +502,11 @@ namespace Octopus.Shared.Util
 
         public bool EqualHash(Stream first, Stream second)
         {
+            if (first == null || second == null)
+            {
+                return false;
+            }
+
             first.Seek(0, SeekOrigin.Begin);
             second.Seek(0, SeekOrigin.Begin);
 
