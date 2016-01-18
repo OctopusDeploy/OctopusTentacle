@@ -190,7 +190,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/tasks/{id}";
                 public static string Details = "~/api/tasks/{id}/details{?verbose,tail}";
                 public static string Raw = "~/api/tasks/{id}/raw";
-                public static string QueuedBehind = "~/api/tasks/{id}/queued-behind";
+                public static string QueuedBehind = "~/api/tasks/{id}/queued-behind{?skip}";
                 public static string Rerun = "~/api/tasks/rerun/{id}";
                 public static string Cancel = "~/api/tasks/{id}/cancel";
             }
