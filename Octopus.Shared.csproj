@@ -48,8 +48,8 @@
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut, Version=2.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.2.0.1.45\lib\Halibut.dll</HintPath>
+    <Reference Include="Halibut, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Halibut.2.2.0.53\lib\Halibut.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -137,9 +137,8 @@
     <Compile Include="Diagnostics\ProgressMessageCategory.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="Model\EncryptedAttribute.cs" />
-    <Compile Include="Packages\IPackageExtractor.cs" />
-    <Compile Include="Packages\LightweightPackageExtractor.cs" />
-    <Compile Include="Packages\PackageExtractionModule.cs" />
+    <Compile Include="Packages\IPackageInstaller.cs" />
+    <Compile Include="Packages\LightweightPackageInstaller.cs" />
     <Compile Include="Pipeline\IPipelineComponent.cs" />
     <Compile Include="Pipeline\IPipelineConsumer.cs" />
     <Compile Include="Pipeline\IPipelineConsumerProducer.cs" />

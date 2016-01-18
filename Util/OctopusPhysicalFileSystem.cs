@@ -195,13 +195,11 @@ namespace Octopus.Shared.Util
                 throw;
             }
         }
-
-        public Stream CreateTemporaryFile(string extension, out string path)
+        
+        public Stream CreateTemporaryFile(string filename, out string path)
         {
-            if (!extension.StartsWith("."))
-                extension = "." + extension;
-
-            path = Path.Combine(GetTempBasePath(), Guid.NewGuid() + extension);
+            path = Path.Combine(GetTempBasePath(), filename);
+            DeleteFile(path);
 
             return OpenFile(path, FileAccess.ReadWrite, FileShare.Read);
         }
@@ -504,6 +502,11 @@ namespace Octopus.Shared.Util
 
         public bool EqualHash(Stream first, Stream second)
         {
+            if (first == null || second == null)
+            {
+                return false;
+            }
+
             first.Seek(0, SeekOrigin.Begin);
             second.Seek(0, SeekOrigin.Begin);
 

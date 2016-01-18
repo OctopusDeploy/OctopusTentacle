@@ -2,6 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web.SessionState;
+using NLog;
 
 namespace Octopus.Shared.Web
 {
@@ -27,6 +28,7 @@ namespace Octopus.Shared.Web
                     public static string CloudServices = "~/api/accounts/{id}/cloudServices";
                     public static string StorageAccounts = "~/api/accounts/{id}/storageAccounts";
                     public static string WebSites = "~/api/accounts/{accountId}/websites";
+                    public static string ResourceGroups = "~/api/accounts/{id}/resourceGroups";
                 }
             }
 
@@ -188,7 +190,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/tasks/{id}";
                 public static string Details = "~/api/tasks/{id}/details{?verbose,tail}";
                 public static string Raw = "~/api/tasks/{id}/raw";
-                public static string QueuedBehind = "~/api/tasks/{id}/queued-behind";
+                public static string QueuedBehind = "~/api/tasks/{id}/queued-behind{?skip}";
                 public static string Rerun = "~/api/tasks/rerun/{id}";
                 public static string Cancel = "~/api/tasks/{id}/cancel";
             }
@@ -334,6 +336,7 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/channels{/id}";
                 public static string Get = "~/api/channels/{id}";
                 public static string VersionRuleTest = "~/api/channels/rule-test{?version,versionRange,preReleaseTag}";
+                public static string GetReleases = "~/api/channels/{id}/releases{?skip}";
             }
         }
 
