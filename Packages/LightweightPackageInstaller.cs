@@ -13,35 +13,36 @@ namespace Octopus.Shared.Packages
     /// This class simply uses the packaging API's directly to extract, and only uses 6mb and takes 10 seconds on the
     /// same 180mb file.
     /// </summary>
-    public class LightweightPackageExtractor : IPackageExtractor
+    public class LightweightPackageInstaller : IPackageInstaller
     {
-        static readonly string[] ExcludePaths = {"_rels", "package\\services\\metadata"};
+        static readonly string[] ExcludePaths = {"_rels", Path.Combine("package", "services", "metadata")};
         readonly IOctopusFileSystem fileSystem;
 
-        public LightweightPackageExtractor(IOctopusFileSystem fileSystem)
+        public LightweightPackageInstaller(IOctopusFileSystem fileSystem)
         {
             this.fileSystem = fileSystem;
         }
 
-        public void Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
+
+        public int Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning)
         {
             using (var package = Package.Open(packageFile, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                Install(package, directory, log, suppressNestedScriptWarning, out filesExtracted);
+                return Install(package, directory, log, suppressNestedScriptWarning);
             }
         }
 
-        public void Install(Stream packageStream, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
+        public int Install(Stream packageStream, string directory, ILog log, bool suppressNestedScriptWarning)
         {
             using (var package = Package.Open(packageStream, FileMode.Open, FileAccess.Read))
             {
-                Install(package, directory, log, suppressNestedScriptWarning, out filesExtracted);
+                return Install(package, directory, log, suppressNestedScriptWarning);
             }
         }
 
-        void Install(Package package, string directory, ILog log, bool suppressNestedScriptWarning, out int filesExtracted)
+        int Install(Package package, string directory, ILog log, bool suppressNestedScriptWarning)
         {
-            filesExtracted = 0;
+           var  filesExtracted = 0;
 
             var files =
                 from part in package.GetParts()
@@ -70,6 +71,7 @@ namespace Octopus.Shared.Packages
                     fileStream.Flush();
                 }
             }
+            return filesExtracted;
         }
 
         void WarnIfScriptInSubFolder(string path, ILog log)
@@ -95,7 +97,7 @@ namespace Octopus.Shared.Packages
         {
             var path = UriUtility.GetPath(part.Uri);
             return !ExcludePaths.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)) &&
-                !PackageUtility.IsManifest(path);
+                !IsManifest(path);
         }
 
         static class UriUtility
@@ -111,13 +113,10 @@ namespace Octopus.Shared.Packages
             }
         }
 
-        static class PackageUtility
+        public static bool IsManifest(string path)
         {
-            public static bool IsManifest(string path)
-            {
-                var extension = Path.GetExtension(path);
-                return extension != null && extension.Equals(".nuspec", StringComparison.OrdinalIgnoreCase);
-            }
+            var extension = Path.GetExtension(path);
+            return extension != null && extension.Equals(".nuspec", StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion

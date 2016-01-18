@@ -421,10 +421,10 @@ namespace Octopus.Shared.Variables
             public static class Package
             {
                 public static readonly string ActionTypeName = "Octopus.TentaclePackage";
-                [Define(Category = VariableCategory.Action, Description = "The ID of the NuGet package being deployed", Example = "OctoFx.RateService")] public static readonly string NuGetPackageId = "Octopus.Action.Package.NuGetPackageId";
-                [Define(Category = VariableCategory.Action, Description = "The version of the NuGet package being deployed", Example = "1.2.3")] public static readonly string NuGetPackageVersion = "Octopus.Action.Package.NuGetPackageVersion";
+                [Define(Category = VariableCategory.Action, Description = "The ID of the package being deployed", Example = "OctoFx.RateService")] public static readonly string NuGetPackageId = "Octopus.Action.Package.NuGetPackageId";
+                [Define(Category = VariableCategory.Action, Description = "The version of the package being deployed", Example = "1.2.3")] public static readonly string NuGetPackageVersion = "Octopus.Action.Package.NuGetPackageVersion";
                 [Define(Category = VariableCategory.Action, Description = "If true, the package will be downloaded by the Tentacle, rather than pushed by the Octopus server", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string ShouldDownloadOnTentacle = "Octopus.Action.Package.DownloadOnTentacle";
-                [Define(Category = VariableCategory.Action, Description = "The ID of the NuGet feed from which the package being deployed was pulled", Example = "feeds-123")] public static readonly string NuGetFeedId = "Octopus.Action.Package.NuGetFeedId";
+                [Define(Category = VariableCategory.Action, Description = "The ID of the package feed from which the package being deployed was pulled", Example = "feeds-123")] public static readonly string NuGetFeedId = "Octopus.Action.Package.NuGetFeedId";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string UpdateIisWebsite = "Octopus.Action.Package.UpdateIisWebsite";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string UpdateIisWebsiteName = "Octopus.Action.Package.UpdateIisWebsiteName";
                 [Define(Category = VariableCategory.Action, Description = "If set, a specific directory to which the package will be copied after extraction", Example = "C:\\InetPub\\WWWRoot\\OctoFx")] public static readonly string CustomInstallationDirectory = "Octopus.Action.Package.CustomInstallationDirectory";
@@ -558,6 +558,9 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string PowerShellActionTypeName = "Octopus.AzurePowerShell";
 
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string ResourceGroupActionTypeName = "Octopus.AzureResourceGroup";
+
                 [Define(Category = VariableCategory.Action, Description = "The ID of the Octopus Azure subscription account", Example = "accounts-1")]
                 public static readonly string AccountId = "Octopus.Action.Azure.AccountId";
 
@@ -566,6 +569,9 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Hidden)] public static readonly string PackageExtractionPath = "Octopus.Action.Azure.PackageExtractionPath";
                 [Define(Category = VariableCategory.Action, Description = "Azure account subscription ID", Example = "42d91e16-206f-4a14-abd2-24791cbbc522")] public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";
+                [Define(Category = VariableCategory.Action, Description = "Azure AD application client ID", Example = "8104d344-fb8f-4a49-ba1a-a6df0790f302")] public static readonly string ClientId = "Octopus.Action.Azure.ClientId";
+                [Define(Category = VariableCategory.Action, Description = "Azure AD application tenant ID", Example = "b87c0ac7-dadf-4842-8a5f-3ba5da9ee8ba")] public static readonly string TenantId = "Octopus.Action.Azure.TenantId";
+                [Define(Category = VariableCategory.Action, Description = "Azure AD application password", Example = "correct horse battery staple")] public static readonly string Password = "Octopus.Action.Azure.Password";
                 [Define(Category = VariableCategory.Action, Description = "Thumprint of the certificate used for Azure authentication ", Example = "0320C45A19F9FAE120356EAB95AB2377C19FF3E2")] public static readonly string CertificateThumbprint = "Octopus.Action.Azure.CertificateThumbprint";
                 [Define(Category = VariableCategory.Action, Description = "Base64-encoded certificate used for Azure authentication", Example = "no example provided")] public static readonly string CertificateBytes = "Octopus.Action.Azure.CertificateBytes";
 
@@ -582,6 +588,11 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Replace instance counts in configuration file with those currently configured in Azure portal", Example = "False")] public static readonly string UseCurrentInstanceCount = "Octopus.Action.Azure.UseCurrentInstanceCount";
                 [Define(Category = VariableCategory.Action, Description = "Log extracted Cloud Service Package", Example="False")] public static readonly string LogExtractedCspkg = "Octopus.Action.Azure.LogExtractedCspkg";
                 [Define(Category = VariableCategory.Action, Description = "Relative path to the *.cscfg file", Example = "AcmeService-Production.cscfg")][DeprecatedAlias("OctopusAzureConfigurationFileName")] public static readonly string CloudServiceConfigurationFileRelativePath = "Octopus.Action.Azure.CloudServiceConfigurationFileRelativePath";
+
+                [Define(Category = VariableCategory.Action, Description = "Resource Group Name", Example = "AcmeResources")] public static readonly string ResourceGroupName = "Octopus.Action.Azure.ResourceGroupName";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string TemplateSource = "Octopus.Action.Azure.TemplateSource";
+                [Define(Category = VariableCategory.Action, Description = "Resource Group template JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplate = "Octopus.Action.Azure.ResourceGroupTemplate";
+                [Define(Category = VariableCategory.Action, Description = "Resource Group template parameter JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplateParameters = "Octopus.Action.Azure.ResourceGroupTemplateParameters";
             }
         }
     }
