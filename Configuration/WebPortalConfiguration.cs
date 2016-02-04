@@ -77,6 +77,12 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Octopus.WebPortal.CorsWhitelist", value); }
         }
 
+        public string XFrameOptionAllowFrom
+        {
+            get { return settings.Get("Octopus.WebPortal.XFrameOptionAllowFrom", string.Empty); }
+            set { settings.Set("Octopus.WebPortal.XFrameOptionAllowFrom", value); }
+        }
+
         /// <summary>
         /// Gets or sets the authentication scheme to use when authentication Domain users.
         /// </summary>

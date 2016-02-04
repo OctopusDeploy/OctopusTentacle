@@ -43,6 +43,11 @@ namespace Octopus.Shared.Configuration
         string CorsWhitelist { get; set; }
 
         /// <summary>
+        /// Gets or sets a uri to be provided in the X-Frame-Options header ALLOW-FROM uri. The absence of a uri implies DENY will be used.
+        /// </summary>
+        string XFrameOptionAllowFrom { get; set; }
+
+        /// <summary>
         /// Gets or sets the authentication scheme to use when authentication Domain users.
         /// </summary>
         AuthenticationSchemes AuthenticationScheme { get; set; }
