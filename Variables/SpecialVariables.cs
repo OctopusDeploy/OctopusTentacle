@@ -233,7 +233,7 @@ namespace Octopus.Shared.Variables
             public static class Channel
             {
                 [Define(Description = "The ID of the channel", Example = "Channels-122")] public static string Id = "Octopus.Release.Channel.Id";
-                [Define(Description = "The ID of the channel", Example = "Channels-122")] public static string Name = "Octopus.Release.Channel.Name";
+                [Define(Description = "The name of the channel", Example = "Channels-122")] public static string Name = "Octopus.Release.Channel.Name";
             }
         }
 
