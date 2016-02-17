@@ -199,8 +199,14 @@ namespace Octopus.Shared.Util
         public Stream CreateTemporaryFile(string filename, out string path)
         {
             path = Path.Combine(GetTempBasePath(), filename);
-            DeleteFile(path);
+            var dir = Path.GetDirectoryName(path);
 
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            DeleteFile(path);
             return OpenFile(path, FileAccess.ReadWrite, FileShare.Read);
         }
 
@@ -208,12 +214,7 @@ namespace Octopus.Shared.Util
         {
             var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             path = Path.Combine(path, Assembly.GetEntryAssembly() != null ? Assembly.GetEntryAssembly().GetName().Name : "Octopus");
-            path = Path.Combine(path, "Temp");
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-            return path;
+            return Path.Combine(path, "Temp");
         }
 
         public string CreateTemporaryDirectory()
