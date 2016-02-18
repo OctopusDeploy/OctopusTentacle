@@ -501,11 +501,6 @@ namespace Octopus.Shared.Variables
                 public static readonly string ScriptSource = "Octopus.Action.Script.ScriptSource";
             }
 
-            public static class ServerScript
-            {
-                public static readonly string ActionTypeName = "Octopus.ServerScript";
-            }
-
             public static class Manual
             {
                 public static readonly string ActionTypeName = "Octopus.Manual";
