@@ -12,6 +12,6 @@ namespace Octopus.Shared.Variables
         public const string TentacleJournal = "TentacleJournal";
         public const string TentacleInstanceName = "TentacleInstanceName";
         public const string TentacleExecutablePath = "TentacleExecutablePath";
-        public const int DefaultMinutesToDeleteOfflineTransientMachines = 60;
+        public const int DefaultHoursToDeleteOfflineTransientMachines = 2;
     }
 }
