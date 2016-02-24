@@ -511,15 +511,18 @@ namespace Octopus.Shared.Util
             first.Seek(0, SeekOrigin.Begin);
             second.Seek(0, SeekOrigin.Begin);
 
-            var firstHash = MD5.Create().ComputeHash(first);
-            var secondHash = MD5.Create().ComputeHash(second);
-
-            for (var i = 0; i < firstHash.Length; i++)
+            using (var cryptoProvider = new SHA1CryptoServiceProvider())
             {
-                if (firstHash[i] != secondHash[i])
-                    return false;
+                var firstHash = cryptoProvider.ComputeHash(first);
+                var secondHash = cryptoProvider.ComputeHash(second);
+
+                for (var i = 0; i < firstHash.Length; i++)
+                {
+                    if (firstHash[i] != secondHash[i])
+                        return false;
+                }
+                return true;
             }
-            return true;
         }
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
