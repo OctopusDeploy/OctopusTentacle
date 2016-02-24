@@ -410,9 +410,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Endpoints\Discovery\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="TransientFaultHandling\License.txt" />
   </ItemGroup>
