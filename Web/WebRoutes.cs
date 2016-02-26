@@ -350,6 +350,13 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/tenants/{id}";
                 public static string Index = "~/api/tenants{?skip}";
             }
+
+            public static class TagSets
+            {
+                public static string Template = "~/api/tagsets/{id}";
+                public static string Get = "~/api/tagsets/{id}";
+                public static string Index = "~/api/tagsets{?skip}";
+            }
         }
 
         public static class Web
