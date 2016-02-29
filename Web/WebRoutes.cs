@@ -400,19 +400,30 @@ namespace Octopus.Shared.Web
                 // compute it here.
                 public static string Gravatar(string email)
                 {
-                    return "https://www.gravatar.com/avatar/" + HexMd5(email.Trim().ToLowerInvariant()) + "?d=blank";
+                    string hexMd5;
+                    var gravatarHash = TryHexMd5(email.Trim().ToLowerInvariant(), out hexMd5) ? hexMd5 : "00000000000000000000000000000000";
+                    return "https://www.gravatar.com/avatar/" + gravatarHash + "?d=blank";
                 }
 
-                static string HexMd5(string s)
+                static bool TryHexMd5(string s, out string hexMd5)
                 {
-                    var md5 = MD5.Create();
-                    var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(s));
-                    var result = new StringBuilder();
-                    foreach (var b in hash)
+                    hexMd5 = null;
+                    try
                     {
-                        result.Append(b.ToString("x2"));
+                        var md5 = MD5.Create();
+                        var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(s));
+                        var result = new StringBuilder();
+                        foreach (var b in hash)
+                        {
+                            result.Append(b.ToString("x2"));
+                        }
+                        hexMd5 = result.ToString();
+                        return true;
                     }
-                    return result.ToString();
+                    catch
+                    {
+                        return false;
+                    }
                 }
             }
         }

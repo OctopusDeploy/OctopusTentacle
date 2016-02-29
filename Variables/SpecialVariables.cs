@@ -395,6 +395,7 @@ namespace Octopus.Shared.Variables
             [Define(Category = VariableCategory.Action, Description = "The sequence number of the action in the deployment process", Example = "5", Domain = VariableDomain.Number)] public static readonly string Number = "Octopus.Action.Number";
             [Define(Category = VariableCategory.Hidden)] public static readonly string IsTentacleDeployment = "Octopus.Action.IsTentacleDeployment";
             [Define(Category = VariableCategory.Hidden)] public static readonly string IsFtpDeployment = "Octopus.Action.IsFtpDeployment";
+            [Define(Category = VariableCategory.Action, Description = "Whether or not the action runs on the Octopus Server", Example = "True", Domain = VariableDomain.Boolean)] public static readonly string RunOnServer = "Octopus.Action.RunOnServer";
             [Define(Category = VariableCategory.Action, Description = "Machine roles targeted by the action", Example = "web-server,frontend", Domain = VariableDomain.List)] public static readonly string TargetRoles = "Octopus.Action.TargetRoles";
             [Define(Category = VariableCategory.Action, Description = "The maximum number of machines on which the action will concurrently execute", Example = "5", Domain = VariableDomain.Number)] public static readonly string MaxParallelism = "Octopus.Action.MaxParallelism";
             [Define(Category = VariableCategory.Action, Description = "Whether or not the action has been skipped in the current deployment", Example = "True", Domain = VariableDomain.Boolean)] public static readonly string IsSkipped = "Octopus.Action.IsSkipped";
@@ -498,11 +499,6 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "The script being run in a script step", Example = "Write-Host 'Hello!'")] public static readonly string ScriptBody = "Octopus.Action.Script.ScriptBody";
                 public static readonly string ScriptFileName = "Octopus.Action.Script.ScriptFileName";
                 public static readonly string ScriptSource = "Octopus.Action.Script.ScriptSource";
-            }
-
-            public static class ServerScript
-            {
-                public static readonly string ActionTypeName = "Octopus.ServerScript";
             }
 
             public static class Manual
