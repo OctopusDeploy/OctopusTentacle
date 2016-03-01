@@ -167,6 +167,13 @@ namespace Octopus.Shared.Web
                 public static string Projects = "~/api/lifecycles/{id}/projects";
             }
 
+            public static class HealthCheckPolicies
+            {
+                public static string Template = "~/api/healthcheckpolicies{/id}{?skip}";
+                public static string Index = "~/api/healthcheckpolicies{?skip}";
+                public static string Get = "~/api/healthcheckpolicies/{id}";
+            }
+
             public static class ProjectGroups
             {
                 public static string Template = "~/api/projectgroups{/id}{?skip}";
