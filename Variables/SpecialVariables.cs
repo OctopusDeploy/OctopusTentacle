@@ -578,7 +578,7 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Do not remove the contents of the App_Data folder", Example = "False")] public static readonly string PreserveAppData = "Octopus.Action.Azure.PreserveAppData";
                 [Define(Category = VariableCategory.Action, Description = "Apply App Offline web deploy rule", Example = "False")] public static readonly string AppOffline = "Octopus.Action.Azure.AppOffline";
                 [Define(Category = VariableCategory.Action, Description = "Physical path relative to site root", Example = "one\\two")] public static readonly string PhysicalPath = "Octopus.Action.Azure.PhysicalPath";
-                [Define(Category = VariableCategory.Action, Description = "Use file check-sum (rather than timestamp) when syncing files", Example = "False")] public static readonly string UseCheckSum = "Octopus.Action.Azure.UseCheckSum";
+                [Define(Category = VariableCategory.Action, Description = "Use file checksum (rather than timestamp) when syncing files", Example = "False")] public static readonly string UseChecksum = "Octopus.Action.Azure.UseChecksum";
 
                 [Define(Category = VariableCategory.Action, Description = "Azure Cloud Service name", Example = "AcmeService")] public static readonly string CloudServiceName = "Octopus.Action.Azure.CloudServiceName";
                 [Define(Category = VariableCategory.Action, Description = "Azure Storage Account name", Example = "AcmePackageStore")] public static readonly string StorageAccountName = "Octopus.Action.Azure.StorageAccountName";
