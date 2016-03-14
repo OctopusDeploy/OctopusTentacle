@@ -172,6 +172,7 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/machinepolicies{/id}{?skip}";
                 public static string Index = "~/api/machinepolicies{?skip}";
                 public static string Get = "~/api/machinepolicies/{id}";
+                public static string Machines = "~/api/machinepolicies/{id}/machines{?skip}";
             }
 
             public static class ProjectGroups
