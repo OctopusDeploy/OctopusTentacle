@@ -291,6 +291,7 @@ namespace Octopus.Shared.Variables
             [Define(Description = "User-provided comments on the deployment", Example = "Signed off by Alice")] public static readonly string Comments = "Octopus.Deployment.Comments";
             [Define(Description = "If true, the package will be freshly downloaded from the feed/repository regardless of whether it is already present on the endpoint", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string ForcePackageDownload = "Octopus.Deployment.ForcePackageDownload";
             [Define(Description = "Specific machines being targeted by the deployment, if any", Example = "machines-123,machines-124", Domain = VariableDomain.List)] public static readonly string SpecificMachines = "Octopus.Deployment.SpecificMachines";
+            [Define(Description = "Machines that were skipped during the deployment because they went offline", Example = "machines-123,machines-124", Domain = VariableDomain.List)] public static readonly string ExcludedMachines = "Octopus.Deployment.OfflineMachines";
             public static readonly string Machines = "Octopus.Deployment.Machines";
             [Define(Description = "The date and time at which the deployment was created", Example = "Tuesday 10th September 1:23 PM")] public static readonly string Created = "Octopus.Deployment.Created";
             [Define(Description = "The UTC date and time at which the deployment was created", Example = "10/09/2015 3:23:00 AM +00:00")] public static readonly string CreatedUtc = "Octopus.Deployment.CreatedUtc";
