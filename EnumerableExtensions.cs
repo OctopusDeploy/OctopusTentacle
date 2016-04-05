@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Octopus.Client.Model;
 
 namespace Octopus.Shared
 {
@@ -9,5 +11,11 @@ namespace Octopus.Shared
         {
             return source;
         }
+
+        public static ReferenceCollection ToReferenceCollection(this IEnumerable<string> source)
+        {
+            return new ReferenceCollection(source);
+        }
+
     }
 }
