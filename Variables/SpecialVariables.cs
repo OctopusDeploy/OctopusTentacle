@@ -40,6 +40,7 @@ namespace Octopus.Shared.Variables
         [Define(Category = VariableCategory.Hidden)] public static readonly string StagedPackageSize = "StagedPackage.Size";
         [Define(Category = VariableCategory.Hidden)] public static readonly string StagedPackageFullPathOnRemoteMachine = "StagedPackage.FullPathOnRemoteMachine";
         [Define(Category = VariableCategory.Hidden)] public static readonly string HasLatestCalamariVersion = "HasLatestCalamariVersion";
+        [Define(Category = VariableCategory.Hidden)] public static readonly string HasWarnings = "HasWarnings";
 
         static SpecialVariables()
         {
