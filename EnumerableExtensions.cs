@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Octopus.Client.Model;
 
 namespace Octopus.Shared
@@ -16,6 +14,5 @@ namespace Octopus.Shared
         {
             return new ReferenceCollection(source);
         }
-
     }
 }
