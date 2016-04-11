@@ -595,6 +595,11 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Resource Group template JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplate = "Octopus.Action.Azure.ResourceGroupTemplate";
                 [Define(Category = VariableCategory.Action, Description = "Resource Group template parameter JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplateParameters = "Octopus.Action.Azure.ResourceGroupTemplateParameters";
             }
+
+            public static class MachineEvaluation
+            {
+                public static readonly string ActionTypeName = "Octopus.MachineEvaluation";
+            }
         }
     }
 }
