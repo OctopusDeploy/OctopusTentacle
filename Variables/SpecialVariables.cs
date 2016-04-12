@@ -599,6 +599,7 @@ namespace Octopus.Shared.Variables
             public static class MachineEvaluation
             {
                 public static readonly string ActionTypeName = "Octopus.MachineEvaluation";
+                public static readonly string StatusSource = "Octopus.Action.MachineEvaluation.StatusSource";
             }
         }
     }
