@@ -448,7 +448,9 @@ namespace Octopus.Shared.Variables
                         Category = VariableCategory.Output,
                         Pattern = "Octopus.Action[_name_].Output.Package.InstallationDirectoryPath",
                         Example = "C:\\Octopus\\Tentacle\\Apps\\Production\\MyApp\\1.2.3",
-                        Description = "The directory to which the package was installed")] public static readonly string InstallationDirectoryPath = "Package.InstallationDirectoryPath";
+                        Description = "The directory to which the package was installed")]
+                    [DeprecatedAlias("Package.InstallationDirectoryPath")]
+                    public static readonly string InstallationDirectoryPath = "Octopus.Action.Package.InstallationDirectoryPath";
                 }
 
                 public static class Ssh
