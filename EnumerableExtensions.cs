@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Octopus.Client.Model;
 
 namespace Octopus.Shared
 {
@@ -8,6 +8,11 @@ namespace Octopus.Shared
         public static IEnumerable<T> ToEnumerable<T>(this IEnumerable<T> source)
         {
             return source;
+        }
+
+        public static ReferenceCollection ToReferenceCollection(this IEnumerable<string> source)
+        {
+            return new ReferenceCollection(source);
         }
     }
 }
