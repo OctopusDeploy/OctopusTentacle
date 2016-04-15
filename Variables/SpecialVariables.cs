@@ -600,6 +600,7 @@ namespace Octopus.Shared.Variables
             {
                 public static readonly string ActionTypeName = "Octopus.MachineEvaluation";
                 public static readonly string StatusSource = "Octopus.Action.MachineEvaluation.StatusSource";
+                public static readonly string SkipMachines = "Octopus.Action.MachineEvaluation.SkipMachines";
             }
         }
     }
