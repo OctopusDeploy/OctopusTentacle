@@ -201,6 +201,7 @@ namespace Octopus.Shared.Variables
             public static readonly string CommunicationStyle = "Octopus.Machine.CommunicationStyle";
         }
 
+
         public static class Account
         {
             [Define(Description = "The name of the account", Example = "OctopusDeployAdmin")] public static readonly string Name = "Octopus.Account.Name";
@@ -309,6 +310,13 @@ namespace Octopus.Shared.Variables
             public static class PreviousSuccessful
             {
                 [Define(Description = "The ID of the previous successful deployment of this project in the target environment", Example = "deployments-122")] public static string Id = "Octopus.Deployment.PreviousSuccessful.Id";
+            }
+
+            public static class Tenant
+            {
+                [Define(Description = "The ID of the tenant", Example = "Tenants-122")] public static string Id = "Octopus.Deployment.Tenant.Id";
+                [Define(Description = "The name of the tenant", Example = "Acme Corp.")] public static string Name = "Octopus.Deployment.Tenant.Name";
+                [Define(Description = "Comma delimited list of tags", Example = "Importance\\High, Feature\\Telephony", Domain = VariableDomain.List)] public static string Tags = "Octopus.Deployment.Tenant.Tags";
             }
         }
 
