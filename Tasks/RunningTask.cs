@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using Halibut;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
