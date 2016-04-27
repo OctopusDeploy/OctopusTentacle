@@ -192,8 +192,15 @@ namespace Octopus.Shared.Web
                 public static string Logo = "~/api/projects/{id}/logo";
                 public static string GetReleases = "~/api/projects/{id}/releases{/version}{?skip}";
                 public static string GetChannels = "~/api/projects/{id}/channels";
+                public static string GetTriggers = "~/api/projects/{id}/triggers";
                 public static string OrderChannels = "~/api/projects/{id}/channels/order";
                 public static string Pulse = "~/api/projects/pulse{?projectIds}";
+            }
+
+            public static class ProjectTriggers
+            {
+                public static string Template = "~/api/projecttriggers{/id}";
+                public static string Get = "~/api/projecttriggers/{id}";
             }
 
             public static class Tasks
