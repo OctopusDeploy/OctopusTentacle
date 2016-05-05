@@ -105,6 +105,13 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/teams/{id}";
             }
 
+            public static class Proxies
+            {
+                public static string Template = "~/api/proxies{/id}{?skip}";
+                public static string Index = "~/api/proxies{?skip}";
+                public static string Get = "~/api/proxies/{id}";
+            }
+
             public static class PermissionDescriptions
             {
                 public static string Template = "~/api/permissions/all";
