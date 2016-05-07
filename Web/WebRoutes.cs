@@ -359,6 +359,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/tenants/{id}";
                 public static string Index = "~/api/tenants{?skip}";
                 public static string Logo = "~/api/tenants/{id}/logo";
+                public static string Variables = "~/api/tenants/{id}/variables";
                 public static string TenantTagTest = "~/api/tenants/tag-test{?tenantIds,tags}";
             }
 
