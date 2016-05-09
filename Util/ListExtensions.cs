@@ -61,5 +61,10 @@ namespace Octopus.Shared.Util
             source.Clear();
             source.AddRange(itemsToAdd);
         }
+
+        public static IEnumerable<TElement> NotNull<TElement>(this IEnumerable<TElement> source)
+        {
+            return source.Where(item => item != null);
+        }
     }
 }
