@@ -1,4 +1,6 @@
 using System;
+using Halibut;
+using Octopus.Client;
 using Octopus.Client.Model;
 using Octopus.Shared.Util;
 
@@ -44,6 +46,11 @@ namespace Octopus.Shared.Configuration
         /// The URL used when connecting to the server, if available.
         /// </summary>
         public Uri Address { get; set; }
+
+        /// <summary>
+        /// The proxy configuration used when connecting to the server, if required.
+        /// </summary>
+        public OctopusProxyConfiguration Proxy { get; set; }
 
         /// <summary>
         /// The server's unique identifier.
