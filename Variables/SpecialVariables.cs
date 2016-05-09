@@ -800,8 +800,8 @@ namespace Octopus.Shared.Variables
             [Define(Category = VariableCategory.ProjectTrigger, Description = "Events targeted by the trigger", Example = "new-server-becomes-available,existing-server-changes-state", Domain = VariableDomain.List)]
             public static readonly string Events = "Octopus.ProjectTriggerCondition.Events";
 
-            [Define(Category = VariableCategory.ProjectTrigger, Description = "Step Ids excluded by the trigger", Example = "guid1,guid2", Domain = VariableDomain.List)]
-            public static readonly string StepIdsToExclude = "Octopus.ProjectTriggerCondition.StepIdsToExclude";
+            //[Define(Category = VariableCategory.ProjectTrigger, Description = "Step actions skipped by the trigger", Example = "guid1,guid2", Domain = VariableDomain.List)]
+            //public static readonly string StepActionsToSkip = "Octopus.ProjectTriggerCondition.StepActionsToSkip";
         }
     }
 }
