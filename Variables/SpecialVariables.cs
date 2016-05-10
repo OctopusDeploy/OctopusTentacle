@@ -781,11 +781,11 @@ namespace Octopus.Shared.Variables
                 public static readonly string ResourceGroupTemplateParameters = "Octopus.Action.Azure.ResourceGroupTemplateParameters";
             }
 
-            public static class MachineEvaluation
+            public static class HealthCheck
             {
-                public static readonly string ActionTypeName = "Octopus.MachineEvaluation";
-                public static readonly string StatusSource = "Octopus.Action.MachineEvaluation.StatusSource";
-                public static readonly string SkipMachines = "Octopus.Action.MachineEvaluation.SkipMachines";
+                public static readonly string ActionTypeName = "Octopus.HealthCheck";
+                public static readonly string StatusSource = "Octopus.Action.HealthCheck.StatusSource";
+                public static readonly string SkipMachines = "Octopus.Action.HealthCheck.SkipMachines";
             }
         }
 
