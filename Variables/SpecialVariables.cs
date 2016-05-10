@@ -798,7 +798,7 @@ namespace Octopus.Shared.Variables
             public static readonly string Environment = "Octopus.ProjectTriggerCondition.Environment";
 
             [Define(Category = VariableCategory.ProjectTrigger, Description = "Events targeted by the trigger", Example = "new-server-becomes-available", Domain = VariableDomain.List)]
-            public static readonly string Event = "Octopus.ProjectTriggerCondition.Event";
+            public static readonly string Events = "Octopus.ProjectTriggerCondition.Events";
         }
     }
 }
