@@ -1,4 +1,3 @@
-using System;
 using Halibut;
 using Newtonsoft.Json;
 
@@ -16,7 +15,6 @@ namespace Octopus.Shared.Contracts
             this.name = name;
             this.contents = contents;
             this.encryptionPassword = encryptionPassword;
-
         }
 
         public ScriptFile(string name, DataStream contents) : this(name, contents, null)
