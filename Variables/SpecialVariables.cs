@@ -791,17 +791,14 @@ namespace Octopus.Shared.Variables
 
         public static class ProjectTriggerCondition
         {
-            [Define(Category = VariableCategory.ProjectTrigger, Description = "Machine roles targeted by the trigger", Example = "web-server,frontend", Domain = VariableDomain.List)]
-            public static readonly string Roles = "Octopus.ProjectTriggerCondition.Roles";
+            [Define(Category = VariableCategory.ProjectTrigger, Description = "Machine roles targeted by the trigger", Example = "web-server", Domain = VariableDomain.List)]
+            public static readonly string Role = "Octopus.ProjectTriggerCondition.Role";
 
-            [Define(Category = VariableCategory.ProjectTrigger, Description = "Environments targeted by the trigger", Example = "Development,UAT", Domain = VariableDomain.List)]
-            public static readonly string Environments = "Octopus.ProjectTriggerCondition.Environments";
+            [Define(Category = VariableCategory.ProjectTrigger, Description = "Environments targeted by the trigger", Example = "Development", Domain = VariableDomain.List)]
+            public static readonly string Environment = "Octopus.ProjectTriggerCondition.Environment";
 
-            [Define(Category = VariableCategory.ProjectTrigger, Description = "Events targeted by the trigger", Example = "new-server-becomes-available,existing-server-changes-state", Domain = VariableDomain.List)]
-            public static readonly string Events = "Octopus.ProjectTriggerCondition.Events";
-
-            //[Define(Category = VariableCategory.ProjectTrigger, Description = "Step actions skipped by the trigger", Example = "guid1,guid2", Domain = VariableDomain.List)]
-            //public static readonly string StepActionsToSkip = "Octopus.ProjectTriggerCondition.StepActionsToSkip";
+            [Define(Category = VariableCategory.ProjectTrigger, Description = "Events targeted by the trigger", Example = "new-server-becomes-available", Domain = VariableDomain.List)]
+            public static readonly string Event = "Octopus.ProjectTriggerCondition.Event";
         }
     }
 }
