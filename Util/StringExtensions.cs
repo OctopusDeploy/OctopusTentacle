@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 // ReSharper disable CheckNamespace
@@ -41,5 +42,8 @@ namespace Octopus.Shared.Util
             if (items.Length == 1) return items[0];
             return string.Join(", ", items.Take(items.Length - 1)) + " and " + items.Last();
         }
+
+        public static string CommaSeperate(this IEnumerable<object> items) => string.Join(", ", items);
+        public static string NewLineSeperate(this IEnumerable<object> items) => string.Join(Environment.NewLine, items);
     }
 }
