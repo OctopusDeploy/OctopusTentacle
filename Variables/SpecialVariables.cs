@@ -784,8 +784,9 @@ namespace Octopus.Shared.Variables
             public static class HealthCheck
             {
                 public static readonly string ActionTypeName = "Octopus.HealthCheck";
-                public static readonly string StatusSource = "Octopus.Action.HealthCheck.StatusSource";
-                public static readonly string SkipMachines = "Octopus.Action.HealthCheck.SkipMachines";
+                public static readonly string Type = "Octopus.Action.HealthCheck.Type";
+                public static readonly string ErrorHandling = "Octopus.Action.HealthCheck.ErrorHandling";
+                public static readonly string NewDeploymentTargets = "Octopus.Action.HealthCheck.NewDeploymentTargets";
             }
         }
 
