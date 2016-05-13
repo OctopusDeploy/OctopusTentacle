@@ -250,7 +250,7 @@ namespace Octopus.Shared.Web
 
             public static class Progression
             {
-                public static string Get = "~/api/progression/{id}";
+                public static string Get = "~/api/progression/{id}{?aggregate}";
             }
 
             public static class DeploymentProcesses
