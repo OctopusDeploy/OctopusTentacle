@@ -132,6 +132,7 @@ namespace Octopus.Shared.Web
                 public static string GetDeployments = "~/api/releases/{id}/deployments{?skip}";
                 public static string DeploymentTemplate = "~/api/releases/{id}/deployments/template";
                 public static string DeploymentPreview = "~/api/releases/{id}/deployments/preview/{environment}";
+                public static string DeploymentTenantPreview = "~/api/releases/{id}/deployments/preview/{environment}/{tenant}";
                 public static string SnapshotVariables = "~/api/releases/{id}/snapshot-variables";
             }
 
@@ -217,7 +218,7 @@ namespace Octopus.Shared.Web
 
             public static class Events
             {
-                public static string Template = "~/api/events{/id}{?skip,regarding,modifier,user,from,to}";
+                public static string Template = "~/api/events{/id}{?skip,regarding,user,from,to}";
                 public static string Index = "~/api/events{?skip,regarding,user,from,to}";
                 public static string Get = "~/api/events/{id}";
             }
@@ -249,7 +250,7 @@ namespace Octopus.Shared.Web
 
             public static class Progression
             {
-                public static string Get = "~/api/progression/{id}";
+                public static string Get = "~/api/progression/{id}{?aggregate}";
             }
 
             public static class DeploymentProcesses
@@ -365,7 +366,9 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/tenants/{id}";
                 public static string Index = "~/api/tenants{?skip}";
                 public static string Logo = "~/api/tenants/{id}/logo";
+                public static string Variables = "~/api/tenants/{id}/variables";
                 public static string TenantTagTest = "~/api/tenants/tag-test{?tenantIds,tags}";
+                public static string MissingVariables = "/api/tenants/variables-missing{?tenantId,projectId,environmentId,includeDetails}";
             }
 
             public static class TagSets

@@ -55,5 +55,16 @@ namespace Octopus.Shared.Util
                 yield return item;
             }
         }
+
+        public static void ReplaceAll<TElement>(this ICollection<TElement> source, IEnumerable<TElement> itemsToAdd)
+        {
+            source.Clear();
+            source.AddRange(itemsToAdd);
+        }
+
+        public static IEnumerable<TElement> NotNull<TElement>(this IEnumerable<TElement> source)
+        {
+            return source.Where(item => item != null);
+        }
     }
 }
