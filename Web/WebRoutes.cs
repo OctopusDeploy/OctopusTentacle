@@ -216,6 +216,11 @@ namespace Octopus.Shared.Web
                 public static string Cancel = "~/api/tasks/{id}/cancel";
             }
 
+            public static class Scheduled
+            {
+                public static string Get = "~/api/scheduled/{name}{?verbose,tail}";
+            }
+
             public static class Events
             {
                 public static string Template = "~/api/events{/id}{?skip,regarding,user,from,to}";
