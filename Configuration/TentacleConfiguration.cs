@@ -18,14 +18,16 @@ namespace Octopus.Shared.Configuration
         readonly IHomeConfiguration home;
         readonly ICommunicationsConfiguration communicationsConfiguration;
         readonly ICertificateGenerator certificateGenerator;
+        readonly IProxyConfiguration proxyConfiguration;
         readonly ILog log = Log.Octopus();
 
-        public TentacleConfiguration(IKeyValueStore settings, IHomeConfiguration home, ICommunicationsConfiguration communicationsConfiguration, ICertificateGenerator certificateGenerator)
+        public TentacleConfiguration(IKeyValueStore settings, IHomeConfiguration home, ICommunicationsConfiguration communicationsConfiguration, ICertificateGenerator certificateGenerator, IProxyConfiguration proxyConfiguration)
         {
             this.settings = settings;
             this.home = home;
             this.communicationsConfiguration = communicationsConfiguration;
             this.certificateGenerator = certificateGenerator;
+            this.proxyConfiguration = proxyConfiguration;
 
             if (MasterKey == null)
             {
@@ -53,6 +55,11 @@ namespace Octopus.Shared.Configuration
         public IEnumerable<string> TrustedOctopusThumbprints
         {
             get { return TrustedOctopusServers.Select(s => s.Thumbprint); }
+        }
+
+        public IProxyConfiguration ProxyConfiguration
+        {
+            get { return proxyConfiguration; }
         }
 
         public int ServicesPortNumber
