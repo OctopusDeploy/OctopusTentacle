@@ -160,10 +160,12 @@ namespace Octopus.Shared.Configuration
             return result;
         }
 
-        bool AreEqual(OctopusServerConfiguration left, OctopusServerConfiguration right)
+        static bool AreEqual(OctopusServerConfiguration left, OctopusServerConfiguration right)
         {
-            return string.Compare(left.Thumbprint, right.Thumbprint, StringComparison.OrdinalIgnoreCase) == 0
-                && left.Address.Equals(right.Address);
+            var thumbprintsMatch = string.Compare(left.Thumbprint, right.Thumbprint, StringComparison.OrdinalIgnoreCase) == 0;
+            var addressesMatch = left.Address == right.Address;
+
+            return thumbprintsMatch && addressesMatch;
         }
 
         static string NormalizeSquid(string squid)
