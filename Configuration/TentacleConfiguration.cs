@@ -146,7 +146,7 @@ namespace Octopus.Shared.Configuration
 
             var all = TrustedOctopusServers.ToList();
 
-            var existing = all.SingleOrDefault(m => string.Compare(m.Thumbprint, machine.Thumbprint, StringComparison.OrdinalIgnoreCase) == 0);
+            var existing = all.SingleOrDefault(m => AreEqual(m, machine));
 
             if (existing != null)
             {
@@ -158,6 +158,14 @@ namespace Octopus.Shared.Configuration
             TrustedOctopusServers = all;
 
             return result;
+        }
+
+        static bool AreEqual(OctopusServerConfiguration left, OctopusServerConfiguration right)
+        {
+            var thumbprintsMatch = string.Compare(left.Thumbprint, right.Thumbprint, StringComparison.OrdinalIgnoreCase) == 0;
+            var addressesMatch = left.Address == right.Address;
+
+            return thumbprintsMatch && addressesMatch;
         }
 
         static string NormalizeSquid(string squid)
