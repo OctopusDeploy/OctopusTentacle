@@ -43,7 +43,9 @@ namespace Octopus.Shared.Configuration
                     var useDefaultCredentials = string.IsNullOrWhiteSpace(proxyConfiguration.Value.CustomProxyUsername);
 
                     proxy.Credentials = useDefaultCredentials
-                        ? useSystemProxy ? CredentialCache.DefaultNetworkCredentials : new NetworkCredential()
+                        ? useSystemProxy
+                            ? CredentialCache.DefaultNetworkCredentials
+                            : new NetworkCredential()
                         : new NetworkCredential(proxyConfiguration.Value.CustomProxyUsername, proxyConfiguration.Value.CustomProxyPassword);
 
                     WebRequest.DefaultWebProxy = proxy;

@@ -229,7 +229,6 @@
     <Compile Include="TransientFaultHandling\TransientErrorCatchAllStrategy.cs" />
     <Compile Include="TransientFaultHandling\TransientErrorIgnoreStrategy.cs" />
     <Compile Include="Util\IOUtil.cs" />
-    <Compile Include="Util\ProxyExtensions.cs" />
     <Compile Include="Util\SemanticVersionExtensions.cs" />
     <Compile Include="Util\StreamDisposalChain.cs" />
     <Compile Include="Caching\ICache.cs" />
