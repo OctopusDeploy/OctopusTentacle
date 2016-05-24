@@ -247,6 +247,7 @@ namespace Octopus.Shared.Web
             public static class Variables
             {
                 public static string Template = "~/api/variables{/id}";
+                public static string Index = "~/api/Variables{?skip,ids}";
                 public static string Get = "~/api/variables/{id}";
                 public static string ScopeValues = "~/api/variables/scope-values/{ownerId}";
                 public static string Names = "~/api/variables/names{?project,projectEnvironmentsFilter}";
@@ -307,8 +308,8 @@ namespace Octopus.Shared.Web
 
             public static class LibraryVariableSets
             {
-                public static string Template = "~/api/libraryvariablesets{/id}{?skip,contentType}";
-                public static string Index = "~/api/libraryvariablesets{?skip,contentType}";
+                public static string Template = "~/api/libraryvariablesets{/id}{?skip,contentType,ids}";
+                public static string Index = "~/api/libraryvariablesets{?skip,contentType,ids}";
                 public static string Get = "~/api/libraryvariablesets/{id}";
             }
 
@@ -367,13 +368,19 @@ namespace Octopus.Shared.Web
 
             public static class Tenants
             {
-                public static string Template = "~/api/tenants{/id}";
+                public static string Template = "~/api/tenants{/id}{?projectId}";
                 public static string Get = "~/api/tenants/{id}";
-                public static string Index = "~/api/tenants{?skip}";
+                public static string All = "~/api/tenants/all{?projectId}";
+                public static string Index = "~/api/tenants{?skip,projectId}";
                 public static string Logo = "~/api/tenants/{id}/logo";
                 public static string Variables = "~/api/tenants/{id}/variables";
                 public static string TenantTagTest = "~/api/tenants/tag-test{?tenantIds,tags}";
                 public static string MissingVariables = "/api/tenants/variables-missing{?tenantId,projectId,environmentId,includeDetails}";
+            }
+
+            public static class TenantVariables
+            {
+                public static string Template = "~/api/tenantvariables/all{?projectId}";
             }
 
             public static class TagSets
