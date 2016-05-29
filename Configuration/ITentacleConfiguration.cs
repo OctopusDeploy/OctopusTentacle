@@ -98,5 +98,11 @@ namespace Octopus.Shared.Configuration
         /// Gets the proxy used for communications.
         /// </summary>
         IProxyConfiguration ProxyConfiguration { get; }
+
+        /// <summary>
+        /// Gets the proxy used for halibut communications with the octopus server.
+        /// </summary>
+        IPollingProxyConfiguration PollingProxyConfiguration { get; }
+
     }
 }

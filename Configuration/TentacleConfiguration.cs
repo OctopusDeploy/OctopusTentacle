@@ -19,15 +19,23 @@ namespace Octopus.Shared.Configuration
         readonly ICommunicationsConfiguration communicationsConfiguration;
         readonly ICertificateGenerator certificateGenerator;
         readonly IProxyConfiguration proxyConfiguration;
+        readonly IPollingProxyConfiguration pollingProxyConfiguration;
         readonly ILog log = Log.Octopus();
 
-        public TentacleConfiguration(IKeyValueStore settings, IHomeConfiguration home, ICommunicationsConfiguration communicationsConfiguration, ICertificateGenerator certificateGenerator, IProxyConfiguration proxyConfiguration)
+        public TentacleConfiguration(
+            IKeyValueStore settings,
+            IHomeConfiguration home, 
+            ICommunicationsConfiguration communicationsConfiguration,
+            ICertificateGenerator certificateGenerator, 
+            IProxyConfiguration proxyConfiguration,
+            IPollingProxyConfiguration pollingProxyConfiguration)
         {
             this.settings = settings;
             this.home = home;
             this.communicationsConfiguration = communicationsConfiguration;
             this.certificateGenerator = certificateGenerator;
             this.proxyConfiguration = proxyConfiguration;
+            this.pollingProxyConfiguration = pollingProxyConfiguration;
 
             if (MasterKey == null)
             {
@@ -60,6 +68,11 @@ namespace Octopus.Shared.Configuration
         public IProxyConfiguration ProxyConfiguration
         {
             get { return proxyConfiguration; }
+        }
+
+        public IPollingProxyConfiguration PollingProxyConfiguration
+        {
+            get { return pollingProxyConfiguration; }
         }
 
         public int ServicesPortNumber

@@ -33,4 +33,10 @@ namespace Octopus.Shared.Configuration
         /// </summary>
         int CustomProxyPort { get; set; }
     }
+
+    /// <summary>
+    /// Tentacle settings for the proxy that is used to communicate with Octopus.
+    /// </summary>
+    public interface IPollingProxyConfiguration : IProxyConfiguration
+    { }
 }

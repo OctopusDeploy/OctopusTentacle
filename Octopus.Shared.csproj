@@ -103,6 +103,7 @@
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\IWebPortalConfiguration.cs" />
     <Compile Include="Configuration\OctopusServerConfiguration.cs" />
+    <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Contracts\IFileTransferService.cs" />
     <Compile Include="Contracts\IScriptService.cs" />
     <Compile Include="Contracts\ScriptFile.cs" />
