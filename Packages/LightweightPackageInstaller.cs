@@ -16,13 +16,13 @@ namespace Octopus.Shared.Packages
     public class LightweightPackageInstaller : IPackageInstaller
     {
         static readonly string[] ExcludePaths = {"_rels", Path.Combine("package", "services", "metadata")};
-        readonly IOctopusFileSystem fileSystem;
 
         public LightweightPackageInstaller(IOctopusFileSystem fileSystem)
         {
-            this.fileSystem = fileSystem;
+            FileSystem = fileSystem;
         }
 
+        protected IOctopusFileSystem FileSystem { get; }
 
         public int Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning)
         {
@@ -62,7 +62,7 @@ namespace Octopus.Shared.Packages
                 path = Path.Combine(directory, path);
 
                 var parent = Path.GetDirectoryName(path);
-                fileSystem.EnsureDirectoryExists(parent);
+                FileSystem.EnsureDirectoryExists(parent);
 
                 using (var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
                 using (var stream = part.GetStream())
