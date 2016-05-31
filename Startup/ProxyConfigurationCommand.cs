@@ -46,6 +46,10 @@ namespace Octopus.Shared.Startup
             Options.Add("proxyHost=", "The proxy host to use. Leave empty to use the default Internet Explorer proxy", v => QueueOperation(delegate
             {
                 hostSet = !string.IsNullOrWhiteSpace(v);
+                if (hostSet)
+                {
+                    v = new UriBuilder(v).Host;
+                }
                 proxyConfiguration.Value.CustomProxyHost = v;
                 if (useAProxy)
                 {

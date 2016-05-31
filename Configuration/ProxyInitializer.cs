@@ -38,7 +38,7 @@ namespace Octopus.Shared.Configuration
 
                     var proxy = useSystemProxy
                         ? WebRequest.GetSystemWebProxy()
-                        : BuildCustomProxy(proxyConfiguration.Value.CustomProxyHost, proxyConfiguration.Value.CustomProxyPort);
+                        : new WebProxy(new UriBuilder("http", proxyConfiguration.Value.CustomProxyHost, proxyConfiguration.Value.CustomProxyPort).Uri);
 
                     var useDefaultCredentials = string.IsNullOrWhiteSpace(proxyConfiguration.Value.CustomProxyUsername);
 
@@ -59,22 +59,6 @@ namespace Octopus.Shared.Configuration
             {
                 Log.Octopus().Warn(ex, "Unable to configure the proxy server: " + ex.Message);
             }
-        }
-
-        public static IWebProxy BuildCustomProxy(string hostname, int port)
-        {
-            var url = hostname;
-            if (!(url.StartsWith("http://") || url.StartsWith("https://")))
-            {
-                url = "http://" + url; //we don't use the http:// but Uri ctor needs it
-            }
-
-            if (!hostname.Replace("://", "").Contains(":"))
-            {
-                url = url + ":" + port;
-            }
-
-            return new WebProxy(new Uri(url));
         }
     }
 }
