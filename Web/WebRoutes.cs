@@ -75,7 +75,7 @@ namespace Octopus.Shared.Web
 
             public static class Machines
             {
-                public static string Template = "~/api/machines{/id}{?skip,thumbprint}";
+                public static string Template = "~/api/machines{/id}{?skip,thumbprint,deploymentId}";
                 public static string Index = "~/api/machines{?skip}";
                 public static string Get = "~/api/machines/{id}";
                 public static string GetConnection = "~/api/machines/{id}/connection";
