@@ -66,5 +66,10 @@ namespace Octopus.Shared.Util
         {
             return source.Where(item => item != null);
         }
+
+        public static IEnumerable<string> NotNullOrWhiteSpace(this IEnumerable<string> source)
+        {
+            return source.Where(item => !string.IsNullOrWhiteSpace(item));
+        }
     }
 }
