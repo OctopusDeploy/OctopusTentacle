@@ -257,7 +257,7 @@ namespace Octopus.Shared.Web
 
             public static class Progression
             {
-                public static string Get = "~/api/progression/{id}{?aggregate}";
+                public static string Get = "~/api/progression/{id}";
             }
 
             public static class DeploymentProcesses
@@ -269,7 +269,7 @@ namespace Octopus.Shared.Web
 
             public static class Dashboards
             {
-                public static string Template = "~/api/dashboard";
+                public static string Template = "~/api/dashboard{?projectId,releaseId,showAll}";
                 public static string DynamicTemplate = "~/api/dashboard/dynamic{?projects,environments,includePrevious}";
             }
 
