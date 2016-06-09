@@ -32,18 +32,19 @@ namespace Octopus.Shared.Configuration
 
             try
             {
-                if (proxyConfiguration.Value.UseDefaultProxy)
-                {
-                    var useSystemProxy = string.IsNullOrWhiteSpace(proxyConfiguration.Value.CustomProxyHost);
+                var useCustomProxy = proxyConfiguration.Value.UsingCustomProxy();
+                var useDefaultProxy = proxyConfiguration.Value.UseDefaultProxy;
 
-                    var proxy = useSystemProxy
+                if (useDefaultProxy || useCustomProxy)
+                {
+                    var proxy = useDefaultProxy
                         ? WebRequest.GetSystemWebProxy()
                         : new WebProxy(new UriBuilder("http", proxyConfiguration.Value.CustomProxyHost, proxyConfiguration.Value.CustomProxyPort).Uri);
 
                     var useDefaultCredentials = string.IsNullOrWhiteSpace(proxyConfiguration.Value.CustomProxyUsername);
 
                     proxy.Credentials = useDefaultCredentials
-                        ? useSystemProxy
+                        ? useDefaultProxy
                             ? CredentialCache.DefaultNetworkCredentials
                             : new NetworkCredential()
                         : new NetworkCredential(proxyConfiguration.Value.CustomProxyUsername, proxyConfiguration.Value.CustomProxyPassword);

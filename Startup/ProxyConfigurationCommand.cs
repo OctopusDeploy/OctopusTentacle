@@ -17,18 +17,19 @@ namespace Octopus.Shared.Startup
     {
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly List<Action> operations = new List<Action>();
+        readonly ILog log;
         bool hostSet;
         bool useAProxy;
+        string host;
 
         public ProxyConfigurationCommand(Lazy<IProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ILog log) : base(instanceSelector)
         {
             this.proxyConfiguration = proxyConfiguration;
+            this.log = log;
 
             Options.Add("proxyEnable=", "Whether to use a proxy", v => QueueOperation(delegate
             {
                 useAProxy = bool.Parse(v);
-                proxyConfiguration.Value.UseDefaultProxy = useAProxy;
-                log.Info("Use a proxy: " + v);
             }));
 
             Options.Add("proxyUsername=", "Username to use when authenticating with the proxy", v => QueueOperation(delegate
@@ -48,12 +49,7 @@ namespace Octopus.Shared.Startup
                 hostSet = !string.IsNullOrWhiteSpace(v);
                 if (hostSet)
                 {
-                    v = new UriBuilder(v).Host;
-                }
-                proxyConfiguration.Value.CustomProxyHost = v;
-                if (useAProxy)
-                {
-                    log.Info(string.IsNullOrWhiteSpace(v) ? "Using Internet Explorer Proxy" : "Proxy host set to: " + v);
+                    host = new UriBuilder(v).Host;
                 }
             }));
 
@@ -72,6 +68,21 @@ namespace Octopus.Shared.Startup
             base.Start();
 
             foreach (var operation in operations) operation();
+
+            if (useAProxy)
+            {
+                proxyConfiguration.Value.CustomProxyHost = hostSet ? host : null;
+                proxyConfiguration.Value.UseDefaultProxy = !hostSet;
+                log.Info(hostSet 
+                    ? "Using custom proxy at: " + host
+                    : "Using Internet Explorer Proxy");
+            }
+            else
+            {
+                proxyConfiguration.Value.CustomProxyHost = null;
+                proxyConfiguration.Value.UseDefaultProxy = false;
+                log.Info("Proxy use is disabled");
+            }
 
             proxyConfiguration.Value.Save();
         }

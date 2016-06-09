@@ -39,4 +39,22 @@ namespace Octopus.Shared.Configuration
     /// </summary>
     public interface IPollingProxyConfiguration : IProxyConfiguration
     { }
+
+    public static class ProxyConfigurationExtensions
+    {
+        public static bool ProxyEnabled(this IProxyConfiguration config)
+        {
+            return config.UseDefaultProxy || config.UsingCustomProxy();
+        }
+
+        public static bool ProxyDisabled(this IProxyConfiguration config)
+        {
+            return !config.ProxyEnabled();
+        }
+
+        public static bool UsingCustomProxy(this IProxyConfiguration config)
+        {
+            return !string.IsNullOrWhiteSpace(config.CustomProxyHost);
+        }
+    }
 }
