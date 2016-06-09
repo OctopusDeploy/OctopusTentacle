@@ -30,6 +30,18 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Octopus.Proxy.ProxyPassword", value, DataProtectionScope.LocalMachine); }
         }
 
+        public string CustomProxyHost
+        {
+            get { return settings.Get("Octopus.Proxy.ProxyHost", string.Empty); }
+            set { settings.Set("Octopus.Proxy.ProxyHost", value); }
+        }
+
+        public int CustomProxyPort
+        {
+            get { return settings.Get("Octopus.Proxy.ProxyPort", 80); }
+            set { settings.Set("Octopus.Proxy.ProxyPort", value); }
+        }
+
         public void Save()
         {
             settings.Save();

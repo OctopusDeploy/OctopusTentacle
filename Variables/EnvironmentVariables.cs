@@ -6,6 +6,8 @@ namespace Octopus.Shared.Variables
     {
         public const string TentacleProxyUsername = "TentacleProxyUsername";
         public const string TentacleProxyPassword = "TentacleProxyPassword";
+        public const string TentacleProxyHost = "TentacleProxyHost";
+        public const string TentacleProxyPort = "TentacleProxyPort";
         public const string TentacleVersion = "TentacleVersion";
         public const string TentacleHome = "TentacleHome";
         public const string TentacleApplications = "TentacleApplications";

@@ -93,5 +93,16 @@ namespace Octopus.Shared.Configuration
 
         X509Certificate2 GenerateNewCertificate();
         void ImportCertificate(X509Certificate2 certificate);
+
+        /// <summary>
+        /// Gets the proxy used for communications.
+        /// </summary>
+        IProxyConfiguration ProxyConfiguration { get; }
+
+        /// <summary>
+        /// Gets the proxy used for halibut communications with the octopus server.
+        /// </summary>
+        IPollingProxyConfiguration PollingProxyConfiguration { get; }
+
     }
 }
