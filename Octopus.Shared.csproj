@@ -229,6 +229,8 @@
     <Compile Include="TransientFaultHandling\TransientErrorCatchAllStrategy.cs" />
     <Compile Include="TransientFaultHandling\TransientErrorIgnoreStrategy.cs" />
     <Compile Include="Util\IOUtil.cs" />
+    <Compile Include="Util\Result.cs" />
+    <Compile Include="Util\ResultExtensions.cs" />
     <Compile Include="Util\StreamDisposalChain.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
