@@ -19,6 +19,11 @@ namespace Octopus.Shared.Security.Permissions
             }
         }
 
+        public AuthorizationScopeAssertion GetScopedAssertion(string scope)
+        {
+            return !scopeAssertions.ContainsKey(scope) ? null : scopeAssertions[scope];
+        }
+
         public bool SupportsRestrictions(RestrictedGrant restrictions)
         {
             foreach (var restrictionScope in restrictions.Scopes)

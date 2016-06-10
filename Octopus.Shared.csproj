@@ -137,6 +137,7 @@
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Diagnostics\LogContext.cs" />
     <Compile Include="Diagnostics\ProgressMessageCategory.cs" />
+    <Compile Include="Security\Permissions\IAuthorizationRequestProvider.cs" />
     <Compile Include="Util\CommonValidationMessages.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="Model\EncryptedAttribute.cs" />
