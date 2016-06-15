@@ -20,7 +20,12 @@ namespace Octopus.Shared.Security.Permissions
 
         public static IList<string> GetSupportedRestrictions(Permission permission)
         {
-            return Permissions[permission].Scopes;
+            return Permissions[permission].SupportsRestrictionAttribute?.Scopes ?? new List<string>();
+        }
+
+        public static bool ExplicitTenantScopeRequired(Permission permission)
+        {
+            return Permissions[permission].SupportsRestrictionAttribute?.ExplicitTenantScopeRequired ?? false;
         }
 
         public static string GetDescription(Permission permission)
@@ -33,22 +38,22 @@ namespace Octopus.Shared.Security.Permissions
                 .Cast<DescriptionAttribute>()
                 .SingleOrDefault()?.Description ?? t.Name;
 
-            var scopes = t.GetCustomAttributes(typeof(SupportsRestrictionAttribute), false)
+            var supportsRestrictionAttribute = t.GetCustomAttributes(typeof(SupportsRestrictionAttribute), false)
                 .Cast<SupportsRestrictionAttribute>()
-                .SingleOrDefault()?.Scopes ?? new List<string>();
+                .SingleOrDefault();
 
-            return new PermissionMetaData(name, scopes);
+            return new PermissionMetaData(name, supportsRestrictionAttribute);
         }
 
         class PermissionMetaData
         {
             public string Description { get; }
-            public IList<string> Scopes { get; }
+            public SupportsRestrictionAttribute SupportsRestrictionAttribute { get; }
 
-            public PermissionMetaData(string description, IList<string> scopes)
+            public PermissionMetaData(string description, SupportsRestrictionAttribute supportsRestrictionAttribute)
             {
                 Description = description;
-                Scopes = scopes;
+                SupportsRestrictionAttribute = supportsRestrictionAttribute;
             }
         }
     }
