@@ -39,6 +39,8 @@ namespace Octopus.Shared.Variables
         // but overridable by user
         [Define(Category = VariableCategory.Hidden)]
         public static readonly string UseGuidedFailure = "OctopusUseGuidedFailure";
+        [Define(Category = VariableCategory.Hidden)]
+        public static readonly string UseNakedScript = "OctopusUseNakedScript";
         // Set by Tentacle exclusively
         [Define(Category = VariableCategory.Hidden)]
         public static readonly string OriginalPackageDirectoryPath = "OctopusOriginalPackageDirectoryPath";
