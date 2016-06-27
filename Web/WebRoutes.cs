@@ -383,7 +383,7 @@ namespace Octopus.Shared.Web
                 public static string Logo = "~/api/tenants/{id}/logo";
                 public static string Variables = "~/api/tenants/{id}/variables";
                 public static string TenantTagTest = "~/api/tenants/tag-test{?tenantIds,tags}";
-                public static string MissingVariables = "/api/tenants/variables-missing{?tenantId,projectId,environmentId,includeDetails}";
+                public static string MissingVariables = "~/api/tenants/variables-missing{?tenantId,projectId,environmentId,includeDetails}";
             }
 
             public static class TenantVariables
