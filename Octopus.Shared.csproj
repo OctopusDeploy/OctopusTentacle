@@ -202,6 +202,7 @@
     <Compile Include="Security\Permissions\RestrictedGrant.cs" />
     <Compile Include="Security\Permissions\WildcardDocumentId.cs" />
     <Compile Include="Startup\AbstractMultiOperationCommand.cs" />
+    <Compile Include="Tasks\ActionFailedException.cs" />
     <Compile Include="Tasks\ActivityFailedException.cs" />
     <Compile Include="Tasks\ITaskContext.cs" />
     <Compile Include="Tasks\IRunningTask.cs" />
