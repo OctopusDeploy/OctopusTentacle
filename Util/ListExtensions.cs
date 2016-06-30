@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-// ReSharper disable CheckNamespace
 
 namespace Octopus.Shared.Util
 {
     public static class ListExtensions
-// ReSharper restore CheckNamespace
     {
         public static void RemoveWhere<TElement>(this IList<TElement> source, Func<TElement, bool> remove)
         {
@@ -45,15 +43,12 @@ namespace Octopus.Shared.Util
             {
                 source.Add(item);
             }
-        }
+        }     
 
-        public static IEnumerable<TElement> Apply<TElement>(this IEnumerable<TElement> source, Action<TElement> apply)
+        public static void ReplaceAll<TElement>(this ICollection<TElement> source, IEnumerable<TElement> itemsToAdd)
         {
-            foreach (var item in source)
-            {
-                apply(item);
-                yield return item;
-            }
+            source.Clear();
+            source.AddRange(itemsToAdd);
         }
     }
 }

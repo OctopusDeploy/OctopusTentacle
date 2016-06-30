@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Security.Policy;
 using Autofac;
 using Octopus.Shared.Diagnostics;
 
@@ -31,14 +32,24 @@ namespace Octopus.Shared.Configuration
 
             try
             {
-                if (proxyConfiguration.Value.UseDefaultProxy)
+                var useCustomProxy = proxyConfiguration.Value.UsingCustomProxy();
+                var useDefaultProxy = proxyConfiguration.Value.UseDefaultProxy;
+
+                if (useDefaultProxy || useCustomProxy)
                 {
-                    var defaultProxy = WebRequest.GetSystemWebProxy();
-                    defaultProxy.Credentials = string.IsNullOrWhiteSpace(proxyConfiguration.Value.CustomProxyUsername)
-                        ? CredentialCache.DefaultNetworkCredentials
+                    var proxy = useDefaultProxy
+                        ? WebRequest.GetSystemWebProxy()
+                        : new WebProxy(new UriBuilder("http", proxyConfiguration.Value.CustomProxyHost, proxyConfiguration.Value.CustomProxyPort).Uri);
+
+                    var useDefaultCredentials = string.IsNullOrWhiteSpace(proxyConfiguration.Value.CustomProxyUsername);
+
+                    proxy.Credentials = useDefaultCredentials
+                        ? useDefaultProxy
+                            ? CredentialCache.DefaultNetworkCredentials
+                            : new NetworkCredential()
                         : new NetworkCredential(proxyConfiguration.Value.CustomProxyUsername, proxyConfiguration.Value.CustomProxyPassword);
 
-                    WebRequest.DefaultWebProxy = defaultProxy;
+                    WebRequest.DefaultWebProxy = proxy;
                 }
                 else
                 {

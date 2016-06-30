@@ -152,7 +152,7 @@ namespace Octopus.Shared.Diagnostics
             }
             catch (Exception ex)
             {
-                return (messageFormat ?? "") + " (" + string.Join(",", (args ?? new object[0]).Where(o => o != null)) + ") => " + ex.Message;
+                return (messageFormat ?? "") + " (" + string.Join(",", (args ?? new object[0]).NotNull()) + ") => " + ex.Message;
             }
         }
 

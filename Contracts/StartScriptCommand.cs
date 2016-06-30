@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 
 namespace Octopus.Shared.Contracts
@@ -15,7 +13,6 @@ namespace Octopus.Shared.Contracts
         public StartScriptCommand(string scriptBody, params ScriptFile[] additionalFiles)
               : this(scriptBody, ScriptIsolationLevel.NoIsolation, new string[0], additionalFiles)
         {
-
         }
 
         public StartScriptCommand(string scriptBody, string[] arguments, params ScriptFile[] additionalFiles)
@@ -34,7 +31,6 @@ namespace Octopus.Shared.Contracts
         public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, params ScriptFile[] additionalFiles)
             : this(scriptBody, isolation, new string[0], additionalFiles)
         {
-
         }
 
         public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, string[] arguments, params ScriptFile[] additionalFiles)

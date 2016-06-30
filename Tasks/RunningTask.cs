@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using Halibut;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
@@ -12,6 +11,7 @@ namespace Octopus.Shared.Tasks
     {
         readonly string taskId;
         readonly string description;
+        readonly string additionalDescription;
         readonly Type rootTaskControllerType;
         readonly object arguments;
         readonly ILifetimeScope lifetimeScope;
@@ -23,10 +23,11 @@ namespace Octopus.Shared.Tasks
         readonly LogContext taskLogContext;
         bool isPaused;
 
-        public RunningTask(string taskId, string logCorrelationId, string description, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback)
+        public RunningTask(string taskId, string logCorrelationId, string description, string additionalDescription, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback)
         {
             this.taskId = taskId;
             this.description = description;
+            this.additionalDescription = additionalDescription;
             this.rootTaskControllerType = rootTaskControllerType;
             this.arguments = arguments;
             this.lifetimeScope = lifetimeScope;
@@ -65,7 +66,10 @@ namespace Octopus.Shared.Tasks
         {
             using (log.WithinBlock(taskLogContext))
             {
-                log.Info(description);
+                var fullTaskDescription = description;
+                if (!string.IsNullOrEmpty(additionalDescription))
+                    fullTaskDescription = $"{fullTaskDescription} {additionalDescription}";
+                log.Info(fullTaskDescription);
 
                 using (var workScope = lifetimeScope.BeginLifetimeScope())
                 {

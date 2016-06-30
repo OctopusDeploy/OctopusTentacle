@@ -9,5 +9,6 @@ namespace Octopus.Shared.Security.Permissions
         const string WildcardSuffix = "-" + Identifier;
         public const string AnyEnvironment = PermissionScope.Environments + WildcardSuffix;
         public const string AnyProject = PermissionScope.Projects + WildcardSuffix;
+        public const string AnyTenant = PermissionScope.Tenants + WildcardSuffix;
     }
 }

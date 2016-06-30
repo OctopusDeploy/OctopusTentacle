@@ -1,4 +1,3 @@
-using System;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Tasks
