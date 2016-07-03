@@ -9,43 +9,52 @@ namespace Octopus.Shared.Security.Permissions
 {
     public static class PermissionInfo
     {
+        static readonly Dictionary<Permission, PermissionMetaData> Permissions = typeof(Permission)
+            .GetFields(BindingFlags.Static | BindingFlags.Public)
+            .ToDictionary(t => (Permission)t.GetValue(null), ExtractMetaData);
+
         public static IList<Permission> GetAllPermissions()
         {
-            return typeof (Permission)
-                .GetFields(BindingFlags.Static | BindingFlags.Public)
-                .Where(f => f.GetCustomAttributes(typeof (DescriptionAttribute), false).Length > 0)
-                .Select(f => (Permission)f.GetValue(null))
-                .ToList();
+            return Permissions.Keys.Where(p => p!= Permission.None).ToList();
         }
 
         public static IList<string> GetSupportedRestrictions(Permission permission)
         {
-            // ReSharper disable once PossibleNullReferenceException
-            var restrictable = typeof (Permission)
-                .GetField(permission.ToString(), BindingFlags.Static | BindingFlags.Public)
-                .GetCustomAttributes(typeof (SupportsRestrictionAttribute), false)
-                .Cast<SupportsRestrictionAttribute>()
-                .SingleOrDefault();
+            return Permissions[permission].SupportsRestrictionAttribute?.Scopes ?? new List<string>();
+        }
 
-            if (restrictable == null)
-                return new List<string>();
-
-            return restrictable.Scopes;
+        public static bool ExplicitTenantScopeRequired(Permission permission)
+        {
+            return Permissions[permission].SupportsRestrictionAttribute?.ExplicitTenantScopeRequired ?? false;
         }
 
         public static string GetDescription(Permission permission)
         {
-            // ReSharper disable once PossibleNullReferenceException
-            var description = typeof (Permission)
-                .GetField(permission.ToString(), BindingFlags.Static | BindingFlags.Public)
-                .GetCustomAttributes(typeof (DescriptionAttribute), false)
+            return Permissions[permission].Description;
+        }
+        static PermissionMetaData ExtractMetaData(FieldInfo t)
+        {
+            var name = t.GetCustomAttributes(typeof(DescriptionAttribute), false)
                 .Cast<DescriptionAttribute>()
+                .SingleOrDefault()?.Description ?? t.Name;
+
+            var supportsRestrictionAttribute = t.GetCustomAttributes(typeof(SupportsRestrictionAttribute), false)
+                .Cast<SupportsRestrictionAttribute>()
                 .SingleOrDefault();
 
-            if (description == null)
-                return permission.ToString();
+            return new PermissionMetaData(name, supportsRestrictionAttribute);
+        }
 
-            return description.Description;
+        class PermissionMetaData
+        {
+            public string Description { get; }
+            public SupportsRestrictionAttribute SupportsRestrictionAttribute { get; }
+
+            public PermissionMetaData(string description, SupportsRestrictionAttribute supportsRestrictionAttribute)
+            {
+                Description = description;
+                SupportsRestrictionAttribute = supportsRestrictionAttribute;
+            }
         }
     }
 }

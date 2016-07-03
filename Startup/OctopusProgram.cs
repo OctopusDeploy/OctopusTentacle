@@ -148,7 +148,8 @@ namespace Octopus.Shared.Startup
                 }
                 exitCode = 100;
             }
-
+            if (exitCode != 0 && Debugger.IsAttached)
+                Debugger.Break();
             return exitCode;
         }
 

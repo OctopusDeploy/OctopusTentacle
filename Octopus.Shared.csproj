@@ -48,8 +48,8 @@
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.2.2.0.55\lib\Halibut.dll</HintPath>
+    <Reference Include="Halibut, Version=2.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Halibut.2.3.0-unstable0007\lib\Halibut.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -103,6 +103,7 @@
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\IWebPortalConfiguration.cs" />
     <Compile Include="Configuration\OctopusServerConfiguration.cs" />
+    <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Contracts\IFileTransferService.cs" />
     <Compile Include="Contracts\IScriptService.cs" />
     <Compile Include="Contracts\ScriptFile.cs" />
@@ -128,6 +129,7 @@
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
     <Compile Include="Diagnostics\LogCategory.cs" />
+    <Compile Include="Diagnostics\TimedSection.cs" />
     <Compile Include="Extensibility\IOctopusExtension.cs" />
     <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
     <Compile Include="Extensibility\OctopusPluginAttribute.cs" />
@@ -228,8 +230,11 @@
     <Compile Include="TransientFaultHandling\ShouldRetry.cs" />
     <Compile Include="TransientFaultHandling\TransientErrorCatchAllStrategy.cs" />
     <Compile Include="TransientFaultHandling\TransientErrorIgnoreStrategy.cs" />
+    <Compile Include="Util\EnumerableExtensions.cs" />
     <Compile Include="Util\IOUtil.cs" />
     <Compile Include="Util\SemanticVersionExtensions.cs" />
+    <Compile Include="Util\Result.cs" />
+    <Compile Include="Util\ResultExtensions.cs" />
     <Compile Include="Util\StreamDisposalChain.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />

@@ -105,6 +105,13 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/teams/{id}";
             }
 
+            public static class Proxies
+            {
+                public static string Template = "~/api/proxies{/id}{?skip}";
+                public static string Index = "~/api/proxies{?skip}";
+                public static string Get = "~/api/proxies/{id}";
+            }
+
             public static class PermissionDescriptions
             {
                 public static string Template = "~/api/permissions/all";
@@ -257,7 +264,7 @@ namespace Octopus.Shared.Web
 
             public static class Progression
             {
-                public static string Get = "~/api/progression/{id}{?aggregate}";
+                public static string Get = "~/api/progression/{id}";
             }
 
             public static class DeploymentProcesses
@@ -269,7 +276,7 @@ namespace Octopus.Shared.Web
 
             public static class Dashboards
             {
-                public static string Template = "~/api/dashboard";
+                public static string Template = "~/api/dashboard{?projectId,releaseId,selectedTenants,selectedTags,showAll}";
                 public static string DynamicTemplate = "~/api/dashboard/dynamic{?projects,environments,includePrevious}";
             }
 
@@ -376,7 +383,7 @@ namespace Octopus.Shared.Web
                 public static string Logo = "~/api/tenants/{id}/logo";
                 public static string Variables = "~/api/tenants/{id}/variables";
                 public static string TenantTagTest = "~/api/tenants/tag-test{?tenantIds,tags}";
-                public static string MissingVariables = "/api/tenants/variables-missing{?tenantId,projectId,environmentId,includeDetails}";
+                public static string MissingVariables = "~/api/tenants/variables-missing{?tenantId,projectId,environmentId,includeDetails}";
             }
 
             public static class TenantVariables

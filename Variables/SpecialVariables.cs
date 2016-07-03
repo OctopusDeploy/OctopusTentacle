@@ -39,6 +39,8 @@ namespace Octopus.Shared.Variables
         // but overridable by user
         [Define(Category = VariableCategory.Hidden)]
         public static readonly string UseGuidedFailure = "OctopusUseGuidedFailure";
+        [Define(Category = VariableCategory.Hidden)]
+        public static readonly string UseNakedScript = "OctopusUseNakedScript";
         // Set by Tentacle exclusively
         [Define(Category = VariableCategory.Hidden)]
         public static readonly string OriginalPackageDirectoryPath = "OctopusOriginalPackageDirectoryPath";
@@ -793,10 +795,10 @@ namespace Octopus.Shared.Variables
         public static class ProjectTriggerCondition
         {
             [Define(Category = VariableCategory.ProjectTrigger, Description = "Machine roles targeted by the trigger", Example = "web-server", Domain = VariableDomain.List)]
-            public static readonly string Role = "Octopus.ProjectTriggerCondition.Role";
+            public static readonly string Role = "Octopus.ProjectTriggerCondition.Roles";
 
             [Define(Category = VariableCategory.ProjectTrigger, Description = "Environments targeted by the trigger", Example = "Development", Domain = VariableDomain.List)]
-            public static readonly string Environment = "Octopus.ProjectTriggerCondition.Environment";
+            public static readonly string Environment = "Octopus.ProjectTriggerCondition.Environments";
 
             [Define(Category = VariableCategory.ProjectTrigger, Description = "Events targeted by the trigger", Example = "new-server-becomes-available", Domain = VariableDomain.List)]
             public static readonly string Events = "Octopus.ProjectTriggerCondition.Events";
