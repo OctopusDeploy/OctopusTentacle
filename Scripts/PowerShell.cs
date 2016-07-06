@@ -43,6 +43,10 @@ namespace Octopus.Shared.Scripts
             // PowerShell fails when in non-interactive mode without indicating why.
             if (!allowInteractive)
                 commandArguments.Append("-NonInteractive ");
+            // Don't load the user profile when we run powershell. Calamari loads the
+            // profile when it runs PS unless ExecuteWithoutProfile is set. For example
+            // when we call CalamariRunScript.ps1 or CalamariRunAzurePowerShell.ps1 here.
+            commandArguments.Append("-NoProfile ");
             commandArguments.Append("-NoLogo ");
             commandArguments.Append("-ExecutionPolicy Unrestricted ");
             var escapedBootstrapFile = bootstrapFile.Replace("'", "''");
