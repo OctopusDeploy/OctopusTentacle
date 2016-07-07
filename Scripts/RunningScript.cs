@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Util;
 
@@ -32,25 +33,34 @@ namespace Octopus.Shared.Scripts
             var powerShellPath = PowerShell.GetFullPath();
 
             using (var writer = log.CreateWriter())
-            using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, GetType().Name, message => writer.WriteOutput(ProcessOutputSource.StdOut, message)))
             {
                 try
                 {
-                    State = ProcessState.Running;
+                    using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, GetType().Name, message => writer.WriteOutput(ProcessOutputSource.StdOut, message), token))
+                    {
+                        try
+                        {
+                            State = ProcessState.Running;
 
-                    var exitCode = SilentProcessRunner.ExecuteCommand(powerShellPath, PowerShell.FormatCommandArguments(workspace.BootstrapScriptFilePath, workspace.ScriptArguments, false), workspace.WorkingDirectory,
-                        output => writer.WriteOutput(ProcessOutputSource.StdOut, output),
-                        output => writer.WriteOutput(ProcessOutputSource.StdErr, output),
-                        token);
+                            var exitCode = SilentProcessRunner.ExecuteCommand(powerShellPath, PowerShell.FormatCommandArguments(workspace.BootstrapScriptFilePath, workspace.ScriptArguments, false), workspace.WorkingDirectory,
+                                output => writer.WriteOutput(ProcessOutputSource.StdOut, output),
+                                output => writer.WriteOutput(ProcessOutputSource.StdErr, output),
+                                token);
 
-                    ExitCode = exitCode;
-                    State = ProcessState.Complete;
+                            ExitCode = exitCode;
+                            State = ProcessState.Complete;
+                        }
+                        catch (Exception ex)
+                        {
+                            writer.WriteOutput(ProcessOutputSource.StdErr, "An exception was thrown when invoking " + powerShellPath + ": " + ex.Message);
+                            ExitCode = -42;
+                            State = ProcessState.Complete;
+                        }
+                    }
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    writer.WriteOutput(ProcessOutputSource.StdErr, "An exception was thrown when invoking " + powerShellPath + ": " + ex.Message);
-                    ExitCode = -42;
-                    State = ProcessState.Complete;
+                    writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution cancelled.");
                 }
             }
         }
