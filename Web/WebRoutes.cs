@@ -375,8 +375,8 @@ namespace Octopus.Shared.Web
             {
                 public static string Template = "~/api/tenants{/id}{?projectId,name}";
                 public static string Get = "~/api/tenants/{id}";
-                public static string All = "~/api/tenants/all{?projectId,name}";
-                public static string Index = "~/api/tenants{?skip,projectId}";
+                public static string All = "~/api/tenants/all{?projectId,ids,name}";
+                public static string Index = "~/api/tenants{?skip,projectId,ids}";
                 public static string Logo = "~/api/tenants/{id}/logo";
                 public static string Variables = "~/api/tenants/{id}/variables";
                 public static string TenantTagTest = "~/api/tenants/tag-test{?tenantIds,tags}";
