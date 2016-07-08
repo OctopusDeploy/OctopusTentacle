@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Util;
 
@@ -60,7 +59,7 @@ namespace Octopus.Shared.Scripts
                 }
                 catch (OperationCanceledException)
                 {
-                    writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution cancelled.");
+                    writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
                 }
             }
         }

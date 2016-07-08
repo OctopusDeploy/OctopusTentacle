@@ -44,7 +44,7 @@ namespace Octopus.Shared.Scripts
             }
             catch (TaskCanceledException tce)
             {
-                Cancelled(log);
+                Canceled(log);
                 throw new OperationCanceledException(tce.CancellationToken);
             }
         }
@@ -65,7 +65,7 @@ namespace Octopus.Shared.Scripts
             }
             catch (TaskCanceledException tce)
             {
-                Cancelled(log);
+                Canceled(log);
                 throw new OperationCanceledException(tce.CancellationToken);
             }
         }
@@ -80,9 +80,9 @@ namespace Octopus.Shared.Scripts
             log("Cannot start this task yet. There is already another task running that cannot be run in conjunction with any other task. Please wait...");
         }
 
-        static void Cancelled(Action<string> log)
+        static void Canceled(Action<string> log)
         {
-            log("This task was cancelled before it could start. The other task had not completed.");
+            log("This task was canceled before it could start. The other task had not completed.");
         }
     }
 
