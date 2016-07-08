@@ -188,6 +188,7 @@
     <Compile Include="Properties\RazorSectionAttribute.cs" />
     <Compile Include="Properties\StringFormatMethodAttribute.cs" />
     <Compile Include="Properties\UsedImplicitlyAttribute.cs" />
+    <Compile Include="Scripts\AsyncReaderWriterLockExtensions.cs" />
     <Compile Include="Scripts\IScriptLog.cs" />
     <Compile Include="Scripts\IScriptLogWriter.cs" />
     <Compile Include="Scripts\IScriptWorkspace.cs" />
