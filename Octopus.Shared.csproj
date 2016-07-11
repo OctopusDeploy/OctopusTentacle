@@ -48,12 +48,23 @@
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.2.2.0.55\lib\Halibut.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Halibut">
+      <HintPath>..\packages\Halibut.2.2.2\lib\Halibut.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nito.AsyncEx, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Concurrent, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Concurrent.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Enlightenment, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
@@ -177,6 +188,7 @@
     <Compile Include="Properties\RazorSectionAttribute.cs" />
     <Compile Include="Properties\StringFormatMethodAttribute.cs" />
     <Compile Include="Properties\UsedImplicitlyAttribute.cs" />
+    <Compile Include="Scripts\AsyncReaderWriterLockExtensions.cs" />
     <Compile Include="Scripts\IScriptLog.cs" />
     <Compile Include="Scripts\IScriptLogWriter.cs" />
     <Compile Include="Scripts\IScriptWorkspace.cs" />
@@ -202,6 +214,7 @@
     <Compile Include="Security\Permissions\RestrictedGrant.cs" />
     <Compile Include="Security\Permissions\WildcardDocumentId.cs" />
     <Compile Include="Startup\AbstractMultiOperationCommand.cs" />
+    <Compile Include="Tasks\ActionFailedException.cs" />
     <Compile Include="Tasks\ActivityFailedException.cs" />
     <Compile Include="Tasks\ITaskContext.cs" />
     <Compile Include="Tasks\IRunningTask.cs" />
@@ -229,6 +242,8 @@
     <Compile Include="TransientFaultHandling\TransientErrorCatchAllStrategy.cs" />
     <Compile Include="TransientFaultHandling\TransientErrorIgnoreStrategy.cs" />
     <Compile Include="Util\IOUtil.cs" />
+    <Compile Include="Util\Result.cs" />
+    <Compile Include="Util\ResultExtensions.cs" />
     <Compile Include="Util\StreamDisposalChain.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />

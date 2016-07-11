@@ -132,8 +132,8 @@ namespace Octopus.Shared.Web
 
             public static class Deployments
             {
-                public static string Template = "~/api/deployments{/id}{?skip,take,projects,environments,taskState}";
-                public static string Index = "~/api/deployments{?skip,take,projects,environments,taskState}";
+                public static string Template = "~/api/deployments{/id}{?skip,take,projects,environments,channels,taskState}";
+                public static string Index = "~/api/deployments{?skip,take,projects,environments,channels,taskState}";
                 public static string Get = "~/api/deployments/{id}";
             }
 
@@ -197,8 +197,8 @@ namespace Octopus.Shared.Web
 
             public static class Events
             {
-                public static string Template = "~/api/events{/id}{?skip,regarding,user,from,to}";
-                public static string Index = "~/api/events{?skip,regarding,user,from,to}";
+                public static string Template = "~/api/events{/id}{?skip,regarding,regardingAny,user,from,to}";
+                public static string Index = "~/api/events{?skip,regarding,regardingAny,user,from,to}";
                 public static string Get = "~/api/events/{id}";
             }
 

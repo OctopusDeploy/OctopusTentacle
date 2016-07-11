@@ -504,6 +504,11 @@ namespace Octopus.Shared.Variables
                 public static readonly string ScriptSource = "Octopus.Action.Script.ScriptSource";
             }
 
+            public static class PowerShell
+            {
+                public static readonly string ExecuteWithoutProfile = "Octopus.Action.PowerShell.ExecuteWithoutProfile";
+            }
+
             public static class Manual
             {
                 public static readonly string ActionTypeName = "Octopus.Manual";

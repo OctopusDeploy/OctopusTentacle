@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
+using Nito.AsyncEx;
 using Octopus.Shared.Contracts;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Scripts
 {
@@ -10,51 +11,80 @@ namespace Octopus.Shared.Scripts
     {
         // Reader-writer locks allow multiple readers, but only one writer which blocks readers. This is perfect for our scenario, because 
         // we want to allow lots of scripts to run with the 'no' isolation level, but nothing should be running under the 'full' isolation level.
-        static readonly ConcurrentDictionary<string, ReaderWriterLockSlim> ReaderWriterLocks = new ConcurrentDictionary<string, ReaderWriterLockSlim>();
+        // NOTE: Changed from ReaderWriterLockSlim to AsyncReaderWriterLock to enable cooperative cancellation whilst waiting for the lock.
+        //       Hopefully in a future version of .NET there will be a fully supported ReaderWriterLock with cooperative cancellation support so we can remove this dependency.
+        static readonly ConcurrentDictionary<string, AsyncReaderWriterLock> ReaderWriterLocks = new ConcurrentDictionary<string, AsyncReaderWriterLock>();
+        static readonly TimeSpan InitialWaitTime = TimeSpan.FromMilliseconds(100);
 
-        public static IDisposable Acquire(ScriptIsolationLevel isolation, string lockName, Action<string> log)
+        public static IDisposable Acquire(ScriptIsolationLevel isolation, string lockName, Action<string> log, CancellationToken ct = default(CancellationToken))
         {
             var readerWriter = GetLock(lockName);
             switch (isolation)
             {
                 case ScriptIsolationLevel.FullIsolation:
-                    return EnterWriteLock(log, readerWriter);
+                    return EnterWriteLock(log, readerWriter, ct);
                 case ScriptIsolationLevel.NoIsolation:
-                    return EnterReadLock(log, readerWriter);
+                    return EnterReadLock(log, readerWriter, ct);
             }
 
             throw new NotSupportedException("Unknown isolation level: " + isolation);
         }
 
-        private static IDisposable EnterReadLock(Action<string> log, ReaderWriterLockSlim readerWriter)
+        static IDisposable EnterReadLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct)
         {
-            if (!readerWriter.TryEnterReadLock(100))
+            IDisposable lockReleaser;
+            if (readerWriter.TryEnterReadLock(InitialWaitTime, out lockReleaser))
             {
-                Busy(log);
-                readerWriter.EnterReadLock();
+                return lockReleaser;
             }
-            return new CallbackDisposable(readerWriter.ExitReadLock);
+
+            Busy(log);
+
+            try
+            {
+                return readerWriter.ReaderLock(ct);
+            }
+            catch (TaskCanceledException tce)
+            {
+                Canceled(log);
+                throw new OperationCanceledException(tce.CancellationToken);
+            }
         }
 
-        private static IDisposable EnterWriteLock(Action<string> log, ReaderWriterLockSlim readerWriter)
+        static IDisposable EnterWriteLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct)
         {
-            if (!readerWriter.TryEnterWriteLock(100))
+            IDisposable lockReleaser;
+            if (readerWriter.TryEnterWriterLock(InitialWaitTime, out lockReleaser))
             {
-                Busy(log);
-                readerWriter.EnterWriteLock();
+                return lockReleaser;
             }
-            return new CallbackDisposable(readerWriter.ExitWriteLock);
+
+            Busy(log);
+
+            try
+            {
+                return readerWriter.WriterLock(ct);
+            }
+            catch (TaskCanceledException tce)
+            {
+                Canceled(log);
+                throw new OperationCanceledException(tce.CancellationToken);
+            }
         }
 
-        static ReaderWriterLockSlim GetLock(string lockName)
+        static AsyncReaderWriterLock GetLock(string lockName)
         {
-            return ReaderWriterLocks.GetOrAdd(lockName, new ReaderWriterLockSlim());
+            return ReaderWriterLocks.GetOrAdd(lockName, new AsyncReaderWriterLock());
         }
-        
 
         static void Busy(Action<string> log)
         {
-            log("This Tentacle is currently busy performing a task that cannot be run in conjunction with any other task. Please wait...");
+            log("Cannot start this task yet. There is already another task running that cannot be run in conjunction with any other task. Please wait...");
+        }
+
+        static void Canceled(Action<string> log)
+        {
+            log("This task was canceled before it could start. The other task is still running.");
         }
     }
 }
