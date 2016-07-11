@@ -370,12 +370,12 @@ namespace Octopus.Shared.Web
                 public static string VersionRuleTest = "~/api/channels/rule-test{?version,versionRange,preReleaseTag}";
                 public static string GetReleases = "~/api/channels/{id}/releases{?skip}";
             }
-
+            
             public static class Tenants
             {
-                public static string Template = "~/api/tenants{/id}{?projectId,name}";
+                public static string Template = "~/api/tenants{/id}{?projectId,name,tags}";
                 public static string Get = "~/api/tenants/{id}";
-                public static string All = "~/api/tenants/all{?projectId,ids,name}";
+                public static string All = "~/api/tenants/all{?projectId,ids,name,tags}";
                 public static string Index = "~/api/tenants{?skip,projectId,ids}";
                 public static string Logo = "~/api/tenants/{id}/logo";
                 public static string Variables = "~/api/tenants/{id}/variables";
