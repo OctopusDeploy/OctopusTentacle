@@ -392,6 +392,7 @@ namespace Octopus.Shared.Variables
         {
             [Define(Category = VariableCategory.Action, Example = "85287bef-fe6c-4eb7-beef-74f5e5a6b5b0")] public static readonly string Id = "Octopus.Action.Id";
             [Define(Category = VariableCategory.Action, Example = "Website")] public static readonly string Name = "Octopus.Action.Name";
+            [Define(Category = VariableCategory.Action, Description = "The name of the parent step", Example = "Website")] public static readonly string StepName = "Octopus.Action.StepName";
             [Define(Category = VariableCategory.Action, Description = "The sequence number of the action in the deployment process", Example = "5", Domain = VariableDomain.Number)] public static readonly string Number = "Octopus.Action.Number";
             [Define(Category = VariableCategory.Hidden)] public static readonly string IsTentacleDeployment = "Octopus.Action.IsTentacleDeployment";
             [Define(Category = VariableCategory.Hidden)] public static readonly string IsFtpDeployment = "Octopus.Action.IsFtpDeployment";
