@@ -1,8 +1,5 @@
-using System;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web.SessionState;
-using NLog;
 
 namespace Octopus.Shared.Web
 {
@@ -224,9 +221,9 @@ namespace Octopus.Shared.Web
                 public static string Cancel = "~/api/tasks/{id}/cancel";
             }
 
-            public static class Scheduled
+            public static class Scheduler
             {
-                public static string Get = "~/api/scheduled/{name}{?verbose,tail}";
+                public static string Get = "~/api/scheduler/{name}/logs{?verbose,tail}";
             }
 
             public static class Events
