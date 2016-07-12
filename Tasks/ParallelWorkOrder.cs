@@ -78,7 +78,26 @@ namespace Octopus.Shared.Tasks
                 throw new TaskCanceledException("One or more child activities were canceled.");
             }
 
-            throw new ActivityFailedException("One or more child activities failed.");
+            throw new ActivityFailedException(BuildMessage(errors), new AggregateException(errors));
+        }
+
+        string BuildMessage(List<Exception> errors)
+        {
+            if (errors.Count == 1)
+            {
+                return errors.Single() is ActionFailedException
+                    ? $"Activity {errors.Single().Message} failed with error '{errors.Single().InnerException.Message}'."
+                    : $"Activity failed with error '{errors.Single().Message}'.";
+            }
+
+            return $"Activities failed with errors {string.Join(", ", errors.Select(GetMessage))}";
+        }
+
+        string GetMessage(Exception ex)
+        {
+            return ex is ActionFailedException
+                ? $"{ex.Message}: '{ex.InnerException.Message}'"
+                : $"'{ex.Message}'";
         }
     }
 }
