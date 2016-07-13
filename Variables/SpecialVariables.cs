@@ -656,7 +656,13 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "The script being run in a script step", Example = "Write-Host 'Hello!'")]
                 public static readonly string ScriptBody = "Octopus.Action.Script.ScriptBody";
                 public static readonly string ScriptFileName = "Octopus.Action.Script.ScriptFileName";
+                public static readonly string ScriptParameters = "Octopus.Action.Script.ScriptParameters";
                 public static readonly string ScriptSource = "Octopus.Action.Script.ScriptSource";
+            }
+
+            public static class PowerShell
+            {
+                public static readonly string ExecuteWithoutProfile = "Octopus.Action.PowerShell.ExecuteWithoutProfile";
             }
 
             public static class Manual

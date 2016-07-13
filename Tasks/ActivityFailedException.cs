@@ -9,6 +9,10 @@ namespace Octopus.Shared.Tasks
         {
         }
 
+        public ActivityFailedException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
         public ActivityFailedException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }

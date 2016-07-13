@@ -143,8 +143,8 @@ namespace Octopus.Shared.Web
 
             public static class Deployments
             {
-                public static string Template = "~/api/deployments{/id}{?skip,take,projects,environments,taskState}";
-                public static string Index = "~/api/deployments{?skip,take,projects,environments,taskState}";
+                public static string Template = "~/api/deployments{/id}{?skip,take,projects,environments,channels,taskState}";
+                public static string Index = "~/api/deployments{?skip,take,projects,environments,channels,taskState}";
                 public static string Get = "~/api/deployments/{id}";
             }
 
@@ -228,8 +228,8 @@ namespace Octopus.Shared.Web
 
             public static class Events
             {
-                public static string Template = "~/api/events{/id}{?skip,regarding,user,from,to}";
-                public static string Index = "~/api/events{?skip,regarding,user,from,to}";
+                public static string Template = "~/api/events{/id}{?skip,regarding,regardingAny,user,from,to}";
+                public static string Index = "~/api/events{?skip,regarding,regardingAny,user,from,to}";
                 public static string Get = "~/api/events/{id}";
             }
 
@@ -370,12 +370,12 @@ namespace Octopus.Shared.Web
                 public static string VersionRuleTest = "~/api/channels/rule-test{?version,versionRange,preReleaseTag}";
                 public static string GetReleases = "~/api/channels/{id}/releases{?skip}";
             }
-
+            
             public static class Tenants
             {
-                public static string Template = "~/api/tenants{/id}{?projectId}";
+                public static string Template = "~/api/tenants{/id}{?projectId,name,tags}";
                 public static string Get = "~/api/tenants/{id}";
-                public static string All = "~/api/tenants/all{?projectId,ids}";
+                public static string All = "~/api/tenants/all{?projectId,ids,name,tags}";
                 public static string Index = "~/api/tenants{?skip,projectId,ids}";
                 public static string Logo = "~/api/tenants/{id}/logo";
                 public static string Variables = "~/api/tenants/{id}/variables";
