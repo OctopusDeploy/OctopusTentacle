@@ -85,11 +85,10 @@ namespace Octopus.Shared.Startup
                 {
                     Sc(
                         string.Format(
-                            "create \"{0}\" binpath= \"\\\"{1}\\\" run --instance=\\\"{2}\\\"{3}\" DisplayName= \"{0}\" depend= LanmanWorkstation/TCPIP start= auto",
+                            "create \"{0}\" binpath= \"\\\"{1}\\\" run --instance=\\\"{2}\\\"\" DisplayName= \"{0}\" depend= LanmanWorkstation/TCPIP start= auto",
                             thisServiceName,
                             exePath,
-                            instance,
-                            serviceConfigurationState.TestMode ? " --test" : ""
+                            instance
                             ));
 
                     Sc(
@@ -110,11 +109,10 @@ namespace Octopus.Shared.Startup
             {
                 Sc(
                     string.Format(
-                        "config \"{0}\" binpath= \"\\\"{1}\\\" run --instance=\\\"{2}\\\"{3}\" DisplayName= \"{0}\" depend= LanmanWorkstation/TCPIP start= auto",
+                        "config \"{0}\" binpath= \"\\\"{1}\\\" run --instance=\\\"{2}\\\"\" DisplayName= \"{0}\" depend= LanmanWorkstation/TCPIP start= auto",
                         thisServiceName,
                         exePath,
-                        instance,
-                        serviceConfigurationState.TestMode ? " --test" : ""
+                        instance
                         ));
 
                 Sc(

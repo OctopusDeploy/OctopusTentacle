@@ -33,7 +33,6 @@ namespace Octopus.Shared.Startup
             {
                 serviceConfigurationState.Password = v;
             });
-            Options.Add("test", "Start the Windows Service in test mode", v => serviceConfigurationState.TestMode = true);
         }
 
         protected override void Start()
