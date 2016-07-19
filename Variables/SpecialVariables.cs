@@ -205,7 +205,7 @@ namespace Octopus.Shared.Variables
             public static readonly string CommunicationStyle = "Octopus.Machine.CommunicationStyle";
             [Define(Description = "Comma delimited list of tags applied to the machine", Example = "Importance\\High, Feature\\Telephony", Domain = VariableDomain.List)]
             public static string Tags = "Octopus.Machine.Tags";
-            [Define(Description = "Comma delimited list of tenantIds applied to the machine", Domain = VariableDomain.List)]
+            [Define(Description = "Comma delimited list of tenantIds applied to the machine", Example ="Tenants-1,Tenants-31", Domain = VariableDomain.List)]
             public static string TenantIds = "Octopus.Machine.TenantIds";
         }
 
