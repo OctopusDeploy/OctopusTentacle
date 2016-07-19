@@ -206,7 +206,7 @@ namespace Octopus.Shared.Variables
             [Define(Description = "Comma delimited list of tags applied to the machine", Example = "Importance\\High, Feature\\Telephony", Domain = VariableDomain.List)]
             public static string Tags = "Octopus.Machine.Tags";
             [Define(Description = "Comma delimited list of tenantIds applied to the machine", Domain = VariableDomain.List)]
-            public static string TenantIds = "Octopus.Machine.Tenants";
+            public static string TenantIds = "Octopus.Machine.TenantIds";
         }
 
         public static class Account
