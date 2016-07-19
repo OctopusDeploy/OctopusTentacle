@@ -203,6 +203,10 @@ namespace Octopus.Shared.Variables
             [Define(Description = "The roles applied to the machine", Example = "web-server,frontend", Domain = VariableDomain.List)] public static readonly string Roles = "Octopus.Machine.Roles";
             public static readonly string Hostname = "Octopus.Machine.Hostname";
             public static readonly string CommunicationStyle = "Octopus.Machine.CommunicationStyle";
+            [Define(Description = "Comma delimited list of tags applied to the machine", Example = "Importance\\High, Feature\\Telephony", Domain = VariableDomain.List)]
+            public static string Tags = "Octopus.Machine.Tags";
+            [Define(Description = "Comma delimited list of tenantIds applied to the machine", Domain = VariableDomain.List)]
+            public static string TenantIds = "Octopus.Machine.Tenants";
         }
 
         public static class Account
