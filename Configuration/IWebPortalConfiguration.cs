@@ -58,5 +58,7 @@ namespace Octopus.Shared.Configuration
         bool AllowFormsAuthenticationForDomainUsers { get; set; }
 
         bool IsFormsAuthAllowed();
+
+        bool IsExternalLoginEnabled();
     }
 }

@@ -106,6 +106,11 @@ namespace Octopus.Shared.Configuration
             return AuthenticationMode == AuthenticationMode.UsernamePassword || AllowFormsAuthenticationForDomainUsers;
         }
 
+        public bool IsExternalLoginEnabled()
+        {
+            return AuthenticationMode == AuthenticationMode.Token;
+        }
+
         public void Save()
         {
             settings.Save();
