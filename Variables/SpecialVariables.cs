@@ -489,6 +489,11 @@ namespace Octopus.Shared.Variables
                 public static readonly string ActionTypeName = "Octopus.IIS";
             }
 
+            public static class WindowsService
+            {
+                public static readonly string ActionTypeName = "Octopus.WindowsService";
+            }
+
             public static class Ftp
             {
                 // deprecated step, do not use
