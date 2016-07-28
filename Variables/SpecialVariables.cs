@@ -484,6 +484,11 @@ namespace Octopus.Shared.Variables
                 }
             }
 
+            public static class Iis
+            {
+                public static readonly string ActionTypeName = "Octopus.IIS";
+            }
+
             public static class Ftp
             {
                 // deprecated step, do not use
