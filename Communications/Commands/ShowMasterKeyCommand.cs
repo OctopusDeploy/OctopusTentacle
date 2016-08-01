@@ -1,6 +1,6 @@
 ﻿using System;
+using Octopus.Server.Extensibility.Diagnostics;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Communications.Commands

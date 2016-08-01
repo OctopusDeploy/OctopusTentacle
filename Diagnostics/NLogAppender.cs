@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using NLog;
+using Octopus.Server.Extensibility.Diagnostics;
 
 namespace Octopus.Shared.Diagnostics
 {

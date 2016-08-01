@@ -3,6 +3,7 @@ using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using Autofac;
+using Octopus.Server.Extensibility.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Extensibility
@@ -18,11 +19,11 @@ namespace Octopus.Shared.Extensibility
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OctopusPlugins");
             if (!Directory.Exists(path))
             {
-                log.VerboseFormat("Plugins directory does not exist: {0}", path);
+                log.Verbose($"Plugins directory does not exist: {path}");
                 return;
             }
 
-            log.VerboseFormat("Loading plugins from: {0}", path);
+            log.Verbose($"Loading plugins from: {path}");
 
             var catalog = new DirectoryCatalog(path);
 
@@ -30,7 +31,7 @@ namespace Octopus.Shared.Extensibility
             var plugins = container.GetExports<IOctopusExtension, IOctopusExtensionMetadata>().Distinct();
             foreach (var item in plugins)
             {
-                log.InfoFormat("Loading external plugin: {0}", item.Metadata.FriendlyName);
+                log.Info($"Loading external plugin: {item.Metadata.FriendlyName}");
                 item.Value.Load(builder);
             }
         }

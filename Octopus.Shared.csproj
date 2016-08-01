@@ -159,8 +159,8 @@
     <Compile Include="ControlledFailureException.cs" />
     <Compile Include="Conventions\OctopusName.cs" />
     <Compile Include="Diagnostics\AbstractLog.cs" />
-    <Compile Include="Diagnostics\ILog.cs" />
     <Compile Include="Diagnostics\ILogAppender.cs" />
+    <Compile Include="Diagnostics\ILogWithContext.cs" />
     <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledge.cs" />
     <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBase.cs" />
     <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBaseEntry.cs" />
@@ -169,7 +169,6 @@
     <Compile Include="Diagnostics\LogEvent.cs" />
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
-    <Compile Include="Diagnostics\LogCategory.cs" />
     <Compile Include="Diagnostics\TimedSection.cs" />
     <Compile Include="Extensibility\IOctopusExtension.cs" />
     <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
@@ -449,6 +448,10 @@
     <ProjectReference Include="..\Octopus.Client\Octopus.Client.csproj">
       <Project>{FAF9A6DD-C669-4F5B-88AF-8AB2B8F3B7C4}</Project>
       <Name>Octopus.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Octopus.Server.Extensibility\Octopus.Server.Extensibility.csproj">
+      <Project>{edd50b77-4b5e-476c-8a66-583b7fd3fe4a}</Project>
+      <Name>Octopus.Server.Extensibility</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

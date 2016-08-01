@@ -1,5 +1,6 @@
 using System;
 using Newtonsoft.Json;
+using Octopus.Server.Extensibility.Diagnostics;
 
 namespace Octopus.Shared.Diagnostics
 {

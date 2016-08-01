@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
-using Octopus.Shared.Diagnostics;
+using Octopus.Server.Extensibility.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Packages

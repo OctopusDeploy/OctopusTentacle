@@ -16,7 +16,7 @@ namespace Octopus.Shared.Startup
 {
     public abstract class OctopusProgram
     {
-        readonly ILog log = Log.Octopus();
+        readonly ILogWithContext log = Log.Octopus();
         readonly string displayName;
         readonly string version;
         readonly string informationalVersion;
