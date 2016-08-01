@@ -1,5 +1,6 @@
 using System;
 using Autofac;
+using Octopus.Server.Extensibility.Configuration;
 using Octopus.Server.Extensibility.Diagnostics;
 using Octopus.Shared.Security.MasterKey;
 using Octopus.Shared.Util;

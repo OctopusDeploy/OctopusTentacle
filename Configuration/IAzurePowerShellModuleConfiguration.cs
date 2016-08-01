@@ -1,4 +1,6 @@
-﻿namespace Octopus.Shared.Configuration
+﻿using Octopus.Server.Extensibility.Configuration;
+
+namespace Octopus.Shared.Configuration
 {
     public interface IAzurePowerShellModuleConfiguration : IModifiableConfiguration
     {

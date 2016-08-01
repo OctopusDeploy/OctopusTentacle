@@ -1,5 +1,6 @@
 using System;
 using System.Security.Cryptography;
+using Octopus.Server.Extensibility.Configuration;
 using Octopus.Server.Extensibility.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security.MasterKey;

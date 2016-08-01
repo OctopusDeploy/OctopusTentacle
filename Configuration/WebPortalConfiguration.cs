@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using Octopus.Client.Model;
+using Octopus.Server.Extensibility.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
@@ -57,15 +58,6 @@ namespace Octopus.Shared.Configuration
         {
             get { return settings.Get("Octopus.WebPortal.AuthenticationMode", AuthenticationMode.UsernamePassword); }
             set { settings.Set("Octopus.WebPortal.AuthenticationMode", value); }
-        }
-
-        /// <summary>
-        /// Gets or sets the active directory container, if not specified default container is used
-        /// </summary>
-        public string ActiveDirectoryContainer
-        {
-            get { return settings.Get("Octopus.WebPortal.ActiveDirectoryContainer", String.Empty); }
-            set { settings.Set("Octopus.WebPortal.ActiveDirectoryContainer", value); }
         }
 
         /// <summary>

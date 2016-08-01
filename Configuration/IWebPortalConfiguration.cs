@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using Octopus.Client.Model;
+using Octopus.Server.Extensibility.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
@@ -31,11 +32,6 @@ namespace Octopus.Shared.Configuration
         /// Gets or sets which authentication mode to use.
         /// </summary>
         AuthenticationMode AuthenticationMode { get; set; }
-
-        /// <summary>
-        /// Gets or sets the active directory container, if not specified default container is used
-        /// </summary>
-        string ActiveDirectoryContainer { get; set; }
 
         /// <summary>
         /// Gets or sets an optional whitelist of allowed domains (empty or null turns CORS off)

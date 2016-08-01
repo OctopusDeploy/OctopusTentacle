@@ -133,11 +133,9 @@
     <Compile Include="Configuration\ICommunicationsConfiguration.cs" />
     <Compile Include="Configuration\IDeploymentProcessConfiguration.cs" />
     <Compile Include="Configuration\IHomeConfiguration.cs" />
-    <Compile Include="Configuration\IKeyValueStore.cs" />
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
     <Compile Include="Configuration\ILogInitializer.cs" />
     <Compile Include="Configuration\IMasterKeyConfiguration.cs" />
-    <Compile Include="Configuration\IModifiableConfiguration.cs" />
     <Compile Include="Configuration\IOctopusServerStorageConfiguration.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
     <Compile Include="Configuration\ITentacleConfiguration.cs" />
@@ -170,9 +168,6 @@
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
     <Compile Include="Diagnostics\TimedSection.cs" />
-    <Compile Include="Extensibility\IOctopusExtension.cs" />
-    <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
-    <Compile Include="Extensibility\OctopusPluginAttribute.cs" />
     <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Diagnostics\LogContext.cs" />
@@ -385,7 +380,6 @@
     <Compile Include="Time\Sleep.cs" />
     <Compile Include="Time\SystemClock.cs" />
     <Compile Include="Time\TimeModule.cs" />
-    <Compile Include="Time\IClock.cs" />
     <Compile Include="Tools\OctoDiff.cs" />
     <Compile Include="Util\AmazingConverter.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
