@@ -140,7 +140,6 @@
     <Compile Include="Configuration\IProxyConfiguration.cs" />
     <Compile Include="Configuration\ITentacleConfiguration.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
-    <Compile Include="Configuration\IWebPortalConfiguration.cs" />
     <Compile Include="Configuration\OctopusServerConfiguration.cs" />
     <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Contracts\IFileTransferService.cs" />

@@ -1,5 +1,6 @@
 using System;
 using Autofac;
+using Octopus.Server.Extensibility.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
