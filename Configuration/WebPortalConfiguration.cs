@@ -1,6 +1,5 @@
 using System;
 using System.Net;
-using Octopus.Client.Model;
 using Octopus.Server.Extensibility.Configuration;
 
 namespace Octopus.Shared.Configuration
@@ -34,30 +33,12 @@ namespace Octopus.Shared.Configuration
         }
 
         /// <summary>
-        /// Gets or sets whether guest login is enabled.
-        /// </summary>
-        public bool GuestLoginEnabled
-        {
-            get { return settings.Get("Octopus.WebPortal.GuestLoginEnabled", false); }
-            set { settings.Set("Octopus.WebPortal.GuestLoginEnabled", value); }
-        }
-
-        /// <summary>
         /// Gets or sets whether HTTP request logging is enabled.
         /// </summary>
         public bool RequestLoggingEnabled
         {
             get { return settings.Get("Octopus.WebPortal.RequestLoggingEnabled", false); }
             set { settings.Set("Octopus.WebPortal.RequestLoggingEnabled", value); }
-        }
-
-        /// <summary>
-        /// Gets or sets which authentication mode to use.
-        /// </summary>
-        public AuthenticationMode AuthenticationMode
-        {
-            get { return settings.Get("Octopus.WebPortal.AuthenticationMode", AuthenticationMode.UsernamePassword); }
-            set { settings.Set("Octopus.WebPortal.AuthenticationMode", value); }
         }
 
         /// <summary>
@@ -91,16 +72,6 @@ namespace Octopus.Shared.Configuration
         {
             get { return settings.Get("Octopus.WebPortal.AllowFormsAuthenticationForDomainUsers", true); }
             set { settings.Set("Octopus.WebPortal.AllowFormsAuthenticationForDomainUsers", value); }
-        }
-
-        public bool IsFormsAuthAllowed()
-        {
-            return AuthenticationMode == AuthenticationMode.UsernamePassword || AllowFormsAuthenticationForDomainUsers;
-        }
-
-        public bool IsExternalLoginEnabled()
-        {
-            return AuthenticationMode == AuthenticationMode.Token;
         }
 
         public void Save()
