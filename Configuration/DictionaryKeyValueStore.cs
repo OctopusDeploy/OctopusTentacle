@@ -23,6 +23,11 @@ namespace Octopus.Shared.Configuration
             return settings.Value.TryGetValue(key, out result) ? result : null;
         }
 
+        protected override void Delete(string key)
+        {
+            settings.Value.Remove(key);
+        }
+
         public override sealed void Save()
         {
             SaveSettings(settings.Value);
