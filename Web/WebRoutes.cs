@@ -228,8 +228,8 @@ namespace Octopus.Shared.Web
 
             public static class Events
             {
-                public static string Template = "~/api/events{/id}{?skip,regarding,regardingAny,user,from,to}";
-                public static string Index = "~/api/events{?skip,regarding,regardingAny,user,from,to}";
+                public static string Template = "~/api/events{/id}{?skip,regarding,regardingAny,user,from,to,internal}";
+                public static string Index = "~/api/events{?skip,regarding,regardingAny,user,from,to,internal}";
                 public static string Get = "~/api/events/{id}";
             }
 
