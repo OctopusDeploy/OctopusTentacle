@@ -1,11 +1,12 @@
 ﻿using System;
-using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Autofac;
 using Octopus.Server.Extensibility;
 using Octopus.Server.Extensibility.Diagnostics;
 using Octopus.Shared.Diagnostics;
+using Module = Autofac.Module;
 
 namespace Octopus.Shared.Extensibility
 {
@@ -26,14 +27,26 @@ namespace Octopus.Shared.Extensibility
 
             log.Verbose($"Loading plugins from: {path}");
 
-            var catalog = new DirectoryCatalog(path);
+            LoadExtensions(builder, path);
+        }
 
-            var container = new CompositionContainer(catalog);
-            var plugins = container.GetExports<IOctopusExtension, IOctopusExtensionMetadata>().Distinct();
-            foreach (var item in plugins)
+        void LoadExtensions(ContainerBuilder builder, string path)
+        {
+            foreach (var file in Directory.EnumerateFiles(path, "*.dll"))
             {
-                log.Info($"Loading external plugin: {item.Metadata.FriendlyName}");
-                item.Value.Load(builder);
+                var assembly = Assembly.LoadFrom(file);
+
+                var extensionTypes = assembly.ExportedTypes.Where(t => t.IsAssignableTo<IOctopusExtension>());
+                foreach (var extensionType in extensionTypes)
+                {
+                    var metadataAttribute = extensionType.GetCustomAttribute(typeof(OctopusPluginAttribute)) as IOctopusExtensionMetadata;
+                    var friendlyName = metadataAttribute == null ? extensionType.Name : metadataAttribute.FriendlyName;
+                    log.Info($"Loading external plugin: {friendlyName}");
+
+                    var extensionInstance = (IOctopusExtension)Activator.CreateInstance(extensionType);
+
+                    extensionInstance.Load(builder);
+                }
             }
         }
     }
