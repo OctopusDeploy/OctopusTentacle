@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Octopus.Shared.Configuration
 {
@@ -7,9 +8,9 @@ namespace Octopus.Shared.Configuration
     {
         readonly Lazy<IDictionary<string, string>> settings;
 
-        public DictionaryKeyValueStore()
+        public DictionaryKeyValueStore(bool isWriteOnly = false)
         {
-            settings = new Lazy<IDictionary<string, string>>(Load);
+            settings = isWriteOnly ? new Lazy<IDictionary<string, string>>(() => new Dictionary<string, string>()) : new Lazy<IDictionary<string, string>>(Load);
         }
 
         protected override sealed void Write(string key, string value)
@@ -46,6 +47,11 @@ namespace Octopus.Shared.Configuration
 
         protected virtual void SaveSettings(IDictionary<string, string> settingsToSave)
         {
+        }
+
+        public override string ToString()
+        {
+            return string.Concat(settings.Value.Select(x => $"{x.Key}: {x.Value}\n"));
         }
     }
 }
