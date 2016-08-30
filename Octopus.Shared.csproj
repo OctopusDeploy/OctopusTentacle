@@ -446,9 +446,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Octopus.Lib\Octopus.Lib.csproj">
-      <Project>{E78CD84B-1503-4EB1-AC61-7DA78197A47B}</Project>
-      <Name>Octopus.Lib</Name>
+    <ProjectReference Include="..\Octopus.Client\Octopus.Client.csproj">
+      <Project>{FAF9A6DD-C669-4F5B-88AF-8AB2B8F3B7C4}</Project>
+      <Name>Octopus.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
