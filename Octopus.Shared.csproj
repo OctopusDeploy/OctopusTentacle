@@ -52,8 +52,8 @@
       <HintPath>..\packages\Halibut.2.3.0\lib\Halibut.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Nito.AsyncEx, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
@@ -100,6 +100,10 @@
       <HintPath>..\packages\NuGet.Versioning.3.4.3\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Octopus.Client, Version=3.4.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Client.3.4.3-dnc0032\lib\net45\Octopus.Client.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -111,6 +115,7 @@
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Management" />
     <Reference Include="System.Net" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Security" />
     <Reference Include="System.ServiceProcess" />
@@ -444,12 +449,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Octopus.Client\Octopus.Client.csproj">
-      <Project>{FAF9A6DD-C669-4F5B-88AF-8AB2B8F3B7C4}</Project>
-      <Name>Octopus.Client</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Internals\Options\_Readme.txt" />
