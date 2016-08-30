@@ -6,6 +6,7 @@ using Autofac;
 using Octopus.Server.Extensibility;
 using Octopus.Server.Extensibility.Diagnostics;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Internals.Options;
 using Module = Autofac.Module;
 
 namespace Octopus.Shared.Extensibility
@@ -41,7 +42,7 @@ namespace Octopus.Shared.Extensibility
                 {
                     var metadataAttribute = extensionType.GetCustomAttribute(typeof(OctopusPluginAttribute)) as IOctopusExtensionMetadata;
                     var friendlyName = metadataAttribute == null ? extensionType.Name : metadataAttribute.FriendlyName;
-                    log.Info($"Loading external plugin: {friendlyName}");
+                    log.Verbose($"Loading external plugin: {friendlyName}");
 
                     var extensionInstance = (IOctopusExtension)Activator.CreateInstance(extensionType);
 
