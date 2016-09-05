@@ -7,7 +7,7 @@ using System.Linq;
 namespace Octopus.Shared.Util
 {
     public static class StringExtensions
-// ReSharper restore CheckNamespace
+    // ReSharper restore CheckNamespace
     {
         public static string FirstLineTrimmedTo(this string text, int length)
         {
@@ -45,5 +45,13 @@ namespace Octopus.Shared.Util
 
         public static string CommaSeperate(this IEnumerable<object> items) => string.Join(", ", items);
         public static string NewLineSeperate(this IEnumerable<object> items) => string.Join(Environment.NewLine, items);
+
+        public static string ConstructQueryString(this System.Collections.Specialized.NameValueCollection Params)
+        {
+            var items = new List<string>();
+            foreach (string name in Params)
+                items.Add(String.Concat(name, "=", System.Web.HttpUtility.UrlEncode(Params[name])));
+            return string.Join("&", items.ToArray());
+        }
     }
 }
