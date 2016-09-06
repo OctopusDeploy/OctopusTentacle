@@ -55,7 +55,7 @@ namespace Octopus.Shared.Util
                 var values = @params[key].Split(',');
                 foreach (var value in values)
                 {
-                    items.Add(String.Concat(key, "=", System.Web.HttpUtility.UrlEncode(value)));
+                    items.Add(string.Concat(key, "=", System.Web.HttpUtility.UrlEncode(value)));
                 }
             }
             return string.Join("&", items.ToArray());
