@@ -186,11 +186,11 @@ namespace Octopus.Shared.Web
                 public static string Machines = "~/api/machinepolicies/{id}/machines{?skip}";
             }
 
-            public static class Triggers
+            public static class Subscriptions
             {
-                public static string Template = "~/api/triggers{/id}{?skip}";
-                public static string Index = "~/api/triggers{?skip}";
-                public static string Get = "~/api/triggers/{id}";
+                public static string Template = "~/api/subscriptions{/id}{?skip}";
+                public static string Index = "~/api/subscriptions{?skip}";
+                public static string Get = "~/api/subscriptions/{id}";
             }
 
             public static class ProjectGroups
