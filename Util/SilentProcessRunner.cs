@@ -6,7 +6,7 @@ using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using Octopus.Server.Extensibility.Diagnostics;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Util

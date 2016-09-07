@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Octopus.Server.Extensibility.Diagnostics;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 
 namespace Octopus.Shared.Packages
 {

@@ -1,7 +1,7 @@
 using System;
 using Autofac;
-using Octopus.Server.Extensibility.Configuration;
-using Octopus.Server.Extensibility.Diagnostics;
+using Octopus.Server.Extensibility.HostServices.Configuration;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Security.MasterKey;
 using Octopus.Shared.Util;
 

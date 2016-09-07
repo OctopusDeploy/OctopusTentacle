@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using Octopus.Server.Extensibility.Configuration;
+using Octopus.Server.Extensibility.HostServices.Configuration;
 
 namespace Octopus.Shared.Configuration
 {

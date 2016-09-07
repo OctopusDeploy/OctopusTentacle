@@ -1,5 +1,5 @@
 ﻿using System;
-using Octopus.Server.Extensibility.Diagnostics;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Startup;
 

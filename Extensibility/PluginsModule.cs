@@ -3,10 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Autofac;
-using Octopus.Server.Extensibility;
-using Octopus.Server.Extensibility.Diagnostics;
+using Octopus.Server.Extensibility.Extensions;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Internals.Options;
 using Module = Autofac.Module;
 
 namespace Octopus.Shared.Extensibility

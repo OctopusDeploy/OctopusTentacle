@@ -1,6 +1,6 @@
 using System;
 using Autofac;
-using Octopus.Server.Extensibility.Time;
+using Octopus.Server.Extensibility.HostServices.Time;
 
 namespace Octopus.Shared.Time
 {
