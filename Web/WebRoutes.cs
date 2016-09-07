@@ -244,6 +244,7 @@ namespace Octopus.Shared.Web
                 public static string Index = "~/api/events{?skip,regarding,regardingAny,users,projects,environments,triggerGroups,eventCategories,tags,tenants,from,to,internal}";
                 public static string Get = "~/api/events/{id}";
                 public static string GetCategories = "~/api/events/categories";
+                public static string GetGroups = "~/api/events/groups";
             }
 
             public static class Feeds
