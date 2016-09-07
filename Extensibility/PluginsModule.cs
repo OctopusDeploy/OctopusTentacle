@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -18,7 +19,19 @@ namespace Octopus.Shared.Extensibility
         {
             base.Load(builder);
 
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OctopusPlugins");
+            var extensions = LoadCustomExtensions(builder);
+            LoadBuiltInExtensions(builder, extensions);
+        }
+
+        HashSet<string> LoadCustomExtensions(ContainerBuilder builder)
+        {
+            // load extensions from AppData/Octopus/CustomExtensions
+            return LoadExtensions(builder, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), @"Octopus\CustomExtensions"), new HashSet<string>() );
+        }
+
+        void LoadBuiltInExtensions(ContainerBuilder builder, HashSet<string> alreadyLoadedExtensions)
+        {
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BuiltInExtensions");
             if (!Directory.Exists(path))
             {
                 log.Verbose($"Plugins directory does not exist: {path}");
@@ -27,12 +40,15 @@ namespace Octopus.Shared.Extensibility
 
             log.Verbose($"Loading plugins from: {path}");
 
-            LoadExtensions(builder, path);
+            LoadExtensions(builder, path, alreadyLoadedExtensions);
         }
 
-        void LoadExtensions(ContainerBuilder builder, string path)
+        HashSet<string> LoadExtensions(ContainerBuilder builder, string path, HashSet<string> loadedExtensions)
         {
-            foreach (var file in Directory.EnumerateFiles(path, "*.dll"))
+            if (!Directory.Exists(path))
+                return loadedExtensions;
+
+            foreach (var file in Directory.EnumerateFiles(path, "*.dll").Where(f => !loadedExtensions.Contains(f)))
             {
                 var assembly = Assembly.LoadFrom(file);
 
@@ -47,7 +63,11 @@ namespace Octopus.Shared.Extensibility
 
                     extensionInstance.Load(builder);
                 }
+
+                loadedExtensions.Add(file);
             }
+
+            return loadedExtensions;
         }
     }
 }
