@@ -395,6 +395,11 @@ namespace Octopus.Shared.Web
                 public static string Index = "~/api/tagsets{?skip}";
                 public static string SortOrder = "~/api/tagsets/sortorder";
             }
+
+            public class Steps
+            {
+                public static string All = "~/api/steps/all";
+            }
         }
 
         public static class Web
