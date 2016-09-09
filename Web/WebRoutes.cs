@@ -114,11 +114,9 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/permissions/all";
             }
 
-            public static class ExternalSecurityGroups
+            public static class ExternalSecurityGroupProviders
             {
-                public static string Template = "~/api/externalsecuritygroups{/id}{?name}";
-                public static string Index = "~/api/externalsecuritygroups{?name}";
-                public static string Get = "~/api/externalsecuritygroups/{id}";
+                public static string Index = "~/api/externalsecuritygroupproviders";
             }
 
             public static class UserRoles
