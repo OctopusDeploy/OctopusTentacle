@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Octopus.Client.Model;
+using Octopus.Server.Extensibility.HostServices.Authentication;
 
 namespace Octopus.Shared.Security.Permissions
 {

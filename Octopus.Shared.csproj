@@ -235,7 +235,6 @@
     <Compile Include="Security\MasterKey\MasterKeyEncryptionExtensions.cs" />
     <Compile Include="Security\MasterKey\WriteOnlyEncryption.cs" />
     <Compile Include="Security\Permissions\AuthorizationRequest.cs" />
-    <Compile Include="Security\Permissions\AuthorizationResult.cs" />
     <Compile Include="Security\Permissions\AuthorizationScopeAssertion.cs" />
     <Compile Include="Security\Permissions\GrantRestrictionScope.cs" />
     <Compile Include="Security\Permissions\IPermissionSet.cs" />
