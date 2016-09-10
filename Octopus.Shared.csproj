@@ -100,10 +100,6 @@
       <HintPath>..\packages\NuGet.Versioning.3.4.3\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Client, Version=3.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Client.3.5.0\lib\net45\Octopus.Client.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -142,7 +138,6 @@
     <Compile Include="Configuration\IModifiableConfiguration.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
-    <Compile Include="Configuration\OctopusServerConfiguration.cs" />
     <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Contracts\IFileTransferService.cs" />
     <Compile Include="Contracts\IScriptService.cs" />
@@ -232,10 +227,6 @@
     <Compile Include="Security\Certificates\CertificateEncoder.cs" />
     <Compile Include="Security\Masking\MaskedException.cs" />
     <Compile Include="Security\Masking\SensitiveDataMask.cs" />
-    <Compile Include="Security\MasterKey\EncryptionUnsupported.cs" />
-    <Compile Include="Security\MasterKey\IMasterKeyEncryption.cs" />
-    <Compile Include="Security\MasterKey\MasterKeyEncryptionExtensions.cs" />
-    <Compile Include="Security\MasterKey\WriteOnlyEncryption.cs" />
     <Compile Include="Startup\AbstractMultiOperationCommand.cs" />
     <Compile Include="Tasks\ActionFailedException.cs" />
     <Compile Include="Tasks\ActivityFailedException.cs" />
@@ -300,7 +291,6 @@
     <Compile Include="Configuration\XmlSettingsRoot.cs" />
     <Compile Include="Configuration\XmlStreamReadOnlyKeyValueStore.cs" />
     <Compile Include="Contracts\IEchoService.cs" />
-    <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
     <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
@@ -335,8 +325,6 @@
     <Compile Include="Security\CertificateValidator.cs" />
     <Compile Include="Security\ICertificateGenerator.cs" />
     <Compile Include="Security\CertificatesModule.cs" />
-    <Compile Include="Security\MasterKey\MasterKeyEncryption.cs" />
-    <Compile Include="Security\MasterKey\StoredMasterKeyEncryption.cs" />
     <Compile Include="Startup\AbstractCommand.cs" />
     <Compile Include="Startup\AbstractStandardCommand.cs" />
     <Compile Include="Startup\AutofacExtensions.cs" />
