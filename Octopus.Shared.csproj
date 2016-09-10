@@ -134,7 +134,6 @@
     <Compile Include="Configuration\IKeyValueStore.cs" />
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
     <Compile Include="Configuration\ILogInitializer.cs" />
-    <Compile Include="Configuration\IMasterKeyConfiguration.cs" />
     <Compile Include="Configuration\IModifiableConfiguration.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
@@ -263,7 +262,6 @@
     <Compile Include="Util\StreamDisposalChain.cs" />
     <Compile Include="Caching\ICache.cs" />
     <Compile Include="Caching\OctopusCache.cs" />
-    <Compile Include="Communications\Commands\ShowMasterKeyCommand.cs" />
     <Compile Include="Configuration\AbstractKeyValueStore.cs" />
     <Compile Include="Configuration\ApplicationInstanceRecord.cs" />
     <Compile Include="Configuration\ApplicationInstanceSelector.cs" />
