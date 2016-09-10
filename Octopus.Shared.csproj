@@ -133,21 +133,15 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
     <Compile Include="Communications\AutofacServiceFactory.cs" />
-    <Compile Include="Configuration\AzurePowerShellModuleConfiguration.cs" />
-    <Compile Include="Configuration\IAzurePowerShellModuleConfiguration.cs" />
     <Compile Include="Configuration\ICommunicationsConfiguration.cs" />
-    <Compile Include="Configuration\IDeploymentProcessConfiguration.cs" />
     <Compile Include="Configuration\IHomeConfiguration.cs" />
     <Compile Include="Configuration\IKeyValueStore.cs" />
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
     <Compile Include="Configuration\ILogInitializer.cs" />
     <Compile Include="Configuration\IMasterKeyConfiguration.cs" />
     <Compile Include="Configuration\IModifiableConfiguration.cs" />
-    <Compile Include="Configuration\IOctopusServerStorageConfiguration.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
-    <Compile Include="Configuration\ITentacleConfiguration.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
-    <Compile Include="Configuration\IWebPortalConfiguration.cs" />
     <Compile Include="Configuration\OctopusServerConfiguration.cs" />
     <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Contracts\IFileTransferService.cs" />
@@ -242,14 +236,6 @@
     <Compile Include="Security\MasterKey\IMasterKeyEncryption.cs" />
     <Compile Include="Security\MasterKey\MasterKeyEncryptionExtensions.cs" />
     <Compile Include="Security\MasterKey\WriteOnlyEncryption.cs" />
-    <Compile Include="Security\Permissions\AuthorizationRequest.cs" />
-    <Compile Include="Security\Permissions\AuthorizationResult.cs" />
-    <Compile Include="Security\Permissions\AuthorizationScopeAssertion.cs" />
-    <Compile Include="Security\Permissions\GrantRestrictionScope.cs" />
-    <Compile Include="Security\Permissions\IPermissionSet.cs" />
-    <Compile Include="Security\Permissions\PermissionInfo.cs" />
-    <Compile Include="Security\Permissions\RestrictedGrant.cs" />
-    <Compile Include="Security\Permissions\WildcardDocumentId.cs" />
     <Compile Include="Startup\AbstractMultiOperationCommand.cs" />
     <Compile Include="Tasks\ActionFailedException.cs" />
     <Compile Include="Tasks\ActivityFailedException.cs" />
@@ -294,7 +280,6 @@
     <Compile Include="Configuration\ApplicationName.cs" />
     <Compile Include="Configuration\CommunicationsConfiguration.cs" />
     <Compile Include="Configuration\ConfigurationModule.cs" />
-    <Compile Include="Configuration\DeploymentProcessConfiguration.cs" />
     <Compile Include="Configuration\DictionaryKeyValueStore.cs" />
     <Compile Include="Configuration\HomeConfiguration.cs" />
     <Compile Include="Configuration\IApplicationInstanceSelector.cs" />
@@ -303,16 +288,11 @@
     <Compile Include="Configuration\LoadedApplicationInstance.cs" />
     <Compile Include="Configuration\LoggingConfiguration.cs" />
     <Compile Include="Configuration\LogInitializer.cs" />
-    <Compile Include="Configuration\OctopusServerStorageConfiguration.cs" />
     <Compile Include="Configuration\OctopusStorage.cs" />
     <Compile Include="Configuration\ProxyConfiguration.cs" />
     <Compile Include="Configuration\ProxyInitializer.cs" />
-    <Compile Include="Configuration\ServerConfigurationModule.cs" />
     <Compile Include="Configuration\ServiceName.cs" />
-    <Compile Include="Configuration\TentacleConfiguration.cs" />
-    <Compile Include="Configuration\TentacleConfigurationModule.cs" />
     <Compile Include="Configuration\UpgradeCheckConfiguration.cs" />
-    <Compile Include="Configuration\WebPortalConfiguration.cs" />
     <Compile Include="Configuration\WindowsRegistryKeyValueStore.cs" />
     <Compile Include="Configuration\XmlFileKeyValueStore.cs" />
     <Compile Include="Configuration\XmlKeyValueStore.cs" />
