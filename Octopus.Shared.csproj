@@ -134,13 +134,11 @@
     <Compile Include="Configuration\ApplicationInstanceSelector.cs" />
     <Compile Include="Configuration\ApplicationInstanceStore.cs" />
     <Compile Include="Configuration\ApplicationName.cs" />
-    <Compile Include="Configuration\CommunicationsConfiguration.cs" />
     <Compile Include="Configuration\ConfigurationModule.cs" />
     <Compile Include="Configuration\DictionaryKeyValueStore.cs" />
     <Compile Include="Configuration\HomeConfiguration.cs" />
     <Compile Include="Configuration\IApplicationInstanceSelector.cs" />
     <Compile Include="Configuration\IApplicationInstanceStore.cs" />
-    <Compile Include="Configuration\ICommunicationsConfiguration.cs" />
     <Compile Include="Configuration\IHomeConfiguration.cs" />
     <Compile Include="Configuration\IKeyValueStore.cs" />
     <Compile Include="Configuration\ILoggingConfiguration.cs" />

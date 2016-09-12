@@ -37,7 +37,6 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<PollingProxyConfiguration>().As<IPollingProxyConfiguration>();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
             builder.RegisterType<ProxyInitializer>().As<IStartable>();
-            builder.RegisterType<CommunicationsConfiguration>().As<ICommunicationsConfiguration>().SingleInstance();
         }
     }
 }
