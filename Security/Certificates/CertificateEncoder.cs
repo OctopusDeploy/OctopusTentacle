@@ -51,6 +51,12 @@ namespace Octopus.Shared.Security.Certificates
             return DoFromBase64String(thumbprint, certificateString, new X509Store("Octopus", StoreLocation.CurrentUser));
         }
 
+        public static X509Certificate2 FromBase64String(string thumbprint, string certificateString, string password)
+        {
+            if (certificateString == null) throw new ArgumentNullException(nameof(certificateString));
+            return DoFromBase64String(thumbprint, certificateString, password, new X509Store("Octopus", StoreLocation.CurrentUser));
+        }
+
         public static X509Certificate2 FromBase64String(string thumbprint, string certificateString, StoreName storeName)
         {
             if (certificateString == null) throw new ArgumentNullException("certificateString");
@@ -63,6 +69,11 @@ namespace Octopus.Shared.Security.Certificates
         }
 
         static X509Certificate2 DoFromBase64String(string thumbprint, string certificateString, X509Store store)
+        {
+            return DoFromBase64String(thumbprint, certificateString, null, store);
+        }
+
+        static X509Certificate2 DoFromBase64String(string thumbprint, string certificateString, string password, X509Store store)
         {
             store.Open(OpenFlags.ReadWrite);
             try
@@ -87,10 +98,10 @@ namespace Octopus.Shared.Security.Certificates
                 {
                     File.WriteAllBytes(file, raw);
 
-                    var certificate = LoadCertificateWithPrivateKey(file);
+                    var certificate = LoadCertificateWithPrivateKey(file, password);
                     if (CheckThatCertificateWasLoadedWithPrivateKey(certificate) == false)
                     {
-                        certificate = LoadCertificateWithPrivateKey(file);
+                        certificate = LoadCertificateWithPrivateKey(file, password);
                     }
                     
                     if (certificate == null)
@@ -113,14 +124,14 @@ namespace Octopus.Shared.Security.Certificates
             }
         }
 
-        static X509Certificate2 LoadCertificateWithPrivateKey(string file)
+        static X509Certificate2 LoadCertificateWithPrivateKey(string file, string password)
         {
-            return TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, true)
-                ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, true)
-                    ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, true)
-                        ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, false)
-                            ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, false)
-                                ?? TryLoadCertificate(file, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, false);
+            return TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, true)
+                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, true)
+                    ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, true)
+                        ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, false)
+                            ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, false)
+                                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, false);
         }
 
         static bool CheckThatCertificateWasLoadedWithPrivateKey(X509Certificate2 certificate)
@@ -185,11 +196,11 @@ namespace Octopus.Shared.Security.Certificates
             }
         }
 
-        static X509Certificate2 TryLoadCertificate(string file, X509KeyStorageFlags flags, bool requirePrivateKey)
+        static X509Certificate2 TryLoadCertificate(string file, string password, X509KeyStorageFlags flags, bool requirePrivateKey)
         {
             try
             {
-                var cert = new X509Certificate2(file, (string)null, flags);
+                var cert = new X509Certificate2(file, password, flags);
 
                 if (!HasPrivateKey(cert) && requirePrivateKey)
                     return null;
