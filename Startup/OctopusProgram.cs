@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
-using Octopus.Client.Model;
+using NuGet.Versioning;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Internals.Options;

@@ -1,7 +1,6 @@
 using System;
 using Autofac;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Security.MasterKey;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
@@ -39,7 +38,6 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
             builder.RegisterType<ProxyInitializer>().As<IStartable>();
             builder.RegisterType<CommunicationsConfiguration>().As<ICommunicationsConfiguration>().SingleInstance();
-            builder.Register(c => new StoredMasterKeyEncryption(c.Resolve<IMasterKeyConfiguration>().MasterKey)).As<IMasterKeyEncryption>().SingleInstance();
         }
     }
 }
