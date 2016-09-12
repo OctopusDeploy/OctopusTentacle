@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Autofac;
 using Octopus.Server.Extensibility.Extensions;
+using Octopus.Server.Extensibility.Extensions.Infrastructure.Web;
 using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Module = Autofac.Module;
@@ -18,6 +19,8 @@ namespace Octopus.Shared.Extensibility
         protected override void Load(ContainerBuilder builder)
         {
             base.Load(builder);
+
+            builder.RegisterGeneric(typeof(WhenEnabledActionInvoker<,>)).InstancePerDependency();
 
             var extensions = LoadCustomExtensions(builder);
             LoadBuiltInExtensions(builder, extensions);
