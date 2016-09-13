@@ -111,6 +111,7 @@
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Management" />
     <Reference Include="System.Net" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Security" />
     <Reference Include="System.ServiceProcess" />
@@ -128,37 +129,54 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
     <Compile Include="Communications\AutofacServiceFactory.cs" />
-    <Compile Include="Configuration\AzurePowerShellModuleConfiguration.cs" />
-    <Compile Include="Configuration\IAzurePowerShellModuleConfiguration.cs" />
-    <Compile Include="Configuration\ICommunicationsConfiguration.cs" />
-    <Compile Include="Configuration\IDeploymentProcessConfiguration.cs" />
+    <Compile Include="Configuration\AbstractKeyValueStore.cs" />
+    <Compile Include="Configuration\ApplicationInstanceRecord.cs" />
+    <Compile Include="Configuration\ApplicationInstanceSelector.cs" />
+    <Compile Include="Configuration\ApplicationInstanceStore.cs" />
+    <Compile Include="Configuration\ApplicationName.cs" />
+    <Compile Include="Configuration\ConfigurationModule.cs" />
+    <Compile Include="Configuration\DictionaryKeyValueStore.cs" />
+    <Compile Include="Configuration\HomeConfiguration.cs" />
+    <Compile Include="Configuration\IApplicationInstanceSelector.cs" />
+    <Compile Include="Configuration\IApplicationInstanceStore.cs" />
     <Compile Include="Configuration\IHomeConfiguration.cs" />
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
     <Compile Include="Configuration\ILogInitializer.cs" />
-    <Compile Include="Configuration\IMasterKeyConfiguration.cs" />
-    <Compile Include="Configuration\IOctopusServerStorageConfiguration.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
-    <Compile Include="Configuration\ITentacleConfiguration.cs" />
+    <Compile Include="Configuration\IsolatedStorageXmlFileKeyValueStore.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\JsonConsoleKeyValueStore.cs" />
     <Compile Include="Configuration\JsonFileKeyValueStore.cs" />
     <Compile Include="Configuration\JsonKeyValueStore.cs" />
-    <Compile Include="Configuration\OctopusServerConfiguration.cs" />
     <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Configuration\XmlConsoleKeyValueStore.cs" />
+    <Compile Include="Configuration\LoadedApplicationInstance.cs" />
+    <Compile Include="Configuration\LoggingConfiguration.cs" />
+    <Compile Include="Configuration\LogInitializer.cs" />
+    <Compile Include="Configuration\OctopusStorage.cs" />
+    <Compile Include="Configuration\ProxyConfiguration.cs" />
+    <Compile Include="Configuration\ProxyInitializer.cs" />
+    <Compile Include="Configuration\ServiceName.cs" />
+    <Compile Include="Configuration\UpgradeCheckConfiguration.cs" />
+    <Compile Include="Configuration\WindowsRegistryKeyValueStore.cs" />
+    <Compile Include="Configuration\XmlFileKeyValueStore.cs" />
+    <Compile Include="Configuration\XmlKeyValueStore.cs" />
+    <Compile Include="Configuration\XmlSetting.cs" />
+    <Compile Include="Configuration\XmlSettingsRoot.cs" />
+    <Compile Include="Configuration\XmlStreamReadOnlyKeyValueStore.cs" />
+    <Compile Include="Contracts\CancelScriptCommand.cs" />
+    <Compile Include="Contracts\CompleteScriptCommand.cs" />
+    <Compile Include="Contracts\IEchoService.cs" />
     <Compile Include="Contracts\IFileTransferService.cs" />
     <Compile Include="Contracts\IScriptService.cs" />
     <Compile Include="Contracts\ScriptFile.cs" />
     <Compile Include="Contracts\ScriptIsolationLevel.cs" />
-    <Compile Include="Contracts\StartScriptCommand.cs" />
-    <Compile Include="Contracts\CancelScriptCommand.cs" />
-    <Compile Include="Contracts\CompleteScriptCommand.cs" />
     <Compile Include="Contracts\ScriptStatusRequest.cs" />
     <Compile Include="Contracts\ScriptStatusResponse.cs" />
     <Compile Include="Contracts\ScriptTicket.cs" />
+    <Compile Include="Contracts\StartScriptCommand.cs" />
     <Compile Include="Contracts\UploadResult.cs" />
     <Compile Include="ControlledFailureException.cs" />
-    <Compile Include="Conventions\OctopusName.cs" />
     <Compile Include="Diagnostics\AbstractLog.cs" />
     <Compile Include="Diagnostics\ILogAppender.cs" />
     <Compile Include="Diagnostics\ILogWithContext.cs" />
@@ -174,17 +192,11 @@
     <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Diagnostics\LogContext.cs" />
-    <Compile Include="Diagnostics\ProgressMessageCategory.cs" />
     <Compile Include="Util\CommonValidationMessages.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="Model\EncryptedAttribute.cs" />
     <Compile Include="Packages\IPackageInstaller.cs" />
     <Compile Include="Packages\NuGetPackageInstaller.cs" />
-    <Compile Include="Pipeline\IPipelineComponent.cs" />
-    <Compile Include="Pipeline\IPipelineConsumer.cs" />
-    <Compile Include="Pipeline\IPipelineConsumerProducer.cs" />
-    <Compile Include="Pipeline\IPipelineProducer.cs" />
-    <Compile Include="Pipeline\Pipeline.cs" />
     <Compile Include="Properties\AspMvcActionAttribute.cs" />
     <Compile Include="Properties\AspMvcActionSelectorAttribute.cs" />
     <Compile Include="Properties\AspMvcAreaAttribute.cs" />
@@ -230,17 +242,6 @@
     <Compile Include="Security\Certificates\CertificateEncoder.cs" />
     <Compile Include="Security\Masking\MaskedException.cs" />
     <Compile Include="Security\Masking\SensitiveDataMask.cs" />
-    <Compile Include="Security\MasterKey\EncryptionUnsupported.cs" />
-    <Compile Include="Security\MasterKey\IMasterKeyEncryption.cs" />
-    <Compile Include="Security\MasterKey\MasterKeyEncryptionExtensions.cs" />
-    <Compile Include="Security\MasterKey\WriteOnlyEncryption.cs" />
-    <Compile Include="Security\Permissions\AuthorizationRequest.cs" />
-    <Compile Include="Security\Permissions\AuthorizationScopeAssertion.cs" />
-    <Compile Include="Security\Permissions\GrantRestrictionScope.cs" />
-    <Compile Include="Security\Permissions\IPermissionSet.cs" />
-    <Compile Include="Security\Permissions\PermissionInfo.cs" />
-    <Compile Include="Security\Permissions\RestrictedGrant.cs" />
-    <Compile Include="Security\Permissions\WildcardDocumentId.cs" />
     <Compile Include="Startup\AbstractMultiOperationCommand.cs" />
     <Compile Include="Tasks\ActionFailedException.cs" />
     <Compile Include="Tasks\ActivityFailedException.cs" />
@@ -275,42 +276,6 @@
     <Compile Include="Util\Result.cs" />
     <Compile Include="Util\ResultExtensions.cs" />
     <Compile Include="Util\StreamDisposalChain.cs" />
-    <Compile Include="Caching\ICache.cs" />
-    <Compile Include="Caching\OctopusCache.cs" />
-    <Compile Include="Communications\Commands\ShowMasterKeyCommand.cs" />
-    <Compile Include="Configuration\AbstractKeyValueStore.cs" />
-    <Compile Include="Configuration\ApplicationInstanceRecord.cs" />
-    <Compile Include="Configuration\ApplicationInstanceSelector.cs" />
-    <Compile Include="Configuration\ApplicationInstanceStore.cs" />
-    <Compile Include="Configuration\ApplicationName.cs" />
-    <Compile Include="Configuration\CommunicationsConfiguration.cs" />
-    <Compile Include="Configuration\ConfigurationModule.cs" />
-    <Compile Include="Configuration\DeploymentProcessConfiguration.cs" />
-    <Compile Include="Configuration\DictionaryKeyValueStore.cs" />
-    <Compile Include="Configuration\HomeConfiguration.cs" />
-    <Compile Include="Configuration\IApplicationInstanceSelector.cs" />
-    <Compile Include="Configuration\IApplicationInstanceStore.cs" />
-    <Compile Include="Configuration\IsolatedStorageXmlFileKeyValueStore.cs" />
-    <Compile Include="Configuration\LoadedApplicationInstance.cs" />
-    <Compile Include="Configuration\LoggingConfiguration.cs" />
-    <Compile Include="Configuration\LogInitializer.cs" />
-    <Compile Include="Configuration\OctopusServerStorageConfiguration.cs" />
-    <Compile Include="Configuration\OctopusStorage.cs" />
-    <Compile Include="Configuration\ProxyConfiguration.cs" />
-    <Compile Include="Configuration\ProxyInitializer.cs" />
-    <Compile Include="Configuration\ServerConfigurationModule.cs" />
-    <Compile Include="Configuration\ServiceName.cs" />
-    <Compile Include="Configuration\TentacleConfiguration.cs" />
-    <Compile Include="Configuration\TentacleConfigurationModule.cs" />
-    <Compile Include="Configuration\UpgradeCheckConfiguration.cs" />
-    <Compile Include="Configuration\WindowsRegistryKeyValueStore.cs" />
-    <Compile Include="Configuration\XmlFileKeyValueStore.cs" />
-    <Compile Include="Configuration\XmlKeyValueStore.cs" />
-    <Compile Include="Configuration\XmlSetting.cs" />
-    <Compile Include="Configuration\XmlSettingsRoot.cs" />
-    <Compile Include="Configuration\XmlStreamReadOnlyKeyValueStore.cs" />
-    <Compile Include="Contracts\IEchoService.cs" />
-    <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
     <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
@@ -345,8 +310,6 @@
     <Compile Include="Security\CertificateValidator.cs" />
     <Compile Include="Security\ICertificateGenerator.cs" />
     <Compile Include="Security\CertificatesModule.cs" />
-    <Compile Include="Security\MasterKey\MasterKeyEncryption.cs" />
-    <Compile Include="Security\MasterKey\StoredMasterKeyEncryption.cs" />
     <Compile Include="Startup\AbstractCommand.cs" />
     <Compile Include="Startup\AbstractStandardCommand.cs" />
     <Compile Include="Startup\AutofacExtensions.cs" />
@@ -439,10 +402,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Octopus.Client\Octopus.Client.csproj">
-      <Project>{FAF9A6DD-C669-4F5B-88AF-8AB2B8F3B7C4}</Project>
-      <Name>Octopus.Client</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Octopus.Server.Extensibility\Octopus.Server.Extensibility.csproj">
       <Project>{edd50b77-4b5e-476c-8a66-583b7fd3fe4a}</Project>
       <Name>Octopus.Server.Extensibility</Name>
@@ -462,13 +421,6 @@
     <Content Include="TransientFaultHandling\License.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\GitVersionTask.3.6.3\build\dotnet\GitVersionTask.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\GitVersionTask.3.6.3\build\dotnet\GitVersionTask.targets'))" />
-  </Target>
-  <Import Project="..\packages\GitVersionTask.3.6.3\build\dotnet\GitVersionTask.targets" Condition="Exists('..\packages\GitVersionTask.3.6.3\build\dotnet\GitVersionTask.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
