@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Octopus.Shared.Util
 {
@@ -16,6 +14,7 @@ namespace Octopus.Shared.Util
                 yield return item;
             }
         }
+
         public static IEnumerable<TElement> NotNull<TElement>(this IEnumerable<TElement> source)
         {
             return source.Where(item => item != null);
