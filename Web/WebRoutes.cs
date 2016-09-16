@@ -100,6 +100,11 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/serverconfiguration";
             }
 
+            public static class ServerConfigurationSettings
+            {
+                public static string Template = "~/api/serverconfigurationsettings";
+            }
+
             public static class Teams
             {
                 public static string Template = "~/api/teams{/id}{?skip}";
