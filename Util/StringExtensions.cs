@@ -7,7 +7,7 @@ using System.Linq;
 namespace Octopus.Shared.Util
 {
     public static class StringExtensions
-// ReSharper restore CheckNamespace
+    // ReSharper restore CheckNamespace
     {
         public static string FirstLineTrimmedTo(this string text, int length)
         {
@@ -43,7 +43,21 @@ namespace Octopus.Shared.Util
             return string.Join(", ", items.Take(items.Length - 1)) + " and " + items.Last();
         }
 
-        public static string CommaSeperate(this IEnumerable<object> items) => string.Join(", ", items);
         public static string NewLineSeperate(this IEnumerable<object> items) => string.Join(Environment.NewLine, items);
+
+        public static string ConstructAngularFriendlyQueryString(this System.Collections.Specialized.NameValueCollection @params)
+        {
+            var items = new List<string>();
+            foreach (string key in @params)
+            {
+                // Needs to be angular friendly (eg. "?projects=Project-01&projects=Project-02" ... not "?projects=Project-01,Projects-02").
+                var values = @params[key].Split(',');
+                foreach (var value in values)
+                {
+                    items.Add(string.Concat(key, "=", System.Web.HttpUtility.UrlEncode(value)));
+                }
+            }
+            return string.Join("&", items.ToArray());
+        }
     }
 }

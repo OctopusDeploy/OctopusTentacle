@@ -1,9 +1,15 @@
 ﻿using System;
-using System.ComponentModel.Composition.Hosting;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Autofac;
+using Octopus.Server.Extensibility.Extensions;
+using Octopus.Server.Extensibility.Extensions.Infrastructure.Web;
+using Octopus.Server.Extensibility.Extensions.Infrastructure.Web.Api;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Diagnostics;
+using Module = Autofac.Module;
 
 namespace Octopus.Shared.Extensibility
 {
@@ -15,24 +21,57 @@ namespace Octopus.Shared.Extensibility
         {
             base.Load(builder);
 
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OctopusPlugins");
+            builder.RegisterGeneric(typeof(WhenEnabledActionInvoker<,>)).InstancePerDependency();
+
+            var extensions = LoadCustomExtensions(builder);
+            LoadBuiltInExtensions(builder, extensions);
+        }
+
+        HashSet<string> LoadCustomExtensions(ContainerBuilder builder)
+        {
+            // load extensions from AppData/Octopus/CustomExtensions
+            return LoadExtensions(builder, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), @"Octopus\CustomExtensions"), new HashSet<string>() );
+        }
+
+        void LoadBuiltInExtensions(ContainerBuilder builder, HashSet<string> alreadyLoadedExtensions)
+        {
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BuiltInExtensions");
             if (!Directory.Exists(path))
             {
-                log.VerboseFormat("Plugins directory does not exist: {0}", path);
+                log.Verbose($"Plugins directory does not exist: {path}");
                 return;
             }
 
-            log.VerboseFormat("Loading plugins from: {0}", path);
+            log.Verbose($"Loading plugins from: {path}");
 
-            var catalog = new DirectoryCatalog(path);
+            LoadExtensions(builder, path, alreadyLoadedExtensions);
+        }
 
-            var container = new CompositionContainer(catalog);
-            var plugins = container.GetExports<IOctopusExtension, IOctopusExtensionMetadata>().Distinct();
-            foreach (var item in plugins)
+        HashSet<string> LoadExtensions(ContainerBuilder builder, string path, HashSet<string> loadedExtensions)
+        {
+            if (!Directory.Exists(path))
+                return loadedExtensions;
+
+            foreach (var file in Directory.EnumerateFiles(path, "*.dll").Where(f => !loadedExtensions.Contains(f)))
             {
-                log.InfoFormat("Loading external plugin: {0}", item.Metadata.FriendlyName);
-                item.Value.Load(builder);
+                var assembly = Assembly.LoadFrom(file);
+
+                var extensionTypes = assembly.ExportedTypes.Where(t => t.IsAssignableTo<IOctopusExtension>());
+                foreach (var extensionType in extensionTypes)
+                {
+                    var metadataAttribute = extensionType.GetCustomAttribute(typeof(OctopusPluginAttribute)) as IOctopusExtensionMetadata;
+                    var friendlyName = metadataAttribute == null ? extensionType.Name : metadataAttribute.FriendlyName;
+                    log.Verbose($"Loading external plugin: {friendlyName}");
+
+                    var extensionInstance = (IOctopusExtension)Activator.CreateInstance(extensionType);
+
+                    extensionInstance.Load(builder);
+                }
+
+                loadedExtensions.Add(file);
             }
+
+            return loadedExtensions;
         }
     }
 }

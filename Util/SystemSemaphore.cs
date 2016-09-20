@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Util

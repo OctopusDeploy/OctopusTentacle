@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup

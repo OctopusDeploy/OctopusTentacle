@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
-using Octopus.Shared.Diagnostics;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 
 namespace Octopus.Shared.Security.Certificates
 {
@@ -20,12 +20,12 @@ namespace Octopus.Shared.Security.Certificates
             X509Certificate2Collection certificates = new X509Certificate2Collection();
             if (string.IsNullOrEmpty(password))
             {
-                Log.InfoFormat($"Importing the certificate stored in PFX file in {pfxFilePath}...");
+                Log.Info($"Importing the certificate stored in PFX file in {pfxFilePath}...");
                 certificates.Import(pfxFilePath, string.Empty, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
             else
             {
-                Log.InfoFormat($"Importing the certificate stored in PFX file in {pfxFilePath} using the provided password...");
+                Log.Info($"Importing the certificate stored in PFX file in {pfxFilePath} using the provided password...");
                 certificates.Import(pfxFilePath, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
 

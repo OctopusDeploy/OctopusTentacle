@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Shared.Diagnostics;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 
 namespace Octopus.Shared.Util
 {

@@ -443,10 +443,26 @@ namespace Octopus.Shared.Variables
             public static class Package
             {
                 public static readonly string ActionTypeName = "Octopus.TentaclePackage";
-                [Define(Category = VariableCategory.Action, Description = "The ID of the package being deployed", Example = "OctoFx.RateService")] public static readonly string NuGetPackageId = "Octopus.Action.Package.NuGetPackageId";
-                [Define(Category = VariableCategory.Action, Description = "The version of the package being deployed", Example = "1.2.3")] public static readonly string NuGetPackageVersion = "Octopus.Action.Package.NuGetPackageVersion";
+
+                [Define(Category = VariableCategory.Action, Description = "The ID of the package being deployed", Example = "OctoFx.RateService")]
+                public static readonly string PackageId = "Octopus.Action.Package.PackageId";
+                [Define(Category = VariableCategory.Action, Description = "The ID of the package being deployed", Example = "OctoFx.RateService")]
+                [DeprecatedAlias("Octopus.Action.Package.PackageId")]
+                public static readonly string NuGetPackageId = "Octopus.Action.Package.NuGetPackageId";
+
+                [Define(Category = VariableCategory.Action, Description = "The version of the package being deployed", Example = "1.2.3")]
+                public static readonly string PackageVersion = "Octopus.Action.Package.PackageVersion";
+                [Define(Category = VariableCategory.Action, Description = "The version of the package being deployed", Example = "1.2.3")]
+                [DeprecatedAlias("Octopus.Action.Package.PackageVersion")]
+                public static readonly string NuGetPackageVersion = "Octopus.Action.Package.NuGetPackageVersion";
+
+                [Define(Category = VariableCategory.Action, Description = "The ID of the package feed from which the package being deployed was pulled", Example = "feeds-123")]
+                public static readonly string FeedId = "Octopus.Action.Package.FeedId";
+                [Define(Category = VariableCategory.Action, Description = "The ID of the package feed from which the package being deployed was pulled", Example = "feeds-123")]
+                [DeprecatedAlias("Octopus.Action.Package.FeedId")]
+                public static readonly string NuGetFeedId = "Octopus.Action.Package.NuGetFeedId";
+
                 [Define(Category = VariableCategory.Action, Description = "If true, the package will be downloaded by the Tentacle, rather than pushed by the Octopus server", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string ShouldDownloadOnTentacle = "Octopus.Action.Package.DownloadOnTentacle";
-                [Define(Category = VariableCategory.Action, Description = "The ID of the package feed from which the package being deployed was pulled", Example = "feeds-123")] public static readonly string NuGetFeedId = "Octopus.Action.Package.NuGetFeedId";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string UpdateIisWebsite = "Octopus.Action.Package.UpdateIisWebsite";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string UpdateIisWebsiteName = "Octopus.Action.Package.UpdateIisWebsiteName";
                 [Define(Category = VariableCategory.Action, Description = "If set, a specific directory to which the package will be copied after extraction", Example = "C:\\InetPub\\WWWRoot\\OctoFx")] public static readonly string CustomInstallationDirectory = "Octopus.Action.Package.CustomInstallationDirectory";
@@ -482,6 +498,16 @@ namespace Octopus.Shared.Variables
                     [Define(Category = VariableCategory.Action, Description = "The directory used for all of the Tentacle's temporary files", Example = "/var/tmp/tentacle/SQ-ABC123/85287bef-fe6c-4eb7-beef-74f5e5a6b5b0")] public static readonly string TemporaryFilesDirectoryPath = "Octopus.Action.Package.Ssh.TempDirectoryPath";
                     [Define(Category = VariableCategory.Action, Description = "The package file being deployed on the target machine", Example = "/home/user/.tentacle/packages/OctoFx.RateService.1.2.3.nupkg.tar.gz")] public static readonly string PackageFileName = "Octopus.Action.Package.Ssh.PackageFileName";
                 }
+            }
+
+            public static class Iis
+            {
+                public static readonly string ActionTypeName = "Octopus.IIS";
+            }
+
+            public static class WindowsService
+            {
+                public static readonly string ActionTypeName = "Octopus.WindowsService";
             }
 
             public static class Ftp

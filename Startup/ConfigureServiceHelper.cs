@@ -3,7 +3,7 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using Octopus.Shared.Diagnostics;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup

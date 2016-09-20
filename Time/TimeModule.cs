@@ -1,5 +1,6 @@
 using System;
 using Autofac;
+using Octopus.Server.Extensibility.HostServices.Time;
 
 namespace Octopus.Shared.Time
 {
@@ -9,7 +10,7 @@ namespace Octopus.Shared.Time
         {
             base.Load(builder);
 
-            builder.RegisterType<SystemClock>().As<IClock>().SingleInstance();
+            builder.RegisterType<SystemClock>().AsSelf().As<IClock>().SingleInstance();
             builder.RegisterType<Sleep>().As<ISleep>().SingleInstance();
         }
     }

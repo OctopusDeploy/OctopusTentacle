@@ -1,4 +1,5 @@
 using System;
+using Octopus.Server.Extensibility.HostServices.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
