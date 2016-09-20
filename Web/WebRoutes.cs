@@ -398,7 +398,12 @@ namespace Octopus.Shared.Web
 
             public class StepTemplates
             {
-                public static string All = "~/api/step-templates/all";
+                public static string All = "~/api/steptemplates/all";
+            }
+
+            public class LibraryStepTemplates
+            {
+                public static string Get = "~/api/librarysteptemplates/{id}";
             }
         }
 
