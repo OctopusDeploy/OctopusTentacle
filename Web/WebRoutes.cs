@@ -345,6 +345,7 @@ namespace Octopus.Shared.Web
                 public static string SystemInfo = "~/api/serverstatus/system-info";
                 public static string SystemReport = "~/api/serverstatus/system-report";
                 public static string BuiltInFeedStats = "~/api/serverstatus/nuget";
+                public static string ExtensionStats = "~/api/serverstatus/extensions";
                 public static string GCCollect = "~/api/serverstatus/gc-collect";
             }
 

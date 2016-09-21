@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using Autofac;
 using Octopus.Server.Extensibility.Extensions;
-using Octopus.Server.Extensibility.Extensions.Infrastructure.Web;
 using Octopus.Server.Extensibility.Extensions.Infrastructure.Web.Api;
 using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Diagnostics;
@@ -21,19 +20,22 @@ namespace Octopus.Shared.Extensibility
         {
             base.Load(builder);
 
+            var provider = new ExtensionInfoProvider();
+            builder.Register(c => provider).As<IExtensionInfoProvider>().SingleInstance();
+
             builder.RegisterGeneric(typeof(WhenEnabledActionInvoker<,>)).InstancePerDependency();
 
-            var extensions = LoadCustomExtensions(builder);
-            LoadBuiltInExtensions(builder, extensions);
+            var extensions = LoadCustomExtensions(builder, provider);
+            LoadBuiltInExtensions(builder, extensions, provider);
         }
 
-        HashSet<string> LoadCustomExtensions(ContainerBuilder builder)
+        HashSet<string> LoadCustomExtensions(ContainerBuilder builder, ExtensionInfoProvider provider)
         {
             // load extensions from AppData/Octopus/CustomExtensions
-            return LoadExtensions(builder, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), @"Octopus\CustomExtensions"), new HashSet<string>() );
+            return LoadExtensions(builder, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), @"Octopus\CustomExtensions"), new HashSet<string>(), provider, true);
         }
 
-        void LoadBuiltInExtensions(ContainerBuilder builder, HashSet<string> alreadyLoadedExtensions)
+        void LoadBuiltInExtensions(ContainerBuilder builder, HashSet<string> alreadyLoadedExtensions, ExtensionInfoProvider provider)
         {
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BuiltInExtensions");
             if (!Directory.Exists(path))
@@ -44,10 +46,10 @@ namespace Octopus.Shared.Extensibility
 
             log.Verbose($"Loading plugins from: {path}");
 
-            LoadExtensions(builder, path, alreadyLoadedExtensions);
+            LoadExtensions(builder, path, alreadyLoadedExtensions, provider, false);
         }
 
-        HashSet<string> LoadExtensions(ContainerBuilder builder, string path, HashSet<string> loadedExtensions)
+        HashSet<string> LoadExtensions(ContainerBuilder builder, string path, HashSet<string> loadedExtensions, ExtensionInfoProvider provider, bool isLoadingCustomExtensions)
         {
             if (!Directory.Exists(path))
                 return loadedExtensions;
@@ -66,6 +68,7 @@ namespace Octopus.Shared.Extensibility
                     var extensionInstance = (IOctopusExtension)Activator.CreateInstance(extensionType);
 
                     extensionInstance.Load(builder);
+                    provider.AddExtensionData(new ExtensionInfo(friendlyName, Path.GetFileName(file), isLoadingCustomExtensions));
                 }
 
                 loadedExtensions.Add(file);
