@@ -25,8 +25,7 @@ namespace Octopus.Shared.Startup
         ICommand commandInstance;
         string[] commandLineArguments;
         bool forceConsole;
-        bool showLogo = true;
-
+        
         protected OctopusProgram(string displayName, string version, string informationalVersion, string[] commandLineArguments)
         {
             this.commandLineArguments = commandLineArguments;
@@ -37,6 +36,7 @@ namespace Octopus.Shared.Startup
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
             commonOptions.Add("nologo", "Don't print title or version information", v =>
             {
+                // suppress logging to the console
                 var c = LogManager.Configuration;
                 var target = c.FindTargetByName("console");
                 foreach (var rule in c.LoggingRules)
@@ -44,7 +44,6 @@ namespace Octopus.Shared.Startup
                     rule.Targets.Remove(target);
                 }
                 LogManager.Configuration = c;
-                showLogo = false;
             });
         }
 
@@ -91,10 +90,9 @@ namespace Octopus.Shared.Startup
                 log.Trace("OctopusProgram.Run() : Processing command line arguments");
 
                 commandLineArguments = ProcessCommonOptions();
-                if (showLogo)
-                {
-                    log.Info($"{displayName} version {version} ({informationalVersion})");
-                }
+
+                log.Info($"{displayName} version {version} ({informationalVersion})");
+
                 var host = SelectMostAppropriateHost();
                 log.Trace("OctopusProgram.Run() : Host is " + host.GetType());
                 log.Trace("OctopusProgram.Run() : Running host");
