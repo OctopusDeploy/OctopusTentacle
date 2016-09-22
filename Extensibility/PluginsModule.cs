@@ -63,13 +63,14 @@ namespace Octopus.Shared.Extensibility
                 {
                     var metadataAttribute = extensionType.GetCustomAttribute(typeof(OctopusPluginAttribute)) as IOctopusExtensionMetadata;
                     var friendlyName = metadataAttribute == null ? extensionType.Name : metadataAttribute.FriendlyName;
+                    var author = metadataAttribute == null ? string.Empty : metadataAttribute.Author;
                     var customString = isLoadingCustomExtensions ? "Custom" : "BuiltIn";
                     log.Info($"Loading {customString} extension: {friendlyName}");
 
                     var extensionInstance = (IOctopusExtension)Activator.CreateInstance(extensionType);
 
                     extensionInstance.Load(builder);
-                    provider.AddExtensionData(new ExtensionInfo(friendlyName, Path.GetFileName(file), isLoadingCustomExtensions));
+                    provider.AddExtensionData(new ExtensionInfo(friendlyName, Path.GetFileName(file), author, isLoadingCustomExtensions));
                 }
 
                 loadedExtensions.Add(file);
