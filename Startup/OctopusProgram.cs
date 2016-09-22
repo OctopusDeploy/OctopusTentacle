@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
+using NLog;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Internals.Options;
@@ -34,7 +35,17 @@ namespace Octopus.Shared.Startup
             this.informationalVersion = informationalVersion;
             commonOptions = new OptionSet();
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
-            commonOptions.Add("nologo", "Don't print title or version information", v => showLogo = false);
+            commonOptions.Add("nologo", "Don't print title or version information", v =>
+            {
+                var c = LogManager.Configuration;
+                var target = c.FindTargetByName("console");
+                foreach (var rule in c.LoggingRules)
+                {
+                    rule.Targets.Remove(target);
+                }
+                LogManager.Configuration = c;
+                showLogo = false;
+            });
         }
 
         protected OptionSet CommonOptions

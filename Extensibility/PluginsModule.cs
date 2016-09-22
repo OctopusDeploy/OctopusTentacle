@@ -40,11 +40,11 @@ namespace Octopus.Shared.Extensibility
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BuiltInExtensions");
             if (!Directory.Exists(path))
             {
-                log.Verbose($"Plugins directory does not exist: {path}");
+                log.Info($"Plugins directory does not exist: {path}");
                 return;
             }
 
-            log.Verbose($"Loading plugins from: {path}");
+            log.Info($"Loading plugins from: {path}");
 
             LoadExtensions(builder, path, alreadyLoadedExtensions, provider, false);
         }
@@ -63,7 +63,8 @@ namespace Octopus.Shared.Extensibility
                 {
                     var metadataAttribute = extensionType.GetCustomAttribute(typeof(OctopusPluginAttribute)) as IOctopusExtensionMetadata;
                     var friendlyName = metadataAttribute == null ? extensionType.Name : metadataAttribute.FriendlyName;
-                    log.Verbose($"Loading external plugin: {friendlyName}");
+                    var customString = isLoadingCustomExtensions ? "Custom" : "BuiltIn";
+                    log.Info($"Loading {customString} extension: {friendlyName}");
 
                     var extensionInstance = (IOctopusExtension)Activator.CreateInstance(extensionType);
 
