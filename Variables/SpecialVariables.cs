@@ -551,6 +551,16 @@ namespace Octopus.Shared.Variables
                 public static readonly string ScriptSource = "Octopus.Action.Script.ScriptSource";
             }
 
+            public static class Docker
+            {
+                [Define(Category = VariableCategory.Hidden)] public static readonly string ActionTypeNameForRun = "Octopus.DockerRun";
+
+                [Define(Category = VariableCategory.Hidden)] public static readonly string ActionTypeNameForCompose = "Octopus.DockerCompose";
+
+            }
+
+
+
             public static class PowerShell
             {
                 public static readonly string ExecuteWithoutProfile = "Octopus.Action.PowerShell.ExecuteWithoutProfile";
