@@ -555,7 +555,35 @@ namespace Octopus.Shared.Variables
             {
                 [Define(Category = VariableCategory.Hidden)] public static readonly string ActionTypeNameForRun = "Octopus.DockerRun";
 
-                [Define(Category = VariableCategory.Hidden)] public static readonly string ActionTypeNameForCompose = "Octopus.DockerCompose";
+                [Define(Category = VariableCategory.Action, Description = "Additional arguments to pass to docker command", Example = "-P -e key=value")]
+                public static readonly string Args = "Octopus.Action.Docker.Args";
+
+                [Define(Category = VariableCategory.Action, Description = "Command argument arguments run in container", Example = "echo env")]
+                public static readonly string Command = "Octopus.Action.Docker.Command";
+
+                [Define(Category = VariableCategory.Action, Description = "Maximum number of retry attempts to start a container", Example = "4")]
+                public static readonly string RestartPolicyMax = "Octopus.Action.Docker.RestartPolicyMax";
+
+                [Define(Category = VariableCategory.Action, Description = "Container restart policy", Example = "on-failure")]
+                public static readonly string RestartPolicy = "Octopus.Action.Docker.RestartPolicy";
+
+                [Define(Category = VariableCategory.Action, Description = "Flags docker to map all ports on container to host", Example = "True")]
+                public static readonly string PortAutoMap = "Octopus.Action.Docker.PortAutoMap";
+
+                public static string ContainerPort(int index)
+                {
+                    return $"Octopus.Action.Docker.Port[{index}].Container";
+                }
+
+                public static string HostPort(int index)
+                {
+                    return $"Octopus.Action.Docker.Port[{index}].Host";
+                }
+
+
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string ActionTypeNameForCompose = "Octopus.DockerCompose";
 
             }
 
