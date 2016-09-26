@@ -52,6 +52,9 @@ namespace Octopus.Shared.Configuration
 
         public IWebProxy ParseToWebProxy(IProxyConfiguration config)
         {
+            if (config == null)
+                return null;
+
             if (config.UseDefaultProxy)
             {
                 var proxy = GetSystemWebProxy();
