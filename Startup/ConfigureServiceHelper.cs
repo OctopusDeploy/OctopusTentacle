@@ -188,7 +188,7 @@ namespace Octopus.Shared.Startup
                 log.Info("Waiting for the service to be ready to stop...");
                 Thread.Sleep(300);
                 return controller.CanStop;
-            }, 50);
+            }, 150);
         }
 
         void WaitForControllerStatus(ServiceController controller, ServiceControllerStatus status)
@@ -199,7 +199,7 @@ namespace Octopus.Shared.Startup
                 log.Info($"Waiting for service to become {status}. Current status: {controller.Status}");
                 Thread.Sleep(300);
                 return controller.Status == status;
-            }, 50);
+            }, 150);
         }
 
         void Sc(string arguments)
