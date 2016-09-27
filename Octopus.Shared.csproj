@@ -153,8 +153,6 @@
     <Compile Include="Configuration\OctopusStorage.cs" />
     <Compile Include="Configuration\ProxyConfiguration.cs" />
     <Compile Include="Configuration\ProxyInitializer.cs" />
-    <Compile Include="Configuration\IWebPortalConfiguration.cs" />
-    <Compile Include="Configuration\OctopusServerConfiguration.cs" />
     <Compile Include="Configuration\ProxyConfigParser.cs" />
     <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Configuration\ServiceName.cs" />
