@@ -10,11 +10,13 @@ namespace Octopus.Shared.Configuration
     {
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly IApplicationInstanceSelector selector;
+        readonly IProxyConfigParser configParser;
 
-        public ProxyInitializer(Lazy<IProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector selector)
+        public ProxyInitializer(Lazy<IProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector selector, IProxyConfigParser configParser)
         {
             this.proxyConfiguration = proxyConfiguration;
             this.selector = selector;
+            this.configParser = configParser;
         }
 
         public void Start()
@@ -32,29 +34,7 @@ namespace Octopus.Shared.Configuration
 
             try
             {
-                var useCustomProxy = proxyConfiguration.Value.UsingCustomProxy();
-                var useDefaultProxy = proxyConfiguration.Value.UseDefaultProxy;
-
-                if (useDefaultProxy || useCustomProxy)
-                {
-                    var proxy = useDefaultProxy
-                        ? WebRequest.GetSystemWebProxy()
-                        : new WebProxy(new UriBuilder("http", proxyConfiguration.Value.CustomProxyHost, proxyConfiguration.Value.CustomProxyPort).Uri);
-
-                    var useDefaultCredentials = string.IsNullOrWhiteSpace(proxyConfiguration.Value.CustomProxyUsername);
-
-                    proxy.Credentials = useDefaultCredentials
-                        ? useDefaultProxy
-                            ? CredentialCache.DefaultNetworkCredentials
-                            : new NetworkCredential()
-                        : new NetworkCredential(proxyConfiguration.Value.CustomProxyUsername, proxyConfiguration.Value.CustomProxyPassword);
-
-                    WebRequest.DefaultWebProxy = proxy;
-                }
-                else
-                {
-                    WebRequest.DefaultWebProxy = null;
-                }
+                WebRequest.DefaultWebProxy = configParser.ParseToWebProxy(proxyConfiguration.Value);
             }
             catch (Exception ex)
             {

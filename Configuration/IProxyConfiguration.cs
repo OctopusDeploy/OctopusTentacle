@@ -56,5 +56,10 @@ namespace Octopus.Shared.Configuration
         {
             return !string.IsNullOrWhiteSpace(config.CustomProxyHost);
         }
+
+        public static bool UsingDefaultCredentials(this IProxyConfiguration config)
+        {
+            return string.IsNullOrWhiteSpace(config.CustomProxyUsername);
+        }
     }
 }
