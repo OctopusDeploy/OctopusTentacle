@@ -309,7 +309,6 @@ namespace Octopus.Shared.Web
                 public static string Index = "~/api/users{?skip}";
                 public static string Template = "~/api/users{/id}{?skip}";
                 public static string Get = "~/api/users/{id}";
-                public static string Login = "~/api/users/login{?returnUrl}";
                 public static string Logout = "~/api/users/logout";
                 public static string Register = "~/api/users/register";
                 public static string Me = "~/api/users/me";
@@ -345,6 +344,7 @@ namespace Octopus.Shared.Web
                 public static string SystemInfo = "~/api/serverstatus/system-info";
                 public static string SystemReport = "~/api/serverstatus/system-report";
                 public static string BuiltInFeedStats = "~/api/serverstatus/nuget";
+                public static string ExtensionStats = "~/api/serverstatus/extensions";
                 public static string GCCollect = "~/api/serverstatus/gc-collect";
             }
 

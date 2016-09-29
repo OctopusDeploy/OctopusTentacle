@@ -148,6 +148,7 @@
     <Compile Include="Configuration\JsonConsoleKeyValueStore.cs" />
     <Compile Include="Configuration\JsonFileKeyValueStore.cs" />
     <Compile Include="Configuration\JsonKeyValueStore.cs" />
+    <Compile Include="Configuration\ProxyConfigParser.cs" />
     <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Configuration\XmlConsoleKeyValueStore.cs" />
     <Compile Include="Configuration\LoadedApplicationInstance.cs" />
@@ -189,6 +190,9 @@
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
     <Compile Include="Diagnostics\TimedSection.cs" />
+    <Compile Include="Extensibility\ExtensionInfo.cs" />
+    <Compile Include="Extensibility\ExtensionInfoProvider.cs" />
+    <Compile Include="Extensibility\IExtensionInfoProvider.cs" />
     <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Diagnostics\LogContext.cs" />
