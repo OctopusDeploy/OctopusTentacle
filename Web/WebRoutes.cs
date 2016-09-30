@@ -399,6 +399,7 @@ namespace Octopus.Shared.Web
             public class StepTemplates
             {
                 public static string All = "~/api/steptemplates/all";
+                public static string Logo = "~/api/steptemplates/{idOrType}/logo";
             }
 
             public class LibraryStepTemplates
