@@ -558,6 +558,38 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Additional arguments to pass to docker command", Example = "-P -e key=value")]
                 public static readonly string Args = "Octopus.Action.Docker.Args";
 
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkType = "Octopus.Action.Docker.NetworkType";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string EnvVariable = "Octopus.Action.Docker.EnvVariable";
+                
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkName = "Octopus.Action.Docker.NetworkName";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkContainer = "Octopus.Action.Docker.NetworkContainer";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string AddedHost = "Octopus.Action.Docker.AddedHost";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkAlias = "Octopus.Action.Docker.NetworkAlias";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string VolumeBindings = "Octopus.Action.Docker.VolumeBindings";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string VolumesFrom = "Octopus.Action.Docker.VolumesFrom";
+                
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string VolumeDriver = "Octopus.Action.Docker.VolumeDriver";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string PortMapping = "Octopus.Action.Docker.PortMapping";
+
+
                 [Define(Category = VariableCategory.Action, Description = "Command argument arguments run in container", Example = "echo env")]
                 public static readonly string Command = "Octopus.Action.Docker.Command";
 
@@ -569,18 +601,6 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Action, Description = "Flags docker to map all ports on container to host", Example = "True")]
                 public static readonly string PortAutoMap = "Octopus.Action.Docker.PortAutoMap";
-
-                public static string ContainerPort(int index)
-                {
-                    return $"Octopus.Action.Docker.Port[{index}].Container";
-                }
-
-                public static string HostPort(int index)
-                {
-                    return $"Octopus.Action.Docker.Port[{index}].Host";
-                }
-
-
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string ActionTypeNameForCompose = "Octopus.DockerCompose";
