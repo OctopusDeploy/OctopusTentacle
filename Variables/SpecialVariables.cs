@@ -554,9 +554,13 @@ namespace Octopus.Shared.Variables
             public static class Docker
             {
                 [Define(Category = VariableCategory.Hidden)] public static readonly string ActionTypeNameForRun = "Octopus.DockerRun";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string ActionTypeNameForNetwork = "Octopus.DockerNetwork";
 
                 [Define(Category = VariableCategory.Action, Description = "Additional arguments to pass to docker command", Example = "-P -e key=value")]
                 public static readonly string Args = "Octopus.Action.Docker.Args";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string DontRun = "Octopus.Action.Docker.DontRun";
 
                 [Define(Category = VariableCategory.Action, Description = "", Example = "")]
                 public static readonly string NetworkType = "Octopus.Action.Docker.NetworkType";
@@ -571,10 +575,23 @@ namespace Octopus.Shared.Variables
                 public static readonly string NetworkContainer = "Octopus.Action.Docker.NetworkContainer";
 
                 [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkCustomDriver = "Octopus.Action.Docker.NetworkCustomDriver";
+                
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
                 public static readonly string AddedHost = "Octopus.Action.Docker.AddedHost";
 
                 [Define(Category = VariableCategory.Action, Description = "", Example = "")]
                 public static readonly string NetworkAlias = "Octopus.Action.Docker.NetworkAlias";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkSubnet = "Octopus.Action.Docker.NetworkSubnet";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkGateway = "Octopus.Action.Docker.NetworkGateway";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkIPRange = "Octopus.Action.Docker.NetworkIPRange";
 
                 [Define(Category = VariableCategory.Action, Description = "", Example = "")]
                 public static readonly string VolumeBindings = "Octopus.Action.Docker.VolumeBindings";
