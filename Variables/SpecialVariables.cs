@@ -606,6 +606,9 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "", Example = "")]
                 public static readonly string PortMapping = "Octopus.Action.Docker.PortMapping";
 
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string RemovalPolicy = "Octopus.Action.Docker.RemovalPolicy";
+
 
                 [Define(Category = VariableCategory.Action, Description = "Command argument arguments run in container", Example = "echo env")]
                 public static readonly string Command = "Octopus.Action.Docker.Command";
