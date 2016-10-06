@@ -406,6 +406,7 @@ namespace Octopus.Shared.Web
             {
                 public static string Template = "~/api/librarysteptemplates{/id}";
                 public static string Get = "~/api/librarysteptemplates/{id}";
+                public static string InstalledTemplate = "~/api/librarysteptemplates/{id}/actiontemplate";
             }
         }
 
