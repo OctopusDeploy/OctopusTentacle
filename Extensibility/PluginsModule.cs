@@ -54,9 +54,10 @@ namespace Octopus.Shared.Extensibility
             if (!Directory.Exists(path))
                 return loadedExtensions;
 
-            foreach (var file in Directory.EnumerateFiles(path, "*.dll").Where(f => !loadedExtensions.Contains(f)))
+            foreach (var file in Directory.EnumerateFiles(path, "*.dll").Where(f => !loadedExtensions.Contains(Path.GetFileName(f))))
             {
                 var assembly = Assembly.LoadFrom(file);
+                var containedExtensions = false;
 
                 var extensionTypes = assembly.ExportedTypes.Where(t => t.IsAssignableTo<IOctopusExtension>());
                 foreach (var extensionType in extensionTypes)
@@ -71,9 +72,13 @@ namespace Octopus.Shared.Extensibility
 
                     extensionInstance.Load(builder);
                     provider.AddExtensionData(new ExtensionInfo(friendlyName, Path.GetFileName(file), author, isLoadingCustomExtensions));
+                    containedExtensions = true;
                 }
 
-                loadedExtensions.Add(file);
+                if (containedExtensions)
+                {
+                    loadedExtensions.Add(Path.GetFileName(file));
+                }
             }
 
             return loadedExtensions;
