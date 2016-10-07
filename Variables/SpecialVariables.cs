@@ -555,6 +555,8 @@ namespace Octopus.Shared.Variables
             {
                 [Define(Category = VariableCategory.Hidden)] public static readonly string ActionTypeNameForRun = "Octopus.DockerRun";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string ActionTypeNameForNetwork = "Octopus.DockerNetwork";
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string ActionTypeNameForStop = "Octopus.DockerStop";
 
                 [Define(Category = VariableCategory.Action, Description = "Additional arguments to pass to docker command", Example = "-P -e key=value")]
                 public static readonly string Args = "Octopus.Action.Docker.Args";
@@ -606,10 +608,6 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "", Example = "")]
                 public static readonly string PortMapping = "Octopus.Action.Docker.PortMapping";
 
-                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
-                public static readonly string RemovalPolicy = "Octopus.Action.Docker.RemovalPolicy";
-
-
                 [Define(Category = VariableCategory.Action, Description = "Command argument arguments run in container", Example = "echo env")]
                 public static readonly string Command = "Octopus.Action.Docker.Command";
 
@@ -624,6 +622,21 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string ActionTypeNameForCompose = "Octopus.DockerCompose";
+
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveByEnvironment = "Octopus.Action.Docker.RemoveByEnvironment";
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveByTenant = "Octopus.Action.Docker.RemoveByTenant";
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveByRelease = "Octopus.Action.Docker.RemoveByRelease";
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveSteps = "Octopus.Action.Docker.RemoveSteps";
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveAll = "Octopus.Action.Docker.RemoveAll";
+
+
 
             }
 
