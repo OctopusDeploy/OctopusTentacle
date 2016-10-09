@@ -634,9 +634,14 @@ namespace Octopus.Shared.Variables
                 public static readonly string RemoveSteps = "Octopus.Action.Docker.RemoveSteps";
 
                 [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveCustomTags = "Octopus.Action.Docker.RemoveCustomTags";
+                
+
+                [Define(Category = VariableCategory.Hidden)]
                 public static readonly string RemoveAll = "Octopus.Action.Docker.RemoveAll";
 
-
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string StopTimeout = "Octopus.Action.Docker.StopTimeout";
 
             }
 
