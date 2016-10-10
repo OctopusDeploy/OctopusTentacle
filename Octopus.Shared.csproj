@@ -196,6 +196,7 @@
     <Compile Include="Diagnostics\TimedSection.cs" />
     <Compile Include="Extensibility\ExtensionInfo.cs" />
     <Compile Include="Extensibility\ExtensionInfoProvider.cs" />
+    <Compile Include="Extensibility\ExtensionsInfrastructureModule.cs" />
     <Compile Include="Extensibility\IExtensionInfoProvider.cs" />
     <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />

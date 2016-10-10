@@ -197,7 +197,7 @@ namespace Octopus.Shared.Startup
             log.Trace("Creating and configuring the Autofac container");
             container = BuildContainer();
             log.Trace("OctopusProgram.Start() : Registering additional modules");
-            RegisterAdditionalModules();
+            RegisterAdditionalModules(container);
 
             log.Trace("OctopusProgram.Start() : Resolving command locator");
             var commandLocator = container.Resolve<ICommandLocator>();
@@ -222,11 +222,11 @@ namespace Octopus.Shared.Startup
 
         protected abstract IContainer BuildContainer();
 
-        void RegisterAdditionalModules()
+        protected virtual void RegisterAdditionalModules(IContainer builtContainer)
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule(new CommandModule());
-            builder.Update(container);
+            builder.Update(builtContainer);
         }
 
         static string ExtractCommandName(ref string[] args)

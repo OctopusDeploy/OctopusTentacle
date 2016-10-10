@@ -14,42 +14,46 @@ namespace Octopus.Shared.Extensibility
 {
     public class PluginsModule : Module
     {
+        readonly bool suppressInfoLogging;
         readonly ILog log = Log.Octopus();
+        readonly ExtensionInfoProvider provider;
+
+        public PluginsModule(ExtensionInfoProvider provider, bool suppressInfoLogging = false)
+        {
+            this.provider = provider;
+            this.suppressInfoLogging = suppressInfoLogging;
+        }
 
         protected override void Load(ContainerBuilder builder)
         {
-            base.Load(builder);
-
-            var provider = new ExtensionInfoProvider();
-            builder.Register(c => provider).As<IExtensionInfoProvider>().SingleInstance();
-
             builder.RegisterGeneric(typeof(WhenEnabledActionInvoker<,>)).InstancePerDependency();
 
-            var extensions = LoadCustomExtensions(builder, provider);
-            LoadBuiltInExtensions(builder, extensions, provider);
+            var extensions = LoadCustomExtensions(builder);
+            LoadBuiltInExtensions(builder, extensions);
         }
 
-        HashSet<string> LoadCustomExtensions(ContainerBuilder builder, ExtensionInfoProvider provider)
+        HashSet<string> LoadCustomExtensions(ContainerBuilder builder)
         {
             // load extensions from AppData/Octopus/CustomExtensions
-            return LoadExtensions(builder, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), @"Octopus\CustomExtensions"), new HashSet<string>(), provider, true);
+            return LoadExtensions(builder, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), @"Octopus\CustomExtensions"), new HashSet<string>(), true);
         }
 
-        void LoadBuiltInExtensions(ContainerBuilder builder, HashSet<string> alreadyLoadedExtensions, ExtensionInfoProvider provider)
+        void LoadBuiltInExtensions(ContainerBuilder builder, HashSet<string> alreadyLoadedExtensions)
         {
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BuiltInExtensions");
             if (!Directory.Exists(path))
             {
-                log.Info($"Plugins directory does not exist: {path}");
+                log.Warn($"Plugins directory does not exist: {path}");
                 return;
             }
 
-            log.Info($"Loading plugins from: {path}");
+            if (!suppressInfoLogging)
+                log.Info($"Loading plugins from: {path}");
 
-            LoadExtensions(builder, path, alreadyLoadedExtensions, provider, false);
+            LoadExtensions(builder, path, alreadyLoadedExtensions, false);
         }
 
-        HashSet<string> LoadExtensions(ContainerBuilder builder, string path, HashSet<string> loadedExtensions, ExtensionInfoProvider provider, bool isLoadingCustomExtensions)
+        HashSet<string> LoadExtensions(ContainerBuilder builder, string path, HashSet<string> loadedExtensions, bool isLoadingCustomExtensions)
         {
             if (!Directory.Exists(path))
                 return loadedExtensions;
@@ -66,7 +70,9 @@ namespace Octopus.Shared.Extensibility
                     var friendlyName = metadataAttribute == null ? extensionType.Name : metadataAttribute.FriendlyName;
                     var author = metadataAttribute == null ? string.Empty : metadataAttribute.Author;
                     var customString = isLoadingCustomExtensions ? "Custom" : "BuiltIn";
-                    log.Info($"Loading {customString} extension: {friendlyName}");
+
+                    if (!suppressInfoLogging)
+                        log.Info($"Loading {customString} extension: {friendlyName}");
 
                     var extensionInstance = (IOctopusExtension)Activator.CreateInstance(extensionType);
 
