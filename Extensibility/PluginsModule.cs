@@ -71,9 +71,10 @@ namespace Octopus.Shared.Extensibility
                     var friendlyName = metadataAttribute == null ? extensionType.Name : metadataAttribute.FriendlyName;
                     var author = metadataAttribute == null ? string.Empty : metadataAttribute.Author;
                     var customString = isLoadingCustomExtensions ? "Custom" : "BuiltIn";
+                    var version = assembly.GetFileVersion();
 
                     if (!suppressInfoLogging)
-                        log.Info($"Loading {customString} extension: {friendlyName}");
+                        log.Info($"Loading {customString} extension: {friendlyName} ({version})");
 
                     var extensionInstance = (IOctopusExtension)Activator.CreateInstance(extensionType);
 
@@ -81,7 +82,6 @@ namespace Octopus.Shared.Extensibility
 
                     if (!suppressInfoLogging)
                     {
-                        var version = assembly.GetFileVersion();
                         provider.AddExtensionData(new ExtensionInfo(friendlyName, Path.GetFileName(file), author, version, isLoadingCustomExtensions));
                     }
 
