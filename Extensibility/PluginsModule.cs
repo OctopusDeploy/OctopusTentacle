@@ -8,6 +8,7 @@ using Octopus.Server.Extensibility.Extensions;
 using Octopus.Server.Extensibility.Extensions.Infrastructure.Web.Api;
 using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Util;
 using Module = Autofac.Module;
 
 namespace Octopus.Shared.Extensibility
@@ -77,7 +78,13 @@ namespace Octopus.Shared.Extensibility
                     var extensionInstance = (IOctopusExtension)Activator.CreateInstance(extensionType);
 
                     extensionInstance.Load(builder);
-                    provider.AddExtensionData(new ExtensionInfo(friendlyName, Path.GetFileName(file), author, isLoadingCustomExtensions));
+
+                    if (!suppressInfoLogging)
+                    {
+                        var version = assembly.GetFileVersion();
+                        provider.AddExtensionData(new ExtensionInfo(friendlyName, Path.GetFileName(file), author, version, isLoadingCustomExtensions));
+                    }
+
                     containedExtensions = true;
                 }
 
