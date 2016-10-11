@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using Halibut;
 using Halibut.Transport.Proxy;
-using Octopus.Shared.Diagnostics;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {
@@ -27,12 +27,12 @@ namespace Octopus.Shared.Configuration
 
                 if (proxy.IsBypassed(destination))
                 {
-                    log.InfoFormat("Agent configured to use the system proxy, but no system proxy is configured for {0}", destination);
+                    log.Info($"Agent configured to use the system proxy, but no system proxy is configured for {destination}");
                     return null;
                 }
 
                 var address = proxy.GetProxy(destination);
-                log.InfoFormat("Agent will use the configured system proxy at {0}:{1} for server at {2}", address.Host, address.Port, destination);
+                log.Info($"Agent will use the configured system proxy at {address.Host}:{address.Port} for server at {destination}");
                 return config.UsingDefaultCredentials()
                     ? new ProxyDetails(address.Host, address.Port, ProxyType.HTTP, CredentialCache.DefaultNetworkCredentials.UserName, CredentialCache.DefaultNetworkCredentials.Password)
                     : new ProxyDetails(address.Host, address.Port, ProxyType.HTTP, config.CustomProxyUsername, config.CustomProxyPassword);
@@ -40,7 +40,7 @@ namespace Octopus.Shared.Configuration
 
             if(config.UsingCustomProxy())
             {
-                log.InfoFormat("Agent will use the octopus configured proxy at {0}:{1} for server at {2}", config.CustomProxyHost, config.CustomProxyPort, destination);
+                log.Info($"Agent will use the octopus configured proxy at {config.CustomProxyHost}:{config.CustomProxyPort} for server at {destination}");
                 return string.IsNullOrWhiteSpace(config.CustomProxyUsername)
                     ? new ProxyDetails(config.CustomProxyHost, config.CustomProxyPort, ProxyType.HTTP, null, null) //Don't use default creds for custom proxy if user has not supplied any
                     : new ProxyDetails(config.CustomProxyHost, config.CustomProxyPort, ProxyType.HTTP, config.CustomProxyUsername, config.CustomProxyPassword);

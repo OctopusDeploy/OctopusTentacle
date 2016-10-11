@@ -95,6 +95,16 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/featuresconfiguration";
             }
 
+            public static class ServerConfiguration
+            {
+                public static string Template = "~/api/serverconfiguration";
+            }
+
+            public static class ServerConfigurationSettings
+            {
+                public static string Template = "~/api/serverconfigurationsettings";
+            }
+
             public static class Teams
             {
                 public static string Template = "~/api/teams{/id}{?skip}";
@@ -114,11 +124,9 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/permissions/all";
             }
 
-            public static class ExternalSecurityGroups
+            public static class ExternalSecurityGroupProviders
             {
-                public static string Template = "~/api/externalsecuritygroups{/id}{?name}";
-                public static string Index = "~/api/externalsecuritygroups{?name}";
-                public static string Get = "~/api/externalsecuritygroups/{id}";
+                public static string Index = "~/api/externalsecuritygroupproviders";
             }
 
             public static class UserRoles
@@ -181,6 +189,13 @@ namespace Octopus.Shared.Web
                 public static string Machines = "~/api/machinepolicies/{id}/machines{?skip}";
             }
 
+            public static class Subscriptions
+            {
+                public static string Template = "~/api/subscriptions{/id}{?skip}";
+                public static string Index = "~/api/subscriptions{?skip}";
+                public static string Get = "~/api/subscriptions/{id}";
+            }
+
             public static class ProjectGroups
             {
                 public static string Template = "~/api/projectgroups{/id}{?skip}";
@@ -228,9 +243,11 @@ namespace Octopus.Shared.Web
 
             public static class Events
             {
-                public static string Template = "~/api/events{/id}{?skip,regarding,regardingAny,user,from,to,internal}";
-                public static string Index = "~/api/events{?skip,regarding,regardingAny,user,from,to,internal}";
+                public static string Template = "~/api/events{/id}{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal}";
+                public static string Index = "~/api/events{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal}";
                 public static string Get = "~/api/events/{id}";
+                public static string GetCategories = "~/api/events/categories";
+                public static string GetGroups = "~/api/events/groups";
             }
 
             public static class Feeds
@@ -292,7 +309,6 @@ namespace Octopus.Shared.Web
                 public static string Index = "~/api/users{?skip}";
                 public static string Template = "~/api/users{/id}{?skip}";
                 public static string Get = "~/api/users/{id}";
-                public static string Login = "~/api/users/login{?returnUrl}";
                 public static string Logout = "~/api/users/logout";
                 public static string Register = "~/api/users/register";
                 public static string Me = "~/api/users/me";
@@ -328,6 +344,7 @@ namespace Octopus.Shared.Web
                 public static string SystemInfo = "~/api/serverstatus/system-info";
                 public static string SystemReport = "~/api/serverstatus/system-report";
                 public static string BuiltInFeedStats = "~/api/serverstatus/nuget";
+                public static string ExtensionStats = "~/api/serverstatus/extensions";
                 public static string GCCollect = "~/api/serverstatus/gc-collect";
             }
 
@@ -370,7 +387,7 @@ namespace Octopus.Shared.Web
                 public static string VersionRuleTest = "~/api/channels/rule-test{?version,versionRange,preReleaseTag}";
                 public static string GetReleases = "~/api/channels/{id}/releases{?skip}";
             }
-            
+
             public static class Tenants
             {
                 public static string Template = "~/api/tenants{/id}{?skip,projectId,name,tags}";

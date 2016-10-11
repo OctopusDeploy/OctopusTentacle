@@ -100,6 +100,10 @@
       <HintPath>..\packages\NuGet.Versioning.3.4.3\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Octopus.Server.Extensibility, Version=0.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Server.Extensibility.0.4.0\lib\net45\Octopus.Server.Extensibility.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -140,20 +144,22 @@
     <Compile Include="Configuration\IApplicationInstanceSelector.cs" />
     <Compile Include="Configuration\IApplicationInstanceStore.cs" />
     <Compile Include="Configuration\IHomeConfiguration.cs" />
-    <Compile Include="Configuration\IKeyValueStore.cs" />
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
     <Compile Include="Configuration\ILogInitializer.cs" />
-    <Compile Include="Configuration\IModifiableConfiguration.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
     <Compile Include="Configuration\IsolatedStorageXmlFileKeyValueStore.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
+    <Compile Include="Configuration\JsonConsoleKeyValueStore.cs" />
+    <Compile Include="Configuration\JsonFileKeyValueStore.cs" />
+    <Compile Include="Configuration\JsonKeyValueStore.cs" />
+    <Compile Include="Configuration\ProxyConfigParser.cs" />
+    <Compile Include="Configuration\XmlConsoleKeyValueStore.cs" />
     <Compile Include="Configuration\LoadedApplicationInstance.cs" />
     <Compile Include="Configuration\LoggingConfiguration.cs" />
     <Compile Include="Configuration\LogInitializer.cs" />
     <Compile Include="Configuration\OctopusStorage.cs" />
     <Compile Include="Configuration\ProxyConfiguration.cs" />
     <Compile Include="Configuration\ProxyInitializer.cs" />
-    <Compile Include="Configuration\ProxyConfigParser.cs" />
     <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Configuration\ServiceName.cs" />
     <Compile Include="Configuration\UpgradeCheckConfiguration.cs" />
@@ -177,8 +183,8 @@
     <Compile Include="Contracts\UploadResult.cs" />
     <Compile Include="ControlledFailureException.cs" />
     <Compile Include="Diagnostics\AbstractLog.cs" />
-    <Compile Include="Diagnostics\ILog.cs" />
     <Compile Include="Diagnostics\ILogAppender.cs" />
+    <Compile Include="Diagnostics\ILogWithContext.cs" />
     <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledge.cs" />
     <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBase.cs" />
     <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBaseEntry.cs" />
@@ -187,11 +193,11 @@
     <Compile Include="Diagnostics\LogEvent.cs" />
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
-    <Compile Include="Diagnostics\LogCategory.cs" />
     <Compile Include="Diagnostics\TimedSection.cs" />
-    <Compile Include="Extensibility\IOctopusExtension.cs" />
-    <Compile Include="Extensibility\IOctopusExtensionMetadata.cs" />
-    <Compile Include="Extensibility\OctopusPluginAttribute.cs" />
+    <Compile Include="Extensibility\ExtensionInfo.cs" />
+    <Compile Include="Extensibility\ExtensionInfoProvider.cs" />
+    <Compile Include="Extensibility\ExtensionsInfrastructureModule.cs" />
+    <Compile Include="Extensibility\IExtensionInfoProvider.cs" />
     <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Diagnostics\LogContext.cs" />
@@ -343,11 +349,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Time\FixedClock.cs" />
-    <Compile Include="Time\ISleep.cs" />
     <Compile Include="Time\Sleep.cs" />
     <Compile Include="Time\SystemClock.cs" />
     <Compile Include="Time\TimeModule.cs" />
-    <Compile Include="Time\IClock.cs" />
     <Compile Include="Tools\OctoDiff.cs" />
     <Compile Include="Util\AmazingConverter.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />

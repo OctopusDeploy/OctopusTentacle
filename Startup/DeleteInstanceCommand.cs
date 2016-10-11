@@ -1,7 +1,7 @@
 using System;
 using System.Data.SqlClient;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup
 {
@@ -63,11 +63,11 @@ namespace Octopus.Shared.Startup
                         cmd.Parameters.AddWithValue("serverName", serverName);
                         cmd.ExecuteNonQuery();
                     }
-                    log.InfoFormat("Deregistered {0} from the database", instanceName);
+                    log.Info($"Deregistered {instanceName} from the database");
                 }
                 catch (Exception)
                 {                    
-                    log.WarnFormat("Could not open the database. This instance has not been deregistered.");
+                    log.Warn("Could not open the database. This instance has not been deregistered.");
                 }
             }            
         }

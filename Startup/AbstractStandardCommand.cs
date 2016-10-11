@@ -14,7 +14,7 @@ namespace Octopus.Shared.Startup
             Options.Add("instance=", "Name of the instance to use", v => instanceName = v);
         }
 
-        protected override void Start()
+        protected override void Initialize()
         {
             if (!string.IsNullOrWhiteSpace(instanceName))
             {
@@ -24,6 +24,10 @@ namespace Octopus.Shared.Startup
             {
                 instanceSelector.LoadDefaultInstance();
             }
+        }
+
+        protected override void Start()
+        {
         }
     }
 }

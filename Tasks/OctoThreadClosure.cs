@@ -1,13 +1,11 @@
 using System;
-using System.Threading.Tasks;
-using Halibut;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Tasks
 {
     public class OctoThreadClosure<T>
     {
-        readonly ILog log = Log.Octopus();
+        readonly ILogWithContext log = Log.Octopus();
         readonly Planned<T> item;
         readonly Action<T> executeCallback;
 

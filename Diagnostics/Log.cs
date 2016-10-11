@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
+
 namespace Octopus.Shared.Diagnostics
 {
     public class Log : AbstractLog
@@ -29,12 +30,12 @@ namespace Octopus.Shared.Diagnostics
             get { return threadLocalLogContext.Value; }
         }
 
-        public static ILog Octopus()
+        public static ILogWithContext Octopus()
         {
             return Instance;
         }
 
-        public static ILog System()
+        public static ILogWithContext System()
         {
             return new Log();
         }
@@ -72,10 +73,10 @@ namespace Octopus.Shared.Diagnostics
 
         class RevertLogContext : IDisposable
         {
-            readonly ILog activityLog;
+            readonly ILogWithContext activityLog;
             readonly LogContext previous;
 
-            public RevertLogContext(ILog activityLog, LogContext previous)
+            public RevertLogContext(ILogWithContext activityLog, LogContext previous)
             {
                 this.activityLog = activityLog;
                 this.previous = previous;

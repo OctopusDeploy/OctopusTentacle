@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
-using NuGet.Versioning;
+using NLog;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Internals.Options;
@@ -16,7 +16,7 @@ namespace Octopus.Shared.Startup
 {
     public abstract class OctopusProgram
     {
-        readonly ILog log = Log.Octopus();
+        readonly ILogWithContext log = Log.Octopus();
         readonly string displayName;
         readonly string version;
         readonly string informationalVersion;
@@ -25,8 +25,7 @@ namespace Octopus.Shared.Startup
         ICommand commandInstance;
         string[] commandLineArguments;
         bool forceConsole;
-        bool showLogo = true;
-
+        
         protected OctopusProgram(string displayName, string version, string informationalVersion, string[] commandLineArguments)
         {
             this.commandLineArguments = commandLineArguments;
@@ -35,7 +34,17 @@ namespace Octopus.Shared.Startup
             this.informationalVersion = informationalVersion;
             commonOptions = new OptionSet();
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
-            commonOptions.Add("nologo", "Don't print title or version information", v => showLogo = false);
+            commonOptions.Add("nologo", "Don't print title or version information", v =>
+            {
+                // suppress logging to the console
+                var c = LogManager.Configuration;
+                var target = c.FindTargetByName("console");
+                foreach (var rule in c.LoggingRules)
+                {
+                    rule.Targets.Remove(target);
+                }
+                LogManager.Configuration = c;
+            });
         }
 
         protected OptionSet CommonOptions
@@ -81,10 +90,9 @@ namespace Octopus.Shared.Startup
                 log.Trace("OctopusProgram.Run() : Processing command line arguments");
 
                 commandLineArguments = ProcessCommonOptions();
-                if (showLogo)
-                {
-                    log.Info($"{displayName} version {version} ({informationalVersion})");
-                }
+
+                log.Info($"{displayName} version {version} ({informationalVersion})");
+
                 var host = SelectMostAppropriateHost();
                 log.Trace("OctopusProgram.Run() : Host is " + host.GetType());
                 log.Trace("OctopusProgram.Run() : Running host");
@@ -189,7 +197,7 @@ namespace Octopus.Shared.Startup
             log.Trace("Creating and configuring the Autofac container");
             container = BuildContainer();
             log.Trace("OctopusProgram.Start() : Registering additional modules");
-            RegisterAdditionalModules();
+            RegisterAdditionalModules(container);
 
             log.Trace("OctopusProgram.Start() : Resolving command locator");
             var commandLocator = container.Resolve<ICommandLocator>();
@@ -214,11 +222,11 @@ namespace Octopus.Shared.Startup
 
         protected abstract IContainer BuildContainer();
 
-        void RegisterAdditionalModules()
+        protected virtual void RegisterAdditionalModules(IContainer builtContainer)
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule(new CommandModule());
-            builder.Update(container);
+            builder.Update(builtContainer);
         }
 
         static string ExtractCommandName(ref string[] args)

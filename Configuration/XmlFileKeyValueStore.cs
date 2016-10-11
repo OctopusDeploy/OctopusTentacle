@@ -9,7 +9,7 @@ namespace Octopus.Shared.Configuration
     {
         readonly string configurationFile;
 
-        public XmlFileKeyValueStore(string configurationFile)
+        public XmlFileKeyValueStore(string configurationFile, bool isWriteOnly = false) : base(isWriteOnly)
         {
             this.configurationFile = PathHelper.ResolveRelativeFilePath(configurationFile);
         }

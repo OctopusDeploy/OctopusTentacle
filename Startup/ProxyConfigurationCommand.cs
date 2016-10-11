@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Octopus.Server.Extensibility.HostServices.Diagnostics;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup
 {
