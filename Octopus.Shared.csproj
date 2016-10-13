@@ -100,6 +100,10 @@
       <HintPath>..\packages\NuGet.Versioning.3.4.3\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Octopus.Server.Extensibility, Version=0.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Server.Extensibility.0.4.0\lib\net45\Octopus.Server.Extensibility.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -149,7 +153,6 @@
     <Compile Include="Configuration\JsonFileKeyValueStore.cs" />
     <Compile Include="Configuration\JsonKeyValueStore.cs" />
     <Compile Include="Configuration\ProxyConfigParser.cs" />
-    <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Configuration\XmlConsoleKeyValueStore.cs" />
     <Compile Include="Configuration\LoadedApplicationInstance.cs" />
     <Compile Include="Configuration\LoggingConfiguration.cs" />
@@ -157,6 +160,7 @@
     <Compile Include="Configuration\OctopusStorage.cs" />
     <Compile Include="Configuration\ProxyConfiguration.cs" />
     <Compile Include="Configuration\ProxyInitializer.cs" />
+    <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Configuration\ServiceName.cs" />
     <Compile Include="Configuration\UpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\WindowsRegistryKeyValueStore.cs" />
@@ -192,6 +196,7 @@
     <Compile Include="Diagnostics\TimedSection.cs" />
     <Compile Include="Extensibility\ExtensionInfo.cs" />
     <Compile Include="Extensibility\ExtensionInfoProvider.cs" />
+    <Compile Include="Extensibility\ExtensionsInfrastructureModule.cs" />
     <Compile Include="Extensibility\IExtensionInfoProvider.cs" />
     <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
@@ -404,12 +409,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Octopus.Server.Extensibility\Octopus.Server.Extensibility.csproj">
-      <Project>{edd50b77-4b5e-476c-8a66-583b7fd3fe4a}</Project>
-      <Name>Octopus.Server.Extensibility</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Internals\Options\_Readme.txt" />
