@@ -8,20 +8,50 @@ namespace Octopus.Shared.Configuration
     public class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
         readonly ApplicationName applicationName;
+        readonly string instanceName;
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
         readonly ILog log;
+        readonly Lazy<ILogInitializer> logInitializer;
 
-        public ApplicationInstanceSelector(ApplicationName applicationName, IOctopusFileSystem fileSystem, IApplicationInstanceStore instanceStore, ILog log)
+        public ApplicationInstanceSelector(ApplicationName applicationName,
+            string instanceName,
+            IOctopusFileSystem fileSystem,
+            IApplicationInstanceStore instanceStore,
+            ILog log,
+            Lazy<ILogInitializer> logInitializer)
         {
             this.applicationName = applicationName;
+            this.instanceName = instanceName;
             this.fileSystem = fileSystem;
             this.instanceStore = instanceStore;
             this.log = log;
+            this.logInitializer = logInitializer;
+        }
+        
+        private LoadedApplicationInstance current;
+        public LoadedApplicationInstance Current
+        {
+            get
+            {
+                return current ?? (current = DoLoad());
+            }
         }
 
-        public LoadedApplicationInstance Current { get; private set; }
-        public event Action Loaded;
+        LoadedApplicationInstance DoLoad()
+        {
+            LoadedApplicationInstance instance = null;
+            if (string.IsNullOrWhiteSpace(instanceName))
+                instance = LoadDefaultInstance();
+            else
+                instance = LoadInstance(instanceName);
+
+            current = instance;
+
+            logInitializer.Value.Start();
+
+            return instance;
+        }
 
         public void DeleteDefaultInstance()
         {
@@ -39,26 +69,22 @@ namespace Octopus.Shared.Configuration
             log.Info("Deleted instance: " + instanceName);
         }
 
-        public void LoadDefaultInstance()
+        private LoadedApplicationInstance LoadDefaultInstance()
         {
             var instance = instanceStore.GetDefaultInstance(applicationName);
             if (instance == null)
-            {
                 throw new ArgumentException("The default instance of " + applicationName + " has not been created. Either pass --instance INSTANCENAME when invoking this command, or run the setup wizard.");
-            }
 
-            Load(instance);
+            return Load(instance);
         }
 
-        public void LoadInstance(string instanceName)
+        private LoadedApplicationInstance LoadInstance(string instanceName)
         {
             var instance = instanceStore.GetInstance(applicationName, instanceName);
             if (instance == null)
-            {
                 throw new ArgumentException("Instance " + instanceName + " of application " + applicationName + " has not been created. Check the instance name or run the setup wizard.");
-            }
 
-            Load(instance);
+            return Load(instance);
         }
 
         public void CreateDefaultInstance(string configurationFile)
@@ -82,17 +108,10 @@ namespace Octopus.Shared.Configuration
             instanceStore.SaveInstance(instance);
         }
 
-        void Load(ApplicationInstanceRecord record)
+        LoadedApplicationInstance Load(ApplicationInstanceRecord record)
         {
             if (record == null) throw new ArgumentNullException("record");
-            Current = new LoadedApplicationInstance(applicationName, record.InstanceName, record.ConfigurationFilePath, new XmlFileKeyValueStore(record.ConfigurationFilePath));
-            OnLoaded();
-        }
-
-        protected virtual void OnLoaded()
-        {
-            var handler = Loaded;
-            if (handler != null) handler();
+            return new LoadedApplicationInstance(applicationName, record.InstanceName, record.ConfigurationFilePath, new XmlFileKeyValueStore(record.ConfigurationFilePath));
         }
     }
 }
