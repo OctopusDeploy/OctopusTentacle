@@ -34,10 +34,7 @@ namespace Octopus.Shared.Configuration
             {
                 var value = settings.Get("Octopus.Home", defaultHome);
                 if (!Path.IsPathRooted(value))
-                {
                     value = PathHelper.ResolveRelativeDirectoryPath(value);
-                }
-
                 return value;
             }
             set { settings.Set("Octopus.Home", value); }

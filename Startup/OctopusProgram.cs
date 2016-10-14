@@ -91,15 +91,12 @@ namespace Octopus.Shared.Startup
                 log.Trace("OctopusProgram.Run() : Processing command line arguments");
 
                 commandLineArguments = ProcessCommonOptions();
-
+                
                 var instanceName = string.Empty;
                 var options = new OptionSet();
                 options.Add("instance=", "Name of the instance to use", v => instanceName = v);
                 var parsedOptions = options.Parse(commandLineArguments);
-
-                // TODO: set log initializer
-
-
+                
                 log.Trace("Creating and configuring the Autofac container");
                 container = BuildContainer(instanceName);
                 log.Trace("OctopusProgram.Start() : Registering additional modules");

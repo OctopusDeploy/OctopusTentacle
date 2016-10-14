@@ -34,23 +34,21 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                return current ?? (current = DoLoad());
+                if (current == null)
+                {
+                    current = DoLoad();
+                    logInitializer.Value.Start();
+                }
+                return current;
             }
         }
 
         LoadedApplicationInstance DoLoad()
         {
-            LoadedApplicationInstance instance = null;
             if (string.IsNullOrWhiteSpace(instanceName))
-                instance = LoadDefaultInstance();
+                return LoadDefaultInstance();
             else
-                instance = LoadInstance(instanceName);
-
-            current = instance;
-
-            logInitializer.Value.Start();
-
-            return instance;
+                return LoadInstance(instanceName);
         }
 
         public void DeleteDefaultInstance()
