@@ -48,9 +48,8 @@
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut, Version=2.3.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.2.3.0\lib\Halibut.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Halibut">
+      <HintPath>..\packages\Halibut.2.4.0\lib\net45\Halibut.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -100,8 +99,8 @@
       <HintPath>..\packages\NuGet.Versioning.3.4.3\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Server.Extensibility, Version=0.4.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Server.Extensibility.0.4.0\lib\net45\Octopus.Server.Extensibility.dll</HintPath>
+    <Reference Include="Octopus.Server.Extensibility, Version=1.0.23.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Server.Extensibility.1.0.23\lib\net45\Octopus.Server.Extensibility.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -153,7 +152,6 @@
     <Compile Include="Configuration\JsonFileKeyValueStore.cs" />
     <Compile Include="Configuration\JsonKeyValueStore.cs" />
     <Compile Include="Configuration\ProxyConfigParser.cs" />
-    <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Configuration\XmlConsoleKeyValueStore.cs" />
     <Compile Include="Configuration\LoadedApplicationInstance.cs" />
     <Compile Include="Configuration\LoggingConfiguration.cs" />
@@ -161,6 +159,7 @@
     <Compile Include="Configuration\OctopusStorage.cs" />
     <Compile Include="Configuration\ProxyConfiguration.cs" />
     <Compile Include="Configuration\ProxyInitializer.cs" />
+    <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
     <Compile Include="Configuration\ServiceName.cs" />
     <Compile Include="Configuration\UpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\WindowsRegistryKeyValueStore.cs" />
