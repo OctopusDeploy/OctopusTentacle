@@ -20,21 +20,9 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
-            var isDefault = false;
-            if (string.IsNullOrWhiteSpace(instanceName))
-            {
-                isDefault = true;
-                instanceSelector.LoadDefaultInstance();
-                instanceName = instanceSelector.Current.InstanceName;
-            }
-            else
-            {
-                instanceSelector.LoadInstance(instanceName);
-            }
-
             RemoveNodeFromDatabase();
 
-            if (isDefault)
+            if (string.IsNullOrWhiteSpace(instanceName))
             {
                 instanceSelector.DeleteDefaultInstance();
             }

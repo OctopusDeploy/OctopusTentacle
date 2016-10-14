@@ -67,6 +67,7 @@ namespace Octopus.Shared.Startup
         {
             // Initialize logging as soon as possible - waiting for the Container to be built is too late
             Log.Appenders.Add(new NLogAppender());
+            
             log.Trace("OctopusProgram.Run() starting");
             log.Trace("OctopusProgram.Run() : adding handler for TaskScheduler.UnobservedTaskException");
             TaskScheduler.UnobservedTaskException += (sender, args) =>
@@ -90,6 +91,16 @@ namespace Octopus.Shared.Startup
                 log.Trace("OctopusProgram.Run() : Processing command line arguments");
 
                 commandLineArguments = ProcessCommonOptions();
+                
+                var instanceName = string.Empty;
+                var options = new OptionSet();
+                options.Add("instance=", "Name of the instance to use", v => instanceName = v);
+                var parsedOptions = options.Parse(commandLineArguments);
+                
+                log.Trace("Creating and configuring the Autofac container");
+                container = BuildContainer(instanceName);
+                log.Trace("OctopusProgram.Start() : Registering additional modules");
+                RegisterAdditionalModules(container);
 
                 log.Info($"{displayName} version {version} ({informationalVersion})");
 
@@ -194,11 +205,6 @@ namespace Octopus.Shared.Startup
 
         void Start(ICommandRuntime commandRuntime)
         {
-            log.Trace("Creating and configuring the Autofac container");
-            container = BuildContainer();
-            log.Trace("OctopusProgram.Start() : Registering additional modules");
-            RegisterAdditionalModules(container);
-
             log.Trace("OctopusProgram.Start() : Resolving command locator");
             var commandLocator = container.Resolve<ICommandLocator>();
 
@@ -220,7 +226,7 @@ namespace Octopus.Shared.Startup
             log.Trace("OctopusProgram.Start() : Command starting command");
         }
 
-        protected abstract IContainer BuildContainer();
+        protected abstract IContainer BuildContainer(string instanceName);
 
         protected virtual void RegisterAdditionalModules(IContainer builtContainer)
         {
