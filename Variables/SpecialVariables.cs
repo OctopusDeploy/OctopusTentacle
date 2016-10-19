@@ -551,6 +551,102 @@ namespace Octopus.Shared.Variables
                 public static readonly string ScriptSource = "Octopus.Action.Script.ScriptSource";
             }
 
+            public static class Docker
+            {
+                [Define(Category = VariableCategory.Hidden)] public static readonly string ActionTypeNameForRun = "Octopus.DockerRun";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string ActionTypeNameForNetwork = "Octopus.DockerNetwork";
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string ActionTypeNameForStop = "Octopus.DockerStop";
+
+                [Define(Category = VariableCategory.Action, Description = "Additional arguments to pass to docker command", Example = "-P -e key=value")]
+                public static readonly string Args = "Octopus.Action.Docker.Args";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string DontRun = "Octopus.Action.Docker.DontRun";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkType = "Octopus.Action.Docker.NetworkType";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string EnvVariable = "Octopus.Action.Docker.EnvVariable";
+                
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkName = "Octopus.Action.Docker.NetworkName";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkContainer = "Octopus.Action.Docker.NetworkContainer";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkCustomDriver = "Octopus.Action.Docker.NetworkCustomDriver";
+                
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string AddedHost = "Octopus.Action.Docker.AddedHost";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkAlias = "Octopus.Action.Docker.NetworkAlias";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkSubnet = "Octopus.Action.Docker.NetworkSubnet";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkGateway = "Octopus.Action.Docker.NetworkGateway";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string NetworkIPRange = "Octopus.Action.Docker.NetworkIPRange";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string VolumeBindings = "Octopus.Action.Docker.VolumeBindings";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string VolumesFrom = "Octopus.Action.Docker.VolumesFrom";
+                
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string VolumeDriver = "Octopus.Action.Docker.VolumeDriver";
+
+                [Define(Category = VariableCategory.Action, Description = "", Example = "")]
+                public static readonly string PortMapping = "Octopus.Action.Docker.PortMapping";
+
+                [Define(Category = VariableCategory.Action, Description = "Command argument arguments run in container", Example = "echo env")]
+                public static readonly string Command = "Octopus.Action.Docker.Command";
+
+                [Define(Category = VariableCategory.Action, Description = "Maximum number of retry attempts to start a container", Example = "4")]
+                public static readonly string RestartPolicyMax = "Octopus.Action.Docker.RestartPolicyMax";
+
+                [Define(Category = VariableCategory.Action, Description = "Container restart policy", Example = "on-failure")]
+                public static readonly string RestartPolicy = "Octopus.Action.Docker.RestartPolicy";
+
+                [Define(Category = VariableCategory.Action, Description = "Flags docker to map all ports on container to host", Example = "True")]
+                public static readonly string PortAutoMap = "Octopus.Action.Docker.PortAutoMap";
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string ActionTypeNameForCompose = "Octopus.DockerCompose";
+
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveByEnvironment = "Octopus.Action.Docker.RemoveByEnvironment";
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveByTenant = "Octopus.Action.Docker.RemoveByTenant";
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveByRelease = "Octopus.Action.Docker.RemoveByRelease";
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveSteps = "Octopus.Action.Docker.RemoveSteps";
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveCustomTags = "Octopus.Action.Docker.RemoveCustomTags";
+                
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string RemoveAll = "Octopus.Action.Docker.RemoveAll";
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string StopTimeout = "Octopus.Action.Docker.StopTimeout";
+
+            }
+
+
+
             public static class PowerShell
             {
                 public static readonly string ExecuteWithoutProfile = "Octopus.Action.PowerShell.ExecuteWithoutProfile";

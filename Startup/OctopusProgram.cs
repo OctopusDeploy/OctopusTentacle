@@ -25,6 +25,7 @@ namespace Octopus.Shared.Startup
         ICommand commandInstance;
         string[] commandLineArguments;
         bool forceConsole;
+        bool showLogo = true;
         
         protected OctopusProgram(string displayName, string version, string informationalVersion, string[] commandLineArguments)
         {
@@ -34,7 +35,8 @@ namespace Octopus.Shared.Startup
             this.informationalVersion = informationalVersion;
             commonOptions = new OptionSet();
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
-            commonOptions.Add("nologo", "Don't print title or version information", v =>
+            commonOptions.Add("nologo", "Don't print title or version information", v => showLogo = false);
+            commonOptions.Add("noconsolelogging", "Don't log to the console", v =>
             {
                 // suppress logging to the console
                 var c = LogManager.Configuration;
@@ -67,6 +69,7 @@ namespace Octopus.Shared.Startup
         {
             // Initialize logging as soon as possible - waiting for the Container to be built is too late
             Log.Appenders.Add(new NLogAppender());
+            
             log.Trace("OctopusProgram.Run() starting");
             log.Trace("OctopusProgram.Run() : adding handler for TaskScheduler.UnobservedTaskException");
             TaskScheduler.UnobservedTaskException += (sender, args) =>
@@ -90,8 +93,21 @@ namespace Octopus.Shared.Startup
                 log.Trace("OctopusProgram.Run() : Processing command line arguments");
 
                 commandLineArguments = ProcessCommonOptions();
+                
+                var instanceName = string.Empty;
+                var options = new OptionSet();
+                options.Add("instance=", "Name of the instance to use", v => instanceName = v);
+                var parsedOptions = options.Parse(commandLineArguments);
+                
+                log.Trace("Creating and configuring the Autofac container");
+                container = BuildContainer(instanceName);
+                log.Trace("OctopusProgram.Start() : Registering additional modules");
+                RegisterAdditionalModules(container);
 
-                log.Info($"{displayName} version {version} ({informationalVersion})");
+                if (showLogo)
+                {
+                    log.Info($"{displayName} version {version} ({informationalVersion})");
+                }
 
                 var host = SelectMostAppropriateHost();
                 log.Trace("OctopusProgram.Run() : Host is " + host.GetType());
@@ -194,11 +210,6 @@ namespace Octopus.Shared.Startup
 
         void Start(ICommandRuntime commandRuntime)
         {
-            log.Trace("Creating and configuring the Autofac container");
-            container = BuildContainer();
-            log.Trace("OctopusProgram.Start() : Registering additional modules");
-            RegisterAdditionalModules(container);
-
             log.Trace("OctopusProgram.Start() : Resolving command locator");
             var commandLocator = container.Resolve<ICommandLocator>();
 
@@ -220,7 +231,7 @@ namespace Octopus.Shared.Startup
             log.Trace("OctopusProgram.Start() : Command starting command");
         }
 
-        protected abstract IContainer BuildContainer();
+        protected abstract IContainer BuildContainer(string instanceName);
 
         protected virtual void RegisterAdditionalModules(IContainer builtContainer)
         {

@@ -1,4 +1,3 @@
-using System;
 using Octopus.Shared.Configuration;
 
 namespace Octopus.Shared.Startup
@@ -12,18 +11,6 @@ namespace Octopus.Shared.Startup
         {
             this.instanceSelector = instanceSelector;
             Options.Add("instance=", "Name of the instance to use", v => instanceName = v);
-        }
-
-        protected override void Initialize()
-        {
-            if (!string.IsNullOrWhiteSpace(instanceName))
-            {
-                instanceSelector.LoadInstance(instanceName);
-            }
-            else
-            {
-                instanceSelector.LoadDefaultInstance();
-            }
         }
 
         protected override void Start()
