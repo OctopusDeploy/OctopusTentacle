@@ -1,7 +1,6 @@
 using System;
 using System.Net;
 using Autofac;
-using Autofac.Core;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Configuration
@@ -28,10 +27,6 @@ namespace Octopus.Shared.Configuration
             {
                 var config = proxyConfiguration.Value;
                 WebRequest.DefaultWebProxy = configParser.ParseToWebProxy(config);
-            }
-            catch (DependencyResolutionException dre) when (dre.InnerException is ArgumentException)
-            {
-                throw;
             }
             catch (Exception ex)
             {

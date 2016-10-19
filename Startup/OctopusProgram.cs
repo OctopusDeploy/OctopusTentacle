@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
-using Autofac.Core;
 using NLog;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
@@ -124,11 +123,6 @@ namespace Octopus.Shared.Startup
             catch (ArgumentException ex)
             {
                 log.Fatal(ex.Message);
-                exitCode = 1;
-            }
-            catch (DependencyResolutionException ex) when (ex.InnerException is ArgumentException)
-            {
-                log.Fatal(ex.InnerException.Message);
                 exitCode = 1;
             }
             catch (SecurityException ex)
