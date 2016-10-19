@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
-using Octopus.Server.Extensibility.HostServices.Diagnostics;
+using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Security.Certificates
 {

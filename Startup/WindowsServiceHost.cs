@@ -1,6 +1,6 @@
 using System;
 using System.ServiceProcess;
-using Octopus.Server.Extensibility.HostServices.Diagnostics;
+using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup

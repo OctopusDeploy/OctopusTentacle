@@ -1,6 +1,5 @@
 ﻿using System;
-using Octopus.Server.Extensibility.HostServices.Diagnostics;
-using Octopus.Shared.Properties;
+using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Diagnostics
 {
@@ -81,48 +80,6 @@ namespace Octopus.Shared.Diagnostics
         void Finish();
 
         bool IsEnabled(LogCategory category);
-
-        [StringFormatMethod("messageFormat")]
-        void WriteFormat(LogCategory category, string messageFormat, params object[] args);
-
-        [StringFormatMethod("messageFormat")]
-        void WriteFormat(LogCategory category, Exception error, string messageFormat, params object[] args);
-
-        [StringFormatMethod("messageFormat")]
-        void TraceFormat(string messageFormat, params object[] args);
-
-        [StringFormatMethod("format")]
-        void TraceFormat(Exception error, string format, params object[] args);
-
-        [StringFormatMethod("messageFormat")]
-        void VerboseFormat(string messageFormat, params object[] args);
-
-        [StringFormatMethod("format")]
-        void VerboseFormat(Exception error, string format, params object[] args);
-
-        [StringFormatMethod("messageFormat")]
-        void InfoFormat(string messageFormat, params object[] args);
-
-        [StringFormatMethod("format")]
-        void InfoFormat(Exception error, string format, params object[] args);
-
-        [StringFormatMethod("messageFormat")]
-        void WarnFormat(string messageFormat, params object[] args);
-
-        [StringFormatMethod("format")]
-        void WarnFormat(Exception error, string format, params object[] args);
-
-        [StringFormatMethod("messageFormat")]
-        void ErrorFormat(string messageFormat, params object[] args);
-
-        [StringFormatMethod("format")]
-        void ErrorFormat(Exception error, string format, params object[] args);
-
-        [StringFormatMethod("messageFormat")]
-        void FatalFormat(string messageFormat, params object[] args);
-
-        [StringFormatMethod("format")]
-        void FatalFormat(Exception error, string format, params object[] args);
 
         void UpdateProgress(int progressPercentage, string messageText);
 

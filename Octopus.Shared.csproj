@@ -107,8 +107,24 @@
       <HintPath>..\packages\NuGet.Versioning.3.4.3\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Server.Extensibility, Version=1.0.24.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Server.Extensibility.1.0.24\lib\net45\Octopus.Server.Extensibility.dll</HintPath>
+    <Reference Include="Octopus.Configuration, Version=1.0.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Configuration.1.0.10\lib\net45\Octopus.Configuration.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Octopus.Data, Version=1.0.12.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Data.1.0.12\lib\netstandard1.0\Octopus.Data.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Octopus.Diagnostics, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Diagnostics.1.0.11\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Octopus.Server.Extensibility, Version=1.0.31.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Server.Extensibility.1.0.31\lib\net45\Octopus.Server.Extensibility.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Octopus.Time, Version=1.0.8.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Time.1.0.8\lib\netstandard1.0\Octopus.Time.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -243,7 +259,6 @@
     <Compile Include="Properties\PublicAPIAttribute.cs" />
     <Compile Include="Properties\PureAttribute.cs" />
     <Compile Include="Properties\RazorSectionAttribute.cs" />
-    <Compile Include="Properties\StringFormatMethodAttribute.cs" />
     <Compile Include="Properties\UsedImplicitlyAttribute.cs" />
     <Compile Include="Scripts\AsyncReaderWriterLockExtensions.cs" />
     <Compile Include="Scripts\IScriptLog.cs" />

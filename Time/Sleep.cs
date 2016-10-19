@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using Octopus.Server.Extensibility.HostServices.Time;
+using Octopus.Time;
 
 namespace Octopus.Shared.Time
 {
