@@ -12,43 +12,38 @@ namespace Octopus.Shared.Configuration
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
         readonly ILog log;
-        readonly Lazy<ILogInitializer> logInitializer;
 
         public ApplicationInstanceSelector(ApplicationName applicationName,
             string instanceName,
             IOctopusFileSystem fileSystem,
             IApplicationInstanceStore instanceStore,
-            ILog log,
-            Lazy<ILogInitializer> logInitializer)
+            ILog log)
         {
             this.applicationName = applicationName;
             this.instanceName = instanceName;
             this.fileSystem = fileSystem;
             this.instanceStore = instanceStore;
             this.log = log;
-            this.logInitializer = logInitializer;
         }
         
         private LoadedApplicationInstance current;
-        public LoadedApplicationInstance Current
-        {
-            get
-            {
-                if (current == null)
-                {
-                    current = DoLoad();
-                    logInitializer.Value.Start();
-                }
-                return current;
-            }
-        }
+        public LoadedApplicationInstance Current => current ?? (current = DoLoad());
 
         LoadedApplicationInstance DoLoad()
         {
+            LoadedApplicationInstance instance;
             if (string.IsNullOrWhiteSpace(instanceName))
-                return LoadDefaultInstance();
+                instance = LoadDefaultInstance();
             else
-                return LoadInstance(instanceName);
+                instance = LoadInstance(instanceName);
+
+            // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
+            // back to here
+            var homeConfig = new HomeConfiguration(applicationName, instance.Configuration);
+            var logInit = new LogInitializer(new LoggingConfiguration(homeConfig), fileSystem);
+            logInit.Start();
+
+            return instance;
         }
 
         public void DeleteDefaultInstance()
@@ -109,7 +104,11 @@ namespace Octopus.Shared.Configuration
         LoadedApplicationInstance Load(ApplicationInstanceRecord record)
         {
             if (record == null) throw new ArgumentNullException("record");
-            return new LoadedApplicationInstance(applicationName, record.InstanceName, record.ConfigurationFilePath, new XmlFileKeyValueStore(record.ConfigurationFilePath));
+            return new LoadedApplicationInstance(
+                applicationName,
+                record.InstanceName,
+                record.ConfigurationFilePath,
+                new XmlFileKeyValueStore(record.ConfigurationFilePath));
         }
     }
 }

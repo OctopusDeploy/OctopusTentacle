@@ -1,5 +1,6 @@
 using Autofac;
 using Octopus.Configuration;
+using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration
 {
@@ -24,22 +25,26 @@ namespace Octopus.Shared.Configuration
                 .WithParameter("instanceName", instanceName)
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
+
             builder.Register(c =>
             {
                 var selector = c.Resolve<IApplicationInstanceSelector>();
                 return selector.Current.Configuration;
-            }).As<IKeyValueStore>();
+            }).As<IKeyValueStore>().SingleInstance();
+
             builder.RegisterType<UpgradeCheckConfiguration>().As<IUpgradeCheckConfiguration>().SingleInstance();
+
             builder.RegisterType<HomeConfiguration>()
                 .WithParameter("application", applicationName)
                 .As<IHomeConfiguration>()
                 .SingleInstance();
+
             builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().SingleInstance();
             builder.RegisterType<LogInitializer>().As<ILogInitializer>();
             builder.RegisterType<ProxyConfigParser>().As<IProxyConfigParser>();
             builder.RegisterType<PollingProxyConfiguration>().As<IPollingProxyConfiguration>();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
-            builder.RegisterType<ProxyInitializer>().As<IStartable>();
+            builder.RegisterType<ProxyInitializer>().As<IStartableOnRun>().SingleInstance();
         }
     }
 }

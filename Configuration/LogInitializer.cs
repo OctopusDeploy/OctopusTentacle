@@ -6,10 +6,10 @@ namespace Octopus.Shared.Configuration
 {
     public class LogInitializer : ILogInitializer
     {
-        readonly Lazy<ILoggingConfiguration> configuration;
+        readonly ILoggingConfiguration configuration;
         readonly IOctopusFileSystem fileSystem;
 
-        public LogInitializer(Lazy<ILoggingConfiguration> configuration, IOctopusFileSystem fileSystem)
+        public LogInitializer(ILoggingConfiguration configuration, IOctopusFileSystem fileSystem)
         {
             this.configuration = configuration;
             this.fileSystem = fileSystem;
@@ -22,7 +22,7 @@ namespace Octopus.Shared.Configuration
 
         void InitializeLogs()
         {
-            var logDirectory = configuration.Value.LogsDirectory;
+            var logDirectory = configuration.LogsDirectory;
 
             fileSystem.EnsureDirectoryExists(logDirectory);
             OctopusLogsDirectoryRenderer.LogsDirectory = logDirectory;
