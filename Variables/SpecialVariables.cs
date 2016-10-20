@@ -642,10 +642,15 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string StopTimeout = "Octopus.Action.Docker.StopTimeout";
-
             }
 
+            public static class Certificate
+            {
+                public static readonly string ActionTypeName = "Octopus.Certificate.Import";
 
+                [Define(Category = VariableCategory.Action, Description = "The name of the certificate variable the action will use", Example = "Acme-Production")]
+                public static readonly string CertificateVariable = "Octopus.Action.Certificate.Variable";
+            }
 
             public static class PowerShell
             {
