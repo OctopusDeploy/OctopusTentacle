@@ -101,7 +101,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Client, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Client.3.6.0-run-template0045\lib\net45\Octopus.Client.dll</HintPath>
+      <HintPath>..\packages\Octopus.Client.3.6.0-dawops-addstep0046\lib\net45\Octopus.Client.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
