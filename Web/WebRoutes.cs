@@ -398,12 +398,12 @@ namespace Octopus.Shared.Web
                 public static string SortOrder = "~/api/tagsets/sortorder";
             }
 
-            public class LibraryStepTemplates
+            public class CommunityActionTemplates
             {
-                public static string Template = "~/api/librarysteptemplates{/id}";
-                public static string Get = "~/api/librarysteptemplates/{id}";
-                public static string InstalledTemplate = "~/api/librarysteptemplates/{id}/actiontemplate";
-                public static string Logo = "~/api/librarysteptemplates/{id}/logo";
+                public static string Template = "~/api/communityactiontemplates{/id}";
+                public static string Get = "~/api/communityactiontemplates/{id}";
+                public static string InstalledTemplate = "~/api/communityactiontemplates/{id}/actiontemplate";
+                public static string Logo = "~/api/communityactiontemplates/{id}/logo";
             }
         }
 
