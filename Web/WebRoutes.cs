@@ -36,6 +36,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/actiontemplates/{id}";
                 public static string Usage = "~/api/actiontemplates/{id}/usage";
                 public static string Logo = "~/api/actiontemplates/{typeOrId}/logo";
+                public static string Search = "~/api/actiontemplates/search"; 
             }
 
             public static class Alerts
@@ -395,11 +396,6 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/tagsets/{id}";
                 public static string Index = "~/api/tagsets{?skip}";
                 public static string SortOrder = "~/api/tagsets/sortorder";
-            }
-
-            public class StepTemplates
-            {
-                public static string All = "~/api/steptemplates/all";
             }
 
             public class LibraryStepTemplates
