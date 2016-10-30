@@ -359,6 +359,7 @@ namespace Octopus.Shared.Web
                 public static string Index = "~/api/certificates{?skip,search,archived}";
                 public static string Get = "~/api/certificates/{id}";
                 public static string Archive = "~/api/certificates/{id}/archive";
+                public static string Unarchive = "~/api/certificates/{id}/unarchive";
                 public static string Usage = "~/api/certificates/{id}/usage";
             }
 
