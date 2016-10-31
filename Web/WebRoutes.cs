@@ -98,11 +98,7 @@ namespace Octopus.Shared.Web
             public static class ServerConfiguration
             {
                 public static string Template = "~/api/serverconfiguration";
-            }
-
-            public static class ServerConfigurationSettings
-            {
-                public static string Template = "~/api/serverconfigurationsettings";
+                public static string Settings = "~/api/serverconfiguration/settings";
             }
 
             public static class Teams
@@ -158,8 +154,6 @@ namespace Octopus.Shared.Web
 
             public static class Defect
             {
-                //public static string Template = "~/api/releases/{id}/defects{?skip,take}";
-
                 public static string Index = "~/api/releases/{id}/defects";
                 public static string Report = "~/api/releases/{id}/defects";
                 public static string Resolve = "~/api/releases/{id}/defects/resolve";
