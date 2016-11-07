@@ -22,10 +22,11 @@ namespace Octopus.Shared.Configuration
 
         void InitializeLogs()
         {
+            // If the LogsDirectory isn't configured yet (probably because the HomeDirectory isn't configured yet) continue logging to the fallback directory
             var logDirectory = configuration.LogsDirectory;
-
-            fileSystem.EnsureDirectoryExists(logDirectory);
-            OctopusLogsDirectoryRenderer.LogsDirectory = logDirectory;
+            if (logDirectory == null) return;
+            
+            OctopusLogsDirectoryRenderer.SetLogsDirectory(logDirectory);
         }
     }
 }
