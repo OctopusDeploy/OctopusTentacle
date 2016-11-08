@@ -535,6 +535,11 @@ namespace Octopus.Shared.Variables
                 public static readonly string ActionTypeName = "Octopus.WindowsService";
             }
 
+            public static class Vhd
+            {
+                public static readonly string ActionTypeName = "Octopus.Vhd";
+            }
+
             public static class Ftp
             {
                 // deprecated step, do not use
