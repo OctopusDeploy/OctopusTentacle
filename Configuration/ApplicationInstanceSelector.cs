@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Octopus.Shared.Diagnostics;
+using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
@@ -8,20 +8,43 @@ namespace Octopus.Shared.Configuration
     public class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
         readonly ApplicationName applicationName;
+        readonly string instanceName;
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
         readonly ILog log;
 
-        public ApplicationInstanceSelector(ApplicationName applicationName, IOctopusFileSystem fileSystem, IApplicationInstanceStore instanceStore, ILog log)
+        public ApplicationInstanceSelector(ApplicationName applicationName,
+            string instanceName,
+            IOctopusFileSystem fileSystem,
+            IApplicationInstanceStore instanceStore,
+            ILog log)
         {
             this.applicationName = applicationName;
+            this.instanceName = instanceName;
             this.fileSystem = fileSystem;
             this.instanceStore = instanceStore;
             this.log = log;
         }
+        
+        private LoadedApplicationInstance current;
+        public LoadedApplicationInstance Current => current ?? (current = DoLoad());
 
-        public LoadedApplicationInstance Current { get; private set; }
-        public event Action Loaded;
+        LoadedApplicationInstance DoLoad()
+        {
+            LoadedApplicationInstance instance;
+            if (string.IsNullOrWhiteSpace(instanceName))
+                instance = LoadDefaultInstance();
+            else
+                instance = LoadInstance(instanceName);
+
+            // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
+            // back to here
+            var homeConfig = new HomeConfiguration(applicationName, instance.Configuration);
+            var logInit = new LogInitializer(new LoggingConfiguration(homeConfig), fileSystem);
+            logInit.Start();
+
+            return instance;
+        }
 
         public void DeleteDefaultInstance()
         {
@@ -39,26 +62,22 @@ namespace Octopus.Shared.Configuration
             log.Info("Deleted instance: " + instanceName);
         }
 
-        public void LoadDefaultInstance()
+        private LoadedApplicationInstance LoadDefaultInstance()
         {
             var instance = instanceStore.GetDefaultInstance(applicationName);
             if (instance == null)
-            {
-                throw new ArgumentException("The default instance of " + applicationName + " has not been created. Either pass --instance INSTANCENAME when invoking this command, or run the setup wizard.");
-            }
+                throw new ControlledFailureException("The default instance of " + applicationName + " has not been created. Either pass --instance INSTANCENAME when invoking this command, or run the setup wizard.");
 
-            Load(instance);
+            return Load(instance);
         }
 
-        public void LoadInstance(string instanceName)
+        private LoadedApplicationInstance LoadInstance(string instanceName)
         {
             var instance = instanceStore.GetInstance(applicationName, instanceName);
             if (instance == null)
-            {
-                throw new ArgumentException("Instance " + instanceName + " of application " + applicationName + " has not been created. Check the instance name or run the setup wizard.");
-            }
+                throw new ControlledFailureException("Instance " + instanceName + " of application " + applicationName + " has not been created. Check the instance name or run the setup wizard.");
 
-            Load(instance);
+            return Load(instance);
         }
 
         public void CreateDefaultInstance(string configurationFile)
@@ -82,17 +101,14 @@ namespace Octopus.Shared.Configuration
             instanceStore.SaveInstance(instance);
         }
 
-        void Load(ApplicationInstanceRecord record)
+        LoadedApplicationInstance Load(ApplicationInstanceRecord record)
         {
             if (record == null) throw new ArgumentNullException("record");
-            Current = new LoadedApplicationInstance(applicationName, record.InstanceName, record.ConfigurationFilePath, new XmlFileKeyValueStore(record.ConfigurationFilePath));
-            OnLoaded();
-        }
-
-        protected virtual void OnLoaded()
-        {
-            var handler = Loaded;
-            if (handler != null) handler();
+            return new LoadedApplicationInstance(
+                applicationName,
+                record.InstanceName,
+                record.ConfigurationFilePath,
+                new XmlFileKeyValueStore(record.ConfigurationFilePath));
         }
     }
 }

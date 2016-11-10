@@ -1,5 +1,6 @@
 using System;
 using System.ServiceProcess;
+using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup

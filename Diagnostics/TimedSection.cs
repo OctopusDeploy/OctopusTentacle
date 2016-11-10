@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Diagnostics
 {

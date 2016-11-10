@@ -19,7 +19,7 @@ namespace Octopus.Shared.Tasks
         readonly ManualResetEventSlim complete = new ManualResetEventSlim(false);
         readonly CancellationTokenSource cancel = new CancellationTokenSource();
         readonly Thread workThread;
-        readonly ILog log = Log.Octopus();
+        readonly ILogWithContext log = Log.Octopus();
         readonly LogContext taskLogContext;
         bool isPaused;
 

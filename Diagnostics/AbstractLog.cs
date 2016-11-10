@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Diagnostics
 {
-    public abstract class AbstractLog : ILog
+    public abstract class AbstractLog : ILogWithContext
     {
         public abstract LogContext CurrentContext { get; }
 

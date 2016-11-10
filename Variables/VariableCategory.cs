@@ -18,7 +18,7 @@ namespace Octopus.Shared.Variables
 
         [Description("Agent-level variables describe the deployment agent or Tentacle on which the deployment is executing.")] Agent,
 
-        [Description("Undocumented variables not avaiable to the user.")] Hidden,
+        [Description("Undocumented variables not available to the user.")] Hidden,
 
         [Description("Project-level variables describe the events available to project triggers.")] ProjectTrigger
     }

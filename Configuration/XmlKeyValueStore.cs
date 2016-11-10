@@ -10,6 +10,10 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class XmlKeyValueStore : DictionaryKeyValueStore
     {
+        protected XmlKeyValueStore(bool isWriteOnly = false) : base(isWriteOnly)
+        {
+        }
+
         protected override void LoadSettings(IDictionary<string, string> settingsToFill)
         {
             if (!ExistsForReading())
@@ -32,6 +36,12 @@ namespace Octopus.Shared.Configuration
 
         protected override void SaveSettings(IDictionary<string, string> settingsToSave)
         {
+            var settings = new XmlSettingsRoot();
+            foreach (var key in settingsToSave.Keys.OrderBy(k => k))
+            {
+                settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key] });
+            }
+
             var serializer = new XmlSerializer(typeof (XmlSettingsRoot));
             using (var stream = OpenForWriting())
             {
@@ -39,12 +49,6 @@ namespace Octopus.Shared.Configuration
                 using (var xmlWriter = new XmlTextWriter(new StreamWriter(stream, Encoding.UTF8)))
                 {
                     xmlWriter.Formatting = Formatting.Indented;
-
-                    var settings = new XmlSettingsRoot();
-                    foreach (var key in settingsToSave.Keys.OrderBy(k => k))
-                    {
-                        settings.Settings.Add(new XmlSetting {Key = key, Value = settingsToSave[key]});
-                    }
 
                     serializer.Serialize(xmlWriter, settings);
                 }

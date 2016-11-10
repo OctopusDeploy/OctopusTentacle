@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {

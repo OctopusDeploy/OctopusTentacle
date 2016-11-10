@@ -6,34 +6,27 @@ namespace Octopus.Shared.Configuration
 {
     public class LogInitializer : ILogInitializer
     {
-        readonly IApplicationInstanceSelector selector;
-        readonly Lazy<ILoggingConfiguration> configuration;
+        readonly ILoggingConfiguration configuration;
         readonly IOctopusFileSystem fileSystem;
 
-        public LogInitializer(IApplicationInstanceSelector selector, Lazy<ILoggingConfiguration> configuration, IOctopusFileSystem fileSystem)
+        public LogInitializer(ILoggingConfiguration configuration, IOctopusFileSystem fileSystem)
         {
-            this.selector = selector;
             this.configuration = configuration;
             this.fileSystem = fileSystem;
         }
 
         public void Start()
         {
-            selector.Loaded += InitializeLogs;
             InitializeLogs();
         }
 
         void InitializeLogs()
         {
-            if (selector.Current == null)
-                return;
-
-            selector.Loaded -= InitializeLogs;
-
-            var logDirectory = configuration.Value.LogsDirectory;
-
-            fileSystem.EnsureDirectoryExists(logDirectory);
-            OctopusLogsDirectoryRenderer.LogsDirectory = logDirectory;
+            // If the LogsDirectory isn't configured yet (probably because the HomeDirectory isn't configured yet) continue logging to the fallback directory
+            var logDirectory = configuration.LogsDirectory;
+            if (logDirectory == null) return;
+            
+            OctopusLogsDirectoryRenderer.SetLogsDirectory(logDirectory);
         }
     }
 }

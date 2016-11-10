@@ -1,4 +1,5 @@
 using System;
+using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
@@ -55,6 +56,11 @@ namespace Octopus.Shared.Configuration
         public static bool UsingCustomProxy(this IProxyConfiguration config)
         {
             return !string.IsNullOrWhiteSpace(config.CustomProxyHost);
+        }
+
+        public static bool UsingDefaultCredentials(this IProxyConfiguration config)
+        {
+            return string.IsNullOrWhiteSpace(config.CustomProxyUsername);
         }
     }
 }

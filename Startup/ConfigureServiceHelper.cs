@@ -3,7 +3,7 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using Octopus.Shared.Diagnostics;
+using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
@@ -37,11 +37,17 @@ namespace Octopus.Shared.Startup
                 {
                     if (controller.Status != ServiceControllerStatus.Stopped && controller.Status != ServiceControllerStatus.StopPending)
                     {
-                        while (!controller.CanStop)
+                        if (!controller.CanStop)
                         {
-                            controller.Refresh();
-                            log.Info("Waiting for the service to be ready to stop...");
-                            Thread.Sleep(300);
+                            try
+                            {
+                                WaitForControllerToBeReadyToStop(controller);
+                            }
+                            catch (Exception)
+                            {
+                                log.Error("The service is not able to stop");
+                                throw;
+                            }
                         }
 
                         log.Info("Stopping service...");
@@ -49,12 +55,14 @@ namespace Octopus.Shared.Startup
                         controller.Stop();
                     }
 
-                    while (controller.Status != ServiceControllerStatus.Stopped)
+                    try
                     {
-                        controller.Refresh();
-
-                        log.Info("Waiting for service to stop. Current status: " + controller.Status);
-                        Thread.Sleep(300);
+                        WaitForControllerStatus(controller, ServiceControllerStatus.Stopped);
+                    }
+                    catch (Exception)
+                    {
+                        log.Error("The service could not be stopped");
+                        throw;
                     }
 
                     log.Info("Service stopped");
@@ -172,6 +180,28 @@ namespace Octopus.Shared.Startup
             }
         }
 
+        void WaitForControllerToBeReadyToStop(ServiceController controller)
+        {
+            Retry(() =>
+            {
+                controller.Refresh();
+                log.Info("Waiting for the service to be ready to stop...");
+                Thread.Sleep(300);
+                return controller.CanStop;
+            }, 150);
+        }
+
+        void WaitForControllerStatus(ServiceController controller, ServiceControllerStatus status)
+        {
+            Retry(() =>
+            {
+                controller.Refresh();
+                log.Info($"Waiting for service to become {status}. Current status: {controller.Status}");
+                Thread.Sleep(300);
+                return controller.Status == status;
+            }, 150);
+        }
+
         void Sc(string arguments)
         {
             var outputBuilder = new StringBuilder();
@@ -179,6 +209,18 @@ namespace Octopus.Shared.Startup
             if (exitCode != 0)
             {
                 log.Error(outputBuilder.ToString());
+            }
+        }
+
+        void Retry(Func<bool> func, int maxRetries)
+        {
+            var currentRetry = 0;
+            while (!func())
+            {
+                if (currentRetry++ > maxRetries)
+                {
+                    throw new Exception("Exceeded max retries");
+                }
             }
         }
     }

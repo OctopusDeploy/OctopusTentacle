@@ -33,7 +33,9 @@ namespace Octopus.Shared.Startup
             }
         }
 
+        protected virtual void Initialize() { }
         protected abstract void Start();
+        protected virtual void Completed() { }
 
         protected virtual void Stop()
         {
@@ -54,7 +56,9 @@ namespace Octopus.Shared.Startup
             foreach (var opset in optionSets)
                 opset.Validate();
 
+            Initialize();
             Start();
+            Completed();
         }
 
         void ICommand.Stop()

@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Diagnostics
 {
@@ -13,7 +14,7 @@ namespace Octopus.Shared.Diagnostics
             }
 
             var log = Log.Octopus();
-            builder.Register(c => log).As<ILog>().SingleInstance();
+            builder.Register(c => log).As<ILog>().As<ILogWithContext>().SingleInstance();
         }
     }
 }

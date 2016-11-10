@@ -1,4 +1,3 @@
-using System;
 using Octopus.Shared.Configuration;
 
 namespace Octopus.Shared.Startup
@@ -16,14 +15,6 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
-            if (!string.IsNullOrWhiteSpace(instanceName))
-            {
-                instanceSelector.LoadInstance(instanceName);
-            }
-            else
-            {
-                instanceSelector.LoadDefaultInstance();
-            }
         }
     }
 }

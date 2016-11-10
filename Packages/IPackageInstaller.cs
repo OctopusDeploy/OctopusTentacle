@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Octopus.Shared.Diagnostics;
+using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Packages
 {

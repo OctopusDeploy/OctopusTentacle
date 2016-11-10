@@ -48,7 +48,7 @@ namespace Octopus.Shared.Internals.Options
             throw new InvalidOperationException("Option has no names!");
         }
 
-        protected Option GetOptionForName(string option)
+        public Option GetOptionForName(string option)
         {
             if (option == null)
                 throw new ArgumentNullException("option");

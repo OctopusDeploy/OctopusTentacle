@@ -1,60 +1,37 @@
 using System;
 using System.Net;
-using System.Security.Policy;
-using Autofac;
+using Autofac.Core;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration
 {
-    public class ProxyInitializer : IStartable
+    public class ProxyInitializer : IStartableOnRun
     {
-        readonly Lazy<IProxyConfiguration> proxyConfiguration;
-        readonly IApplicationInstanceSelector selector;
+        readonly IProxyConfiguration proxyConfiguration;
+        readonly IProxyConfigParser configParser;
 
-        public ProxyInitializer(Lazy<IProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector selector)
+        public ProxyInitializer(IProxyConfiguration proxyConfiguration, IProxyConfigParser configParser)
         {
             this.proxyConfiguration = proxyConfiguration;
-            this.selector = selector;
+            this.configParser = configParser;
         }
 
         public void Start()
         {
-            selector.Loaded += InitializeProxy;
             InitializeProxy();
         }
 
         void InitializeProxy()
         {
-            if (selector.Current == null)
-                return;
-
-            selector.Loaded -= InitializeProxy;
-
             try
             {
-                var useCustomProxy = proxyConfiguration.Value.UsingCustomProxy();
-                var useDefaultProxy = proxyConfiguration.Value.UseDefaultProxy;
-
-                if (useDefaultProxy || useCustomProxy)
-                {
-                    var proxy = useDefaultProxy
-                        ? WebRequest.GetSystemWebProxy()
-                        : new WebProxy(new UriBuilder("http", proxyConfiguration.Value.CustomProxyHost, proxyConfiguration.Value.CustomProxyPort).Uri);
-
-                    var useDefaultCredentials = string.IsNullOrWhiteSpace(proxyConfiguration.Value.CustomProxyUsername);
-
-                    proxy.Credentials = useDefaultCredentials
-                        ? useDefaultProxy
-                            ? CredentialCache.DefaultNetworkCredentials
-                            : new NetworkCredential()
-                        : new NetworkCredential(proxyConfiguration.Value.CustomProxyUsername, proxyConfiguration.Value.CustomProxyPassword);
-
-                    WebRequest.DefaultWebProxy = proxy;
-                }
-                else
-                {
-                    WebRequest.DefaultWebProxy = null;
-                }
+                var config = proxyConfiguration;
+                WebRequest.DefaultWebProxy = configParser.ParseToWebProxy(config);
+            }
+            catch (DependencyResolutionException dre) when (dre.InnerException is ArgumentException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

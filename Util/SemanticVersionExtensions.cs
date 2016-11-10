@@ -1,4 +1,5 @@
-﻿using Octopus.Shared.Versioning;
+﻿using System;
+using Octopus.Shared.Versioning;
 
 namespace Octopus.Shared.Util
 {

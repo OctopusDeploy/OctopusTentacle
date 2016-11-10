@@ -2,6 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
+using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
@@ -9,6 +10,7 @@ namespace Octopus.Shared.Configuration
     {
         protected abstract void Write(string key, string value);
         protected abstract string Read(string key);
+        protected abstract void Delete(string key);
 
         public string Get(string name, DataProtectionScope? protectionScope = null)
         {
@@ -74,6 +76,11 @@ namespace Octopus.Shared.Configuration
                 Set(name, (string)(object)value, protectionScope);
             else
                 Set(name, JsonConvert.SerializeObject(value), protectionScope);
+        }
+
+        public void Remove(string name)
+        {
+            Delete(name);
         }
 
         public abstract void Save();
