@@ -1,5 +1,5 @@
 using System;
-using Octopus.Server.Extensibility.HostServices.Time;
+using Octopus.Time;
 
 namespace Octopus.Shared.Time
 {

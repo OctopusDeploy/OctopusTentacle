@@ -1,16 +1,17 @@
 using System;
 using System.Net;
-using Autofac;
+using Autofac.Core;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration
 {
-    public class ProxyInitializer : IStartable
+    public class ProxyInitializer : IStartableOnRun
     {
-        readonly Lazy<IProxyConfiguration> proxyConfiguration;
+        readonly IProxyConfiguration proxyConfiguration;
         readonly IProxyConfigParser configParser;
 
-        public ProxyInitializer(Lazy<IProxyConfiguration> proxyConfiguration, IProxyConfigParser configParser)
+        public ProxyInitializer(IProxyConfiguration proxyConfiguration, IProxyConfigParser configParser)
         {
             this.proxyConfiguration = proxyConfiguration;
             this.configParser = configParser;
@@ -25,8 +26,12 @@ namespace Octopus.Shared.Configuration
         {
             try
             {
-                var config = proxyConfiguration.Value;
+                var config = proxyConfiguration;
                 WebRequest.DefaultWebProxy = configParser.ParseToWebProxy(config);
+            }
+            catch (DependencyResolutionException dre) when (dre.InnerException is ArgumentException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using Halibut;
 using Halibut.Transport.Proxy;
-using Octopus.Server.Extensibility.HostServices.Diagnostics;
+using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {

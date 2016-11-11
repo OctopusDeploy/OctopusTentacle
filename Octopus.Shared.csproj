@@ -48,15 +48,12 @@
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut">
-      <HintPath>..\packages\Halibut.2.4.0\lib\net45\Halibut.dll</HintPath>
-    </Reference>
-    <Reference Include="Nancy, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nancy.1.2.0\lib\net40\Nancy.dll</HintPath>
+    <Reference Include="Halibut, Version=2.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Halibut.2.4.1\lib\net45\Halibut.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Nancy.Serialization.JsonNet, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nancy.Serialization.JsonNet.1.2.0\lib\net40\Nancy.Serialization.JsonNet.dll</HintPath>
+    <Reference Include="Nevermore.Contracts, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nevermore.Contracts.1.0.1\lib\netstandard1.0\Nevermore.Contracts.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -107,8 +104,20 @@
       <HintPath>..\packages\NuGet.Versioning.3.4.3\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Server.Extensibility, Version=1.0.24.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Server.Extensibility.1.0.24\lib\net45\Octopus.Server.Extensibility.dll</HintPath>
+    <Reference Include="Octopus.Configuration, Version=1.0.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Configuration.1.0.10\lib\net45\Octopus.Configuration.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Octopus.Data, Version=1.0.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Data.1.0.18\lib\netstandard1.0\Octopus.Data.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Octopus.Diagnostics, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Diagnostics.1.0.11\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Octopus.Time, Version=1.0.8.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Time.1.0.8\lib\netstandard1.0\Octopus.Time.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -201,13 +210,9 @@
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
     <Compile Include="Diagnostics\TimedSection.cs" />
-    <Compile Include="Extensibility\ExtensionInfo.cs" />
-    <Compile Include="Extensibility\ExtensionInfoProvider.cs" />
-    <Compile Include="Extensibility\ExtensionsInfrastructureModule.cs" />
-    <Compile Include="Extensibility\IExtensionInfoProvider.cs" />
-    <Compile Include="Extensibility\PluginsModule.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Diagnostics\LogContext.cs" />
+    <Compile Include="Startup\IStartableOnRun.cs" />
     <Compile Include="Util\CommonValidationMessages.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="Model\EncryptedAttribute.cs" />
@@ -243,7 +248,6 @@
     <Compile Include="Properties\PublicAPIAttribute.cs" />
     <Compile Include="Properties\PureAttribute.cs" />
     <Compile Include="Properties\RazorSectionAttribute.cs" />
-    <Compile Include="Properties\StringFormatMethodAttribute.cs" />
     <Compile Include="Properties\UsedImplicitlyAttribute.cs" />
     <Compile Include="Scripts\AsyncReaderWriterLockExtensions.cs" />
     <Compile Include="Scripts\IScriptLog.cs" />
@@ -273,7 +277,6 @@
     <Compile Include="Tasks\TaskCompletionHandler.cs" />
     <Compile Include="Tasks\TaskControllerAttribute.cs" />
     <Compile Include="Tasks\WorkItem.cs" />
-    <Compile Include="Tools\CommandLine.cs" />
     <Compile Include="TransientFaultHandling\FixedInterval.cs" />
     <Compile Include="TransientFaultHandling\ExponentialBackoff.cs" />
     <Compile Include="TransientFaultHandling\Incremental.cs" />
@@ -289,8 +292,6 @@
     <Compile Include="Util\EnumerableExtensions.cs" />
     <Compile Include="Util\IOUtil.cs" />
     <Compile Include="Util\SemanticVersionExtensions.cs" />
-    <Compile Include="Util\Result.cs" />
-    <Compile Include="Util\ResultExtensions.cs" />
     <Compile Include="Util\StreamDisposalChain.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
     <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
@@ -359,7 +360,6 @@
     <Compile Include="Time\Sleep.cs" />
     <Compile Include="Time\SystemClock.cs" />
     <Compile Include="Time\TimeModule.cs" />
-    <Compile Include="Tools\OctoDiff.cs" />
     <Compile Include="Util\AmazingConverter.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Util\CallbackDisposable.cs" />
@@ -381,12 +381,10 @@
     <Compile Include="Util\IOctopusFileSystem.cs" />
     <Compile Include="Util\ISemaphore.cs" />
     <Compile Include="Util\ListExtensions.cs" />
-    <Compile Include="Util\MimeTypes.cs" />
     <Compile Include="Util\NumericExtensions.cs" />
     <Compile Include="Util\ObjectFormatter.cs" />
     <Compile Include="Util\OctopusPhysicalFileSystem.cs" />
     <Compile Include="Util\OutboundLinks.cs" />
-    <Compile Include="Util\PasswordHasher.cs" />
     <Compile Include="Util\PathHelper.cs" />
     <Compile Include="Util\PathSegmentValidator.cs" />
     <Compile Include="Util\PlatformTextFormatter.cs" />
@@ -395,7 +393,6 @@
     <Compile Include="Util\ReplaceStatus.cs" />
     <Compile Include="Util\RuntimeUtility.cs" />
     <Compile Include="Util\SilentProcessRunner.cs" />
-    <Compile Include="Util\SlugGenerator.cs" />
     <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Util\SystemSemaphore.cs" />
     <Compile Include="Util\TypeExtensions.cs" />

@@ -1,4 +1,5 @@
 using System;
+using Autofac.Core;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Util;
@@ -30,6 +31,10 @@ namespace Octopus.Shared.Startup
             catch (ControlledFailureException)
             {
                 throw;
+            }
+            catch (DependencyResolutionException rex) when (rex.InnerException is ControlledFailureException)
+            {
+                throw rex.InnerException;
             }
             catch (Exception ex)
             {

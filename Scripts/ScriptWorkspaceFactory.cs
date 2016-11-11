@@ -13,6 +13,9 @@ namespace Octopus.Shared.Scripts
 
         public ScriptWorkspaceFactory(IOctopusFileSystem fileSystem, IHomeConfiguration home)
         {
+            if (home.ApplicationSpecificHomeDirectory == null)
+                throw new ArgumentException($"{GetType().Name} cannot function without the HomeDirectory configured.", nameof(home));
+
             this.fileSystem = fileSystem;
             this.home = home;
         }

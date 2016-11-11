@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Octopus.Server.Extensibility.HostServices.Configuration;
+using Octopus.Configuration;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
@@ -23,17 +23,14 @@ namespace Octopus.Shared.Configuration
             defaultHome = Path.Combine(Directory.GetDirectoryRoot(programFiles), "Octopus");
         }
 
-        public string ApplicationSpecificHomeDirectory
-        {
-            get { return Path.Combine(HomeDirectory, application.ToString()); }
-        }
+        public string ApplicationSpecificHomeDirectory => HomeDirectory == null ? null : Path.Combine(HomeDirectory, application.ToString());
 
         public string HomeDirectory
         {
             get
             {
-                var value = settings.Get("Octopus.Home", defaultHome);
-                if (!Path.IsPathRooted(value))
+                var value = settings.Get("Octopus.Home", null);
+                if (value != null && !Path.IsPathRooted(value))
                     value = PathHelper.ResolveRelativeDirectoryPath(value);
                 return value;
             }

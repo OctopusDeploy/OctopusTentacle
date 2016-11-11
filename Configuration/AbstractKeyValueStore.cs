@@ -2,7 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
-using Octopus.Server.Extensibility.HostServices.Configuration;
+using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
