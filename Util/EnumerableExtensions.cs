@@ -59,5 +59,10 @@ namespace Octopus.Shared.Util
                 .Select((x, index) => new { x, index })
                 .GroupBy(x => x.index / blockSize, y => y.x);
         }
+
+        public static bool IsNullOrEmpty<T>(this IEnumerable<T> source)
+        {
+            return source == null || !source.Any();
+        }
     }
 }
