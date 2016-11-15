@@ -108,8 +108,8 @@
       <HintPath>..\packages\Octopus.Configuration.1.0.10\lib\net45\Octopus.Configuration.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Data, Version=1.0.14.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Data.1.0.14\lib\netstandard1.0\Octopus.Data.dll</HintPath>
+    <Reference Include="Octopus.Data, Version=1.0.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Data.1.0.18\lib\netstandard1.0\Octopus.Data.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Diagnostics, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
