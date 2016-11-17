@@ -99,7 +99,7 @@ namespace Octopus.Shared.Util
             return this;
         }
 
-        public CliBuilder Argument(string argName, object argValue)
+        public CliBuilder Argument(string argName, object argValue, bool unescaped = false)
         {
             arguments.Add(MakeArg(argName, argValue));
             return this;
@@ -123,7 +123,7 @@ namespace Octopus.Shared.Util
             return string.Format("{0}", Escape(sval));
         }
 
-        static string MakeArg(string argName, object argValue)
+        static string MakeArg(string argName, object argValue, bool unescaped = false)
         {
             var sval = "";
             var f = argValue as IFormattable;
@@ -132,7 +132,7 @@ namespace Octopus.Shared.Util
             else if (argValue != null)
                 sval = argValue.ToString();
 
-            return string.Format("--{0} {1}", Normalize(argName), Escape(sval));
+            return string.Format("--{0} {1}", Normalize(argName), unescaped ? sval : Escape(sval));
         }
 
         public static string Escape(string argValue)
