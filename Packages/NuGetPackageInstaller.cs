@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Threading;
+using NuGet.Common;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using Octopus.Diagnostics;
@@ -26,7 +27,7 @@ namespace Octopus.Shared.Packages
         public int Install(Stream packageStream, string directory, ILog log, bool suppressNestedScriptWarning)
         {
             var extracted = PackageExtractor.ExtractPackage(packageStream, new SuppliedDirectoryPackagePathResolver(directory),
-                new PackageExtractionContext {PackageSaveMode = PackageSaveMode.Files, XmlDocFileSaveMode = XmlDocFileSaveMode.None, CopySatelliteFiles = false},
+                new PackageExtractionContext(NullLogger.Instance) {PackageSaveMode = PackageSaveMode.Files, XmlDocFileSaveMode = XmlDocFileSaveMode.None, CopySatelliteFiles = false},
                 CancellationToken.None);
 
             return extracted.Count();
@@ -38,7 +39,7 @@ namespace Octopus.Shared.Packages
             {
             }
 
-            public override string GetInstallPath(PackageIdentity packageIdentity)
+            public new string GetInstallPath(PackageIdentity packageIdentity)
             {
                 return Root;
             }
