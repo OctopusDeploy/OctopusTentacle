@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
@@ -83,6 +84,13 @@ namespace Octopus.Shared.Startup
                 }
             }
 
+            var depend = new List<string>();
+            depend.AddRange(new [] {"LanmanWorkstation", "TCPIP"});
+
+            if (!string.IsNullOrWhiteSpace(serviceConfigurationState.DependOn))
+            {
+                depend.Add(serviceConfigurationState.DependOn);
+            }
             if (serviceConfigurationState.Install)
             {
                 if (controller != null)
@@ -93,10 +101,11 @@ namespace Octopus.Shared.Startup
                 {
                     Sc(
                         string.Format(
-                            "create \"{0}\" binpath= \"\\\"{1}\\\" run --instance=\\\"{2}\\\"\" DisplayName= \"{0}\" depend= LanmanWorkstation/TCPIP start= auto",
+                            "create \"{0}\" binpath= \"\\\"{1}\\\" run --instance=\\\"{2}\\\"\" DisplayName= \"{0}\" depend= {3} start= auto",
                             thisServiceName,
                             exePath,
-                            instance
+                            instance,
+                            string.Join("/", depend)
                             ));
 
                     Sc(
@@ -117,10 +126,11 @@ namespace Octopus.Shared.Startup
             {
                 Sc(
                     string.Format(
-                        "config \"{0}\" binpath= \"\\\"{1}\\\" run --instance=\\\"{2}\\\"\" DisplayName= \"{0}\" depend= LanmanWorkstation/TCPIP start= auto",
+                        "config \"{0}\" binpath= \"\\\"{1}\\\" run --instance=\\\"{2}\\\"\" DisplayName= \"{0}\" depend= {3} start= auto",
                         thisServiceName,
                         exePath,
-                        instance
+                        instance,
+                        string.Join("/", depend)
                         ));
 
                 Sc(

@@ -33,6 +33,7 @@ namespace Octopus.Shared.Startup
             {
                 serviceConfigurationState.Password = v;
             });
+            Options.Add("dependOn=", "", v => serviceConfigurationState.DependOn = v);
         }
 
         protected override void Start()
