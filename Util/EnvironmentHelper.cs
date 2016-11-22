@@ -39,6 +39,7 @@ namespace Octopus.Shared.Util
         {
             try
             {
+                envVars.Add($"CurrentDirectory: {Directory.GetCurrentDirectory()}");
                 envVars.Add($"TempDirectory: {Path.GetTempPath()}");
             }
             catch

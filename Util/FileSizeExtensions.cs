@@ -1,12 +1,7 @@
 ﻿namespace Octopus.Shared.Util
 {
-    public static class NumericExtensions
+    public static class FileSizeExtensions
     {
-        const long Kilobyte = 1024;
-        const long Megabyte = 1024*Kilobyte;
-        const long Gigabyte = 1024*Megabyte;
-        const long Terabyte = 1024*Gigabyte;
-
         public static string ToFileSizeString(this long bytes)
         {
             return ToFileSizeString(bytes <= 0 ? 0 : (ulong)bytes);
