@@ -8,7 +8,7 @@ namespace Octopus.Shared.Startup
         {
         }
 
-        public ServiceConfigurationState(bool start, bool stop, bool reconfigure, bool install, bool uninstall, string username, string password)
+        public ServiceConfigurationState(bool start, bool stop, bool reconfigure, bool install, bool uninstall, string username, string password, string dependOn)
         {
             Start = start;
             Stop = stop;
@@ -17,6 +17,7 @@ namespace Octopus.Shared.Startup
             Uninstall = uninstall;
             Username = username;
             Password = password;
+            DependOn = dependOn;
         }
 
         public bool Start { get; set; }
@@ -26,5 +27,6 @@ namespace Octopus.Shared.Startup
         public bool Uninstall { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
+        public string DependOn { get; set; }
     }
 }

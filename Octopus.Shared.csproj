@@ -209,7 +209,6 @@
     <Compile Include="Diagnostics\LogEvent.cs" />
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
-    <Compile Include="Diagnostics\TimedSection.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Diagnostics\LogContext.cs" />
     <Compile Include="Startup\IStartableOnRun.cs" />
@@ -277,18 +276,6 @@
     <Compile Include="Tasks\TaskCompletionHandler.cs" />
     <Compile Include="Tasks\TaskControllerAttribute.cs" />
     <Compile Include="Tasks\WorkItem.cs" />
-    <Compile Include="TransientFaultHandling\FixedInterval.cs" />
-    <Compile Include="TransientFaultHandling\ExponentialBackoff.cs" />
-    <Compile Include="TransientFaultHandling\Incremental.cs" />
-    <Compile Include="TransientFaultHandling\ITransientErrorDetectionStrategy.cs" />
-    <Compile Include="TransientFaultHandling\RetryingEventArgs.cs" />
-    <Compile Include="TransientFaultHandling\RetryLimitExceededException.cs" />
-    <Compile Include="TransientFaultHandling\RetryManager.cs" />
-    <Compile Include="TransientFaultHandling\RetryPolicy.cs" />
-    <Compile Include="TransientFaultHandling\RetryStrategy.cs" />
-    <Compile Include="TransientFaultHandling\ShouldRetry.cs" />
-    <Compile Include="TransientFaultHandling\TransientErrorCatchAllStrategy.cs" />
-    <Compile Include="TransientFaultHandling\TransientErrorIgnoreStrategy.cs" />
     <Compile Include="Util\EnumerableExtensions.cs" />
     <Compile Include="Util\EnumExtensions.cs" />
     <Compile Include="Util\IOUtil.cs" />
@@ -361,7 +348,6 @@
     <Compile Include="Time\Sleep.cs" />
     <Compile Include="Time\SystemClock.cs" />
     <Compile Include="Time\TimeModule.cs" />
-    <Compile Include="Util\AmazingConverter.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Util\CallbackDisposable.cs" />
     <Compile Include="Util\CleanId.cs" />
@@ -425,9 +411,6 @@
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <Content Include="TransientFaultHandling\License.txt" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
