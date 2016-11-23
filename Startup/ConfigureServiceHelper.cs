@@ -84,13 +84,14 @@ namespace Octopus.Shared.Startup
                 }
             }
 
-            var depend = new List<string>();
-            depend.AddRange(new [] {"LanmanWorkstation", "TCPIP"});
+            var serviceDependencies = new List<string>();
+            serviceDependencies.AddRange(new [] {"LanmanWorkstation", "TCPIP"});
 
             if (!string.IsNullOrWhiteSpace(serviceConfigurationState.DependOn))
             {
-                depend.Add(serviceConfigurationState.DependOn);
+                serviceDependencies.Add(serviceConfigurationState.DependOn);
             }
+
             if (serviceConfigurationState.Install)
             {
                 if (controller != null)
@@ -105,7 +106,7 @@ namespace Octopus.Shared.Startup
                             thisServiceName,
                             exePath,
                             instance,
-                            string.Join("/", depend)
+                            string.Join("/", serviceDependencies)
                             ));
 
                     Sc(
@@ -130,7 +131,7 @@ namespace Octopus.Shared.Startup
                         thisServiceName,
                         exePath,
                         instance,
-                        string.Join("/", depend)
+                        string.Join("/", serviceDependencies)
                         ));
 
                 Sc(
