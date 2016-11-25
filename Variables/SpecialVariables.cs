@@ -644,9 +644,7 @@ namespace Octopus.Shared.Variables
                 public static readonly string StopTimeout = "Octopus.Action.Docker.StopTimeout";
 
             }
-
-
-
+            
             public static class PowerShell
             {
                 public static readonly string ExecuteWithoutProfile = "Octopus.Action.PowerShell.ExecuteWithoutProfile";
