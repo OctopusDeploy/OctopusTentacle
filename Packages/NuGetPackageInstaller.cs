@@ -39,7 +39,7 @@ namespace Octopus.Shared.Packages
             {
             }
 
-            public new string GetInstallPath(PackageIdentity packageIdentity)
+            public override string GetInstallPath(PackageIdentity packageIdentity)
             {
                 return Root;
             }
