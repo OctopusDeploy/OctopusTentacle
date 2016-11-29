@@ -44,16 +44,16 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AsyncStackTraceEx, Version=1.0.0.2, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AsyncStackTraceEx.1.0.1.1\lib\dotnet\AsyncStackTraceEx.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Autofac, Version=3.5.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut, Version=2.4.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.2.4.1\lib\net45\Halibut.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Nevermore.Contracts, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nevermore.Contracts.1.0.1\lib\netstandard1.0\Nevermore.Contracts.dll</HintPath>
+    <Reference Include="Halibut, Version=2.4.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Halibut.2.4.2\lib\net45\Halibut.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -209,7 +209,6 @@
     <Compile Include="Diagnostics\LogEvent.cs" />
     <Compile Include="Diagnostics\NLogAppender.cs" />
     <Compile Include="Diagnostics\NullLog.cs" />
-    <Compile Include="Diagnostics\TimedSection.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Diagnostics\LogContext.cs" />
     <Compile Include="Startup\IStartableOnRun.cs" />
@@ -277,18 +276,6 @@
     <Compile Include="Tasks\TaskCompletionHandler.cs" />
     <Compile Include="Tasks\TaskControllerAttribute.cs" />
     <Compile Include="Tasks\WorkItem.cs" />
-    <Compile Include="TransientFaultHandling\FixedInterval.cs" />
-    <Compile Include="TransientFaultHandling\ExponentialBackoff.cs" />
-    <Compile Include="TransientFaultHandling\Incremental.cs" />
-    <Compile Include="TransientFaultHandling\ITransientErrorDetectionStrategy.cs" />
-    <Compile Include="TransientFaultHandling\RetryingEventArgs.cs" />
-    <Compile Include="TransientFaultHandling\RetryLimitExceededException.cs" />
-    <Compile Include="TransientFaultHandling\RetryManager.cs" />
-    <Compile Include="TransientFaultHandling\RetryPolicy.cs" />
-    <Compile Include="TransientFaultHandling\RetryStrategy.cs" />
-    <Compile Include="TransientFaultHandling\ShouldRetry.cs" />
-    <Compile Include="TransientFaultHandling\TransientErrorCatchAllStrategy.cs" />
-    <Compile Include="TransientFaultHandling\TransientErrorIgnoreStrategy.cs" />
     <Compile Include="Util\EnumerableExtensions.cs" />
     <Compile Include="Util\IOUtil.cs" />
     <Compile Include="Util\SemanticVersionExtensions.cs" />
@@ -360,7 +347,6 @@
     <Compile Include="Time\Sleep.cs" />
     <Compile Include="Time\SystemClock.cs" />
     <Compile Include="Time\TimeModule.cs" />
-    <Compile Include="Util\AmazingConverter.cs" />
     <Compile Include="Util\AssemblyExtensions.cs" />
     <Compile Include="Util\CallbackDisposable.cs" />
     <Compile Include="Util\CleanId.cs" />
@@ -424,9 +410,6 @@
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <Content Include="TransientFaultHandling\License.txt" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

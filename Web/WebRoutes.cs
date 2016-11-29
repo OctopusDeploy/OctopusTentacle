@@ -79,7 +79,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/machines/{id}";
                 public static string GetConnection = "~/api/machines/{id}/connection";
                 public static string GetTasks = "~/api/machines/{id}/tasks{?skip}";
-                public static string Discover = "~/api/machines/discover{?host,port,type}";
+                public static string Discover = "~/api/machines/discover{?host,port,type,proxyId}";
             }
 
             public static class MachinesRoles
