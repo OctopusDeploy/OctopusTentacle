@@ -9,6 +9,29 @@ namespace Octopus.Shared.Util
 {
     public static class ExceptionExtensions
     {
+        public static string PrettyPrint(this Exception ex, StringBuilder sb = null)
+        {
+            sb = sb ?? new StringBuilder();
+
+            sb.AppendLine(ex.Message);
+            sb.AppendLine(ex.GetType().FullName);
+            try
+            {
+                sb.AppendLine(ex.StackTraceEx()); // Sometimes fails printing the trace
+            }
+            catch
+            {
+                sb.AppendLine(ex.StackTrace);
+            }
+
+            if (ex.InnerException != null)
+            {
+                sb.AppendLine("--Inner Exception--");
+                PrettyPrint(ex.InnerException, sb);
+            }
+            return sb.ToString();
+        }
+
         public static Exception UnpackFromContainers(this Exception error)
         {
             var aggregateException = error as AggregateException;
