@@ -159,7 +159,7 @@ namespace Octopus.Shared.Startup
             {
                 var unpacked = ex.UnpackFromContainers();
                 log.Error(new string('=', 79));
-                log.Fatal(unpacked);
+                log.Fatal(unpacked.PrettyPrint());
 
                 ExceptionKnowledgeBaseEntry entry;
                 if (ExceptionKnowledgeBase.TryInterpret(unpacked, out entry))
