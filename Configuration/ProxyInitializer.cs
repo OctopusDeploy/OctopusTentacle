@@ -2,11 +2,10 @@ using System;
 using System.Net;
 using Autofac.Core;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration
 {
-    public class ProxyInitializer : IStartableOnRun
+    public class ProxyInitializer : IProxyInitializer
     {
         readonly IProxyConfiguration proxyConfiguration;
         readonly IProxyConfigParser configParser;
@@ -17,17 +16,12 @@ namespace Octopus.Shared.Configuration
             this.configParser = configParser;
         }
 
-        public void Start()
-        {
-            InitializeProxy();
-        }
-
-        void InitializeProxy()
+        public void InitializeProxy()
         {
             try
             {
-                var config = proxyConfiguration;
-                WebRequest.DefaultWebProxy = configParser.ParseToWebProxy(config);
+                var proxy = configParser.ParseToWebProxy(proxyConfiguration);
+                WebRequest.DefaultWebProxy = proxy;
             }
             catch (DependencyResolutionException dre) when (dre.InnerException is ArgumentException)
             {
@@ -37,6 +31,11 @@ namespace Octopus.Shared.Configuration
             {
                 Log.Octopus().Warn(ex, "Unable to configure the proxy server: " + ex.Message);
             }
+        }
+
+        public IWebProxy GetProxy()
+        {
+            return WebRequest.DefaultWebProxy;
         }
     }
 }

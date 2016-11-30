@@ -1,6 +1,5 @@
 using Autofac;
 using Octopus.Configuration;
-using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration
 {
@@ -44,7 +43,7 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<ProxyConfigParser>().As<IProxyConfigParser>();
             builder.RegisterType<PollingProxyConfiguration>().As<IPollingProxyConfiguration>();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
-            builder.RegisterType<ProxyInitializer>().As<IStartableOnRun>().SingleInstance();
+            builder.RegisterType<ProxyInitializer>().As<IProxyInitializer>().SingleInstance();
         }
     }
 }

@@ -155,6 +155,7 @@
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
     <Compile Include="Configuration\ILogInitializer.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
+    <Compile Include="Configuration\IProxyInitializer.cs" />
     <Compile Include="Configuration\IsolatedStorageXmlFileKeyValueStore.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\JsonConsoleKeyValueStore.cs" />
@@ -203,7 +204,6 @@
     <Compile Include="Diagnostics\NullLog.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Diagnostics\LogContext.cs" />
-    <Compile Include="Startup\IStartableOnRun.cs" />
     <Compile Include="Util\CommonValidationMessages.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="Model\EncryptedAttribute.cs" />
