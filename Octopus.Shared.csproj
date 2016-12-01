@@ -283,6 +283,7 @@
     <Compile Include="Tasks\WorkItem.cs" />
     <Compile Include="Util\EnumerableExtensions.cs" />
     <Compile Include="Util\EnvironmentHelper.cs" />
+    <Compile Include="Util\EnumExtensions.cs" />
     <Compile Include="Util\IOUtil.cs" />
     <Compile Include="Util\SemanticVersionExtensions.cs" />
     <Compile Include="Util\StreamDisposalChain.cs" />

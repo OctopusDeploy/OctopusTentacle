@@ -760,8 +760,11 @@ namespace Octopus.Shared.Variables
             [Define(Category = VariableCategory.ProjectTrigger, Description = "Environments targeted by the trigger", Example = "Development", Domain = VariableDomain.List)]
             public static readonly string Environment = "Octopus.ProjectTriggerCondition.Environments";
 
-            [Define(Category = VariableCategory.ProjectTrigger, Description = "Events targeted by the trigger", Example = "new-server-becomes-available", Domain = VariableDomain.List)]
-            public static readonly string Events = "Octopus.ProjectTriggerCondition.Events";
+            [Define(Category = VariableCategory.ProjectTrigger, Description = "Event groups targeted by the trigger", Example = "Machine", Domain = VariableDomain.List)]
+            public static readonly string EventGroups = "Octopus.ProjectTriggerCondition.EventGroups";
+
+            [Define(Category = VariableCategory.ProjectTrigger, Description = "Event categories targeted by the trigger", Example = "MachineAdded", Domain = VariableDomain.List)]
+            public static readonly string EventCategories = "Octopus.ProjectTriggerCondition.EventCategories";
         }
     }
 }
