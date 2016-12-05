@@ -415,6 +415,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/communityactiontemplates/{id}";
                 public static string InstalledTemplate = "~/api/communityactiontemplates/{id}/actiontemplate";
                 public static string Logo = "~/api/communityactiontemplates/{id}/logo";
+                public static string Installation = "~/api/communityactiontemplates/{id}/installation";    
             }
         }
 
