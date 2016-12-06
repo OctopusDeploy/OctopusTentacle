@@ -27,6 +27,6 @@ namespace Octopus.Shared.Util
         public static readonly string CheckForUpgrades = "https://octopusdeploy.com/download/upgrade/v3";
         public static readonly string WhyAmINotAllowedToUseDependencies = "http://octopusdeploy.com/documentation/packaging";
         public static readonly string HowDoIInstallPowerShell = "http://octopusdeploy.com/documentation/install/tentacle";
-        public static readonly string WhereDoIGetMyApiKey = "https://github.com/OctopusDeploy/OctopusDeploy-Api/wiki/Authentication";
+        public static readonly string WhereDoIGetMyApiKey = "http://g.octopushq.com/ApiKey";
     }
 }

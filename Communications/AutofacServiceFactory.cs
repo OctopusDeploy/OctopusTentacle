@@ -15,8 +15,15 @@ namespace Octopus.Shared.Communications
 
         public IServiceLease CreateService(string serviceName)
         {
-            var service = scope.ResolveNamed<object>(serviceName);
-            return new Lease(service);
+            try
+            {
+                var service = scope.ResolveNamed<object>(serviceName);
+                return new Lease(service);
+            }
+            catch (ObjectDisposedException)
+            {
+                throw new Exception("The Tentacle service is shutting down and cannot process this request.");
+            }
         }
 
         class Lease : IServiceLease

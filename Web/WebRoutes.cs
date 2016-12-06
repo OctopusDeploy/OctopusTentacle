@@ -35,6 +35,8 @@ namespace Octopus.Shared.Web
                 public static string Index = "~/api/actiontemplates{?skip}";
                 public static string Get = "~/api/actiontemplates/{id}";
                 public static string Usage = "~/api/actiontemplates/{id}/usage";
+                public static string Logo = "~/api/actiontemplates/{typeOrId}/logo";
+                public static string Search = "~/api/actiontemplates/search"; 
             }
 
             public static class Alerts
@@ -240,8 +242,8 @@ namespace Octopus.Shared.Web
                 public static string Template = "~/api/events{/id}{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal}";
                 public static string Index = "~/api/events{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal}";
                 public static string Get = "~/api/events/{id}";
-                public static string GetCategories = "~/api/events/categories";
-                public static string GetGroups = "~/api/events/groups";
+                public static string GetCategories = "~/api/events/categories{?appliesTo}";
+                public static string GetGroups = "~/api/events/groups{?appliesTo}";
             }
 
             public static class Feeds
@@ -405,6 +407,15 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/tagsets/{id}";
                 public static string Index = "~/api/tagsets{?skip}";
                 public static string SortOrder = "~/api/tagsets/sortorder";
+            }
+
+            public class CommunityActionTemplates
+            {
+                public static string Template = "~/api/communityactiontemplates{/id}";
+                public static string Get = "~/api/communityactiontemplates/{id}";
+                public static string InstalledTemplate = "~/api/communityactiontemplates/{id}/actiontemplate";
+                public static string Logo = "~/api/communityactiontemplates/{id}/logo";
+                public static string Installation = "~/api/communityactiontemplates/{id}/installation";    
             }
         }
 

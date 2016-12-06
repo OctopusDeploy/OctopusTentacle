@@ -20,6 +20,7 @@ namespace Octopus.Shared.Startup
         readonly string displayName;
         readonly string version;
         readonly string informationalVersion;
+        readonly string[] environmentInformation;
         readonly OptionSet commonOptions;
         IContainer container;
         ICommand commandInstance;
@@ -27,12 +28,13 @@ namespace Octopus.Shared.Startup
         bool forceConsole;
         bool showLogo = true;
         
-        protected OctopusProgram(string displayName, string version, string informationalVersion, string[] commandLineArguments)
+        protected OctopusProgram(string displayName, string version, string informationalVersion, string[] environmentInformation, string[] commandLineArguments)
         {
             this.commandLineArguments = commandLineArguments;
             this.displayName = displayName;
             this.version = version;
             this.informationalVersion = informationalVersion;
+            this.environmentInformation = environmentInformation;
             commonOptions = new OptionSet();
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
             commonOptions.Add("nologo", "Don't print title or version information", v => showLogo = false);
@@ -107,6 +109,8 @@ namespace Octopus.Shared.Startup
                 if (showLogo)
                 {
                     log.Info($"{displayName} version {version} ({informationalVersion})");
+                    log.Info($"Environment Information:{Environment.NewLine}" +
+                        $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
                 }
 
                 var host = SelectMostAppropriateHost();
