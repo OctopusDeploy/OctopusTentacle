@@ -14,6 +14,7 @@ namespace Octopus.Shared.Util
                 yield return item;
             }
         }
+
         public static IEnumerable<TElement> NotNull<TElement>(this IEnumerable<TElement> source)
         {
             return source.Where(item => item != null);
@@ -57,6 +58,11 @@ namespace Octopus.Shared.Util
             return source
                 .Select((x, index) => new { x, index })
                 .GroupBy(x => x.index / blockSize, y => y.x);
+        }
+
+        public static bool IsNullOrEmpty<T>(this IEnumerable<T> source)
+        {
+            return source == null || !source.Any();
         }
     }
 }
