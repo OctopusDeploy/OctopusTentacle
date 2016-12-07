@@ -342,6 +342,7 @@ namespace Octopus.Shared.Web
                 public static string BuiltInFeedStats = "~/api/serverstatus/nuget";
                 public static string ExtensionStats = "~/api/serverstatus/extensions";
                 public static string GCCollect = "~/api/serverstatus/gc-collect";
+                public static string Timezones = "~/api/serverstatus/timezones";
             }
 
             public static class BuiltInFeed
