@@ -15,5 +15,11 @@ namespace Octopus.Shared.Util
                 return da.Description;
             return typeOrMember.Name;
         }
+
+        public static bool IsDecoratedWith<TAttribute>(this MemberInfo typeOrMember)
+        {
+            if (typeOrMember == null) throw new ArgumentNullException("typeOrMember");
+            return typeOrMember.GetCustomAttributes(typeof(TAttribute), false).Any();
+        }
     }
 }

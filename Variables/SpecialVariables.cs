@@ -675,22 +675,22 @@ namespace Octopus.Shared.Variables
                     public static class ResponsibleUser
                     {
                         [Define(Category = VariableCategory.Output,
-                            Pattern = "Octopus.Action[_name_].Output.ResponsibleUser.Id",
+                            Pattern = "Octopus.Action[_name_].Output.Manual.ResponsibleUser.Id",
                             Description = "The ID of the user who completed the manual step",
                             Example = "users-123")] public static readonly string Id = "Manual.ResponsibleUser.Id";
 
                         [Define(Category = VariableCategory.Output,
-                            Pattern = "Octopus.Action[_name_].Output.ResponsibleUser.Username",
+                            Pattern = "Octopus.Action[_name_].Output.Manual.ResponsibleUser.Username",
                             Description = "The username of the user who completed the manual step",
                             Example = "alice")] public static readonly string Username = "Manual.ResponsibleUser.Username";
 
                         [Define(Category = VariableCategory.Output,
-                            Pattern = "Octopus.Action[_name_].Output.ResponsibleUser.DisplayName",
+                            Pattern = "Octopus.Action[_name_].Output.Manual.ResponsibleUser.DisplayName",
                             Description = "The full name of the user who completed the manual step",
                             Example = "Alice King")] public static readonly string DisplayName = "Manual.ResponsibleUser.DisplayName";
 
                         [Define(Category = VariableCategory.Output,
-                            Pattern = "Octopus.Action[_name_].Output.ResponsibleUser.EmailAddress",
+                            Pattern = "Octopus.Action[_name_].Output.Manual.ResponsibleUser.EmailAddress",
                             Description = "The email address of the user who completed the manual step",
                             Example = "alice@example.com")] public static readonly string EmailAddress = "Manual.ResponsibleUser.EmailAddress";
                     }
@@ -767,8 +767,11 @@ namespace Octopus.Shared.Variables
             [Define(Category = VariableCategory.ProjectTrigger, Description = "Environments targeted by the trigger", Example = "Development", Domain = VariableDomain.List)]
             public static readonly string Environment = "Octopus.ProjectTriggerCondition.Environments";
 
-            [Define(Category = VariableCategory.ProjectTrigger, Description = "Events targeted by the trigger", Example = "new-server-becomes-available", Domain = VariableDomain.List)]
-            public static readonly string Events = "Octopus.ProjectTriggerCondition.Events";
+            [Define(Category = VariableCategory.ProjectTrigger, Description = "Event groups targeted by the trigger", Example = "Machine", Domain = VariableDomain.List)]
+            public static readonly string EventGroups = "Octopus.ProjectTriggerCondition.EventGroups";
+
+            [Define(Category = VariableCategory.ProjectTrigger, Description = "Event categories targeted by the trigger", Example = "MachineAdded", Domain = VariableDomain.List)]
+            public static readonly string EventCategories = "Octopus.ProjectTriggerCondition.EventCategories";
         }
     }
 }

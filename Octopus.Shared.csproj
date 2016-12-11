@@ -44,16 +44,16 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AsyncStackTraceEx, Version=1.0.0.2, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AsyncStackTraceEx.1.0.1.1\lib\dotnet\AsyncStackTraceEx.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Autofac, Version=3.5.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut, Version=2.4.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.2.4.1\lib\net45\Halibut.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Nevermore.Contracts, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nevermore.Contracts.1.0.1\lib\netstandard1.0\Nevermore.Contracts.dll</HintPath>
+    <Reference Include="Halibut, Version=2.4.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Halibut.2.4.2\lib\net45\Halibut.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -76,32 +76,28 @@
       <HintPath>..\packages\NLog.4.0.1\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NuGet.Common, Version=3.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Common.3.4.3\lib\net45\NuGet.Common.dll</HintPath>
+    <Reference Include="NuGet.Common, Version=3.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NuGet.Common.3.5.0-octopus-39953\lib\net45\NuGet.Common.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NuGet.Frameworks, Version=3.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Frameworks.3.4.3\lib\net45\NuGet.Frameworks.dll</HintPath>
+    <Reference Include="NuGet.Frameworks, Version=3.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NuGet.Frameworks.3.5.0-octopus-39953\lib\net45\NuGet.Frameworks.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NuGet.Logging, Version=3.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Logging.3.4.3\lib\net45\NuGet.Logging.dll</HintPath>
+    <Reference Include="NuGet.Packaging, Version=3.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NuGet.Packaging.3.5.0-octopus-39953\lib\net45\NuGet.Packaging.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NuGet.Packaging, Version=3.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Packaging.3.4.3\lib\net45\NuGet.Packaging.dll</HintPath>
+    <Reference Include="NuGet.Packaging.Core, Version=3.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NuGet.Packaging.Core.3.5.0-octopus-39953\lib\net45\NuGet.Packaging.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NuGet.Packaging.Core, Version=3.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Packaging.Core.3.4.3\lib\net45\NuGet.Packaging.Core.dll</HintPath>
+    <Reference Include="NuGet.Packaging.Core.Types, Version=3.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NuGet.Packaging.Core.Types.3.5.0-octopus-39953\lib\net45\NuGet.Packaging.Core.Types.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NuGet.Packaging.Core.Types, Version=3.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Packaging.Core.Types.3.4.3\lib\net45\NuGet.Packaging.Core.Types.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Versioning, Version=3.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Versioning.3.4.3\lib\net45\NuGet.Versioning.dll</HintPath>
+    <Reference Include="NuGet.Versioning, Version=3.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NuGet.Versioning.3.5.0-octopus-39953\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Configuration, Version=1.0.10.0, Culture=neutral, processorArchitecture=MSIL">
@@ -163,6 +159,7 @@
     <Compile Include="Configuration\ILoggingConfiguration.cs" />
     <Compile Include="Configuration\ILogInitializer.cs" />
     <Compile Include="Configuration\IProxyConfiguration.cs" />
+    <Compile Include="Configuration\IProxyInitializer.cs" />
     <Compile Include="Configuration\IsolatedStorageXmlFileKeyValueStore.cs" />
     <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
     <Compile Include="Configuration\JsonConsoleKeyValueStore.cs" />
@@ -211,7 +208,6 @@
     <Compile Include="Diagnostics\NullLog.cs" />
     <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
     <Compile Include="Diagnostics\LogContext.cs" />
-    <Compile Include="Startup\IStartableOnRun.cs" />
     <Compile Include="Util\CommonValidationMessages.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="Model\EncryptedAttribute.cs" />
@@ -277,6 +273,8 @@
     <Compile Include="Tasks\TaskControllerAttribute.cs" />
     <Compile Include="Tasks\WorkItem.cs" />
     <Compile Include="Util\EnumerableExtensions.cs" />
+    <Compile Include="Util\EnvironmentHelper.cs" />
+    <Compile Include="Util\EnumExtensions.cs" />
     <Compile Include="Util\IOUtil.cs" />
     <Compile Include="Util\SemanticVersionExtensions.cs" />
     <Compile Include="Util\StreamDisposalChain.cs" />
@@ -367,7 +365,7 @@
     <Compile Include="Util\IOctopusFileSystem.cs" />
     <Compile Include="Util\ISemaphore.cs" />
     <Compile Include="Util\ListExtensions.cs" />
-    <Compile Include="Util\NumericExtensions.cs" />
+    <Compile Include="Util\FileSizeExtensions.cs" />
     <Compile Include="Util\ObjectFormatter.cs" />
     <Compile Include="Util\OctopusPhysicalFileSystem.cs" />
     <Compile Include="Util\OutboundLinks.cs" />
