@@ -442,6 +442,7 @@ namespace Octopus.Shared.Variables
 
             public static class Package
             {
+                public static readonly string TransferPackageActionTypeName = "Octopus.TransferPackage";
                 public static readonly string ActionTypeName = "Octopus.TentaclePackage";
 
                 [Define(Category = VariableCategory.Action, Description = "The ID of the package being deployed", Example = "OctoFx.RateService")]
