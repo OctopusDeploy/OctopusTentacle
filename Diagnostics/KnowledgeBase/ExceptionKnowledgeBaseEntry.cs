@@ -19,7 +19,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
 
         public override string ToString()
         {
-            var parts = new[] {Summary, HelpLink}.NotNullOrWhiteSpace().ToList();
+            var parts = new[] {Summary, HelpText}.NotNullOrWhiteSpace().ToList();
             if (HelpLink != null)
                 parts.Add("See: " + HelpLink);
 
