@@ -554,8 +554,11 @@ namespace Octopus.Shared.Variables
             {
                 public static readonly string ActionTypeName = "Octopus.Email";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string To = "Octopus.Action.Email.To";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string ToTeamIds = "Octopus.Action.Email.ToTeamIds";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string CC = "Octopus.Action.Email.CC";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string CCTeamIds = "Octopus.Action.Email.CCTeamIds";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Bcc = "Octopus.Action.Email.Bcc";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string BccTeamIds = "Octopus.Action.Email.BccTeamIds";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string IsHtml = "Octopus.Action.Email.IsHtml";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Subject = "Octopus.Action.Email.Subject";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Body = "Octopus.Action.Email.Body";
