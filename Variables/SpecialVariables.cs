@@ -442,7 +442,11 @@ namespace Octopus.Shared.Variables
 
             public static class Package
             {
+                public static readonly string TransferPackageActionTypeName = "Octopus.TransferPackage";
                 public static readonly string ActionTypeName = "Octopus.TentaclePackage";
+
+                [Define(Category = VariableCategory.Action, Description = "The location to move the transfer package to", Example = @"C:\temp\MyDir")]
+                public static readonly string TransferPath = "Octopus.Action.Package.TransferPath";
 
                 [Define(Category = VariableCategory.Action, Description = "The ID of the package being deployed", Example = "OctoFx.RateService")]
                 public static readonly string PackageId = "Octopus.Action.Package.PackageId";
@@ -487,6 +491,27 @@ namespace Octopus.Shared.Variables
                         Description = "The directory to which the package was installed")]
                     [DeprecatedAlias("Package.InstallationDirectoryPath")]
                     public static readonly string InstallationDirectoryPath = "Octopus.Action.Package.InstallationDirectoryPath";
+
+                    [Define(
+                        Category = VariableCategory.Output,
+                        Pattern = "Octopus.Action[_name_].Output.Package.DirectoryPath",
+                        Example = "C:\\Temp\\MyApp",
+                        Description = "The directory to which the package transferred to")]
+                    public static readonly string DirectoryPath = "Octopus.Action.Package.DirectoryPath";
+
+                    [Define(
+                        Category = VariableCategory.Output,
+                        Pattern = "Octopus.Action[_name_].Output.Package.FileName",
+                        Example = "MyProject.1.2.3.nupkg",
+                        Description = "The file name of the transferred package")]
+                    public static readonly string FileName = "Octopus.Action.Package.FileName";
+
+                    [Define(
+                        Category = VariableCategory.Output,
+                        Pattern = "Octopus.Action[_name_].Output.Package.FilePath",
+                        Example = "C:\\Temp\\MyApp\\MyProject.1.2.3.nupkg",
+                        Description = "The full file name of the transferred package")]
+                    public static readonly string FilePath = "Octopus.Action.Package.FilePath";
                 }
 
                 public static class Ssh
