@@ -1,9 +1,8 @@
 using System;
-using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
-    public interface IHomeConfiguration : IModifiableConfiguration
+    public interface IHomeConfiguration
     {
         string ApplicationSpecificHomeDirectory { get; }
         string HomeDirectory { get; set; }
