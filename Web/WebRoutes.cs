@@ -309,6 +309,7 @@ namespace Octopus.Shared.Web
                 public static string Register = "~/api/users/register";
                 public static string Me = "~/api/users/me";
                 public static string Permissions = "~/api/users/{id}/permissions";
+                public static string ExportPermissions = "~/api/users/{id}/permissions/export";
                 public static string Invitations = "~/api/users/invitations";
                 public static string GetInvitation = "~/api/users/invitations/{id}";
             }
