@@ -82,7 +82,7 @@ namespace Octopus.Shared.Tasks
                         builder.Update(workScope.ComponentRegistry);
 
                         var controller = (ITaskController)workScope.Resolve(rootTaskControllerType);
-
+                        workThread.Priority = controller.ExecutionPriority;
                         controller.Execute();
                     }
                     catch (Exception e)
