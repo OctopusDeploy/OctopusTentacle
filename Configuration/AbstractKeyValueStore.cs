@@ -66,6 +66,8 @@ namespace Octopus.Shared.Configuration
             }
 
             Write(name, v);
+
+            Save();
         }
 
         public void Set<TData>(string name, TData value, DataProtectionScope? protectionScope = null)
