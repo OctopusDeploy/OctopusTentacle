@@ -421,8 +421,7 @@ namespace Octopus.Shared.Variables
             [Define(Category = VariableCategory.Action, Description = "The maximum number of machines on which the action will concurrently execute", Example = "5", Domain = VariableDomain.Number)] public static readonly string MaxParallelism = "Octopus.Action.MaxParallelism";
             [Define(Category = VariableCategory.Action, Description = "Whether or not the action has been skipped in the current deployment", Example = "True", Domain = VariableDomain.Boolean)] public static readonly string IsSkipped = "Octopus.Action.IsSkipped";
             [Define(Category = VariableCategory.Action, Description = "If set by the user, completes processing of the action without runnning further conventions/scripts", Example = "True", Domain = VariableDomain.Boolean)] public static readonly string SkipRemainingConventions = "Octopus.Action.SkipRemainingConventions";
-            [Define(Category = VariableCategory.Hidden)] public static readonly string EnabledFeatures = "Octopus.Action.EnabledFeatures";
-            [Define(Category = VariableCategory.Action, Description = "Whether or not the action runs directly via scripts without executing through Calamari", Example = "True", Domain = VariableDomain.Boolean)]public static readonly string NakedScripting = "Octopus.Action.NakedScripting";
+            [Define(Category = VariableCategory.Hidden)] public static readonly string EnabledFeatures = "Octopus.Action.EnabledFeatures";           
 
             public static class Status
             {
