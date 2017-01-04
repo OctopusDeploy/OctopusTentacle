@@ -309,6 +309,7 @@ namespace Octopus.Shared.Web
                 public static string Register = "~/api/users/register";
                 public static string Me = "~/api/users/me";
                 public static string Permissions = "~/api/users/{id}/permissions";
+                public static string ExportPermissions = "~/api/users/{id}/permissions/export";
                 public static string Invitations = "~/api/users/invitations";
                 public static string GetInvitation = "~/api/users/invitations/{id}";
             }
@@ -342,6 +343,7 @@ namespace Octopus.Shared.Web
                 public static string BuiltInFeedStats = "~/api/serverstatus/nuget";
                 public static string ExtensionStats = "~/api/serverstatus/extensions";
                 public static string GCCollect = "~/api/serverstatus/gc-collect";
+                public static string Timezones = "~/api/serverstatus/timezones";
             }
 
             public static class BuiltInFeed
@@ -415,7 +417,12 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/communityactiontemplates/{id}";
                 public static string InstalledTemplate = "~/api/communityactiontemplates/{id}/actiontemplate";
                 public static string Logo = "~/api/communityactiontemplates/{id}/logo";
-                public static string Installation = "~/api/communityactiontemplates/{id}/installation";    
+                public static string Installation = "~/api/communityactiontemplates/{id}/installation";
+            }
+
+            public static class UpgradeConfiguration
+            {
+                public static string Template = "~/api/upgradeconfiguration";
             }
         }
 

@@ -15,5 +15,6 @@ namespace Octopus.Shared.Variables
         public const string TentacleInstanceName = "TentacleInstanceName";
         public const string TentacleExecutablePath = "TentacleExecutablePath";
         public const string TentacleProgramDirectoryPath = "TentacleProgramDirectoryPath";
+        public const string AgentProgramDirectoryPath = "AgentProgramDirectoryPath";
     }
 }

@@ -299,8 +299,8 @@ namespace Octopus.Shared.Variables
             [Define(Description = "User-provided comments on the deployment", Example = "Signed off by Alice")] public static readonly string Comments = "Octopus.Deployment.Comments";
             [Define(Description = "If true, the package will be freshly downloaded from the feed/repository regardless of whether it is already present on the endpoint", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string ForcePackageDownload = "Octopus.Deployment.ForcePackageDownload";
             [Define(Description = "Specific machines being targeted by the deployment, if any", Example = "machines-123,machines-124", Domain = VariableDomain.List)] public static readonly string SpecificMachines = "Octopus.Deployment.SpecificMachines";
-            [Define(Description = "Machines that were skipped during the deployment because they went offline and the machine policy said this was ok", Example = "machines-123,machines-124", Domain = VariableDomain.List)]
-            public static readonly string ExcludedMachines = "Octopus.Deployment.ExcludedMachines";
+            [Define(Description = "Specific machines being excluded by the deployment, if any", Example = "machines-123,machines-124", Domain = VariableDomain.List)] public static readonly string ExcludedMachines = "Octopus.Deployment.ExcludedMachines";
+            [Define(Description = "Machines that were skipped during the deployment because they went offline and the machine policy said this was ok", Example = "machines-123,machines-124", Domain = VariableDomain.List)] public static readonly string AutomaticallyExcludedMachines = "Octopus.Deployment.AutomaticallyExcludedMachines";
             public static readonly string Machines = "Octopus.Deployment.Machines";
             [Define(Description = "The date and time at which the deployment was created", Example = "Tuesday 10th September 1:23 PM")] public static readonly string Created = "Octopus.Deployment.Created";
             [Define(Description = "The UTC date and time at which the deployment was created", Example = "10/09/2015 3:23:00 AM +00:00")] public static readonly string CreatedUtc = "Octopus.Deployment.CreatedUtc";
@@ -400,6 +400,12 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Agent, Description = "The instance name that the agent runs under", Example = "Tentacle")] public static readonly string InstanceName = "Octopus.Tentacle.Agent.InstanceName";
                 [Define(Category = VariableCategory.Agent, Description = "The directory containing the agent's own executables", Example = "C:\\Program Files\\Octopus Deploy\\Tentacle")] public static readonly string ProgramDirectoryPath = "Octopus.Tentacle.Agent.ProgramDirectoryPath";
             }
+        }
+
+
+        public static class Agent
+        {
+             [Define(Category = VariableCategory.Agent, Description = "The directory containing the agent's (server or tentacle) own executables", Example = "C:\\Program Files\\Octopus Deploy")] public static readonly string ProgramDirectoryPath = "Octopus.Agent.ProgramDirectoryPath";
         }
 
         public class Script
@@ -554,8 +560,11 @@ namespace Octopus.Shared.Variables
             {
                 public static readonly string ActionTypeName = "Octopus.Email";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string To = "Octopus.Action.Email.To";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string ToTeamIds = "Octopus.Action.Email.ToTeamIds";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string CC = "Octopus.Action.Email.CC";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string CCTeamIds = "Octopus.Action.Email.CCTeamIds";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Bcc = "Octopus.Action.Email.Bcc";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string BccTeamIds = "Octopus.Action.Email.BccTeamIds";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string IsHtml = "Octopus.Action.Email.IsHtml";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Subject = "Octopus.Action.Email.Subject";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Body = "Octopus.Action.Email.Body";
