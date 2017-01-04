@@ -1,12 +1,11 @@
 using System;
-using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
     /// <summary>
     /// Octopus and Tentacle machine-wide proxy settings (backed by the Windows Registry).
     /// </summary>
-    public interface IProxyConfiguration : IModifiableConfiguration
+    public interface IProxyConfiguration
     {
         /// <summary>
         /// Gets or sets a flag indicating whether to use the a proxy.

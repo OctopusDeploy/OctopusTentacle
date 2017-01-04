@@ -41,10 +41,5 @@ namespace Octopus.Shared.Configuration
             get { return settings.Get("Octopus.Server.Proxy.ProxyPort", 80); }
             set { settings.Set("Octopus.Server.Proxy.ProxyPort", value); }
         }
-
-        public void Save()
-        {
-            settings.Save();
-        }
     }
 }
