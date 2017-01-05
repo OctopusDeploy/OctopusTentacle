@@ -402,6 +402,12 @@ namespace Octopus.Shared.Variables
             }
         }
 
+
+        public static class Agent
+        {
+             [Define(Category = VariableCategory.Agent, Description = "The directory containing the agent's (server or tentacle) own executables", Example = "C:\\Program Files\\Octopus Deploy")] public static readonly string ProgramDirectoryPath = "Octopus.Agent.ProgramDirectoryPath";
+        }
+
         public class Script
         {
             // Variables will have the form Octopus.Script.Module[ModuleName]
@@ -421,7 +427,7 @@ namespace Octopus.Shared.Variables
             [Define(Category = VariableCategory.Action, Description = "The maximum number of machines on which the action will concurrently execute", Example = "5", Domain = VariableDomain.Number)] public static readonly string MaxParallelism = "Octopus.Action.MaxParallelism";
             [Define(Category = VariableCategory.Action, Description = "Whether or not the action has been skipped in the current deployment", Example = "True", Domain = VariableDomain.Boolean)] public static readonly string IsSkipped = "Octopus.Action.IsSkipped";
             [Define(Category = VariableCategory.Action, Description = "If set by the user, completes processing of the action without runnning further conventions/scripts", Example = "True", Domain = VariableDomain.Boolean)] public static readonly string SkipRemainingConventions = "Octopus.Action.SkipRemainingConventions";
-            [Define(Category = VariableCategory.Hidden)] public static readonly string EnabledFeatures = "Octopus.Action.EnabledFeatures";
+            [Define(Category = VariableCategory.Hidden)] public static readonly string EnabledFeatures = "Octopus.Action.EnabledFeatures";           
 
             public static class Status
             {
@@ -497,21 +503,21 @@ namespace Octopus.Shared.Variables
                         Pattern = "Octopus.Action[_name_].Output.Package.DirectoryPath",
                         Example = "C:\\Temp\\MyApp",
                         Description = "The directory to which the package transferred to")]
-                    public static readonly string DirectoryPath = "Octopus.Action.Package.DirectoryPath";
+                    public static readonly string DirectoryPath = "Package.DirectoryPath";
 
                     [Define(
                         Category = VariableCategory.Output,
                         Pattern = "Octopus.Action[_name_].Output.Package.FileName",
                         Example = "MyProject.1.2.3.nupkg",
                         Description = "The file name of the transferred package")]
-                    public static readonly string FileName = "Octopus.Action.Package.FileName";
+                    public static readonly string FileName = "Package.FileName";
 
                     [Define(
                         Category = VariableCategory.Output,
                         Pattern = "Octopus.Action[_name_].Output.Package.FilePath",
                         Example = "C:\\Temp\\MyApp\\MyProject.1.2.3.nupkg",
                         Description = "The full file name of the transferred package")]
-                    public static readonly string FilePath = "Octopus.Action.Package.FilePath";
+                    public static readonly string FilePath = "Package.FilePath";
                 }
 
                 public static class Ssh

@@ -83,8 +83,6 @@ namespace Octopus.Shared.Startup
                 proxyConfiguration.Value.UseDefaultProxy = false;
                 log.Info("Proxy use is disabled");
             }
-
-            proxyConfiguration.Value.Save();
         }
 
         void QueueOperation(Action action)

@@ -21,7 +21,6 @@ namespace Octopus.Shared.Startup
 
         protected override void OnStart(string[] args)
         {
-            Log.Octopus().Trace("WindowsServiceAdapter.OnStart()");
             if (args.Length > 0 && args[0].ToLowerInvariant().Contains("debug"))
             {
                 Debugger.Launch();
@@ -31,7 +30,6 @@ namespace Octopus.Shared.Startup
             // A service will usually fail to start after 30 seconds, so by requesting additional time 
             // we can be more likely to start up successfully. Also, 120 seconds seems to be about the 
             // maximum time we can ask for.
-            Log.Octopus().Trace("WindowsServiceAdapter.OnStart() : Requesting an additional 120 seconds for startup");
             RequestAdditionalTime(120000);
 
             workerThread = new Thread(RunService);
@@ -43,10 +41,7 @@ namespace Octopus.Shared.Startup
         {
             try
             {
-                Log.Octopus().Trace("WindowsServiceAdapter.RunService() : executing");
-
                 execute();
-                Log.Octopus().Trace("WindowsServiceAdapter.RunService() : execute complete");
             }
             catch (Exception ex)
             {
