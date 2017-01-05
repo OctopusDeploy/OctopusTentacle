@@ -1,9 +1,8 @@
 using System;
-using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
-    public interface IUpgradeCheckConfiguration : IModifiableConfiguration
+    public interface IUpgradeCheckConfiguration
     {
         /// <summary>
         /// Gets or sets whether the Octopus server is allowed to check for upgrades.

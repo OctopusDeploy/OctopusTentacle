@@ -36,10 +36,5 @@ namespace Octopus.Shared.Configuration
             }
             set { settings.Set("Octopus.Home", value); }
         }
-
-        public void Save()
-        {
-            settings.Save();
-        }
     }
 }

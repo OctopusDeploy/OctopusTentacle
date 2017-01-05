@@ -72,8 +72,6 @@ namespace Octopus.Shared.Startup
             // Initialize logging as soon as possible - waiting for the Container to be built is too late
             Log.Appenders.Add(new NLogAppender());
             
-            log.Trace("OctopusProgram.Run() starting");
-            log.Trace("OctopusProgram.Run() : adding handler for TaskScheduler.UnobservedTaskException");
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 if (Debugger.IsAttached) Debugger.Break();
@@ -81,7 +79,6 @@ namespace Octopus.Shared.Startup
                 args.SetObserved();
             };
 
-            log.Trace("OctopusProgram.Run() : adding handler for AppDomain.CurrentDomain.UnhandledException");
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 if (Debugger.IsAttached) Debugger.Break();
@@ -92,8 +89,6 @@ namespace Octopus.Shared.Startup
             int exitCode;
             try
             {
-                log.Trace("OctopusProgram.Run() : Processing command line arguments");
-
                 commandLineArguments = ProcessCommonOptions();
                 
                 var instanceName = string.Empty;
@@ -103,7 +98,6 @@ namespace Octopus.Shared.Startup
                 
                 log.Trace("Creating and configuring the Autofac container");
                 container = BuildContainer(instanceName);
-                log.Trace("OctopusProgram.Start() : Registering additional modules");
                 RegisterAdditionalModules(container);
 
                 if (showLogo)
@@ -114,8 +108,6 @@ namespace Octopus.Shared.Startup
                 }
 
                 var host = SelectMostAppropriateHost();
-                log.Trace("OctopusProgram.Run() : Host is " + host.GetType());
-                log.Trace("OctopusProgram.Run() : Running host");
                 host.Run(Start, Stop);
                 exitCode = Environment.ExitCode;
             }
@@ -214,13 +206,10 @@ namespace Octopus.Shared.Startup
 
         void Start(ICommandRuntime commandRuntime)
         {
-            log.Trace("OctopusProgram.Start() : Resolving command locator");
             var commandLocator = container.Resolve<ICommandLocator>();
 
-            log.Trace("OctopusProgram.Start() : Extracting command name");
             var commandName = ExtractCommandName(ref commandLineArguments);
 
-            log.TraceFormat("OctopusProgram.Start() : Finding the implementation for command: {0}", commandName);
             var command = commandLocator.Find(commandName);
             if (command == null)
             {
@@ -230,9 +219,7 @@ namespace Octopus.Shared.Startup
 
             commandInstance = command.Value;
 
-            log.TraceFormat("OctopusProgram.Start() : Starting command: {0}", commandInstance.GetType().Name);
             commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions);
-            log.Trace("OctopusProgram.Start() : Command starting command");
         }
 
         protected abstract IContainer BuildContainer(string instanceName);
