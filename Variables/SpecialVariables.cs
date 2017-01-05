@@ -402,6 +402,12 @@ namespace Octopus.Shared.Variables
             }
         }
 
+
+        public static class Agent
+        {
+             [Define(Category = VariableCategory.Agent, Description = "The directory containing the agent's (server or tentacle) own executables", Example = "C:\\Program Files\\Octopus Deploy")] public static readonly string ProgramDirectoryPath = "Octopus.Agent.ProgramDirectoryPath";
+        }
+
         public class Script
         {
             // Variables will have the form Octopus.Script.Module[ModuleName]
