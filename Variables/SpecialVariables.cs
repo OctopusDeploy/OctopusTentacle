@@ -504,21 +504,21 @@ namespace Octopus.Shared.Variables
                         Pattern = "Octopus.Action[_name_].Output.Package.DirectoryPath",
                         Example = "C:\\Temp\\MyApp",
                         Description = "The directory to which the package transferred to")]
-                    public static readonly string DirectoryPath = "Octopus.Action.Package.DirectoryPath";
+                    public static readonly string DirectoryPath = "Package.DirectoryPath";
 
                     [Define(
                         Category = VariableCategory.Output,
                         Pattern = "Octopus.Action[_name_].Output.Package.FileName",
                         Example = "MyProject.1.2.3.nupkg",
                         Description = "The file name of the transferred package")]
-                    public static readonly string FileName = "Octopus.Action.Package.FileName";
+                    public static readonly string FileName = "Package.FileName";
 
                     [Define(
                         Category = VariableCategory.Output,
                         Pattern = "Octopus.Action[_name_].Output.Package.FilePath",
                         Example = "C:\\Temp\\MyApp\\MyProject.1.2.3.nupkg",
                         Description = "The full file name of the transferred package")]
-                    public static readonly string FilePath = "Octopus.Action.Package.FilePath";
+                    public static readonly string FilePath = "Package.FilePath";
                 }
 
                 public static class Ssh
