@@ -57,7 +57,7 @@ namespace Octopus.Shared.Startup
                     }
 
                     taskDefinition.Triggers.Clear();
-                    taskDefinition.Triggers.Add(new BootTrigger()
+                    taskDefinition.Triggers.Add(new TimeTrigger()
                     {
                         Repetition = new RepetitionPattern(TimeSpan.FromMinutes(interval), TimeSpan.Zero)
                     });
