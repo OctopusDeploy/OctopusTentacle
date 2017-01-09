@@ -24,22 +24,22 @@ namespace Octopus.Shared.Startup
             this.log = log;
             this.applicationName = applicationName;
 
-            Options.Add("create", "Create the watchdog task for the given instance", v =>
+            Options.Add("create", "Create the watchdog task for the given instances", v =>
             {
                 createTask = true;
                 log.Info("Creating watchdog task");
             });
-            Options.Add("delete", "Delete the watchdog task for the given instance", v =>
+            Options.Add("delete", "Delete the watchdog task for the given instances", v =>
             {
                 deleteTask = true;
                 log.Info("Removing watchdog task");
             });
-            Options.Add("interval=", "The interval, in minutes, that the service should be checked", v =>
+            Options.Add("interval=", "The interval, in minutes, at which that the service(s) should be checked (default: 5)", v =>
             {
                 log.Info($"Setting watchdog task interval to {v} minutes");
                 interval = int.Parse(v);
             });
-            Options.Add("instances=", "List of instances to check", v =>
+            Options.Add("instances=", "List of instances to be checked (default: *)", v =>
             {
                 instances = new HashSet<string>(v.Split(',', ';'));
             });
