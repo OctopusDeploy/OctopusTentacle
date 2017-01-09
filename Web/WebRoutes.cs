@@ -305,6 +305,7 @@ namespace Octopus.Shared.Web
                 public static string Index = "~/api/users{?skip}";
                 public static string Template = "~/api/users{/id}{?skip}";
                 public static string Get = "~/api/users/{id}";
+                public static string Login = "~/api/users/login{?returnUrl}";
                 public static string Logout = "~/api/users/logout";
                 public static string Register = "~/api/users/register";
                 public static string Me = "~/api/users/me";
