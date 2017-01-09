@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Octopus.Shared.Configuration;
@@ -7,16 +8,22 @@ using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Startup
 {
-    public class WatchdogCommand : AbstractStandardCommand
+    public class WatchdogCommand : AbstractCommand
     {
-        readonly IApplicationInstanceSelector instanceSelector;
+        readonly ILog log;
+        readonly ApplicationName applicationName;
         int interval = 5;
         bool createTask;
         bool deleteTask;
+        HashSet<string> instances = new HashSet<string> { "*" };
 
-        public WatchdogCommand(ILog log, IApplicationInstanceSelector instanceSelector) : base(instanceSelector)
+        public WatchdogCommand(
+            ILog log, 
+            ApplicationName applicationName)
         {
-            this.instanceSelector = instanceSelector;
+            this.log = log;
+            this.applicationName = applicationName;
+
             Options.Add("create", "Create the watchdog task for the given instance", v =>
             {
                 createTask = true;
@@ -32,16 +39,21 @@ namespace Octopus.Shared.Startup
                 log.Info($"Setting watchdog task interval to {v} minutes");
                 interval = int.Parse(v);
             });
+            Options.Add("instances=", "List of instances to check", v =>
+            {
+                instances = new HashSet<string>(v.Split(',', ';'));
+            });
         }
 
         protected override void Start()
         {
-            base.Start();
+            log.Info("ApplicationName: " + applicationName);
+            var instanceNames = string.Join(",", instances);
+            log.Info("Instances: " + instanceNames);
 
             using (var taskService = new TaskService())
             {
-                var instanceName = instanceSelector.Current.InstanceName;
-                var taskName = "Octopus Watchdog " + instanceName;
+                var taskName = "Octopus Watchdog " + applicationName;
 
                 if (createTask)
                 {
@@ -50,14 +62,15 @@ namespace Octopus.Shared.Startup
                     {
                         taskDefinition = taskService.NewTask();
 
-                        taskDefinition.Actions.Add(new ExecAction(Assembly.GetEntryAssembly().Location, "service --start --instance " + instanceName + " --console", null));
-
                         taskDefinition.Principal.UserId = "SYSTEM";
                         taskDefinition.Principal.LogonType = TaskLogonType.ServiceAccount;
                     }
 
+                    taskDefinition.Actions.Clear();
+                    taskDefinition.Actions.Add(new ExecAction(Assembly.GetEntryAssembly().Location, "checkservices --instances " + instanceNames + " --console --nologo", null));
+
                     taskDefinition.Triggers.Clear();
-                    taskDefinition.Triggers.Add(new TimeTrigger()
+                    taskDefinition.Triggers.Add(new TimeTrigger
                     {
                         Repetition = new RepetitionPattern(TimeSpan.FromMinutes(interval), TimeSpan.Zero)
                     });
