@@ -455,6 +455,9 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "The location to move the transfer package to", Example = @"C:\temp\MyDir")]
                 public static readonly string TransferPath = "Octopus.Action.Package.TransferPath";
 
+                [Define(Category = VariableCategory.Action, Description = "The original file name of the staged package without the unique suffix appended", Example = @"C:\temp\MyDir")]
+                public static readonly string OriginalFileName = "Octopus.Action.Package.OriginalFileName";
+
                 [Define(Category = VariableCategory.Action, Description = "The ID of the package being deployed", Example = "OctoFx.RateService")]
                 public static readonly string PackageId = "Octopus.Action.Package.PackageId";
                 [Define(Category = VariableCategory.Action, Description = "The ID of the package being deployed", Example = "OctoFx.RateService")]
