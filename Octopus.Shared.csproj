@@ -53,8 +53,8 @@
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut, Version=2.4.10.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.2.4.10\lib\net45\Halibut.dll</HintPath>
+    <Reference Include="Halibut, Version=2.4.11.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Halibut.2.4.11\lib\net45\Halibut.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Nevermore.Contracts, Version=2.0.3.0, Culture=neutral, processorArchitecture=MSIL">
@@ -219,6 +219,8 @@
     <Compile Include="Diagnostics\LogContext.cs" />
     <Compile Include="Startup\CheckServicesCommand.cs" />
     <Compile Include="Startup\WatchdogCommand.cs" />
+    <Compile Include="Time\IStopwatch.cs" />
+    <Compile Include="Time\StopWatch.cs" />
     <Compile Include="Util\CommonValidationMessages.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="Model\EncryptedAttribute.cs" />
