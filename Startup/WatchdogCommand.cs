@@ -55,6 +55,15 @@ namespace Octopus.Shared.Startup
             {
                 var taskName = "Octopus Watchdog " + applicationName;
 
+                if (deleteTask)
+                {
+                    if (taskService.FindAllTasks(t => t.Name == taskName).SingleOrDefault() != null)
+                    {
+                        taskService.RootFolder.DeleteTask(taskName);
+                        log.Info($"Deleted scheduled task {taskName}");
+                    }
+                }
+
                 if (createTask)
                 {
                     var taskDefinition = taskService.FindAllTasks(t => t.Name == taskName).SingleOrDefault()?.Definition;
@@ -64,6 +73,11 @@ namespace Octopus.Shared.Startup
 
                         taskDefinition.Principal.UserId = "SYSTEM";
                         taskDefinition.Principal.LogonType = TaskLogonType.ServiceAccount;
+                        log.Info($"Creating scheduled task {taskName}");
+                    }
+                    else
+                    {
+                        log.Info($"Updating scheduled task {taskName}");
                     }
 
                     taskDefinition.Actions.Clear();
@@ -76,13 +90,6 @@ namespace Octopus.Shared.Startup
                     });
 
                     taskService.RootFolder.RegisterTaskDefinition(taskName, taskDefinition);
-                }
-                else if (deleteTask)
-                {
-                    if (taskService.FindAllTasks(t => t.Name == taskName).SingleOrDefault() != null)
-                    {
-                        taskService.RootFolder.DeleteTask(taskName);
-                    }
                 }
             }
         }
