@@ -32,15 +32,18 @@ namespace Octopus.Shared.Startup
         protected override void Start()
         {
             var startAll = instances.Count == 1 && instances.First() == "*";
-
-            foreach (var instance in applicationInstanceStore.ListInstances(applicationName))
+            var serviceControllers = ServiceController.GetServices();
+            try
             {
-                if (!startAll && instances.Contains(instance.InstanceName) == false)
-                    continue;
-
-                var serviceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
-                using (var controller = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == serviceName))
+                foreach (var instance in applicationInstanceStore.ListInstances(applicationName))
                 {
+                    if (!startAll && instances.Contains(instance.InstanceName) == false)
+                        continue;
+
+                    var serviceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
+
+                    var controller = serviceControllers.FirstOrDefault(s => s.ServiceName == serviceName);
+
                     if (controller != null &&
                         controller.Status != ServiceControllerStatus.Running &&
                         controller.Status != ServiceControllerStatus.StartPending)
@@ -48,8 +51,10 @@ namespace Octopus.Shared.Startup
                         try
                         {
                             controller.Start();
+                            log.Info($"Service {serviceName} starting");
 
-                            while (controller.Status != ServiceControllerStatus.Running)
+                            var waitUntil = DateTime.Now.AddSeconds(30);
+                            while (controller.Status != ServiceControllerStatus.Running && DateTime.Now < waitUntil)
                             {
                                 controller.Refresh();
 
@@ -57,7 +62,10 @@ namespace Octopus.Shared.Startup
                                 Thread.Sleep(300);
                             }
 
-                            log.Info($"Service {serviceName} started");
+                            if (controller.Status == ServiceControllerStatus.Running)
+                                log.Info($"Service {serviceName} started");
+                            else
+                                log.Info($"Service {serviceName} doesn't have Running status after 30sec. Status will be assessed again at the time of the next scheduled check.");
                         }
                         catch (Exception ex)
                         {
@@ -65,6 +73,11 @@ namespace Octopus.Shared.Startup
                         }
                     }
                 }
+            }
+            finally
+            {
+                foreach (var controller in serviceControllers)
+                    controller.Dispose();
             }
         }
     }
