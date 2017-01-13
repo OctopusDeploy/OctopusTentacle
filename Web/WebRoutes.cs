@@ -70,6 +70,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/environments/{id}";
                 public static string GetMachines = "~/api/environments/{id}/machines{?skip}";
                 public static string SortOrder = "~/api/environments/sortorder";
+                public static string GetVariables = "~/api/environments/{id}/variables";
             }
 
             public static class Machines
