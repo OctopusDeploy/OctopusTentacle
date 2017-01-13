@@ -101,16 +101,6 @@ namespace Octopus.Shared.Startup
                 container = BuildContainer(instanceName);
                 RegisterAdditionalModules(container);
 
-                // BEWARE: the following is required in order to initialize the log directory correctly,
-                // based on the instance.  Failure to do this will result in the following log entries
-                // ending up in the file in the user's profile, rather than the one for the instance.
-                if (!string.IsNullOrWhiteSpace(instanceName))
-                {
-                    // resolve the selector to trigger the log initialization
-                    var selector = container.Resolve<IApplicationInstanceSelector>();
-                    var name = selector.Current.InstanceName;
-                }
-
                 if (showLogo)
                 {
                     log.Info($"{displayName} version {version} ({informationalVersion}) instance {instanceName}");
