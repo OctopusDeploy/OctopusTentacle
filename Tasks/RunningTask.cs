@@ -96,7 +96,7 @@ namespace Octopus.Shared.Tasks
                         }
                         else
                         {
-                            log.Fatal(root.Message);
+                            log.Fatal(root.MessageRecursive());
                         }
                     }
                     finally
