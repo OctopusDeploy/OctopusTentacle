@@ -26,8 +26,8 @@ namespace Octopus.Shared.Startup
         ICommand commandInstance;
         string[] commandLineArguments;
         bool forceConsole;
-        bool showLogo = true;
-        
+        string instanceName;
+
         protected OctopusProgram(string displayName, string version, string informationalVersion, string[] environmentInformation, string[] commandLineArguments)
         {
             this.commandLineArguments = commandLineArguments;
@@ -37,7 +37,6 @@ namespace Octopus.Shared.Startup
             this.environmentInformation = environmentInformation;
             commonOptions = new OptionSet();
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
-            commonOptions.Add("nologo", "Don't print title or version information", v => showLogo = false);
             commonOptions.Add("noconsolelogging", "Don't log to the console", v =>
             {
                 // suppress logging to the console
@@ -91,7 +90,7 @@ namespace Octopus.Shared.Startup
             {
                 commandLineArguments = ProcessCommonOptions();
                 
-                var instanceName = string.Empty;
+                instanceName = string.Empty;
                 var options = new OptionSet();
                 options.Add("instance=", "Name of the instance to use", v => instanceName = v);
                 var parsedOptions = options.Parse(commandLineArguments);
@@ -99,13 +98,6 @@ namespace Octopus.Shared.Startup
                 log.Trace("Creating and configuring the Autofac container");
                 container = BuildContainer(instanceName);
                 RegisterAdditionalModules(container);
-
-                if (showLogo)
-                {
-                    log.Info($"{displayName} version {version} ({informationalVersion})");
-                    log.Info($"Environment Information:{Environment.NewLine}" +
-                        $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
-                }
 
                 var host = SelectMostAppropriateHost();
                 host.Run(Start, Stop);
@@ -219,7 +211,7 @@ namespace Octopus.Shared.Startup
 
             commandInstance = command.Value;
 
-            commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions);
+            commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions, displayName, version, informationalVersion, environmentInformation, instanceName);
         }
 
         protected abstract IContainer BuildContainer(string instanceName);

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using Octopus.Shared.Diagnostics;
 
@@ -170,6 +171,10 @@ namespace Octopus.Shared.Util
         public void OverwriteFile(string path, string contents)
         {
             File.WriteAllText(path, contents);
+        }
+        public void OverwriteFile(string path, string contents, Encoding encoding)
+        {
+            File.WriteAllText(path, contents, encoding);
         }
 
         public Stream OpenFile(string path, FileAccess access, FileShare share)

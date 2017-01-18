@@ -174,20 +174,23 @@ namespace Octopus.Shared.Startup
                 if (controller == null)
                     return;
 
-                if (controller.Status != ServiceControllerStatus.Running && controller.Status != ServiceControllerStatus.StartPending)
+                if (controller.Status != ServiceControllerStatus.Running)
                 {
-                    controller.Start();
+                    if (controller.Status != ServiceControllerStatus.StartPending)
+                    {
+                        controller.Start();
+                    }
+
+                    while (controller.Status != ServiceControllerStatus.Running)
+                    {
+                        controller.Refresh();
+
+                        log.Info("Waiting for service to start. Current status: " + controller.Status);
+                        Thread.Sleep(300);
+                    }
+
+                    log.Info("Service started");
                 }
-
-                while (controller.Status != ServiceControllerStatus.Running)
-                {
-                    controller.Refresh();
-
-                    log.Info("Waiting for service to start. Current status: " + controller.Status);
-                    Thread.Sleep(300);
-                }
-
-                log.Info("Service started");
             }
         }
 

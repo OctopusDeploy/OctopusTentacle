@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Util;
 
@@ -36,7 +37,8 @@ namespace Octopus.Shared.Scripts
 
         public void BootstrapScript(string scriptBody)
         {
-            fileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody);
+            // default is UTF8noBOM but powershell doesn't interpret that correctly
+            fileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.UTF8);
         }
 
         public string ResolvePath(string fileName)

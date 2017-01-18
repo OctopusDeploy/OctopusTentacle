@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
 
 namespace Octopus.Shared.Startup
@@ -9,6 +10,12 @@ namespace Octopus.Shared.Startup
     {
         readonly OptionSet options = new OptionSet();
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
+        bool showLogo = true;
+
+        protected AbstractCommand()
+        {
+            Options.Add("nologo", "Don't print title or version information", v => showLogo = false);
+        }
 
         protected OptionSet Options
         {
@@ -33,7 +40,17 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        protected virtual void Initialize() { }
+        protected virtual void Initialize(string displayName, string version, string informationalVersion, string[] environmentInformation, string instanceName)
+        {
+            if (showLogo)
+            {
+                var instanceNameToLog = string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName;
+                Log.Octopus().Info($"{displayName} version {version} ({informationalVersion}) instance {instanceNameToLog}");
+                Log.Octopus().Info($"Environment Information:{Environment.NewLine}" +
+                    $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
+            }
+        }
+
         protected abstract void Start();
         protected virtual void Completed() { }
 
@@ -46,7 +63,7 @@ namespace Octopus.Shared.Startup
             Options.WriteOptionDescriptions(writer);
         }
 
-        void ICommand.Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
+        void ICommand.Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions, string displayName, string version, string informationalVersion, string[] environmentInformation, string instanceName)
         {
             Runtime = commandRuntime;
 
@@ -56,7 +73,7 @@ namespace Octopus.Shared.Startup
             foreach (var opset in optionSets)
                 opset.Validate();
 
-            Initialize();
+            Initialize(displayName, version, informationalVersion, environmentInformation, instanceName);
             Start();
             Completed();
         }
