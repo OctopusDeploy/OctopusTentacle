@@ -777,14 +777,52 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Replace instance counts in configuration file with those currently configured in Azure portal", Example = "False")] public static readonly string UseCurrentInstanceCount = "Octopus.Action.Azure.UseCurrentInstanceCount";
                 [Define(Category = VariableCategory.Action, Description = "Log extracted Cloud Service Package", Example="False")] public static readonly string LogExtractedCspkg = "Octopus.Action.Azure.LogExtractedCspkg";
                 [Define(Category = VariableCategory.Action, Description = "Relative path to the *.cscfg file", Example = "AcmeService-Production.cscfg")][DeprecatedAlias("OctopusAzureConfigurationFileName")] public static readonly string CloudServiceConfigurationFileRelativePath = "Octopus.Action.Azure.CloudServiceConfigurationFileRelativePath";
-
-                [Define(Category = VariableCategory.Action, Description = "Azure Service Fabric App connection endpoint", Example = "url")] public static readonly string ServiceFabricAppConnectionEndpoint = "Octopus.Action.Azure.ServiceFabricAppConnectionEndpoint";
-                [Define(Category = VariableCategory.Action, Description = "Azure Service Fabric App target profile", Example = "PublishProfiles\\Cloud.xml")] public static readonly string ServiceFabricAppTargetProfile = "Octopus.Action.Azure.ServiceFabricAppTargetProfile";
-
+                
                 [Define(Category = VariableCategory.Action, Description = "Resource Group Name", Example = "AcmeResources")] public static readonly string ResourceGroupName = "Octopus.Action.Azure.ResourceGroupName";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string TemplateSource = "Octopus.Action.Azure.TemplateSource";
                 [Define(Category = VariableCategory.Action, Description = "Resource Group template JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplate = "Octopus.Action.Azure.ResourceGroupTemplate";
                 [Define(Category = VariableCategory.Action, Description = "Resource Group template parameter JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplateParameters = "Octopus.Action.Azure.ResourceGroupTemplateParameters";
+
+                // Azure Service Fabric
+                [Define(Category = VariableCategory.Action, Description = "Azure Service Fabric App connection endpoint", Example = "[url]")]
+                public static readonly string FabricConnectionEndpoint = "Octopus.Action.Azure.FabricConnectionEndpoint";
+
+                [Define(Category = VariableCategory.Action, Description = "Path to the file containing the publish profile", Example = "PublishProfiles\\Cloud.xml")]
+                public static readonly string FabricPublishProfileFile = "Octopus.Action.Azure.FabricPublishProfileFile";
+                
+                [Define(Category = VariableCategory.Action, Description = "Path to the folder of the packaged Service Fabric application", Example = "[This path is set by Calamari]")]
+                public static readonly string FabricApplicationPackagePath = "Octopus.Action.Azure.FabricApplicationPackagePath";
+
+                [Define(Category = VariableCategory.Action, Description = "Indicates that the Service Fabric application should not be created or upgraded after registering the application type", Example = "False")]
+                public static readonly string FabricDeployOnly = "Octopus.Action.Azure.FabricDeployOnly";
+
+                [Define(Category = VariableCategory.Action, Description = "Hashtable of the Service Fabric application parameters to be used for the application", Example = "@{CustomParameter1='MyValue'; CustomParameter2='MyValue'}")]
+                public static readonly string FabricApplicationParameters = "Octopus.Action.Azure.FabricApplicationParameters";
+
+                [Define(Category = VariableCategory.Action, Description = "Indicates whether to unregister any unused application versions that exist after an upgrade is finished", Example = "False")]
+                public static readonly string FabricUnregisterUnusedApplicationVersionsAfterUpgrade = "Octopus.Action.Azure.FabricUnregisterUnusedApplicationVersionsAfterUpgrade";
+
+                [Define(Category = VariableCategory.Action, Description = "Indicates the behavior used to override the upgrade settings specified by the publish profile. Options: None | ForceUpgrade | VetoUpgrade", Example = "None | ForceUpgrade | VetoUpgrade")]
+                public static readonly string FabricOverrideUpgradeBehavior = "Octopus.Action.Azure.FabricOverrideUpgradeBehavior";
+
+                [Define(Category = VariableCategory.Action, Description = "Indicates that the script should make use of an existing cluster connection that has already been established in the PowerShell session.  The cluster connection parameters configured in the publish profile are ignored", Example = "False")]
+                public static readonly string FabricUseExistingClusterConnection = "Octopus.Action.Azure.FabricUseExistingClusterConnection";
+
+                [Define(Category = VariableCategory.Action, Description = "Overwrite Behavior if an application exists in the cluster with the same name. Available Options are Never, Always, SameAppTypeAndVersion. This setting is not applicable when upgrading an application", Example = "Never | Always | SameAppTypeAndVersion")]
+                public static readonly string FabricOverwriteBehavior = "Octopus.Action.Azure.FabricOverwriteBehavior";
+
+                [Define(Category = VariableCategory.Action, Description = "Switch signaling whether the package should be validated or not before deployment", Example = "False")]
+                public static readonly string FabricSkipPackageValidation = "Octopus.Action.Azure.FabricSkipPackageValidation";
+
+                [Define(Category = VariableCategory.Action, Description = "A security token for authentication to cluster management endpoints. Used for silent authentication to clusters that are protected by Azure Active Directory", Example = "")]
+                public static readonly string FabricSecurityToken = "Octopus.Action.Azure.FabricSecurityToken";
+
+                [Define(Category = VariableCategory.Action, Description = "Timeout in seconds for copying application package to image store", Example = "300")]
+                public static readonly string FabricCopyPackageTimeoutSec = "Octopus.Action.Azure.FabricCopyPackageTimeoutSec";
+
+                [Define(Category = VariableCategory.Action, Description = "Log the extracted Azure Service Fabric application package", Example = "False")]
+                public static readonly string FabricLogExtractedApplicationPackage = "Octopus.Action.Azure.FabricLogExtractedApplicationPackage";
+
             }
 
             public static class HealthCheck
