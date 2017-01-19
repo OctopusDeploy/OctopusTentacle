@@ -15,7 +15,7 @@ namespace Octopus.Shared.Configuration
         const string KeyName = "Software\\Octopus";
         readonly ILog log;
 
-        public WindowsRegistryKeyValueStore(ILog log)
+        public WindowsRegistryKeyValueStore(ILog log) : base(autoSaveOnSet: true)
         {
             this.log = log;
         }
