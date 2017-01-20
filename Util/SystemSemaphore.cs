@@ -17,6 +17,7 @@ namespace Octopus.Shared.Util
 
         public IDisposable Acquire(string name, string waitMessage)
         {
+            systemLog.Trace($"Aquiring system semaphore {name}");
             var semaphore = new Semaphore(1, 1, Normalize(name));
             if (!semaphore.WaitOne(3000))
             {
@@ -25,6 +26,8 @@ namespace Octopus.Shared.Util
                     log.Verbose(waitMessage);
                 semaphore.WaitOne();
             }
+
+            systemLog.Trace($"Aquired system semaphore {name}");
             return new SemaphoreReleaser(semaphore, name);
         }
 
@@ -48,6 +51,7 @@ namespace Octopus.Shared.Util
             {
                 semaphore.Release();
                 semaphore.Dispose();
+                Log.System().Trace($"Released system semaphore {name}");
             }
         }
     }
