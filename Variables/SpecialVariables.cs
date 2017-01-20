@@ -741,7 +741,7 @@ namespace Octopus.Shared.Variables
                 public static readonly string WebAppActionTypeName = "Octopus.AzureWebApp";
 
                 [Define(Category = VariableCategory.Hidden)]
-                public static readonly string ServiceFabricAppActionTypeName = "Octopus.AzureServiceFabricApp";
+                public static readonly string FabricAppActionTypeName = "Octopus.AzureFabricApp";
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string PowerShellActionTypeName = "Octopus.AzurePowerShell";

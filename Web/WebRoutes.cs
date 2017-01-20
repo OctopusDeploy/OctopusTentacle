@@ -26,6 +26,7 @@ namespace Octopus.Shared.Web
                     public static string StorageAccounts = "~/api/accounts/{id}/storageAccounts";
                     public static string WebSites = "~/api/accounts/{accountId}/websites";
                     public static string ResourceGroups = "~/api/accounts/{id}/resourceGroups";
+                    public static string FabricApplications = "~/api/accounts/{id}/fabricApplications";
                 }
             }
 
