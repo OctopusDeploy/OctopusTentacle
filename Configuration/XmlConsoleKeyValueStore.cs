@@ -10,7 +10,7 @@ namespace Octopus.Shared.Configuration
 {
     public class XmlConsoleKeyValueStore : DictionaryKeyValueStore
     {
-        public XmlConsoleKeyValueStore() : base(true)
+        public XmlConsoleKeyValueStore() : base(autoSaveOnSet:false, isWriteOnly:true)
         {
         }
 

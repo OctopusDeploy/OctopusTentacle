@@ -10,7 +10,7 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class XmlKeyValueStore : DictionaryKeyValueStore
     {
-        protected XmlKeyValueStore(bool isWriteOnly = false) : base(isWriteOnly)
+        protected XmlKeyValueStore(bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
         }
 

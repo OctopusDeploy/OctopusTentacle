@@ -8,9 +8,15 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class AbstractKeyValueStore : IKeyValueStore
     {
+        readonly bool autoSaveOnSet;
         protected abstract void Write(string key, string value);
         protected abstract string Read(string key);
         protected abstract void Delete(string key);
+
+        protected AbstractKeyValueStore(bool autoSaveOnSet)
+        {
+            this.autoSaveOnSet = autoSaveOnSet;
+        }
 
         public string Get(string name, DataProtectionScope? protectionScope = null)
         {
@@ -67,7 +73,10 @@ namespace Octopus.Shared.Configuration
 
             Write(name, v);
 
-            Save();
+            if (autoSaveOnSet)
+            {
+                Save();
+            }
         }
 
         public void Set<TData>(string name, TData value, DataProtectionScope? protectionScope = null)
