@@ -15,6 +15,7 @@ namespace Octopus.Shared.Diagnostics
 
             var log = Log.Octopus();
             builder.Register(c => log).As<ILog>().As<ILogWithContext>().SingleInstance();
+            builder.Register(c => new CorrelationId()).InstancePerLifetimeScope();
         }
     }
 }
