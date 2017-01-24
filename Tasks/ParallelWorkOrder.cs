@@ -25,11 +25,28 @@ namespace Octopus.Shared.Tasks
 
         public void Execute()
         {
+            SchedulingLoop();
+
+            foreach (var wi in running)
+                wi.WaitForCompletion();
+
+            taskContext.EnsureNotCanceled();
+
+            AssertNoErrorsOccured();
+        }
+
+
+        void SchedulingLoop()
+        {
             while (pending.Count > 0 || running.Count > 0)
             {
-                taskContext.CancellationToken.ThrowIfCancellationRequested();
                 CheckForCompletedTasks();
-                AssertAllCompletedTasksThusFarAreSuccessful();
+                if (taskContext.IsCancellationRequested)
+                    return;
+
+                if (GetExceptionsThusFar().Any())
+                    return;
+
                 ScheduleNextWork();
                 Thread.Sleep(100);
             }
@@ -66,11 +83,15 @@ namespace Octopus.Shared.Tasks
             }
         }
 
-        void AssertAllCompletedTasksThusFarAreSuccessful()
+        List<Exception> GetExceptionsThusFar()
         {
-            var errors = (from pair in completed where pair.Exception != null select pair.Exception).ToList();
+            return (from pair in completed where pair.Exception != null select pair.Exception).ToList();
+        }
 
-            if (errors.Count <= 0)
+        void AssertNoErrorsOccured()
+        {
+            var errors = GetExceptionsThusFar();
+            if (errors.Count == 0)
                 return;
 
             if (errors.Any(e => e is OperationCanceledException))
