@@ -784,8 +784,8 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Resource Group template parameter JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplateParameters = "Octopus.Action.Azure.ResourceGroupTemplateParameters";
 
                 // Azure Service Fabric
-                [Define(Category = VariableCategory.Action, Description = "Azure Service Fabric App connection endpoint", Example = "[url]")]
-                public static readonly string FabricConnectionEndpoint = "Octopus.Action.Azure.FabricConnectionEndpoint";
+                //[Define(Category = VariableCategory.Action, Description = "Azure Service Fabric App connection endpoint", Example = "[url]")]
+                //public static readonly string FabricConnectionEndpoint = "Octopus.Action.Azure.FabricConnectionEndpoint";
 
                 [Define(Category = VariableCategory.Action, Description = "Path to the file containing the publish profile", Example = "PublishProfiles\\Cloud.xml")]
                 public static readonly string FabricPublishProfileFile = "Octopus.Action.Azure.FabricPublishProfileFile";
