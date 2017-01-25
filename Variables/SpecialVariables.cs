@@ -299,8 +299,8 @@ namespace Octopus.Shared.Variables
             [Define(Description = "User-provided comments on the deployment", Example = "Signed off by Alice")] public static readonly string Comments = "Octopus.Deployment.Comments";
             [Define(Description = "If true, the package will be freshly downloaded from the feed/repository regardless of whether it is already present on the endpoint", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string ForcePackageDownload = "Octopus.Deployment.ForcePackageDownload";
             [Define(Description = "Specific machines being targeted by the deployment, if any", Example = "machines-123,machines-124", Domain = VariableDomain.List)] public static readonly string SpecificMachines = "Octopus.Deployment.SpecificMachines";
-            [Define(Description = "Machines that were skipped during the deployment because they went offline and the machine policy said this was ok", Example = "machines-123,machines-124", Domain = VariableDomain.List)]
-            public static readonly string ExcludedMachines = "Octopus.Deployment.ExcludedMachines";
+            [Define(Description = "Specific machines being excluded by the deployment, if any", Example = "machines-123,machines-124", Domain = VariableDomain.List)] public static readonly string ExcludedMachines = "Octopus.Deployment.ExcludedMachines";
+            [Define(Description = "Machines that were skipped during the deployment because they went offline and the machine policy said this was ok", Example = "machines-123,machines-124", Domain = VariableDomain.List)] public static readonly string AutomaticallyExcludedMachines = "Octopus.Deployment.AutomaticallyExcludedMachines";
             public static readonly string Machines = "Octopus.Deployment.Machines";
             [Define(Description = "The date and time at which the deployment was created", Example = "Tuesday 10th September 1:23 PM")] public static readonly string Created = "Octopus.Deployment.Created";
             [Define(Description = "The UTC date and time at which the deployment was created", Example = "10/09/2015 3:23:00 AM +00:00")] public static readonly string CreatedUtc = "Octopus.Deployment.CreatedUtc";
@@ -394,12 +394,26 @@ namespace Octopus.Shared.Variables
                 [Define(Description = "The directory into which the previous version of the package was deployed", Example = "C:\\InetPub\\WWWRoot\\OctoFx")] public static readonly string CustomInstallationDirectory = "Octopus.Tentacle.PreviousInstallation.CustomInstallationDirectory";
             }
 
+            public static class PreviousSuccessfulInstallation
+            {
+                [Define(Description = "The previous version of the package that was sucessfully deployed to the Tentacle", Example = "1.2.3")] public static readonly string PackageVersion = "Octopus.Tentacle.PreviousSuccessfulInstallation.PackageVersion";
+                [Define(Description = "The path to the package file previously sucessfully deployed", Example = "C:\\Octopus\\Tentacle\\Packages\\OctoFx.1.2.2.nupkg")] public static readonly string PackageFilePath = "Octopus.Tentacle.PreviousSuccessfulInstallation.PackageFilePath";
+                [Define(Description = "The directory into which the previous sucessful version of the package was extracted", Example = "C:\\Octopus\\Tentacle\\Apps\\Production\\OctoFx\\1.2.2")] public static readonly string OriginalInstalledPath = "Octopus.Tentacle.PreviousSuccessfulInstallation.OriginalInstalledPath";
+                [Define(Description = "The directory into which the previous sucessful version of the package was deployed", Example = "C:\\InetPub\\WWWRoot\\OctoFx")] public static readonly string CustomInstallationDirectory = "Octopus.Tentacle.PreviousSuccessfulInstallation.CustomInstallationDirectory";
+            }
+
             public static class Agent
             {
                 [Define(Category = VariableCategory.Agent, Description = "The directory under which the agent installs packages", Example = "C:\\Octopus\\Tentacle\\Apps")] public static readonly string ApplicationDirectoryPath = "Octopus.Tentacle.Agent.ApplicationDirectoryPath";
                 [Define(Category = VariableCategory.Agent, Description = "The instance name that the agent runs under", Example = "Tentacle")] public static readonly string InstanceName = "Octopus.Tentacle.Agent.InstanceName";
                 [Define(Category = VariableCategory.Agent, Description = "The directory containing the agent's own executables", Example = "C:\\Program Files\\Octopus Deploy\\Tentacle")] public static readonly string ProgramDirectoryPath = "Octopus.Tentacle.Agent.ProgramDirectoryPath";
             }
+        }
+
+
+        public static class Agent
+        {
+             [Define(Category = VariableCategory.Agent, Description = "The directory containing the agent's (server or tentacle) own executables", Example = "C:\\Program Files\\Octopus Deploy")] public static readonly string ProgramDirectoryPath = "Octopus.Agent.ProgramDirectoryPath";
         }
 
         public class Script
@@ -422,6 +436,7 @@ namespace Octopus.Shared.Variables
             [Define(Category = VariableCategory.Action, Description = "Whether or not the action has been skipped in the current deployment", Example = "True", Domain = VariableDomain.Boolean)] public static readonly string IsSkipped = "Octopus.Action.IsSkipped";
             [Define(Category = VariableCategory.Action, Description = "If set by the user, completes processing of the action without runnning further conventions/scripts", Example = "True", Domain = VariableDomain.Boolean)] public static readonly string SkipRemainingConventions = "Octopus.Action.SkipRemainingConventions";
             [Define(Category = VariableCategory.Hidden)] public static readonly string EnabledFeatures = "Octopus.Action.EnabledFeatures";
+            [Define(Category = VariableCategory.Action, Description = "Run condition variable expression used by the action", Example = "[truthy/falsey code]", Domain = VariableDomain.Text)] public static readonly string ConditionVariableExpression = "Octopus.Action.ConditionVariableExpression";
 
             public static class Status
             {
@@ -442,7 +457,14 @@ namespace Octopus.Shared.Variables
 
             public static class Package
             {
+                public static readonly string TransferPackageActionTypeName = "Octopus.TransferPackage";
                 public static readonly string ActionTypeName = "Octopus.TentaclePackage";
+
+                [Define(Category = VariableCategory.Action, Description = "The location to move the transfer package to", Example = @"C:\temp\MyDir")]
+                public static readonly string TransferPath = "Octopus.Action.Package.TransferPath";
+
+                [Define(Category = VariableCategory.Action, Description = "The original file name of the staged package without the unique suffix appended", Example = @"C:\temp\MyDir")]
+                public static readonly string OriginalFileName = "Octopus.Action.Package.OriginalFileName";
 
                 [Define(Category = VariableCategory.Action, Description = "The ID of the package being deployed", Example = "OctoFx.RateService")]
                 public static readonly string PackageId = "Octopus.Action.Package.PackageId";
@@ -487,6 +509,27 @@ namespace Octopus.Shared.Variables
                         Description = "The directory to which the package was installed")]
                     [DeprecatedAlias("Package.InstallationDirectoryPath")]
                     public static readonly string InstallationDirectoryPath = "Octopus.Action.Package.InstallationDirectoryPath";
+
+                    [Define(
+                        Category = VariableCategory.Output,
+                        Pattern = "Octopus.Action[_name_].Output.Package.DirectoryPath",
+                        Example = "C:\\Temp\\MyApp",
+                        Description = "The directory to which the package transferred to")]
+                    public static readonly string DirectoryPath = "Package.DirectoryPath";
+
+                    [Define(
+                        Category = VariableCategory.Output,
+                        Pattern = "Octopus.Action[_name_].Output.Package.FileName",
+                        Example = "MyProject.1.2.3.nupkg",
+                        Description = "The file name of the transferred package")]
+                    public static readonly string FileName = "Package.FileName";
+
+                    [Define(
+                        Category = VariableCategory.Output,
+                        Pattern = "Octopus.Action[_name_].Output.Package.FilePath",
+                        Example = "C:\\Temp\\MyApp\\MyProject.1.2.3.nupkg",
+                        Description = "The full file name of the transferred package")]
+                    public static readonly string FilePath = "Package.FilePath";
                 }
 
                 public static class Ssh
@@ -529,8 +572,11 @@ namespace Octopus.Shared.Variables
             {
                 public static readonly string ActionTypeName = "Octopus.Email";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string To = "Octopus.Action.Email.To";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string ToTeamIds = "Octopus.Action.Email.ToTeamIds";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string CC = "Octopus.Action.Email.CC";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string CCTeamIds = "Octopus.Action.Email.CCTeamIds";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Bcc = "Octopus.Action.Email.Bcc";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string BccTeamIds = "Octopus.Action.Email.BccTeamIds";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string IsHtml = "Octopus.Action.Email.IsHtml";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Subject = "Octopus.Action.Email.Subject";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string Body = "Octopus.Action.Email.Body";

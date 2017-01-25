@@ -4,7 +4,7 @@ namespace Octopus.Shared.Configuration
 {
     public class JsonConsoleKeyValueStore : JsonKeyValueStore
     {
-        public JsonConsoleKeyValueStore(bool useHierarchicalOutput) : base(useHierarchicalOutput)
+        public JsonConsoleKeyValueStore(bool useHierarchicalOutput) : base(useHierarchicalOutput, autoSaveOnSet: false, isWriteOnly: true)
         {
         }
 

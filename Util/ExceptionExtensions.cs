@@ -101,5 +101,12 @@ namespace Octopus.Shared.Util
 
             return error.Message;
         }
+
+        public static string MessageRecursive(this Exception ex)
+        {
+            return ex.InnerException == null
+                ? ex.Message
+                : ex.Message + Environment.NewLine + ex.InnerException.MessageRecursive();
+        }
     }
 }

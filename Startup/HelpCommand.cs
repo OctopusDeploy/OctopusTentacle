@@ -20,7 +20,7 @@ namespace Octopus.Shared.Startup
         {
         }
 
-        public void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
+        public void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions, string displayName, string version, string informationalVersion, string[] environmentInformation, string instanceName)
         {
             var executable = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullLocalPath());
 
