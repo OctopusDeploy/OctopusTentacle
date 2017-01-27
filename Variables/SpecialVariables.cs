@@ -792,8 +792,6 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Resource Group template parameter JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplateParameters = "Octopus.Action.Azure.ResourceGroupTemplateParameters";
 
                 // Azure Service Fabric
-                //[Define(Category = VariableCategory.Action, Description = "Azure Service Fabric App connection endpoint", Example = "[url]")]
-                //public static readonly string FabricConnectionEndpoint = "Octopus.Action.Azure.FabricConnectionEndpoint";
 
                 [Define(Category = VariableCategory.Action, Description = "Path to the file containing the publish profile", Example = "PublishProfiles\\Cloud.xml")]
                 public static readonly string FabricPublishProfileFile = "Octopus.Action.Azure.FabricPublishProfileFile";
@@ -804,8 +802,8 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Indicates that the Service Fabric application should not be created or upgraded after registering the application type", Example = "False")]
                 public static readonly string FabricDeployOnly = "Octopus.Action.Azure.FabricDeployOnly";
 
-                [Define(Category = VariableCategory.Action, Description = "Hashtable of the Service Fabric application parameters to be used for the application", Example = "@{CustomParameter1='MyValue'; CustomParameter2='MyValue'}")]
-                public static readonly string FabricApplicationParameters = "Octopus.Action.Azure.FabricApplicationParameters";
+                //[Define(Category = VariableCategory.Action, Description = "Hashtable of the Service Fabric application parameters to be used for the application", Example = "@{CustomParameter1='MyValue'; CustomParameter2='MyValue'}")]
+                //public static readonly string FabricApplicationParameters = "Octopus.Action.Azure.FabricApplicationParameters";
 
                 [Define(Category = VariableCategory.Action, Description = "Indicates whether to unregister any unused application versions that exist after an upgrade is finished", Example = "False")]
                 public static readonly string FabricUnregisterUnusedApplicationVersionsAfterUpgrade = "Octopus.Action.Azure.FabricUnregisterUnusedApplicationVersionsAfterUpgrade";
