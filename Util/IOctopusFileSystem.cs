@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading;
 
 namespace Octopus.Shared.Util
@@ -22,6 +23,7 @@ namespace Octopus.Shared.Util
         string ReadFile(string path);
         void AppendToFile(string path, string contents);
         void OverwriteFile(string path, string contents);
+        void OverwriteFile(string path, string contents, Encoding encoding);
         Stream OpenFile(string path, FileAccess access = FileAccess.ReadWrite, FileShare share = FileShare.Read);
         Stream OpenFile(string path, FileMode mode = FileMode.OpenOrCreate, FileAccess access = FileAccess.ReadWrite, FileShare share = FileShare.Read);
         Stream CreateTemporaryFile(string filename, out string path);

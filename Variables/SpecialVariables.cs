@@ -394,6 +394,14 @@ namespace Octopus.Shared.Variables
                 [Define(Description = "The directory into which the previous version of the package was deployed", Example = "C:\\InetPub\\WWWRoot\\OctoFx")] public static readonly string CustomInstallationDirectory = "Octopus.Tentacle.PreviousInstallation.CustomInstallationDirectory";
             }
 
+            public static class PreviousSuccessfulInstallation
+            {
+                [Define(Description = "The previous version of the package that was sucessfully deployed to the Tentacle", Example = "1.2.3")] public static readonly string PackageVersion = "Octopus.Tentacle.PreviousSuccessfulInstallation.PackageVersion";
+                [Define(Description = "The path to the package file previously sucessfully deployed", Example = "C:\\Octopus\\Tentacle\\Packages\\OctoFx.1.2.2.nupkg")] public static readonly string PackageFilePath = "Octopus.Tentacle.PreviousSuccessfulInstallation.PackageFilePath";
+                [Define(Description = "The directory into which the previous sucessful version of the package was extracted", Example = "C:\\Octopus\\Tentacle\\Apps\\Production\\OctoFx\\1.2.2")] public static readonly string OriginalInstalledPath = "Octopus.Tentacle.PreviousSuccessfulInstallation.OriginalInstalledPath";
+                [Define(Description = "The directory into which the previous sucessful version of the package was deployed", Example = "C:\\InetPub\\WWWRoot\\OctoFx")] public static readonly string CustomInstallationDirectory = "Octopus.Tentacle.PreviousSuccessfulInstallation.CustomInstallationDirectory";
+            }
+
             public static class Agent
             {
                 [Define(Category = VariableCategory.Agent, Description = "The directory under which the agent installs packages", Example = "C:\\Octopus\\Tentacle\\Apps")] public static readonly string ApplicationDirectoryPath = "Octopus.Tentacle.Agent.ApplicationDirectoryPath";

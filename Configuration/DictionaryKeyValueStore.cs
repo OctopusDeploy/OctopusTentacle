@@ -8,7 +8,7 @@ namespace Octopus.Shared.Configuration
     {
         readonly Lazy<IDictionary<string, string>> settings;
 
-        public DictionaryKeyValueStore(bool isWriteOnly = false)
+        public DictionaryKeyValueStore(bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet)
         {
             settings = isWriteOnly ? new Lazy<IDictionary<string, string>>(() => new Dictionary<string, string>()) : new Lazy<IDictionary<string, string>>(Load);
         }

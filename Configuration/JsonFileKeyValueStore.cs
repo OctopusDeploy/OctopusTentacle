@@ -11,7 +11,7 @@ namespace Octopus.Shared.Configuration
         readonly string configurationFile;
         readonly IOctopusFileSystem fileSystem;
 
-        public JsonFileKeyValueStore(string configurationFile, IOctopusFileSystem fileSystem, bool useHierarchicalOutput, bool isWriteOnly = false) : base(useHierarchicalOutput, isWriteOnly)
+        public JsonFileKeyValueStore(string configurationFile, IOctopusFileSystem fileSystem, bool useHierarchicalOutput, bool autoSaveOnSet, bool isWriteOnly = false) : base(useHierarchicalOutput, autoSaveOnSet, isWriteOnly)
         {
             this.configurationFile = configurationFile;
             this.fileSystem = fileSystem;
