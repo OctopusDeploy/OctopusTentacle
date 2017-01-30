@@ -354,8 +354,8 @@ namespace Octopus.Shared.Web
 
             public static class Certificates
             {
-                public static string Template = "~/api/certificates{/id}{?skip,take,search,archived,tenant,firstResult}";
-                public static string Index = "~/api/certificates{?skip,take,search,archived,tenant,firstResult}";
+                public static string Template = "~/api/certificates{/id}{?skip,take,search,archived,tenant,firstResult,orderBy}";
+                public static string Index = "~/api/certificates{?skip,take,search,archived,tenant,firstResult,orderBy}";
                 public static string Get = "~/api/certificates/{id}";
                 public static string Export = "~/api/certificates/{id}/export{?format,password,includePrivateKey}";
                 public static string Archive = "~/api/certificates/{id}/archive";
