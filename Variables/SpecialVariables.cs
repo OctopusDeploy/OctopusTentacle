@@ -338,7 +338,7 @@ namespace Octopus.Shared.Variables
 
             public static class Environment
             {
-                [Define]public static readonly string AllowNoMachines = "OctopusProjectEnvironmentAllowNoMachines";
+                [Define(Description = "Indicates that a deployment may start in an Environment that contains no targets", Example = "True")]public static readonly string AllowNoTargets = "OctopusProjectEnvironmentAllowNoTargets";
             }
         }
 
