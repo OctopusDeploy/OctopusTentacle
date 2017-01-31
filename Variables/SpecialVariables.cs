@@ -335,11 +335,6 @@ namespace Octopus.Shared.Variables
         {
             [Define] public static readonly string Id = "Octopus.Project.Id";
             [Define(Example = "OctoFx")] public static readonly string Name = "Octopus.Project.Name";
-
-            public static class Environment
-            {
-                [Define(Description = "Indicates that a deployment may start in an Environment that contains no targets", Example = "True")]public static readonly string AllowNoTargets = "OctopusProjectEnvironmentAllowNoTargets";
-            }
         }
 
         public static class ProjectGroup
