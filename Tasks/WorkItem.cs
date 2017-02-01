@@ -23,5 +23,10 @@ namespace Octopus.Shared.Tasks
         {
             return thread.ThreadState == ThreadState.Stopped;
         }
+
+        public void WaitForCompletion()
+        {
+            thread.Join();
+        }
     }
 }
