@@ -222,6 +222,7 @@
     <Compile Include="Startup\WatchdogCommand.cs" />
     <Compile Include="Time\IStopwatch.cs" />
     <Compile Include="Time\StopWatch.cs" />
+    <Compile Include="Security\Masking\AhoCorasick.cs" />
     <Compile Include="Util\CommonValidationMessages.cs" />
     <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
     <Compile Include="Model\EncryptedAttribute.cs" />
