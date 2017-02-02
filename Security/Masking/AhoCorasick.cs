@@ -57,7 +57,7 @@ namespace Octopus.Shared.Security.Masking
         }
 
         /// <summary>
-        /// Trie that will find strings in a text and return values of type <typeparamref name="T"/>
+        /// Trie that will find strings in a text and return values of type <typeparamref name="TValue"/>
         /// for each string found.
         /// </summary>
         /// <typeparam name="TValue">Value type.</typeparam>
@@ -159,10 +159,10 @@ namespace Octopus.Shared.Security.Masking
             /// </summary>
             /// <param name="text">The text to search in.</param>
             /// <returns>The values that were added for the found words.</returns>
-            public FindResult<TValue> Find(IEnumerable<T> text)
+            public FindResult Find(IEnumerable<T> text)
             {
                 var index = 0;
-                var result = new FindResult<TValue>();
+                var result = new FindResult();
 
                 foreach (T c in text)
                 {
@@ -285,7 +285,7 @@ namespace Octopus.Shared.Security.Masking
                 }
             }
 
-            public class FindResult<TValue>
+            public class FindResult
             {
                 public FindResult()
                 {
