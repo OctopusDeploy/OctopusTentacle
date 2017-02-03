@@ -158,6 +158,11 @@ namespace Octopus.Shared.Util
             return new FileInfo(path).Length;
         }
 
+        public DateTimeOffset GetFileLastWriteTimeUtc(string path)
+        {
+            return File.GetLastWriteTimeUtc(path);
+        }
+
         public string ReadFile(string path)
         {
             return File.ReadAllText(path);
