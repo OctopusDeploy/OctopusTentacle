@@ -88,6 +88,8 @@ namespace Octopus.Shared.Startup
             int exitCode;
             try
             {
+                EnsureTempPathIsWriteable();
+
                 commandLineArguments = ProcessCommonOptions();
                 
                 instanceName = string.Empty;
@@ -168,6 +170,24 @@ namespace Octopus.Shared.Startup
             if (exitCode != 0 && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
+        }
+
+        static void EnsureTempPathIsWriteable()
+        {
+            var tempPath = Path.GetTempPath();
+            if (!Directory.Exists(tempPath))
+                throw new ControlledFailureException($"The temp folder '{tempPath}' does not exist. Ensure the user '{Environment.UserName}' has a valid temp folder.");
+
+            try
+            {
+                var tempFile = Path.Combine(tempPath, Guid.NewGuid().ToString("N"));
+                File.WriteAllText(tempFile, "");
+                File.Delete(tempFile);
+            }
+            catch
+            {
+                throw new ControlledFailureException($"Could not write to temp folder '{tempPath}'. Ensure the user '{Environment.UserName}' can write to the temp forlder.");
+            }
         }
 
         ICommandHost SelectMostAppropriateHost()
