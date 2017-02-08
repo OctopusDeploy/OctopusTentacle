@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Octopus.Shared.Scripts;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Contracts
 {
@@ -11,7 +10,7 @@ namespace Octopus.Shared.Contracts
 
         ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
 
-        List<ScriptFile> files = new List<ScriptFile>();
+        readonly List<ScriptFile> files = new List<ScriptFile>();
 
         string[] arguments = new string[0];
 
