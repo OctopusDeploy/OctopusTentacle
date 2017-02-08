@@ -9,6 +9,9 @@ namespace Octopus.Shared.Util
     {
         readonly ILog log = Log.Octopus();
         readonly ILog systemLog = Log.System();
+        static readonly string DirectorySeparatorString = Path.DirectorySeparatorChar.ToString();
+        static readonly string VolumeSeparatorString = Path.VolumeSeparatorChar.ToString();
+
 
         public IDisposable Acquire(string name)
         {
@@ -33,7 +36,7 @@ namespace Octopus.Shared.Util
 
         static string Normalize(string name)
         {
-            return name.Replace("\\", "_").Replace(":", "_").ToLowerInvariant();
+            return name.Replace(DirectorySeparatorString, "_").Replace(VolumeSeparatorString, "_").ToLowerInvariant();
         }
 
         class SemaphoreReleaser : IDisposable
