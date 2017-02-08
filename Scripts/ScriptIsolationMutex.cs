@@ -54,7 +54,7 @@ namespace Octopus.Shared.Scripts
             {
                 return lockReleaser;
             }
-            Canceled(log);
+            CanceledOrTimedOut(log, mutexAcquireTimeout);
             throw new OperationCanceledException($"Could not acquire read mutex with timeout {mutexAcquireTimeout}.", ct);
         }
 
@@ -93,7 +93,7 @@ namespace Octopus.Shared.Scripts
             {
                 return lockReleaser;
             }
-            Canceled(log);
+            CanceledOrTimedOut(log, mutexAcquireTimeout);
             throw new OperationCanceledException($"Could not acquire write mutex with timeout {mutexAcquireTimeout}.", ct);
         }
 
@@ -123,6 +123,11 @@ namespace Octopus.Shared.Scripts
         static void Canceled(Action<string> log)
         {
             log("This task was canceled before it could start. The other task is still running.");
+        }
+
+        static void CanceledOrTimedOut(Action<string> log, TimeSpan timeout)
+        {
+            log($"This task was canceled before it could start or it waited more than {timeout.Minutes} minutes and timed out. The other task is still running.");
         }
     }
 }
