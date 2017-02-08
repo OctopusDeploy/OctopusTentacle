@@ -7,6 +7,8 @@ namespace Octopus.Shared.Scripts
 {
     public class RunningScript
     {
+        public const int CancelledExitCode = -1337;
+
         readonly IScriptWorkspace workspace;
         readonly IScriptLog log;
         readonly CancellationToken token;
@@ -35,7 +37,7 @@ namespace Octopus.Shared.Scripts
             {
                 try
                 {
-                    using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, GetType().Name, message => writer.WriteOutput(ProcessOutputSource.StdOut, message), token))
+                    using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, workspace.ScriptMutexAcquireTimeout, GetType().Name, message => writer.WriteOutput(ProcessOutputSource.StdOut, message), token))
                     {
                         try
                         {
@@ -60,6 +62,8 @@ namespace Octopus.Shared.Scripts
                 catch (OperationCanceledException)
                 {
                     writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
+                    ExitCode = CancelledExitCode;
+                    State = ProcessState.Complete;
                 }
             }
         }

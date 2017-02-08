@@ -16,30 +16,50 @@ namespace Octopus.Shared.Scripts
         static readonly ConcurrentDictionary<string, AsyncReaderWriterLock> ReaderWriterLocks = new ConcurrentDictionary<string, AsyncReaderWriterLock>();
         static readonly TimeSpan InitialWaitTime = TimeSpan.FromMilliseconds(100);
 
-        public static IDisposable Acquire(ScriptIsolationLevel isolation, string lockName, Action<string> log, CancellationToken ct = default(CancellationToken))
+        public static readonly TimeSpan NoTimeout = TimeSpan.Zero;
+
+        public static IDisposable Acquire(ScriptIsolationLevel isolation, TimeSpan mutexAcquireTimeout, string lockName, Action<string> log, CancellationToken ct = default(CancellationToken))
         {
             var readerWriter = GetLock(lockName);
             switch (isolation)
             {
                 case ScriptIsolationLevel.FullIsolation:
-                    return EnterWriteLock(log, readerWriter, ct);
+                    return EnterWriteLock(log, readerWriter, ct, mutexAcquireTimeout);
                 case ScriptIsolationLevel.NoIsolation:
-                    return EnterReadLock(log, readerWriter, ct);
+                    return EnterReadLock(log, readerWriter, ct, mutexAcquireTimeout);
             }
 
             throw new NotSupportedException("Unknown isolation level: " + isolation);
         }
 
-        static IDisposable EnterReadLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct)
+        static IDisposable EnterReadLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout)
         {
             IDisposable lockReleaser;
-            if (readerWriter.TryEnterReadLock(InitialWaitTime, out lockReleaser))
+            if (readerWriter.TryEnterReadLock(InitialWaitTime, ct, out lockReleaser))
             {
                 return lockReleaser;
             }
 
             Busy(log);
 
+            return mutexAcquireTimeout == NoTimeout
+                ? EnterReadLock(log, readerWriter, ct)
+                : EnterReadLockWithTimeout(log, readerWriter, ct, mutexAcquireTimeout);
+        }
+
+        static IDisposable EnterReadLockWithTimeout(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout)
+        {
+            IDisposable lockReleaser;
+            if (readerWriter.TryEnterReadLock(mutexAcquireTimeout, ct, out lockReleaser))
+            {
+                return lockReleaser;
+            }
+            Canceled(log);
+            throw new OperationCanceledException($"Could not acquire read mutex with timeout {mutexAcquireTimeout}.", ct);
+        }
+
+        static IDisposable EnterReadLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct)
+        {
             try
             {
                 return readerWriter.ReaderLock(ct);
@@ -51,16 +71,34 @@ namespace Octopus.Shared.Scripts
             }
         }
 
-        static IDisposable EnterWriteLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct)
+        static IDisposable EnterWriteLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout)
         {
             IDisposable lockReleaser;
-            if (readerWriter.TryEnterWriterLock(InitialWaitTime, out lockReleaser))
+            if (readerWriter.TryEnterWriterLock(InitialWaitTime, ct, out lockReleaser))
             {
                 return lockReleaser;
             }
 
             Busy(log);
 
+            return mutexAcquireTimeout == TimeSpan.Zero
+                ? EnterWriteLock(log, readerWriter, ct)
+                : EnterWriteLockWithTimeout(log, readerWriter, ct, mutexAcquireTimeout);
+        }
+
+        static IDisposable EnterWriteLockWithTimeout(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout)
+        {
+            IDisposable lockReleaser;
+            if (readerWriter.TryEnterWriterLock(mutexAcquireTimeout, ct, out lockReleaser))
+            {
+                return lockReleaser;
+            }
+            Canceled(log);
+            throw new OperationCanceledException($"Could not acquire write mutex with timeout {mutexAcquireTimeout}.", ct);
+        }
+
+        static IDisposable EnterWriteLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct)
+        {
             try
             {
                 return readerWriter.WriterLock(ct);
