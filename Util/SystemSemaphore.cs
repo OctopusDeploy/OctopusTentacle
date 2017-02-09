@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
@@ -7,8 +8,27 @@ namespace Octopus.Shared.Util
 {
     public class SystemSemaphore : ISemaphore
     {
+        static readonly TimeSpan DefaultInitialAcquisitionAttemptTimeout = TimeSpan.FromSeconds(3);
+        static readonly TimeSpan DefaultWaitBetweenAcquisitionAttempts = TimeSpan.FromSeconds(60);
+
+        readonly CancellationToken cancellationToken;
         readonly ILog log = Log.Octopus();
         readonly ILog systemLog = Log.System();
+        static readonly string DirectorySeparatorString = Path.DirectorySeparatorChar.ToString();
+        static readonly string VolumeSeparatorString = Path.VolumeSeparatorChar.ToString();
+
+        public SystemSemaphore(
+            CancellationToken cancellationToken = default(CancellationToken),
+            TimeSpan? initialAcquisitionAttemptTimeout = null,
+            TimeSpan? waitBetweenAcquisitionAttempts = null)
+        {
+            this.cancellationToken = cancellationToken;
+            InitialAcquisitionAttemptTimeout = initialAcquisitionAttemptTimeout ?? DefaultInitialAcquisitionAttemptTimeout;
+            WaitBetweenAcquisitionAttempts = waitBetweenAcquisitionAttempts ?? DefaultWaitBetweenAcquisitionAttempts;
+        }
+
+        public TimeSpan InitialAcquisitionAttemptTimeout { get; }
+        public TimeSpan WaitBetweenAcquisitionAttempts { get; }
 
         public IDisposable Acquire(string name)
         {
@@ -17,23 +37,46 @@ namespace Octopus.Shared.Util
 
         public IDisposable Acquire(string name, string waitMessage)
         {
-            systemLog.Trace($"Aquiring system semaphore {name}");
+            systemLog.Trace($"Acquiring system semaphore {name}");
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Create a new named Semaphore - note this is cross-process
             var semaphore = new Semaphore(1, 1, Normalize(name));
-            if (!semaphore.WaitOne(3000))
+
+            // Try to acquire the semaphore for a few seconds before reporting we are going to start waiting
+            if (AcquireSemaphore(semaphore, cancellationToken, InitialAcquisitionAttemptTimeout))
             {
-                systemLog.Verbose($"System semaphore {name} in use, waiting. {waitMessage}");
-                if (waitMessage != null)
-                    log.Verbose(waitMessage);
-                semaphore.WaitOne();
+                systemLog.Trace($"Acquired system semaphore {name}");
+                return new SemaphoreReleaser(semaphore, name);
             }
 
-            systemLog.Trace($"Aquired system semaphore {name}");
+            // Go into an acquisition loop supporting cooperative cancellation
+            while (!AcquireSemaphore(semaphore, cancellationToken, WaitBetweenAcquisitionAttempts))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                systemLog.Verbose($"System semaphore {name} in use, waiting. {waitMessage}");
+                if (!string.IsNullOrWhiteSpace(waitMessage))
+                    log.Verbose(waitMessage);
+            }
+
+            systemLog.Trace($"Acquired system semaphore {name}");
             return new SemaphoreReleaser(semaphore, name);
+        }
+
+        static bool AcquireSemaphore(Semaphore semaphore, CancellationToken cancellationToken, TimeSpan attemptTimeout)
+        {
+            // Wait on either acquiring the semaphore or cancellation being signalled, for up to the time allotted for this attempt
+            var waitHandles = new[] { semaphore, cancellationToken.WaitHandle };
+            var waitResult = WaitHandle.WaitAny(waitHandles, attemptTimeout);
+
+            // Beware the result may not be an index in the array hence checking WaitHandle.WaitTimeout first.
+            return waitResult != WaitHandle.WaitTimeout && waitHandles[waitResult] == semaphore;
         }
 
         static string Normalize(string name)
         {
-            return name.Replace("\\", "_").Replace(":", "_").ToLowerInvariant();
+            return name.Replace(DirectorySeparatorString, "_").Replace(VolumeSeparatorString, "_").ToLowerInvariant();
         }
 
         class SemaphoreReleaser : IDisposable
