@@ -19,16 +19,12 @@ namespace Octopus.Shared.Util
 
         public SystemSemaphore(
             CancellationToken cancellationToken = default(CancellationToken),
-            TimeSpan initialAcquisitionAttemptTimeout = default(TimeSpan),
-            TimeSpan waitBetweenAcquisitionAttempts = default(TimeSpan))
+            TimeSpan? initialAcquisitionAttemptTimeout = null,
+            TimeSpan? waitBetweenAcquisitionAttempts = null)
         {
             this.cancellationToken = cancellationToken;
-            InitialAcquisitionAttemptTimeout = initialAcquisitionAttemptTimeout == default(TimeSpan)
-                ? DefaultInitialAcquisitionAttemptTimeout
-                : initialAcquisitionAttemptTimeout;
-            WaitBetweenAcquisitionAttempts = waitBetweenAcquisitionAttempts == default(TimeSpan)
-                ? DefaultWaitBetweenAcquisitionAttempts
-                : waitBetweenAcquisitionAttempts;
+            InitialAcquisitionAttemptTimeout = initialAcquisitionAttemptTimeout ?? DefaultInitialAcquisitionAttemptTimeout;
+            WaitBetweenAcquisitionAttempts = waitBetweenAcquisitionAttempts ?? DefaultWaitBetweenAcquisitionAttempts;
         }
 
         public TimeSpan InitialAcquisitionAttemptTimeout { get; }
