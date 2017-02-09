@@ -380,7 +380,7 @@
     <Compile Include="Util\ICommandLineRunner.cs" />
     <Compile Include="Util\IFileInfo.cs" />
     <Compile Include="Util\IOctopusFileSystem.cs" />
-    <Compile Include="Util\ISemaphore.cs" />
+    <Compile Include="Util\IMachineWideMutex.cs" />
     <Compile Include="Util\ListExtensions.cs" />
     <Compile Include="Util\FileSizeExtensions.cs" />
     <Compile Include="Util\ObjectFormatter.cs" />
@@ -395,7 +395,7 @@
     <Compile Include="Util\RuntimeUtility.cs" />
     <Compile Include="Util\SilentProcessRunner.cs" />
     <Compile Include="Util\StringExtensions.cs" />
-    <Compile Include="Util\SystemSemaphore.cs" />
+    <Compile Include="Util\MachineWideMutex.cs" />
     <Compile Include="Util\TaskExtensions.cs" />
     <Compile Include="Util\TypeExtensions.cs" />
     <Compile Include="Util\Uniquifier.cs" />
