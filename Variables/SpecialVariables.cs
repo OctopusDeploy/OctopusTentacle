@@ -758,6 +758,9 @@ namespace Octopus.Shared.Variables
                 public static readonly string AccountId = "Octopus.Action.Azure.AccountId";
 
                 [Define(Category = VariableCategory.Hidden)]
+                public static readonly string Environment = "Octopus.Action.Azure.Environment";
+
+                [Define(Category = VariableCategory.Hidden)]
                 public static readonly string ResourceManagementEndPoint = "Octopus.Action.Azure.ResourceManagementEndPoint";
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string ActiveDirectoryEndPoint = "Octopus.Action.Azure.ActiveDirectoryEndPoint";
