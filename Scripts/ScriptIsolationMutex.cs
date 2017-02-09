@@ -54,8 +54,15 @@ namespace Octopus.Shared.Scripts
             {
                 return lockReleaser;
             }
-            CanceledOrTimedOut(log, mutexAcquireTimeout);
-            throw new OperationCanceledException($"Could not acquire read mutex with timeout {mutexAcquireTimeout}.", ct);
+
+            if (ct.IsCancellationRequested)
+            {
+                Canceled(log);
+                throw new OperationCanceledException(ct);
+            }
+
+            TimedOut(log, mutexAcquireTimeout);
+            throw new TimeoutException($"Could not acquire read mutex within timeout {mutexAcquireTimeout}.");
         }
 
         static IDisposable EnterReadLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct)
@@ -93,8 +100,15 @@ namespace Octopus.Shared.Scripts
             {
                 return lockReleaser;
             }
-            CanceledOrTimedOut(log, mutexAcquireTimeout);
-            throw new OperationCanceledException($"Could not acquire write mutex with timeout {mutexAcquireTimeout}.", ct);
+
+            if (ct.IsCancellationRequested)
+            {
+                Canceled(log);
+                throw new OperationCanceledException(ct);
+            }
+
+            TimedOut(log, mutexAcquireTimeout);
+            throw new TimeoutException($"Could not acquire write mutex within timeout {mutexAcquireTimeout}.");
         }
 
         static IDisposable EnterWriteLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct)
@@ -125,9 +139,9 @@ namespace Octopus.Shared.Scripts
             log("This task was canceled before it could start. The other task is still running.");
         }
 
-        static void CanceledOrTimedOut(Action<string> log, TimeSpan timeout)
+        static void TimedOut(Action<string> log, TimeSpan timeout)
         {
-            log($"This task was canceled before it could start or it waited more than {timeout.Minutes} minutes and timed out. The other task is still running.");
+            log($"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. The other task is still running.");
         }
     }
 }
