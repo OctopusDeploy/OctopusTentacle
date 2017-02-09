@@ -7,7 +7,8 @@ namespace Octopus.Shared.Scripts
 {
     public class RunningScript
     {
-        public const int TimeoutExitCode = -1337;
+        public const int CanceledExitCode = -43;
+        public const int TimeoutExitCode = -44;
 
         readonly IScriptWorkspace workspace;
         readonly CancellationToken token;
@@ -58,6 +59,8 @@ namespace Octopus.Shared.Scripts
                 catch (OperationCanceledException)
                 {
                     writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
+                    ExitCode = CanceledExitCode;
+                    State = ProcessState.Complete;
                 }
                 catch (TimeoutException)
                 {
