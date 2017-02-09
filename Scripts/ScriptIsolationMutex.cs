@@ -15,7 +15,7 @@ namespace Octopus.Shared.Scripts
         static readonly ConcurrentDictionary<string, AsyncReaderWriterLock> ReaderWriterLocks = new ConcurrentDictionary<string, AsyncReaderWriterLock>();
         static readonly TimeSpan InitialWaitTime = TimeSpan.FromMilliseconds(100);
 
-        public static readonly TimeSpan NoTimeout = TimeSpan.MaxValue;
+        public static readonly TimeSpan NoTimeout = TimeSpan.FromMilliseconds(int.MaxValue);
 
         public static IDisposable Acquire(ScriptIsolationLevel isolation, TimeSpan mutexAcquireTimeout, string lockName, Action<string> log, CancellationToken ct = default(CancellationToken))
         {
