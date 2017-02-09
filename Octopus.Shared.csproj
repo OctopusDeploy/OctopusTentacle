@@ -204,6 +204,7 @@
     <Compile Include="Contracts\ScriptStatusResponse.cs" />
     <Compile Include="Contracts\ScriptTicket.cs" />
     <Compile Include="Contracts\StartScriptCommand.cs" />
+    <Compile Include="Contracts\StartScriptCommandBuilder.cs" />
     <Compile Include="Contracts\UploadResult.cs" />
     <Compile Include="ControlledFailureException.cs" />
     <Compile Include="Diagnostics\AbstractLog.cs" />

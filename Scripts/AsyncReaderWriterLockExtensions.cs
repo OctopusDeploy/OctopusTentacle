@@ -7,14 +7,15 @@ namespace Octopus.Shared.Scripts
 {
     public static class AsyncReaderWriterLockExtensions
     {
-        public static bool TryEnterReadLock(this AsyncReaderWriterLock @lock, TimeSpan timeout, out IDisposable releaseLock)
+        public static bool TryEnterReadLock(this AsyncReaderWriterLock @lock, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable releaseLock)
         {
             releaseLock = null;
             using (var timeoutSource = new CancellationTokenSource(timeout))
+            using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token))
             {
                 try
                 {
-                    releaseLock = @lock.ReaderLock(timeoutSource.Token);
+                    releaseLock = @lock.ReaderLock(linkedCancellationTokenSource.Token);
                     return true;
                 }
                 catch (TaskCanceledException)
@@ -24,14 +25,15 @@ namespace Octopus.Shared.Scripts
             }
         }
 
-        public static bool TryEnterWriterLock(this AsyncReaderWriterLock @lock, TimeSpan timeout, out IDisposable releaseLock)
+        public static bool TryEnterWriterLock(this AsyncReaderWriterLock @lock, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable releaseLock)
         {
             releaseLock = null;
             using (var timeoutSource = new CancellationTokenSource(timeout))
+            using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token))
             {
                 try
                 {
-                    releaseLock = @lock.WriterLock(timeoutSource.Token);
+                    releaseLock = @lock.WriterLock(linkedCancellationTokenSource.Token);
                     return true;
                 }
                 catch (TaskCanceledException)

@@ -7,14 +7,16 @@ namespace Octopus.Shared.Scripts
 {
     public class RunningScript
     {
+        public const int CanceledExitCode = -43;
+        public const int TimeoutExitCode = -44;
+
         readonly IScriptWorkspace workspace;
-        readonly IScriptLog log;
         readonly CancellationToken token;
 
         public RunningScript(IScriptWorkspace workspace, IScriptLog log, CancellationToken token)
         {
             this.workspace = workspace;
-            this.log = log;
+            Log = log;
             this.token = token;
             State = ProcessState.Pending;
         }
@@ -22,20 +24,17 @@ namespace Octopus.Shared.Scripts
         public ProcessState State { get; private set; }
         public int ExitCode { get; private set; }
 
-        public IScriptLog Log
-        {
-            get { return log; }
-        }
+        public IScriptLog Log { get; }
 
         public void Execute()
         {
             var powerShellPath = PowerShell.GetFullPath();
 
-            using (var writer = log.CreateWriter())
+            using (var writer = Log.CreateWriter())
             {
                 try
                 {
-                    using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, GetType().Name, message => writer.WriteOutput(ProcessOutputSource.StdOut, message), token))
+                    using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, workspace.ScriptMutexAcquireTimeout, GetType().Name, message => writer.WriteOutput(ProcessOutputSource.StdOut, message), token))
                     {
                         try
                         {
@@ -60,6 +59,14 @@ namespace Octopus.Shared.Scripts
                 catch (OperationCanceledException)
                 {
                     writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
+                    ExitCode = CanceledExitCode;
+                    State = ProcessState.Complete;
+                }
+                catch (TimeoutException)
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution timed out.");
+                    ExitCode = TimeoutExitCode;
+                    State = ProcessState.Complete;
                 }
             }
         }
