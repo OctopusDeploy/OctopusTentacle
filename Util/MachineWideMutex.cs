@@ -8,14 +8,15 @@ namespace Octopus.Shared.Util
 {
     public class MachineWideMutex : IMachineWideMutex
     {
+        static readonly string DirectorySeparatorString = Path.DirectorySeparatorChar.ToString();
+        static readonly string VolumeSeparatorString = Path.VolumeSeparatorChar.ToString();
         static readonly TimeSpan DefaultInitialAcquisitionAttemptTimeout = TimeSpan.FromSeconds(3);
         static readonly TimeSpan DefaultWaitBetweenAcquisitionAttempts = TimeSpan.FromSeconds(60);
 
-        readonly CancellationToken cancellationToken;
         readonly ILog log = Log.Octopus();
         readonly ILog systemLog = Log.System();
-        static readonly string DirectorySeparatorString = Path.DirectorySeparatorChar.ToString();
-        static readonly string VolumeSeparatorString = Path.VolumeSeparatorChar.ToString();
+
+        readonly CancellationToken cancellationToken;
 
         public MachineWideMutex(
             CancellationToken cancellationToken = default(CancellationToken),
@@ -55,7 +56,7 @@ namespace Octopus.Shared.Util
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                systemLog.Verbose($"System machine-wide mutex {name} in use, waiting. {waitMessage}");
+                systemLog.Verbose($"Machine-wide mutex {name} in use, waiting. {waitMessage}");
                 if (!string.IsNullOrWhiteSpace(waitMessage))
                     log.Verbose(waitMessage);
             }
@@ -98,7 +99,7 @@ namespace Octopus.Shared.Util
                 }
                 catch (Exception ex)
                 {
-                    Log.System().Warn(ex, "Exception thrown while disposing machine-wide mutex");
+                    Log.System().Warn(ex, $"Exception thrown while disposing machine-wide mutex {name}");
                 }
 
                 semaphore.Dispose();
