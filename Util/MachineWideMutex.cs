@@ -96,9 +96,9 @@ namespace Octopus.Shared.Util
                 {
                     semaphore.Release();
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // ignore so we can safely dispose
+                    Log.System().Warn(ex, $"Exception thrown while disposing machine-wide mutex: {ex.PrettyPrint()}");
                 }
 
                 semaphore.Dispose();
