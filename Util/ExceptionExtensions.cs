@@ -1,35 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Octopus.Shared.Util
 {
     public static class ExceptionExtensions
     {
-        public static string PrettyPrint(this Exception ex, StringBuilder sb = null)
+        public static string PrettyPrint(this Exception ex, bool printStackTrace = true)
         {
-            sb = sb ?? new StringBuilder();
+            var sb = new StringBuilder();
+            PrettyPrint(sb, ex, printStackTrace);
+            return sb.ToString().Trim();
+        }
+
+        static void PrettyPrint(StringBuilder sb, Exception ex, bool printStackTrace)
+        { 
+            if(ex is OperationCanceledException)
+            {
+                sb.AppendLine("Operation cancelled");
+                return;
+            }
 
             sb.AppendLine(ex.Message);
-            sb.AppendLine(ex.GetType().FullName);
-            try
+            
+            if (ex is ControlledFailureException)
+                return;
+
+            if (printStackTrace)
             {
-                sb.AppendLine(ex.StackTraceEx()); // Sometimes fails printing the trace
-            }
-            catch
-            {
-                sb.AppendLine(ex.StackTrace);
+                var rtle = ex as ReflectionTypeLoadException;
+                if (rtle != null)
+                    AddReflectionTypeLoadExceptionDetails(rtle, sb);
+
+                sb.AppendLine(ex.GetType().FullName);
+                try
+                {
+                    sb.AppendLine(ex.StackTraceEx()); // Sometimes fails printing the trace
+                }
+                catch
+                {
+                    sb.AppendLine(ex.StackTrace);
+                }
             }
 
-            if (ex.InnerException != null)
-            {
+            if (ex.InnerException == null)
+                return;
+
+            if (printStackTrace)
                 sb.AppendLine("--Inner Exception--");
-                PrettyPrint(ex.InnerException, sb);
+
+            PrettyPrint(sb, ex.InnerException, printStackTrace);
+        }
+
+        static void AddReflectionTypeLoadExceptionDetails(ReflectionTypeLoadException rtle, StringBuilder sb)
+        {
+            foreach (var loaderException in rtle.LoaderExceptions)
+            {
+                sb.AppendLine();
+                sb.AppendLine("--Loader Exception--");
+                PrettyPrint(sb, loaderException, true);
+
+                var fusionLog = (loaderException as FileNotFoundException)?.FusionLog;
+                if (!string.IsNullOrEmpty(fusionLog))
+                    sb.Append("Fusion log: ").AppendLine(fusionLog);
             }
-            return sb.ToString();
         }
 
         public static Exception UnpackFromContainers(this Exception error)
