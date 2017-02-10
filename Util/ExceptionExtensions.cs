@@ -19,10 +19,17 @@ namespace Octopus.Shared.Util
         }
 
         static void PrettyPrint(StringBuilder sb, Exception ex, bool printStackTrace)
-        { 
+        {
+            var aex = ex as AggregateException;
+            if (aex != null)
+            {
+                AppendAggregateException(sb, printStackTrace, aex);
+                return;
+            }
+
             if(ex is OperationCanceledException)
             {
-                sb.AppendLine("Operation cancelled");
+                sb.AppendLine("The task was canceled");
                 return;
             }
 
@@ -33,19 +40,7 @@ namespace Octopus.Shared.Util
 
             if (printStackTrace)
             {
-                var rtle = ex as ReflectionTypeLoadException;
-                if (rtle != null)
-                    AddReflectionTypeLoadExceptionDetails(rtle, sb);
-
-                sb.AppendLine(ex.GetType().FullName);
-                try
-                {
-                    sb.AppendLine(ex.StackTraceEx()); // Sometimes fails printing the trace
-                }
-                catch
-                {
-                    sb.AppendLine(ex.StackTrace);
-                }
+                AddStackTrace(sb, ex);
             }
 
             if (ex.InnerException == null)
@@ -55,6 +50,42 @@ namespace Octopus.Shared.Util
                 sb.AppendLine("--Inner Exception--");
 
             PrettyPrint(sb, ex.InnerException, printStackTrace);
+        }
+
+        static void AppendAggregateException(StringBuilder sb, bool printStackTrace, AggregateException aex)
+        {
+            if (!printStackTrace && aex.InnerExceptions.Count == 1)
+            {
+                PrettyPrint(sb, aex.InnerException, printStackTrace);
+            }
+            else
+            {
+                sb.AppendLine("Aggregate Exception");
+                if(printStackTrace)
+                    AddStackTrace(sb, aex);
+                for (var x = 0; x < aex.InnerExceptions.Count; x++)
+                {
+                    sb.AppendLine($"--Inner Exception {x+1}--");
+                    PrettyPrint(sb, aex.InnerExceptions[x], printStackTrace);
+                }
+            }
+        }
+
+        static void AddStackTrace(StringBuilder sb, Exception ex)
+        {
+            var rtle = ex as ReflectionTypeLoadException;
+            if (rtle != null)
+                AddReflectionTypeLoadExceptionDetails(rtle, sb);
+
+            sb.AppendLine(ex.GetType().FullName);
+            try
+            {
+                sb.AppendLine(ex.StackTraceEx()); // Sometimes fails printing the trace
+            }
+            catch
+            {
+                sb.AppendLine(ex.StackTrace);
+            }
         }
 
         static void AddReflectionTypeLoadExceptionDetails(ReflectionTypeLoadException rtle, StringBuilder sb)
@@ -129,16 +160,6 @@ namespace Octopus.Shared.Util
                 .Append(string.Join(", ", prefixes.Select(p => p.Port)));
 
             return message.ToString();
-        }
-
-        public static string GetErrorSummary(this Exception error)
-        {
-            error = error.UnpackFromContainers();
-
-            if (error is OperationCanceledException)
-                return "The task was canceled.";
-
-            return error.Message;
         }
 
         public static string MessageRecursive(this Exception ex)

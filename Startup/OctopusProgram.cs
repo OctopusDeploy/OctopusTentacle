@@ -74,7 +74,7 @@ namespace Octopus.Shared.Startup
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 if (Debugger.IsAttached) Debugger.Break();
-                log.ErrorFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
+                log.ErrorFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.PrettyPrint(false));
                 args.SetObserved();
             };
 
@@ -82,7 +82,7 @@ namespace Octopus.Shared.Startup
             {
                 if (Debugger.IsAttached) Debugger.Break();
                 var exception = args.ExceptionObject as Exception; // May not actually be one.
-                log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception == null ? args.ExceptionObject : exception.GetErrorSummary());
+                log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception == null ? args.ExceptionObject : exception.PrettyPrint(false));
             };
 
             int exitCode;
