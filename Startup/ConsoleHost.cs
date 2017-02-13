@@ -40,7 +40,7 @@ namespace Octopus.Shared.Startup
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(new string('-', 79));
-                Console.WriteLine("Error: " + ex.GetErrorSummary());
+                Console.WriteLine("Error: " + ex.PrettyPrint(false));
                 Console.WriteLine(new string('-', 79));
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine("Full error details are available in the log files.");
