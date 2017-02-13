@@ -758,8 +758,18 @@ namespace Octopus.Shared.Variables
                 public static readonly string AccountId = "Octopus.Action.Azure.AccountId";
 
                 [Define(Category = VariableCategory.Hidden)]
-                public static readonly string PowershellModulePath = "Octopus.Action.Azure.PowerShellModule";
+                public static readonly string Environment = "Octopus.Action.Azure.Environment";
 
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string ResourceManagementEndPoint = "Octopus.Action.Azure.ResourceManagementEndPoint";
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string ActiveDirectoryEndPoint = "Octopus.Action.Azure.ActiveDirectoryEndPoint";
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string ServiceManagementEndPoint = "Octopus.Action.Azure.ServiceManagementEndPoint";
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string PowershellModulePath = "Octopus.Action.Azure.PowerShellModule";
+                
                 [Define(Category = VariableCategory.Hidden)] public static readonly string PackageExtractionPath = "Octopus.Action.Azure.PackageExtractionPath";
                 [Define(Category = VariableCategory.Action, Description = "Azure account subscription ID", Example = "42d91e16-206f-4a14-abd2-24791cbbc522")] public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";
                 [Define(Category = VariableCategory.Action, Description = "Azure AD application client ID", Example = "8104d344-fb8f-4a49-ba1a-a6df0790f302")] public static readonly string ClientId = "Octopus.Action.Azure.ClientId";
