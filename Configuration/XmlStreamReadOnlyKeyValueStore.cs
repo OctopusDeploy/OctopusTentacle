@@ -7,7 +7,7 @@ namespace Octopus.Shared.Configuration
     {
         readonly Stream s;
 
-        public XmlStreamReadOnlyKeyValueStore(Stream s)
+        public XmlStreamReadOnlyKeyValueStore(Stream s) : base(autoSaveOnSet:false)
         {
             this.s = s;
         }

@@ -4,20 +4,25 @@ using System.Text;
 
 namespace Octopus.Shared.Util
 {
-    public class RandomStringGenerator
+    public static class RandomStringGenerator
     {
+        static readonly object GeneratorLock = new object();
+
         public static string Generate(int length)
         {
             const string allowedCharacters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            var password = new StringBuilder(length);
-            using (var random = new RNGCryptoServiceProvider())
+            lock (GeneratorLock)
             {
-                for (var i = 0; i < length; i++)
+                var password = new StringBuilder(length);
+                using (var random = new RNGCryptoServiceProvider())
                 {
-                    password.Append(allowedCharacters[Next(random, allowedCharacters.Length - 1)]);
-                }
+                    for (var i = 0; i < length; i++)
+                    {
+                        password.Append(allowedCharacters[Next(random, allowedCharacters.Length - 1)]);
+                    }
 
-                return password.ToString();
+                    return password.ToString();
+                }
             }
         }
 

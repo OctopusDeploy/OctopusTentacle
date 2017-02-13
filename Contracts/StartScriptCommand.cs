@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
@@ -5,61 +6,32 @@ namespace Octopus.Shared.Contracts
 {
     public class StartScriptCommand
     {
-        readonly string[] arguments;
-        readonly string scriptBody;
-        readonly ScriptIsolationLevel isolation;
-        readonly List<ScriptFile> files = new List<ScriptFile>();
-
-        public StartScriptCommand(string scriptBody, params ScriptFile[] additionalFiles)
-              : this(scriptBody, ScriptIsolationLevel.NoIsolation, new string[0], additionalFiles)
-        {
-        }
-
-        public StartScriptCommand(string scriptBody, string[] arguments, params ScriptFile[] additionalFiles)
-            : this(scriptBody, ScriptIsolationLevel.NoIsolation, arguments, additionalFiles)
-        {
-        }
-
         [JsonConstructor]
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, string[] arguments)
+        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments)
         {
-            this.arguments = arguments;
-            this.scriptBody = scriptBody;
-            this.isolation = isolation;
+            Arguments = arguments;
+            ScriptBody = scriptBody;
+            Isolation = isolation;
+            ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
         }
 
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, params ScriptFile[] additionalFiles)
-            : this(scriptBody, isolation, new string[0], additionalFiles)
-        {
-        }
-
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, string[] arguments, params ScriptFile[] additionalFiles)
-            : this(scriptBody, isolation, arguments)
+        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, params ScriptFile[] additionalFiles)
+            : this(scriptBody, isolation, scriptIsolationMutexTimeout, arguments)
         {
             if (additionalFiles != null)
             {
-                files.AddRange(additionalFiles);
+                Files.AddRange(additionalFiles);
             }
         }
 
-        public string ScriptBody
-        {
-            get { return scriptBody; }
-        }
+        public string ScriptBody { get; }
 
-        public ScriptIsolationLevel Isolation
-        {
-            get { return isolation; }
-        }
+        public ScriptIsolationLevel Isolation { get; }
 
-        public List<ScriptFile> Files
-        {
-            get { return files; }
-        }
+        public List<ScriptFile> Files { get; } = new List<ScriptFile>();
 
-        public string[] Arguments
-        {
-            get { return arguments; }
-        }
+        public string[] Arguments { get; }
+
+        public TimeSpan ScriptIsolationMutexTimeout { get; }
     }
 }

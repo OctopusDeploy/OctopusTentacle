@@ -10,26 +10,43 @@ namespace Octopus.Shared.Tasks
     {
         readonly int maxParallelism;
         readonly Action<T> executeCallback;
-        readonly CancellationToken cancellation;
+        readonly ITaskContext taskContext;
         readonly List<WorkItem<T>> completed = new List<WorkItem<T>>();
         readonly List<WorkItem<T>> running = new List<WorkItem<T>>();
         readonly Queue<Planned<T>> pending = new Queue<Planned<T>>();
 
-        public ParallelWorkOrder(IEnumerable<Planned<T>> work, int maxParallelism, Action<T> executeCallback, CancellationToken cancellation)
+        public ParallelWorkOrder(IEnumerable<Planned<T>> work, int maxParallelism, Action<T> executeCallback, ITaskContext taskContext)
         {
             this.maxParallelism = maxParallelism;
             this.executeCallback = executeCallback;
-            this.cancellation = cancellation;
+            this.taskContext = taskContext;
             foreach (var item in work) pending.Enqueue(item);
         }
 
         public void Execute()
         {
+            SchedulingLoop();
+
+            foreach (var wi in running)
+                wi.WaitForCompletion();
+
+            taskContext.EnsureNotCanceled();
+
+            AssertNoErrorsOccured();
+        }
+
+
+        void SchedulingLoop()
+        {
             while (pending.Count > 0 || running.Count > 0)
             {
-                cancellation.ThrowIfCancellationRequested();
                 CheckForCompletedTasks();
-                AssertAllCompletedTasksThusFarAreSuccessful();
+                if (taskContext.IsCancellationRequested)
+                    return;
+
+                if (GetExceptionsThusFar().Any())
+                    return;
+
                 ScheduleNextWork();
                 Thread.Sleep(100);
             }
@@ -66,11 +83,15 @@ namespace Octopus.Shared.Tasks
             }
         }
 
-        void AssertAllCompletedTasksThusFarAreSuccessful()
+        List<Exception> GetExceptionsThusFar()
         {
-            var errors = (from pair in completed where pair.Exception != null select pair.Exception).ToList();
+            return (from pair in completed where pair.Exception != null select pair.Exception).ToList();
+        }
 
-            if (errors.Count <= 0)
+        void AssertNoErrorsOccured()
+        {
+            var errors = GetExceptionsThusFar();
+            if (errors.Count == 0)
                 return;
 
             if (errors.Any(e => e is OperationCanceledException))

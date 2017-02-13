@@ -70,12 +70,13 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/environments/{id}";
                 public static string GetMachines = "~/api/environments/{id}/machines{?skip}";
                 public static string SortOrder = "~/api/environments/sortorder";
+                public static string GetSinglyScopedVariableDetails = "~/api/environments/{id}/singlyScopedVariableDetails";
             }
 
             public static class Machines
             {
-                public static string Template = "~/api/machines{/id}{?skip,thumbprint,deploymentId}";
-                public static string Index = "~/api/machines{?skip}";
+                public static string Template = "~/api/machines{/id}{?skip,thumbprint,deploymentId,name}";
+                public static string Index = "~/api/machines{?skip,name}";
                 public static string Get = "~/api/machines/{id}";
                 public static string GetConnection = "~/api/machines/{id}/connection";
                 public static string GetTasks = "~/api/machines/{id}/tasks{?skip}";
@@ -305,10 +306,12 @@ namespace Octopus.Shared.Web
                 public static string Index = "~/api/users{?skip}";
                 public static string Template = "~/api/users{/id}{?skip}";
                 public static string Get = "~/api/users/{id}";
+                public static string Login = "~/api/users/login{?returnUrl}";
                 public static string Logout = "~/api/users/logout";
                 public static string Register = "~/api/users/register";
                 public static string Me = "~/api/users/me";
                 public static string Permissions = "~/api/users/{id}/permissions";
+                public static string ExportPermissions = "~/api/users/{id}/permissions/export";
                 public static string Invitations = "~/api/users/invitations";
                 public static string GetInvitation = "~/api/users/invitations/{id}";
             }

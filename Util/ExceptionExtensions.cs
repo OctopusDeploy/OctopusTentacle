@@ -1,19 +1,82 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Octopus.Shared.Util
 {
     public static class ExceptionExtensions
     {
-        public static string PrettyPrint(this Exception ex, StringBuilder sb = null)
+        public static string PrettyPrint(this Exception ex, bool printStackTrace = true)
         {
-            sb = sb ?? new StringBuilder();
+            var sb = new StringBuilder();
+            PrettyPrint(sb, ex, printStackTrace);
+            return sb.ToString().Trim();
+        }
+
+        static void PrettyPrint(StringBuilder sb, Exception ex, bool printStackTrace)
+        {
+            var aex = ex as AggregateException;
+            if (aex != null)
+            {
+                AppendAggregateException(sb, printStackTrace, aex);
+                return;
+            }
+
+            if(ex is OperationCanceledException)
+            {
+                sb.AppendLine("The task was canceled");
+                return;
+            }
 
             sb.AppendLine(ex.Message);
+            
+            if (ex is ControlledFailureException)
+                return;
+
+            if (printStackTrace)
+            {
+                AddStackTrace(sb, ex);
+            }
+
+            if (ex.InnerException == null)
+                return;
+
+            if (printStackTrace)
+                sb.AppendLine("--Inner Exception--");
+
+            PrettyPrint(sb, ex.InnerException, printStackTrace);
+        }
+
+        static void AppendAggregateException(StringBuilder sb, bool printStackTrace, AggregateException aex)
+        {
+            if (!printStackTrace && aex.InnerExceptions.Count == 1)
+            {
+                PrettyPrint(sb, aex.InnerException, printStackTrace);
+            }
+            else
+            {
+                sb.AppendLine("Aggregate Exception");
+                if(printStackTrace)
+                    AddStackTrace(sb, aex);
+                for (var x = 0; x < aex.InnerExceptions.Count; x++)
+                {
+                    sb.AppendLine($"--Inner Exception {x+1}--");
+                    PrettyPrint(sb, aex.InnerExceptions[x], printStackTrace);
+                }
+            }
+        }
+
+        static void AddStackTrace(StringBuilder sb, Exception ex)
+        {
+            var rtle = ex as ReflectionTypeLoadException;
+            if (rtle != null)
+                AddReflectionTypeLoadExceptionDetails(rtle, sb);
+
             sb.AppendLine(ex.GetType().FullName);
             try
             {
@@ -23,13 +86,20 @@ namespace Octopus.Shared.Util
             {
                 sb.AppendLine(ex.StackTrace);
             }
+        }
 
-            if (ex.InnerException != null)
+        static void AddReflectionTypeLoadExceptionDetails(ReflectionTypeLoadException rtle, StringBuilder sb)
+        {
+            foreach (var loaderException in rtle.LoaderExceptions)
             {
-                sb.AppendLine("--Inner Exception--");
-                PrettyPrint(ex.InnerException, sb);
+                sb.AppendLine();
+                sb.AppendLine("--Loader Exception--");
+                PrettyPrint(sb, loaderException, true);
+
+                var fusionLog = (loaderException as FileNotFoundException)?.FusionLog;
+                if (!string.IsNullOrEmpty(fusionLog))
+                    sb.Append("Fusion log: ").AppendLine(fusionLog);
             }
-            return sb.ToString();
         }
 
         public static Exception UnpackFromContainers(this Exception error)
@@ -92,14 +162,11 @@ namespace Octopus.Shared.Util
             return message.ToString();
         }
 
-        public static string GetErrorSummary(this Exception error)
+        public static string MessageRecursive(this Exception ex)
         {
-            error = error.UnpackFromContainers();
-
-            if (error is OperationCanceledException)
-                return "The task was canceled.";
-
-            return error.Message;
+            return ex.InnerException == null
+                ? ex.Message
+                : ex.Message + Environment.NewLine + ex.InnerException.MessageRecursive();
         }
     }
 }

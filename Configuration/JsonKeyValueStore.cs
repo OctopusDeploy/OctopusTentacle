@@ -8,7 +8,7 @@ namespace Octopus.Shared.Configuration
     {
         readonly bool useHierarchicalOutput;
 
-        protected JsonKeyValueStore(bool useHierarchicalOutput, bool isWriteOnly = false) : base(isWriteOnly)
+        protected JsonKeyValueStore(bool useHierarchicalOutput, bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
             this.useHierarchicalOutput = useHierarchicalOutput;
         }

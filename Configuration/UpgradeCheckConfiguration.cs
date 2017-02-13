@@ -29,10 +29,5 @@ namespace Octopus.Shared.Configuration
             get { return settings.Get("Octopus.Errors.ReportErrorsOnline", true); }
             set { settings.Set("Octopus.Errors.ReportErrorsOnline", value); }
         }
-
-        public void Save()
-        {
-            settings.Save();
-        }
     }
 }

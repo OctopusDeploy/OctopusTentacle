@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using Octopus.Shared.Diagnostics;
 
@@ -157,6 +158,11 @@ namespace Octopus.Shared.Util
             return new FileInfo(path).Length;
         }
 
+        public DateTimeOffset GetFileLastWriteTimeUtc(string path)
+        {
+            return File.GetLastWriteTimeUtc(path);
+        }
+
         public string ReadFile(string path)
         {
             return File.ReadAllText(path);
@@ -170,6 +176,10 @@ namespace Octopus.Shared.Util
         public void OverwriteFile(string path, string contents)
         {
             File.WriteAllText(path, contents);
+        }
+        public void OverwriteFile(string path, string contents, Encoding encoding)
+        {
+            File.WriteAllText(path, contents, encoding);
         }
 
         public Stream OpenFile(string path, FileAccess access, FileShare share)
