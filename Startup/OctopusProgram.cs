@@ -74,7 +74,7 @@ namespace Octopus.Shared.Startup
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 if (Debugger.IsAttached) Debugger.Break();
-                log.ErrorFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.GetErrorSummary());
+                log.ErrorFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.PrettyPrint(false));
                 args.SetObserved();
             };
 
@@ -82,12 +82,14 @@ namespace Octopus.Shared.Startup
             {
                 if (Debugger.IsAttached) Debugger.Break();
                 var exception = args.ExceptionObject as Exception; // May not actually be one.
-                log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception == null ? args.ExceptionObject : exception.GetErrorSummary());
+                log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception == null ? args.ExceptionObject : exception.PrettyPrint(false));
             };
 
             int exitCode;
             try
             {
+                EnsureTempPathIsWriteable();
+
                 commandLineArguments = ProcessCommonOptions();
                 
                 instanceName = string.Empty;
@@ -168,6 +170,24 @@ namespace Octopus.Shared.Startup
             if (exitCode != 0 && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
+        }
+
+        static void EnsureTempPathIsWriteable()
+        {
+            var tempPath = Path.GetTempPath();
+            if (!Directory.Exists(tempPath))
+                throw new ControlledFailureException($"The temp folder '{tempPath}' does not exist. Ensure the user '{Environment.UserName}' has a valid temp folder.");
+
+            try
+            {
+                var tempFile = Path.Combine(tempPath, Guid.NewGuid().ToString("N"));
+                File.WriteAllText(tempFile, "");
+                File.Delete(tempFile);
+            }
+            catch
+            {
+                throw new ControlledFailureException($"Could not write to temp folder '{tempPath}'. Ensure the user '{Environment.UserName}' can write to the temp forlder.");
+            }
         }
 
         ICommandHost SelectMostAppropriateHost()
