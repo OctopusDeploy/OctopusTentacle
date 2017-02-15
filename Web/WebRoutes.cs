@@ -143,8 +143,8 @@ namespace Octopus.Shared.Web
                 public static string Progression = "~/api/releases/{id}/progression";
                 public static string GetDeployments = "~/api/releases/{id}/deployments{?skip}";
                 public static string DeploymentTemplate = "~/api/releases/{id}/deployments/template";
-                public static string DeploymentPreview = "~/api/releases/{id}/deployments/preview/{environment}";
-                public static string DeploymentTenantPreview = "~/api/releases/{id}/deployments/preview/{environment}/{tenant}";
+                public static string DeploymentPreview = "~/api/releases/{id}/deployments/preview/{environment}{?includeDisabledSteps}";
+                public static string DeploymentTenantPreview = "~/api/releases/{id}/deployments/preview/{environment}/{tenant}{?includeDisabledSteps}";
                 public static string SnapshotVariables = "~/api/releases/{id}/snapshot-variables";
             }
 
