@@ -23,6 +23,7 @@ namespace Octopus.Shared.Util
             TimeSpan? initialAcquisitionAttemptTimeout = null,
             TimeSpan? waitBetweenAcquisitionAttempts = null)
         {
+            if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size), size, "It doesn't make much sense to have a throttle with no capacity.");
             InitialAttemptTimeout = initialAcquisitionAttemptTimeout ?? DefaultInitialAttemptTimeout;
             WaitBetweenAttempts = waitBetweenAcquisitionAttempts ?? DefaultWaitBetweenAttempts;
             this.name = name;
@@ -61,7 +62,7 @@ namespace Octopus.Shared.Util
 
         public override string ToString()
         {
-            return $"{name}:{semaphore.CurrentCount}/{size}";
+            return $"{name}:{size-semaphore.CurrentCount}/{size}";
         }
 
         class ThrottleReleaser : IDisposable
