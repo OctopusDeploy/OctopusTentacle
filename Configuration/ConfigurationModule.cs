@@ -38,6 +38,7 @@ namespace Octopus.Shared.Configuration
                 .As<IHomeConfiguration>()
                 .SingleInstance();
 
+            builder.RegisterType<BundledPackageStoreConfiguration>().As<IBundledPackageStoreConfiguration>().SingleInstance();
             builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().SingleInstance();
             builder.RegisterType<LogInitializer>().As<ILogInitializer>();
             builder.RegisterType<ProxyConfigParser>().As<IProxyConfigParser>();

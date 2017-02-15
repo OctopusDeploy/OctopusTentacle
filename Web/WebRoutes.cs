@@ -76,8 +76,8 @@ namespace Octopus.Shared.Web
 
             public static class Machines
             {
-                public static string Template = "~/api/machines{/id}{?skip,thumbprint,deploymentId}";
-                public static string Index = "~/api/machines{?skip}";
+                public static string Template = "~/api/machines{/id}{?skip,thumbprint,deploymentId,name}";
+                public static string Index = "~/api/machines{?skip,name}";
                 public static string Get = "~/api/machines/{id}";
                 public static string GetConnection = "~/api/machines/{id}/connection";
                 public static string GetTasks = "~/api/machines/{id}/tasks{?skip}";
@@ -241,8 +241,8 @@ namespace Octopus.Shared.Web
 
             public static class Events
             {
-                public static string Template = "~/api/events{/id}{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal}";
-                public static string Index = "~/api/events{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal}";
+                public static string Template = "~/api/events{/id}{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal,fromAutoId,toAutoId}";
+                public static string Index = "~/api/events{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal,fromAutoId,toAutoId}";
                 public static string Get = "~/api/events/{id}";
                 public static string GetCategories = "~/api/events/categories{?appliesTo}";
                 public static string GetGroups = "~/api/events/groups{?appliesTo}";
