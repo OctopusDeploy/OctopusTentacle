@@ -5,7 +5,7 @@ using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Util
 {
-    public class Throttle
+    public class Throttle : IThrottle
     {
         static readonly TimeSpan DefaultInitialAttemptTimeout = TimeSpan.FromSeconds(3);
         static readonly TimeSpan DefaultWaitBetweenAttempts = TimeSpan.FromSeconds(60);

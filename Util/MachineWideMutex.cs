@@ -16,14 +16,10 @@ namespace Octopus.Shared.Util
         readonly ILog log = Log.Octopus();
         readonly ILog systemLog = Log.System();
 
-        readonly CancellationToken cancellationToken;
-
         public MachineWideMutex(
-            CancellationToken cancellationToken = default(CancellationToken),
             TimeSpan? initialAcquisitionAttemptTimeout = null,
             TimeSpan? waitBetweenAcquisitionAttempts = null)
         {
-            this.cancellationToken = cancellationToken;
             InitialAcquisitionAttemptTimeout = initialAcquisitionAttemptTimeout ?? DefaultInitialAcquisitionAttemptTimeout;
             WaitBetweenAcquisitionAttempts = waitBetweenAcquisitionAttempts ?? DefaultWaitBetweenAcquisitionAttempts;
         }
@@ -31,12 +27,12 @@ namespace Octopus.Shared.Util
         public TimeSpan InitialAcquisitionAttemptTimeout { get; }
         public TimeSpan WaitBetweenAcquisitionAttempts { get; }
 
-        public IDisposable Acquire(string name)
+        public IDisposable Acquire(string name, CancellationToken cancellationToken)
         {
-            return Acquire(name, null);
+            return Acquire(name, null, cancellationToken);
         }
 
-        public IDisposable Acquire(string name, string waitMessage)
+        public IDisposable Acquire(string name, string waitMessage, CancellationToken cancellationToken)
         {
             systemLog.Trace($"Acquiring machine-wide mutex {name}");
             cancellationToken.ThrowIfCancellationRequested();
