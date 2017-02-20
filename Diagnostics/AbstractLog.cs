@@ -117,7 +117,7 @@ namespace Octopus.Shared.Diagnostics
 
             if (IsEnabled(category))
             {
-                Write(category, error, error.GetErrorSummary());
+                Write(category, error, error.PrettyPrint(false));
             }
         }
 
