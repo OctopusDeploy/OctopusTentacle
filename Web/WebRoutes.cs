@@ -299,6 +299,7 @@ namespace Octopus.Shared.Web
             public static class Licenses
             {
                 public static string Current = "~/api/licenses/licenses-current";
+                public static string CurrentStatus = "~/api/licenses/licenses-current-status";
             }
 
             public static class Users
