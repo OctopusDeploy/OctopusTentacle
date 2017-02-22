@@ -294,6 +294,7 @@
     <Compile Include="Util\EnvironmentHelper.cs" />
     <Compile Include="Util\EnumExtensions.cs" />
     <Compile Include="Util\IOUtil.cs" />
+    <Compile Include="Util\IThrottle.cs" />
     <Compile Include="Util\SemanticVersionExtensions.cs" />
     <Compile Include="Util\StreamDisposalChain.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
@@ -398,6 +399,7 @@
     <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Util\MachineWideMutex.cs" />
     <Compile Include="Util\TaskExtensions.cs" />
+    <Compile Include="Util\Throttle.cs" />
     <Compile Include="Util\TypeExtensions.cs" />
     <Compile Include="Util\Uniquifier.cs" />
     <Compile Include="Util\UriExtensions.cs" />
