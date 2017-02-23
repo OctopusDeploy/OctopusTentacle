@@ -6,7 +6,7 @@ using Octopus.Shared.Security.Masking;
 
 namespace Octopus.Shared.Diagnostics
 {
-    public class LogContext
+    public class LogContext 
     {
         readonly string[] sensitiveValues;
         readonly string correlationId;
@@ -35,15 +35,18 @@ namespace Octopus.Shared.Diagnostics
             get { return sensitiveValues; }
         }
 
-        public string SafeSanitize(string raw)
+        public void SafeSanitize(string raw, Action<string> action)
         {
             try
             {
-                return sensitiveDataMask != null ? sensitiveDataMask.ApplyTo(raw) : raw;
+                if (sensitiveDataMask != null)
+                    sensitiveDataMask.ApplyTo(raw, action);
+                else
+                    action(raw);
             }
             catch
             {
-                return raw;
+                action(raw);
             }
         }
 
@@ -87,5 +90,11 @@ namespace Octopus.Shared.Diagnostics
             if (correlationId == null) throw new ArgumentNullException("correlationId");
             return new LogContext(correlationId);
         }
+
+        public void Flush()
+        {
+            sensitiveDataMask?.Flush();
+        }
+
     }
 }
