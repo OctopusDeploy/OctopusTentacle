@@ -27,8 +27,14 @@ namespace Octopus.Shared.Variables
         // Set by Octopus Server to DeploymentEnvironment.UseGuidedFailure || DeploymentUseGuidedFailure,
         // but overridable by user
         [Define(Category = VariableCategory.Hidden)] public static readonly string UseGuidedFailure = "OctopusUseGuidedFailure";
+
         [Define(Category = VariableCategory.Hidden)]
         public static readonly string UseNakedScript = "OctopusUseNakedScript";
+
+        [Define(Category = VariableCategory.Hidden)]
+        [DeprecatedAlias("OctopusUseNakedScript")]
+        public static readonly string UseRawScript = "OctopusUseRawScript";
+
         // Set by Tentacle exclusively
         [Define(Category = VariableCategory.Hidden)] public static readonly string OriginalPackageDirectoryPath = "OctopusOriginalPackageDirectoryPath";
         [Define(Category = VariableCategory.Hidden)] public static readonly string SearchForScriptsRecursively = "OctopusSearchForScriptsRecursively";
