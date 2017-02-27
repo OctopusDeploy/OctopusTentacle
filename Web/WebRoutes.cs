@@ -37,7 +37,7 @@ namespace Octopus.Shared.Web
                 public static string Usage = "~/api/actiontemplates/{id}/usage";
                 public static string Logo = "~/api/actiontemplates/{typeOrId}/logo";
                 public static string Search = "~/api/actiontemplates/search";
-                public static string AllDeploymentProcessesUpdate = "~/api/actiontemplates/allDeploymentProcessesUpdate";
+                public static string ActionsUpdate = "~/api/actiontemplates/{id}/actionsUpdate";
             }
 
             public static class Alerts
