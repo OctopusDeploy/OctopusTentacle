@@ -223,6 +223,7 @@ namespace Octopus.Shared.Variables
 
         public static class Release
         {
+            [Define(Description = "The Id of the release", Example = "Releases-123")] public static readonly string Id = "Octopus.Release.Id";
             [Define(Description = "The version number of the release", Example = "1.2.3")] public static readonly string Number = "Octopus.Release.Number";
             [Define(Description = "Release notes associated with the release, in Markdown format", Example = "Fixes bugs 1, 2 & 3")] public static readonly string Notes = "Octopus.Release.Notes";
 
