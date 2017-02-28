@@ -16,7 +16,6 @@ namespace Octopus.Shared.Variables
         [Define(Category = VariableCategory.Hidden)] public static readonly string RetentionPolicyDaysToKeep = "OctopusRetentionPolicyDaysToKeep";
         [Define(Category = VariableCategory.Hidden)] public static readonly string FailureEncountered = "OctopusFailureEncountered";
         // Defaulted by Tentacle, but overridable by user
-        [Define(Category = VariableCategory.Hidden)] public static readonly string TreatWarningsAsErrors = "OctopusTreatWarningsAsErrors";
         [Define(Category = VariableCategory.Hidden)] public static readonly string PrintVariables = "OctopusPrintVariables";
         [Define(Category = VariableCategory.Hidden)] public static readonly string PrintEvaluatedVariables = "OctopusPrintEvaluatedVariables";
         [Define(Category = VariableCategory.Hidden)] public static readonly string IgnoreMissingVariableTokens = "OctopusIgnoreMissingVariableTokens";
@@ -71,6 +70,21 @@ namespace Octopus.Shared.Variables
         public static bool IsIndexedActionVariable(string variableName, string key)
         {
             return variableName.StartsWith("Octopus.Action[" + key + "]");
+        }
+
+        public static bool IsIndexedActionVariable(string variableName)
+        {
+            return variableName.StartsWith("Octopus.Action[");
+        }
+
+        public static string GetActionVariableIndex(string variableName)
+        {
+            return variableName.Substring(15, variableName.IndexOf(']') - 15);  // 15 == len("Octopus.Action[")
+        }
+
+        public static string GetUnindexedActionVariable(string variableName)
+        {
+            return variableName.Substring(0, variableName.IndexOf('[')) + variableName.Substring(variableName.IndexOf(']') + 1);
         }
 
         public static bool IsStepVariable(string variableName)
