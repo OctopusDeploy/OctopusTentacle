@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Octopus.Shared.Scripts;
 
 namespace Octopus.Shared.Contracts
 {
     public class StartScriptCommandBuilder
     {
-        string scriptBody = string.Empty;
+        StringBuilder scriptBody = new StringBuilder(string.Empty);
 
         ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
 
@@ -18,13 +19,13 @@ namespace Octopus.Shared.Contracts
 
         public StartScriptCommandBuilder WithScriptBody(string scriptBody)
         {
-            this.scriptBody = scriptBody;
+            this.scriptBody = new StringBuilder(scriptBody);
             return this;
         }
 
         public StartScriptCommandBuilder WithReplacementInScriptBody(string oldValue, string newValue)
         {
-            scriptBody = scriptBody.Replace(oldValue, newValue);
+            scriptBody.Replace(oldValue, newValue);
             return this;
         }
 
@@ -62,7 +63,7 @@ namespace Octopus.Shared.Contracts
 
         public StartScriptCommand Build()
         {
-            return new StartScriptCommand(scriptBody, isolation, scriptIsolationMutexTimeout, arguments.ToArray(), files.ToArray());
+            return new StartScriptCommand(scriptBody.ToString(), isolation, scriptIsolationMutexTimeout, arguments.ToArray(), files.ToArray());
         }
     }
 }
