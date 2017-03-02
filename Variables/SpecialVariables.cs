@@ -16,7 +16,6 @@ namespace Octopus.Shared.Variables
         [Define(Category = VariableCategory.Hidden)] public static readonly string RetentionPolicyDaysToKeep = "OctopusRetentionPolicyDaysToKeep";
         [Define(Category = VariableCategory.Hidden)] public static readonly string FailureEncountered = "OctopusFailureEncountered";
         // Defaulted by Tentacle, but overridable by user
-        [Define(Category = VariableCategory.Hidden)] public static readonly string TreatWarningsAsErrors = "OctopusTreatWarningsAsErrors";
         [Define(Category = VariableCategory.Hidden)] public static readonly string PrintVariables = "OctopusPrintVariables";
         [Define(Category = VariableCategory.Hidden)] public static readonly string PrintEvaluatedVariables = "OctopusPrintEvaluatedVariables";
         [Define(Category = VariableCategory.Hidden)] public static readonly string IgnoreMissingVariableTokens = "OctopusIgnoreMissingVariableTokens";
@@ -27,8 +26,14 @@ namespace Octopus.Shared.Variables
         // Set by Octopus Server to DeploymentEnvironment.UseGuidedFailure || DeploymentUseGuidedFailure,
         // but overridable by user
         [Define(Category = VariableCategory.Hidden)] public static readonly string UseGuidedFailure = "OctopusUseGuidedFailure";
+
         [Define(Category = VariableCategory.Hidden)]
         public static readonly string UseNakedScript = "OctopusUseNakedScript";
+
+        [Define(Category = VariableCategory.Hidden)]
+        [DeprecatedAlias("OctopusUseNakedScript")]
+        public static readonly string UseRawScript = "OctopusUseRawScript";
+
         // Set by Tentacle exclusively
         [Define(Category = VariableCategory.Hidden)] public static readonly string OriginalPackageDirectoryPath = "OctopusOriginalPackageDirectoryPath";
         [Define(Category = VariableCategory.Hidden)] public static readonly string SearchForScriptsRecursively = "OctopusSearchForScriptsRecursively";
@@ -65,6 +70,21 @@ namespace Octopus.Shared.Variables
         public static bool IsIndexedActionVariable(string variableName, string key)
         {
             return variableName.StartsWith("Octopus.Action[" + key + "]");
+        }
+
+        public static bool IsIndexedActionVariable(string variableName)
+        {
+            return variableName.StartsWith("Octopus.Action[");
+        }
+
+        public static string GetActionVariableIndex(string variableName)
+        {
+            return variableName.Substring(15, variableName.IndexOf(']') - 15);  // 15 == len("Octopus.Action[")
+        }
+
+        public static string GetUnindexedActionVariable(string variableName)
+        {
+            return variableName.Substring(0, variableName.IndexOf('[')) + variableName.Substring(variableName.IndexOf(']') + 1);
         }
 
         public static bool IsStepVariable(string variableName)
@@ -217,6 +237,7 @@ namespace Octopus.Shared.Variables
 
         public static class Release
         {
+            [Define(Description = "The Id of the release", Example = "Releases-123")] public static readonly string Id = "Octopus.Release.Id";
             [Define(Description = "The version number of the release", Example = "1.2.3")] public static readonly string Number = "Octopus.Release.Number";
             [Define(Description = "Release notes associated with the release, in Markdown format", Example = "Fixes bugs 1, 2 & 3")] public static readonly string Notes = "Octopus.Release.Notes";
 
@@ -553,6 +574,11 @@ namespace Octopus.Shared.Variables
                 public static readonly string ActionTypeName = "Octopus.WindowsService";
             }
 
+            public static class Vhd
+            {
+                public static readonly string ActionTypeName = "Octopus.Vhd";
+            }
+
             public static class Ftp
             {
                 // deprecated step, do not use
@@ -688,9 +714,16 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string StopTimeout = "Octopus.Action.Docker.StopTimeout";
-
             }
-            
+
+            public static class Certificate
+            {
+                public static readonly string ActionTypeName = "Octopus.Certificate.Import";
+
+                [Define(Category = VariableCategory.Action, Description = "The name of the certificate variable the action will use", Example = "Acme-Production")]
+                public static readonly string CertificateVariable = "Octopus.Action.Certificate.Variable";
+            }
+
             public static class PowerShell
             {
                 public static readonly string ExecuteWithoutProfile = "Octopus.Action.PowerShell.ExecuteWithoutProfile";

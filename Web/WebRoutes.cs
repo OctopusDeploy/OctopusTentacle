@@ -356,10 +356,22 @@ namespace Octopus.Shared.Web
 
             public static class Certificates
             {
-                public static string Template = "~/api/certificates{/id}{?skip}";
-                public static string Index = "~/api/certificates{?skip}";
+                public static string Template = "~/api/certificates{/id}{?skip,take,search,archived,tenant,firstResult,orderBy}";
+                public static string Index = "~/api/certificates{?skip,take,search,archived,tenant,firstResult,orderBy}";
                 public static string Get = "~/api/certificates/{id}";
-                public static string PublicCer = "~/api/certificates/{id}/public-cer";
+                public static string Export = "~/api/certificates/{id}/export{?format,password,includePrivateKey}";
+                public static string Archive = "~/api/certificates/{id}/archive";
+                public static string Unarchive = "~/api/certificates/{id}/unarchive";
+                public static string Usage = "~/api/certificates/{id}/usage";
+                public static string Replace = "~/api/certificates/{id}/replace";
+            }
+
+            public static class CertificateConfiguration
+            {
+                public static string Template = "~/api/configuration/certificates{/id}{?skip}";
+                public static string Index = "~/api/configuration/certificates{?skip}";
+                public static string Get = "~/api/configuration/certificates/{id}";
+                public static string PublicCer = "~/api/configuration/certificates/{id}/public-cer";
             }
 
             public static class Packages
