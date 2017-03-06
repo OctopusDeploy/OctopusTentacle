@@ -11,5 +11,6 @@ namespace Octopus.Shared.Tasks
         void EnsureNotCanceled();
         void Pause();
         bool IsPaused();
+        void SleepUnlessCancelled(TimeSpan fromSeconds);
     }
 }
