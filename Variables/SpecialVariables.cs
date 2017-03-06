@@ -812,14 +812,26 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Indicates that the Service Fabric application should not be created or upgraded after registering the application type", Example = "False")]
                 public static readonly string FabricDeployOnly = "Octopus.Action.Azure.FabricDeployOnly";
 
+                [Define(Category = VariableCategory.Action, Description = "The connection endpoint of the cluster", Example = "")]
+                public static readonly string FabricConnectionEndpoint = "Octopus.Action.Azure.FabricConnectionEndpoint";
+
+                [Define(Category = VariableCategory.Action, Description = "The security mode of the cluster", Example = "False")]
+                public static readonly string FabricIsSecure = "Octopus.Action.Azure.FabricIsSecure";
+
+                [Define(Category = VariableCategory.Action, Description = "The server certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
+                public static readonly string FabricServerCertificateThumbprint = "Octopus.Action.Azure.FabricServerCertificateThumbprint";
+
+                [Define(Category = VariableCategory.Action, Description = "The client certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
+                public static readonly string FabricClientCertificateThumbprint = "Octopus.Action.Azure.FabricClientCertificateThumbprint";
+
+                [Define(Category = VariableCategory.Action, Description = "The client certificate subject name used to secure the cluster (only applies to secure clusters)", Example = "")]
+                public static readonly string FabricClientCertificateSubjectName = "Octopus.Action.Azure.FabricClientCertificateSubjectName";
+
                 [Define(Category = VariableCategory.Action, Description = "Indicates whether to unregister any unused application versions that exist after an upgrade is finished", Example = "False")]
                 public static readonly string FabricUnregisterUnusedApplicationVersionsAfterUpgrade = "Octopus.Action.Azure.FabricUnregisterUnusedApplicationVersionsAfterUpgrade";
 
                 [Define(Category = VariableCategory.Action, Description = "Indicates the behavior used to override the upgrade settings specified by the publish profile. Options: None | ForceUpgrade | VetoUpgrade", Example = "None | ForceUpgrade | VetoUpgrade")]
                 public static readonly string FabricOverrideUpgradeBehavior = "Octopus.Action.Azure.FabricOverrideUpgradeBehavior";
-
-                [Define(Category = VariableCategory.Action, Description = "Indicates that the script should make use of an existing cluster connection that has already been established in the PowerShell session.  The cluster connection parameters configured in the publish profile are ignored", Example = "False")]
-                public static readonly string FabricUseExistingClusterConnection = "Octopus.Action.Azure.FabricUseExistingClusterConnection";
 
                 [Define(Category = VariableCategory.Action, Description = "Overwrite Behavior if an application exists in the cluster with the same name. Available Options are Never, Always, SameAppTypeAndVersion. This setting is not applicable when upgrading an application", Example = "Never | Always | SameAppTypeAndVersion")]
                 public static readonly string FabricOverwriteBehavior = "Octopus.Action.Azure.FabricOverwriteBehavior";
