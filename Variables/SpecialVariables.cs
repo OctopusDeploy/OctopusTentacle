@@ -824,8 +824,8 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "The client certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
                 public static readonly string FabricClientCertificateThumbprint = "Octopus.Action.Azure.FabricClientCertificateThumbprint";
 
-                [Define(Category = VariableCategory.Action, Description = "The client certificate subject name used to secure the cluster (only applies to secure clusters)", Example = "")]
-                public static readonly string FabricClientCertificateSubjectName = "Octopus.Action.Azure.FabricClientCertificateSubjectName";
+                //[Define(Category = VariableCategory.Action, Description = "The client certificate subject name used to secure the cluster (only applies to secure clusters)", Example = "")]
+                //public static readonly string FabricClientCertificateSubjectName = "Octopus.Action.Azure.FabricClientCertificateSubjectName";
 
                 [Define(Category = VariableCategory.Action, Description = "Indicates whether to unregister any unused application versions that exist after an upgrade is finished", Example = "False")]
                 public static readonly string FabricUnregisterUnusedApplicationVersionsAfterUpgrade = "Octopus.Action.Azure.FabricUnregisterUnusedApplicationVersionsAfterUpgrade";
