@@ -18,7 +18,7 @@ namespace Octopus.Shared.Templates
         {
             return new Dictionary<string, string>()
             {
-                {"Octopus.ControlType", "SingleLineText"}
+                {"Octopus.ControlType", controlType}
             };
         }
     }
