@@ -72,6 +72,7 @@ namespace Octopus.Shared.Diagnostics
             using (WithinBlock(child))
             {
                 Write(LogCategory.Planned, messageText);
+                CurrentContext.Flush();
             }
             return child;
         }
@@ -84,16 +85,19 @@ namespace Octopus.Shared.Diagnostics
         public void Abandon()
         {
             Write(LogCategory.Abandoned, "Abandon");
+            CurrentContext.Flush();
         }
 
         public void Reinstate()
         {
             Write(LogCategory.Planned, "Reinstate");
+            CurrentContext.Flush();
         }
 
         public void Finish()
         {
             Write(LogCategory.Finished, "Finished");
+            CurrentContext.Flush();
         }
 
         public virtual bool IsEnabled(LogCategory category)
@@ -124,8 +128,8 @@ namespace Octopus.Shared.Diagnostics
         {
             if (IsEnabled(category))
             {
-                var sanitizedMessage = CurrentContext.SafeSanitize(messageText);
-                WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitizedMessage, error != null ? error.UnpackFromContainers() : null));
+                CurrentContext.SafeSanitize(messageText, 
+                    sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitized, error?.UnpackFromContainers())));
             }
         }
 
@@ -139,9 +143,8 @@ namespace Octopus.Shared.Diagnostics
             if (!IsEnabled(category))
                 return;
 
-            var sanitizedMessage = CurrentContext.SafeSanitize(SafeFormat(messageFormat, args));
-
-            WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitizedMessage, error != null ? error.UnpackFromContainers() : null));
+            CurrentContext.SafeSanitize(SafeFormat(messageFormat, args), 
+                sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitized, error?.UnpackFromContainers())));
         }
 
         static string SafeFormat(string messageFormat, object[] args)
@@ -308,8 +311,8 @@ namespace Octopus.Shared.Diagnostics
 
         public void UpdateProgress(int progressPercentage, string messageText)
         {
-            var sanitizedMessage = CurrentContext.SafeSanitize(messageText);
-            WriteEvent(new LogEvent(CurrentContext.CorrelationId, LogCategory.Progress, sanitizedMessage, null, progressPercentage));
+            CurrentContext.SafeSanitize(messageText, 
+                sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId, LogCategory.Progress, sanitized, null, progressPercentage)));
         }
 
         public void UpdateProgressFormat(int progressPercentage, string messageFormat, params object[] args)
