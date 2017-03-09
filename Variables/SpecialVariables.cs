@@ -858,11 +858,11 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "The server certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
                 public static readonly string FabricServerCertThumbprint = "Octopus.Action.Azure.FabricServerCertThumbprint";
 
+                [Define(Category = VariableCategory.Action, Description = "The client certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
+                public static readonly string FabricClientCertThumbprint = "Octopus.Action.Azure.FabricClientCertThumbprint";
+
                 [Define(Category = VariableCategory.Action, Description = "The type of FindValue for searching certificate in the certificate store (only applies to secure clusters)", Example = "Defaults to 'FindByThumbprint' if not provided")]
                 public static readonly string FabricCertificateFindType = "Octopus.Action.Azure.FabricCertificateFindType";
-
-                [Define(Category = VariableCategory.Action, Description = "The filter value to search a certificate in the certificate store (only applies to secure clusters)", Example = "")]
-                public static readonly string FabricCertificateFindValue = "Octopus.Action.Azure.FabricCertificateFindValue";
 
                 [Define(Category = VariableCategory.Action, Description = "The certificate store location (only applies to secure clusters)", Example = "Defaults to 'LocalMachine' if not provided")]
                 public static readonly string FabricCertificateStoreLocation = "Octopus.Action.Azure.FabricCertificateStoreLocation";
