@@ -856,15 +856,18 @@ namespace Octopus.Shared.Variables
                 public static readonly string FabricIsSecure = "Octopus.Action.Azure.FabricIsSecure";
 
                 [Define(Category = VariableCategory.Action, Description = "The server certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
-                public static readonly string FabricServerCertificateThumbprint = "Octopus.Action.Azure.FabricServerCertificateThumbprint";
+                public static readonly string FabricServerCertThumbprint = "Octopus.Action.Azure.FabricServerCertThumbprint";
 
-                [Define(Category = VariableCategory.Action, Description = "The client certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
-                public static readonly string FabricClientCertificateThumbprint = "Octopus.Action.Azure.FabricClientCertificateThumbprint";
+                [Define(Category = VariableCategory.Action, Description = "The type of FindValue for searching certificate in the certificate store (only applies to secure clusters)", Example = "Defaults to 'FindByThumbprint' if not provided")]
+                public static readonly string FabricCertificateFindType = "Octopus.Action.Azure.FabricCertificateFindType";
 
-                [Define(Category = VariableCategory.Action, Description = "The certificate store location (only applies to secure clusters)", Example = "LocalMachine")]
+                [Define(Category = VariableCategory.Action, Description = "The filter value to search a certificate in the certificate store (only applies to secure clusters)", Example = "")]
+                public static readonly string FabricCertificateFindValue = "Octopus.Action.Azure.FabricCertificateFindValue";
+
+                [Define(Category = VariableCategory.Action, Description = "The certificate store location (only applies to secure clusters)", Example = "Defaults to 'LocalMachine' if not provided")]
                 public static readonly string FabricCertificateStoreLocation = "Octopus.Action.Azure.FabricCertificateStoreLocation";
 
-                [Define(Category = VariableCategory.Action, Description = "The certificate store name (only applies to secure clusters)", Example = "MY")]
+                [Define(Category = VariableCategory.Action, Description = "The certificate store name (only applies to secure clusters)", Example = "Defaults to 'MY' if not provided")]
                 public static readonly string FabricCertificateStoreName = "Octopus.Action.Azure.FabricCertificateStoreName";
 
                 [Define(Category = VariableCategory.Action, Description = "Indicates whether to unregister any unused application versions that exist after an upgrade is finished", Example = "False")]
