@@ -16,7 +16,6 @@ namespace Octopus.Shared.Variables
         [Define(Category = VariableCategory.Hidden)] public static readonly string RetentionPolicyDaysToKeep = "OctopusRetentionPolicyDaysToKeep";
         [Define(Category = VariableCategory.Hidden)] public static readonly string FailureEncountered = "OctopusFailureEncountered";
         // Defaulted by Tentacle, but overridable by user
-        [Define(Category = VariableCategory.Hidden)] public static readonly string TreatWarningsAsErrors = "OctopusTreatWarningsAsErrors";
         [Define(Category = VariableCategory.Hidden)] public static readonly string PrintVariables = "OctopusPrintVariables";
         [Define(Category = VariableCategory.Hidden)] public static readonly string PrintEvaluatedVariables = "OctopusPrintEvaluatedVariables";
         [Define(Category = VariableCategory.Hidden)] public static readonly string IgnoreMissingVariableTokens = "OctopusIgnoreMissingVariableTokens";
@@ -27,8 +26,14 @@ namespace Octopus.Shared.Variables
         // Set by Octopus Server to DeploymentEnvironment.UseGuidedFailure || DeploymentUseGuidedFailure,
         // but overridable by user
         [Define(Category = VariableCategory.Hidden)] public static readonly string UseGuidedFailure = "OctopusUseGuidedFailure";
+
         [Define(Category = VariableCategory.Hidden)]
         public static readonly string UseNakedScript = "OctopusUseNakedScript";
+
+        [Define(Category = VariableCategory.Hidden)]
+        [DeprecatedAlias("OctopusUseNakedScript")]
+        public static readonly string UseRawScript = "OctopusUseRawScript";
+
         // Set by Tentacle exclusively
         [Define(Category = VariableCategory.Hidden)] public static readonly string OriginalPackageDirectoryPath = "OctopusOriginalPackageDirectoryPath";
         [Define(Category = VariableCategory.Hidden)] public static readonly string SearchForScriptsRecursively = "OctopusSearchForScriptsRecursively";
@@ -65,6 +70,21 @@ namespace Octopus.Shared.Variables
         public static bool IsIndexedActionVariable(string variableName, string key)
         {
             return variableName.StartsWith("Octopus.Action[" + key + "]");
+        }
+
+        public static bool IsIndexedActionVariable(string variableName)
+        {
+            return variableName.StartsWith("Octopus.Action[");
+        }
+
+        public static string GetActionVariableIndex(string variableName)
+        {
+            return variableName.Substring(15, variableName.IndexOf(']') - 15);  // 15 == len("Octopus.Action[")
+        }
+
+        public static string GetUnindexedActionVariable(string variableName)
+        {
+            return variableName.Substring(0, variableName.IndexOf('[')) + variableName.Substring(variableName.IndexOf(']') + 1);
         }
 
         public static bool IsStepVariable(string variableName)
@@ -217,6 +237,7 @@ namespace Octopus.Shared.Variables
 
         public static class Release
         {
+            [Define(Description = "The Id of the release", Example = "Releases-123")] public static readonly string Id = "Octopus.Release.Id";
             [Define(Description = "The version number of the release", Example = "1.2.3")] public static readonly string Number = "Octopus.Release.Number";
             [Define(Description = "Release notes associated with the release, in Markdown format", Example = "Fixes bugs 1, 2 & 3")] public static readonly string Notes = "Octopus.Release.Notes";
 
@@ -496,6 +517,7 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Hidden)] public static readonly string AutomaticallyRunConfigurationTransformationFiles = "Octopus.Action.Package.AutomaticallyRunConfigurationTransformationFiles";
                 [Define(Category = VariableCategory.Hidden)] [DeprecatedAlias("Octopus.Action.Package.IgnoreConfigTranformationErrors")] public static readonly string IgnoreConfigTransformationErrors = "Octopus.Action.Package.IgnoreConfigTransformationErrors";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string SuppressConfigTransformationLogging = "Octopus.Action.Package.SuppressConfigTransformationLogging";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string TreatConfigTransformationWarningsAsErrors = "Octopus.Action.Package.TreatConfigTransformationWarningsAsErrors ";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string AdditionalXmlConfigurationTransforms = "Octopus.Action.Package.AdditionalXmlConfigurationTransforms";
                 [Define(Category = VariableCategory.Action, Description = "If true, and the version of the package being deployed is already present on the machine, its re-deployment will be skipped (use with caution)", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string SkipIfAlreadyInstalled = "Octopus.Action.Package.SkipIfAlreadyInstalled";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string IgnoreVariableReplacementErrors = "Octopus.Action.Package.IgnoreVariableReplacementErrors";

@@ -135,6 +135,11 @@ namespace Octopus.Shared.Tasks
             return isPaused;
         }
 
+        public void SleepUnlessCancelled(TimeSpan duration)
+        {
+            CancellationToken.WaitHandle.WaitOne(duration);
+        }
+
         public void EnsureNotCanceled()
         {
             if (IsCancellationRequested)
