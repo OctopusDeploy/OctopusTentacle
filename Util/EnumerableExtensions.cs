@@ -64,5 +64,8 @@ namespace Octopus.Shared.Util
         {
             return source == null || !source.Any();
         }
+
+        public static bool None<T>(this IEnumerable<T> items) => !items.Any();
+
     }
 }
