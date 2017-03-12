@@ -852,8 +852,8 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "The connection endpoint of the cluster", Example = "")]
                 public static readonly string FabricConnectionEndpoint = "Octopus.Action.Azure.FabricConnectionEndpoint";
 
-                [Define(Category = VariableCategory.Action, Description = "The security mode of the cluster", Example = "False")]
-                public static readonly string FabricIsSecure = "Octopus.Action.Azure.FabricIsSecure";
+                [Define(Category = VariableCategory.Action, Description = "The security mode of the cluster", Example = "Unsecure")]
+                public static readonly string FabricSecurityMode = "Octopus.Action.Azure.FabricSecurityMode";
 
                 [Define(Category = VariableCategory.Action, Description = "The server certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
                 public static readonly string FabricServerCertThumbprint = "Octopus.Action.Azure.FabricServerCertThumbprint";
