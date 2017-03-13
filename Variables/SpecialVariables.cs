@@ -778,7 +778,7 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string CloudServiceActionTypeName = "Octopus.AzureCloudService";
-
+          
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string WebAppActionTypeName = "Octopus.AzureWebApp";
 
@@ -890,6 +890,18 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Action, Description = "Log the extracted Azure Service Fabric application package", Example = "False")]
                 public static readonly string FabricLogExtractedApplicationPackage = "Octopus.Action.Azure.FabricLogExtractedApplicationPackage";
+
+                [Define(Category = VariableCategory.Action, Description = "The client ID for AAD authentication", Example = "")]
+                public static readonly string FabricAadClientId = "Octopus.Action.Azure.FabricAadClientId";
+
+                [Define(Category = VariableCategory.Action, Description = "The Azure environment used to determine the AAD Authority URL", Example = "Defaults to 'AzureCloud' if not provided")]
+                public static readonly string FabricAadEnvironment = "Octopus.Action.Azure.FabricAadEnvironment";
+
+                [Define(Category = VariableCategory.Action, Description = "The resource URL for AAD authentication", Example = "")]
+                public static readonly string FabricAadResourceUrl = "Octopus.Action.Azure.FabricAadResourceUrl";
+
+                [Define(Category = VariableCategory.Action, Description = "The tenant ID for AAD authentication", Example = "")]
+                public static readonly string FabricAadTenantId = "Octopus.Action.Azure.FabricAadTenantId";
 
                 #endregion
             }
