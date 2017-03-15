@@ -438,6 +438,11 @@ namespace Octopus.Shared.Web
             {
                 public static string Template = "~/api/upgradeconfiguration";
             }
+
+            public static class UserOnboarding
+            {
+                public static string Template = "~/api/useronboarding";
+            }
         }
 
         public static class Web
