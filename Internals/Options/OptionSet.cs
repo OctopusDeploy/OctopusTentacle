@@ -116,7 +116,7 @@ namespace Octopus.Shared.Internals.Options
             return Add(prototype, null, action);
         }
 
-        public OptionSet Add(string prototype, string description, Action<string> action)
+        public OptionSet Add(string prototype, string description, Action<string> action, bool hide = false)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
@@ -125,6 +125,7 @@ namespace Octopus.Shared.Internals.Options
                 {
                     action(v[0]);
                 });
+            p.Hide = hide;
             base.Add(p);
             return this;
         }
@@ -374,7 +375,7 @@ namespace Octopus.Shared.Internals.Options
 
         public void WriteOptionDescriptions(TextWriter o)
         {
-            foreach (var p in this)
+            foreach (var p in this.Where(p => !p.Hide))
             {
                 var written = 0;
                 if (!WriteOptionPrototype(o, p, ref written))
