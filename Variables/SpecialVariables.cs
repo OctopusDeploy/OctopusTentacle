@@ -728,6 +728,8 @@ namespace Octopus.Shared.Variables
             public static class PowerShell
             {
                 public static readonly string ExecuteWithoutProfile = "Octopus.Action.PowerShell.ExecuteWithoutProfile";
+                public static readonly string UserName = "Octopus.Action.PowerShell.UserName";
+                public static readonly string Password = "Octopus.Action.PowerShell.Password";
             }
 
             public static class Manual
