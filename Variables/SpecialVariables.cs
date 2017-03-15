@@ -882,9 +882,6 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Switch signaling whether the package should be validated or not before deployment", Example = "False")]
                 public static readonly string FabricSkipPackageValidation = "Octopus.Action.Azure.FabricSkipPackageValidation";
 
-                [Define(Category = VariableCategory.Action, Description = "A security token for authentication to cluster management endpoints. Used for silent authentication to clusters that are protected by Azure Active Directory", Example = "")]
-                public static readonly string FabricSecurityToken = "Octopus.Action.Azure.FabricSecurityToken";
-
                 [Define(Category = VariableCategory.Action, Description = "Timeout in seconds for copying application package to image store", Example = "300")]
                 public static readonly string FabricCopyPackageTimeoutSec = "Octopus.Action.Azure.FabricCopyPackageTimeoutSec";
 
@@ -894,11 +891,14 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "The client ID for AAD authentication", Example = "")]
                 public static readonly string FabricAadClientId = "Octopus.Action.Azure.FabricAadClientId";
 
+                [Define(Category = VariableCategory.Action, Description = "The client secret for AAD authentication", Example = "")]
+                public static readonly string FabricAadClientSecret = "Octopus.Action.Azure.FabricAadClientSecret";
+
                 [Define(Category = VariableCategory.Action, Description = "The Azure environment used to determine the AAD Authority URL", Example = "Defaults to 'AzureCloud' if not provided")]
                 public static readonly string FabricAadEnvironment = "Octopus.Action.Azure.FabricAadEnvironment";
 
                 [Define(Category = VariableCategory.Action, Description = "The resource URL for AAD authentication", Example = "")]
-                public static readonly string FabricAadResourceUrl = "Octopus.Action.Azure.FabricAadResourceUrl";
+                public static readonly string FabricAadResourceId = "Octopus.Action.Azure.FabricAadResourceId";
 
                 [Define(Category = VariableCategory.Action, Description = "The tenant ID for AAD authentication", Example = "")]
                 public static readonly string FabricAadTenantId = "Octopus.Action.Azure.FabricAadTenantId";
