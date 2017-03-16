@@ -770,6 +770,72 @@ namespace Octopus.Shared.Variables
                 }
             }
 
+            public static class ServiceFabric
+            {
+                [Define(Category = VariableCategory.Action, Description = "Path to the file containing the publish profile", Example = "PublishProfiles\\Cloud.xml")]
+                public static readonly string PublishProfileFile = "Octopus.Action.ServiceFabric.PublishProfileFile";
+
+                [Define(Category = VariableCategory.Action, Description = "Path to the folder of the packaged Service Fabric application", Example = "[This path is set by Calamari]")]
+                public static readonly string ApplicationPackagePath = "Octopus.Action.ServiceFabric.ApplicationPackagePath";
+
+                [Define(Category = VariableCategory.Action, Description = "Indicates that the Service Fabric application should not be created or upgraded after registering the application type", Example = "False")]
+                public static readonly string DeployOnly = "Octopus.Action.ServiceFabric.DeployOnly";
+
+                [Define(Category = VariableCategory.Action, Description = "The connection endpoint of the cluster", Example = "")]
+                public static readonly string ConnectionEndpoint = "Octopus.Action.ServiceFabric.ConnectionEndpoint";
+
+                [Define(Category = VariableCategory.Action, Description = "The security mode of the cluster", Example = "Unsecure")]
+                public static readonly string SecurityMode = "Octopus.Action.ServiceFabric.SecurityMode";
+
+                [Define(Category = VariableCategory.Action, Description = "The server certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
+                public static readonly string ServerCertThumbprint = "Octopus.Action.ServiceFabric.ServerCertThumbprint";
+
+                [Define(Category = VariableCategory.Action, Description = "The client certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
+                public static readonly string ClientCertThumbprint = "Octopus.Action.ServiceFabric.ClientCertThumbprint";
+
+                [Define(Category = VariableCategory.Action, Description = "The type of FindValue for searching certificate in the certificate store (only applies to secure clusters)", Example = "Defaults to 'FindByThumbprint' if not provided")]
+                public static readonly string CertificateFindType = "Octopus.Action.ServiceFabric.CertificateFindType";
+
+                [Define(Category = VariableCategory.Action, Description = "The certificate store location (only applies to secure clusters)", Example = "Defaults to 'LocalMachine' if not provided")]
+                public static readonly string CertificateStoreLocation = "Octopus.Action.ServiceFabric.CertificateStoreLocation";
+
+                [Define(Category = VariableCategory.Action, Description = "The certificate store name (only applies to secure clusters)", Example = "Defaults to 'MY' if not provided")]
+                public static readonly string CertificateStoreName = "Octopus.Action.ServiceFabric.CertificateStoreName";
+
+                [Define(Category = VariableCategory.Action, Description = "Indicates whether to unregister any unused application versions that exist after an upgrade is finished", Example = "False")]
+                public static readonly string UnregisterUnusedApplicationVersionsAfterUpgrade = "Octopus.Action.ServiceFabric.UnregisterUnusedApplicationVersionsAfterUpgrade";
+
+                [Define(Category = VariableCategory.Action, Description = "Indicates the behavior used to override the upgrade settings specified by the publish profile. Options: None | ForceUpgrade | VetoUpgrade", Example = "None | ForceUpgrade | VetoUpgrade")]
+                public static readonly string OverrideUpgradeBehavior = "Octopus.Action.ServiceFabric.OverrideUpgradeBehavior";
+
+                [Define(Category = VariableCategory.Action, Description = "Overwrite Behavior if an application exists in the cluster with the same name. Available Options are Never, Always, SameAppTypeAndVersion. This setting is not applicable when upgrading an application", Example = "Never | Always | SameAppTypeAndVersion")]
+                public static readonly string OverwriteBehavior = "Octopus.Action.ServiceFabric.OverwriteBehavior";
+
+                [Define(Category = VariableCategory.Action, Description = "Switch signaling whether the package should be validated or not before deployment", Example = "False")]
+                public static readonly string SkipPackageValidation = "Octopus.Action.ServiceFabric.SkipPackageValidation";
+
+                [Define(Category = VariableCategory.Action, Description = "Timeout in seconds for copying application package to image store", Example = "300")]
+                public static readonly string CopyPackageTimeoutSec = "Octopus.Action.ServiceFabric.CopyPackageTimeoutSec";
+
+                [Define(Category = VariableCategory.Action, Description = "Log the extracted Azure Service Fabric application package", Example = "False")]
+                public static readonly string LogExtractedApplicationPackage = "Octopus.Action.ServiceFabric.LogExtractedApplicationPackage";
+
+                [Define(Category = VariableCategory.Action, Description = "The client ID for AAD authentication", Example = "")]
+                public static readonly string AadClientId = "Octopus.Action.ServiceFabric.AadClientId";
+
+                [Define(Category = VariableCategory.Action, Description = "The client secret for AAD authentication", Example = "")]
+                public static readonly string AadClientSecret = "Octopus.Action.ServiceFabric.AadClientSecret";
+
+                [Define(Category = VariableCategory.Action, Description = "The Azure environment used to determine the AAD Authority URL", Example = "Defaults to 'AzureCloud' if not provided")]
+                public static readonly string AadEnvironment = "Octopus.Action.ServiceFabric.AadEnvironment";
+
+                [Define(Category = VariableCategory.Action, Description = "The resource URL for AAD authentication", Example = "")]
+                public static readonly string AadResourceId = "Octopus.Action.ServiceFabric.AadResourceId";
+
+                [Define(Category = VariableCategory.Action, Description = "The tenant ID for AAD authentication", Example = "")]
+                public static readonly string AadTenantId = "Octopus.Action.ServiceFabric.AadTenantId";
+            }
+
             public static class Azure
             {
                 // do not reuse this value
@@ -783,10 +849,10 @@ namespace Octopus.Shared.Variables
                 public static readonly string WebAppActionTypeName = "Octopus.AzureWebApp";
 
                 [Define(Category = VariableCategory.Hidden)]
-                public static readonly string FabricAppActionTypeName = "Octopus.AzureFabricApp";
+                public static readonly string ServiceFabricAppActionTypeName = "Octopus.AzureServiceFabricApp";
 
                 [Define(Category = VariableCategory.Hidden)]
-                public static readonly string FabricPowerShellActionTypeName = "Octopus.AzureFabricPowerShell";
+                public static readonly string ServiceFabricPowerShellActionTypeName = "Octopus.AzureServiceFabricPowerShell";
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string PowerShellActionTypeName = "Octopus.AzurePowerShell";
@@ -837,73 +903,6 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Hidden)] public static readonly string TemplateSource = "Octopus.Action.Azure.TemplateSource";
                 [Define(Category = VariableCategory.Action, Description = "Resource Group template JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplate = "Octopus.Action.Azure.ResourceGroupTemplate";
                 [Define(Category = VariableCategory.Action, Description = "Resource Group template parameter JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplateParameters = "Octopus.Action.Azure.ResourceGroupTemplateParameters";
-
-                #region Azure Service Fabric
-
-                [Define(Category = VariableCategory.Action, Description = "Path to the file containing the publish profile", Example = "PublishProfiles\\Cloud.xml")]
-                public static readonly string FabricPublishProfileFile = "Octopus.Action.Azure.FabricPublishProfileFile";
-                
-                [Define(Category = VariableCategory.Action, Description = "Path to the folder of the packaged Service Fabric application", Example = "[This path is set by Calamari]")]
-                public static readonly string FabricApplicationPackagePath = "Octopus.Action.Azure.FabricApplicationPackagePath";
-
-                [Define(Category = VariableCategory.Action, Description = "Indicates that the Service Fabric application should not be created or upgraded after registering the application type", Example = "False")]
-                public static readonly string FabricDeployOnly = "Octopus.Action.Azure.FabricDeployOnly";
-
-                [Define(Category = VariableCategory.Action, Description = "The connection endpoint of the cluster", Example = "")]
-                public static readonly string FabricConnectionEndpoint = "Octopus.Action.Azure.FabricConnectionEndpoint";
-
-                [Define(Category = VariableCategory.Action, Description = "The security mode of the cluster", Example = "Unsecure")]
-                public static readonly string FabricSecurityMode = "Octopus.Action.Azure.FabricSecurityMode";
-
-                [Define(Category = VariableCategory.Action, Description = "The server certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
-                public static readonly string FabricServerCertThumbprint = "Octopus.Action.Azure.FabricServerCertThumbprint";
-
-                [Define(Category = VariableCategory.Action, Description = "The client certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
-                public static readonly string FabricClientCertThumbprint = "Octopus.Action.Azure.FabricClientCertThumbprint";
-
-                [Define(Category = VariableCategory.Action, Description = "The type of FindValue for searching certificate in the certificate store (only applies to secure clusters)", Example = "Defaults to 'FindByThumbprint' if not provided")]
-                public static readonly string FabricCertificateFindType = "Octopus.Action.Azure.FabricCertificateFindType";
-
-                [Define(Category = VariableCategory.Action, Description = "The certificate store location (only applies to secure clusters)", Example = "Defaults to 'LocalMachine' if not provided")]
-                public static readonly string FabricCertificateStoreLocation = "Octopus.Action.Azure.FabricCertificateStoreLocation";
-
-                [Define(Category = VariableCategory.Action, Description = "The certificate store name (only applies to secure clusters)", Example = "Defaults to 'MY' if not provided")]
-                public static readonly string FabricCertificateStoreName = "Octopus.Action.Azure.FabricCertificateStoreName";
-
-                [Define(Category = VariableCategory.Action, Description = "Indicates whether to unregister any unused application versions that exist after an upgrade is finished", Example = "False")]
-                public static readonly string FabricUnregisterUnusedApplicationVersionsAfterUpgrade = "Octopus.Action.Azure.FabricUnregisterUnusedApplicationVersionsAfterUpgrade";
-
-                [Define(Category = VariableCategory.Action, Description = "Indicates the behavior used to override the upgrade settings specified by the publish profile. Options: None | ForceUpgrade | VetoUpgrade", Example = "None | ForceUpgrade | VetoUpgrade")]
-                public static readonly string FabricOverrideUpgradeBehavior = "Octopus.Action.Azure.FabricOverrideUpgradeBehavior";
-
-                [Define(Category = VariableCategory.Action, Description = "Overwrite Behavior if an application exists in the cluster with the same name. Available Options are Never, Always, SameAppTypeAndVersion. This setting is not applicable when upgrading an application", Example = "Never | Always | SameAppTypeAndVersion")]
-                public static readonly string FabricOverwriteBehavior = "Octopus.Action.Azure.FabricOverwriteBehavior";
-
-                [Define(Category = VariableCategory.Action, Description = "Switch signaling whether the package should be validated or not before deployment", Example = "False")]
-                public static readonly string FabricSkipPackageValidation = "Octopus.Action.Azure.FabricSkipPackageValidation";
-
-                [Define(Category = VariableCategory.Action, Description = "Timeout in seconds for copying application package to image store", Example = "300")]
-                public static readonly string FabricCopyPackageTimeoutSec = "Octopus.Action.Azure.FabricCopyPackageTimeoutSec";
-
-                [Define(Category = VariableCategory.Action, Description = "Log the extracted Azure Service Fabric application package", Example = "False")]
-                public static readonly string FabricLogExtractedApplicationPackage = "Octopus.Action.Azure.FabricLogExtractedApplicationPackage";
-
-                [Define(Category = VariableCategory.Action, Description = "The client ID for AAD authentication", Example = "")]
-                public static readonly string FabricAadClientId = "Octopus.Action.Azure.FabricAadClientId";
-
-                [Define(Category = VariableCategory.Action, Description = "The client secret for AAD authentication", Example = "")]
-                public static readonly string FabricAadClientSecret = "Octopus.Action.Azure.FabricAadClientSecret";
-
-                [Define(Category = VariableCategory.Action, Description = "The Azure environment used to determine the AAD Authority URL", Example = "Defaults to 'AzureCloud' if not provided")]
-                public static readonly string FabricAadEnvironment = "Octopus.Action.Azure.FabricAadEnvironment";
-
-                [Define(Category = VariableCategory.Action, Description = "The resource URL for AAD authentication", Example = "")]
-                public static readonly string FabricAadResourceId = "Octopus.Action.Azure.FabricAadResourceId";
-
-                [Define(Category = VariableCategory.Action, Description = "The tenant ID for AAD authentication", Example = "")]
-                public static readonly string FabricAadTenantId = "Octopus.Action.Azure.FabricAadTenantId";
-
-                #endregion
             }
 
             public static class HealthCheck
