@@ -826,9 +826,6 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "The client secret for AAD authentication", Example = "")]
                 public static readonly string AadClientSecret = "Octopus.Action.ServiceFabric.AadClientSecret";
 
-                [Define(Category = VariableCategory.Action, Description = "The Azure environment used to determine the AAD Authority URL", Example = "Defaults to 'AzureCloud' if not provided")]
-                public static readonly string AadEnvironment = "Octopus.Action.ServiceFabric.AadEnvironment";
-
                 [Define(Category = VariableCategory.Action, Description = "The resource URL for AAD authentication", Example = "")]
                 public static readonly string AadResourceId = "Octopus.Action.ServiceFabric.AadResourceId";
 
