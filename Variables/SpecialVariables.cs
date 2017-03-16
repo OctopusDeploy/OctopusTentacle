@@ -809,7 +809,7 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string PowershellModulePath = "Octopus.Action.Azure.PowerShellModule";
-                
+
                 [Define(Category = VariableCategory.Hidden)] public static readonly string PackageExtractionPath = "Octopus.Action.Azure.PackageExtractionPath";
                 [Define(Category = VariableCategory.Action, Description = "Azure account subscription ID", Example = "42d91e16-206f-4a14-abd2-24791cbbc522")] public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";
                 [Define(Category = VariableCategory.Action, Description = "Azure AD application client ID", Example = "8104d344-fb8f-4a49-ba1a-a6df0790f302")] public static readonly string ClientId = "Octopus.Action.Azure.ClientId";
@@ -832,7 +832,7 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Replace instance counts in configuration file with those currently configured in Azure portal", Example = "False")] public static readonly string UseCurrentInstanceCount = "Octopus.Action.Azure.UseCurrentInstanceCount";
                 [Define(Category = VariableCategory.Action, Description = "Log extracted Cloud Service Package", Example="False")] public static readonly string LogExtractedCspkg = "Octopus.Action.Azure.LogExtractedCspkg";
                 [Define(Category = VariableCategory.Action, Description = "Relative path to the *.cscfg file", Example = "AcmeService-Production.cscfg")][DeprecatedAlias("OctopusAzureConfigurationFileName")] public static readonly string CloudServiceConfigurationFileRelativePath = "Octopus.Action.Azure.CloudServiceConfigurationFileRelativePath";
-                
+
                 [Define(Category = VariableCategory.Action, Description = "Resource Group Name", Example = "AcmeResources")] public static readonly string ResourceGroupName = "Octopus.Action.Azure.ResourceGroupName";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string TemplateSource = "Octopus.Action.Azure.TemplateSource";
                 [Define(Category = VariableCategory.Action, Description = "Resource Group template JSON", Example = "For examples see https://github.com/Azure/azure-resource-manager-schemas")] public static readonly string ResourceGroupTemplate = "Octopus.Action.Azure.ResourceGroupTemplate";
