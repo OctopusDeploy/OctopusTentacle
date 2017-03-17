@@ -78,12 +78,7 @@ namespace Octopus.Shared.Startup
                 args.SetObserved();
             };
 
-            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
-            {
-                if (Debugger.IsAttached) Debugger.Break();
-                var exception = args.ExceptionObject as Exception; // May not actually be one.
-                log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception == null ? args.ExceptionObject : exception.PrettyPrint(false));
-            };
+            AppDomain.CurrentDomain.UnhandledException += LogUnhandledException;
 
             int exitCode;
             try
@@ -170,6 +165,28 @@ namespace Octopus.Shared.Startup
             if (exitCode != 0 && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
+        }
+
+        void LogUnhandledException(object sender, UnhandledExceptionEventArgs args)
+        {
+            try
+            {
+                if (Debugger.IsAttached) Debugger.Break();
+                var exception = args.ExceptionObject as Exception; // May not actually be one.
+                log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception?.PrettyPrint() ?? args.ExceptionObject);
+            }
+            catch (Exception ex)
+            {
+
+                try
+                {
+                    log.Fatal(ex, "Exception logging unhandled exception: ");
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
         }
 
         static void EnsureTempPathIsWriteable()
