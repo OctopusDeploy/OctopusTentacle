@@ -86,15 +86,6 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
                     "on some systems; first, try qualifying the username with DOMAIN\\Administrator. If this " +
                     "issue persists, you may need to use an administrative account with a different name.")
                 .EntryHelpLinkIs("http://g.octopushq.com/AdministratorAccountName"));
-
-            AddRule(r => r.ExceptionIs<CryptographicException>(
-                ex => ex.Message.Contains("Padding is invalid and cannot be removed"))
-                .EntrySummaryIs("The master key does not match the encryption used in the database")
-                .EntryHelpTextIs("A new install creates a new master key. If you then restore data from another " +
-                    "instance with a different master key you will get this exception. "+
-                    "This error can also occur if you try to upgrade a 2.5 instance to 3.0 without first " +
-                    "upgrading to 2.6.")
-                .EntryHelpLinkIs("http://g.octopushq.com/SecurityAndEncryption"));
         }
 
         public static void AddRule(Action<ExceptionKnowledgeBuilder> buildRule)

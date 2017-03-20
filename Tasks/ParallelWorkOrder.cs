@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tasks
 {
@@ -107,8 +108,8 @@ namespace Octopus.Shared.Tasks
             if (errors.Count == 1)
             {
                 return errors.Single() is ActionFailedException
-                    ? $"Activity {errors.Single().Message} failed with error '{errors.Single().InnerException.Message}'."
-                    : $"Activity failed with error '{errors.Single().Message}'.";
+                    ? $"Activity {errors.Single().Message} failed with error '{errors.Single().InnerException.PrettyPrint(false)}'."
+                    : $"Activity failed with error '{errors.Single().PrettyPrint(false)}'.";
             }
 
             return $"Activities failed with errors {string.Join(", ", errors.Select(GetMessage))}";
@@ -117,8 +118,8 @@ namespace Octopus.Shared.Tasks
         string GetMessage(Exception ex)
         {
             return ex is ActionFailedException
-                ? $"{ex.Message}: '{ex.InnerException.Message}'"
-                : $"'{ex.Message}'";
+                ? $"{ex.Message}: '{ex.InnerException.PrettyPrint(false)}'"
+                : $"'{ex.PrettyPrint(false)}'";
         }
     }
 }
