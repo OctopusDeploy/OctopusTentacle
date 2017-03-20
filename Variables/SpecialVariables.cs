@@ -843,7 +843,7 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string CloudServiceActionTypeName = "Octopus.AzureCloudService";
-          
+
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string WebAppActionTypeName = "Octopus.AzureWebApp";
 
