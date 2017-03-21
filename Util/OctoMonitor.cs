@@ -55,10 +55,8 @@ namespace Octopus.Shared.Util
                 if (lockTaken)
                 {
                     SystemLog.Trace($"Acquired monitor {obj}");
-                    {
-                        mutexReleaser = new OctoMonitorReleaser(obj);
-                        return true;
-                    }
+                    mutexReleaser = new OctoMonitorReleaser(obj);
+                    return true;
                 }
             }
             catch (Exception ex)
