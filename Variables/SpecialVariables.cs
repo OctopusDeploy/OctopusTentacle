@@ -822,17 +822,17 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Log the extracted Azure Service Fabric application package", Example = "False")]
                 public static readonly string LogExtractedApplicationPackage = "Octopus.Action.ServiceFabric.LogExtractedApplicationPackage";
 
-                [Define(Category = VariableCategory.Action, Description = "The client ID for AAD authentication", Example = "")]
-                public static readonly string AadClientId = "Octopus.Action.ServiceFabric.AadClientId";
+                [Define(Category = VariableCategory.Action, Description = "The credential type for AAD authentication. Options: ClientCredential | UserCredential", Example = "ClientCredential")]
+                public static readonly string AadCredentialType = "Octopus.Action.ServiceFabric.AadCredentialType";
 
-                [Define(Category = VariableCategory.Action, Description = "The client secret for AAD authentication", Example = "")]
-                public static readonly string AadClientSecret = "Octopus.Action.ServiceFabric.AadClientSecret";
+                [Define(Category = VariableCategory.Action, Description = "The client application secret for AAD ClientCredential authentication", Example = "")]
+                public static readonly string AadClientCredentialSecret = "Octopus.Action.ServiceFabric.AadClientCredentialSecret";
 
-                [Define(Category = VariableCategory.Action, Description = "The resource URL for AAD authentication", Example = "")]
-                public static readonly string AadResourceId = "Octopus.Action.ServiceFabric.AadResourceId";
+                [Define(Category = VariableCategory.Action, Description = "The username for AAD UserCredential authentication", Example = "")]
+                public static readonly string AadUserCredentialUsername = "Octopus.Action.ServiceFabric.AadUserCredentialUsername";
 
-                [Define(Category = VariableCategory.Action, Description = "The tenant ID for AAD authentication", Example = "")]
-                public static readonly string AadTenantId = "Octopus.Action.ServiceFabric.AadTenantId";
+                [Define(Category = VariableCategory.Action, Description = "The password for AAD UserCredential authentication", Example = "")]
+                public static readonly string AadUserCredentialPassword = "Octopus.Action.ServiceFabric.AadUserCredentialPassword";
             }
 
             public static class Azure
