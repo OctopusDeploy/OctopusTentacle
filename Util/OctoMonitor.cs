@@ -7,7 +7,7 @@ namespace Octopus.Shared.Util
     public class OctoMonitor
     {
         public static readonly TimeSpan DefaultInitialAcquisitionAttemptTimeout = TimeSpan.FromSeconds(3);
-        public static readonly TimeSpan DefaultWaitBetweenAcquisitionAttempts = TimeSpan.FromSeconds(60);
+        public static readonly TimeSpan DefaultWaitBetweenAcquisitionAttempts = TimeSpan.FromSeconds(10);
 
         public static TimeSpan InitialAcquisitionAttemptTimeout = DefaultInitialAcquisitionAttemptTimeout;
         public static TimeSpan WaitBetweenAcquisitionAttempts = DefaultWaitBetweenAcquisitionAttempts;
