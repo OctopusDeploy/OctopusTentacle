@@ -822,10 +822,10 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "Log the extracted Azure Service Fabric application package", Example = "False")]
                 public static readonly string LogExtractedApplicationPackage = "Octopus.Action.ServiceFabric.LogExtractedApplicationPackage";
 
-                [Define(Category = VariableCategory.Action, Description = "The credential type for AAD authentication. Options: ClientCredential | UserCredential", Example = "ClientCredential")]
+                [Define(Category = VariableCategory.Action, Description = "The credential type for AAD authentication. Options: ClientCredential | UserCredential", Example = "UserCredential")]
                 public static readonly string AadCredentialType = "Octopus.Action.ServiceFabric.AadCredentialType";
 
-                [Define(Category = VariableCategory.Action, Description = "The client application secret for AAD ClientCredential authentication", Example = "")]
+                [Define(Category = VariableCategory.Action, Description = "The cluster application secret for AAD ClientCredential authentication", Example = "")]
                 public static readonly string AadClientCredentialSecret = "Octopus.Action.ServiceFabric.AadClientCredentialSecret";
 
                 [Define(Category = VariableCategory.Action, Description = "The username for AAD UserCredential authentication", Example = "")]
