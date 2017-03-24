@@ -792,8 +792,8 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "The server certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
                 public static readonly string ServerCertThumbprint = "Octopus.Action.ServiceFabric.ServerCertThumbprint";
 
-                [Define(Category = VariableCategory.Action, Description = "The client certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
-                public static readonly string ClientCertThumbprint = "Octopus.Action.ServiceFabric.ClientCertThumbprint";
+                [Define(Category = VariableCategory.Action, Description = "The client certificate variable used to secure the cluster (only applies to secure clusters)", Example = "")]
+                public static readonly string ClientCertVariable = "Octopus.Action.ServiceFabric.ClientCertVariable";
 
                 [Define(Category = VariableCategory.Action, Description = "The type of FindValue for searching certificates in the certificate store (only applies to secure clusters)", Example = "Defaults to 'FindByThumbprint' if not provided")]
                 public static readonly string CertificateFindType = "Octopus.Action.ServiceFabric.CertificateFindType";
