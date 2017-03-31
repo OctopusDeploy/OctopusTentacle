@@ -230,23 +230,6 @@ namespace Octopus.Shared.Variables
             public static string TenantIds = "Octopus.Machine.TenantIds";
         }
 
-        public static class Event
-        {
-            [Define(Category = VariableCategory.Hidden, Description = "A JSON string of the event subscription payload.", Example = "{\"Payload\", \"...\"}")]
-            public static readonly string SubscriptionPayloadJson = "Octopus.Event.SubscriptionPayload.Json";
-
-            [Define(Category = VariableCategory.Hidden)] public static readonly string Id = "Octopus.Event.Id";
-            [Define(Category = VariableCategory.Hidden, Description = "The collection of document ID's that this event relates to. Note that the document ID's may no longer exist.", Example = "")] public static readonly string RelatedDocumentIds = "Octopus.Event.RelatedDocumentIds";
-            [Define(Category = VariableCategory.Hidden, Description = "The event category.", Example = "MachineCreated")] public static readonly string Category = "Octopus.Event.Category";
-            [Define(Category = VariableCategory.Hidden, Description = "The ID of the user who created the event.", Example = "Users-123")] public static readonly string UserId = "Octopus.Event.UserId";
-            [Define(Category = VariableCategory.Hidden, Description = "The name of the user who created the event.", Example = "Rick and Morty")] public static readonly string Username = "Octopus.Event.Username";
-            [Define(Category = VariableCategory.Hidden, Description = "Description of how the user performing the event identified themselves to Octopus.", Example = "Session cookie")] public static readonly string IdentityEstablishedWith = "Octopus.Event.IdentityEstablishedWith";
-            [Define(Category = VariableCategory.Hidden, Description = "The date/time that the event took place.", Example = "2017-02-16T02:17:28.4682384+00:00")] public static readonly string Occurred = "Octopus.Event.Occurred";
-            [Define(Category = VariableCategory.Hidden, Description = "The message text that summarizes the event.", Example = "Machines-123 was created")] public static readonly string Message = "Octopus.Event.Message";
-            [Define(Category = VariableCategory.Hidden, Description = "Any user-provided comments that were recorded with the event.", Example = "")] public static readonly string Comments = "Octopus.Event.Comments";
-            [Define(Category = VariableCategory.Hidden, Description = "The details of the event. For events representing a modification to a document this will provide a HTML-formatted diff of the original and new document.", Example = "")] public static readonly string Details = "Octopus.Event.Details";
-        }
-
         public static class Account
         {
             [Define(Description = "The name of the account", Example = "OctopusDeployAdmin")] public static readonly string Name = "Octopus.Account.Name";
