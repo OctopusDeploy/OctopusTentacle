@@ -48,6 +48,7 @@ namespace Octopus.Shared.Diagnostics
             var child = CurrentContext.CreateChild();
             var revertLogContext = WithinBlock(child);
             Write(LogCategory.Info, messageText);
+            CurrentContext.Flush();
             return revertLogContext;
         }
 
@@ -62,6 +63,7 @@ namespace Octopus.Shared.Diagnostics
             using (WithinBlock(child))
             {
                 Write(LogCategory.Info, messageText);
+                CurrentContext.Flush();
             }
             return child;
         }
@@ -72,6 +74,7 @@ namespace Octopus.Shared.Diagnostics
             using (WithinBlock(child))
             {
                 Write(LogCategory.Planned, messageText);
+                CurrentContext.Flush();
             }
             return child;
         }
@@ -84,11 +87,13 @@ namespace Octopus.Shared.Diagnostics
         public void Abandon()
         {
             Write(LogCategory.Abandoned, "Abandon");
+            CurrentContext.Flush();
         }
 
         public void Reinstate()
         {
             Write(LogCategory.Planned, "Reinstate");
+            CurrentContext.Flush();
         }
 
         public void Finish()

@@ -77,6 +77,7 @@ namespace Octopus.Shared.Internals.Options
         }
 
         internal string[] ValueSeparators { get; set; }
+        public bool Hide { get; set; }
 
         public string[] GetNames()
         {

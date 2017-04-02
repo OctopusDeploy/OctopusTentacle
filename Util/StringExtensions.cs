@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 // ReSharper disable CheckNamespace
 
@@ -58,6 +59,12 @@ namespace Octopus.Shared.Util
                 }
             }
             return string.Join("&", items.ToArray());
+        }
+
+        public static byte[] EncodeInUtf8Bom(this string source)
+        {
+            var encodedString = Encoding.UTF8.GetBytes(source);
+            return Encoding.UTF8.GetPreamble().Concat(encodedString).ToArray();
         }
     }
 }

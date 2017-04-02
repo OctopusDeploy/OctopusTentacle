@@ -47,8 +47,9 @@ namespace Octopus.Shared.Variables
         [Define(Category = VariableCategory.Hidden)] public static readonly string StagedPackageSize = "StagedPackage.Size";
         [Define(Category = VariableCategory.Hidden)] public static readonly string StagedPackageFullPathOnRemoteMachine = "StagedPackage.FullPathOnRemoteMachine";
         [Define(Category = VariableCategory.Hidden)] public static readonly string HasLatestCalamariVersion = "HasLatestCalamariVersion";
-        [Define(Category = VariableCategory.Hidden)]
-        public static readonly string HasWarnings = "HasWarnings";
+        [Define(Category = VariableCategory.Hidden)] public static readonly string HasWarnings = "HasWarnings";
+        [Define(Category = VariableCategory.Hidden)] public static readonly string HealthCheckMessages = "OctopusHealthCheckMessages";
+
 
         static SpecialVariables()
         {
@@ -513,10 +514,14 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "If true, the all files in the `Octopus.Action.Package.CustomInstallationDirectory` will be deleted before deployment", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string CustomInstallationDirectoryShouldBePurgedBeforeDeployment =
                     "Octopus.Action.Package.CustomInstallationDirectoryShouldBePurgedBeforeDeployment";
 
+                [Define(Category = VariableCategory.Action, Description = "The directory where the package was installed, it is not available prior to package extraction", Example = "C:\\InetPub\\WWWRoot\\OctoFx")]
+                public static readonly string InstallationDirectoryPath = "Octopus.Action.Package.InstallationDirectoryPath";
+
                 [Define(Category = VariableCategory.Hidden)] public static readonly string AutomaticallyUpdateAppSettingsAndConnectionStrings = "Octopus.Action.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string AutomaticallyRunConfigurationTransformationFiles = "Octopus.Action.Package.AutomaticallyRunConfigurationTransformationFiles";
                 [Define(Category = VariableCategory.Hidden)] [DeprecatedAlias("Octopus.Action.Package.IgnoreConfigTranformationErrors")] public static readonly string IgnoreConfigTransformationErrors = "Octopus.Action.Package.IgnoreConfigTransformationErrors";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string SuppressConfigTransformationLogging = "Octopus.Action.Package.SuppressConfigTransformationLogging";
+                [Define(Category = VariableCategory.Hidden)] public static readonly string TreatConfigTransformationWarningsAsErrors = "Octopus.Action.Package.TreatConfigTransformationWarningsAsErrors ";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string AdditionalXmlConfigurationTransforms = "Octopus.Action.Package.AdditionalXmlConfigurationTransforms";
                 [Define(Category = VariableCategory.Action, Description = "If true, and the version of the package being deployed is already present on the machine, its re-deployment will be skipped (use with caution)", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string SkipIfAlreadyInstalled = "Octopus.Action.Package.SkipIfAlreadyInstalled";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string IgnoreVariableReplacementErrors = "Octopus.Action.Package.IgnoreVariableReplacementErrors";
@@ -727,6 +732,8 @@ namespace Octopus.Shared.Variables
             public static class PowerShell
             {
                 public static readonly string ExecuteWithoutProfile = "Octopus.Action.PowerShell.ExecuteWithoutProfile";
+                public static readonly string UserName = "Octopus.Action.PowerShell.UserName";
+                public static readonly string Password = "Octopus.Action.PowerShell.Password";
             }
 
             public static class Manual

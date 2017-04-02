@@ -48,13 +48,12 @@ namespace Octopus.Shared.Util
             }
 
             // Go into an acquisition loop supporting cooperative cancellation
+            cancellationToken.ThrowIfCancellationRequested();
+            LogWaiting(name, waitMessage);
             while (!AcquireSemaphore(semaphore, cancellationToken, WaitBetweenAcquisitionAttempts))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-
-                systemLog.Verbose($"Machine-wide mutex {name} in use, waiting. {waitMessage}");
-                if (!string.IsNullOrWhiteSpace(waitMessage))
-                    log.Verbose(waitMessage);
+                LogWaiting(name, waitMessage);
             }
 
             systemLog.Trace($"Acquired machine-wide mutex {name}");
@@ -69,6 +68,13 @@ namespace Octopus.Shared.Util
 
             // Beware the result may not be an index in the array hence checking WaitHandle.WaitTimeout first.
             return waitResult != WaitHandle.WaitTimeout && waitHandles[waitResult] == semaphore;
+        }
+
+        void LogWaiting(string name, string waitMessage)
+        {
+            systemLog.Verbose($"Machine-wide mutex {name} in use, waiting. {waitMessage}");
+            if (!string.IsNullOrWhiteSpace(waitMessage))
+                log.Verbose(waitMessage);
         }
 
         static string Normalize(string name)

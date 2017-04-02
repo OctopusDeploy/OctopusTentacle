@@ -53,13 +53,8 @@
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut, Version=2.4.15.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.2.4.15\lib\net45\Halibut.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Nevermore.Contracts, Version=2.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nevermore.Contracts.2.0.3\lib\netstandard1.0\Nevermore.Contracts.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Halibut, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Halibut.2.5.0\lib\net45\Halibut.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Win32.TaskScheduler, Version=2.5.21.0, Culture=neutral, PublicKeyToken=0d013ddd5178a2ae, processorArchitecture=MSIL">
       <HintPath>..\packages\TaskScheduler.2.5.21\lib\net40\Microsoft.Win32.TaskScheduler.dll</HintPath>
@@ -295,6 +290,7 @@
     <Compile Include="Util\EnumExtensions.cs" />
     <Compile Include="Util\IOUtil.cs" />
     <Compile Include="Util\IThrottle.cs" />
+    <Compile Include="Util\OctoMonitor.cs" />
     <Compile Include="Util\SemanticVersionExtensions.cs" />
     <Compile Include="Util\StreamDisposalChain.cs" />
     <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />

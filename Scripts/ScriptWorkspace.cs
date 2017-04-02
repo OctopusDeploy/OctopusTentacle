@@ -21,7 +21,7 @@ namespace Octopus.Shared.Scripts
 
         public ScriptIsolationLevel IsolationLevel { get; set; }
 
-        TimeSpan scriptMutexAcquireTimeout;
+        TimeSpan scriptMutexAcquireTimeout = ScriptIsolationMutex.NoTimeout;
         public TimeSpan ScriptMutexAcquireTimeout {
             get { return scriptMutexAcquireTimeout; }
             set

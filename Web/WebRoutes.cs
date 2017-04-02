@@ -150,8 +150,8 @@ namespace Octopus.Shared.Web
 
             public static class Deployments
             {
-                public static string Template = "~/api/deployments{/id}{?skip,take,projects,environments,channels,taskState}";
-                public static string Index = "~/api/deployments{?skip,take,projects,environments,channels,taskState}";
+                public static string Template = "~/api/deployments{/id}{?skip,take,projects,environments,tenants,channels,taskState}";
+                public static string Index = "~/api/deployments{?skip,take,projects,environments,tenants,channels,taskState}";
                 public static string Get = "~/api/deployments/{id}";
             }
 
@@ -399,6 +399,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/channels/{id}";
                 public static string VersionRuleTest = "~/api/channels/rule-test{?version,versionRange,preReleaseTag}";
                 public static string GetReleases = "~/api/channels/{id}/releases{?skip}";
+                public static string Index = "~/api/channels{?skip}";
             }
 
             public static class Tenants
