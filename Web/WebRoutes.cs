@@ -402,6 +402,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/channels/{id}";
                 public static string VersionRuleTest = "~/api/channels/rule-test{?version,versionRange,preReleaseTag}";
                 public static string GetReleases = "~/api/channels/{id}/releases{?skip}";
+                public static string Index = "~/api/channels{?skip}";
             }
 
             public static class Tenants
