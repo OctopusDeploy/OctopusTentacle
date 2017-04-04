@@ -125,12 +125,13 @@ namespace Octopus.Shared.Util
             message.AppendLine("Ensure that the current user has access to listen on these prefixes by running the following command(s):");
             foreach (var prefix in prefixes)
             {
-                message.AppendFormat("  netsh http add urlacl url={0}://+:{1}{2} user={3}\\{4}",
+                message.AppendFormat("  netsh http add urlacl url={0}://{5}:{1}{2} user={3}\\{4}",
                     prefix.Scheme,
                     prefix.Port,
                     prefix.PathAndQuery,
                     Environment.UserDomainName,
-                    Environment.UserName)
+                    Environment.UserName,
+                    prefix.Host == "localhost" ? "+" : prefix.Host)
                     .AppendLine();
             }
 
