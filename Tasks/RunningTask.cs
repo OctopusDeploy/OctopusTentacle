@@ -22,6 +22,8 @@ namespace Octopus.Shared.Tasks
         readonly ILogWithContext log = Log.Octopus();
         readonly LogContext taskLogContext;
         bool isPaused;
+        bool failedToComplete;
+        Exception finalException;
 
         public RunningTask(string taskId, string logCorrelationId, string description, string additionalDescription, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback)
         {
@@ -34,7 +36,7 @@ namespace Octopus.Shared.Tasks
             this.completeCallback = completeCallback;
 
             taskLogContext = LogContext.CreateNew(logCorrelationId);
-            workThread = new Thread(RunMainThread) {Name = taskId + ": " + description};
+            workThread = new Thread(RunMainThread) { Name = taskId + ": " + description };
         }
 
         public string Id
@@ -73,7 +75,6 @@ namespace Octopus.Shared.Tasks
 
                 using (var workScope = lifetimeScope.BeginLifetimeScope())
                 {
-                    Exception ex = null;
                     try
                     {
                         var builder = new ContainerBuilder();
@@ -87,7 +88,7 @@ namespace Octopus.Shared.Tasks
                     }
                     catch (Exception e)
                     {
-                        ex = e;
+                        finalException = e;
                         var root = e.UnpackFromContainers();
 
                         if (root is OperationCanceledException || root is ThreadAbortException)
@@ -96,18 +97,23 @@ namespace Octopus.Shared.Tasks
                         }
                         else
                         {
-                            log.Fatal(root.MessageRecursive());
+                            log.Fatal(root.PrettyPrint(false));
                         }
                     }
                     finally
                     {
-                        CompleteTask(ex);
+                        CompleteTask();
                     }
                 }
-                if (!IsPaused() || IsCancellationRequested)
-                {
-                    log.Finish();
-                }
+              
+            }
+        }
+
+        void FinishLog()
+        {
+            if (!IsPaused() || IsCancellationRequested)
+            {
+                log.Finish();
             }
         }
 
@@ -135,6 +141,11 @@ namespace Octopus.Shared.Tasks
             return isPaused;
         }
 
+        public bool FailedToComplete()
+        {
+            return failedToComplete;
+        }
+
         public void SleepUnlessCancelled(TimeSpan duration)
         {
             CancellationToken.WaitHandle.WaitOne(duration);
@@ -148,21 +159,34 @@ namespace Octopus.Shared.Tasks
             }
         }
 
-        void CompleteTask(Exception error)
+        void CompleteTask()
         {
             try
             {
                 complete.Set();
 
-                if (completeCallback != null)
-                {
-                    completeCallback(taskId, error);
-                }
+                completeCallback?.Invoke(taskId, finalException);
+                FinishLog();
             }
             catch (Exception completeEx)
             {
-                log.Error(completeEx, "Unable to mark task " + Id + " as complete: " + completeEx.Message);
+                failedToComplete = true;
+                log.Warn($"Unable to mark task as complete, will continue to retry");
+                log.Warn(completeEx.PrettyPrint(false));
             }
         }
+
+
+        public void ReattemptCompleteTask()
+        {
+            completeCallback?.Invoke(taskId, finalException);
+            failedToComplete = false;
+            using (log.WithinBlock(taskLogContext))
+            {
+                log.Info("Sucessfully marked task as complete");
+                FinishLog();
+            }
+        }
+
     }
 }
