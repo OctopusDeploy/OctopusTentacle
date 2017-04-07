@@ -38,11 +38,17 @@ namespace Octopus.Shared.Licensing
         public bool CheckHash(Encoding encoding, string joinedElements, string expectedSignature)
         {
             if (encoding == null) return false;
-            var hasher = new SHA1CryptoServiceProvider();
-            var hash = hasher.ComputeHash(encoding.GetBytes(joinedElements));
 
-            var rsa = (RSACryptoServiceProvider)certificateProvider.GetCertificate().PublicKey.Key;
-            return rsa.VerifyHash(hash, CryptoConfig.MapNameToOID("SHA1"), Convert.FromBase64String(expectedSignature));
+            byte[] hash;
+            using (var hasher = new SHA1CryptoServiceProvider())
+            {
+                hash = hasher.ComputeHash(encoding.GetBytes(joinedElements));
+            }
+
+            using (var rsa = (RSACryptoServiceProvider) certificateProvider.GetCertificate().PublicKey.Key)
+            {
+                return rsa.VerifyHash(hash, CryptoConfig.MapNameToOID("SHA1"), Convert.FromBase64String(expectedSignature));
+            }
         }
     }
 }
