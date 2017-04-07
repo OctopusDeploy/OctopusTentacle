@@ -45,10 +45,9 @@ namespace Octopus.Shared.Licensing
                 hash = hasher.ComputeHash(encoding.GetBytes(joinedElements));
             }
 
-            using (var rsa = (RSACryptoServiceProvider) certificateProvider.GetCertificate().PublicKey.Key)
-            {
-                return rsa.VerifyHash(hash, CryptoConfig.MapNameToOID("SHA1"), Convert.FromBase64String(expectedSignature));
-            }
+            // Once loaded this will use the same instance of the RSACryptoServiceProvider
+            var rsa = (RSACryptoServiceProvider) certificateProvider.GetCertificate().PublicKey.Key;
+            return rsa.VerifyHash(hash, CryptoConfig.MapNameToOID("SHA1"), Convert.FromBase64String(expectedSignature));
         }
     }
 }
