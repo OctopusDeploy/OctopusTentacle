@@ -8,5 +8,7 @@ namespace Octopus.Shared.Tasks
         void Cancel();
         bool IsPaused();
         void Pause();
+        bool FailedToComplete();
+        void ReattemptCompleteTask();
     }
 }
