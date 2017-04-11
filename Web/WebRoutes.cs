@@ -234,6 +234,7 @@ namespace Octopus.Shared.Web
                 public static string QueuedBehind = "~/api/tasks/{id}/queued-behind{?skip}";
                 public static string Rerun = "~/api/tasks/rerun/{id}";
                 public static string Cancel = "~/api/tasks/{id}/cancel";
+                public static string State = "~/api/tasks/{id}/state";
             }
 
             public static class Scheduler
