@@ -9,19 +9,31 @@ namespace Octopus.Shared.Util
     {
         public static string Hash(Stream stream)
         {
-            var hash = GetAlgorithm().ComputeHash(stream);
-            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            using (var hasher = new SHA1CryptoServiceProvider())
+            {
+                return Sanitize(hasher.ComputeHash(stream));
+            }
+        }
+
+        public static string Hash(byte[] bytes)
+        {
+            using (var hasher = new SHA1CryptoServiceProvider())
+            {
+                return Sanitize(hasher.ComputeHash(bytes));
+            }
         }
 
         public static string Hash(string input)
         {
-            var hash = GetAlgorithm().ComputeHash(Encoding.UTF8.GetBytes(input));
-            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            using (var hasher = new SHA1CryptoServiceProvider())
+            {
+                return Sanitize(hasher.ComputeHash(Encoding.UTF8.GetBytes(input)));
+            }
         }
 
-        static HashAlgorithm GetAlgorithm()
+        static string Sanitize(byte[] hash)
         {
-            return new SHA1CryptoServiceProvider();
+            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
         }
     }
 }
