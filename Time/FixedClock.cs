@@ -24,7 +24,7 @@ namespace Octopus.Shared.Time
 
         public DateTimeOffset GetUtcTime()
         {
-            return Clone().now;
+            return Clone().now.ToUniversalTime();
         }
 
         public DateTimeOffset GetLocalTime()
