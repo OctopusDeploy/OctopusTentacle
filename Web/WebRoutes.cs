@@ -290,7 +290,7 @@ namespace Octopus.Shared.Web
 
             public static class Dashboards
             {
-                public static string Template = "~/api/dashboard{?projectId,releaseId,selectedTenants,selectedTags,showAll}";
+                public static string Template = "~/api/dashboard{?projectId,releaseId,selectedTenants,selectedTags,showAll,highestVersionPerProjectAndEnvironment}";
                 public static string DynamicTemplate = "~/api/dashboard/dynamic{?projects,environments,includePrevious}";
             }
 
