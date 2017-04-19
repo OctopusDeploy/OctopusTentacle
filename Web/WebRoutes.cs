@@ -37,7 +37,10 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/actiontemplates/{id}";
                 public static string Usage = "~/api/actiontemplates/{id}/usage";
                 public static string Logo = "~/api/actiontemplates/{typeOrId}/logo";
-                public static string Search = "~/api/actiontemplates/search"; 
+                public static string VersionedLogo = "~/api/actiontemplates/{typeOrId}/versions/{version}/logo";
+                public static string Search = "~/api/actiontemplates/search";
+                public static string ActionsUpdate = "~/api/actiontemplates/{id}/actionsUpdate";
+                public static string Versions = "~/api/actiontemplates/{id}/versions/{version}";
             }
 
             public static class Alerts
@@ -300,6 +303,7 @@ namespace Octopus.Shared.Web
             public static class Licenses
             {
                 public static string Current = "~/api/licenses/licenses-current";
+                public static string CurrentStatus = "~/api/licenses/licenses-current-status";
             }
 
             public static class Users
@@ -399,6 +403,7 @@ namespace Octopus.Shared.Web
                 public static string Get = "~/api/channels/{id}";
                 public static string VersionRuleTest = "~/api/channels/rule-test{?version,versionRange,preReleaseTag}";
                 public static string GetReleases = "~/api/channels/{id}/releases{?skip}";
+                public static string Index = "~/api/channels{?skip}";
             }
 
             public static class Tenants
@@ -438,6 +443,11 @@ namespace Octopus.Shared.Web
             public static class UpgradeConfiguration
             {
                 public static string Template = "~/api/upgradeconfiguration";
+            }
+
+            public static class UserOnboarding
+            {
+                public static string Template = "~/api/useronboarding";
             }
         }
 

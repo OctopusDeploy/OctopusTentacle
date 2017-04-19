@@ -514,6 +514,9 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "If true, the all files in the `Octopus.Action.Package.CustomInstallationDirectory` will be deleted before deployment", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string CustomInstallationDirectoryShouldBePurgedBeforeDeployment =
                     "Octopus.Action.Package.CustomInstallationDirectoryShouldBePurgedBeforeDeployment";
 
+                [Define(Category = VariableCategory.Action, Description = "The directory where the package was installed, it is not available prior to package extraction", Example = "C:\\InetPub\\WWWRoot\\OctoFx")]
+                public static readonly string InstallationDirectoryPath = "Octopus.Action.Package.InstallationDirectoryPath";
+
                 [Define(Category = VariableCategory.Hidden)] public static readonly string AutomaticallyUpdateAppSettingsAndConnectionStrings = "Octopus.Action.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string AutomaticallyRunConfigurationTransformationFiles = "Octopus.Action.Package.AutomaticallyRunConfigurationTransformationFiles";
                 [Define(Category = VariableCategory.Hidden)] [DeprecatedAlias("Octopus.Action.Package.IgnoreConfigTranformationErrors")] public static readonly string IgnoreConfigTransformationErrors = "Octopus.Action.Package.IgnoreConfigTransformationErrors";

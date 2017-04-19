@@ -53,12 +53,8 @@
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.2.5.0\lib\net45\Halibut.dll</HintPath>
-    </Reference>
-    <Reference Include="Nevermore.Contracts, Version=2.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nevermore.Contracts.2.0.3\lib\netstandard1.0\Nevermore.Contracts.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Halibut, Version=2.6.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Halibut.2.6.1\lib\net45\Halibut.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Win32.TaskScheduler, Version=2.5.21.0, Culture=neutral, PublicKeyToken=0d013ddd5178a2ae, processorArchitecture=MSIL">
       <HintPath>..\packages\TaskScheduler.2.5.21\lib\net40\Microsoft.Win32.TaskScheduler.dll</HintPath>
@@ -110,10 +106,6 @@
     </Reference>
     <Reference Include="Octopus.Configuration, Version=1.0.10.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Configuration.1.0.10\lib\net45\Octopus.Configuration.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Octopus.Data, Version=1.0.19.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Data.1.0.19\lib\netstandard1.0\Octopus.Data.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Diagnostics, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
@@ -222,6 +214,7 @@
     <Compile Include="Diagnostics\LogContext.cs" />
     <Compile Include="Startup\CheckServicesCommand.cs" />
     <Compile Include="Startup\WatchdogCommand.cs" />
+    <Compile Include="Templates\ControlType.cs" />
     <Compile Include="Time\IStopwatch.cs" />
     <Compile Include="Time\StopWatch.cs" />
     <Compile Include="Security\Masking\AhoCorasick.cs" />

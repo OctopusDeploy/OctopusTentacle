@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -33,8 +34,17 @@ namespace Octopus.Shared.Util
                 return;
             }
 
-            sb.AppendLine(ex.Message);
-            
+            var sqlEx = ex as SqlException;
+            if (sqlEx != null)
+            {
+                sb.AppendLine($"SQL Error {sqlEx.Number} - {ex.Message}");
+            }
+            else
+            {
+                sb.AppendLine(ex.Message);
+            }
+
+
             if (ex is ControlledFailureException)
                 return;
 
@@ -125,12 +135,13 @@ namespace Octopus.Shared.Util
             message.AppendLine("Ensure that the current user has access to listen on these prefixes by running the following command(s):");
             foreach (var prefix in prefixes)
             {
-                message.AppendFormat("  netsh http add urlacl url={0}://+:{1}{2} user={3}\\{4}",
+                message.AppendFormat("  netsh http add urlacl url={0}://{5}:{1}{2} user={3}\\{4}",
                     prefix.Scheme,
                     prefix.Port,
                     prefix.PathAndQuery,
                     Environment.UserDomainName,
-                    Environment.UserName)
+                    Environment.UserName,
+                    prefix.Host == "localhost" ? "+" : prefix.Host)
                     .AppendLine();
             }
 
@@ -161,12 +172,6 @@ namespace Octopus.Shared.Util
 
             return message.ToString();
         }
-
-        public static string MessageRecursive(this Exception ex)
-        {
-            return ex.InnerException == null
-                ? ex.Message
-                : ex.Message + Environment.NewLine + ex.InnerException.MessageRecursive();
-        }
+        
     }
 }
