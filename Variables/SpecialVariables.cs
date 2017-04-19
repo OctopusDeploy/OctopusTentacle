@@ -577,6 +577,40 @@ namespace Octopus.Shared.Variables
             public static class Iis
             {
                 public static readonly string ActionTypeName = "Octopus.IIS";
+
+                public static class DeploymentType
+                {
+                    public static readonly string WebSite = "webSite";
+                    public static readonly string WebApplication = "webApplication";
+                    public static readonly string VirtualDirectory = "virtualDirectory";
+                }
+
+                public static class WebSite
+                {
+                    public static readonly string DeploymentType = "Octopus.Action.IISWebSite.DeploymentType";
+
+                    public static readonly string WebSiteName = "Octopus.Action.IISWebSite.WebSiteName";
+                    public static readonly string ApplicationPoolName = "Octopus.Action.IISWebSite.ApplicationPoolName";
+                    public static readonly string ApplicationPoolUserName = "Octopus.Action.IISWebSite.ApplicationPoolUsername";
+                    public static readonly string Bindings = "Octopus.Action.IISWebSite.Bindings";
+                    public static readonly string ApplicationPoolIdentityType = "Octopus.Action.IISWebSite.ApplicationPoolIdentityType";
+                    public static readonly string EnableAnonymousAuthentication = "Octopus.Action.IISWebSite.EnableAnonymousAuthentication";
+                    public static readonly string EnableBasicAuthentication = "Octopus.Action.IISWebSite.EnableBasicAuthentication";
+                    public static readonly string EnableWindowsAuthentication = "Octopus.Action.IISWebSite.EnableWindowsAuthentication";
+                }
+
+                public static class WebApplication
+                {
+                    public static readonly string WebSiteName = "Octopus.Action.IISWebSite.WebApplication.WebSiteName";
+                    public static readonly string VirtualPath = "Octopus.Action.IISWebSite.WebApplication.VirtualPath";
+                    public static readonly string ApplicationPoolName = "Octopus.Action.IISWebSite.WebApplication.ApplicationPoolName";
+
+                }
+                public static class VirtualDirectory
+                {
+                    public static readonly string WebSiteName = "Octopus.Action.IISWebSite.VirtualDirectory.WebSiteName";
+                    public static readonly string VirtualPath = "Octopus.Action.IISWebSite.VirtualDirectory.VirtualPath";
+                }
             }
 
             public static class WindowsService
