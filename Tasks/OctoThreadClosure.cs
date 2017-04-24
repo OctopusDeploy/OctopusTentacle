@@ -19,31 +19,43 @@ namespace Octopus.Shared.Tasks
 
         public void Execute()
         {
-            using (log.WithinBlock(item.LogContext))
+            try
             {
-                try
+                using (log.WithinBlock(item.LogContext))
                 {
-                    executeCallback(item.WorkItem);
+                    try
+                    {
+                        executeCallback(item.WorkItem);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex is OperationCanceledException)
+                        {
+                            log.Info(ex.Message);
+                        }
+                        else if (ex is ControlledFailureException)
+                        {
+                            log.Error(ex.Message);
+                        }
+                        else
+                        {
+                            log.Fatal(ex.Message);
+                        }
+                        Exception = ex;
+                    }
+                    finally
+                    {
+                        log.Finish();
+                    }
                 }
-                catch (Exception ex)
-                {
-                    if (ex is OperationCanceledException)
-                    {
-                        log.Info(ex.Message);
-                    } else if (ex is ControlledFailureException)
-                    {
-                        log.Error(ex.Message);
-                    }
-                    else
-                    {
-                        log.Fatal(ex.Message);
-                    }
+            }
+            catch (Exception ex)
+            {
+                // Something must have gone wrong finishing or disposing the log context
+                // If we let the exception propogate, it will tear down the process
+
+                if (Exception != null)
                     Exception = ex;
-                }
-                finally
-                {
-                    log.Finish();
-                }
             }
         }
     }
