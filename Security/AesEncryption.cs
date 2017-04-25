@@ -83,8 +83,10 @@ namespace Octopus.Shared.Security
         
         byte[] GetEncryptionKey(string encryptionPassword)
         {
-            var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations);
-            return passwordGenerator.GetBytes(16);
+            using (var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations))
+            {
+                return passwordGenerator.GetBytes(16);
+            }
         }
     }
 }
