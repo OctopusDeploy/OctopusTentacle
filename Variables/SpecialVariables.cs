@@ -296,6 +296,11 @@ namespace Octopus.Shared.Variables
                 public static readonly string NextBuild = "Octopus.Version.Channel.NextBuild";
                 public static readonly string NextRevision = "Octopus.Version.Channel.NextRevision";
                 public static readonly string NextSuffix = "Octopus.Version.Channel.NextSuffix";
+
+                public static string CreateChannelIndexedVariable(string variable, string channelName)
+                {
+                    return variable.Replace("Octopus.Version.Channel", $"Octopus.Version.Channel[{channelName}]");
+                }
             }
         }
 
