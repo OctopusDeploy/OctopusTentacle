@@ -54,7 +54,7 @@ namespace Octopus.Shared.Tasks
                 // Something must have gone wrong finishing or disposing the log context
                 // If we let the exception propogate, it will tear down the process
 
-                if (Exception != null)
+                if (Exception == null)
                     Exception = ex;
             }
         }
