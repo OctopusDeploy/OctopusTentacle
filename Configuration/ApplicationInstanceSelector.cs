@@ -12,6 +12,7 @@ namespace Octopus.Shared.Configuration
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
         readonly ILog log;
+        readonly object @lock = new object();
 
         public ApplicationInstanceSelector(ApplicationName applicationName,
             string instanceName,
@@ -27,7 +28,21 @@ namespace Octopus.Shared.Configuration
         }
         
         private LoadedApplicationInstance current;
-        public LoadedApplicationInstance Current => current ?? (current = DoLoad());
+        public LoadedApplicationInstance Current
+        {
+            get
+            {
+                if (current == null)
+                {
+                    lock (@lock)
+                    {
+                        if (current == null)
+                            current = DoLoad();
+                    }
+                }
+                return current;
+            }
+        }
 
         LoadedApplicationInstance DoLoad()
         {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
