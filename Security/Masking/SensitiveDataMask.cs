@@ -24,7 +24,7 @@ namespace Octopus.Shared.Security.Masking
 
         internal void MaskInstancesOf(string instanceToMask)
         {
-            MaskInstancesOf(new[] {instanceToMask});
+            MaskInstancesOf(new[] { instanceToMask });
         }
 
         public void MaskInstancesOf(IEnumerable<string> instancesToMask)
@@ -99,7 +99,7 @@ namespace Octopus.Shared.Security.Masking
 
             foreach (var maskedSection in maskedSections)
             {
-               // If we are not at the start of the masked section, then progress to it 
+                // If we are not at the start of the masked section, then progress to it 
                 while (i < maskedSection.Item1)
                 {
                     builder.Append(raw[i++]);
@@ -142,7 +142,7 @@ namespace Octopus.Shared.Security.Masking
             }
 
             var matches = trie.Find(builder.ToString());
-            var maskedSections = new Queue<Tuple<int,int>>(GetMaskedSections(matches.Found));
+            var maskedSections = new Queue<Tuple<int, int>>(GetMaskedSections(matches.Found));
 
             // Process each deferred action, masking as appropriate
             var currentEndIndex = -1;
@@ -224,7 +224,8 @@ namespace Octopus.Shared.Security.Masking
         /// </summary>
         public void Flush()
         {
-            ProcessDeferred(); 
+            lock (sync)
+                ProcessDeferred();
         }
 
         class DeferredAction
@@ -233,7 +234,7 @@ namespace Octopus.Shared.Security.Masking
             {
                 Text = text;
                 Action = action;
-            } 
+            }
 
             public string Text { get; }
             public Action<string> Action { get; }

@@ -227,8 +227,8 @@ namespace Octopus.Shared.Web
 
             public static class Tasks
             {
-                public static string Template = "~/api/tasks{/id}{?skip,active,environment,project,name,node,running}";
-                public static string Index = "~/api/tasks{?skip,active,environment,project,name,node,running}";
+                public static string Template = "~/api/tasks{/id}{?skip,active,environment,project,name,node,running,hasPendingInterruptions}";
+                public static string Index = "~/api/tasks{?skip,active,environment,project,name,node,running,hasPendingInterruptions}";
                 public static string Get = "~/api/tasks/{id}";
                 public static string Details = "~/api/tasks/{id}/details{?verbose,tail}";
                 public static string Raw = "~/api/tasks/{id}/raw";
@@ -291,7 +291,7 @@ namespace Octopus.Shared.Web
 
             public static class Dashboards
             {
-                public static string Template = "~/api/dashboard{?projectId,releaseId,selectedTenants,selectedTags,showAll}";
+                public static string Template = "~/api/dashboard{?projectId,releaseId,selectedTenants,selectedTags,showAll,highestLatestVersionPerProjectAndEnvironment}";
                 public static string DynamicTemplate = "~/api/dashboard/dynamic{?projects,environments,includePrevious}";
             }
 
