@@ -38,7 +38,7 @@ namespace Octopus.Shared.Configuration
 
         public TData Get<TData>(string name, TData defaultValue = default(TData), DataProtectionScope? protectionScope = null)
         {
-            if (name == null) throw new ArgumentNullException("name");
+            if (name == null) throw new ArgumentNullException(nameof(name));
 
             var s = Get(name, protectionScope);
             if (s == null)
@@ -52,11 +52,13 @@ namespace Octopus.Shared.Configuration
 
         public void Set(string name, string value, DataProtectionScope? protectionScope = null)
         {
-            if (name == null) throw new ArgumentNullException("name");
+            if (name == null) throw new ArgumentNullException(nameof(name));
 
             if (string.IsNullOrWhiteSpace(value))
             {
                 Write(name, null);
+                if (autoSaveOnSet)
+                    Save();
                 return;
             }
 
@@ -72,16 +74,13 @@ namespace Octopus.Shared.Configuration
             }
 
             Write(name, v);
-
             if (autoSaveOnSet)
-            {
                 Save();
-            }
         }
 
         public void Set<TData>(string name, TData value, DataProtectionScope? protectionScope = null)
         {
-            if (name == null) throw new ArgumentNullException("name");
+            if (name == null) throw new ArgumentNullException(nameof(name));
 
             if (typeof (TData) == typeof (string))
                 Set(name, (string)(object)value, protectionScope);
