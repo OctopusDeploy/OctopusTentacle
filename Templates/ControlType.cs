@@ -5,6 +5,8 @@ namespace Octopus.Shared.Templates
 {
     public static class ControlType
     {
+        public static readonly string ControlTypeKey = "Octopus.ControlType";
+
         public const string SingleLineText = "SingleLineText";
         public const string MultiLineText = "MultiLineText";
         public const string Select = "Select";
@@ -18,7 +20,7 @@ namespace Octopus.Shared.Templates
         {
             return new Dictionary<string, string>()
             {
-                {"Octopus.ControlType", controlType}
+                {ControlTypeKey, controlType}
             };
         }
     }
