@@ -732,6 +732,12 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Action, Description = "The name of the certificate variable the action will use", Example = "Acme-Production")]
                 public static readonly string CertificateVariable = "Octopus.Action.Certificate.Variable";
+
+                [Define(Category = VariableCategory.Action, Description = "The certificate store location. i.e. CurrentUser or LocalMachine", Example = "LocalMachine")]
+                public static readonly string StoreLocation = "Octopus.Action.Certificate.StoreLocation";
+
+                [Define(Category = VariableCategory.Action, Description = "The certificate store name", Example = "My")]
+                public static readonly string StoreName = "Octopus.Action.Certificate.StoreName";
             }
 
             public static class PowerShell
