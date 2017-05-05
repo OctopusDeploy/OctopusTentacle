@@ -8,7 +8,6 @@ namespace Octopus.Shared.Startup
 {
     public abstract class AbstractCommand : ICommand
     {
-        readonly OptionSet options = new OptionSet();
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
         bool showLogo = true;
 
@@ -17,17 +16,14 @@ namespace Octopus.Shared.Startup
             Options.Add("nologo", "Don't print title or version information", v => showLogo = false);
         }
 
-        protected OptionSet Options
-        {
-            get { return options; }
-        }
+        protected OptionSet Options { get; } = new OptionSet();
 
         protected ICommandRuntime Runtime { get; private set; }
 
         protected TOptionSet AddOptionSet<TOptionSet>(TOptionSet commandOptions)
             where TOptionSet : class, ICommandOptions
         {
-            if (commandOptions == null) throw new ArgumentNullException("commandOptions");
+            if (commandOptions == null) throw new ArgumentNullException(nameof(commandOptions));
             optionSets.Add(commandOptions);
             return commandOptions;
         }
@@ -67,7 +63,7 @@ namespace Octopus.Shared.Startup
         {
             Runtime = commandRuntime;
 
-            var unrecognized = options.Parse(commandLineArguments);
+            var unrecognized = Options.Parse(commandLineArguments);
             UnrecognizedArguments(unrecognized);
 
             foreach (var opset in optionSets)
