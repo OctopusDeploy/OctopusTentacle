@@ -26,8 +26,8 @@ namespace Octopus.Shared.Configuration
             this.instanceStore = instanceStore;
             this.log = log;
         }
-        
-        private LoadedApplicationInstance current;
+
+        LoadedApplicationInstance current;
         public LoadedApplicationInstance Current
         {
             get
@@ -77,7 +77,7 @@ namespace Octopus.Shared.Configuration
             log.Info("Deleted instance: " + instanceName);
         }
 
-        private LoadedApplicationInstance LoadDefaultInstance()
+        LoadedApplicationInstance LoadDefaultInstance()
         {
             var instance = instanceStore.GetDefaultInstance(applicationName);
             if (instance == null)
@@ -86,7 +86,7 @@ namespace Octopus.Shared.Configuration
             return Load(instance);
         }
 
-        private LoadedApplicationInstance LoadInstance(string instanceName)
+        LoadedApplicationInstance LoadInstance(string instanceName)
         {
             var instance = instanceStore.GetInstance(applicationName, instanceName);
             if (instance == null)
