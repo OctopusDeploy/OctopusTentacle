@@ -238,6 +238,11 @@ namespace Octopus.Shared.Web
                 public static string State = "~/api/tasks/{id}/state";
             }
 
+            public static class Migrations
+            {
+                public static string PartialExport = "~/api/migrations/partialexport{?exportPassword,projects}";
+            }
+
             public static class Scheduler
             {
                 public static string Get = "~/api/scheduler/{name}/logs{?verbose,tail}";
