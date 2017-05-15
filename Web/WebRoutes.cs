@@ -240,7 +240,8 @@ namespace Octopus.Shared.Web
 
             public static class Migrations
             {
-                public static string PartialExport = "~/api/migrations/partialexport{?exportPassword,projects}";
+                public static string PartialExport = "~/api/migrations/partialexport{?password,projects}";
+                public static string Import = "~/api/migrations/import{?password,packageId}";
             }
 
             public static class Scheduler
