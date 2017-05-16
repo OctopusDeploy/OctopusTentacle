@@ -13,6 +13,6 @@
     <iconUrl>http://i.octopusdeploy.com/resources/Avatar3-32x32.png</iconUrl>
   </metadata>
   <files>
-    <file src="Octopus.Shared.dll" />
+    <file src="Octopus.Shared.dll" target="lib" />
   </files>
 </package>
