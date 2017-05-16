@@ -91,7 +91,7 @@ Task("__PackNuget")
     .Does(() =>
 {
     CreateDirectory(packageDir);
-    CopyFiles("./source/Octopus.Tentacle/bin/*", packageDir);
+    CopyFiles("./source/Octopus.Manager.Tentacle/bin/*", packageDir);
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.nuspec", packageDir);
 
     CreateDirectory(artifactsDir);
