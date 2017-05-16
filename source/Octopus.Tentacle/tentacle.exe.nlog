@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<nlog
+  xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  autoReload="true"
+  throwExceptions="false"
+  internalLogLevel="Warn"
+  internalLogToConsole="true">
+
+  <extensions>
+    <add assembly="Octopus.Shared"/>
+  </extensions>
+
+  <variable name="appName" value="Octopus Tentacle" />
+  <variable name="messageLayout" value="${message}${onexception:${newline}${exception:format=ToString}}"/>
+  <variable name="normalLayout" value="${longdate}  ${threadid:padding=5} ${uppercase:${level}:padding=5}  ${messageLayout}"/>
+
+  <targets async="false">
+    <target name="octopus-log-file" xsi:type="File"
+        layout="${normalLayout}"
+        fileName="${octopusLogsDirectory}/OctopusTentacle.txt"
+        archiveFileName="${octopusLogsDirectory}/OctopusTentacle.{#}.txt"
+        archiveEvery="Day"
+        archiveNumbering="Rolling"
+        maxArchiveFiles="7"
+        concurrentWrites="true"
+        keepFileOpen="false" />
+
+    <target xsi:type="ColoredConsole" name="console" layout="${messageLayout}"/>
+    <target xsi:type="EventLog" name="eventlog" source="${appName}" layout="${normalLayout}" />
+  </targets>
+
+  <rules>
+    <logger name="SkipConsole" minlevel="Info" writeTo="octopus-log-file" />
+    <logger name="SkipConsole" minlevel="Fatal" writeTo="eventlog" final="true" />
+    
+    <logger name="*" minlevel="Info" writeTo="octopus-log-file" />
+    <logger name="*" minlevel="Fatal" writeTo="eventlog" />
+    <logger name="*" minlevel="Info" writeTo="console" />
+  </rules>
+</nlog>
