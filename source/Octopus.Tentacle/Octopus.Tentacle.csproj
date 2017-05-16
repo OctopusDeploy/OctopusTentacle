@@ -97,7 +97,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Shared, Version=3.13.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Shared.3.13.3-tentsplit0010\lib\Octopus.Shared.dll</HintPath>
+      <HintPath>..\packages\Octopus.Shared.3.13.3-tentsplit0011\lib\Octopus.Shared.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.0.8.0, Culture=neutral, processorArchitecture=MSIL">

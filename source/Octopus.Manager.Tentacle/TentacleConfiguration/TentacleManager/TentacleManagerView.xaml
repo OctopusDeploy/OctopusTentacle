@@ -1,0 +1,163 @@
+﻿<UserControl 
+    x:Class="Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager.TentacleManagerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:controls="clr-namespace:Octopus.Manager.Core.Shared.Controls;assembly=Octopus.Manager.Core"
+    mc:Ignorable="d" 
+    d:DesignHeight="600" d:DesignWidth="800"
+    >
+    <Grid Grid.IsSharedSizeScope="True">
+        <Border Name="findingInstallation">
+            <StackPanel Margin="10" Height="300" VerticalAlignment="Center">
+                <TextBlock Margin="10" TextAlignment="Center" Text="Searching for Octopus Tentacle installation..." />
+            </StackPanel>
+        </Border>
+
+        <Border Name="newInstallation" Margin="30" VerticalAlignment="Center">
+            <StackPanel>
+                <TextBlock Text="Welcome!" FontSize="13pt" Margin="10" TextAlignment="Center" />
+                <TextBlock Margin="10" TextAlignment="Center" TextWrapping="Wrap" Text="Our getting started wizard will guide you through configuring your Tentacle deployment agent." />
+                <Button Click="SetupTentacle" Margin="20" HorizontalAlignment="Center" FontSize="12pt" Padding="18,8,18,8" Style="{StaticResource Button.Success}">Get started...</Button>
+            </StackPanel>
+        </Border>
+
+        <Border Name="existingInstallation">
+            <ScrollViewer HorizontalScrollBarVisibility="Hidden" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalScrollBarVisibility="Auto">
+
+                <Border Width="{Binding ElementName=existingInstallation, Path=ActualWidth}">
+
+                    <StackPanel>
+
+                        <Border Margin="0" Style="{StaticResource Border.Status.Red}" Visibility="{Binding Path=ServiceWatcher.IsNotRunning, Converter={StaticResource Converter.BooleanToVisibility}}">
+                            <Grid Margin="0,0,0,0">
+                                <TextBlock Foreground="White" VerticalAlignment="Center" Grid.Column="1" Margin="10,8,-0.428,7.429" Grid.ColumnSpan="2">
+                                                The Tentacle Windows Service (<Run Text="{Binding Path=ServiceWatcher.ServiceName, Mode=OneWay}"/>) is 
+                                                <Run Text="{Binding Path=ServiceWatcher.StatusSummary}" />.
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+
+                        <StackPanel Grid.Column="0"  Margin="10,0,10,0">
+
+                            <StackPanel Margin="10">
+                                <Border Style="{StaticResource Border.BorderedHeader}">
+                                    <TextBlock Margin="0,0,0,5" Padding="0" Text="Tentacle Windows Service" Style="{StaticResource TextBlock.Heading}" />
+                                </Border>
+
+                                <Grid Margin="20,0,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="Links" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="1" >
+
+                                        <TextBlock Margin="0,10,0,0">
+                                        The Tentacle Windows Service (<Run FontWeight="Bold" Text="{Binding Path=ServiceWatcher.ServiceName, Mode=OneWay}"/>) is 
+                                        <Run Text="{Binding Path=ServiceWatcher.StatusSummary}" />.
+                                        </TextBlock>
+
+                                        <TextBlock Margin="0,10,0,0" FontSize="9pt" Foreground="Gray" TextWrapping="Wrap">Home directory: <Hyperlink Click="BrowseHome"><Run Text="{Binding Path=HomeDirectory}" /></Hyperlink></TextBlock>
+                                        <TextBlock Margin="0,2,0,0" FontSize="9pt" Foreground="Gray" TextWrapping="Wrap">Logs directory:<Hyperlink Click="BrowseLogs"><Run Text="{Binding Path=LogsDirectory}" /></Hyperlink></TextBlock>
+
+                                        <StackPanel>
+                                            <TextBlock Margin="0,10,0,0" TextWrapping="Wrap">The thumbprint of the certificate that securely identifies this Tentacle is shown below. This should match the value shown on the Machine configuration page in the Octopus web portal.</TextBlock>
+                                            <TextBox FontWeight="Bold" FontFamily="Consolas" IsReadOnly="True" Margin="0,10,10,0" Text="{Binding Path=Thumbprint, Mode=OneWay}"/>
+                                            <TextBlock Margin="0,10,0,0" FontSize="9pt" Foreground="Gray" Text="{Binding Path=Trust, Mode=OneWay}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,10,0" DataContext="{Binding Path=ServiceWatcher}">
+                                        <controls:ImageLink
+                                            BigImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_next@2.png"
+                                            SmallImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_next.png"
+                                            Text="Start"
+                                            Margin="0,10,0,0"
+                                            IsEnabled="{Binding Path=CanStart, Mode=OneWay}"
+                                            Click="StartServiceClicked"
+                                            Visibility="{Binding Path=CanStart, Mode=OneWay, Converter={StaticResource Converter.InverseBooleanToVisibilityConverter}}"
+                                            />
+                                        <controls:ImageLink
+                                            BigImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_next@2.png"
+                                            SmallImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_next.png"
+                                            Text="Start"
+                                            Margin="0,10,0,0"
+                                            IsEnabled="{Binding Path=CanStart, Mode=OneWay}"
+                                            Click="StartServiceClicked"
+                                            FontWeight="Bold"
+                                            Visibility="{Binding Path=CanStart, Mode=OneWay, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"
+                                            />
+                                        <controls:ImageLink
+                                            BigImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_last@2.png"
+                                            SmallImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_last.png"
+                                            Text="Restart"
+                                            Click="RestartServiceClicked"
+                                            IsEnabled="{Binding Path=CanRestart, Mode=OneWay}"
+                                            Margin="0,10,0,0" 
+                                            />
+                                        <controls:ImageLink
+                                            BigImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_delete@2.png"
+                                            SmallImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_delete.png"
+                                            Text="Stop"
+                                            Click="StopServiceClicked"
+                                            IsEnabled="{Binding Path=CanStop}"
+                                            Margin="0,10,0,0" 
+                                            />
+                                        <controls:ImageLink
+                                            BigImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_orange_next@2.png"
+                                            SmallImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_orange_next.png"
+                                            Text="Reinstall"
+                                            Click="RepairServiceClicked"
+                                            Margin="0,10,0,0" 
+                                            />
+                                    </StackPanel>
+                                </Grid>
+
+
+                            </StackPanel>
+
+                            <StackPanel Margin="10,10,10,30">
+                                <Border Style="{StaticResource Border.BorderedHeader}">
+                                    <TextBlock Margin="0,0,0,5" Padding="0" Text="Other tasks" Style="{StaticResource TextBlock.Heading}" />
+                                </Border>
+
+                                <Grid Margin="20,0,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="Links" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="1" >
+                                        <TextBlock Margin="0,10,0,0" TextWrapping="Wrap"  Text="{Binding Path=ProxyStatus}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,10,0">
+                                        <controls:ImageLink
+                                        BigImage="/Octopus.Manager.Core;component/Resources/Images/server_network-internet@2.png"
+                                        SmallImage="/Octopus.Manager.Core;component/Resources/Images/server_network-internet.png"
+                                        Text="Change proxy server settings..."
+                                        Margin="0,10,0,0" 
+                                        Click="ShowProxy"
+                                        />
+                                        <controls:ImageLink
+                                        BigImage="/Octopus.Manager.Core;component/Resources/Images/delete@2.png"
+                                        SmallImage="/Octopus.Manager.Core;component/Resources/Images/delete.png"
+                                        Text="Delete this Tentacle instance..."
+                                        Margin="0,10,0,0" 
+                                        Click="DeleteInstance"
+                                        />
+                                    </StackPanel>
+                                </Grid>
+
+
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+
+                </Border>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>
