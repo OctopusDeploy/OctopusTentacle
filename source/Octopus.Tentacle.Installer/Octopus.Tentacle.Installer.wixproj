@@ -12,14 +12,14 @@
     <DefineSolutionProperties>False</DefineSolutionProperties>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <OutputPath>bin\</OutputPath>
+    <OutputPath>bin\x86\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>Debug;TentacleSource=..\..\Build\Installer</DefineConstants>
     <SuppressPdbOutput>True</SuppressPdbOutput>
     <SuppressValidation>True</SuppressValidation>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>bin\</OutputPath>
+    <OutputPath>bin\x86\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <SuppressPdbOutput>True</SuppressPdbOutput>
     <DefineConstants>TentacleSource=..\..\Build\Installer</DefineConstants>
