@@ -15,6 +15,17 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
 
+var signingCertificatePath = Argument("signing_certicifate_path", "./certificates/OctopusDevelopment.pfx");
+var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
+
+// Keep this list in order by most likely to succeed
+var signingTimestampUrls = new string[] {
+    "http://timestamp.globalsign.com/scripts/timestamp.dll",
+    "http://www.startssl.com/timestamp",
+    "http://timestamp.comodoca.com/rfc3161", 
+    "http://timestamp.verisign.com/scripts/timstamp.dll",
+    "http://tsa.starfieldtech.com"};
+
 var packageDir = "./build/package";
 var installerDir = "./build/installer";
 var artifactsDir = "./build/artifacts";
@@ -45,6 +56,7 @@ Task("__Default")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
+    .IsDependentOn("__SignBuiltFiles")
     .IsDependentOn("__CreateTentacleInstaller")
     .IsDependentOn("__PackNuget")
     .IsDependentOn("__CopyToLocalPackages");
@@ -95,6 +107,21 @@ Task("__Build")
     );
 });
 
+Task("__SignBuiltFiles")
+    .Does(() =>
+{
+    var filesToSign = new string[] {
+        "./source/Octopus.Tentacle/bin/Octopus*.dll",
+        "./source/Octopus.Tentacle/bin/Octopus*.exe",
+        "./source/Octopus.Tentacle/bin/Tentacle.exe",
+        "./source/Octopus.Manager.Tentacle/bin/Octopus*.dll",
+        "./source/Octopus.Manager.Tentacle/bin/Octopus*.exe"
+    };
+
+    SignAndTimestamp(filesToSign);
+});
+
+
 Task("__CreateTentacleInstaller")
     .IsDependentOn("__UpdateWixVersion")
     .Does(() =>
@@ -136,6 +163,8 @@ Task("__CreateTentacleInstaller")
             .SetVerbosity(verbosity)
             .WithTarget("build")
     );
+
+
 });
 
 Task("__UpdateWixVersion")
@@ -193,30 +222,44 @@ private void CleanBinariesDirectory(string directory)
 {
     Information($"Cleaning {directory}");
     DeleteFiles($"{directory}/*.xml");
-    //DeleteFiles($"{directory}/**vshost.*");
-    //DeleteFiles($"{directory}/**.resources.dll");
-
-    //DeleteEmptyDirectories(directory);
 }
 
-private void DeleteEmptyDirectories(string directory)
+private void SignAndTimestamp(params string[] paths)
 {
-    foreach (var d in Dir.EnumerateDirectories(directory))
+    var allFiles = new List<FilePath>();
+    foreach (var path in paths)
     {
-        DeleteEmptyDirectories(d);
+        var files = GetFiles(path);
+        allFiles.AddRange(files);
     }
+    SignAndTimestamp(allFiles.ToArray());
+}
 
-    var entries = Dir.EnumerateFileSystemEntries(directory);
-
-    if (!entries.Any())
+private void SignAndTimestamp(params FilePath[] assemblies)
+{
+    var lastException = default(Exception);
+    var signSettings = new SignToolSignSettings
     {
+        CertPath = File(signingCertificatePath),
+        Password = signingCertificatPassword
+    };
+    foreach (var url in signingTimestampUrls)
+    {
+        Information($"  Trying to time stamp {assemblies} using {url}");
+        signSettings.TimeStampUri = new Uri(url);
         try
         {
-            Dir.Delete(directory);
+            Sign(assemblies, signSettings);
+            return;
         }
-        catch (DirectoryNotFoundException) { }
+        catch (Exception ex)
+        {
+            lastException = ex;
+        }
     }
+    throw(lastException);
 }
+
 //////////////////////////////////////////////////////////////////////
 // TASKS
 //////////////////////////////////////////////////////////////////////
