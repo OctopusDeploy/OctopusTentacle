@@ -118,7 +118,7 @@ Task("__SignBuiltFiles")
         "./source/Octopus.Manager.Tentacle/bin/Octopus*.exe"
     };
 
-    SignAndTimestamp(filesToSign);
+    SignAndTimeStamp(filesToSign);
 });
 
 
@@ -152,19 +152,8 @@ Task("__CreateTentacleInstaller")
 
     WiXHeat(harvestDirectory, File(harvestFile), WiXHarvestType.Dir, heatSettings);
 
-    var allowUpgrade = !string.Equals(gitVersion.PreReleaseLabel, "alpha");
-
-    Information("Building 32 bit installer");
-
-    MSBuild("./source/Octopus.Tentacle.Installer/Octopus.Tentacle.Installer.wixproj", settings =>
-        settings
-            .SetConfiguration(configuration)
-            .WithProperty("AllowUpgrade", allowUpgrade.ToString())
-            .SetVerbosity(verbosity)
-            .WithTarget("build")
-    );
-
-
+    BuildInstallerForPlatform(PlatformTarget.x86);
+    BuildInstallerForPlatform(PlatformTarget.x64);
 });
 
 Task("__UpdateWixVersion")
@@ -217,6 +206,32 @@ private void RestoreFileOnCleanup(string file)
     });
 }
 
+private void BuildInstallerForPlatform(PlatformTarget platformTarget)
+{
+    var allowUpgrade = !string.Equals(gitVersion.PreReleaseLabel, "alpha");
+
+    Information($"Building {platformTarget} installer");
+
+    MSBuild("./source/Octopus.Tentacle.Installer/Octopus.Tentacle.Installer.wixproj", settings =>
+        settings
+            .SetConfiguration(configuration)
+            .WithProperty("AllowUpgrade", allowUpgrade.ToString())
+            .SetVerbosity(verbosity)
+            .SetPlatformTarget(platformTarget)
+            .WithTarget("build")
+    );
+    var builtMsi = File($"./source/Octopus.Tentacle.Installer/bin/{platformTarget}/Octopus.Tentacle.msi");
+
+    SignAndTimeStamp(builtMsi);
+
+    var platformStr = platformTarget == PlatformTarget.x64
+        ? "-x64"
+        : "";
+
+    var artifactDestination = $"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}{platformStr}.msi";
+
+    MoveFile(builtMsi, File(artifactDestination));
+}
 
 private void CleanBinariesDirectory(string directory)
 {
@@ -224,7 +239,7 @@ private void CleanBinariesDirectory(string directory)
     DeleteFiles($"{directory}/*.xml");
 }
 
-private void SignAndTimestamp(params string[] paths)
+private void SignAndTimeStamp(params string[] paths)
 {
     var allFiles = new List<FilePath>();
     foreach (var path in paths)
@@ -232,17 +247,20 @@ private void SignAndTimestamp(params string[] paths)
         var files = GetFiles(path);
         allFiles.AddRange(files);
     }
-    SignAndTimestamp(allFiles.ToArray());
+    SignAndTimeStamp(allFiles.ToArray());
 }
 
-private void SignAndTimestamp(params FilePath[] assemblies)
+private void SignAndTimeStamp(params FilePath[] assemblies)
 {
     var lastException = default(Exception);
     var signSettings = new SignToolSignSettings
     {
         CertPath = File(signingCertificatePath),
-        Password = signingCertificatPassword
+        Password = signingCertificatPassword,
+        Description = "Octopus Tentacle Agent",
+        DescriptionUri = new Uri("http://octopus.com")
     };
+
     foreach (var url in signingTimestampUrls)
     {
         Information($"  Trying to time stamp {assemblies} using {url}");
