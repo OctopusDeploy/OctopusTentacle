@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Octopus.Shared.Util
 {
@@ -73,6 +74,11 @@ namespace Octopus.Shared.Util
             }
 
             return result.ToString();
+        }
+        
+        public static string SplitPascalCase(string name)
+        {
+            return Regex.Replace(name, "([a-z])([A-Z])", "$1 $2");
         }
     }
 }
