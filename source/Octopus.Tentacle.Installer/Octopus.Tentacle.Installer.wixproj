@@ -14,7 +14,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <OutputPath>bin\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>Debug;TentacleSource=..\..\..\Build\Temp\Tentacle</DefineConstants>
+    <DefineConstants>Debug;TentacleSource=..\..\Build\Installer</DefineConstants>
     <SuppressPdbOutput>True</SuppressPdbOutput>
     <SuppressValidation>True</SuppressValidation>
   </PropertyGroup>
@@ -22,10 +22,10 @@
     <OutputPath>bin\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <SuppressPdbOutput>True</SuppressPdbOutput>
-    <DefineConstants>TentacleSource=..\..\..\Build\Temp\Tentacle</DefineConstants>
+    <DefineConstants>TentacleSource=..\..\Build\Installer</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DefineConstants>Debug;TentacleSource=..\..\..\Build\Temp\Tentacle</DefineConstants>
+    <DefineConstants>Debug;TentacleSource=..\..\Build\Installer</DefineConstants>
     <SuppressPdbOutput>True</SuppressPdbOutput>
     <SuppressValidation>True</SuppressValidation>
     <OutputPath>bin\x64\</OutputPath>
@@ -33,7 +33,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <SuppressPdbOutput>True</SuppressPdbOutput>
-    <DefineConstants>TentacleSource=..\..\..\Build\Temp\Tentacle</DefineConstants>
+    <DefineConstants>TentacleSource=..\..\Build\Installer</DefineConstants>
     <OutputPath>bin\x64\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
