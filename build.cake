@@ -132,28 +132,30 @@ Task("__CreateTentacleInstaller")
 
     CleanBinariesDirectory(installerDir);
 
-    Information("Generating installer contents");
-    var harvestDirectory = Directory(installerDir);
+    InBlock("Running HEAT to generate the installer contents...", () =>
+    {
+        var harvestDirectory = Directory(installerDir);
 
-    var harvestFile = "./source/Octopus.Tentacle.Installer/Tentacle.Generated.wxs";
-    RestoreFileOnCleanup(harvestFile);
+        var harvestFile = "./source/Octopus.Tentacle.Installer/Tentacle.Generated.wxs";
+        RestoreFileOnCleanup(harvestFile);
 
-    var heatSettings = new HeatSettings {
-        NoLogo = true,
-        GenerateGuid = true,
-        SuppressFragments = true,
-        SuppressRootDirectory = true,
-        SuppressRegistry = true,
-        SuppressUniqueIds = true,
-        ComponentGroupName = "TentacleComponents",
-        PreprocessorVariable = "var.TentacleSource",
-        DirectoryReferenceId = "INSTALLLOCATION"
-    };
+        var heatSettings = new HeatSettings {
+            NoLogo = true,
+            GenerateGuid = true,
+            SuppressFragments = true,
+            SuppressRootDirectory = true,
+            SuppressRegistry = true,
+            SuppressUniqueIds = true,
+            ComponentGroupName = "TentacleComponents",
+            PreprocessorVariable = "var.TentacleSource",
+            DirectoryReferenceId = "INSTALLLOCATION"
+        };
 
-    WiXHeat(harvestDirectory, File(harvestFile), WiXHarvestType.Dir, heatSettings);
+        WiXHeat(harvestDirectory, File(harvestFile), WiXHarvestType.Dir, heatSettings);
+    });
 
-    BuildInstallerForPlatform(PlatformTarget.x86);
-    BuildInstallerForPlatform(PlatformTarget.x64);
+    InBlock("Building 32-bit installer", () => BuildInstallerForPlatform(PlatformTarget.x86));
+    InBlock("Building 64-bit installer", () => BuildInstallerForPlatform(PlatformTarget.x64));
 });
 
 Task("__UpdateWixVersion")
@@ -196,6 +198,25 @@ Task("__CopyToLocalPackages")
     CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.{gitVersion.NuGetVersion}.nupkg"), localPackagesDir);
 });
 
+private void InBlock(string block, Action action)
+{
+    if (TeamCity.IsRunningOnTeamCity)
+        TeamCity.WriteStartBlock(block);
+    else
+        Information($"Starting {block}");
+
+    try
+    {
+        action();
+    }
+    finally
+    {
+        if (TeamCity.IsRunningOnTeamCity)
+            TeamCity.WriteEndBlock(block);
+        else
+            Information($"Finished {block}");
+    }
+}
 
 private void RestoreFileOnCleanup(string file)
 {
@@ -209,8 +230,6 @@ private void RestoreFileOnCleanup(string file)
 private void BuildInstallerForPlatform(PlatformTarget platformTarget)
 {
     var allowUpgrade = !string.Equals(gitVersion.PreReleaseLabel, "alpha");
-
-    Information($"Building {platformTarget} installer");
 
     MSBuild("./source/Octopus.Tentacle.Installer/Octopus.Tentacle.Installer.wixproj", settings =>
         settings
