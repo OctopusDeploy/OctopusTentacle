@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle", "Octopus
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Manager.Tentacle", "Octopus.Manager.Tentacle\Octopus.Manager.Tentacle.csproj", "{A9E01394-4A21-418F-9ACC-D5A164E8491B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Tests", "Octopus.Tentacle.Tests\Octopus.Tentacle.Tests.csproj", "{8A33CADF-9D7F-4835-842C-B71700DB6A3B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,6 +30,10 @@ Global
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
