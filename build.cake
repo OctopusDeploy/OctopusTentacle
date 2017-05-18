@@ -4,6 +4,8 @@
 #tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
 #tool "nuget:?package=WiX&version=3.10.3"
 
+#addin "Cake.FileHelpers"
+
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
 using System.Xml;
@@ -38,6 +40,13 @@ var cleanups = new List<Action>();
 ///////////////////////////////////////////////////////////////////////////////
 // SETUP / TEARDOWN
 ///////////////////////////////////////////////////////////////////////////////
+Setup(context =>
+{
+    CreateDirectory(packageDir);
+    CreateDirectory(installerDir);
+    CreateDirectory(artifactsDir);
+});
+
 Teardown(context =>
 {
     Information("Cleaning up");
@@ -58,6 +67,7 @@ Task("__Default")
     .IsDependentOn("__Build")
     .IsDependentOn("__SignBuiltFiles")
     .IsDependentOn("__CreateTentacleInstaller")
+    .IsDependentOn("__CreateChocolateyPackage")
     .IsDependentOn("__PackNuget")
     .IsDependentOn("__CopyToLocalPackages");
 
@@ -126,36 +136,17 @@ Task("__CreateTentacleInstaller")
     .IsDependentOn("__UpdateWixVersion")
     .Does(() =>
 {
-    CreateDirectory(installerDir);
     CopyFiles("./source/Octopus.Manager.Tentacle/bin/*", installerDir);
     CopyFiles("./source/Octopus.Tentacle/bin/*", installerDir);
 
     CleanBinariesDirectory(installerDir);
 
-    InBlock("Running HEAT to generate the installer contents...", () =>
-    {
-        var harvestDirectory = Directory(installerDir);
-
-        var harvestFile = "./source/Octopus.Tentacle.Installer/Tentacle.Generated.wxs";
-        RestoreFileOnCleanup(harvestFile);
-
-        var heatSettings = new HeatSettings {
-            NoLogo = true,
-            GenerateGuid = true,
-            SuppressFragments = true,
-            SuppressRootDirectory = true,
-            SuppressRegistry = true,
-            SuppressUniqueIds = true,
-            ComponentGroupName = "TentacleComponents",
-            PreprocessorVariable = "var.TentacleSource",
-            DirectoryReferenceId = "INSTALLLOCATION"
-        };
-
-        WiXHeat(harvestDirectory, File(harvestFile), WiXHarvestType.Dir, heatSettings);
-    });
+    InBlock("Running HEAT to generate the installer contents...", () => GenerateInstallerContents());
 
     InBlock("Building 32-bit installer", () => BuildInstallerForPlatform(PlatformTarget.x86));
     InBlock("Building 64-bit installer", () => BuildInstallerForPlatform(PlatformTarget.x64));
+
+    CopyFiles($"{artifactsDir}/*.msi", packageDir);
 });
 
 Task("__UpdateWixVersion")
@@ -175,14 +166,43 @@ Task("__UpdateWixVersion")
     xmlDoc.Save(installerProductFile);
 });
 
+Task("__CreateChocolateyPackage")
+    .Does(() =>
+{
+    InBlock ("Create Chocolatey package...", () =>
+    {
+        var checksum = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}.msi"));
+        Information($"Checksum: Octopus.Tentacle.msi = {checksum}");
+
+        var checksum64 = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}-x64.msi"));
+        Information($"Checksum: Octopus.Tentacle-x64.msi = {checksum64}");
+
+        var chocolateyInstallScriptPath = "./source/Chocolatey/chocolateyInstall.ps1";
+        RestoreFileOnCleanup(chocolateyInstallScriptPath);
+
+        ReplaceTextInFiles(chocolateyInstallScriptPath, "0.0.0", gitVersion.NuGetVersion);
+        ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum>", System.Text.Encoding.Default.GetString(checksum.ComputedHash));
+        ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype>", checksum.Algorithm.ToString());
+        ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", System.Text.Encoding.Default.GetString(checksum64.ComputedHash));
+        ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype64>", checksum64.Algorithm.ToString());
+
+        var chocolateyArtifactsDir = $"{artifactsDir}/Chocolatey";
+        CreateDirectory(chocolateyArtifactsDir);
+
+        NuGetPack("./source/Chocolatey/OctopusDeploy.Tentacle.nuspec", new NuGetPackSettings {
+            Version = gitVersion.NuGetVersion,
+            OutputDirectory = chocolateyArtifactsDir,
+            NoPackageAnalysis = true
+        });
+    });
+});
+
 Task("__PackNuget")
     .Does(() =>
 {
-    CreateDirectory(packageDir);
-    CopyFiles("./source/Octopus.Manager.Tentacle/bin/*", packageDir);
+    CopyFiles($"{artifactsDir}/*.msi", packageDir);
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.nuspec", packageDir);
 
-    CreateDirectory(artifactsDir);
     NuGetPack(Path.Combine(packageDir, "Tentacle.nuspec"), new NuGetPackSettings {
         Version = gitVersion.NuGetVersion,
         OutputDirectory = artifactsDir
@@ -225,6 +245,28 @@ private void RestoreFileOnCleanup(string file)
         Information("Restoring {0}", file);
         System.IO.File.WriteAllBytes(file, contents);
     });
+}
+
+private void GenerateInstallerContents()
+{
+    var harvestDirectory = Directory(installerDir);
+
+    var harvestFile = "./source/Octopus.Tentacle.Installer/Tentacle.Generated.wxs";
+    RestoreFileOnCleanup(harvestFile);
+
+    var heatSettings = new HeatSettings {
+        NoLogo = true,
+        GenerateGuid = true,
+        SuppressFragments = true,
+        SuppressRootDirectory = true,
+        SuppressRegistry = true,
+        SuppressUniqueIds = true,
+        ComponentGroupName = "TentacleComponents",
+        PreprocessorVariable = "var.TentacleSource",
+        DirectoryReferenceId = "INSTALLLOCATION"
+    };
+
+    WiXHeat(harvestDirectory, File(harvestFile), WiXHarvestType.Dir, heatSettings);
 }
 
 private void BuildInstallerForPlatform(PlatformTarget platformTarget)
