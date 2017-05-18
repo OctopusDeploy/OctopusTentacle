@@ -27,9 +27,6 @@
       <dependency id="Octopus.Configuration" version="1.0.10" />
       <dependency id="Octopus.Diagnostics" version="1.0.11" />
       <dependency id="Octopus.Time" version="1.0.8" />
-      <dependency id="System.Collections" version="4.0.11" />
-      <dependency id="System.Runtime" version="4.1.0" />
-      <dependency id="System.Runtime.Extensions" version="4.1.0" />
       <dependency id="TaskScheduler" version="2.5.21" />
     </dependencies>
   </metadata>
