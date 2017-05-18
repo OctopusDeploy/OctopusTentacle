@@ -186,6 +186,9 @@ namespace Octopus.Tentacle.Commands
 
             var serverVersion = SemanticVersion.Parse(repository.Client.RootDocument.Version);
             var tentacleVersion = SemanticVersion.Parse(OctopusTentacle.SemanticVersionInfo.MajorMinorPatch);
+            if (serverVersion.Version.Major == 0 || tentacleVersion.Version.Major == 0)
+                return;
+
             if (serverVersion.Version.Major < tentacleVersion.Version.Major)
                 throw new ControlledFailureException($"You cannot register a {tentacleVersion.Version.Major}.* Octopus Tentacle with a {serverVersion.Version.Major}.* Octopus Server.");
         }
