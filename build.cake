@@ -28,7 +28,8 @@ var signingTimestampUrls = new string[] {
     "http://timestamp.verisign.com/scripts/timstamp.dll",
     "http://tsa.starfieldtech.com"};
 
-var packageDir = "./build/package";
+var installerPackageDir = "./build/package/installer";
+var binariesPackageDir = "./build/package/binaries";
 var installerDir = "./build/installer";
 var artifactsDir = "./build/artifacts";
 var localPackagesDir = "../LocalPackages";
@@ -42,7 +43,8 @@ var cleanups = new List<Action>();
 ///////////////////////////////////////////////////////////////////////////////
 Setup(context =>
 {
-    CreateDirectory(packageDir);
+    CreateDirectory(installerPackageDir);
+    CreateDirectory(binariesPackageDir);
     CreateDirectory(installerDir);
     CreateDirectory(artifactsDir);
 });
@@ -68,7 +70,8 @@ Task("__Default")
     .IsDependentOn("__SignBuiltFiles")
     .IsDependentOn("__CreateTentacleInstaller")
     .IsDependentOn("__CreateChocolateyPackage")
-    .IsDependentOn("__PackNuget")
+    .IsDependentOn("__CreateInstallerNuGet")
+    .IsDependentOn("__CreateBinariesNuGet")
     .IsDependentOn("__CopyToLocalPackages");
 
 Task("__Version")
@@ -99,7 +102,8 @@ Task("__Clean")
 {
     CleanDirectories("./source/**/bin");
     CleanDirectories("./source/**/obj");
-    CleanDirectory(packageDir);
+    CleanDirectory(installerPackageDir);
+    CleanDirectory(binariesPackageDir);
     CleanDirectory(installerDir);
     CleanDirectory(artifactsDir);
 });
@@ -146,7 +150,7 @@ Task("__CreateTentacleInstaller")
     InBlock("Building 32-bit installer", () => BuildInstallerForPlatform(PlatformTarget.x86));
     InBlock("Building 64-bit installer", () => BuildInstallerForPlatform(PlatformTarget.x64));
 
-    CopyFiles($"{artifactsDir}/*.msi", packageDir);
+    CopyFiles($"{artifactsDir}/*.msi", installerPackageDir);
 });
 
 Task("__UpdateWixVersion")
@@ -197,13 +201,27 @@ Task("__CreateChocolateyPackage")
     });
 });
 
-Task("__PackNuget")
+Task("__CreateInstallerNuGet")
     .Does(() =>
 {
-    CopyFiles($"{artifactsDir}/*.msi", packageDir);
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.nuspec", packageDir);
+    CopyFiles($"{artifactsDir}/*.msi", installerPackageDir);
+    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.nuspec", installerPackageDir);
 
-    NuGetPack(Path.Combine(packageDir, "Tentacle.nuspec"), new NuGetPackSettings {
+    NuGetPack(Path.Combine(installerPackageDir, "Tentacle.nuspec"), new NuGetPackSettings {
+        Version = gitVersion.NuGetVersion,
+        OutputDirectory = artifactsDir
+    });
+});
+
+Task("__CreateBinariesNuGet")
+    .Does(() =>
+{
+    CreateDirectory($"{binariesPackageDir}/lib");
+    CopyFiles($"./source/Octopus.Manager.Tentacle/bin/*", $"{binariesPackageDir}/lib");
+    CleanBinariesDirectory(binariesPackageDir);
+    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
+
+    NuGetPack(Path.Combine(binariesPackageDir, "Tentacle.Binaries.nuspec"), new NuGetPackSettings {
         Version = gitVersion.NuGetVersion,
         OutputDirectory = artifactsDir
     });
@@ -211,11 +229,11 @@ Task("__PackNuget")
 
 Task("__CopyToLocalPackages")
     .WithCriteria(BuildSystem.IsLocalBuild)
-    .IsDependentOn("__PackNuget")
+    .IsDependentOn("__CreateInstallerNuGet")
     .Does(() =>
 {
     CreateDirectory(localPackagesDir);
-    CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.{gitVersion.NuGetVersion}.nupkg"), localPackagesDir);
+    CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.Binaries.{gitVersion.NuGetVersion}.nupkg"), localPackagesDir);
 });
 
 private void InBlock(string block, Action action)
