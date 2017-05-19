@@ -217,9 +217,15 @@ Task("__CreateBinariesNuGet")
     .Does(() =>
 {
     CreateDirectory($"{binariesPackageDir}/lib");
-    CopyFiles($"./source/Octopus.Manager.Tentacle/bin/*", $"{binariesPackageDir}/lib");
-    CleanBinariesDirectory(binariesPackageDir);
+    CopyFileToDirectory($"./source/Octopus.Manager.Tentacle/bin/Octopus.Manager.Tentacle.exe", $"{binariesPackageDir}/lib");
+    CleanBinariesDirectory($"{binariesPackageDir}/lib");
+
+    CreateDirectory($"{binariesPackageDir}/build/Tentacle");
+    CopyFiles($"./source/Octopus.Tentacle/bin/*", $"{binariesPackageDir}/build/Tentacle");
+    CleanBinariesDirectory($"{binariesPackageDir}/build/Tentacle");
+
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
+    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build");
 
     NuGetPack(Path.Combine(binariesPackageDir, "Tentacle.Binaries.nuspec"), new NuGetPackSettings {
         Version = gitVersion.NuGetVersion,
