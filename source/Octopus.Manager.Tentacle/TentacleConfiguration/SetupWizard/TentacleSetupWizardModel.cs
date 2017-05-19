@@ -21,7 +21,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
     public class TentacleSetupWizardModel : ViewModel, IScriptableViewModel, IHaveServices
     {
         readonly ApplicationName applicationName;
-        readonly string tentacleExe;
         CommunicationStyle communicationStyle;
         string octopusServerUrl;
         bool useUsernamePasswordAuthMode;
@@ -60,8 +59,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             this.applicationName = applicationName;
             this.proxyWizardModel = proxyWizardModel;
 
-            tentacleExe = CommandLine.PathToTentacleExe();
-
             InstanceName = selectedInstance;
             var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             HomeDirectory = Path.Combine(Path.GetPathRoot(programFiles), "Octopus");
@@ -94,6 +91,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         public string InstanceName { get; private set; }
         public bool FirewallException { get; set; }
         public bool FirewallExceptionPossible { get; set; }
+
+        string TentacleExe => string.IsNullOrEmpty(PathToTentacleExe) ? CommandLine.PathToTentacleExe() : PathToTentacleExe;
+
+        public string PathToTentacleExe { get; set; }
 
         public string HomeDirectory
         {
@@ -430,7 +431,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public IEnumerable<OctoService> Services
         {
-            get { yield return new OctoService(tentacleExe, InstanceName); }
+            get { yield return new OctoService(TentacleExe, InstanceName); }
         }
 
         public ProxyWizardModel ProxyWizardModel
@@ -668,7 +669,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         CliBuilder Cli(string action)
         {
-            return CliBuilder.ForTool(tentacleExe, action, InstanceName);
+            return CliBuilder.ForTool(TentacleExe, action, InstanceName);
         }
     }
 }
