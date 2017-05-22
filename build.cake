@@ -43,7 +43,7 @@ var cleanups = new List<Action>();
 ///////////////////////////////////////////////////////////////////////////////
 Setup(context =>
 {
-    context.Tools.RegisterFile("./Tools/signtool/signtool.exe");
+    context.Tools.RegisterFile("./signtool.exe");
     CreateDirectory(installerPackageDir);
     CreateDirectory(binariesPackageDir);
     CreateDirectory(installerDir);
