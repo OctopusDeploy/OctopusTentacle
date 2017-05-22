@@ -240,8 +240,8 @@ namespace Octopus.Shared.Web
 
             public static class Migrations
             {
-                public static string SpacePartialExport = "~/api/migrations/spacepartialexport{?password,projects}";
-                public static string SpaceImport = "~/api/migrations/spaceimport{?password,packageId}";
+                public static string SpacePartialExport = "~/api/migrations/spacepartialexport{?password,projects,includeApiKeys,includeCertificates,includeCertificateConfigurations,includeDeployments,includeEvents,includeLicense,includeMachines,includeSmtpConfiguration,includeSubscriptions,includeTeams,includeTenants,includeUsers,includeUserRoles,encryptPackage,destinationApiKey,destinationPackageFeed,successCallbackUri,failureCallbackUri}";
+                public static string SpaceImport = "~/api/migrations/spaceimport{?packageId,packageVersion,password,encryptPackage,successCallbackUri,failureCallbackUri}";
             }
 
             public static class Scheduler
