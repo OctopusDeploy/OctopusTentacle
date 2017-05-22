@@ -9,7 +9,6 @@ namespace Octopus.Shared.Tasks
 {
     public class RunningTask : ITaskContext, IRunningTask
     {
-        readonly string taskId;
         readonly string description;
         readonly string additionalDescription;
         readonly Type rootTaskControllerType;
@@ -27,7 +26,7 @@ namespace Octopus.Shared.Tasks
 
         public RunningTask(string taskId, string logCorrelationId, string description, string additionalDescription, Type rootTaskControllerType, object arguments, ILifetimeScope lifetimeScope, TaskCompletionHandler completeCallback)
         {
-            this.taskId = taskId;
+            this.Id = taskId;
             this.description = description;
             this.additionalDescription = additionalDescription;
             this.rootTaskControllerType = rootTaskControllerType;
@@ -39,25 +38,13 @@ namespace Octopus.Shared.Tasks
             workThread = new Thread(RunMainThread) { Name = taskId + ": " + description };
         }
 
-        public string Id
-        {
-            get { return taskId; }
-        }
+        public string Id { get; }
 
-        public string TaskId
-        {
-            get { return taskId; }
-        }
+        public string TaskId => Id;
 
-        public bool IsCancellationRequested
-        {
-            get { return cancel.IsCancellationRequested; }
-        }
+        public bool IsCancellationRequested => cancel.IsCancellationRequested;
 
-        public CancellationToken CancellationToken
-        {
-            get { return cancel.Token; }
-        }
+        public CancellationToken CancellationToken => cancel.Token;
 
         public void Start()
         {
@@ -165,21 +152,20 @@ namespace Octopus.Shared.Tasks
             {
                 complete.Set();
 
-                completeCallback?.Invoke(taskId, finalException);
+                completeCallback?.Invoke(Id, finalException);
                 FinishLog();
             }
             catch (Exception completeEx)
             {
                 failedToComplete = true;
-                log.Warn($"Unable to mark task as complete, will continue to retry");
+                log.Warn("Unable to mark task as complete, will continue to retry");
                 log.Warn(completeEx.PrettyPrint(false));
             }
         }
 
-
         public void ReattemptCompleteTask()
         {
-            completeCallback?.Invoke(taskId, finalException);
+            completeCallback?.Invoke(Id, finalException);
             failedToComplete = false;
             using (log.WithinBlock(taskLogContext))
             {
