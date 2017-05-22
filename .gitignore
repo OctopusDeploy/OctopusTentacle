@@ -50,7 +50,4 @@ source/_ReSharper*
 source/.idea
 source/Octopus.sln.iml
 
-!/tools/
-
-/tools/*
-!/tools/signtool/
+/tools/
