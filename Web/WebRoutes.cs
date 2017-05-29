@@ -245,11 +245,12 @@ namespace Octopus.Shared.Web
 
             public static class Events
             {
-                public static string Template = "~/api/events{/id}{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal,fromAutoId,toAutoId}";
-                public static string Index = "~/api/events{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal,fromAutoId,toAutoId}";
+                public static string Template = "~/api/events{/id}{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal,fromAutoId,toAutoId,documentTypes,asCsv}";
+                public static string Index = "~/api/events{?skip,regarding,regardingAny,user,users,projects,environments,eventGroups,eventCategories,tags,tenants,from,to,internal,fromAutoId,toAutoId,documentTypes,asCsv}";
                 public static string Get = "~/api/events/{id}";
                 public static string GetCategories = "~/api/events/categories{?appliesTo}";
                 public static string GetGroups = "~/api/events/groups{?appliesTo}";
+                public static string GetDocumentTypes = "~/api/events/documenttypes";
             }
 
             public static class Feeds
