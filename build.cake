@@ -119,6 +119,7 @@ Task("__Build")
         settings
             .SetConfiguration(configuration)
             .SetVerbosity(verbosity)
+            .UseToolVersion(MSBuildToolVersion.VS2017)
     );
 });
 
@@ -304,6 +305,7 @@ private void BuildInstallerForPlatform(PlatformTarget platformTarget)
             .WithProperty("AllowUpgrade", allowUpgrade.ToString())
             .SetVerbosity(verbosity)
             .SetPlatformTarget(platformTarget)
+            .UseToolVersion(MSBuildToolVersion.VS2015)
             .WithTarget("build")
     );
     var builtMsi = File($"./source/Octopus.Tentacle.Installer/bin/{platformTarget}/Octopus.Tentacle.msi");
