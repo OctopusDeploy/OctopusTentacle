@@ -127,9 +127,9 @@ Task("__SignBuiltFiles")
     .Does(() =>
 {
     var filesToSign = new string[] {
-        "./source/Octopus.Tentacle/bin/Octopus*.dll",
-        "./source/Octopus.Tentacle/bin/Octopus*.exe",
-        "./source/Octopus.Tentacle/bin/Tentacle.exe",
+        "./source/Octopus.Tentacle/bin/net45/Octopus*.dll",
+        "./source/Octopus.Tentacle/bin/net45/Octopus*.exe",
+        "./source/Octopus.Tentacle/bin/net45/Tentacle.exe",
         "./source/Octopus.Manager.Tentacle/bin/Octopus*.dll",
         "./source/Octopus.Manager.Tentacle/bin/Octopus*.exe"
     };
@@ -143,7 +143,7 @@ Task("__CreateTentacleInstaller")
     .Does(() =>
 {
     CopyFiles("./source/Octopus.Manager.Tentacle/bin/*", installerDir);
-    CopyFiles("./source/Octopus.Tentacle/bin/*", installerDir);
+    CopyFiles("./source/Octopus.Tentacle/bin/net45/*", installerDir);
 
     CleanBinariesDirectory(installerDir);
 
@@ -223,7 +223,7 @@ Task("__CreateBinariesNuGet")
     CleanBinariesDirectory($"{binariesPackageDir}/lib");
 
     CreateDirectory($"{binariesPackageDir}/build/Tentacle");
-    CopyFiles($"./source/Octopus.Tentacle/bin/*", $"{binariesPackageDir}/build/Tentacle");
+    CopyFiles($"./source/Octopus.Tentacle/bin/net45/*", $"{binariesPackageDir}/build/Tentacle");
     CleanBinariesDirectory($"{binariesPackageDir}/build/Tentacle");
 
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
