@@ -207,9 +207,9 @@ Task("__CreateInstallerNuGet")
     .Does(() =>
 {
     CopyFiles($"{artifactsDir}/*.msi", installerPackageDir);
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.nuspec", installerPackageDir);
+    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Installers.nuspec", installerPackageDir);
 
-    NuGetPack(Path.Combine(installerPackageDir, "Tentacle.nuspec"), new NuGetPackSettings {
+    NuGetPack(Path.Combine(installerPackageDir, "Tentacle.Installers.nuspec"), new NuGetPackSettings {
         Version = gitVersion.NuGetVersion,
         OutputDirectory = artifactsDir
     });
