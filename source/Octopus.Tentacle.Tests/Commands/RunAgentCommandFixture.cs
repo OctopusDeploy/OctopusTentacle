@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             halibut = Substitute.For<IHalibutInitializer>();
             tentacleConfiguration = Substitute.For<ITentacleConfiguration>();
-            tentacleConfiguration.TentacleCertificate.Returns(new X509Certificate());
+            tentacleConfiguration.TentacleCertificate.Returns(new X509Certificate2());
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
             Command = new RunAgentCommand(
