@@ -28,54 +28,29 @@ namespace Octopus.Shared.Startup
                 shutdown();
                 Console.ResetColor();
             }
-            catch (ControlledFailureException)
-            {
-                throw;
-            }
             catch (DependencyResolutionException rex) when (rex.InnerException is ControlledFailureException)
             {
                 throw rex.InnerException;
             }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(new string('-', 79));
-                Console.WriteLine("Error: " + ex.PrettyPrint(false));
-                Console.WriteLine(new string('-', 79));
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine("Full error details are available in the log files.");
-                Console.Write("At: ");
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine(OctopusLogsDirectoryRenderer.LogsDirectory);
-                Console.ResetColor();
+        }
 
-                ExceptionKnowledgeBaseEntry entry;
-                if (ExceptionKnowledgeBase.TryInterpret(ex, out entry))
-                {
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(new string('=', 79));
-                    Console.WriteLine(entry.Summary);
-                    if (entry.HelpText != null || entry.HelpLink != null)
-                    {
-                        Console.WriteLine(new string('-', 79));
-                        if (entry.HelpText != null)
-                        {
-                            Console.WriteLine(entry.HelpText);
-                        }
-                        if (entry.HelpLink != null)
-                        {
-                            Console.Write("See: ");
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.WriteLine(entry.HelpLink);
-                            Console.ForegroundColor = ConsoleColor.White;
-                        }
-                    }
-                    Console.WriteLine(new string('=', 79));
-                    Console.ResetColor();
-                }
+        public void OnExit(int exitCode)
+        {
+            if (exitCode == 0) return;
 
-                throw;
-            }
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(new string('-', 79));
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write("Full error details are available in the log files at ");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(OctopusLogsDirectoryRenderer.LogsDirectory);
+            Console.ResetColor();
+            Console.Write("If you need help, please send these log files to ");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("https://octopus.com/support");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(new string('-', 79));
+            Console.ResetColor();
         }
 
         public void WaitForUserToExit()

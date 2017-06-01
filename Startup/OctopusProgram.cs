@@ -81,6 +81,7 @@ namespace Octopus.Shared.Startup
             AppDomain.CurrentDomain.UnhandledException += LogUnhandledException;
 
             int exitCode;
+            ICommandHost host = null;
             try
             {
                 EnsureTempPathIsWriteable();
@@ -96,7 +97,7 @@ namespace Octopus.Shared.Startup
                 container = BuildContainer(instanceName);
                 RegisterAdditionalModules(container);
 
-                var host = SelectMostAppropriateHost();
+                host = SelectMostAppropriateHost();
                 host.Run(Start, Stop);
                 exitCode = Environment.ExitCode;
             }
@@ -162,6 +163,9 @@ namespace Octopus.Shared.Startup
                 }
                 exitCode = 100;
             }
+
+            host?.OnExit(exitCode);
+
             if (exitCode != 0 && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
