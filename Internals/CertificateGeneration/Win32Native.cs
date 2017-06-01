@@ -36,7 +36,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
             [In] CryptoApiBlob subjectIssuerBlob,
             int flags,
             [In] CryptKeyProviderInformation keyProviderInfo,
-            IntPtr signatureAlgorithm,
+            [In] CryptoAlgorithmIdentifier signatureAlgorithm,
             [In] SystemTime startTime,
             [In] SystemTime endTime,
             IntPtr extensions);
@@ -66,6 +66,14 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         }
 
         #endregion
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct CryptoAlgorithmIdentifier
+        {
+            [MarshalAs(UnmanagedType.LPStr)]
+            public string pszObjId;
+            public CryptoApiBlob parameters;
+        }
 
         #region Nested type: CryptoApiBlob
 
