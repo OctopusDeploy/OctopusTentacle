@@ -6,7 +6,7 @@ using System.Reflection;
 [assembly: AssemblyInformationalVersion("0.0.0-local")]
 [assembly: AssemblyFileVersion("0.0.0.0")]
 
-namespace Octopus
+namespace Octopus.Tentacle
 {
     static class GitVersionInformation
     {
