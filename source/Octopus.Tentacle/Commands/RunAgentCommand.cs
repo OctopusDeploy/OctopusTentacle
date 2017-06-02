@@ -4,11 +4,11 @@ using Octopus.Diagnostics;
 using Octopus.Time;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
 using Octopus.Shared.Variables;
-using Octopus.Shared.Versioning;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Versioning;
+using AssemblyExtensions = Octopus.Tentacle.Versioning.AssemblyExtensions;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Commands
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleApplications, configuration.ApplicationDirectory);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleJournal, configuration.JournalFilePath);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleInstanceName, selector.Current.InstanceName);
-            var exePath = typeof (RunAgentCommand).Assembly.FullLocalPath();
+            var exePath = AssemblyExtensions.FullLocalPath(typeof (RunAgentCommand).Assembly);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleExecutablePath, exePath);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProgramDirectoryPath, Path.GetDirectoryName(exePath));
             Environment.SetEnvironmentVariable(EnvironmentVariables.AgentProgramDirectoryPath, Path.GetDirectoryName(exePath));

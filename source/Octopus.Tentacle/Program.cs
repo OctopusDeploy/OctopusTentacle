@@ -6,12 +6,12 @@ using Octopus.Shared.Security;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Time;
 using Octopus.Shared.Util;
-using Octopus.Shared.Versioning;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Properties;
 using Octopus.Tentacle.Services;
+using Octopus.Tentacle.Versioning;
 
 namespace Octopus.Tentacle
 {
