@@ -3,7 +3,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Versioning;
+using Octopus.Tentacle.Versioning;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
