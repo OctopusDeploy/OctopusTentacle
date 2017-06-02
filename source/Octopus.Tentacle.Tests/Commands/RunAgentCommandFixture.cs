@@ -1,8 +1,8 @@
-using System.Security.Cryptography.X509Certificates;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Security;
 using Octopus.Shared.Versioning;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Communications;
@@ -27,7 +27,8 @@ namespace Octopus.Tentacle.Tests.Commands
 
             halibut = Substitute.For<IHalibutInitializer>();
             tentacleConfiguration = Substitute.For<ITentacleConfiguration>();
-            tentacleConfiguration.TentacleCertificate.Returns(new X509Certificate2());
+            var certificate = new CertificateGenerator().GenerateNew("cn=Test.Cert.For.Octopus.Tests");
+            tentacleConfiguration.TentacleCertificate.Returns(certificate);
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
             Command = new RunAgentCommand(
