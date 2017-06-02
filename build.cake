@@ -96,6 +96,9 @@ Task("__GitVersionAssemblies")
         UpdateAssemblyInfo = true,
         UpdateAssemblyInfoFilePath = gitVersionFile
     });
+
+    ReplaceRegexInFiles(gitVersionFile, "BranchName = \".*?\"", $"BranchName = \"{gitVersion.BranchName}\"");
+    ReplaceRegexInFiles(gitVersionFile, "NuGetVersion = \".*?\"", $"NuGetVersion = \"{gitVersion.NuGetVersion}\"");
 });
 
 Task("__Clean")
