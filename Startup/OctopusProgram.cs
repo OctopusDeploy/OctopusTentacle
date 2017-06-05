@@ -108,11 +108,6 @@ namespace Octopus.Shared.Startup
                 log.Fatal(ex.Message);
                 exitCode = 1;
             }
-            catch (ArgumentException ex)
-            {
-                log.Fatal(ex.Message);
-                exitCode = 1;
-            }
             catch (SecurityException ex)
             {
                 log.Fatal(ex, "A security exception was encountered. Please try re-running the command as an Administrator from an elevated command prompt.");

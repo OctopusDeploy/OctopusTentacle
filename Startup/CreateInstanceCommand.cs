@@ -21,7 +21,7 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
-            if (string.IsNullOrWhiteSpace(config)) throw new ArgumentException("No configuration file was specified. Please use the --config parameter to specify a configuration file path.");
+            if (string.IsNullOrWhiteSpace(config)) throw new ControlledFailureException("No configuration file was specified. Please use the --config parameter to specify a configuration file path.");
 
             config = fileSystem.GetFullPath(config);
 
