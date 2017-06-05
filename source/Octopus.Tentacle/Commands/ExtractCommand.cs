@@ -6,6 +6,7 @@ using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using System.Threading;
 using Octopus.Diagnostics;
+using Octopus.Shared;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -24,7 +25,7 @@ namespace Octopus.Tentacle.Commands
                 var fullPath = fileSystem.Value.GetFullPath(v);
                 fileSystem.Value.EnsureDirectoryExists(Path.GetDirectoryName(fullPath));
                 if (!fileSystem.Value.FileExists(fullPath))
-                    throw new ArgumentException("Package not found: " + fullPath);
+                    throw new ControlledFailureException("Package not found: " + fullPath);
 
                 log.Info("Package: " + fullPath);
                 packageFile = fullPath;

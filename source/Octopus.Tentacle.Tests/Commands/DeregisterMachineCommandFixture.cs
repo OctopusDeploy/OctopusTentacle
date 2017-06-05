@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Octopus.Client;
 using Octopus.Client.Model;
 using Octopus.Diagnostics;
+using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Security;
 using Octopus.Tentacle.Commands;
@@ -50,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Commands
             asyncRepository.Machines.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
                 
-            var result = Assert.Throws<ArgumentException>( async () => await Command.Deregister(asyncRepository));
+            var result = Assert.Throws<ControlledFailureException>( async () => await Command.Deregister(asyncRepository));
 
             Assert.That(result.Message.Equals(DeregisterMachineCommand.MultipleMatchErrorMsg));
         }

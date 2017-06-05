@@ -83,24 +83,24 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         void StartServiceClicked(object sender, EventArgs e)
         {
-            RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetStartCommands(), "Starting Tentacle service...");
+            RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetStartCommands(), "Starting Tentacle service...", model.LogsDirectory);
         }
 
         void StopServiceClicked(object sender, EventArgs e)
         {
-            RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetStopCommands(), "Stopping Tentacle service...");
+            RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetStopCommands(), "Stopping Tentacle service...", model.LogsDirectory);
             Refresh();
         }
 
         void RestartServiceClicked(object sender, EventArgs e)
         {
-            RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetRestartCommands(), "Restarting Tentacle service...");
+            RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetRestartCommands(), "Restarting Tentacle service...", model.LogsDirectory);
             Refresh();
         }
 
         void RepairServiceClicked(object sender, EventArgs e)
         {
-            RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetRepairCommands(), "Reinstalling the Tentacle service...");
+            RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetRepairCommands(), "Reinstalling the Tentacle service...", model.LogsDirectory);
         }
 
         void ShowProxy(object sender, EventArgs e)

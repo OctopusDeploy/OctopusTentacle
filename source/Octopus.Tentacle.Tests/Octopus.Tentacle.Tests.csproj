@@ -128,7 +128,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Shared, Version=3.14.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Shared.3.14.1-enh-sha256-ui0002\lib\Octopus.Shared.dll</HintPath>
+      <HintPath>..\packages\Octopus.Shared.3.14.1-enh-showdbupgrad0062\lib\Octopus.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.0.8.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Time.1.0.8\lib\netstandard1.0\Octopus.Time.dll</HintPath>
