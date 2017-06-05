@@ -592,7 +592,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public IEnumerable<CommandLineInvocation> GenerateScript()
         {
-            var root = Path.GetFullPath(HomeDirectory);
             pathToConfig = Path.Combine(HomeDirectory, ((ApplicationInstanceRecord.GetDefaultInstance(applicationName) != InstanceName) ? "Tentacle-" + InstanceName : InstanceName) + ".config");
 
             yield return Cli("create-instance").Argument("config", pathToConfig).Build();
