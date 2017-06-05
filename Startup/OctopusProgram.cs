@@ -7,6 +7,7 @@ using System.Security;
 using System.Threading.Tasks;
 using Autofac;
 using NLog;
+using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Internals.Options;
@@ -87,14 +88,15 @@ namespace Octopus.Shared.Startup
                 EnsureTempPathIsWriteable();
 
                 commandLineArguments = ProcessCommonOptions();
-                
-                instanceName = string.Empty;
-                var options = new OptionSet();
-                options.Add("instance=", "Name of the instance to use", v => instanceName = v);
-                var parsedOptions = options.Parse(commandLineArguments);
-                
+                instanceName = TryLoadInstanceName(commandLineArguments);
+
                 log.Trace("Creating and configuring the Autofac container");
                 container = BuildContainer(instanceName);
+
+                // Try to load the instance here so we can log into the instance's log file as soon as possible
+                // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on anyhow
+                TryLoadInstance();
+                
                 RegisterAdditionalModules(container);
 
                 host = SelectMostAppropriateHost();
@@ -169,6 +171,25 @@ namespace Octopus.Shared.Startup
             if (exitCode != 0 && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
+        }
+
+        void TryLoadInstance()
+        {
+            try
+            {
+                var instance = container.Resolve<IApplicationInstanceSelector>().Current;
+            }
+            catch (ControlledFailureException)
+            {
+                // ignore
+            }
+        }
+
+        static string TryLoadInstanceName(string[] arguments)
+        {
+            var instanceName = string.Empty;
+            new OptionSet {{"instance=", "Name of the instance to use", v => instanceName = v}}.Parse(arguments);
+            return instanceName;
         }
 
         void LogUnhandledException(object sender, UnhandledExceptionEventArgs args)
