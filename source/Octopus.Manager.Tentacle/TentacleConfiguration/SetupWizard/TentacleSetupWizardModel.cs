@@ -600,7 +600,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             yield return Cli("configure").Flag("reset-trust").Build();
 
             var config = Cli("configure")
-                .Argument("home", root)
                 .Argument("app", applicationInstallDirectory)
                 .Argument("port", ListenPort)
                 .Argument("noListen", IsTentacleActive.ToString());
