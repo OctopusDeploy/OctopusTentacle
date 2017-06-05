@@ -8,7 +8,7 @@ namespace Octopus.Shared.Configuration
     public class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
         readonly ApplicationName applicationName;
-        readonly string instanceName;
+        string instanceName;
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
         readonly ILog log;
@@ -27,6 +27,8 @@ namespace Octopus.Shared.Configuration
             this.log = log;
         }
         
+
+
         private LoadedApplicationInstance current;
         public LoadedApplicationInstance Current
         {
@@ -114,6 +116,13 @@ namespace Octopus.Shared.Configuration
             log.Info("Saving instance: " + instanceName);
             var instance = new ApplicationInstanceRecord(instanceName, applicationName, configurationFile);
             instanceStore.SaveInstance(instance);
+
+            log.Info($"Setting home directory to: {parentDirectory}");
+            var homeConfig = new HomeConfiguration(applicationName, new XmlFileKeyValueStore(configurationFile));
+            homeConfig.HomeDirectory = parentDirectory;
+
+            this.instanceName = instanceName;
+            DoLoad();
         }
 
         LoadedApplicationInstance Load(ApplicationInstanceRecord record)
