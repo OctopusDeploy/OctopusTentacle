@@ -26,8 +26,6 @@ namespace Octopus.Shared.Configuration
             this.instanceStore = instanceStore;
             this.log = log;
         }
-        
-
 
         private LoadedApplicationInstance current;
         public LoadedApplicationInstance Current
@@ -97,12 +95,12 @@ namespace Octopus.Shared.Configuration
             return Load(instance);
         }
 
-        public void CreateDefaultInstance(string configurationFile)
+        public void CreateDefaultInstance(string configurationFile, string homeDirectory = null)
         {
-            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(applicationName), configurationFile);
+            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(applicationName), configurationFile, homeDirectory);
         }
 
-        public void CreateInstance(string instanceName, string configurationFile)
+        public void CreateInstance(string instanceName, string configurationFile, string homeDirectory = null)
         {
             var parentDirectory = Path.GetDirectoryName(configurationFile);
             fileSystem.EnsureDirectoryExists(parentDirectory);
@@ -117,9 +115,10 @@ namespace Octopus.Shared.Configuration
             var instance = new ApplicationInstanceRecord(instanceName, applicationName, configurationFile);
             instanceStore.SaveInstance(instance);
 
-            log.Info($"Setting home directory to: {parentDirectory}");
             var homeConfig = new HomeConfiguration(applicationName, new XmlFileKeyValueStore(configurationFile));
-            homeConfig.HomeDirectory = parentDirectory;
+            var home = !string.IsNullOrWhiteSpace(homeDirectory) ? homeDirectory : parentDirectory;
+            log.Info($"Setting home directory to: {home}");
+            homeConfig.HomeDirectory = home;
 
             this.instanceName = instanceName;
             DoLoad();
