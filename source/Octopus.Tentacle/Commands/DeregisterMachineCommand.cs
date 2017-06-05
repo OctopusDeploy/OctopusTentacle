@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Client;
+using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Startup;
 using Octopus.Tentacle.Commands.OptionSets;
@@ -35,7 +36,6 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            base.Start();
             StartAsync().GetAwaiter().GetResult();
         }
 
@@ -55,10 +55,10 @@ namespace Octopus.Tentacle.Commands
             var matchingMachines = await repository.Machines.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
 
             if (matchingMachines.Count == 0)
-                throw new ArgumentException("No machine was found on the server matching this Tentacle's thumbprint.");
+                throw new ControlledFailureException("No machine was found on the server matching this Tentacle's thumbprint.");
 
             if (matchingMachines.Count > 1 && !allowMultiple)
-                throw new ArgumentException(MultipleMatchErrorMsg);
+                throw new ControlledFailureException(MultipleMatchErrorMsg);
             
             // 2. contact the server and de-register, this is independant to any tentacle configuration
             foreach (var machineResource in matchingMachines)

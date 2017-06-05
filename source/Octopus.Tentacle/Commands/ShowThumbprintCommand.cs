@@ -26,7 +26,6 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            base.Start();
             var thumbprint = tentacleConfiguration.Value.TentacleCertificate.Thumbprint;
             log.Info((thumbprintOnly ? "" : "The thumbprint of this Tentacle is: ") + thumbprint);
             if (!string.IsNullOrWhiteSpace(exportFile))
