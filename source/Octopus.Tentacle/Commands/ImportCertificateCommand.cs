@@ -4,6 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Microsoft.Win32;
 using Octopus.Diagnostics;
+using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Security;
 using Octopus.Shared.Security.Certificates;
@@ -34,10 +35,10 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             if (!fromRegistry && string.IsNullOrWhiteSpace(importFile))
-                throw new ArgumentException("Please specify the certificate to import.");
+                throw new ControlledFailureException("Please specify the certificate to import.");
 
             if (fromRegistry && !string.IsNullOrWhiteSpace(importFile))
-                throw new ArgumentException("Please specify only one of either from-registry or from-file.");
+                throw new ControlledFailureException("Please specify only one of either from-registry or from-file.");
 
             X509Certificate2 x509Certificate = null;
             if (fromRegistry)
@@ -47,7 +48,7 @@ namespace Octopus.Tentacle.Commands
                 string encoded = GetEncodedCertificate();
                 if (string.IsNullOrWhiteSpace(encoded))
                 {
-                    throw new ArgumentException("No Octopus 1.x Tentacle certificate was found.");
+                    throw new ControlledFailureException("No Octopus 1.x Tentacle certificate was found.");
                 }
                 x509Certificate = CertificateEncoder.FromBase64String(encoded);
             }

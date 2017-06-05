@@ -5,6 +5,7 @@ using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Client.Model;
+using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Startup;
@@ -78,7 +79,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public void NoTrusts()
         {
             Action action = () => Execute(Thumb1, CommunicationStyle.TentaclePassive);
-            action.ShouldThrow<ArgumentException>()
+            action.ShouldThrow<ControlledFailureException>()
                 .WithMessage("Before server communications can be modified, trust must be established with the configure command");
         }
 
@@ -98,7 +99,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             AddTrusts(Thumb1);
             Action action = () => Execute(Thumb1, CommunicationStyle.TentacleActive, null, "1234");
-            action.ShouldThrow<ArgumentException>()
+            action.ShouldThrow<ControlledFailureException>()
                 .WithMessage("Please provide either the server hostname or websocket address, e.g. --host=OCTOPUS");
         }
 
