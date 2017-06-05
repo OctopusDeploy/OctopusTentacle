@@ -111,28 +111,24 @@
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Client, Version=4.15.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Client.4.15.3\lib\net45\Octopus.Client.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Octopus.Client, Version=4.15.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Client.4.15.6\lib\net45\Octopus.Client.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Configuration, Version=1.0.10.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Configuration.1.0.10\lib\net45\Octopus.Configuration.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Octopus.Configuration, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Configuration.1.0.11\lib\net45\Octopus.Configuration.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Data, Version=1.0.24.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Data.1.0.24\lib\netstandard1.0\Octopus.Data.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Diagnostics, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Diagnostics.1.0.11\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Octopus.Diagnostics, Version=1.0.12.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Diagnostics.1.0.12\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Shared, Version=3.14.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Shared.3.14.1-enh-showdbupgrad0062\lib\Octopus.Shared.dll</HintPath>
+    <Reference Include="Octopus.Shared, Version=3.14.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Shared.3.14.0-beta0066\lib\Octopus.Shared.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Time, Version=1.0.8.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Time.1.0.8\lib\netstandard1.0\Octopus.Time.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Octopus.Time, Version=1.0.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Time.1.0.9\lib\netstandard1.0\Octopus.Time.dll</HintPath>
     </Reference>
     <Reference Include="Polly, Version=5.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Polly.5.1.0\lib\net45\Polly.dll</HintPath>
