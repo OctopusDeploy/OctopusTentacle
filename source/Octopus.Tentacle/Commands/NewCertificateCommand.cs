@@ -48,8 +48,6 @@ namespace Octopus.Tentacle.Commands
             }
             else
             {
-                base.Start(); // Initialises Tentacle Instance.  This is only required when pushing to config.
-
                 if (preserve && configuration.Value.TentacleCertificate != null)
                 {
                     log.Info("A certificate already exists, no changes will be applied.");

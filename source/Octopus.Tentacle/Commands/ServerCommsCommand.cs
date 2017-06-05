@@ -35,8 +35,6 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            base.Start();
-
             if (!tentacleConfiguration.Value.TrustedOctopusThumbprints.Any())
                 throw new ArgumentException("Before server communications can be modified, trust must be established with the configure command");
 

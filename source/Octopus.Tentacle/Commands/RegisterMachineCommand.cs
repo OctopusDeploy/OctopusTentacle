@@ -67,7 +67,6 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            base.Start();
             StartAsync().GetAwaiter().GetResult();
         }
 
