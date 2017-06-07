@@ -127,10 +127,10 @@
       <HintPath>..\packages\Octopus.Diagnostics.1.0.12\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Manager.Core, Version=3.14.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Manager.Core.3.14.0-beta0066\lib\Octopus.Manager.Core.dll</HintPath>
+      <HintPath>..\packages\Octopus.Manager.Core.3.14.0-beta0081\lib\Octopus.Manager.Core.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Shared, Version=3.14.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Shared.3.14.0-beta0066\lib\Octopus.Shared.dll</HintPath>
+      <HintPath>..\packages\Octopus.Shared.3.14.0-beta0081\lib\Octopus.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.0.9.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Time.1.0.9\lib\netstandard1.0\Octopus.Time.dll</HintPath>
