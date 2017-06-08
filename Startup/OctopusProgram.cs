@@ -7,6 +7,7 @@ using System.Security;
 using System.Threading.Tasks;
 using Autofac;
 using NLog;
+using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Internals.Options;
@@ -81,31 +82,28 @@ namespace Octopus.Shared.Startup
             AppDomain.CurrentDomain.UnhandledException += LogUnhandledException;
 
             int exitCode;
+            ICommandHost host = null;
             try
             {
                 EnsureTempPathIsWriteable();
 
                 commandLineArguments = ProcessCommonOptions();
-                
-                instanceName = string.Empty;
-                var options = new OptionSet();
-                options.Add("instance=", "Name of the instance to use", v => instanceName = v);
-                var parsedOptions = options.Parse(commandLineArguments);
-                
+                instanceName = TryLoadInstanceName(commandLineArguments);
+
                 log.Trace("Creating and configuring the Autofac container");
                 container = BuildContainer(instanceName);
+
+                // Try to load the instance here so we can log into the instance's log file as soon as possible
+                // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on anyhow
+                TryLoadInstance();
+                
                 RegisterAdditionalModules(container);
 
-                var host = SelectMostAppropriateHost();
+                host = SelectMostAppropriateHost();
                 host.Run(Start, Stop);
                 exitCode = Environment.ExitCode;
             }
             catch (ControlledFailureException ex)
-            {
-                log.Fatal(ex.Message);
-                exitCode = 1;
-            }
-            catch (ArgumentException ex)
             {
                 log.Fatal(ex.Message);
                 exitCode = 1;
@@ -162,9 +160,31 @@ namespace Octopus.Shared.Startup
                 }
                 exitCode = 100;
             }
+
+            host?.OnExit(exitCode);
+
             if (exitCode != 0 && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
+        }
+
+        void TryLoadInstance()
+        {
+            try
+            {
+                var instance = container.Resolve<IApplicationInstanceSelector>().Current;
+            }
+            catch (ControlledFailureException)
+            {
+                // ignore
+            }
+        }
+
+        static string TryLoadInstanceName(string[] arguments)
+        {
+            var instanceName = string.Empty;
+            new OptionSet {{"instance=", "Name of the instance to use", v => instanceName = v}}.Parse(arguments);
+            return instanceName;
         }
 
         void LogUnhandledException(object sender, UnhandledExceptionEventArgs args)

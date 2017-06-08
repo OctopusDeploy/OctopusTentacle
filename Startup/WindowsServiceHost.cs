@@ -33,6 +33,11 @@ namespace Octopus.Shared.Startup
             ServiceBase.Run(adapter);
         }
 
+        public void OnExit(int exitCode)
+        {
+            // Only applicable for interactive hosts
+        }
+
         public void WaitForUserToExit()
         {
             // Only applicable for interactive hosts; services are stopped via the service control panel

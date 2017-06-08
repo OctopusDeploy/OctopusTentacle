@@ -32,7 +32,7 @@ namespace Octopus.Shared.Startup
         {
             if (arguments.Count > 0)
             {
-                throw new ArgumentException("Unrecognized command line arguments: " + string.Join(" ", arguments));
+                throw new ControlledFailureException("Unrecognized command line arguments: " + string.Join(" ", arguments));
             }
         }
 
@@ -70,8 +70,10 @@ namespace Octopus.Shared.Startup
                 opset.Validate();
 
             Initialize(displayName, version, informationalVersion, environmentInformation, instanceName);
+            Log.System().Info($"==== {GetType().Name} starting ====");
             Start();
             Completed();
+            Log.System().Info($"==== {GetType().Name} completed ====");
         }
 
         void ICommand.Stop()
