@@ -4,7 +4,6 @@ using System.Data.Services.Client;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Cryptography;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Diagnostics.KnowledgeBase
