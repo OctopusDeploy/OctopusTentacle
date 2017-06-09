@@ -18,12 +18,12 @@
       <dependency id="Newtonsoft.Json" version="9.0.1" />
       <dependency id="Nito.AsyncEx" version="3.0.1" />
       <dependency id="NLog" version="4.0.1" />
-      <dependency id="NuGet.Common" version="3.6.0-octopus-58455" />
-      <dependency id="NuGet.Frameworks" version="3.6.0-octopus-58455" />
-      <dependency id="NuGet.Packaging" version="3.6.0-octopus-58455" />
-      <dependency id="NuGet.Packaging.Core" version="3.6.0-octopus-58455" />
-      <dependency id="NuGet.Packaging.Core.Types" version="3.6.0-octopus-58455" />
-      <dependency id="NuGet.Versioning" version="3.6.0-octopus-58455" />
+      <dependency id="NuGet.Common" version="3.6.0-octopus-58672" />
+      <dependency id="NuGet.Frameworks" version="3.6.0-octopus-58672" />
+      <dependency id="NuGet.Packaging" version="3.6.0-octopus-58672" />
+      <dependency id="NuGet.Packaging.Core" version="3.6.0-octopus-58672" />
+      <dependency id="NuGet.Packaging.Core.Types" version="3.6.0-octopus-58672" />
+      <dependency id="NuGet.Versioning" version="3.6.0-octopus-58672" />
       <dependency id="Octopus.Configuration" version="1.0.10" />
       <dependency id="Octopus.Diagnostics" version="1.0.11" />
       <dependency id="Octopus.Time" version="1.0.8" />
