@@ -18,12 +18,12 @@
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
     <PackageReference Include="NLog" Version="4.0.1" />
-    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58455" />
-    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58455" />
-    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58455" />
-    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58455" />
-    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58455" />
-    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58455" />
+    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58672" />
+    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58672" />
+    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58672" />
+    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58672" />
+    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58672" />
+    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58672" />
     <PackageReference Include="Octopus.Configuration" Version="1.0.10" />
     <PackageReference Include="Octopus.Diagnostics" Version="1.0.11" />
     <PackageReference Include="Octopus.Time" Version="1.0.8" />
