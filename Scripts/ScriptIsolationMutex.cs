@@ -19,36 +19,42 @@ namespace Octopus.Shared.Scripts
 
         public static IDisposable Acquire(ScriptIsolationLevel isolation, TimeSpan mutexAcquireTimeout, string lockName, Action<string> log, CancellationToken ct)
         {
+            log($"Trying to acquire lock for '{lockName}' with '{isolation}'.");
             var readerWriter = GetLock(lockName);
             switch (isolation)
             {
                 case ScriptIsolationLevel.FullIsolation:
-                    return EnterWriteLock(log, readerWriter, ct, mutexAcquireTimeout);
+                    return EnterWriteLock(log, readerWriter, ct, mutexAcquireTimeout, lockName);
                 case ScriptIsolationLevel.NoIsolation:
-                    return EnterReadLock(log, readerWriter, ct, mutexAcquireTimeout);
+                    return EnterReadLock(log, readerWriter, ct, mutexAcquireTimeout, lockName);
             }
 
             throw new NotSupportedException("Unknown isolation level: " + isolation);
         }
 
-        static IDisposable EnterReadLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout)
+        static IDisposable EnterReadLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout, string lockName)
         {
             IDisposable lockReleaser;
-            if (readerWriter.TryEnterReadLock(InitialWaitTime, ct, out lockReleaser))
+            if (readerWriter.TryEnterReadLock(log, InitialWaitTime, ct, out lockReleaser))
             {
+                log($"Acquired read lock for '{lockName}' within {InitialWaitTime}.");
                 return lockReleaser;
             }
 
+            log($"Failed to acquire read lock for '{lockName}' within {InitialWaitTime}.");
+
             Busy(log);
 
-            return EnterReadLockWithTimeout(log, readerWriter, ct, mutexAcquireTimeout);
+            return EnterReadLockWithTimeout(log, readerWriter, ct, mutexAcquireTimeout, lockName);
         }
 
-        static IDisposable EnterReadLockWithTimeout(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout)
+        static IDisposable EnterReadLockWithTimeout(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout, string lockName)
         {
+            log($"Trying to acquire read lock with wait time of {mutexAcquireTimeout}.");
             IDisposable lockReleaser;
-            if (readerWriter.TryEnterReadLock(mutexAcquireTimeout, ct, out lockReleaser))
+            if (readerWriter.TryEnterReadLock(log, mutexAcquireTimeout, ct, out lockReleaser))
             {
+                log($"Acquired read lock for '{lockName}' within {mutexAcquireTimeout}.");
                 return lockReleaser;
             }
 
@@ -57,29 +63,39 @@ namespace Octopus.Shared.Scripts
                 Canceled(log);
                 throw new OperationCanceledException(ct);
             }
+
+            log($"Failed to acquire read lock for '{lockName}' within {mutexAcquireTimeout}.");
 
             TimedOut(log, mutexAcquireTimeout);
             throw new TimeoutException($"Could not acquire read mutex within timeout {mutexAcquireTimeout}.");
         }
 
-        static IDisposable EnterWriteLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout)
+        static IDisposable EnterWriteLock(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout, string lockName)
         {
             IDisposable lockReleaser;
-            if (readerWriter.TryEnterWriterLock(InitialWaitTime, ct, out lockReleaser))
+            if (readerWriter.TryEnterWriterLock(log, InitialWaitTime, ct, out lockReleaser))
             {
+                log($"Acquired write lock for '{lockName}' within {InitialWaitTime}.");
+
                 return lockReleaser;
             }
 
+            log($"Failed to acquire write lock for '{lockName}' within {InitialWaitTime}.");
+
             Busy(log);
 
-            return EnterWriteLockWithTimeout(log, readerWriter, ct, mutexAcquireTimeout);
+            return EnterWriteLockWithTimeout(log, readerWriter, ct, mutexAcquireTimeout, lockName);
         }
 
-        static IDisposable EnterWriteLockWithTimeout(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout)
+        static IDisposable EnterWriteLockWithTimeout(Action<string> log, AsyncReaderWriterLock readerWriter, CancellationToken ct, TimeSpan mutexAcquireTimeout, string lockName)
         {
             IDisposable lockReleaser;
-            if (readerWriter.TryEnterWriterLock(mutexAcquireTimeout, ct, out lockReleaser))
+            log($"Trying to acquire write lock with wait time of {mutexAcquireTimeout}.");
+
+            if (readerWriter.TryEnterWriterLock(log, mutexAcquireTimeout, ct, out lockReleaser))
             {
+                log($"Acquired write lock for '{lockName}' within {mutexAcquireTimeout}.");
+
                 return lockReleaser;
             }
 
@@ -88,6 +104,8 @@ namespace Octopus.Shared.Scripts
                 Canceled(log);
                 throw new OperationCanceledException(ct);
             }
+
+            log($"Failed to acquire write lock for '{lockName}' within {mutexAcquireTimeout}.");
 
             TimedOut(log, mutexAcquireTimeout);
             throw new TimeoutException($"Could not acquire write mutex within timeout {mutexAcquireTimeout}.");
