@@ -31,9 +31,6 @@
   </targets>
 
   <rules>
-    <logger name="SkipConsole" minlevel="Info" writeTo="octopus-log-file" />
-    <logger name="SkipConsole" minlevel="Fatal" writeTo="eventlog" final="true" />
-    
     <logger name="*" minlevel="Info" writeTo="octopus-log-file" />
     <logger name="*" minlevel="Fatal" writeTo="eventlog" />
     <logger name="*" minlevel="Info" writeTo="console" />
