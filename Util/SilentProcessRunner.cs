@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
@@ -89,6 +90,7 @@ namespace Octopus.Shared.Util
         {
             try
             {
+                output.WriteVerbose($"Starting {Path.GetFileName(executable)} in {workingDirectory}");
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -168,6 +170,8 @@ namespace Octopus.Shared.Util
                         process.BeginErrorReadLine();
 
                         process.WaitForExit();
+
+                        output.WriteVerbose($"Process exited with code {process.ExitCode}");
 
                         running = false;
 
