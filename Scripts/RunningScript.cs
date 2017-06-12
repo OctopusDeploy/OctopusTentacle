@@ -11,13 +11,15 @@ namespace Octopus.Shared.Scripts
         public const int TimeoutExitCode = -44;
 
         readonly IScriptWorkspace workspace;
+        readonly string taskId;
         readonly CancellationToken token;
 
-        public RunningScript(IScriptWorkspace workspace, IScriptLog log, CancellationToken token)
+        public RunningScript(IScriptWorkspace workspace, IScriptLog log, string taskId, CancellationToken token)
         {
             this.workspace = workspace;
-            Log = log;
+            this.taskId = taskId;
             this.token = token;
+            Log = log;
             State = ProcessState.Pending;
         }
 
@@ -34,7 +36,7 @@ namespace Octopus.Shared.Scripts
             {
                 try
                 {
-                    using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, workspace.ScriptMutexAcquireTimeout, GetType().Name, message => writer.WriteOutput(ProcessOutputSource.StdOut, message), token))
+                    using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, workspace.ScriptMutexAcquireTimeout, GetType().Name, message => writer.WriteOutput(ProcessOutputSource.StdOut, message), taskId, token))
                     {
                         try
                         {
