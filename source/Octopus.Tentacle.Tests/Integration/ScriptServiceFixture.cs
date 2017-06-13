@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Shared.Configuration;
@@ -50,8 +51,9 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public void ShouldPingRandomUnsuccessfully()
         {
+            var guid = Guid.NewGuid();
             var startScriptCommand = new StartScriptCommandBuilder()
-                .WithScriptBody("& ping.exe " + Guid.NewGuid() + " -n 1")
+                .WithScriptBody($"& ping.exe {guid} -n 1")
                 .Build();
 
             var ticket = service.StartScript(startScriptCommand);
@@ -65,7 +67,7 @@ namespace Octopus.Tentacle.Tests.Integration
             DumpLog(finalStatus);
             Assert.That(finalStatus.State, Is.EqualTo(ProcessState.Complete));
             Assert.That(finalStatus.ExitCode, Is.Not.EqualTo(0));
-            Assert.That(finalStatus.Logs[0].Text, Is.StringContaining("Ping request could not find host"));
+            finalStatus.Logs.Select(l => l.Text).Should().Contain($"Ping request could not find host {guid}. Please check the name and try again.");
         }
 
         [Test]
