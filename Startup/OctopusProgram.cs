@@ -38,17 +38,21 @@ namespace Octopus.Shared.Startup
             this.environmentInformation = environmentInformation;
             commonOptions = new OptionSet();
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
-            commonOptions.Add("noconsolelogging", "Don't log to the console", v =>
+            commonOptions.Add("noconsolelogging", "Don't log messages to the stdout - errors are still logged to stderr", v => { DisableConsoleLogging(); });
+        }
+
+        static void DisableConsoleLogging()
+        {
+            // Suppress logging to the console by removing the console logger for stdout
+            var c = LogManager.Configuration;
+
+            // Note: this matches the target name in octopus.server.exe.nlog
+            var stdoutTarget = c.FindTargetByName("stdout");
+            foreach (var rule in c.LoggingRules)
             {
-                // suppress logging to the console
-                var c = LogManager.Configuration;
-                var target = c.FindTargetByName("console");
-                foreach (var rule in c.LoggingRules)
-                {
-                    rule.Targets.Remove(target);
-                }
-                LogManager.Configuration = c;
-            });
+                rule.Targets.Remove(stdoutTarget);
+            }
+            LogManager.Configuration = c;
         }
 
         protected OptionSet CommonOptions
