@@ -10,6 +10,7 @@ using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Security;
 using Octopus.Tentacle.Commands;
+using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Tests.Support;
 
@@ -41,7 +42,11 @@ namespace Octopus.Tentacle.Tests.Commands
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
                 TentacleCertificate = new CertificateGenerator().GenerateNew($"CN={Guid.NewGuid()}")
             };
-            Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration), log, Substitute.For<IApplicationInstanceSelector>(), proxyConfig);
+            Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration), 
+                                                   log, 
+                                                   Substitute.For<IApplicationInstanceSelector>(), 
+                                                   proxyConfig,
+                                                   Substitute.For<IOctopusClientInitializer>());
 
             var matchingMachines = new List<MachineResource>
             {
@@ -66,7 +71,11 @@ namespace Octopus.Tentacle.Tests.Commands
                 TentacleCertificate = new CertificateGenerator().GenerateNew($"CN={Guid.NewGuid()}")
             };
 
-            Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration), log, Substitute.For<IApplicationInstanceSelector>(), proxyConfig);
+            Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
+                                                   log, 
+                                                   Substitute.For<IApplicationInstanceSelector>(),
+                                                   proxyConfig,
+                                                   Substitute.For<IOctopusClientInitializer>());
 
             const string machineName = "MachineToBeDeleted";
             var matchingMachines = new List<MachineResource>
@@ -92,7 +101,11 @@ namespace Octopus.Tentacle.Tests.Commands
                 TentacleCertificate = new CertificateGenerator().GenerateNew($"CN={Guid.NewGuid()}")
             };
 
-            Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration), log, Substitute.For<IApplicationInstanceSelector>(), proxyConfig);
+            Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
+                                                   log,
+                                                   Substitute.For<IApplicationInstanceSelector>(),
+                                                   proxyConfig,
+                                                   Substitute.For<IOctopusClientInitializer>());
 
             asyncRepository.CertificateConfiguration.GetOctopusCertificate()
                 .ReturnsForAnyArgs(new CertificateConfigurationResource { Thumbprint = expectedThumbPrint }.AsTask());

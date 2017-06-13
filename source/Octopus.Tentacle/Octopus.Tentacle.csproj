@@ -15,6 +15,8 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac" Version="3.5.2" />
+    <PackageReference Include="Octopus.Client" Version="4.15.7" />
+    <PackageReference Include="Octopus.Shared" Version="3.14.1-enh-sha256-ui0002" />
     <PackageReference Include="Octopus.Client" Version="4.15.6" />
     <PackageReference Include="Octopus.Shared" Version="3.14.0-ci0053" />
     <PackageReference Include="System.Net.Http" Version="4.1.0" />
