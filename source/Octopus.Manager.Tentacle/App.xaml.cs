@@ -12,6 +12,7 @@ using Octopus.Manager.Core.Shared.Dialogs;
 using Octopus.Manager.Core.Shared.Shell;
 using Octopus.Manager.Core.Util;
 using Octopus.Manager.Tentacle.TentacleConfiguration;
+using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
@@ -91,10 +92,11 @@ namespace Octopus.Manager.Tentacle
             var instancesWithDefaultFirst = defaultInstance.Concat(instances.Except(defaultInstance).OrderBy(x => x.InstanceName));
             foreach (var instance in instancesWithDefaultFirst)
             {
-                var service = new ServiceWatcher(instance.ApplicationName, instance.InstanceName, CommandLine.PathToTentacleExe());
+                var model = new TentacleManagerModel();
+                model.Load(instance);
                 var isDefaultInstance = instance.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(instance.ApplicationName);
                 var title = isDefaultInstance ? "Reconfiguring Tentacle..." : $"Reconfiguring Tentacle {instance.InstanceName}...";
-                RunProcessDialog.ShowDialog(MainWindow, service.GetReconfigureCommands(), title);
+                RunProcessDialog.ShowDialog(MainWindow, model.ServiceWatcher.GetReconfigureCommands(), title, model.LogsDirectory, showOutputLog: true);
             }
         }
 

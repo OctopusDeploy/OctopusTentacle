@@ -3,6 +3,7 @@ using System.Linq;
 using Halibut;
 using Octopus.Client.Model;
 using Octopus.Diagnostics;
+using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
@@ -35,26 +36,24 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            base.Start();
-
             if (!tentacleConfiguration.Value.TrustedOctopusThumbprints.Any())
-                throw new ArgumentException("Before server communications can be modified, trust must be established with the configure command");
+                throw new ControlledFailureException("Before server communications can be modified, trust must be established with the configure command");
 
             if (string.IsNullOrWhiteSpace(serverThumbprint))
             {
                 if (tentacleConfiguration.Value.TrustedOctopusThumbprints.Count() != 1)
-                    throw new ArgumentException("More than one server is trusted; please provide the thumbprint of the server to configure, e.g. --thumbprint=...");
+                    throw new ControlledFailureException("More than one server is trusted; please provide the thumbprint of the server to configure, e.g. --thumbprint=...");
 
                 serverThumbprint = tentacleConfiguration.Value.TrustedOctopusThumbprints.Single();
             }
 
             CommunicationStyle communicationStyle;
             if (!Enum.TryParse(style, true, out communicationStyle))
-                throw new ArgumentException("Please specify a valid communications style, e.g. --style=TentaclePassive");
+                throw new ControlledFailureException("Please specify a valid communications style, e.g. --style=TentaclePassive");
 
             var servers = tentacleConfiguration.Value.TrustedOctopusServers.Where(s => s.Thumbprint == serverThumbprint).ToArray();
             if (servers.None())
-                throw new ArgumentException("No trusted server was found with the supplied thumbprint");
+                throw new ControlledFailureException("No trusted server was found with the supplied thumbprint");
 
 
             if (communicationStyle == CommunicationStyle.TentacleActive)
@@ -95,10 +94,10 @@ namespace Octopus.Tentacle.Commands
             var hasHost = !string.IsNullOrWhiteSpace(serverHost);
             var hasWebSocket = !string.IsNullOrWhiteSpace(webSocket);
             if (!hasHost && !hasWebSocket)
-                throw new ArgumentException("Please provide either the server hostname or websocket address, e.g. --host=OCTOPUS");
+                throw new ControlledFailureException("Please provide either the server hostname or websocket address, e.g. --host=OCTOPUS");
 
             if (hasHost && hasWebSocket)
-                throw new ArgumentException("The hostname and websocket options cannot be used together");
+                throw new ControlledFailureException("The hostname and websocket options cannot be used together");
 
             if (hasHost)
                 return new Uri($"https://{serverHost}:{serverPort}");
@@ -113,7 +112,7 @@ namespace Octopus.Tentacle.Commands
                 case "wss":
                     break;
                 default:
-                    throw new ArgumentException("The websocket address must start with wss://");
+                    throw new ControlledFailureException("The websocket address must start with wss://");
             }
 
             return address;

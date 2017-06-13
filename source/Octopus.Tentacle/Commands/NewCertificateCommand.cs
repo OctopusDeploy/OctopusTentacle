@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using Octopus.Diagnostics;
+using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Security;
 using Octopus.Shared.Security.Certificates;
@@ -36,7 +37,7 @@ namespace Octopus.Tentacle.Commands
         {
 
             if (preserve && !string.IsNullOrWhiteSpace(exportFile))
-                throw new ArgumentException("Invalid command: --if-blank and --export-file cannot be specified together");
+                throw new ControlledFailureException("Invalid command: --if-blank and --export-file cannot be specified together");
 
             if (!string.IsNullOrWhiteSpace(exportFile))
             {
@@ -48,8 +49,6 @@ namespace Octopus.Tentacle.Commands
             }
             else
             {
-                base.Start(); // Initialises Tentacle Instance.  This is only required when pushing to config.
-
                 if (preserve && configuration.Value.TentacleCertificate != null)
                 {
                     log.Info("A certificate already exists, no changes will be applied.");

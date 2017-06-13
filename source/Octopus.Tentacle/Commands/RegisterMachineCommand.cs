@@ -75,21 +75,20 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            base.Start();
             StartAsync().GetAwaiter().GetResult();
         }
 
         async Task StartAsync()
         {
             if (environmentNames.Count == 0 || string.IsNullOrWhiteSpace(environmentNames.First()))
-                throw new ArgumentException("Please specify an environment name, e.g., --environment=Development");
+                throw new ControlledFailureException("Please specify an environment name, e.g., --environment=Development");
 
             CommunicationStyle communicationStyle;
             if (!Enum.TryParse(comms, true, out communicationStyle))
-                throw new ArgumentException("Please specify a valid communications style, e.g. --comms-style=TentaclePassive");
+                throw new ControlledFailureException("Please specify a valid communications style, e.g. --comms-style=TentaclePassive");
 
             if (configuration.Value.TentacleCertificate == null)
-                throw new ArgumentException("No certificate has been generated for this Tentacle. Please run the new-certificate command first.");
+                throw new ControlledFailureException("No certificate has been generated for this Tentacle. Please run the new-certificate command first.");
 
             Uri serverAddress = null;
 
@@ -187,7 +186,7 @@ namespace Octopus.Tentacle.Commands
                 case "wss":
                     break;
                 default:
-                    throw new ArgumentException("The websocket address must start with wss://");
+                    throw new ControlledFailureException("The websocket address must start with wss://");
             }
 
             return address;

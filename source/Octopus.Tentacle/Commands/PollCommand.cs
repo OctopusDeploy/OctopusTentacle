@@ -6,6 +6,7 @@ using Octopus.Client;
 using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Diagnostics;
+using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Startup;
 using Octopus.Tentacle.Commands.OptionSets;
@@ -47,7 +48,6 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            base.Start();
             StartAsync().GetAwaiter().GetResult();
         }
 
@@ -148,7 +148,7 @@ namespace Octopus.Tentacle.Commands
                 case "wss":
                     break;
                 default:
-                    throw new ArgumentException("The websocket address must start with wss://");
+                    throw new ControlledFailureException("The websocket address must start with wss://");
             }
 
             return address;
