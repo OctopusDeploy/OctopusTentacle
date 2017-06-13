@@ -17,17 +17,23 @@ namespace Octopus.Tentacle.Commands
         readonly ApiEndpointOptions api;
         bool allowMultiple;
         readonly IProxyConfigParser proxyConfig;
+        readonly IOctopusClientInitializer octopusClientInitializer;
 
         public const string ThumbprintNotFoundMsg = "The server you supplied did not match the thumbprint stored in the configuration for this tentacle.";
         public const string DeregistrationSuccessMsg = "Machine deregistered successfully";
         public const string MultipleMatchErrorMsg = "The Tentacle matches more than one machine on the server. To deregister all of these machines specify the --multiple flag.";
         
-        public DeregisterMachineCommand(Lazy<ITentacleConfiguration> configuration, ILog log, IApplicationInstanceSelector selector, IProxyConfigParser proxyConfig)
+        public DeregisterMachineCommand(Lazy<ITentacleConfiguration> configuration, 
+                                        ILog log,
+                                        IApplicationInstanceSelector selector,
+                                        IProxyConfigParser proxyConfig,
+                                        IOctopusClientInitializer octopusClientInitializer)
             : base(selector)
         {
             this.configuration = configuration;
             this.log = log;
             this.proxyConfig = proxyConfig;
+            this.octopusClientInitializer = octopusClientInitializer;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
             Options.Add("m|multiple", "Deregister all machines that use the same thumbprint", s => allowMultiple = true);
@@ -43,7 +49,7 @@ namespace Octopus.Tentacle.Commands
         {
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
-            using (var client = await api.CreateClient(proxyOverride))
+            using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
                 await Deregister(new OctopusAsyncRepository(client));
             }

@@ -25,6 +25,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<ITentacleConfiguration> configuration;
         readonly Lazy<IOctopusServerChecker> octopusServerChecker;
         readonly IProxyConfigParser proxyConfig;
+        readonly IOctopusClientInitializer octopusClientInitializer;
         readonly List<string> environmentNames = new List<string>();
         readonly List<string> roles = new List<string>();
         readonly List<string> tenants = new List<string>();
@@ -40,7 +41,13 @@ namespace Octopus.Tentacle.Commands
         string serverWebSocketAddress;
         int? tentacleCommsPort = null;
 
-        public RegisterMachineCommand(Lazy<IRegisterMachineOperation> lazyRegisterMachineOperation, Lazy<ITentacleConfiguration> configuration, ILog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig)
+        public RegisterMachineCommand(Lazy<IRegisterMachineOperation> lazyRegisterMachineOperation, 
+                                      Lazy<ITentacleConfiguration> configuration, 
+                                      ILog log, 
+                                      IApplicationInstanceSelector selector, 
+                                      Lazy<IOctopusServerChecker> octopusServerChecker, 
+                                      IProxyConfigParser proxyConfig,
+                                      IOctopusClientInitializer octopusClientInitializer)
             : base(selector)
         {
             this.lazyRegisterMachineOperation = lazyRegisterMachineOperation;
@@ -48,6 +55,7 @@ namespace Octopus.Tentacle.Commands
             this.log = log;
             this.octopusServerChecker = octopusServerChecker;
             this.proxyConfig = proxyConfig;
+            this.octopusClientInitializer = octopusClientInitializer;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
 
@@ -97,48 +105,56 @@ namespace Octopus.Tentacle.Commands
 
             log.Info($"Registering the tentacle with the server at {api.ServerUri}");
 
-            using (var client = await api.CreateClient(proxyOverride))
+            using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
-                var repository = new OctopusAsyncRepository(client);
-
-                ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(repository);
-
-                var machine = new OctopusServerConfiguration(await GetServerThumbprint(repository, serverAddress, sslThumbprint))
-                {
-                    Address = serverAddress,
-                    CommunicationStyle = communicationStyle
-                };
-
-                var registerMachineOperation = lazyRegisterMachineOperation.Value;
-                registerMachineOperation.MachineName = string.IsNullOrWhiteSpace(name) ? Environment.MachineName : name;
-
-                if (communicationStyle == CommunicationStyle.TentaclePassive)
-                {
-                    registerMachineOperation.TentacleHostname = string.IsNullOrWhiteSpace(publicName) ? Environment.MachineName : publicName;
-                    registerMachineOperation.TentaclePort = tentacleCommsPort ?? configuration.Value.ServicesPortNumber;
-                }
-                else if (communicationStyle == CommunicationStyle.TentacleActive)
-                {
-                    var subscriptionId = new Uri("poll://" + RandomStringGenerator.Generate(20).ToLowerInvariant() + "/");
-                    registerMachineOperation.SubscriptionId = subscriptionId;
-                    machine.SubscriptionId = subscriptionId.ToString();
-                }
-
-                registerMachineOperation.Tenants = tenants.ToArray();
-                registerMachineOperation.TenantTags = tenantTgs.ToArray();
-                registerMachineOperation.TentacleThumbprint = configuration.Value.TentacleCertificate.Thumbprint;
-                registerMachineOperation.EnvironmentNames = environmentNames.ToArray();
-                registerMachineOperation.Roles = roles.ToArray();
-                registerMachineOperation.MachinePolicy = policy;
-                registerMachineOperation.AllowOverwrite = allowOverwrite;
-                registerMachineOperation.CommunicationStyle = communicationStyle;
-                await registerMachineOperation.ExecuteAsync(repository);
-
-
-                configuration.Value.AddOrUpdateTrustedOctopusServer(machine); 
-
-                log.Info("Machine registered successfully");
+                await RegisterMachine(client.Repository, serverAddress, sslThumbprint, communicationStyle);
             }
+        }
+
+        async Task RegisterMachine(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint, CommunicationStyle communicationStyle)
+        {
+            ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(repository);
+
+            var machine = new OctopusServerConfiguration(await GetServerThumbprint(repository, serverAddress, sslThumbprint))
+            {
+                Address = serverAddress,
+                CommunicationStyle = communicationStyle
+            };
+
+            var registerMachineOperation = lazyRegisterMachineOperation.Value;
+            registerMachineOperation.MachineName = string.IsNullOrWhiteSpace(name) ? Environment.MachineName : name;
+
+            var existingMachine = configuration.Value.TrustedOctopusServers.FirstOrDefault(x => x.Address == machine.Address && x.CommunicationStyle == communicationStyle);
+            if (communicationStyle == CommunicationStyle.TentaclePassive)
+            {
+                registerMachineOperation.TentacleHostname = string.IsNullOrWhiteSpace(publicName) ? Environment.MachineName : publicName;
+                registerMachineOperation.TentaclePort = tentacleCommsPort ?? configuration.Value.ServicesPortNumber;
+            }
+            else if (communicationStyle == CommunicationStyle.TentacleActive)
+            {
+                Uri subscriptionId;
+                if (existingMachine?.SubscriptionId != null)
+                    subscriptionId = new Uri(existingMachine.SubscriptionId);
+                else
+                    subscriptionId = new Uri("poll://" + RandomStringGenerator.Generate(20).ToLowerInvariant() + "/");
+                registerMachineOperation.SubscriptionId = subscriptionId;
+                machine.SubscriptionId = subscriptionId.ToString();
+            }
+
+            registerMachineOperation.Tenants = tenants.ToArray();
+            registerMachineOperation.TenantTags = tenantTgs.ToArray();
+            registerMachineOperation.TentacleThumbprint = configuration.Value.TentacleCertificate.Thumbprint;
+            registerMachineOperation.EnvironmentNames = environmentNames.ToArray();
+            registerMachineOperation.Roles = roles.ToArray();
+            registerMachineOperation.MachinePolicy = policy;
+            registerMachineOperation.AllowOverwrite = allowOverwrite;
+            registerMachineOperation.CommunicationStyle = communicationStyle;
+
+            await registerMachineOperation.ExecuteAsync(repository);
+
+            configuration.Value.AddOrUpdateTrustedOctopusServer(machine);
+
+            log.Info("Machine registered successfully");
         }
 
         async Task<string> GetServerThumbprint(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint)
@@ -149,7 +165,8 @@ namespace Octopus.Tentacle.Commands
                     throw new Exception($"Could not determine thumbprint of the SSL Certificate at {serverAddress}");
                 return sslThumbprint;
             }
-            return (await repository.CertificateConfiguration.GetOctopusCertificate()).Thumbprint;
+            var certificate = await repository.CertificateConfiguration.GetOctopusCertificate();
+            return certificate.Thumbprint;
         }
 
         Uri GetActiveTentacleAddress()
@@ -178,7 +195,7 @@ namespace Octopus.Tentacle.Commands
 
         #region Helpers
 
-        void ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(OctopusAsyncRepository repository)
+        void ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusAsyncRepository repository)
         {
             // Eg. Check they're not trying to register a 3.* Tentacle with a 2.* API Server.
             if (string.IsNullOrEmpty(repository.Client.RootDocument.Version))
