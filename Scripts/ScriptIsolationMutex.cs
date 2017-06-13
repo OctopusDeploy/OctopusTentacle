@@ -161,7 +161,7 @@ namespace Octopus.Shared.Scripts
 
         void Busy()
         {
-            taskLog($"Cannot start this task yet because {taskLock.TaskId} task is currently running and cannot be run in conjunction with any other task. Please wait...");
+            taskLog($"Cannot start this task yet because {taskLock.TaskId ?? "another"} task is currently running and cannot be run in conjunction with any other task. Please wait...");
         }
 
         void Canceled()
@@ -171,7 +171,7 @@ namespace Octopus.Shared.Scripts
 
         void TimedOut(TimeSpan timeout)
         {
-            taskLog($"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. {taskLock.TaskId} task is still running.");
+            taskLog($"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. {taskLock.TaskId ?? "Another"} task is still running.");
         }
 
         void WriteToSystemLog(string message)
