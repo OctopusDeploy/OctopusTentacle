@@ -20,17 +20,24 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<ITentacleConfiguration> configuration;
         readonly Lazy<IOctopusServerChecker> octopusServerChecker;
         readonly IProxyConfigParser proxyConfig;
+        readonly IOctopusClientInitializer octopusClientInitializer;
         readonly ILog log;
         readonly ApiEndpointOptions api;
         int commsPort = 10943;
         string serverWebSocketAddress;
 
-        public PollCommand(Lazy<ITentacleConfiguration> configuration, ILog log, IApplicationInstanceSelector selector, Lazy<IOctopusServerChecker> octopusServerChecker, IProxyConfigParser proxyConfig)
+        public PollCommand(Lazy<ITentacleConfiguration> configuration, 
+                           ILog log, 
+                           IApplicationInstanceSelector selector, 
+                           Lazy<IOctopusServerChecker> octopusServerChecker, 
+                           IProxyConfigParser proxyConfig,
+                           IOctopusClientInitializer octopusClientInitializer)
             : base(selector)
         {
             this.configuration = configuration;
             this.octopusServerChecker = octopusServerChecker;
             this.proxyConfig = proxyConfig;
+            this.octopusClientInitializer = octopusClientInitializer;
             this.log = log;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
@@ -55,7 +62,7 @@ namespace Octopus.Tentacle.Commands
 
             log.Info($"Registering the tentacle with the server at {api.ServerUri}");
 
-            using (var client = await api.CreateClient(proxyOverride))
+            using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
                 var repository = new OctopusAsyncRepository(client);
 

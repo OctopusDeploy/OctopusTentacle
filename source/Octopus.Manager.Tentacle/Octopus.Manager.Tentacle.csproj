@@ -117,6 +117,8 @@
       <HintPath>..\packages\NuGet.Versioning.3.6.0-octopus-58455\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Octopus.Client, Version=4.15.7.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Client.4.15.7\lib\net45\Octopus.Client.dll</HintPath>
     <Reference Include="Octopus.Client, Version=4.15.6.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Client.4.15.6\lib\net45\Octopus.Client.dll</HintPath>
     </Reference>
