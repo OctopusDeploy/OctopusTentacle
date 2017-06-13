@@ -7,7 +7,7 @@ using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Scripts
 {
-    public class ScriptIsolationMutex : IDisposable
+    public class ScriptIsolationMutex
     {
         // Reader-writer locks allow multiple readers, but only one writer which blocks readers. This is perfect for our scenario, because 
         // we want to allow lots of scripts to run with the 'no' isolation level, but nothing should be running under the 'full' isolation level.
@@ -22,162 +22,165 @@ namespace Octopus.Shared.Scripts
         {
             var taskLock = ReaderWriterLocks.GetOrAdd(lockName, new TaskLock());
 
-            return new ScriptIsolationMutex(isolation, taskLog, taskLock, token, mutexAcquireTimeout, lockName, taskId).EnterLock();
+            return new ScriptIsolationMutexReleaser(isolation, taskLog, taskLock, token, mutexAcquireTimeout, lockName, taskId).EnterLock();
         }
 
-        readonly TimeSpan mutexAcquireTimeout;
-        readonly string lockName;
-        readonly string taskId;
-        readonly ScriptIsolationLevel isolationLevel;
-        readonly Action<string> taskLog;
-        readonly TaskLock taskLock;
-        readonly CancellationToken cancellationToken;
-        readonly ILogWithContext systemLog;
-        readonly string lockType;
-        IDisposable lockReleaser;
-
-        ScriptIsolationMutex(ScriptIsolationLevel isolationLevel, Action<string> taskLog, TaskLock taskLock, CancellationToken cancellationToken, TimeSpan mutexAcquireTimeout, string lockName, string taskId)
+        class ScriptIsolationMutexReleaser: IDisposable
         {
-            systemLog = Log.System();
+            readonly TimeSpan mutexAcquireTimeout;
+            readonly string lockName;
+            readonly string taskId;
+            readonly ScriptIsolationLevel isolationLevel;
+            readonly Action<string> taskLog;
+            readonly TaskLock taskLock;
+            readonly CancellationToken cancellationToken;
+            readonly ILogWithContext systemLog;
+            readonly string lockType;
+            IDisposable lockReleaser;
 
-            this.isolationLevel = isolationLevel;
-            this.taskLog = taskLog;
-            this.taskLock = taskLock;
-            this.cancellationToken = cancellationToken;
-            this.lockName = lockName;
-            this.taskId = taskId;
-            this.mutexAcquireTimeout = mutexAcquireTimeout;
-            lockType = isolationLevel == ScriptIsolationLevel.FullIsolation ? "Write Lock" : "Read Lock";
-        }
-
-        IDisposable EnterLock()
-        {
-            WriteToSystemLog("Trying to acquire lock.");
-
-            switch (isolationLevel)
+            public ScriptIsolationMutexReleaser(ScriptIsolationLevel isolationLevel, Action<string> taskLog, TaskLock taskLock, CancellationToken cancellationToken, TimeSpan mutexAcquireTimeout, string lockName, string taskId)
             {
-                case ScriptIsolationLevel.FullIsolation:
-                    EnterWriteLock();
-                    break;
-                case ScriptIsolationLevel.NoIsolation:
-                    EnterReadLock();
-                    break;
-                default:
-                    throw new NotSupportedException("Unknown isolation level: " + isolationLevel);
+                systemLog = Log.System();
+
+                this.isolationLevel = isolationLevel;
+                this.taskLog = taskLog;
+                this.taskLock = taskLock;
+                this.cancellationToken = cancellationToken;
+                this.lockName = lockName;
+                this.taskId = taskId;
+                this.mutexAcquireTimeout = mutexAcquireTimeout;
+                lockType = isolationLevel == ScriptIsolationLevel.FullIsolation ? "Write Lock" : "Read Lock";
             }
 
-            return this;
-        }
-
-        void IDisposable.Dispose()
-        {
-            WriteToSystemLog("Releasing lock.");
-            if (isolationLevel == ScriptIsolationLevel.FullIsolation)
+            public IDisposable EnterLock()
             {
-                taskLock.TaskId = null;
-            }
-            lockReleaser.Dispose();
-        }
+                WriteToSystemLog("Trying to acquire lock.");
 
-        void EnterWriteLock()
-        {
-            if (taskLock.AsyncReaderWriterLock.TryEnterWriterLock(InitialWaitTime, cancellationToken, out lockReleaser))
-            {
-                taskLock.TaskId = taskId;
-                WriteToSystemLog("Lock taken.");
-                return;
+                switch (isolationLevel)
+                {
+                    case ScriptIsolationLevel.FullIsolation:
+                        EnterWriteLock();
+                        break;
+                    case ScriptIsolationLevel.NoIsolation:
+                        EnterReadLock();
+                        break;
+                    default:
+                        throw new NotSupportedException("Unknown isolation level: " + isolationLevel);
+                }
+
+                return this;
             }
 
-            WriteToSystemLog($"Failed to acquire lock within {InitialWaitTime}.");
-
-            Busy();
-
-            EnterWriteLockWithTimeout();
-        }
-
-        void EnterReadLock()
-        {
-            if (taskLock.AsyncReaderWriterLock.TryEnterReadLock(InitialWaitTime, cancellationToken, out lockReleaser))
+            void IDisposable.Dispose()
             {
-                WriteToSystemLog("Lock taken.");
-                return;
+                WriteToSystemLog("Releasing lock.");
+                if (isolationLevel == ScriptIsolationLevel.FullIsolation)
+                {
+                    taskLock.TaskId = null;
+                }
+                lockReleaser.Dispose();
             }
 
-            WriteToSystemLog($"Failed to acquire lock within {InitialWaitTime}.");
-
-            Busy();
-
-            EnterReadLockWithTimeout();
-        }
-
-        void EnterReadLockWithTimeout()
-        {
-            WriteToSystemLog($"Trying to acquire lock with wait time of {mutexAcquireTimeout}.");
-
-            if (taskLock.AsyncReaderWriterLock.TryEnterReadLock(mutexAcquireTimeout, cancellationToken, out lockReleaser))
+            void EnterWriteLock()
             {
-                WriteToSystemLog("Lock taken.");
-                return;
+                if (taskLock.AsyncReaderWriterLock.TryEnterWriterLock(InitialWaitTime, cancellationToken, out lockReleaser))
+                {
+                    taskLock.TaskId = taskId;
+                    WriteToSystemLog("Lock taken.");
+                    return;
+                }
+
+                WriteToSystemLog($"Failed to acquire lock within {InitialWaitTime}.");
+
+                Busy();
+
+                EnterWriteLockWithTimeout();
             }
 
-            if (cancellationToken.IsCancellationRequested)
+            void EnterReadLock()
             {
-                WriteToSystemLog("Lock acquire canceled.");
+                if (taskLock.AsyncReaderWriterLock.TryEnterReadLock(InitialWaitTime, cancellationToken, out lockReleaser))
+                {
+                    WriteToSystemLog("Lock taken.");
+                    return;
+                }
 
-                Canceled();
-                throw new OperationCanceledException(cancellationToken);
+                WriteToSystemLog($"Failed to acquire lock within {InitialWaitTime}.");
+
+                Busy();
+
+                EnterReadLockWithTimeout();
             }
 
-            WriteToSystemLog($"Failed to acquire lock within {mutexAcquireTimeout}.");
-
-            TimedOut(mutexAcquireTimeout);
-            throw new TimeoutException($"Could not acquire read mutex within timeout {mutexAcquireTimeout}.");
-        }
-
-        void EnterWriteLockWithTimeout()
-        {
-            WriteToSystemLog($"Trying to acquire lock with wait time of {mutexAcquireTimeout}.");
-
-            if (taskLock.AsyncReaderWriterLock.TryEnterWriterLock(mutexAcquireTimeout, cancellationToken, out lockReleaser))
+            void EnterReadLockWithTimeout()
             {
-                taskLock.TaskId = taskId;
-                WriteToSystemLog("Lock taken.");
-                return;
+                WriteToSystemLog($"Trying to acquire lock with wait time of {mutexAcquireTimeout}.");
+
+                if (taskLock.AsyncReaderWriterLock.TryEnterReadLock(mutexAcquireTimeout, cancellationToken, out lockReleaser))
+                {
+                    WriteToSystemLog("Lock taken.");
+                    return;
+                }
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    WriteToSystemLog("Lock acquire canceled.");
+
+                    Canceled();
+                    throw new OperationCanceledException(cancellationToken);
+                }
+
+                WriteToSystemLog($"Failed to acquire lock within {mutexAcquireTimeout}.");
+
+                TimedOut(mutexAcquireTimeout);
+                throw new TimeoutException($"Could not acquire read mutex within timeout {mutexAcquireTimeout}.");
             }
 
-            if (cancellationToken.IsCancellationRequested)
+            void EnterWriteLockWithTimeout()
             {
-                WriteToSystemLog("Lock acquire canceled.");
+                WriteToSystemLog($"Trying to acquire lock with wait time of {mutexAcquireTimeout}.");
 
-                Canceled();
-                throw new OperationCanceledException(cancellationToken);
+                if (taskLock.AsyncReaderWriterLock.TryEnterWriterLock(mutexAcquireTimeout, cancellationToken, out lockReleaser))
+                {
+                    taskLock.TaskId = taskId;
+                    WriteToSystemLog("Lock taken.");
+                    return;
+                }
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    WriteToSystemLog("Lock acquire canceled.");
+
+                    Canceled();
+                    throw new OperationCanceledException(cancellationToken);
+                }
+
+                WriteToSystemLog($"Failed to acquire lock within {mutexAcquireTimeout}.");
+
+                TimedOut(mutexAcquireTimeout);
+                throw new TimeoutException($"Could not acquire write mutex within timeout {mutexAcquireTimeout}.");
             }
 
-            WriteToSystemLog($"Failed to acquire lock within {mutexAcquireTimeout}.");
+            void Busy()
+            {
+                taskLog($"Cannot start this task yet because {taskLock.TaskId ?? "another"} task is currently running and cannot be run in conjunction with any other task. Please wait...");
+            }
 
-            TimedOut(mutexAcquireTimeout);
-            throw new TimeoutException($"Could not acquire write mutex within timeout {mutexAcquireTimeout}.");
-        }
+            void Canceled()
+            {
+                taskLog("This task was canceled before it could start. The other task is still running.");
+            }
 
-        void Busy()
-        {
-            taskLog($"Cannot start this task yet because {taskLock.TaskId ?? "another"} task is currently running and cannot be run in conjunction with any other task. Please wait...");
-        }
+            void TimedOut(TimeSpan timeout)
+            {
+                taskLog($"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. {taskLock.TaskId ?? "Another"} task is still running.");
+            }
 
-        void Canceled()
-        {
-            taskLog("This task was canceled before it could start. The other task is still running.");
-        }
-
-        void TimedOut(TimeSpan timeout)
-        {
-            taskLog($"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. {taskLock.TaskId ?? "Another"} task is still running.");
-        }
-
-        void WriteToSystemLog(string message)
-        {
-            var lockTaken = taskLock.TaskId != null ? $" [Lock taken by {taskLock.TaskId}]" : String.Empty;
-            systemLog.Info($"[{taskId}] [{lockName}] [{lockType}]{lockTaken} {message}");
+            void WriteToSystemLog(string message)
+            {
+                var lockTaken = taskLock.TaskId != null ? $" [Lock taken by {taskLock.TaskId}]" : String.Empty;
+                systemLog.Info($"[{taskId}] [{lockName}] [{lockType}]{lockTaken} {message}");
+            }
         }
 
         class TaskLock
