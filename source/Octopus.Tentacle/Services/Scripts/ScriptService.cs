@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         RunningScript LaunchPowerShell(ScriptTicket ticket, IScriptWorkspace workspace, CancellationTokenSource cancel)
         {
-            var runningScript = new RunningScript(workspace, CreateLog(workspace), cancel.Token);
+            var runningScript = new RunningScript(workspace, CreateLog(workspace), ticket.TaskId, cancel.Token);
             var thread = new Thread(runningScript.Execute);
             thread.Name = "Executing PowerShell script for " + ticket.TaskId;
             thread.Start();
