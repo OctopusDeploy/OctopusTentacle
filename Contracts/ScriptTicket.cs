@@ -66,7 +66,7 @@ namespace Octopus.Shared.Contracts
 
         public static ScriptTicket Create(string serverTaskId)
         {
-            serverTaskId = serverTaskId?.Replace("ServerTasks-", "");
+            serverTaskId = serverTaskId?.Replace("ServerTasks-", String.Empty);
             return new ScriptTicket($"{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{serverTaskId}-{Interlocked.Increment(ref nextTaskId)}");
         }
     }
