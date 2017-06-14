@@ -88,9 +88,10 @@ namespace Octopus.Shared.Util
 
         public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error, CancellationToken cancel)
         {
+            var systemLog = Log.System();
             try
             {
-                output.WriteVerbose($"Starting {Path.GetFileName(executable)} in {workingDirectory}");
+                systemLog.Info($"Starting {Path.GetFileName(executable)} in {workingDirectory}");
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -171,6 +172,7 @@ namespace Octopus.Shared.Util
 
                         process.WaitForExit();
 
+                        systemLog.Info($"Process {Path.GetFileName(executable)} in {workingDirectory} exited with code {process.ExitCode}");
                         output.WriteVerbose($"Process exited with code {process.ExitCode}");
 
                         running = false;
