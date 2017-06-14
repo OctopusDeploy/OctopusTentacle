@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using Nito.AsyncEx;
 using Octopus.Shared.Contracts;
@@ -74,18 +75,14 @@ namespace Octopus.Shared.Scripts
             void IDisposable.Dispose()
             {
                 WriteToSystemLog("Releasing lock.");
-                if (isolationLevel == ScriptIsolationLevel.FullIsolation)
-                {
-                    taskLock.TaskId = null;
-                }
+                taskLock.RemoveLock(taskId);
                 lockReleaser.Dispose();
             }
 
             void EnterWriteLock()
             {
-                if (taskLock.AsyncReaderWriterLock.TryEnterWriterLock(InitialWaitTime, cancellationToken, out lockReleaser))
+                if (taskLock.TryEnterWriteLock(taskId, InitialWaitTime, cancellationToken, out lockReleaser))
                 {
-                    taskLock.TaskId = taskId;
                     WriteToSystemLog("Lock taken.");
                     return;
                 }
@@ -99,7 +96,7 @@ namespace Octopus.Shared.Scripts
 
             void EnterReadLock()
             {
-                if (taskLock.AsyncReaderWriterLock.TryEnterReadLock(InitialWaitTime, cancellationToken, out lockReleaser))
+                if (taskLock.TryEnterReadLock(taskId, InitialWaitTime, cancellationToken, out lockReleaser))
                 {
                     WriteToSystemLog("Lock taken.");
                     return;
@@ -116,7 +113,7 @@ namespace Octopus.Shared.Scripts
             {
                 WriteToSystemLog($"Trying to acquire lock with wait time of {mutexAcquireTimeout}.");
 
-                if (taskLock.AsyncReaderWriterLock.TryEnterReadLock(mutexAcquireTimeout, cancellationToken, out lockReleaser))
+                if (taskLock.TryEnterReadLock(taskId, mutexAcquireTimeout, cancellationToken, out lockReleaser))
                 {
                     WriteToSystemLog("Lock taken.");
                     return;
@@ -140,9 +137,8 @@ namespace Octopus.Shared.Scripts
             {
                 WriteToSystemLog($"Trying to acquire lock with wait time of {mutexAcquireTimeout}.");
 
-                if (taskLock.AsyncReaderWriterLock.TryEnterWriterLock(mutexAcquireTimeout, cancellationToken, out lockReleaser))
+                if (taskLock.TryEnterWriteLock(taskId, mutexAcquireTimeout, cancellationToken, out lockReleaser))
                 {
-                    taskLock.TaskId = taskId;
                     WriteToSystemLog("Lock taken.");
                     return;
                 }
@@ -163,7 +159,7 @@ namespace Octopus.Shared.Scripts
 
             void Busy()
             {
-                taskLog($"Cannot start this task yet because {taskLock.TaskId ?? "another"} task is currently running and cannot be run in conjunction with any other task. Please wait...");
+                taskLog($"Cannot start this task yet because {taskLock.Report()} tasks are currently running and this task cannot be run in conjunction with any other tasks. Please wait...");
             }
 
             void Canceled()
@@ -173,26 +169,94 @@ namespace Octopus.Shared.Scripts
 
             void TimedOut(TimeSpan timeout)
             {
-                taskLog($"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. {taskLock.TaskId ?? "Another"} task is still running.");
+                taskLog($"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. {taskLock.Report()} task is still running.");
             }
 
             void WriteToSystemLog(string message)
             {
-                var lockTaken = taskLock.TaskId != null ? $" [Lock taken by {taskLock.TaskId}]" : String.Empty;
+                var lockTaken = $" [{taskLock.Report()}]";
                 systemLog.Info($"[{taskId}] [{lockName}] [{lockType}]{lockTaken} {message}");
             }
         }
 
         class TaskLock
         {
+            readonly ConcurrentDictionary<string, object> readersTaskIds = new ConcurrentDictionary<string, object>();
+            readonly AsyncReaderWriterLock asyncReaderWriterLock;
+            string writerTaskId;
+
             public TaskLock()
             {
-                AsyncReaderWriterLock = new AsyncReaderWriterLock();
+                asyncReaderWriterLock = new AsyncReaderWriterLock();
             }
 
-            public string TaskId { get; set; }
+            public bool TryEnterWriteLock(string taskId, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable releaseLock)
+            {
+                if (asyncReaderWriterLock.TryEnterWriteLock(timeout, cancellationToken, out releaseLock))
+                {
+                    writerTaskId = taskId;
+                    return true;
+                }
 
-            public AsyncReaderWriterLock AsyncReaderWriterLock { get; }
+                return false;
+            }
+
+            public bool TryEnterReadLock(string taskId, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable releaseLock)
+            {
+                if (asyncReaderWriterLock.TryEnterReadLock(timeout, cancellationToken, out releaseLock))
+                {
+                    readersTaskIds.TryAdd(taskId, null);
+                    return true;
+                }
+
+                return false;
+            }
+
+            public void RemoveLock(string taskId)
+            {
+                if (writerTaskId == taskId)
+                {
+                    writerTaskId = null;
+                    return;
+                }
+
+                object _;
+                readersTaskIds.TryRemove(taskId, out _);
+            }
+
+            public string Report()
+            {
+                string result;
+
+                if (writerTaskId != null)
+                {
+                    result = $"\"{writerTaskId}\" (has a write lock)";
+                }
+                else
+                {
+                    var ids = readersTaskIds.Keys.ToArray();
+
+                    if (ids.Length == 0)
+                    {
+                        return "no locks";
+                    }
+
+                    var readerTaskIds = String.Join(", ", ids);
+                    
+                    result = $"\"{readerTaskIds}\"";
+
+                    if (ids.Length > 1)
+                    {
+                        result += " (have read locks)";
+                    }
+                    else
+                    {
+                        result += " (has a read lock)";
+                    }
+                }
+
+                return result;
+            }
         }
     }
 }
