@@ -6,7 +6,7 @@ using Octopus.Client.Model;
 
 namespace Octopus.Tentacle.Commands.OptionSets
 {
-    public class OctopusClientInitilizer : IOctopusClientInitializer
+    public class OctopusClientInitializer : IOctopusClientInitializer
     {
         public async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, IWebProxy overrideProxy)
         {
@@ -42,10 +42,5 @@ namespace Octopus.Tentacle.Commands.OptionSets
                 throw;
             }
         }
-    }
-
-    public interface IOctopusClientInitializer
-    {
-        Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions api, IWebProxy proxyOverride);
     }
 }

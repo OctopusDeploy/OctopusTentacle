@@ -7,6 +7,7 @@ using Octopus.Shared.Startup;
 using Octopus.Shared.Time;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands;
+using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Properties;
@@ -42,6 +43,7 @@ namespace Octopus.Tentacle
 
             builder.RegisterModule(new ConfigurationModule(applicationName, instanceName));
             builder.RegisterModule(new TentacleConfigurationModule());
+            builder.RegisterModule(new OctopusClientInitializerModule());
             builder.RegisterModule(new LoggingModule());
             builder.RegisterModule(new OctopusFileSystemModule());
             builder.RegisterModule(new CertificatesModule());
