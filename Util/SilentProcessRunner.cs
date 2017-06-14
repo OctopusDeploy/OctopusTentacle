@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
@@ -87,8 +88,10 @@ namespace Octopus.Shared.Util
 
         public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error, CancellationToken cancel)
         {
+            var systemLog = Log.System();
             try
             {
+                systemLog.Info($"Starting {Path.GetFileName(executable)} in {workingDirectory}");
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -168,6 +171,9 @@ namespace Octopus.Shared.Util
                         process.BeginErrorReadLine();
 
                         process.WaitForExit();
+
+                        systemLog.Info($"Process {Path.GetFileName(executable)} in {workingDirectory} exited with code {process.ExitCode}");
+                        output.WriteVerbose($"Process exited with code {process.ExitCode}");
 
                         running = false;
 

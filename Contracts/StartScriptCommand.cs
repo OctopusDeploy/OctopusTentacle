@@ -7,16 +7,17 @@ namespace Octopus.Shared.Contracts
     public class StartScriptCommand
     {
         [JsonConstructor]
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments)
+        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string taskId)
         {
             Arguments = arguments;
+            TaskId = taskId;
             ScriptBody = scriptBody;
             Isolation = isolation;
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
         }
 
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, params ScriptFile[] additionalFiles)
-            : this(scriptBody, isolation, scriptIsolationMutexTimeout, arguments)
+        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string taskId, params ScriptFile[] additionalFiles)
+            : this(scriptBody, isolation, scriptIsolationMutexTimeout, arguments, taskId)
         {
             if (additionalFiles != null)
             {
@@ -31,6 +32,7 @@ namespace Octopus.Shared.Contracts
         public List<ScriptFile> Files { get; } = new List<ScriptFile>();
 
         public string[] Arguments { get; }
+        public string TaskId { get; }
 
         public TimeSpan ScriptIsolationMutexTimeout { get; }
     }
