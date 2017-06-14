@@ -31,6 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 var logs = log.GetOutput(long.MinValue, out next);
                 Assert.That(logs.Count, Is.EqualTo(2));
                 Assert.That(logs[0].Text, Is.EqualTo("Hello"));
+                Assert.That(logs[0].Source, Is.EqualTo(ProcessOutputSource.StdOut));
                 Assert.That(logs[1].Text, Is.EqualTo("World"));
 
                 appender.WriteOutput(ProcessOutputSource.StdOut, "More");
@@ -40,6 +41,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 Assert.That(logs.Count, Is.EqualTo(2));
                 Assert.That(logs[0].Text, Is.EqualTo("More"));
                 Assert.That(logs[1].Text, Is.EqualTo("Output"));
+
+                appender.WriteOutput(ProcessOutputSource.StdErr, "ErrorHappened");
+
+                logs = log.GetOutput(next, out next);
+                Assert.That(logs.Count, Is.EqualTo(1));
+                Assert.That(logs[0].Text, Is.EqualTo("ErrorHappened"));
+                Assert.That(logs[0].Source, Is.EqualTo(ProcessOutputSource.StdErr));
+
                 appender.Dispose();
             }
             finally
