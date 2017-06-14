@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Shared;
 using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
@@ -30,7 +31,7 @@ namespace Octopus.Tentacle.Commands.OptionSets
             Guard.ArgumentNotNullOrEmpty(Server, "Please specify an Octopus server, e.g., --server=http://your-octopus-server");
 
             if (string.IsNullOrEmpty(Username) && string.IsNullOrEmpty(ApiKey))
-                throw new ArgumentException("Please specify a username and password, or an Octopus API key. You can get an API key from the Octopus web portal. E.g., --apiKey=ABC1234");
+                throw new ControlledFailureException("Please specify a username and password, or an Octopus API key. You can get an API key from the Octopus web portal. E.g., --apiKey=ABC1234");
         }
     }
 }
