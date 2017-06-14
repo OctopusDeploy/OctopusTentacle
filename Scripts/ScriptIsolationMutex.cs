@@ -21,7 +21,7 @@ namespace Octopus.Shared.Scripts
 
         public static IDisposable Acquire(ScriptIsolationLevel isolation, TimeSpan mutexAcquireTimeout, string lockName, Action<string> taskLog, string taskId, CancellationToken token)
         {
-            var taskLock = ReaderWriterLocks.GetOrAdd(lockName, new TaskLock());
+            var taskLock = ReaderWriterLocks.GetOrAdd(lockName, _ => new TaskLock());
 
             return new ScriptIsolationMutexReleaser(isolation, taskLog, taskLock, token, mutexAcquireTimeout, lockName, taskId).EnterLock();
         }
