@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using NLog;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Startup;
@@ -27,12 +28,32 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             var thumbprint = tentacleConfiguration.Value.TentacleCertificate.Thumbprint;
-            log.Info((thumbprintOnly ? "" : "The thumbprint of this Tentacle is: ") + thumbprint);
+            var message = (thumbprintOnly ? "" : "The thumbprint of this Tentacle is: ") + thumbprint;
+
+            if (IsConsoleLoggingSuppressed())
+            {
+                Console.WriteLine(message);
+            }
+
+            log.Info(message);
             if (!string.IsNullOrWhiteSpace(exportFile))
             {
                 File.WriteAllText(exportFile, thumbprint, Encoding.ASCII);
                 log.Info($"The thumbprint has been written to {exportFile}.");
             }
+        }
+
+        bool IsConsoleLoggingSuppressed()
+        {
+            var c = LogManager.Configuration;
+            // Note: this matches the target name in tentacle.exe.nlog
+            var stdoutTarget = c.FindTargetByName("stdout");
+            foreach (var rule in c.LoggingRules)
+            {
+                if (rule.Targets.Contains(stdoutTarget))
+                    return false;
+            }
+            return true;
         }
     }
 }
