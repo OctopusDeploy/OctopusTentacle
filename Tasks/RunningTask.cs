@@ -15,7 +15,6 @@ namespace Octopus.Shared.Tasks
         readonly object arguments;
         readonly ILifetimeScope lifetimeScope;
         readonly TaskCompletionHandler completeCallback;
-        readonly ManualResetEventSlim complete = new ManualResetEventSlim(false);
         readonly CancellationTokenSource cancel = new CancellationTokenSource();
         readonly Thread workThread;
         readonly ILogWithContext log = Log.Octopus();
@@ -150,10 +149,8 @@ namespace Octopus.Shared.Tasks
         {
             try
             {
-                complete.Set();
-
-                completeCallback?.Invoke(Id, finalException);
                 FinishLog();
+                completeCallback?.Invoke(Id, finalException);
             }
             catch (Exception completeEx)
             {
