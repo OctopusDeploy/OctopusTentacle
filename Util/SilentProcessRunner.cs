@@ -17,6 +17,7 @@ namespace Octopus.Shared.Util
         // ReSharper disable once InconsistentNaming
         const int CP_OEMCP = 1;
         static readonly Encoding oemEncoding;
+        static readonly ILog SystemLog = Log.System();
 
         static SilentProcessRunner()
         {
@@ -88,7 +89,6 @@ namespace Octopus.Shared.Util
 
         public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error, CancellationToken cancel)
         {
-            var systemLog = Log.System();
             try
             {
                 systemLog.Info($"Starting {Path.GetFileName(executable)} in {workingDirectory}");
