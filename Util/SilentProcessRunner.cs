@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -87,6 +88,11 @@ namespace Octopus.Shared.Util
         }
 
         public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error, CancellationToken cancel)
+        {
+            return ExecuteCommand(executable, arguments, workingDirectory, output, error, output.WriteVerbose, cancel);
+        }
+
+        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error, Action<string> verbose, CancellationToken cancel)
         {
             var systemLog = Log.System();
             try
@@ -173,7 +179,7 @@ namespace Octopus.Shared.Util
                         process.WaitForExit();
 
                         systemLog.Info($"Process {Path.GetFileName(executable)} in {workingDirectory} exited with code {process.ExitCode}");
-                        output.WriteVerbose($"Process exited with code {process.ExitCode}");
+                        verbose($"Process exited with code {process.ExitCode}");
 
                         running = false;
 
@@ -187,6 +193,33 @@ namespace Octopus.Shared.Util
             catch (Exception ex)
             {
                 throw new Exception(string.Format("Error when attempting to execute {0}: {1}", executable, ex.Message), ex);
+            }
+        }
+
+        public static void ExecuteBackgroundCommand(string executable, string arguments, string workingDirectory, string username = null, string password = null)
+        {
+            try
+            {
+                using (var process = new Process())
+                {
+                    process.StartInfo.FileName = executable;
+                    process.StartInfo.Arguments = arguments;
+                    process.StartInfo.WorkingDirectory = workingDirectory;
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
+
+                    if (username != null)
+                    {
+                        process.StartInfo.UserName = username;
+                        process.StartInfo.Password = new NetworkCredential("", password ?? "").SecurePassword;
+                    }
+
+                    process.Start();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error when attempting to execute {executable}: {ex.Message}", ex);
             }
         }
 
