@@ -91,7 +91,10 @@ namespace Octopus.Shared.Util
         {
             try
             {
-                systemLog.Info($"Starting {Path.GetFileName(executable)} in {workingDirectory}");
+                // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
+                var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
+                var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
+                SystemLog.Info($"Starting {exeFileNameOrFullPath} in {workingDirectory}");
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -172,7 +175,7 @@ namespace Octopus.Shared.Util
 
                         process.WaitForExit();
 
-                        systemLog.Info($"Process {Path.GetFileName(executable)} in {workingDirectory} exited with code {process.ExitCode}");
+                        SystemLog.Info($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {process.ExitCode}");
                         output.WriteVerbose($"Process exited with code {process.ExitCode}");
 
                         running = false;
