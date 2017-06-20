@@ -10,6 +10,7 @@ namespace Octopus.Shared.Startup
     {
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
         bool showLogo = true;
+        static readonly ILogWithContext Log = Diagnostics.Log.Octopus();
 
         protected AbstractCommand()
         {
@@ -41,10 +42,11 @@ namespace Octopus.Shared.Startup
             if (showLogo)
             {
                 var instanceNameToLog = string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName;
-                Log.Octopus().Info($"{displayName} version {version} ({informationalVersion}) instance {instanceNameToLog}");
-                Log.Octopus().Info($"Environment Information:{Environment.NewLine}" +
+                Log.Info($"{displayName} version {version} ({informationalVersion}) instance {instanceNameToLog}");
+                Log.Info($"Environment Information:{Environment.NewLine}" +
                     $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
             }
+            Log.Info($"==== {GetType().Name} ====");
         }
 
         protected abstract void Start();
@@ -70,10 +72,8 @@ namespace Octopus.Shared.Startup
                 opset.Validate();
 
             Initialize(displayName, version, informationalVersion, environmentInformation, instanceName);
-            Log.System().Info($"==== {GetType().Name} starting ====");
             Start();
             Completed();
-            Log.System().Info($"==== {GetType().Name} completed ====");
         }
 
         void ICommand.Stop()
