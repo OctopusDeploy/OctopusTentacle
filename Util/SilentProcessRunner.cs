@@ -176,7 +176,6 @@ namespace Octopus.Shared.Util
                         process.WaitForExit();
 
                         SystemLog.Info($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {process.ExitCode}");
-                        output.WriteVerbose($"Process exited with code {process.ExitCode}");
 
                         running = false;
 
