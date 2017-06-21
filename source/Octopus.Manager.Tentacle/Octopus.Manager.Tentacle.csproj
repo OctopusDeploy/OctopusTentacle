@@ -120,9 +120,6 @@
     <Reference Include="Octopus.Diagnostics, Version=1.0.12.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Diagnostics.1.0.12\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Manager.Core, Version=3.14.15.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Manager.Core.3.14.15\lib\Octopus.Manager.Core.dll</HintPath>
-    </Reference>
     <Reference Include="Octopus.Shared, Version=3.14.15.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Shared.3.14.15\lib\Octopus.Shared.dll</HintPath>
     </Reference>
@@ -138,6 +135,7 @@
     <Reference Include="System.Net.Http.WebRequest" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Security" />
+    <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Controls.Input.Toolkit, Version=3.5.40128.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WPFToolkit.3.5.50211.1\lib\System.Windows.Controls.Input.Toolkit.dll</HintPath>
       <Private>True</Private>
@@ -175,14 +173,59 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Controls\ControlGroup.cs" />
+    <Compile Include="Controls\ErrorMessage.cs" />
+    <Compile Include="Controls\ImageLink.cs" />
+    <Compile Include="Controls\PasswordEditor.cs" />
+    <Compile Include="Controls\RetinaImage.cs" />
+    <Compile Include="Controls\ServiceWatcher.cs" />
+    <Compile Include="Controls\TaggingAutoCompleteBox.cs" />
+    <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="Converters\BooleanToYesNoConverter.cs" />
+    <Compile Include="Converters\InverseBooleanConverter.cs" />
+    <Compile Include="Converters\InverseBooleanToVisibilityConverter.cs" />
+    <Compile Include="DeleteWizard\DeleteWizardLauncher.cs" />
+    <Compile Include="DeleteWizard\DeleteWizardModel.cs" />
+    <Compile Include="DeleteWizard\Views\DeleteWelcome.cs" />
     <Compile Include="Dialogs\EditTrustedOctopusDialog.xaml.cs">
       <DependentUpon>EditTrustedOctopusDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\ErrorDialog.cs" />
+    <Compile Include="Dialogs\NewInstanceNameDialog.cs" />
+    <Compile Include="Dialogs\RunProcessDialog.cs" />
+    <Compile Include="Dialogs\SetPasswordDialog.cs" />
+    <Compile Include="Dialogs\ViewScriptDialog.cs" />
+    <Compile Include="Infrastructure\DispatchHelper.cs" />
+    <Compile Include="Infrastructure\ElevationHelper.cs" />
+    <Compile Include="Infrastructure\IHaveServices.cs" />
+    <Compile Include="Infrastructure\IScriptableViewModel.cs" />
+    <Compile Include="Infrastructure\OctoService.cs" />
+    <Compile Include="Infrastructure\TextBoxLogger.cs" />
+    <Compile Include="Infrastructure\UnhandledErrorTrapper.cs" />
+    <Compile Include="Infrastructure\ViewModel.cs" />
+    <Compile Include="PreReq\IPrerequisite.cs" />
+    <Compile Include="PreReq\IPrerequisiteProfile.cs" />
+    <Compile Include="PreReq\PowerShellPrerequisite.cs" />
+    <Compile Include="PreReq\PrerequisiteCheckResult.cs" />
+    <Compile Include="PreReq\PreReqWindow.cs" />
+    <Compile Include="PreReq\TentaclePrerequisiteProfile.cs" />
+    <Compile Include="Proxy\ProxyConfigurationTab.cs" />
+    <Compile Include="Proxy\ProxyWizardLauncher.cs" />
+    <Compile Include="Proxy\ProxyWizardModel.cs" />
+    <Compile Include="Proxy\TentacleProxyWizardModel.cs" />
+    <Compile Include="Shell\InstanceSelectionModel.cs" />
+    <Compile Include="Shell\ITab.cs" />
+    <Compile Include="Shell\ITabWithNotifications.cs" />
+    <Compile Include="Shell\ShellView.cs" />
+    <Compile Include="Shell\ShellViewModel.cs" />
+    <Compile Include="Shell\TabbedWizard.cs" />
+    <Compile Include="Shell\TabView.cs" />
     <Compile Include="TentacleConfiguration\SetupWizard\TentacleSetupWizardLauncher.cs" />
     <Compile Include="TentacleConfiguration\SetupWizard\TentacleSetupWizardModel.cs" />
     <Compile Include="TentacleConfiguration\SetupWizard\Views\CommunicationStyleTab.xaml.cs">
       <DependentUpon>CommunicationStyleTab.xaml</DependentUpon>
     </Compile>
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\InstallTab.cs" />
     <Compile Include="TentacleConfiguration\SetupWizard\Views\StorageTab.xaml.cs">
       <DependentUpon>StorageTab.xaml</DependentUpon>
     </Compile>
@@ -203,6 +246,13 @@
       <DependentUpon>TentacleManagerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="TentacleConfiguration\TentacleModule.cs" />
+    <Compile Include="TentacleManager.cs" />
+    <Compile Include="Util\BrowserHelper.cs" />
+    <Compile Include="Util\CommandLine.cs" />
+    <Page Include="DeleteWizard\Views\DeleteWelcome.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Dialogs\EditTrustedOctopusDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -212,7 +262,51 @@
       <SubType>
       </SubType>
     </Compile>
+    <Page Include="Dialogs\ErrorDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialogs\NewInstanceNameDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialogs\RunProcessDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialogs\SetPasswordDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialogs\ViewScriptDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PreReq\PreReqWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Proxy\ProxyConfigurationTab.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Styles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Shell\ShellView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Shell\TabbedWizard.xaml">
+      <SubType>Designer</SubType>
+      <Generator>XamlIntelliSenseFileGenerator</Generator>
+    </Page>
     <Page Include="TentacleConfiguration\SetupWizard\Views\CommunicationStyleTab.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="TentacleConfiguration\SetupWizard\Views\InstallTab.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -280,6 +374,74 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Properties\Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Icon.ico" />
+    <Resource Include="Resources\logo-1x.png" />
+    <Resource Include="Resources\logo-2x.png" />
+    <Resource Include="Resources\Logo-Small-White-Text.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\alert%402.png" />
+    <Resource Include="Resources\Images\alert%404.png" />
+    <Resource Include="Resources\Images\alert-error%402.png" />
+    <Resource Include="Resources\Images\alert-error%404.png" />
+    <Resource Include="Resources\Images\alert.png" />
+    <Resource Include="Resources\Images\balloons.png" />
+    <Resource Include="Resources\Images\button_circle_blue_right%402.png" />
+    <Resource Include="Resources\Images\button_circle_blue_right.png" />
+    <Resource Include="Resources\Images\button_rounded_green_delete%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_delete.png" />
+    <Resource Include="Resources\Images\button_rounded_green_last%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_last.png" />
+    <Resource Include="Resources\Images\button_rounded_green_next%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_next.png" />
+    <Resource Include="Resources\Images\button_rounded_green_right%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_right.png" />
+    <Resource Include="Resources\Images\button_rounded_orange_next%402.png" />
+    <Resource Include="Resources\Images\button_rounded_orange_next.png" />
+    <Resource Include="Resources\Images\clipboard-export%402.png" />
+    <Resource Include="Resources\Images\clipboard-export.png" />
+    <Resource Include="Resources\Images\database-export%402.png" />
+    <Resource Include="Resources\Images\database-export.png" />
+    <Resource Include="Resources\Images\database-favorite2%402.png" />
+    <Resource Include="Resources\Images\database-favorite2%404.png" />
+    <Resource Include="Resources\Images\database-favorite2.png" />
+    <Resource Include="Resources\Images\database-import%402.png" />
+    <Resource Include="Resources\Images\database-import.png" />
+    <Resource Include="Resources\Images\database-up%402.png" />
+    <Resource Include="Resources\Images\database-up.png" />
+    <Resource Include="Resources\Images\database_restore%402.png" />
+    <Resource Include="Resources\Images\database_restore.png" />
+    <Resource Include="Resources\Images\delete%402.png" />
+    <Resource Include="Resources\Images\delete.png" />
+    <Resource Include="Resources\Images\help%402.png" />
+    <Resource Include="Resources\Images\help.png" />
+    <Resource Include="Resources\Images\history%402.png" />
+    <Resource Include="Resources\Images\history.png" />
+    <Resource Include="Resources\Images\internet-edit%402.png" />
+    <Resource Include="Resources\Images\internet-edit.png" />
+    <Resource Include="Resources\Images\internet_browse%402.png" />
+    <Resource Include="Resources\Images\internet_browse.png" />
+    <Resource Include="Resources\Images\key%402.png" />
+    <Resource Include="Resources\Images\key.png" />
+    <Resource Include="Resources\Images\nav_blue_right.png" />
+    <Resource Include="Resources\Images\ok%402.png" />
+    <Resource Include="Resources\Images\ok.png" />
+    <Resource Include="Resources\Images\ok_button%402.png" />
+    <Resource Include="Resources\Images\ok_button%404.png" />
+    <Resource Include="Resources\Images\ok_button.png" />
+    <Resource Include="Resources\Images\server_network-internet%402.png" />
+    <Resource Include="Resources\Images\server_network-internet.png" />
+    <Resource Include="Resources\Images\TentacleActive.png" />
+    <Resource Include="Resources\Images\TentaclePassive.png" />
+    <Resource Include="Resources\Images\visitor_man-internet%402.png" />
+    <Resource Include="Resources\Images\visitor_man-internet.png" />
+    <Resource Include="Resources\Images\warning%402.png" />
+    <Resource Include="Resources\Images\warning%404.png" />
+    <Resource Include="Resources\Images\Warning-ico-dropshadow%402.png" />
+    <Resource Include="Resources\Images\Warning-ico-dropshadow.png" />
+    <Resource Include="Resources\Images\warning.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

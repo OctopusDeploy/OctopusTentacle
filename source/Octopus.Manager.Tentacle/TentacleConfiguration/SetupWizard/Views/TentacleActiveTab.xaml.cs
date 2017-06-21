@@ -1,10 +1,7 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using Octopus.Manager.Core.Infrastructure;
+﻿using System.Windows;
 using System.Windows.Navigation;
-using Octopus.Manager.Core.Util;
+using Octopus.Manager.Tentacle.Infrastructure;
+using Octopus.Manager.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 {
