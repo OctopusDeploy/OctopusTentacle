@@ -83,6 +83,9 @@ namespace Octopus.Tentacle.Commands
             if (environmentNames.Count == 0 || string.IsNullOrWhiteSpace(environmentNames.First()))
                 throw new ControlledFailureException("Please specify an environment name, e.g., --environment=Development");
 
+            if (roles.Count == 0 || string.IsNullOrWhiteSpace(roles.First()))
+                throw new ControlledFailureException("Please specify an role name, e.g., --role=web-server");
+
             CommunicationStyle communicationStyle;
             if (!Enum.TryParse(comms, true, out communicationStyle))
                 throw new ControlledFailureException("Please specify a valid communications style, e.g. --comms-style=TentaclePassive");
