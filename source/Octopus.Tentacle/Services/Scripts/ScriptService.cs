@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Services.Scripts
             var ticket = ScriptTicket.Create(command.TaskId);
             var workspace = PrepareWorkspace(command, ticket);
             var cancel = new CancellationTokenSource();
-            var process = LaunchPowerShell(ticket, command.TaskId, workspace, cancel);
+            var process = LaunchPowerShell(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
             running.TryAdd(ticket.TaskId, process);
             cancellationTokens.TryAdd(ticket.TaskId, cancel);
             return ticket;
