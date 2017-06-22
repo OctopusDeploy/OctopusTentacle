@@ -28,7 +28,8 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
         public void Validate()
         {
-            Guard.ArgumentNotNullOrEmpty(Server, "Please specify an Octopus server, e.g., --server=http://your-octopus-server");
+            if (string.IsNullOrWhiteSpace(Server))
+                throw new ControlledFailureException("Please specify an Octopus server, e.g., --server=http://your-octopus-server");
 
             if (string.IsNullOrEmpty(Username) && string.IsNullOrEmpty(ApiKey))
                 throw new ControlledFailureException("Please specify a username and password, or an Octopus API key. You can get an API key from the Octopus web portal. E.g., --apiKey=ABC1234");
