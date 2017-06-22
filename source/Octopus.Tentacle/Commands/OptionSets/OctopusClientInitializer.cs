@@ -21,8 +21,7 @@ namespace Octopus.Tentacle.Commands.OptionSets
                         endpoint.Proxy = overrideProxy;
                     }
                     client = await OctopusAsyncClient.Create(endpoint).ConfigureAwait(false);
-                    await new OctopusAsyncRepository(client)
-                        .Users
+                    await client.Repository.Users
                         .SignIn(new LoginCommand { Username = apiEndpointOptions.Username, Password = apiEndpointOptions.Password });
                 }
                 else
