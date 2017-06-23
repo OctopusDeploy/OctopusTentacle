@@ -18,6 +18,7 @@ namespace Octopus.Shared.Util
         // ReSharper disable once InconsistentNaming
         const int CP_OEMCP = 1;
         static readonly Encoding oemEncoding;
+        static readonly ILog SystemLog = Log.System();
 
         static SilentProcessRunner()
         {
@@ -89,15 +90,12 @@ namespace Octopus.Shared.Util
 
         public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error, CancellationToken cancel)
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, output, error, output.WriteVerbose, cancel);
-        }
-
-        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error, Action<string> verbose, CancellationToken cancel)
-        {
-            var systemLog = Log.System();
             try
             {
-                systemLog.Info($"Starting {Path.GetFileName(executable)} in {workingDirectory}");
+                // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
+                var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
+                var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
+                SystemLog.Info($"Starting {exeFileNameOrFullPath} in {workingDirectory}");
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -178,8 +176,7 @@ namespace Octopus.Shared.Util
 
                         process.WaitForExit();
 
-                        systemLog.Info($"Process {Path.GetFileName(executable)} in {workingDirectory} exited with code {process.ExitCode}");
-                        verbose($"Process exited with code {process.ExitCode}");
+                        SystemLog.Info($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {process.ExitCode}");
 
                         running = false;
 

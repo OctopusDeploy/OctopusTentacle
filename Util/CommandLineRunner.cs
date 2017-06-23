@@ -26,7 +26,6 @@ namespace Octopus.Shared.Util
                     Environment.CurrentDirectory,
                     log.Info,
                     log.Error,
-                    log.Verbose, 
                     CancellationToken.None);
 
                 if (exitCode != 0)
