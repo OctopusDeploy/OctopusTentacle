@@ -29,6 +29,20 @@ namespace Octopus.Shared.Configuration
 
         LoadedApplicationInstance current;
 
+        public bool TryLoadCurrentInstance(out LoadedApplicationInstance instance)
+        {
+            instance = null;
+            try
+            {
+                instance = Current;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public LoadedApplicationInstance Current
         {
             get

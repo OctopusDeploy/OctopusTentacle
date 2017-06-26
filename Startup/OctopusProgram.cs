@@ -27,7 +27,6 @@ namespace Octopus.Shared.Startup
         ICommand commandInstance;
         string[] commandLineArguments;
         bool forceConsole;
-        string instanceName;
 
         protected OctopusProgram(string displayName, string version, string informationalVersion, string[] environmentInformation, string[] commandLineArguments)
         {
@@ -38,7 +37,18 @@ namespace Octopus.Shared.Startup
             this.environmentInformation = environmentInformation;
             commonOptions = new OptionSet();
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
-            commonOptions.Add("noconsolelogging", "Don't log messages to the stdout - errors are still logged to stderr", v => { DisableConsoleLogging(); });
+            AddNoLogoOption();
+            commonOptions.Add("noconsolelogging", "Don't log informational messages to the console (stdout) - errors are still logged to stderr", v => { DisableConsoleLogging(); });
+            commonOptions.Add("help", "", v => { showHelpForCommand = true; });
+        }
+
+        [ObsoleteEx(Message = "We should consider removing '--nologo'", TreatAsErrorFromVersion = "4.0")]
+        void AddNoLogoOption()
+        {
+            commonOptions.Add("nologo", "Don't print title or version information", v =>
+            {
+                StartupDiagnosticsLogger.Warn("'--nologo' is being deprecated in a future version since the title and version information are not printed any more.");
+            });
         }
 
         static void DisableConsoleLogging()
@@ -92,15 +102,23 @@ namespace Octopus.Shared.Startup
                 EnsureTempPathIsWriteable();
 
                 commandLineArguments = ProcessCommonOptions();
-                instanceName = TryLoadInstanceName(commandLineArguments);
+
+                // Write diagnostics information early as possible - note this will target the global log file since we haven't loaded the instance yet.
+                // This is nice because the global log file will always have a history of every application invocation, regardless of instance
+                // See: OctopusLogsDirectoryRenderer.DefaultLogsDirectory
+                var instanceName = TryLoadInstanceNameFromCommandLineArguments(commandLineArguments);
+                WriteDiagnosticsInfoToLogFile(instanceName);
 
                 log.Trace("Creating and configuring the Autofac container");
                 container = BuildContainer(instanceName);
 
                 // Try to load the instance here so we can log into the instance's log file as soon as possible
-                // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on anyhow
-                TryLoadInstance();
-                
+                // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on when we try to load the instance for real
+                if (container.Resolve<IApplicationInstanceSelector>().TryLoadCurrentInstance(out var instance))
+                {
+                    WriteDiagnosticsInfoToLogFile(instance.InstanceName);
+                }
+
                 RegisterAdditionalModules(container);
 
                 host = SelectMostAppropriateHost();
@@ -172,19 +190,14 @@ namespace Octopus.Shared.Startup
             return exitCode;
         }
 
-        void TryLoadInstance()
+        void WriteDiagnosticsInfoToLogFile(string instanceName)
         {
-            try
-            {
-                var instance = container.Resolve<IApplicationInstanceSelector>().Current;
-            }
-            catch (ControlledFailureException)
-            {
-                // ignore
-            }
+            StartupDiagnosticsLogger.Info($"Starting {displayName} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName)}");
+            StartupDiagnosticsLogger.Info($"Environment Information:{Environment.NewLine}" +
+                $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
         }
 
-        static string TryLoadInstanceName(string[] arguments)
+        static string TryLoadInstanceNameFromCommandLineArguments(string[] arguments)
         {
             var instanceName = string.Empty;
             new OptionSet {{"instance=", "Name of the instance to use", v => instanceName = v}}.Parse(arguments);
@@ -272,7 +285,7 @@ namespace Octopus.Shared.Startup
 
             commandInstance = command.Value;
 
-            commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions, displayName, version, informationalVersion, environmentInformation, instanceName);
+            commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions);
         }
 
         protected abstract IContainer BuildContainer(string instanceName);

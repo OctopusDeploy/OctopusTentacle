@@ -9,5 +9,6 @@ namespace Octopus.Shared.Configuration
         void CreateInstance(string instanceName, string configurationFile, string homeDirectory = null);
         void DeleteDefaultInstance();
         void DeleteInstance(string instanceName);
+        bool TryLoadCurrentInstance(out LoadedApplicationInstance instance);
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
 
 namespace Octopus.Shared.Startup
@@ -9,13 +8,6 @@ namespace Octopus.Shared.Startup
     public abstract class AbstractCommand : ICommand
     {
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
-        bool showLogo = true;
-        static readonly ILogWithContext Log = Diagnostics.Log.Octopus();
-
-        protected AbstractCommand()
-        {
-            Options.Add("nologo", "Don't print title or version information", v => showLogo = false);
-        }
 
         protected OptionSet Options { get; } = new OptionSet();
 
@@ -37,18 +29,6 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        protected virtual void Initialize(string displayName, string version, string informationalVersion, string[] environmentInformation, string instanceName)
-        {
-            if (showLogo)
-            {
-                var instanceNameToLog = string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName;
-                Log.Info($"{displayName} version {version} ({informationalVersion}) instance {instanceNameToLog}");
-                Log.Info($"Environment Information:{Environment.NewLine}" +
-                    $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
-            }
-            Log.Info($"==== {GetType().Name} ====");
-        }
-
         protected abstract void Start();
         protected virtual void Completed() { }
 
@@ -61,7 +41,7 @@ namespace Octopus.Shared.Startup
             Options.WriteOptionDescriptions(writer);
         }
 
-        void ICommand.Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions, string displayName, string version, string informationalVersion, string[] environmentInformation, string instanceName)
+        void ICommand.Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
             Runtime = commandRuntime;
 
@@ -71,7 +51,7 @@ namespace Octopus.Shared.Startup
             foreach (var opset in optionSets)
                 opset.Validate();
 
-            Initialize(displayName, version, informationalVersion, environmentInformation, instanceName);
+            StartupDiagnosticsLogger.Info($"==== {GetType().Name} ====");
             Start();
             Completed();
         }
