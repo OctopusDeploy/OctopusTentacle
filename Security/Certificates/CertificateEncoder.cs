@@ -223,9 +223,10 @@ namespace Octopus.Shared.Security.Certificates
             if (current == null || current.User == null)
                 throw new Exception("There is no current windows identity.");
 
-            var security = Directory.GetAccessControl(folderPath);
+            var directory = new DirectoryInfo(folderPath);
+            var security = directory.GetAccessControl();
             security.AddAccessRule(new FileSystemAccessRule(current.User, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
-            Directory.SetAccessControl(folderPath, security);
+            directory.SetAccessControl(security);
         }
 
         public static X509Certificate2 FromBase64StringPublicKeyOnly(string certificateString)
