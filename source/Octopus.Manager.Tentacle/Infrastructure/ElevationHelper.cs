@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -13,8 +12,10 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 
         public static void Elevate(IEnumerable<string> args)
         {
-            var info = new ProcessStartInfo(Assembly.GetEntryAssembly().Location, String.Join(" ", args));
-            info.Verb = "runas";
+            var info = new ProcessStartInfo(Assembly.GetEntryAssembly().Location, string.Join(" ", args))
+            {
+                Verb = "runas"
+            };
 
             var process = new Process {StartInfo = info};
             process.Start();

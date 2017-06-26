@@ -162,7 +162,7 @@ namespace Octopus.Manager.Tentacle.Shell
 
         List<int> GetVisibleTabIndexes()
         {
-            var visibleTabIndexes = Enumerable.OfType<TabItem>(tabs.Items).Select((v, i) => new {Index = i, Tab = v}).Where(v => v.Tab.Visibility == Visibility.Visible).Select(v => v.Index).ToList();
+            var visibleTabIndexes = tabs.Items.OfType<TabItem>().Select((v, i) => new {Index = i, Tab = v}).Where(v => v.Tab.Visibility == Visibility.Visible).Select(v => v.Index).ToList();
             return visibleTabIndexes;
         }
     }

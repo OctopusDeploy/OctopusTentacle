@@ -57,7 +57,7 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         public string ProxyUsername
         {
-            get { return proxyUsername; }
+            get => proxyUsername;
             set
             {
                 if (value == proxyUsername) return;
@@ -68,7 +68,7 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         public string ProxyPassword
         {
-            get { return proxyPassword; }
+            get => proxyPassword;
             set
             {
                 if (value == proxyPassword) return;
@@ -79,7 +79,7 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         public bool UseNoProxy
         {
-            get { return useNoProxy; }
+            get => useNoProxy;
             set
             {
                 if (value.Equals(useNoProxy)) return;
@@ -91,7 +91,7 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         public bool UseDefaultProxy
         {
-            get { return useDefaultProxy; }
+            get => useDefaultProxy;
             set
             {
                 if (value.Equals(useDefaultProxy)) return;
@@ -103,7 +103,7 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         public bool UseDefaultProxyCustomCredentials
         {
-            get { return useDefaultProxyCustomCredentials; }
+            get => useDefaultProxyCustomCredentials;
             set
             {
                 if (value.Equals(useDefaultProxyCustomCredentials)) return;
@@ -115,7 +115,7 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         public bool UseCustomProxy
         {
-            get { return useCustomProxy; }
+            get => useCustomProxy;
             set
             {
                 if (value.Equals(useCustomProxy)) return;
@@ -127,7 +127,7 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         public string ProxyServerHost
         {
-            get { return proxyServerHost; }
+            get => proxyServerHost;
             set
             {
                 if (value.Equals(proxyServerHost)) return;
@@ -138,7 +138,7 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         public int ProxyServerPort
         {
-            get { return proxyServerPort; }
+            get => proxyServerPort;
             set
             {
                 if (value.Equals(proxyServerPort)) return;
@@ -149,7 +149,7 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         public bool ShowProxySettings
         {
-            get { return showProxySettings; }
+            get => showProxySettings;
             set
             {
                 if (value.Equals(showProxySettings)) return;

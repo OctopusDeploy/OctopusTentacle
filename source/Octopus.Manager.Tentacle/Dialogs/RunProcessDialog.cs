@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms.VisualStyles;
 using System.Windows.Media;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Shared.Util;
@@ -29,9 +28,11 @@ namespace Octopus.Manager.Tentacle.Dialogs
 
         public static void ShowDialog(Window owner, IEnumerable<CommandLineInvocation> commandLines, string title, string logsDirectory, bool showOutputLog = false)
         {
-            var dialog = new RunProcessDialog(commandLines.ToList(), logsDirectory);
-            dialog.Title = title;
-            dialog.Owner = owner;
+            var dialog = new RunProcessDialog(commandLines.ToList(), logsDirectory)
+            {
+                Title = title,
+                Owner = owner
+            };
             if (dialog.Owner == null)
             {
                 dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;

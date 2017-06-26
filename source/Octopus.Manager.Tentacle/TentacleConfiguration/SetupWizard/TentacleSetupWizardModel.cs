@@ -98,7 +98,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string HomeDirectory
         {
-            get { return homeDirectory; }
+            get => homeDirectory;
             set
             {
                 if (value == homeDirectory) return;
@@ -109,7 +109,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string ApplicationInstallDirectory
         {
-            get { return applicationInstallDirectory; }
+            get => applicationInstallDirectory;
             set
             {
                 if (value == applicationInstallDirectory) return;
@@ -120,7 +120,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public CommunicationStyle CommunicationStyle
         {
-            get { return communicationStyle; }
+            get => communicationStyle;
             set
             {
                 if (value == communicationStyle) return;
@@ -133,7 +133,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public bool IsTentacleActive
         {
-            get { return CommunicationStyle == CommunicationStyle.TentacleActive; }
+            get => CommunicationStyle == CommunicationStyle.TentacleActive;
             set
             {
                 CommunicationStyle = value ? CommunicationStyle.TentacleActive : CommunicationStyle.TentaclePassive;
@@ -143,7 +143,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public bool IsTentaclePassive
         {
-            get { return CommunicationStyle == CommunicationStyle.TentaclePassive; }
+            get => CommunicationStyle == CommunicationStyle.TentaclePassive;
             set
             {
                 CommunicationStyle = value ? CommunicationStyle.TentaclePassive : CommunicationStyle.TentacleActive;
@@ -153,7 +153,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string OctopusServerUrl
         {
-            get { return octopusServerUrl; }
+            get => octopusServerUrl;
             set
             {
                 if (value == octopusServerUrl) return;
@@ -171,7 +171,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public bool UseUsernamePasswordAuthMode
         {
-            get { return useUsernamePasswordAuthMode; }
+            get => useUsernamePasswordAuthMode;
             set
             {
                 if (value.Equals(useUsernamePasswordAuthMode)) return;
@@ -184,7 +184,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         
         public bool UseApiKeyAuthMode
         {
-            get { return useApiKeyAuthMode; }
+            get => useApiKeyAuthMode;
             set
             {
                 if (value.Equals(useApiKeyAuthMode)) return;
@@ -197,7 +197,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string ApiKey
         {
-            get { return apiKey; }
+            get => apiKey;
             set
             {
                 if (value == apiKey) return;
@@ -209,7 +209,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string Username
         {
-            get { return username; }
+            get => username;
             set
             {
                 if (value == username) return;
@@ -221,7 +221,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string Password
         {
-            get { return password; }
+            get => password;
             set
             {
                 if (value == password) return;
@@ -233,7 +233,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public bool HaveCredentialsBeenVerified
         {
-            get { return haveCredentialsBeenVerified; }
+            get => haveCredentialsBeenVerified;
             set
             {
                 if (value.Equals(haveCredentialsBeenVerified)) return;
@@ -244,7 +244,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string[] PotentialEnvironments
         {
-            get { return potentialEnvironments; }
+            get => potentialEnvironments;
             set
             {
                 if (Equals(value, potentialEnvironments)) return;
@@ -255,7 +255,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string[] PotentialTenantTags
         {
-            get { return potentialTenantTags; }
+            get => potentialTenantTags;
             set
             {
                 if (Equals(value, potentialTenantTags)) return;
@@ -266,7 +266,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string[] PotentialTenants
         {
-            get { return potentialTenants; }
+            get => potentialTenants;
             set
             {
                 if (Equals(value, potentialTenants)) return;
@@ -277,7 +277,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string[] PotentialRoles
         {
-            get { return potentialRoles; }
+            get => potentialRoles;
             set
             {
                 if (Equals(value, potentialRoles)) return;
@@ -287,7 +287,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         }
         public string[] PotentialMachinePolicies
         {
-            get { return potentialMachinePolicies; }
+            get => potentialMachinePolicies;
             set
             {
                 if (Equals(value, potentialMachinePolicies)) return;
@@ -298,7 +298,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string SelectedEnvironment
         {
-            get { return selectedEnvironment; }
+            get => selectedEnvironment;
             set
             {
                 if (value == selectedEnvironment) return;
@@ -309,7 +309,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string SelectedRoles
         {
-            get { return selectedRoles; }
+            get => selectedRoles;
             set
             {
                 if (value == selectedRoles) return;
@@ -320,7 +320,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string SelectedTenantTags
         {
-            get { return selectedTenantTags; }
+            get => selectedTenantTags;
             set
             {
                 if (value == selectedTenantTags) return;
@@ -331,7 +331,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string SelectedTenants
         {
-            get { return selectedTenants; }
+            get => selectedTenants;
             set
             {
                 if (value == selectedTenants) return;
@@ -342,7 +342,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string SelectedMachinePolicy
         {
-            get { return selectedMachinePolicy; }
+            get => selectedMachinePolicy;
             set
             {
                 if (value == selectedMachinePolicy) return;
@@ -353,7 +353,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string MachineName
         {
-            get { return machineName; }
+            get => machineName;
             set
             {
                 if (value == machineName) return;
@@ -364,7 +364,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string OctopusThumbprint
         {
-            get { return octopusThumbprint; }
+            get => octopusThumbprint;
             set
             {
                 if (value == octopusThumbprint) return;
@@ -375,7 +375,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string ListenPort
         {
-            get { return listenPort; }
+            get => listenPort;
             set
             {
                 if (value == listenPort) return;
@@ -386,7 +386,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string ServerCommsPort
         {
-            get { return serverCommsPort; }
+            get => serverCommsPort;
             set
             {
                 if (value == serverCommsPort) return;
@@ -397,7 +397,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public string ServerWebSocket
         {
-            get { return serverWebSocket; }
+            get => serverWebSocket;
             set
             {
                 if (value == serverWebSocket) return;
@@ -408,7 +408,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public OctopusServerConfiguration Handshake
         {
-            get { return handshake; }
+            get => handshake;
             set
             {
                 if (Equals(value, handshake)) return;
@@ -419,25 +419,16 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
-        public bool HasHandshake
-        {
-            get { return Handshake != null; }
-        }
+        public bool HasHandshake => Handshake != null;
 
-        public bool AwaitingHandshake
-        {
-            get { return Handshake == null; }
-        }
+        public bool AwaitingHandshake => Handshake == null;
 
         public IEnumerable<OctoService> Services
         {
             get { yield return new OctoService(TentacleExe, InstanceName); }
         }
 
-        public ProxyWizardModel ProxyWizardModel
-        {
-            get { return proxyWizardModel; }
-        }
+        public ProxyWizardModel ProxyWizardModel => proxyWizardModel;
 
         public async Task VerifyCredentials(ILog logger)
         {

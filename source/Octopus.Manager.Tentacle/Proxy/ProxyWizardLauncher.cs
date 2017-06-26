@@ -39,9 +39,11 @@ namespace Octopus.Manager.Tentacle.Proxy
         ShellView BuildShell(Window owner, TabbedWizard wizard)
         {
             var shellModel = container.Resolve<ShellViewModel>();
-            var shell = new ShellView("Proxy Configuration Wizard", shellModel);
-            shell.Height = 590;
-            shell.Width = 890;
+            var shell = new ShellView("Proxy Configuration Wizard", shellModel)
+            {
+                Height = 590,
+                Width = 890
+            };
             shell.SetViewContent(wizard);
             shell.Owner = owner;
             return shell;

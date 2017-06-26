@@ -12,6 +12,6 @@ namespace Octopus.Manager.Tentacle.PreReq
             };
         }
 
-        public IEnumerable<IPrerequisite> Prerequisites { get; private set; }
+        public IEnumerable<IPrerequisite> Prerequisites { get; }
     }
 }

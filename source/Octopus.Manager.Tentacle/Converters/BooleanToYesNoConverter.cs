@@ -8,7 +8,7 @@ namespace Octopus.Manager.Tentacle.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (value as bool?) == true ? "Yes" : "No";
+            return value as bool? == true ? "Yes" : "No";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

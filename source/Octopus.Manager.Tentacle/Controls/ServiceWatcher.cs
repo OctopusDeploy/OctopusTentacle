@@ -12,7 +12,6 @@ namespace Octopus.Manager.Tentacle.Controls
     public class ServiceWatcher : ViewModel, IDisposable
     {
         readonly string instanceName;
-        readonly ApplicationName application;
         readonly string executablePath;
         readonly Timer timer;
         bool canRestart;
@@ -27,9 +26,8 @@ namespace Octopus.Manager.Tentacle.Controls
 
         public ServiceWatcher(ApplicationName application, string instanceName, string executablePath)
         {
-            this.application = application;
             this.instanceName = instanceName;
-            ServiceName = Octopus.Shared.Configuration.ServiceName.GetWindowsServiceName(application, instanceName);
+            ServiceName = Shared.Configuration.ServiceName.GetWindowsServiceName(application, instanceName);
             this.executablePath = executablePath;
 
             timer = new Timer(500);
@@ -42,7 +40,7 @@ namespace Octopus.Manager.Tentacle.Controls
 
         public bool IsInstalled
         {
-            get { return isInstalled; }
+            get => isInstalled;
             set
             {
                 if (value.Equals(isInstalled)) return;
@@ -53,7 +51,7 @@ namespace Octopus.Manager.Tentacle.Controls
 
         public bool IsRunning
         {
-            get { return isRunning; }
+            get => isRunning;
             set
             {
                 if (value.Equals(isRunning)) return;
@@ -64,7 +62,7 @@ namespace Octopus.Manager.Tentacle.Controls
 
         public bool IsNotRunning
         {
-            get { return isNotRunning; }
+            get => isNotRunning;
             set
             {
                 if (value.Equals(isNotRunning)) return;
@@ -75,7 +73,7 @@ namespace Octopus.Manager.Tentacle.Controls
 
         public string RunningAs
         {
-            get { return runningAs; }
+            get => runningAs;
             set
             {
                 if (value == runningAs) return;
@@ -86,7 +84,7 @@ namespace Octopus.Manager.Tentacle.Controls
 
         public string StatusSummary
         {
-            get { return statusSummary; }
+            get => statusSummary;
             set
             {
                 if (value == statusSummary) return;
@@ -97,7 +95,7 @@ namespace Octopus.Manager.Tentacle.Controls
 
         public bool CanStart
         {
-            get { return canStart; }
+            get => canStart;
             set
             {
                 if (value.Equals(canStart)) return;
@@ -108,7 +106,7 @@ namespace Octopus.Manager.Tentacle.Controls
 
         public bool CanStop
         {
-            get { return canStop; }
+            get => canStop;
             set
             {
                 if (value.Equals(canStop)) return;
@@ -119,7 +117,7 @@ namespace Octopus.Manager.Tentacle.Controls
 
         public bool CanRestart
         {
-            get { return canRestart; }
+            get => canRestart;
             set
             {
                 if (value.Equals(canRestart)) return;

@@ -21,12 +21,14 @@ namespace Octopus.Manager.Tentacle.PreReq
 
         public static PrerequisiteCheckResult Failed(string message, string commandLineSolution = null, string helpLink = null, string helpLinkText = null)
         {
-            var result = new PrerequisiteCheckResult();
-            result.Success = false;
-            result.Message = message;
-            result.CommandLineSolution = commandLineSolution;
-            result.HelpLink = helpLink;
-            result.HelpLinkText = helpLinkText;
+            var result = new PrerequisiteCheckResult
+            {
+                Success = false,
+                Message = message,
+                CommandLineSolution = commandLineSolution,
+                HelpLink = helpLink,
+                HelpLinkText = helpLinkText
+            };
             return result;
         }
     }

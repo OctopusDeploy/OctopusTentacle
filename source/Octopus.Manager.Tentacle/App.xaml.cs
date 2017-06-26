@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Windows;
@@ -46,10 +45,7 @@ namespace Octopus.Manager.Tentacle
 
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            var remaining = commonOptions.Parse(e.Args);
-            var command = NormalizeCommand(GetCommandLineSwitch(remaining));
-
-            var container = ConfigureContainer(command, e.Args);
+            var container = ConfigureContainer();
 
             if (reconfigure)
             {
@@ -59,7 +55,7 @@ namespace Octopus.Manager.Tentacle
             CreateAndShowShell(container);
         }
 
-        IContainer ConfigureContainer(string command, string[] args)
+        static IContainer ConfigureContainer()
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule(new CertificatesModule());
@@ -103,21 +99,6 @@ namespace Octopus.Manager.Tentacle
             MainWindow = shell;
             shell.ShowDialog();
             Shutdown(0);
-        }
-
-        static string NormalizeCommand(string command)
-        {
-            if (command == "")
-            {
-                // If we can't find Octopus then assume we're a Tentacle only
-                command = "tentacle";
-            }
-            return command;
-        }
-
-        static string GetCommandLineSwitch(IEnumerable<string> args)
-        {
-            return (args.FirstOrDefault() ?? string.Empty).Replace("/", "").Replace("-", "");
         }
     }
 }

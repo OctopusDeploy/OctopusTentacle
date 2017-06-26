@@ -26,7 +26,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             }
             else
             {
-                textBox.Dispatcher.Invoke(new Action(Clear));
+                textBox.Dispatcher.Invoke(Clear);
             }
         }
 

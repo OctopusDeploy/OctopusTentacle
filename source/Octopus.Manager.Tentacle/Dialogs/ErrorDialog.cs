@@ -27,11 +27,13 @@ namespace Octopus.Manager.Tentacle.Dialogs
                     + Environment.NewLine + Environment.NewLine + errorAsString;
             }
 
-            var window = new ErrorDialog();
-            window.ErrorTextBox.Text = errorAsString;
-            window.errorSummary.Text = errorSummary;
-            window.title.Text = title;
-            window.Title = title;
+            var window = new ErrorDialog
+            {
+                ErrorTextBox = {Text = errorAsString},
+                errorSummary = {Text = errorSummary},
+                title = {Text = title},
+                Title = title
+            };
 
             if (!details)
             {

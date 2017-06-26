@@ -107,7 +107,7 @@ namespace Octopus.Manager.Tentacle.Controls
 
         static void ErrorPropertySet(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var control = ((ErrorMessage)d);
+            var control = (ErrorMessage) d;
             control.HasError = !string.IsNullOrWhiteSpace(control.Error);
         }
 

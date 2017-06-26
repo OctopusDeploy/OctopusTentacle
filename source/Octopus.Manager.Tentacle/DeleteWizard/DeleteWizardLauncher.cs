@@ -28,9 +28,11 @@ namespace Octopus.Manager.Tentacle.DeleteWizard
             wizard.AddTab(new InstallTab(wizardModel, container.Resolve<ICommandLineRunner>()) {ReadyMessage = "When you click the button below, the Windows Service will be stopped and uninstalled, and your instance will be deleted.", SuccessMessage = "Instance deleted", ExecuteButtonText = "Delete", Title = "Delete", Header = "Delete"});
 
             var shellModel = container.Resolve<ShellViewModel>();
-            var shell = new ShellView("Delete Instance Wizard", shellModel);
-            shell.Height = 580;
-            shell.Width = 890;
+            var shell = new ShellView("Delete Instance Wizard", shellModel)
+            {
+                Height = 580,
+                Width = 890
+            };
             shell.SetViewContent(wizard);
             shell.Owner = owner;
             return shell.ShowDialog();

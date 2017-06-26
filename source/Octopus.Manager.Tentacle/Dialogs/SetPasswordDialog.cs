@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 
 namespace Octopus.Manager.Tentacle.Dialogs
 {
@@ -12,10 +11,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
             password.Focus();
         }
 
-        public string Password
-        {
-            get { return password.Password; }
-        }
+        public string Password => password.Password;
 
         void SaveClicked(object sender, RoutedEventArgs e)
         {

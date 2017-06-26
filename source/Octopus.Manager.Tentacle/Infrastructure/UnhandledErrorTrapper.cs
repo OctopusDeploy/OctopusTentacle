@@ -4,13 +4,12 @@ using System.Windows;
 using System.Windows.Threading;
 using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Dialogs;
-using Octopus.Shared.Util;
 
 namespace Octopus.Manager.Tentacle.Infrastructure
 {
     public static class UnhandledErrorTrapper
     {
-        static readonly ILog Log = Octopus.Shared.Diagnostics.Log.Octopus();
+        static readonly ILog Log = Shared.Diagnostics.Log.Octopus();
 
         public static void Initialize()
         {
@@ -21,8 +20,6 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 
         static void HandleDispatcherException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
-            var error = e.Exception.UnpackFromContainers();
-
             if (Application.Current.MainWindow != null && Application.Current.MainWindow.IsVisible)
             {
                 e.Handled = true;

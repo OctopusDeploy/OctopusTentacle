@@ -18,10 +18,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
             instanceNameBox.Focus();
         }
 
-        public string InstanceName
-        {
-            get { return instanceNameBox.Text; }
-        }
+        public string InstanceName => instanceNameBox.Text;
 
         void SaveClicked(object sender, RoutedEventArgs e)
         {

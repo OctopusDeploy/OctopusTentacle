@@ -22,19 +22,13 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 
         public IValidator Validator { get; protected set; }
 
-        public string this[string columnName]
-        {
-            get { return errors.ContainsKey(columnName) ? errors[columnName] : null; }
-        }
+        public string this[string columnName] => errors.ContainsKey(columnName) ? errors[columnName] : null;
 
-        string IDataErrorInfo.Error
-        {
-            get { return ""; }
-        }
+        string IDataErrorInfo.Error => "";
 
         public bool IsValid
         {
-            get { return isValid; }
+            get => isValid;
             private set
             {
                 if (value.Equals(isValid)) return;
@@ -92,7 +86,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             }
 
             var handler = PropertyChanged;
-            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
+            handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

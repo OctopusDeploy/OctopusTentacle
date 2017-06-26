@@ -9,7 +9,7 @@ namespace Octopus.Manager.Tentacle.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (((bool)value))
+            if ((bool) value)
             {
                 return Visibility.Visible;
             }
