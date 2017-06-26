@@ -37,6 +37,7 @@ namespace Octopus.Shared.Startup
         ICommand commandInstance;
         string[] commandLineArguments;
         bool forceConsole;
+        bool showHelpForCommand;
 
         protected OctopusProgram(string displayName, string version, string informationalVersion, string[] environmentInformation, string[] commandLineArguments)
         {
@@ -273,7 +274,7 @@ namespace Octopus.Shared.Startup
 
         string[] ProcessCommonOptions()
         {
-            log.Trace("Processing common command line options");
+            log.Trace("Processing common command-line options");
             return CommonOptions.Parse(commandLineArguments).ToArray();
         }
 
@@ -281,13 +282,22 @@ namespace Octopus.Shared.Startup
         {
             var commandLocator = container.Resolve<ICommandLocator>();
 
-            var commandName = ExtractCommandName(ref commandLineArguments);
+            var commandName = ParseCommandName(commandLineArguments);
 
-            var command = commandLocator.Find(commandName);
+            var command = string.IsNullOrWhiteSpace(commandName) ? null : commandLocator.Find(commandName);
             if (command == null)
             {
                 command = commandLocator.Find("help");
                 Environment.ExitCode = (int)ExitCode.UnknownCommand;
+            }
+            else if (showHelpForCommand)
+            {
+                command = commandLocator.Find("help");
+            }
+            else
+            {
+                // For all other commands, strip the command name argument from the list
+                commandLineArguments = commandLineArguments.Skip(1).ToArray();
             }
 
             commandInstance = command.Value;
@@ -304,10 +314,9 @@ namespace Octopus.Shared.Startup
             builder.Update(builtContainer);
         }
 
-        static string ExtractCommandName(ref string[] args)
+        public static string ParseCommandName(string[] args)
         {
             var first = (args.FirstOrDefault() ?? string.Empty).ToLowerInvariant().TrimStart('-', '/');
-            args = args.Skip(1).ToArray();
             return first;
         }
 

@@ -20,11 +20,11 @@ namespace Octopus.Shared.Startup
         {
         }
 
-        public void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions, string displayName, string version, string informationalVersion, string[] environmentInformation, string instanceName)
+        public void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
             var executable = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullLocalPath());
 
-            var commandName = commandLineArguments.Length > 0 ? commandLineArguments[0] : null;
+            var commandName = OctopusProgram.ParseCommandName(commandLineArguments);
 
             if (string.IsNullOrEmpty(commandName))
             {
@@ -83,7 +83,11 @@ namespace Octopus.Shared.Startup
             Console.WriteLine(executable + " <command> [<options>]");
             Console.ResetColor();
             Console.WriteLine();
-            Console.WriteLine("Where <command> is one of: ");
+            Console.Write("Where ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("<command>");
+            Console.ResetColor();
+            Console.WriteLine(" is one of: ");
             Console.WriteLine();
 
             foreach (var possible in commands.List().OrderBy(x => x.Name))
@@ -97,7 +101,7 @@ namespace Octopus.Shared.Startup
             Console.WriteLine();
             Console.Write("Or use ");
             Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("help <command>");
+            Console.Write("<command> --help");
             Console.ResetColor();
             Console.WriteLine(" for more details.");
         }
