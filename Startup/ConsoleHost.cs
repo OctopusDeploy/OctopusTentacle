@@ -37,7 +37,8 @@ namespace Octopus.Shared.Startup
 
         public void OnExit(int exitCode)
         {
-            if (exitCode == 0) return;
+            // Lower exit codes shouldn't be treated as unexpected errors, they're related to user input
+            if (exitCode <= (int)OctopusProgram.ExitCode.ControlledFailureException) return;
 
             var sb = new StringBuilder()
                 .AppendLine(new string('-', 79))

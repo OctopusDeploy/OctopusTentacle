@@ -17,6 +17,16 @@ namespace Octopus.Shared.Startup
 {
     public abstract class OctopusProgram
     {
+        public enum ExitCode
+        {
+            UnknownCommand = -1,
+            Ok = 0,
+            ControlledFailureException = 1,
+            SecurityException = 42,
+            ReflectionTypeLoadException = 43,
+            GeneralException = 100
+        }
+
         readonly ILogWithContext log = Log.Octopus();
         readonly string displayName;
         readonly string version;
@@ -125,13 +135,13 @@ namespace Octopus.Shared.Startup
             catch (ControlledFailureException ex)
             {
                 log.Fatal(ex.Message);
-                exitCode = 1;
+                exitCode = (int)ExitCode.ControlledFailureException;
             }
             catch (SecurityException ex)
             {
                 log.Fatal(ex, "A security exception was encountered. Please try re-running the command as an Administrator from an elevated command prompt.");
                 log.Fatal(ex);
-                exitCode = 42;
+                exitCode = (int)ExitCode.SecurityException;
             }
             catch (ReflectionTypeLoadException ex)
             {
@@ -151,7 +161,7 @@ namespace Octopus.Shared.Startup
                     }
                 }
 
-                exitCode = 43;
+                exitCode = (int)ExitCode.ReflectionTypeLoadException;
             }
             catch (Exception ex)
             {
@@ -177,12 +187,12 @@ namespace Octopus.Shared.Startup
                         }
                     }
                 }
-                exitCode = 100;
+                exitCode = (int)ExitCode.GeneralException;
             }
 
             host?.OnExit(exitCode);
 
-            if (exitCode != 0 && Debugger.IsAttached)
+            if (exitCode > 1 && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
         }
@@ -277,7 +287,7 @@ namespace Octopus.Shared.Startup
             if (command == null)
             {
                 command = commandLocator.Find("help");
-                Environment.ExitCode = -1;
+                Environment.ExitCode = (int)ExitCode.UnknownCommand;
             }
 
             commandInstance = command.Value;
