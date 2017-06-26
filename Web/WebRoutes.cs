@@ -450,6 +450,11 @@ namespace Octopus.Shared.Web
             {
                 public static string Template = "~/api/useronboarding";
             }
+
+            public static class LetsEncryptConfiguration
+            {
+                public static string Template = "~/api/letsencryptconfiguration";
+            }
         }
 
         public static class Web
