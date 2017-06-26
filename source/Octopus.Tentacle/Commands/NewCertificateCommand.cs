@@ -18,7 +18,6 @@ namespace Octopus.Tentacle.Commands
         readonly ILog log;
         readonly Lazy<ICertificateGenerator> generator;
         bool preserve;
-        [ObsoleteEx(Message="--export-file is deprecated, as it is insecure", RemoveInVersion = "4.0", ReplacementTypeOrMember="exportPfx", TreatAsErrorFromVersion="4.0")]
         string exportFile;
         string exportPfx;
         string password;
