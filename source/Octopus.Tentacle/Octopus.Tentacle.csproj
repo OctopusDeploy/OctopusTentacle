@@ -18,9 +18,6 @@
     <PackageReference Include="Octopus.Client" Version="4.17.0" />
     <PackageReference Include="Octopus.Shared" Version="3.14.15" />
     <PackageReference Include="System.Net.Http" Version="4.1.0" />
-    <PackageReference Include="Obsolete.Fody" Version="4.2.2">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
