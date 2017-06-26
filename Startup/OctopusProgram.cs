@@ -65,10 +65,7 @@ namespace Octopus.Shared.Startup
             LogManager.Configuration = c;
         }
 
-        protected OptionSet CommonOptions
-        {
-            get { return commonOptions; }
-        }
+        protected OptionSet CommonOptions => commonOptions;
 
         public IContainer Container
         {
