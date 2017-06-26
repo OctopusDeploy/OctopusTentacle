@@ -135,6 +135,9 @@ namespace Octopus.Tentacle.Commands
             if (string.IsNullOrWhiteSpace(serverWebSocketAddress))
                 return new Uri("https://" + api.ServerUri.Host + ":" + commsPort);
 
+#if NO_WEBSOCKET_SUPPORT
+            throw new Exception("Websockets is only supported on Windows Server 2012 and later");
+#else
             if (!HalibutRuntime.OSSupportsWebSockets)
                 throw new Exception("Websockets is only supported on Windows Server 2012 and later");
 
@@ -152,6 +155,7 @@ namespace Octopus.Tentacle.Commands
             }
 
             return address;
+#endif
         }
     }
 }

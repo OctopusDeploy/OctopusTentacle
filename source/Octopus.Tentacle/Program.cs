@@ -1,11 +1,15 @@
+using System.IO;
 using System.Net;
 using Autofac;
+using NLog;
+using NLog.Config;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Time;
 using Octopus.Shared.Util;
+using Octopus.Shared.Variables;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
@@ -25,14 +29,19 @@ namespace Octopus.Tentacle
             commandLineArguments)
         {
             ServicePointManager.SecurityProtocol =
-                SecurityProtocolType.Ssl3
-                | SecurityProtocolType.Tls
-                | SecurityProtocolType.Tls11
-                | SecurityProtocolType.Tls12;
+#if SSL3_SUPPORT
+                SecurityProtocolType.Ssl3 |
+#endif
+                SecurityProtocolType.Tls |
+                SecurityProtocolType.Tls11 |
+                SecurityProtocolType.Tls12;
         }
 
         static int Main(string[] args)
         {
+#if NETCORE
+            LogManager.Configuration = new XmlLoggingConfiguration("tentacle.core.nlog", true);
+#endif
             return new Program(args).Run();
         }
 
@@ -55,10 +64,12 @@ namespace Octopus.Tentacle
 
             builder.RegisterCommand<CreateInstanceCommand>("create-instance", "Registers a new instance of the Tentacle service");
             builder.RegisterCommand<DeleteInstanceCommand>("delete-instance", "Deletes an instance of the Tentacle service");
+#if WINDOWS_SERVICE
             builder.RegisterCommand<WatchdogCommand>("watchdog", "Configure a scheduled task to monitor the Tentacle service(s)")
                 .WithParameter("applicationName", ApplicationName.Tentacle);
             builder.RegisterCommand<CheckServicesCommand>("checkservices", "Checks the Tentacle instances are running")
                 .WithParameter("applicationName", ApplicationName.Tentacle);
+#endif
             builder.RegisterCommand<RunAgentCommand>("agent", "Starts the Tentacle Agent in debug mode", "", "run");
             builder.RegisterCommand<ConfigureCommand>("configure", "Sets Tentacle settings such as the port number and thumbprints");
             builder.RegisterCommand<RegisterMachineCommand>("register-with", "Registers this machine with an Octopus Server");
@@ -66,7 +77,9 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<DeregisterMachineCommand>("deregister-from", "Deregisters this machine from an Octopus Server");
             builder.RegisterCommand<NewCertificateCommand>("new-certificate", "Creates and installs a new certificate for this Tentacle");
             builder.RegisterCommand<ShowThumbprintCommand>("show-thumbprint", "Show the thumbprint of this Tentacle's certificate");
+#if WINDOWS_SERVICE
             builder.RegisterCommand<ServiceCommand>("service", "Start, stop, install and configure the Tentacle service").WithParameter("serviceName", "OctopusDeploy Tentacle").WithParameter("serviceDescription", "Octopus Deploy: Tentacle deployment agent").WithParameter("assemblyContainingService", typeof (Program).Assembly);
+#endif
             builder.RegisterCommand<ProxyConfigurationCommand>("proxy", "Configure the HTTP proxy used by Octopus");
             builder.RegisterCommand<PollingProxyConfigurationCommand>("polling-proxy", "Configure the HTTP proxy used by polling tentacles to reach the Octopus Server");
             builder.RegisterCommand<ServerCommsCommand>("server-comms", "Configure how the Tentacle communicates with an Octopus Server");
