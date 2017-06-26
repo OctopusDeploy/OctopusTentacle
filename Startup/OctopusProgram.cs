@@ -284,7 +284,9 @@ namespace Octopus.Shared.Startup
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule(new CommandModule());
+#pragma warning disable 618
             builder.Update(builtContainer);
+#pragma warning restore 618
         }
 
         static string ExtractCommandName(ref string[] args)
