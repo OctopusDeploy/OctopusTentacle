@@ -38,8 +38,6 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
-            base.Start();
-
             var thisServiceName = ServiceName.GetWindowsServiceName(instanceSelector.Current.ApplicationName, instanceSelector.Current.InstanceName);
             var instance = instanceSelector.Current.InstanceName;
             var exePath = assemblyContainingService.FullLocalPath();

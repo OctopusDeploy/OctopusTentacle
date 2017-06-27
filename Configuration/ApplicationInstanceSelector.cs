@@ -8,10 +8,11 @@ namespace Octopus.Shared.Configuration
     public class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
         readonly ApplicationName applicationName;
-        readonly string instanceName;
+        string instanceName;
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
         readonly ILog log;
+        readonly object @lock = new object();
 
         public ApplicationInstanceSelector(ApplicationName applicationName,
             string instanceName,
@@ -25,9 +26,24 @@ namespace Octopus.Shared.Configuration
             this.instanceStore = instanceStore;
             this.log = log;
         }
-        
-        private LoadedApplicationInstance current;
-        public LoadedApplicationInstance Current => current ?? (current = DoLoad());
+
+        LoadedApplicationInstance current;
+
+        public LoadedApplicationInstance Current
+        {
+            get
+            {
+                if (current == null)
+                {
+                    lock (@lock)
+                    {
+                        if (current == null)
+                            current = DoLoad();
+                    }
+                }
+                return current;
+            }
+        }
 
         LoadedApplicationInstance DoLoad()
         {
@@ -62,7 +78,7 @@ namespace Octopus.Shared.Configuration
             log.Info("Deleted instance: " + instanceName);
         }
 
-        private LoadedApplicationInstance LoadDefaultInstance()
+        LoadedApplicationInstance LoadDefaultInstance()
         {
             var instance = instanceStore.GetDefaultInstance(applicationName);
             if (instance == null)
@@ -71,7 +87,7 @@ namespace Octopus.Shared.Configuration
             return Load(instance);
         }
 
-        private LoadedApplicationInstance LoadInstance(string instanceName)
+        LoadedApplicationInstance LoadInstance(string instanceName)
         {
             var instance = instanceStore.GetInstance(applicationName, instanceName);
             if (instance == null)
@@ -80,12 +96,12 @@ namespace Octopus.Shared.Configuration
             return Load(instance);
         }
 
-        public void CreateDefaultInstance(string configurationFile)
+        public void CreateDefaultInstance(string configurationFile, string homeDirectory = null)
         {
-            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(applicationName), configurationFile);
+            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(applicationName), configurationFile, homeDirectory);
         }
 
-        public void CreateInstance(string instanceName, string configurationFile)
+        public void CreateInstance(string instanceName, string configurationFile, string homeDirectory = null)
         {
             var parentDirectory = Path.GetDirectoryName(configurationFile);
             fileSystem.EnsureDirectoryExists(parentDirectory);
@@ -99,6 +115,14 @@ namespace Octopus.Shared.Configuration
             log.Info("Saving instance: " + instanceName);
             var instance = new ApplicationInstanceRecord(instanceName, applicationName, configurationFile);
             instanceStore.SaveInstance(instance);
+
+            var homeConfig = new HomeConfiguration(applicationName, new XmlFileKeyValueStore(configurationFile));
+            var home = !string.IsNullOrWhiteSpace(homeDirectory) ? homeDirectory : parentDirectory;
+            log.Info($"Setting home directory to: {home}");
+            homeConfig.HomeDirectory = home;
+
+            this.instanceName = instanceName;
+            DoLoad();
         }
 
         LoadedApplicationInstance Load(ApplicationInstanceRecord record)

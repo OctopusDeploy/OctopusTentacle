@@ -66,14 +66,14 @@ namespace Octopus.Shared.Security
 
         AesCryptoServiceProvider GetCryptoProvider(byte[] iv = null)
         {
-            var provider = new AesCryptoServiceProvider()
+            var provider = new AesCryptoServiceProvider
             {
                 Mode = CipherMode.CBC,
                 Padding = PaddingMode.PKCS7,
                 KeySize = 128,
-                BlockSize = 128
+                BlockSize = 128,
+                Key = key
             };
-            provider.Key = key;
             if (iv != null)
             {
                 provider.IV = iv;
@@ -81,10 +81,12 @@ namespace Octopus.Shared.Security
             return provider;
         }
         
-        byte[] GetEncryptionKey(string encryptionPassword)
+        public static byte[] GetEncryptionKey(string encryptionPassword)
         {
-            var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations);
-            return passwordGenerator.GetBytes(16);
+            using (var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations))
+            {
+                return passwordGenerator.GetBytes(16);
+            }
         }
     }
 }

@@ -4,7 +4,6 @@ using System.Data.Services.Client;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Cryptography;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Diagnostics.KnowledgeBase
@@ -86,6 +85,15 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
                     "on some systems; first, try qualifying the username with DOMAIN\\Administrator. If this " +
                     "issue persists, you may need to use an administrative account with a different name.")
                 .EntryHelpLinkIs("http://g.octopushq.com/AdministratorAccountName"));
+
+            AddRule(r => r.ExceptionIs<InvalidDataException>(
+                ex => ex.Message.Contains("Central Directory corrupt") &&
+                    ex.StackTrace.Contains(".SynchronizeBuiltInPackageRepositoryIndexTaskController.AddFileToIndex("))
+                .HasInnerException<IOException>(
+                    iex => iex.Message.Contains("An attempt was made to move the file pointer before the beginning of the file"))
+                .EntrySummaryIs("The re-index built-in package repository task was unable to index package {0}.")
+                .EntryHelpTextIs("The above package was skipped due to corruption or 0 byte file size. " +
+                    "The re-index task will continue to process any remaining files."));
         }
 
         public static void AddRule(Action<ExceptionKnowledgeBuilder> buildRule)

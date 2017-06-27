@@ -1,128 +1,41 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{6C70613B-7CF1-4E3E-81B2-06613361DEF2}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Octopus.Shared</RootNamespace>
     <AssemblyName>Octopus.Shared</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
-    <NuGetPackageImportStamp>a3b59c1b</NuGetPackageImportStamp>
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <NoWarn>1998</NoWarn>
-    <UseVSHostingProcess>true</UseVSHostingProcess>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <Prefer32Bit>false</Prefer32Bit>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TargetFramework>net45</TargetFramework>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>bin\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <NoWarn>1998</NoWarn>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <Prefer32Bit>false</Prefer32Bit>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>True</Optimize>
   </PropertyGroup>
+  
   <ItemGroup>
-    <Reference Include="AsyncStackTraceEx, Version=1.0.0.2, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\AsyncStackTraceEx.1.0.1.1\lib\dotnet\AsyncStackTraceEx.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Autofac, Version=3.5.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Halibut, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.2.5.0\lib\net45\Halibut.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Win32.TaskScheduler, Version=2.5.21.0, Culture=neutral, PublicKeyToken=0d013ddd5178a2ae, processorArchitecture=MSIL">
-      <HintPath>..\packages\TaskScheduler.2.5.21\lib\net40\Microsoft.Win32.TaskScheduler.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Nevermore.Contracts, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nevermore.Contracts.1.0.1\lib\netstandard1.0\Nevermore.Contracts.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Nito.AsyncEx, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Nito.AsyncEx.Concurrent, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Concurrent.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Nito.AsyncEx.Enlightenment, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.0.1\lib\net45\NLog.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Common, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Common.3.6.0-octopus-58455\lib\net45\NuGet.Common.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Frameworks, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Frameworks.3.6.0-octopus-58455\lib\net45\NuGet.Frameworks.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Packaging, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Packaging.3.6.0-octopus-58455\lib\net45\NuGet.Packaging.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Packaging.Core, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Packaging.Core.3.6.0-octopus-58455\lib\net45\NuGet.Packaging.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Packaging.Core.Types, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Packaging.Core.Types.3.6.0-octopus-58455\lib\net45\NuGet.Packaging.Core.Types.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Versioning, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Versioning.3.6.0-octopus-58455\lib\net45\NuGet.Versioning.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Octopus.Configuration, Version=1.0.10.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Configuration.1.0.10\lib\net45\Octopus.Configuration.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Octopus.Data, Version=1.0.19.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Data.1.0.19\lib\netstandard1.0\Octopus.Data.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Octopus.Diagnostics, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Diagnostics.1.0.11\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Octopus.Time, Version=1.0.8.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Time.1.0.8\lib\netstandard1.0\Octopus.Time.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+    <PackageReference Include="AsyncStackTraceEx" Version="1.0.1.1" />
+    <PackageReference Include="Autofac" Version="3.5.2" />
+    <PackageReference Include="Halibut" Version="2.6.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
+    <PackageReference Include="NLog" Version="4.0.1" />
+    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58672" />
+    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58672" />
+    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58672" />
+    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58672" />
+    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58672" />
+    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58672" />
+    <PackageReference Include="Octopus.Configuration" Version="1.0.10" />
+    <PackageReference Include="Octopus.Diagnostics" Version="1.0.11" />
+    <PackageReference Include="Octopus.Time" Version="1.0.8" />
+    <PackageReference Include="System.Collections" Version="4.0.11" />
+    <PackageReference Include="System.Runtime" Version="4.1.0" />
+    <PackageReference Include="System.Runtime.Extensions" Version="4.1.0" />
+    <PackageReference Include="TaskScheduler" Version="2.5.21">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -144,6 +57,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
+  
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>
@@ -151,289 +65,13 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
-    <Compile Include="Communications\AutofacServiceFactory.cs" />
-    <Compile Include="Configuration\AbstractKeyValueStore.cs" />
-    <Compile Include="Configuration\ApplicationInstanceRecord.cs" />
-    <Compile Include="Configuration\ApplicationInstanceSelector.cs" />
-    <Compile Include="Configuration\ApplicationInstanceStore.cs" />
-    <Compile Include="Configuration\ApplicationName.cs" />
-    <Compile Include="Configuration\BundledPackageStoreConfiguration.cs" />
-    <Compile Include="Configuration\ConfigurationModule.cs" />
-    <Compile Include="Configuration\DictionaryKeyValueStore.cs" />
-    <Compile Include="Configuration\HomeConfiguration.cs" />
-    <Compile Include="Configuration\IApplicationInstanceSelector.cs" />
-    <Compile Include="Configuration\IApplicationInstanceStore.cs" />
-    <Compile Include="Configuration\IBundledPackageStoreConfiguration.cs" />
-    <Compile Include="Configuration\IHomeConfiguration.cs" />
-    <Compile Include="Configuration\ILoggingConfiguration.cs" />
-    <Compile Include="Configuration\ILogInitializer.cs" />
-    <Compile Include="Configuration\IProxyConfiguration.cs" />
-    <Compile Include="Configuration\IProxyInitializer.cs" />
-    <Compile Include="Configuration\IsolatedStorageXmlFileKeyValueStore.cs" />
-    <Compile Include="Configuration\IUpgradeCheckConfiguration.cs" />
-    <Compile Include="Configuration\JsonConsoleKeyValueStore.cs" />
-    <Compile Include="Configuration\JsonFileKeyValueStore.cs" />
-    <Compile Include="Configuration\JsonKeyValueStore.cs" />
-    <Compile Include="Configuration\ProxyConfigParser.cs" />
-    <Compile Include="Configuration\XmlConsoleKeyValueStore.cs" />
-    <Compile Include="Configuration\LoadedApplicationInstance.cs" />
-    <Compile Include="Configuration\LoggingConfiguration.cs" />
-    <Compile Include="Configuration\LogInitializer.cs" />
-    <Compile Include="Configuration\OctopusStorage.cs" />
-    <Compile Include="Configuration\ProxyConfiguration.cs" />
-    <Compile Include="Configuration\ProxyInitializer.cs" />
-    <Compile Include="Configuration\ServerCommunicationProxyConfiguration.cs" />
-    <Compile Include="Configuration\ServiceName.cs" />
-    <Compile Include="Configuration\UpgradeCheckConfiguration.cs" />
-    <Compile Include="Configuration\WindowsRegistryKeyValueStore.cs" />
-    <Compile Include="Configuration\XmlFileKeyValueStore.cs" />
-    <Compile Include="Configuration\XmlKeyValueStore.cs" />
-    <Compile Include="Configuration\XmlSetting.cs" />
-    <Compile Include="Configuration\XmlSettingsRoot.cs" />
-    <Compile Include="Configuration\XmlStreamReadOnlyKeyValueStore.cs" />
-    <Compile Include="Contracts\CancelScriptCommand.cs" />
-    <Compile Include="Contracts\CompleteScriptCommand.cs" />
-    <Compile Include="Contracts\IEchoService.cs" />
-    <Compile Include="Contracts\IFileTransferService.cs" />
-    <Compile Include="Contracts\IScriptService.cs" />
-    <Compile Include="Contracts\ScriptFile.cs" />
-    <Compile Include="Contracts\ScriptIsolationLevel.cs" />
-    <Compile Include="Contracts\ScriptStatusRequest.cs" />
-    <Compile Include="Contracts\ScriptStatusResponse.cs" />
-    <Compile Include="Contracts\ScriptTicket.cs" />
-    <Compile Include="Contracts\StartScriptCommand.cs" />
-    <Compile Include="Contracts\StartScriptCommandBuilder.cs" />
-    <Compile Include="Contracts\UploadResult.cs" />
-    <Compile Include="ControlledFailureException.cs" />
-    <Compile Include="Diagnostics\AbstractLog.cs" />
-    <Compile Include="Diagnostics\CorrelationId.cs" />
-    <Compile Include="Diagnostics\ILogAppender.cs" />
-    <Compile Include="Diagnostics\ILogWithContext.cs" />
-    <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledge.cs" />
-    <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBase.cs" />
-    <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBaseEntry.cs" />
-    <Compile Include="Diagnostics\KnowledgeBase\ExceptionKnowledgeBuilder.cs" />
-    <Compile Include="Diagnostics\Log.cs" />
-    <Compile Include="Diagnostics\LogEvent.cs" />
-    <Compile Include="Diagnostics\NLogAppender.cs" />
-    <Compile Include="Diagnostics\NullLog.cs" />
-    <Compile Include="Licensing\AssemblyBuildDateAttribute.cs" />
-    <Compile Include="Diagnostics\LogContext.cs" />
-    <Compile Include="Startup\CheckServicesCommand.cs" />
-    <Compile Include="Startup\WatchdogCommand.cs" />
-    <Compile Include="Time\IStopwatch.cs" />
-    <Compile Include="Time\StopWatch.cs" />
-    <Compile Include="Security\Masking\AhoCorasick.cs" />
-    <Compile Include="Util\CommonValidationMessages.cs" />
-    <Compile Include="Messages\Deploy\Steps\TentacleArtifact.cs" />
-    <Compile Include="Model\EncryptedAttribute.cs" />
-    <Compile Include="Packages\IPackageInstaller.cs" />
-    <Compile Include="Packages\NuGetPackageInstaller.cs" />
-    <Compile Include="Properties\AspMvcActionAttribute.cs" />
-    <Compile Include="Properties\AspMvcActionSelectorAttribute.cs" />
-    <Compile Include="Properties\AspMvcAreaAttribute.cs" />
-    <Compile Include="Properties\AspMvcControllerAttribute.cs" />
-    <Compile Include="Properties\AspMvcDisplayTemplateAttribute.cs" />
-    <Compile Include="Properties\AspMvcEditorTemplateAttribute.cs" />
-    <Compile Include="Properties\AspMvcMasterAttribute.cs" />
-    <Compile Include="Properties\AspMvcModelTypeAttribute.cs" />
-    <Compile Include="Properties\AspMvcPartialViewAttribute.cs" />
-    <Compile Include="Properties\AspMvcSupressViewErrorAttribute.cs" />
-    <Compile Include="Properties\AspMvcTemplateAttribute.cs" />
-    <Compile Include="Properties\AspMvcViewAttribute.cs" />
-    <Compile Include="Properties\BaseTypeRequiredAttribute.cs" />
-    <Compile Include="Properties\CanBeNullAttribute.cs" />
-    <Compile Include="Properties\CannotApplyEqualityOperatorAttribute.cs" />
-    <Compile Include="Properties\ContractAnnotationAttribute.cs" />
-    <Compile Include="Properties\HtmlAttributeValueAttribute.cs" />
-    <Compile Include="Properties\HtmlElementAttributesAttribute.cs" />
-    <Compile Include="Properties\ImplicitUseKindFlags.cs" />
-    <Compile Include="Properties\ImplicitUseTargetFlags.cs" />
-    <Compile Include="Properties\InstantHandleAttribute.cs" />
-    <Compile Include="Properties\InvokerParameterNameAttribute.cs" />
-    <Compile Include="Properties\LocalizationRequiredAttribute.cs" />
-    <Compile Include="Properties\MeansImplicitUseAttribute.cs" />
-    <Compile Include="Properties\NotifyPropertyChangedInvocatorAttribute.cs" />
-    <Compile Include="Properties\NotNullAttribute.cs" />
-    <Compile Include="Properties\PathReferenceAttribute.cs" />
-    <Compile Include="Properties\PublicAPIAttribute.cs" />
-    <Compile Include="Properties\PureAttribute.cs" />
-    <Compile Include="Properties\RazorSectionAttribute.cs" />
-    <Compile Include="Properties\UsedImplicitlyAttribute.cs" />
-    <Compile Include="Scripts\AsyncReaderWriterLockExtensions.cs" />
-    <Compile Include="Scripts\IScriptLog.cs" />
-    <Compile Include="Scripts\IScriptLogWriter.cs" />
-    <Compile Include="Scripts\IScriptWorkspace.cs" />
-    <Compile Include="Scripts\IScriptWorkspaceFactory.cs" />
-    <Compile Include="Scripts\PowerShell.cs" />
-    <Compile Include="Scripts\ScriptIsolationMutex.cs" />
-    <Compile Include="Scripts\ScriptWorkspace.cs" />
-    <Compile Include="Scripts\ScriptWorkspaceFactory.cs" />
-    <Compile Include="Security\AesEncryption.cs" />
-    <Compile Include="Security\Certificates\CertificateEncoder.cs" />
-    <Compile Include="Security\Masking\MaskedException.cs" />
-    <Compile Include="Security\Masking\SensitiveDataMask.cs" />
-    <Compile Include="Startup\AbstractMultiOperationCommand.cs" />
-    <Compile Include="Tasks\ActionFailedException.cs" />
-    <Compile Include="Tasks\ActivityFailedException.cs" />
-    <Compile Include="Tasks\ITaskContext.cs" />
-    <Compile Include="Tasks\IRunningTask.cs" />
-    <Compile Include="Tasks\ITaskController.cs" />
-    <Compile Include="Tasks\OctoParallel.cs" />
-    <Compile Include="Tasks\OctoThreadClosure.cs" />
-    <Compile Include="Tasks\ParallelWorkOrder.cs" />
-    <Compile Include="Tasks\Planned.cs" />
-    <Compile Include="Scripts\RunningScript.cs" />
-    <Compile Include="Tasks\RunningTask.cs" />
-    <Compile Include="Tasks\TaskCompletionHandler.cs" />
-    <Compile Include="Tasks\TaskControllerAttribute.cs" />
-    <Compile Include="Tasks\WorkItem.cs" />
-    <Compile Include="Util\EnumerableExtensions.cs" />
-    <Compile Include="Util\EnvironmentHelper.cs" />
-    <Compile Include="Util\EnumExtensions.cs" />
-    <Compile Include="Util\IOUtil.cs" />
-    <Compile Include="Util\IThrottle.cs" />
-    <Compile Include="Util\OctoMonitor.cs" />
-    <Compile Include="Util\SemanticVersionExtensions.cs" />
-    <Compile Include="Util\StreamDisposalChain.cs" />
-    <Compile Include="Internals\DiffMatchPatch\CompatibilityExtensions.cs" />
-    <Compile Include="Internals\DiffMatchPatch\Diff.cs" />
-    <Compile Include="Internals\DiffMatchPatch\GoogleDiffMatchPatch.cs" />
-    <Compile Include="Internals\DiffMatchPatch\Operation.cs" />
-    <Compile Include="Internals\DiffMatchPatch\Patch.cs" />
-    <Compile Include="Licensing\ILicenseVerificationCertificateProvider.cs" />
-    <Compile Include="Licensing\ILicenseVerifier.cs" />
-    <Compile Include="Licensing\LicenseVerificationCertificateProvider.cs" />
-    <Compile Include="Licensing\LicenseVerifier.cs" />
-    <Compile Include="Util\OctopusFileSystemModule.cs" />
-    <Compile Include="Diagnostics\OctopusLogsDirectoryRenderer.cs" />
-    <Compile Include="Internals\Options\Option.cs" />
-    <Compile Include="Internals\Options\OptionAction.cs" />
-    <Compile Include="Internals\Options\OptionContext.cs" />
-    <Compile Include="Internals\Options\OptionException.cs" />
-    <Compile Include="Internals\Options\OptionSet.cs" />
-    <Compile Include="Internals\Options\OptionValueType.cs" />
-    <Compile Include="Diagnostics\LoggingModule.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Security\CertificateExpectations.cs" />
-    <Compile Include="Internals\CertificateGeneration\SelfSignedCertProperties.cs" />
-    <Compile Include="Internals\CertificateGeneration\CryptContext.cs" />
-    <Compile Include="Internals\CertificateGeneration\CryptKey.cs" />
-    <Compile Include="Internals\CertificateGeneration\FinalizableObject.cs" />
-    <Compile Include="Internals\CertificateGeneration\KeyExchangeKey.cs" />
-    <Compile Include="Internals\CertificateGeneration\KeyType.cs" />
-    <Compile Include="Internals\CertificateGeneration\SignatureKey.cs" />
-    <Compile Include="Internals\CertificateGeneration\Win32ErrorHelper.cs" />
-    <Compile Include="Internals\CertificateGeneration\Win32Native.cs" />
-    <Compile Include="Security\CertificateGenerator.cs" />
-    <Compile Include="Security\CertificateValidationDirection.cs" />
-    <Compile Include="Security\CertificateValidator.cs" />
-    <Compile Include="Security\ICertificateGenerator.cs" />
-    <Compile Include="Security\CertificatesModule.cs" />
-    <Compile Include="Startup\AbstractCommand.cs" />
-    <Compile Include="Startup\AbstractStandardCommand.cs" />
-    <Compile Include="Startup\AutofacExtensions.cs" />
-    <Compile Include="Startup\CommandLocator.cs" />
-    <Compile Include="Startup\ConfigureServiceHelper.cs" />
-    <Compile Include="Startup\CreateInstanceCommand.cs" />
-    <Compile Include="Startup\DeleteInstanceCommand.cs" />
-    <Compile Include="Startup\ICommandOptions.cs" />
-    <Compile Include="Startup\LsaUtility.cs" />
-    <Compile Include="Startup\ProxyConfigurationCommand.cs" />
-    <Compile Include="Startup\ServiceCommand.cs" />
-    <Compile Include="Startup\ServiceConfigurationState.cs" />
-    <Compile Include="Startup\WindowsServiceHost.cs" />
-    <Compile Include="Startup\CommandModule.cs" />
-    <Compile Include="Startup\ConsoleHost.cs" />
-    <Compile Include="Startup\HelpCommand.cs" />
-    <Compile Include="Startup\ICommand.cs" />
-    <Compile Include="Startup\ICommandHost.cs" />
-    <Compile Include="Startup\ICommandLocator.cs" />
-    <Compile Include="Startup\CommandMetadata.cs" />
-    <Compile Include="Startup\ICommandRuntime.cs" />
-    <Compile Include="Startup\IServiceInstaller.cs" />
-    <Compile Include="Startup\OctopusProgram.cs" />
-    <Compile Include="Internals\Options\OptionValueCollection.cs" />
-    <Compile Include="Startup\ServiceOptions.cs" />
-    <Compile Include="Startup\ServiceInstaller.cs" />
-    <Compile Include="Startup\WindowsServiceAdapter.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Time\FixedClock.cs" />
-    <Compile Include="Time\Sleep.cs" />
-    <Compile Include="Time\SystemClock.cs" />
-    <Compile Include="Time\TimeModule.cs" />
-    <Compile Include="Util\AssemblyExtensions.cs" />
-    <Compile Include="Util\CallbackDisposable.cs" />
-    <Compile Include="Util\CleanId.cs" />
-    <Compile Include="Util\CliBuilder.cs" />
-    <Compile Include="Util\CmdResult.cs" />
-    <Compile Include="Util\CommandLineInvocation.cs" />
-    <Compile Include="Util\CommandLineRunner.cs" />
-    <Compile Include="Util\DateTimeExtensions.cs" />
-    <Compile Include="Util\DeletionOptions.cs" />
-    <Compile Include="Util\ExceptionExtensions.cs" />
-    <Compile Include="Util\FileInfoAdapter.cs" />
-    <Compile Include="Util\Glob.cs" />
-    <Compile Include="Util\Guard.cs" />
-    <Compile Include="Util\HashCalculator.cs" />
-    <Compile Include="Util\Humanize.cs" />
-    <Compile Include="Util\ICommandLineRunner.cs" />
-    <Compile Include="Util\IFileInfo.cs" />
-    <Compile Include="Util\IOctopusFileSystem.cs" />
-    <Compile Include="Util\IMachineWideMutex.cs" />
-    <Compile Include="Util\ListExtensions.cs" />
-    <Compile Include="Util\FileSizeExtensions.cs" />
-    <Compile Include="Util\ObjectFormatter.cs" />
-    <Compile Include="Util\OctopusPhysicalFileSystem.cs" />
-    <Compile Include="Util\OutboundLinks.cs" />
-    <Compile Include="Util\PathHelper.cs" />
-    <Compile Include="Util\PathSegmentValidator.cs" />
-    <Compile Include="Util\PlatformTextFormatter.cs" />
-    <Compile Include="Util\RandomStringGenerator.cs" />
-    <Compile Include="Util\RemotedObject.cs" />
-    <Compile Include="Util\ReplaceStatus.cs" />
-    <Compile Include="Util\RuntimeUtility.cs" />
-    <Compile Include="Util\SilentProcessRunner.cs" />
-    <Compile Include="Util\StringExtensions.cs" />
-    <Compile Include="Util\MachineWideMutex.cs" />
-    <Compile Include="Util\TaskExtensions.cs" />
-    <Compile Include="Util\Throttle.cs" />
-    <Compile Include="Util\TypeExtensions.cs" />
-    <Compile Include="Util\Uniquifier.cs" />
-    <Compile Include="Util\UriExtensions.cs" />
-    <Compile Include="Variables\DefineAttribute.cs" />
-    <Compile Include="Variables\DeprecatedAliasAttribute.cs" />
-    <Compile Include="Variables\EnvironmentVariables.cs" />
-    <Compile Include="Variables\SpecialVariables.cs" />
-    <Compile Include="Variables\VariableCategory.cs" />
-    <Compile Include="Variables\VariableDefinition.cs" />
-    <Compile Include="Variables\VariableDomain.cs" />
-    <Compile Include="Versioning\AppVersion.cs" />
-    <Compile Include="Versioning\SemanticVersionInfo.cs" />
-    <Compile Include="Versioning\VersioningModule.cs" />
-    <Compile Include="Web\WebRoutes.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Internals\Options\_Readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Internals\CertificateGeneration\_Readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <ItemGroup>
+    <Compile Update="Startup\WindowsServiceAdapter.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
 </Project>

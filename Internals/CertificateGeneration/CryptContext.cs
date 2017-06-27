@@ -51,14 +51,20 @@ namespace Octopus.Shared.Internals.CertificateGeneration
             {
                 ContainerName = ContainerName,
                 KeySpec = (int)KeyType.Exchange,
-                ProviderType = 1
-                // default RSA provider
+                ProviderType = 24,
+                ProviderName = "Microsoft Enhanced RSA and AES Cryptographic Provider"
             };
 
+            const string OID_RSA_SHA256RSA = "1.2.840.113549.1.1.11";
+            var signatureAlgorithm = new Win32Native.CryptoAlgorithmIdentifier
+            {
+                pszObjId = OID_RSA_SHA256RSA
+            };
+            
             var certContext = Win32Native.CertCreateSelfSignCertificate(
                 handle,
                 new Win32Native.CryptoApiBlob(asnName.Length, asnNameHandle.AddrOfPinnedObject()),
-                0, kpi, IntPtr.Zero,
+                0, kpi, signatureAlgorithm,
                 ToSystemTime(properties.ValidFrom),
                 ToSystemTime(properties.ValidTo),
                 IntPtr.Zero);

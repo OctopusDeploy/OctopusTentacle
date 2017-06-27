@@ -10,6 +10,7 @@ namespace Octopus.Shared.Startup
         readonly IApplicationInstanceSelector instanceSelector;
         string instanceName;
         string config;
+        string home;
 
         public CreateInstanceCommand(IOctopusFileSystem fileSystem, IApplicationInstanceSelector instanceSelector)
         {
@@ -17,21 +18,22 @@ namespace Octopus.Shared.Startup
             this.instanceSelector = instanceSelector;
             Options.Add("instance=", "Name of the instance to create", v => instanceName = v);
             Options.Add("config=", "Path to configuration file to create", v => config = v);
+            Options.Add("home=", "[Optional] Path to the home directory - defaults to the same directory as the config file", v => home = v);
         }
 
         protected override void Start()
         {
-            if (string.IsNullOrWhiteSpace(config)) throw new ArgumentException("No configuration file was specified. Please use the --config parameter to specify a configuration file path.");
+            if (string.IsNullOrWhiteSpace(config)) throw new ControlledFailureException("No configuration file was specified. Please use the --config parameter to specify a configuration file path.");
 
             config = fileSystem.GetFullPath(config);
 
             if (string.IsNullOrWhiteSpace(instanceName))
             {
-                instanceSelector.CreateDefaultInstance(config);
+                instanceSelector.CreateDefaultInstance(config, home);
             }
             else
             {
-                instanceSelector.CreateInstance(instanceName, config);
+                instanceSelector.CreateInstance(instanceName, config, home);
             }
         }
     }

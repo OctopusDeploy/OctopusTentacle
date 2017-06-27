@@ -1,13 +1,14 @@
 using System;
+using System.Text;
 using Autofac.Core;
+using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Diagnostics.KnowledgeBase;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {
     public class ConsoleHost : ICommandHost, ICommandRuntime
     {
+        readonly ILog log = Log.Octopus();
         readonly string displayName;
 
         public ConsoleHost(string displayName)
@@ -28,54 +29,27 @@ namespace Octopus.Shared.Startup
                 shutdown();
                 Console.ResetColor();
             }
-            catch (ControlledFailureException)
-            {
-                throw;
-            }
             catch (DependencyResolutionException rex) when (rex.InnerException is ControlledFailureException)
             {
                 throw rex.InnerException;
             }
-            catch (Exception ex)
+        }
+
+        public void OnExit(int exitCode)
+        {
+            if (exitCode == 0) return;
+
+            var sb = new StringBuilder()
+                .AppendLine(new string('-', 79))
+                .AppendLine($"Terminating process with exit code {exitCode}")
+                .AppendLine("Full error details are available in the log files at:");
+            foreach (var logDirectory in OctopusLogsDirectoryRenderer.LogsDirectoryHistory)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(new string('-', 79));
-                Console.WriteLine("Error: " + ex.PrettyPrint(false));
-                Console.WriteLine(new string('-', 79));
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine("Full error details are available in the log files.");
-                Console.Write("At: ");
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine(OctopusLogsDirectoryRenderer.LogsDirectory);
-                Console.ResetColor();
-
-                ExceptionKnowledgeBaseEntry entry;
-                if (ExceptionKnowledgeBase.TryInterpret(ex, out entry))
-                {
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(new string('=', 79));
-                    Console.WriteLine(entry.Summary);
-                    if (entry.HelpText != null || entry.HelpLink != null)
-                    {
-                        Console.WriteLine(new string('-', 79));
-                        if (entry.HelpText != null)
-                        {
-                            Console.WriteLine(entry.HelpText);
-                        }
-                        if (entry.HelpLink != null)
-                        {
-                            Console.Write("See: ");
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.WriteLine(entry.HelpLink);
-                            Console.ForegroundColor = ConsoleColor.White;
-                        }
-                    }
-                    Console.WriteLine(new string('=', 79));
-                    Console.ResetColor();
-                }
-
-                throw;
+                sb.AppendLine(logDirectory);
             }
+            sb.AppendLine("If you need help, please send these log files to https://octopus.com/support");
+            sb.AppendLine(new string('-', 79));
+            log.Fatal(sb.ToString());
         }
 
         public void WaitForUserToExit()

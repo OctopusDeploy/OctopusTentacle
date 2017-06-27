@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
@@ -16,6 +17,7 @@ namespace Octopus.Shared.Util
         // ReSharper disable once InconsistentNaming
         const int CP_OEMCP = 1;
         static readonly Encoding oemEncoding;
+        static readonly ILog SystemLog = Log.System();
 
         static SilentProcessRunner()
         {
@@ -89,6 +91,10 @@ namespace Octopus.Shared.Util
         {
             try
             {
+                // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
+                var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
+                var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
+                SystemLog.Info($"Starting {exeFileNameOrFullPath} in {workingDirectory}");
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -168,6 +174,8 @@ namespace Octopus.Shared.Util
                         process.BeginErrorReadLine();
 
                         process.WaitForExit();
+
+                        SystemLog.Info($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {process.ExitCode}");
 
                         running = false;
 

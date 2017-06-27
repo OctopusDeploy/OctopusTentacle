@@ -7,12 +7,10 @@ namespace Octopus.Shared.Configuration
     public class LogInitializer : ILogInitializer
     {
         readonly ILoggingConfiguration configuration;
-        readonly IOctopusFileSystem fileSystem;
 
         public LogInitializer(ILoggingConfiguration configuration, IOctopusFileSystem fileSystem)
         {
             this.configuration = configuration;
-            this.fileSystem = fileSystem;
         }
 
         public void Start()
@@ -25,7 +23,7 @@ namespace Octopus.Shared.Configuration
             // If the LogsDirectory isn't configured yet (probably because the HomeDirectory isn't configured yet) continue logging to the fallback directory
             var logDirectory = configuration.LogsDirectory;
             if (logDirectory == null) return;
-            
+
             OctopusLogsDirectoryRenderer.SetLogsDirectory(logDirectory);
         }
     }

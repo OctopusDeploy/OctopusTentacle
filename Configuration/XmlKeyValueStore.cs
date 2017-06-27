@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {
@@ -46,11 +47,14 @@ namespace Octopus.Shared.Configuration
             using (var stream = OpenForWriting())
             {
                 stream.SetLength(0);
-                using (var xmlWriter = new XmlTextWriter(new StreamWriter(stream, Encoding.UTF8)))
+                using (var streamWriter = new StreamWriter(stream, Encoding.UTF8))
                 {
-                    xmlWriter.Formatting = Formatting.Indented;
+                    using (var xmlWriter = new XmlTextWriter(streamWriter))
+                    {
+                        xmlWriter.Formatting = Formatting.Indented;
 
-                    serializer.Serialize(xmlWriter, settings);
+                        serializer.Serialize(xmlWriter, settings);
+                    }
                 }
             }
         }

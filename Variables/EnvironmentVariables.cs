@@ -9,6 +9,7 @@ namespace Octopus.Shared.Variables
         public const string TentacleProxyHost = "TentacleProxyHost";
         public const string TentacleProxyPort = "TentacleProxyPort";
         public const string TentacleVersion = "TentacleVersion";
+        public const string TentacleCertificateSignatureAlgorithm = "TentacleCertificateSignatureAlgorithm";
         public const string TentacleHome = "TentacleHome";
         public const string TentacleApplications = "TentacleApplications";
         public const string TentacleJournal = "TentacleJournal";

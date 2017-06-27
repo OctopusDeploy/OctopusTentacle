@@ -8,26 +8,23 @@ namespace Octopus.Shared.Startup
 {
     public abstract class AbstractCommand : ICommand
     {
-        readonly OptionSet options = new OptionSet();
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
         bool showLogo = true;
+        static readonly ILogWithContext Log = Diagnostics.Log.Octopus();
 
         protected AbstractCommand()
         {
             Options.Add("nologo", "Don't print title or version information", v => showLogo = false);
         }
 
-        protected OptionSet Options
-        {
-            get { return options; }
-        }
+        protected OptionSet Options { get; } = new OptionSet();
 
         protected ICommandRuntime Runtime { get; private set; }
 
         protected TOptionSet AddOptionSet<TOptionSet>(TOptionSet commandOptions)
             where TOptionSet : class, ICommandOptions
         {
-            if (commandOptions == null) throw new ArgumentNullException("commandOptions");
+            if (commandOptions == null) throw new ArgumentNullException(nameof(commandOptions));
             optionSets.Add(commandOptions);
             return commandOptions;
         }
@@ -36,7 +33,7 @@ namespace Octopus.Shared.Startup
         {
             if (arguments.Count > 0)
             {
-                throw new ArgumentException("Unrecognized command line arguments: " + string.Join(" ", arguments));
+                throw new ControlledFailureException("Unrecognized command line arguments: " + string.Join(" ", arguments));
             }
         }
 
@@ -45,10 +42,11 @@ namespace Octopus.Shared.Startup
             if (showLogo)
             {
                 var instanceNameToLog = string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName;
-                Log.Octopus().Info($"{displayName} version {version} ({informationalVersion}) instance {instanceNameToLog}");
-                Log.Octopus().Info($"Environment Information:{Environment.NewLine}" +
+                Log.Info($"{displayName} version {version} ({informationalVersion}) instance {instanceNameToLog}");
+                Log.Info($"Environment Information:{Environment.NewLine}" +
                     $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
             }
+            Log.Info($"==== {GetType().Name} ====");
         }
 
         protected abstract void Start();
@@ -67,7 +65,7 @@ namespace Octopus.Shared.Startup
         {
             Runtime = commandRuntime;
 
-            var unrecognized = options.Parse(commandLineArguments);
+            var unrecognized = Options.Parse(commandLineArguments);
             UnrecognizedArguments(unrecognized);
 
             foreach (var opset in optionSets)

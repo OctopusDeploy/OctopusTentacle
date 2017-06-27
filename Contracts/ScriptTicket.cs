@@ -9,11 +9,10 @@ namespace Octopus.Shared.Contracts
 
         public ScriptTicket(string taskId)
         {
-            if (taskId == null) throw new ArgumentNullException("taskId");
-            TaskId = taskId;
+            TaskId = taskId ?? throw new ArgumentNullException("taskId");
         }
 
-        public string TaskId { get; set; }
+        public string TaskId { get; }
 
         public bool Equals(ScriptTicket other)
         {
@@ -65,9 +64,10 @@ namespace Octopus.Shared.Contracts
             return TaskId;
         }
 
-        public static ScriptTicket Create()
+        public static ScriptTicket Create(string serverTaskId)
         {
-            return new ScriptTicket(DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss") + "-" + Interlocked.Increment(ref nextTaskId));
+            serverTaskId = serverTaskId?.Replace("ServerTasks-", String.Empty);
+            return new ScriptTicket($"{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{serverTaskId}-{Interlocked.Increment(ref nextTaskId)}");
         }
     }
 }

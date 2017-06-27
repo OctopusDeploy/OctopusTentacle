@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Octopus.Shared.Util
 {
@@ -19,8 +20,7 @@ namespace Octopus.Shared.Util
             result.Add("C:");
             result.Add("C:\\");
             return result;
-        }
-            );
+        });
 
         public static void ArgumentNotNull(object argument, string parameterName)
         {
@@ -39,7 +39,7 @@ namespace Octopus.Shared.Util
             ArgumentNotNull(argument, parameterName);
             if (argument.Trim().Length == 0)
             {
-                throw new ArgumentException(string.Format("The parameter '{0}' cannot be empty.", parameterName), parameterName);
+                throw new ArgumentException($"The parameter '{parameterName}' cannot be empty.", parameterName);
             }
         }
 
@@ -54,7 +54,7 @@ namespace Octopus.Shared.Util
             {
                 if (string.IsNullOrWhiteSpace(errorMessage))
                     throw new FileNotFoundException(errorMessage);
-                throw new FileNotFoundException(string.Format("Could not find file '{0}'", argument));
+                throw new FileNotFoundException($"Could not find file '{argument}'");
             }
         }
 
@@ -68,7 +68,7 @@ namespace Octopus.Shared.Util
         {
             if (File.Exists(argument))
             {
-                throw new ArgumentException(string.Format("Cannot create directory, file exists '{0}'", argument));
+                throw new ArgumentException($"Cannot create directory, file exists '{argument}'");
             }
         }
 
@@ -82,7 +82,7 @@ namespace Octopus.Shared.Util
         {
             if (!Directory.Exists(argument))
             {
-                throw new DirectoryNotFoundException(string.Format("Directory '{0}' not found", argument));
+                throw new DirectoryNotFoundException($"Directory '{argument}' not found");
             }
         }
 
@@ -97,7 +97,7 @@ namespace Octopus.Shared.Util
             foreach (var path in specialLocations.Value)
             {
                 if (string.Equals(argument, path, StringComparison.OrdinalIgnoreCase))
-                    throw new ArgumentException(string.Format("Directory '{0}' is not a good place, pick a safe subdirectory", argument));
+                    throw new ArgumentException($"Directory '{argument}' is not a good place, pick a safe subdirectory");
             }
         }
 

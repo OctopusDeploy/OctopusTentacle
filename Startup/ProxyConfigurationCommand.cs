@@ -53,7 +53,7 @@ namespace Octopus.Shared.Startup
                 }
             }));
 
-            Options.Add("proxyPort=", "The proxy port to use in conjuction with the Host set with proxyHost", v => QueueOperation(delegate
+            Options.Add("proxyPort=", "The proxy port to use in conjunction with the Host set with proxyHost", v => QueueOperation(delegate
             {
                 proxyConfiguration.Value.CustomProxyPort = string.IsNullOrWhiteSpace(v) ? 80 : int.Parse(v);
                 if (hostSet)
@@ -65,8 +65,6 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
-            base.Start();
-
             foreach (var operation in operations) operation();
 
             if (useAProxy)

@@ -16,6 +16,7 @@ namespace Octopus.Shared.Contracts
         readonly List<string> arguments = new List<string>();
 
         TimeSpan scriptIsolationMutexTimeout = ScriptIsolationMutex.NoTimeout;
+        string taskId;
 
         public StartScriptCommandBuilder WithScriptBody(string scriptBody)
         {
@@ -61,9 +62,15 @@ namespace Octopus.Shared.Contracts
             return this;
         }
 
+        public StartScriptCommandBuilder WithTaskId(string taskId)
+        {
+            this.taskId = taskId;
+            return this;
+        }
+
         public StartScriptCommand Build()
         {
-            return new StartScriptCommand(scriptBody.ToString(), isolation, scriptIsolationMutexTimeout, arguments.ToArray(), files.ToArray());
+            return new StartScriptCommand(scriptBody.ToString(), isolation, scriptIsolationMutexTimeout, arguments.ToArray(), taskId, files.ToArray());
         }
     }
 }

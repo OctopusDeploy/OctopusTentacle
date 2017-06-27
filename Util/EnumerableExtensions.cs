@@ -67,5 +67,7 @@ namespace Octopus.Shared.Util
 
         public static bool None<T>(this IEnumerable<T> items) => !items.Any();
 
+        public static bool None<T>(this IEnumerable<T> items, Func<T, bool> predicate) => !items.Any(predicate);
+
     }
 }

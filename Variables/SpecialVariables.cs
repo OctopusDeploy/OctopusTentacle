@@ -47,8 +47,9 @@ namespace Octopus.Shared.Variables
         [Define(Category = VariableCategory.Hidden)] public static readonly string StagedPackageSize = "StagedPackage.Size";
         [Define(Category = VariableCategory.Hidden)] public static readonly string StagedPackageFullPathOnRemoteMachine = "StagedPackage.FullPathOnRemoteMachine";
         [Define(Category = VariableCategory.Hidden)] public static readonly string HasLatestCalamariVersion = "HasLatestCalamariVersion";
-        [Define(Category = VariableCategory.Hidden)]
-        public static readonly string HasWarnings = "HasWarnings";
+        [Define(Category = VariableCategory.Hidden)] public static readonly string HasWarnings = "HasWarnings";
+        [Define(Category = VariableCategory.Hidden)] public static readonly string HealthCheckMessages = "OctopusHealthCheckMessages";
+
 
         static SpecialVariables()
         {
@@ -295,6 +296,11 @@ namespace Octopus.Shared.Variables
                 public static readonly string NextBuild = "Octopus.Version.Channel.NextBuild";
                 public static readonly string NextRevision = "Octopus.Version.Channel.NextRevision";
                 public static readonly string NextSuffix = "Octopus.Version.Channel.NextSuffix";
+
+                public static string CreateChannelIndexedVariable(string variable, string channelName)
+                {
+                    return variable.Replace("Octopus.Version.Channel", $"Octopus.Version.Channel[{channelName}]");
+                }
             }
         }
 
@@ -513,6 +519,9 @@ namespace Octopus.Shared.Variables
                 [Define(Category = VariableCategory.Action, Description = "If true, the all files in the `Octopus.Action.Package.CustomInstallationDirectory` will be deleted before deployment", Example = "False", Domain = VariableDomain.Boolean)] public static readonly string CustomInstallationDirectoryShouldBePurgedBeforeDeployment =
                     "Octopus.Action.Package.CustomInstallationDirectoryShouldBePurgedBeforeDeployment";
 
+                [Define(Category = VariableCategory.Action, Description = "The directory where the package was installed, it is not available prior to package extraction", Example = "C:\\InetPub\\WWWRoot\\OctoFx")]
+                public static readonly string InstallationDirectoryPath = "Octopus.Action.Package.InstallationDirectoryPath";
+
                 [Define(Category = VariableCategory.Hidden)] public static readonly string AutomaticallyUpdateAppSettingsAndConnectionStrings = "Octopus.Action.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings";
                 [Define(Category = VariableCategory.Hidden)] public static readonly string AutomaticallyRunConfigurationTransformationFiles = "Octopus.Action.Package.AutomaticallyRunConfigurationTransformationFiles";
                 [Define(Category = VariableCategory.Hidden)] [DeprecatedAlias("Octopus.Action.Package.IgnoreConfigTranformationErrors")] public static readonly string IgnoreConfigTransformationErrors = "Octopus.Action.Package.IgnoreConfigTransformationErrors";
@@ -568,6 +577,40 @@ namespace Octopus.Shared.Variables
             public static class Iis
             {
                 public static readonly string ActionTypeName = "Octopus.IIS";
+
+                public static class DeploymentType
+                {
+                    public static readonly string WebSite = "webSite";
+                    public static readonly string WebApplication = "webApplication";
+                    public static readonly string VirtualDirectory = "virtualDirectory";
+                }
+
+                public static class WebSite
+                {
+                    public static readonly string DeploymentType = "Octopus.Action.IISWebSite.DeploymentType";
+
+                    public static readonly string WebSiteName = "Octopus.Action.IISWebSite.WebSiteName";
+                    public static readonly string ApplicationPoolName = "Octopus.Action.IISWebSite.ApplicationPoolName";
+                    public static readonly string ApplicationPoolUserName = "Octopus.Action.IISWebSite.ApplicationPoolUsername";
+                    public static readonly string Bindings = "Octopus.Action.IISWebSite.Bindings";
+                    public static readonly string ApplicationPoolIdentityType = "Octopus.Action.IISWebSite.ApplicationPoolIdentityType";
+                    public static readonly string EnableAnonymousAuthentication = "Octopus.Action.IISWebSite.EnableAnonymousAuthentication";
+                    public static readonly string EnableBasicAuthentication = "Octopus.Action.IISWebSite.EnableBasicAuthentication";
+                    public static readonly string EnableWindowsAuthentication = "Octopus.Action.IISWebSite.EnableWindowsAuthentication";
+                }
+
+                public static class WebApplication
+                {
+                    public static readonly string WebSiteName = "Octopus.Action.IISWebSite.WebApplication.WebSiteName";
+                    public static readonly string VirtualPath = "Octopus.Action.IISWebSite.WebApplication.VirtualPath";
+                    public static readonly string ApplicationPoolName = "Octopus.Action.IISWebSite.WebApplication.ApplicationPoolName";
+
+                }
+                public static class VirtualDirectory
+                {
+                    public static readonly string WebSiteName = "Octopus.Action.IISWebSite.VirtualDirectory.WebSiteName";
+                    public static readonly string VirtualPath = "Octopus.Action.IISWebSite.VirtualDirectory.VirtualPath";
+                }
             }
 
             public static class WindowsService
@@ -723,6 +766,12 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Action, Description = "The name of the certificate variable the action will use", Example = "Acme-Production")]
                 public static readonly string CertificateVariable = "Octopus.Action.Certificate.Variable";
+
+                [Define(Category = VariableCategory.Action, Description = "The certificate store location. i.e. CurrentUser or LocalMachine", Example = "LocalMachine")]
+                public static readonly string StoreLocation = "Octopus.Action.Certificate.StoreLocation";
+
+                [Define(Category = VariableCategory.Action, Description = "The certificate store name", Example = "My")]
+                public static readonly string StoreName = "Octopus.Action.Certificate.StoreName";
             }
 
             public static class PowerShell
@@ -772,6 +821,72 @@ namespace Octopus.Shared.Variables
                 }
             }
 
+            public static class ServiceFabric
+            {
+                [Define(Category = VariableCategory.Action, Description = "Path to the file containing the publish profile", Example = "PublishProfiles\\Cloud.xml")]
+                public static readonly string PublishProfileFile = "Octopus.Action.ServiceFabric.PublishProfileFile";
+
+                [Define(Category = VariableCategory.Action, Description = "Path to the folder of the packaged Service Fabric application", Example = "[This path is set by Calamari]")]
+                public static readonly string ApplicationPackagePath = "Octopus.Action.ServiceFabric.ApplicationPackagePath";
+
+                [Define(Category = VariableCategory.Action, Description = "Indicates that the Service Fabric application should not be created or upgraded after registering the application type", Example = "False")]
+                public static readonly string DeployOnly = "Octopus.Action.ServiceFabric.DeployOnly";
+
+                [Define(Category = VariableCategory.Action, Description = "The connection endpoint of the cluster", Example = "")]
+                public static readonly string ConnectionEndpoint = "Octopus.Action.ServiceFabric.ConnectionEndpoint";
+
+                [Define(Category = VariableCategory.Action, Description = "The security mode of the cluster", Example = "Unsecure")]
+                public static readonly string SecurityMode = "Octopus.Action.ServiceFabric.SecurityMode";
+
+                [Define(Category = VariableCategory.Action, Description = "The server certificate thumbprint used to secure the cluster (only applies to secure clusters)", Example = "")]
+                public static readonly string ServerCertThumbprint = "Octopus.Action.ServiceFabric.ServerCertThumbprint";
+
+                [Define(Category = VariableCategory.Action, Description = "The client certificate variable used to secure the cluster (only applies to secure clusters)", Example = "")]
+                public static readonly string ClientCertVariable = "Octopus.Action.ServiceFabric.ClientCertVariable";
+
+                [Define(Category = VariableCategory.Action, Description = "The type of 'FindValue' for searching certificates in the Azure certificate store (only applies to secure clusters)", Example = "Defaults to 'FindByThumbprint' if not provided")]
+                public static readonly string CertificateFindType = "Octopus.Action.ServiceFabric.CertificateFindType";
+
+                [Define(Category = VariableCategory.Action, Description = "The 'FindValue' override value for searching certificates in the Azure certificate store (only applies to secure clusters). By default, this will be set to the client certificate variable's thumbprint and you will not need to set this value.", Example = "")]
+                public static readonly string CertificateFindValueOverride = "Octopus.Action.ServiceFabric.CertificateFindValueOverride";
+
+                [Define(Category = VariableCategory.Action, Description = "The certificate store location (only applies to secure clusters)", Example = "Defaults to 'LocalMachine' if not provided")]
+                public static readonly string CertificateStoreLocation = "Octopus.Action.ServiceFabric.CertificateStoreLocation";
+
+                [Define(Category = VariableCategory.Action, Description = "The certificate store name (only applies to secure clusters)", Example = "Defaults to 'MY' if not provided")]
+                public static readonly string CertificateStoreName = "Octopus.Action.ServiceFabric.CertificateStoreName";
+
+                [Define(Category = VariableCategory.Action, Description = "Indicates whether to unregister any unused application versions that exist after an upgrade is finished", Example = "False")]
+                public static readonly string UnregisterUnusedApplicationVersionsAfterUpgrade = "Octopus.Action.ServiceFabric.UnregisterUnusedApplicationVersionsAfterUpgrade";
+
+                [Define(Category = VariableCategory.Action, Description = "Indicates the behavior used to override the upgrade settings specified by the publish profile. Options: None | ForceUpgrade | VetoUpgrade", Example = "None | ForceUpgrade | VetoUpgrade")]
+                public static readonly string OverrideUpgradeBehavior = "Octopus.Action.ServiceFabric.OverrideUpgradeBehavior";
+
+                [Define(Category = VariableCategory.Action, Description = "Overwrite Behavior if an application exists in the cluster with the same name. Available Options are Never, Always, SameAppTypeAndVersion. This setting is not applicable when upgrading an application", Example = "Never | Always | SameAppTypeAndVersion")]
+                public static readonly string OverwriteBehavior = "Octopus.Action.ServiceFabric.OverwriteBehavior";
+
+                [Define(Category = VariableCategory.Action, Description = "Switch signaling whether the package should be validated or not before deployment", Example = "False")]
+                public static readonly string SkipPackageValidation = "Octopus.Action.ServiceFabric.SkipPackageValidation";
+
+                [Define(Category = VariableCategory.Action, Description = "Timeout in seconds for copying application package to image store", Example = "300")]
+                public static readonly string CopyPackageTimeoutSec = "Octopus.Action.ServiceFabric.CopyPackageTimeoutSec";
+
+                [Define(Category = VariableCategory.Action, Description = "Log the extracted Azure Service Fabric application package", Example = "False")]
+                public static readonly string LogExtractedApplicationPackage = "Octopus.Action.ServiceFabric.LogExtractedApplicationPackage";
+
+                [Define(Category = VariableCategory.Action, Description = "The credential type for AAD authentication. Options: ClientCredential | UserCredential", Example = "UserCredential")]
+                public static readonly string AadCredentialType = "Octopus.Action.ServiceFabric.AadCredentialType";
+
+                [Define(Category = VariableCategory.Action, Description = "The cluster application secret for AAD ClientCredential authentication", Example = "")]
+                public static readonly string AadClientCredentialSecret = "Octopus.Action.ServiceFabric.AadClientCredentialSecret";
+
+                [Define(Category = VariableCategory.Action, Description = "The username for AAD UserCredential authentication", Example = "")]
+                public static readonly string AadUserCredentialUsername = "Octopus.Action.ServiceFabric.AadUserCredentialUsername";
+
+                [Define(Category = VariableCategory.Action, Description = "The password for AAD UserCredential authentication", Example = "")]
+                public static readonly string AadUserCredentialPassword = "Octopus.Action.ServiceFabric.AadUserCredentialPassword";
+            }
+
             public static class Azure
             {
                 // do not reuse this value
@@ -783,6 +898,12 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string WebAppActionTypeName = "Octopus.AzureWebApp";
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string ServiceFabricAppActionTypeName = "Octopus.AzureServiceFabricApp";
+
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string ServiceFabricPowerShellActionTypeName = "Octopus.AzureServiceFabricPowerShell";
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string PowerShellActionTypeName = "Octopus.AzurePowerShell";
@@ -805,7 +926,7 @@ namespace Octopus.Shared.Variables
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string PowershellModulePath = "Octopus.Action.Azure.PowerShellModule";
-                
+
                 [Define(Category = VariableCategory.Hidden)] public static readonly string PackageExtractionPath = "Octopus.Action.Azure.PackageExtractionPath";
                 [Define(Category = VariableCategory.Action, Description = "Azure account subscription ID", Example = "42d91e16-206f-4a14-abd2-24791cbbc522")] public static readonly string SubscriptionId = "Octopus.Action.Azure.SubscriptionId";
                 [Define(Category = VariableCategory.Action, Description = "Azure AD application client ID", Example = "8104d344-fb8f-4a49-ba1a-a6df0790f302")] public static readonly string ClientId = "Octopus.Action.Azure.ClientId";
