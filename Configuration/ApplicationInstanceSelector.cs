@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
@@ -96,7 +97,12 @@ namespace Octopus.Shared.Configuration
         {
             var instance = instanceStore.GetDefaultInstance(applicationName);
             if (instance == null)
-                throw new ControlledFailureException("The default instance of " + applicationName + " has not been created. Either pass --instance INSTANCENAME when invoking this command, or run the setup wizard.");
+            {
+                var instances = instanceStore.ListInstances(applicationName);
+                throw new ControlledFailureException(instances.Any()
+                    ? $"There is no default instance of {applicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}"
+                    : $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
+            }
 
             return Load(instance);
         }
@@ -105,7 +111,12 @@ namespace Octopus.Shared.Configuration
         {
             var instance = instanceStore.GetInstance(applicationName, instanceName);
             if (instance == null)
-                throw new ControlledFailureException("Instance " + instanceName + " of application " + applicationName + " has not been created. Check the instance name or run the setup wizard.");
+            {
+                var instances = instanceStore.ListInstances(applicationName);
+                throw new ControlledFailureException(instances.Any()
+                    ? $"Instance {instanceName} of {applicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}"
+                    : $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
+            }
 
             return Load(instance);
         }
