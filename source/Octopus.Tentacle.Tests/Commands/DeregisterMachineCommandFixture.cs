@@ -13,6 +13,7 @@ using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Tests.Support;
+using FluentAssertions;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
@@ -32,7 +33,7 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public async Task ShouldNotContinueIfMultipleMatchesButAllowMultipleIsNotSupplied()
+        public void ShouldNotContinueIfMultipleMatchesButAllowMultipleIsNotSupplied()
         {
             const string expectedThumbPrint1 = "ABCDEFGHIJKLMNOP";
             const string expectedThumbPrint2 = "1234124123412344";
@@ -42,9 +43,9 @@ namespace Octopus.Tentacle.Tests.Commands
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
                 TentacleCertificate = new CertificateGenerator().GenerateNew($"CN={Guid.NewGuid()}")
             };
-            Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration), 
-                                                   log, 
-                                                   Substitute.For<IApplicationInstanceSelector>(), 
+            Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
+                                                   log,
+                                                   Substitute.For<IApplicationInstanceSelector>(),
                                                    proxyConfig,
                                                    Substitute.For<IOctopusClientInitializer>());
 
@@ -55,10 +56,9 @@ namespace Octopus.Tentacle.Tests.Commands
             };
             asyncRepository.Machines.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
-                
-            var result = Assert.Throws<ControlledFailureException>( async () => await Command.Deregister(asyncRepository));
 
-            Assert.That(result.Message.Equals(DeregisterMachineCommand.MultipleMatchErrorMsg));
+            Func<Task> func = () => Command.Deregister(asyncRepository);
+            func.ShouldThrow<ControlledFailureException>().WithMessage(DeregisterMachineCommand.MultipleMatchErrorMsg);
         }
 
         [Test]
@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Commands
             };
 
             Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
-                                                   log, 
+                                                   log,
                                                    Substitute.For<IApplicationInstanceSelector>(),
                                                    proxyConfig,
                                                    Substitute.For<IOctopusClientInitializer>());

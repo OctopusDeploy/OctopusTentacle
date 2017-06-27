@@ -127,7 +127,7 @@ namespace Octopus.Tentacle.Tests.Commands
             Assert.That(operation.MachinePolicy, Is.Null);
             Assert.That(operation.Roles.First(), Is.EqualTo("app-server"));
             Assert.That(operation.Roles.Last(), Is.EqualTo("web-server"));
-            Assert.That(operation.SubscriptionId.ToString(), Is.StringStarting("poll://"));
+            Assert.That(operation.SubscriptionId.ToString(), Does.StartWith("poll://"));
             Assert.That(operation.TenantTags.Single(), Is.EqualTo("CustomerType/VIP"));
             Assert.That(operation.Tenants.Single(), Is.EqualTo("Tenant1"));
 
