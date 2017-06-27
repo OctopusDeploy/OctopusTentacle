@@ -49,31 +49,27 @@ namespace Octopus.Shared.Startup
             commonOptions = new OptionSet();
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
             AddNoLogoOption();
-            commonOptions.Add("noconsolelogging", "Don't log informational messages to the console (stdout) - errors are still logged to stderr", v => { DisableConsoleLogging(); });
+            AddNoConsoleLoggingOption();
             commonOptions.Add("help", "", v => { showHelpForCommand = true; });
         }
 
         [ObsoleteEx(Message = "We should consider removing '--nologo'", TreatAsErrorFromVersion = "4.0")]
         void AddNoLogoOption()
         {
-            commonOptions.Add("nologo", "Don't print title or version information", v =>
+            commonOptions.Add("nologo", "Don't print title or version information. This switch will be removed in a future version since it is no longer required.", v =>
             {
                 LogFileOnlyLogger.Warn("'--nologo' is being deprecated in a future version since the title and version information are not printed any more.");
             });
         }
 
-        static void DisableConsoleLogging()
+        [ObsoleteEx(Message = "We should consider removing '--noconsolelogging'", TreatAsErrorFromVersion = "4.0")]
+        void AddNoConsoleLoggingOption()
         {
-            // Suppress logging to the console by removing the console logger for stdout
-            var c = LogManager.Configuration;
-
-            // Note: this matches the target name in octopus.server.exe.nlog
-            var stdoutTarget = c.FindTargetByName("stdout");
-            foreach (var rule in c.LoggingRules)
+            commonOptions.Add("noconsolelogging", "Don't log informational messages to the console (stdout) - errors are still logged to stderr. This switch will be removed in a future version since it is no longer required.", v =>
             {
-                rule.Targets.Remove(stdoutTarget);
-            }
-            LogManager.Configuration = c;
+                DisableConsoleLogging();
+                LogFileOnlyLogger.Warn("'--noconsolelogging' is being deprecated in a future version since each command has been configured to keep its stdout nice, clean and parsable.");
+            });
         }
 
         protected OptionSet CommonOptions => commonOptions;
@@ -303,6 +299,20 @@ namespace Octopus.Shared.Startup
             commandInstance = command.Value;
             if (commandInstance.SuppressConsoleLogging) DisableConsoleLogging();
             commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions);
+        }
+
+        static void DisableConsoleLogging()
+        {
+            // Suppress logging to the console by removing the console logger for stdout
+            var c = LogManager.Configuration;
+
+            // Note: this matches the target name in octopus.server.exe.nlog
+            var stdoutTarget = c.FindTargetByName("stdout");
+            foreach (var rule in c.LoggingRules)
+            {
+                rule.Targets.Remove(stdoutTarget);
+            }
+            LogManager.Configuration = c;
         }
 
         protected abstract IContainer BuildContainer(string instanceName);
