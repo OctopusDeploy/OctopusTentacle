@@ -58,7 +58,7 @@ namespace Octopus.Shared.Startup
         {
             commonOptions.Add("nologo", "Don't print title or version information", v =>
             {
-                StartupDiagnosticsLogger.Warn("'--nologo' is being deprecated in a future version since the title and version information are not printed any more.");
+                LogFileOnlyLogger.Warn("'--nologo' is being deprecated in a future version since the title and version information are not printed any more.");
             });
         }
 
@@ -200,8 +200,8 @@ namespace Octopus.Shared.Startup
 
         void WriteDiagnosticsInfoToLogFile(string instanceName)
         {
-            StartupDiagnosticsLogger.Info($"Starting {displayName} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName)}");
-            StartupDiagnosticsLogger.Info($"Environment Information:{Environment.NewLine}" +
+            LogFileOnlyLogger.Info($"Starting {displayName} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName)}");
+            LogFileOnlyLogger.Info($"Environment Information:{Environment.NewLine}" +
                 $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
         }
 

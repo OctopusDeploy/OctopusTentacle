@@ -51,7 +51,7 @@ namespace Octopus.Shared.Startup
             foreach (var opset in optionSets)
                 opset.Validate();
 
-            StartupDiagnosticsLogger.Info($"==== {GetType().Name} ====");
+            LogFileOnlyLogger.Info($"==== {GetType().Name} ====");
             Start();
             Completed();
         }
