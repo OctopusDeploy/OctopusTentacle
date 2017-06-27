@@ -85,6 +85,7 @@ namespace Octopus.Shared.Web
                 public static string GetConnection = "~/api/machines/{id}/connection";
                 public static string GetTasks = "~/api/machines/{id}/tasks{?skip}";
                 public static string Discover = "~/api/machines/discover{?host,port,type,proxyId}";
+                public static string CalamariRuntimes  = "~/api/machines/calamariRuntimes";
             }
 
             public static class MachinesRoles
