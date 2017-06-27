@@ -9,6 +9,8 @@ namespace Octopus.Shared.Startup
     {
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
 
+        public virtual bool SuppressConsoleLogging => false;
+
         protected OptionSet Options { get; } = new OptionSet();
 
         protected ICommandRuntime Runtime { get; private set; }

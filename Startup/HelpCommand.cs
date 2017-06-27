@@ -9,12 +9,15 @@ namespace Octopus.Shared.Startup
 {
     public class HelpCommand : ICommand
     {
+
         readonly ICommandLocator commands;
 
         public HelpCommand(ICommandLocator commands)
         {
             this.commands = commands;
         }
+
+        public bool SuppressConsoleLogging => false;
 
         public void WriteHelp(TextWriter writer)
         {

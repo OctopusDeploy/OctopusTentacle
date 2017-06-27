@@ -301,7 +301,7 @@ namespace Octopus.Shared.Startup
             }
 
             commandInstance = command.Value;
-
+            if (commandInstance.SuppressConsoleLogging) DisableConsoleLogging();
             commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions);
         }
 
