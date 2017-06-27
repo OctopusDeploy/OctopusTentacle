@@ -454,6 +454,7 @@ namespace Octopus.Shared.Web
             public static class LetsEncryptConfiguration
             {
                 public static string Template = "~/api/letsencryptconfiguration";
+                public static string Disable = "~/api/letsencryptconfiguration/disable";
             }
         }
 
