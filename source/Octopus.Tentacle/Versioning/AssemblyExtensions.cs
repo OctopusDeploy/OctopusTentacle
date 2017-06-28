@@ -14,7 +14,8 @@ namespace Octopus.Tentacle.Versioning
             var codeBase = assembly.CodeBase;
             var uri = new UriBuilder(codeBase);
             var root = Uri.UnescapeDataString(uri.Path);
-            root = root.Replace("/", "\\");
+            if(Octopus.Tentacle.Util.TentacleEnvironment.IsRunningOnWindows)
+                root = root.Replace("/", "\\");
             return root;
         }
 

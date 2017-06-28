@@ -37,6 +37,7 @@ namespace Octopus.Tentacle.Services.Scripts
         IScriptWorkspace PrepareWorkspace(StartScriptCommand command, ScriptTicket ticket)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket);
+            Console.WriteLine("Preparing workspace in " + workspace.WorkingDirectory );
             workspace.IsolationLevel = command.Isolation;
             workspace.ScriptMutexAcquireTimeout = command.ScriptIsolationMutexTimeout;
             workspace.ScriptArguments = command.Arguments;
@@ -51,7 +52,10 @@ namespace Octopus.Tentacle.Services.Scripts
         {
             if (scriptFile.EncryptionPassword == null)
             {
-                scriptFile.Contents.Receiver().SaveTo(workspace.ResolvePath(scriptFile.Name));
+                var path = workspace.ResolvePath(scriptFile.Name);
+                path = path.Replace("$HOME", "/home/robert");
+                Console.WriteLine("Saving to " + path);
+                scriptFile.Contents.Receiver().SaveTo(path);
             }
             else
             {
@@ -107,7 +111,7 @@ namespace Octopus.Tentacle.Services.Scripts
             cancellationTokens.TryRemove(command.Ticket.TaskId, out cancellation);
             var response = GetResponse(command.Ticket, script, command.LastLogSequence);
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
-            workspace.Delete();
+            //workspace.Delete();
             return response;
         }
 

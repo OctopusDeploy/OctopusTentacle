@@ -26,7 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="Octopus.Client" Version="4.17.0" />
-    <PackageReference Include="Octopus.Shared" Version="[3.14.16-enh-netcore2shar0020]" />
+    <ProjectReference Include="../../../OctopusDeploy/source/Octopus.Shared/Octopus.Shared.csproj" />
     <PackageReference Include="System.Net.Http" Version="4.3.1" />
   </ItemGroup>
   
