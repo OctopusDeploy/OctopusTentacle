@@ -923,6 +923,8 @@ namespace Octopus.Shared.Variables
                 public static readonly string ActiveDirectoryEndPoint = "Octopus.Action.Azure.ActiveDirectoryEndPoint";
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string ServiceManagementEndPoint = "Octopus.Action.Azure.ServiceManagementEndPoint";
+                [Define(Category = VariableCategory.Hidden)]
+                public static readonly string StorageEndPointSuffix = "Octopus.Action.Azure.StorageEndpointSuffix";
 
                 [Define(Category = VariableCategory.Hidden)]
                 public static readonly string PowershellModulePath = "Octopus.Action.Azure.PowerShellModule";
