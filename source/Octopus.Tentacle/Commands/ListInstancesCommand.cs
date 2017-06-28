@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Startup;
@@ -20,10 +22,16 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             var instances = instanceStore.ListInstances(ApplicationName.Tentacle);
-            if (string.Equals(format, "json", StringComparison.InvariantCultureIgnoreCase))
+            Console.WriteLine(GetOutput(format, instances));
+        }
+
+        public string GetOutput(string outputFormat, IList<ApplicationInstanceRecord> instances)
+        {
+            var result = new StringBuilder();
+            if (string.Equals(outputFormat, "json", StringComparison.InvariantCultureIgnoreCase))
             {
-                var json = JsonConvert.SerializeObject(instances.Select(x => new { x.InstanceName, x.ConfigurationFilePath }), Formatting.Indented);
-                Console.WriteLine(json);
+                var json = JsonConvert.SerializeObject(instances.Select(x => new {x.InstanceName, x.ConfigurationFilePath}), Formatting.Indented);
+                result.AppendLine(json);
             }
             else
             {
@@ -31,14 +39,15 @@ namespace Octopus.Tentacle.Commands
                 {
                     foreach (var instance in instances)
                     {
-                        Console.WriteLine($"Instance '{instance.InstanceName}' uses configuration '{instance.ConfigurationFilePath}'.");
+                        result.AppendLine($"Instance '{instance.InstanceName}' uses configuration '{instance.ConfigurationFilePath}'.");
                     }
                 }
                 else
                 {
-                    Console.WriteLine("No instances installed");
+                    result.AppendLine("No instances installed");
                 }
             }
+            return result.ToString();
         }
     }
 }

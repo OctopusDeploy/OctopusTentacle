@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -42,7 +43,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string machineName;
         string homeDirectory;
         string applicationInstallDirectory;
-        string pathToConfig;
         OctopusServerConfiguration handshake;
         string listenPort;
         string octopusThumbprint;
@@ -94,7 +94,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         string TentacleExe => string.IsNullOrEmpty(PathToTentacleExe) ? CommandLine.PathToTentacleExe() : PathToTentacleExe;
 
+        public FileVersionInfo TentacleExeVersion => string.IsNullOrEmpty(TentacleExe) ? null : FileVersionInfo.GetVersionInfo(TentacleExe);
+
         public string PathToTentacleExe { get; set; }
+
+        public string PathToConfig => Path.Combine(HomeDirectory, ((ApplicationInstanceRecord.GetDefaultInstance(applicationName) != InstanceName) ? "Tentacle-" + InstanceName : InstanceName) + ".config");
 
         public string HomeDirectory
         {
@@ -285,6 +289,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 OnPropertyChanged();
             }
         }
+
         public string[] PotentialMachinePolicies
         {
             get { return potentialMachinePolicies; }
@@ -574,6 +579,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 && Uri.TryCreate(s, UriKind.Absolute, out uri)
                 && (uri.Scheme == "http" || uri.Scheme == "https");
         }
+
         string[] SelectedRolesArray
         {
             get { return (selectedRoles ?? string.Empty).Split(';', ',', ' ').Select(r => r.Trim()).NotNullOrWhiteSpace().ToArray(); }
@@ -589,12 +595,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             get { return (selectedTenants ?? string.Empty).Split(';', ',').Select(r => r.Trim().Trim('"')).NotNullOrWhiteSpace().ToArray(); }
         }
 
-
         public IEnumerable<CommandLineInvocation> GenerateScript()
         {
-            pathToConfig = Path.Combine(HomeDirectory, ((ApplicationInstanceRecord.GetDefaultInstance(applicationName) != InstanceName) ? "Tentacle-" + InstanceName : InstanceName) + ".config");
-
-            yield return Cli("create-instance").Argument("config", pathToConfig).Build();
+            yield return Cli("create-instance").Argument("config", PathToConfig).Build();
             yield return Cli("new-certificate").Flag("if-blank").Build();
             yield return Cli("configure").Flag("reset-trust").Build();
 

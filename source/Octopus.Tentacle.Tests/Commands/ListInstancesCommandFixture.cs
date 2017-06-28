@@ -1,4 +1,3 @@
-/* TODO: Fix references
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
@@ -23,8 +22,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void CommandShouldReturnJsonIfRequested()
         {
-            Command.Format = "json";
-            var json = Command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", ApplicationName.Tentacle, "MyConfigPath") });
+            var json = Command.GetOutput("json", new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", ApplicationName.Tentacle, "MyConfigPath") });
             var definition = new[] { new { InstanceName = "", ConfigurationFilePath = "" } };
             var reconstituted = JsonConvert.DeserializeAnonymousType(json, definition);
             Assert.That(reconstituted.Length, Is.EqualTo(1));
@@ -35,10 +33,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void CommandShouldReturnTextIfRequested()
         {
-            Command.Format = "text";
-            var result = Command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", ApplicationName.Tentacle, "MyConfigPath") });
+            var result = Command.GetOutput("json", new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", ApplicationName.Tentacle, "MyConfigPath") });
             Assert.That(result, Is.EqualTo("Instance 'MyInstance' uses configuration 'MyConfigPath'." + Environment.NewLine));
         }
     }
 }
-*/
