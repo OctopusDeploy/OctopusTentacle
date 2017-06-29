@@ -93,8 +93,8 @@ namespace Octopus.Shared.Configuration
             {
                 var instances = instanceStore.ListInstances(applicationName);
                 throw new ControlledFailureException(instances.Any()
-                    ? $"There is no default instance of {applicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}"
-                    : $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
+                    ? $"There is no default instance of {applicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}."
+                    : BuildNoInstancesMessage(applicationName));
             }
 
             return LoadFrom(instance);
@@ -107,11 +107,16 @@ namespace Octopus.Shared.Configuration
             {
                 var instances = instanceStore.ListInstances(applicationName);
                 throw new ControlledFailureException(instances.Any()
-                    ? $"Instance {instanceName} of {applicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}"
-                    : $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
+                    ? $"Instance {instanceName} of {applicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}."
+                    : BuildNoInstancesMessage(applicationName));
             }
 
             return LoadFrom(instance);
+        }
+
+        static string BuildNoInstancesMessage(ApplicationName applicationName)
+        {
+            return $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.";
         }
 
         public void CreateDefaultInstance(string configurationFile, string homeDirectory = null)
