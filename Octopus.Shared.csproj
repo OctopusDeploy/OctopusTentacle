@@ -7,6 +7,11 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
     <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
+    <Description>The library shared by Octopus Server and Octopus Tentacle.</Description>
+    <Authors>Octopus Deploy</Authors>
+    <PackageIconUrl>http://i.octopusdeploy.com/resources/Avatar3_360.png</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/OctopusDeploy/OctopusDeploy</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/OctopusDeploy/OctopusDeploy.git</RepositoryUrl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>True</Optimize>
