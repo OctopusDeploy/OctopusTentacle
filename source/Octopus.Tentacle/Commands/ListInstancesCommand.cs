@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Newtonsoft.Json;
-using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Startup;
 
@@ -11,55 +8,37 @@ namespace Octopus.Tentacle.Commands
 {
     public class ListInstancesCommand : AbstractCommand
     {
-        static readonly string TextFormat = "text";
-        static readonly string JsonFormat = "json";
-        static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
-
         readonly IApplicationInstanceStore instanceStore;
-        public string Format { get; set; } = TextFormat;
-
-        public override bool SuppressConsoleLogging => true;
+        string format = "text";
 
         public ListInstancesCommand(IApplicationInstanceStore instanceStore)
         {
             this.instanceStore = instanceStore;
-
-            Options.Add("format=", $"The format of the output ({string.Join(",", SupportedFormats)}). Defaults to {Format}.", v => Format = v);
+            Options.Add("format=", "The format of the export. Can be 'text' or 'json'. Defaults to 'json'.", v => format = v);
         }
 
         protected override void Start()
         {
-            if (!SupportedFormats.Contains(Format, StringComparer.OrdinalIgnoreCase))
-                throw new ControlledFailureException($"The format '{Format}' is not supported. Try {string.Join(" or ", SupportedFormats)}.");
-
             var instances = instanceStore.ListInstances(ApplicationName.Tentacle);
-            Console.Write(GetOutput(instances));
-        }
-
-        public string GetOutput(IList<ApplicationInstanceRecord> instances)
-        {
-            var results = new StringBuilder();
-            if (string.Equals(Format, JsonFormat, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(format, "json", StringComparison.InvariantCultureIgnoreCase))
             {
                 var json = JsonConvert.SerializeObject(instances.Select(x => new { x.InstanceName, x.ConfigurationFilePath }), Formatting.Indented);
-                results.Append(json);
+                Console.WriteLine(json);
             }
-            else if (string.Equals(Format, TextFormat, StringComparison.OrdinalIgnoreCase))
+            else
             {
                 if (instances.Any())
                 {
                     foreach (var instance in instances)
                     {
-                        results.AppendLine($"Instance '{instance.InstanceName}' uses configuration '{instance.ConfigurationFilePath}'.");
+                        Console.WriteLine($"Instance '{instance.InstanceName}' uses configuration '{instance.ConfigurationFilePath}'.");
                     }
                 }
                 else
                 {
-                    results.Append("No instances installed");
+                    Console.WriteLine("No instances installed");
                 }
             }
-
-            return results.ToString();
         }
     }
 }
