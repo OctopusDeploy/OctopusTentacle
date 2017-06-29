@@ -118,7 +118,7 @@ namespace Octopus.Shared.Startup
 
                 // Try to load the instance here so we can log into the instance's log file as soon as possible
                 // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on when we try to load the instance for real
-                if (container.Resolve<IApplicationInstanceSelector>().TryLoadCurrentInstance(out var instance))
+                if (container.Resolve<IApplicationInstanceSelector>().TryGetCurrentInstance(out var instance))
                 {
                     WriteDiagnosticsInfoToLogFile(instance.InstanceName);
                 }

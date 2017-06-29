@@ -21,14 +21,14 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<ApplicationInstanceStore>().As<IApplicationInstanceStore>();
             builder.RegisterType<ApplicationInstanceSelector>()
                 .WithParameter("applicationName", applicationName)
-                .WithParameter("instanceName", instanceName)
+                .WithParameter("currentInstanceName", instanceName)
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
 
             builder.Register(c =>
             {
                 var selector = c.Resolve<IApplicationInstanceSelector>();
-                return selector.Current.Configuration;
+                return selector.GetCurrentInstance().Configuration;
             }).As<IKeyValueStore>().SingleInstance();
 
             builder.RegisterType<UpgradeCheckConfiguration>().As<IUpgradeCheckConfiguration>().SingleInstance();

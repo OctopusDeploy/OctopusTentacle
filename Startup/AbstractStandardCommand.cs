@@ -25,14 +25,15 @@ namespace Octopus.Shared.Startup
             // These kinds of commands depend on being able to load the correct instance
             // Try and load it here just in case the implementing class forgets to call base.Start()
             // NOTE: Don't throw any exception in the constructor, otherwise we can't show help
-            instanceSelector.TryLoadCurrentInstance(out var unused);
+            instanceSelector.TryGetCurrentInstance(out var unused);
         }
 
         protected override void Start()
         {
             // These kinds of commands depend on being able to load the correct instance
             // We need to assert the current instance can be loaded otherwise the rest of the command won't work as expected
-            var unused = instanceSelector.Current;
+            // NOTE: This method should throw a ControlledFailureException with the most appropriate message inside it
+            var unused = instanceSelector.GetCurrentInstance();
         }
 
 
@@ -41,7 +42,7 @@ namespace Octopus.Shared.Startup
             base.Stop();
             if (voteForRestart)
             {
-                var applicationName = instanceSelector.TryLoadCurrentInstance(out var instance) ? instance.ApplicationDescription : "service";
+                var applicationName = instanceSelector.TryGetCurrentInstance(out var instance) ? instance.ApplicationDescription : "service";
                 Log.Warn($"These changes require a restart of the {applicationName}.");
             }
         }

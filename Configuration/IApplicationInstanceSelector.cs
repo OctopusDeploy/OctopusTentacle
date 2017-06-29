@@ -4,11 +4,11 @@ namespace Octopus.Shared.Configuration
 {
     public interface IApplicationInstanceSelector
     {
-        LoadedApplicationInstance Current { get; }
+        LoadedApplicationInstance GetCurrentInstance();
         void CreateDefaultInstance(string configurationFile, string homeDirectory = null);
         void CreateInstance(string instanceName, string configurationFile, string homeDirectory = null);
         void DeleteDefaultInstance();
         void DeleteInstance(string instanceName);
-        bool TryLoadCurrentInstance(out LoadedApplicationInstance instance);
+        bool TryGetCurrentInstance(out LoadedApplicationInstance instance);
     }
 }

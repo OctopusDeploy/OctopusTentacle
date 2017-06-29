@@ -9,20 +9,20 @@ namespace Octopus.Shared.Configuration
     public class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
         readonly ApplicationName applicationName;
-        string instanceName;
+        string currentInstanceName;
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
         readonly ILog log;
         readonly object @lock = new object();
 
         public ApplicationInstanceSelector(ApplicationName applicationName,
-            string instanceName,
+            string currentInstanceName,
             IOctopusFileSystem fileSystem,
             IApplicationInstanceStore instanceStore,
             ILog log)
         {
             this.applicationName = applicationName;
-            this.instanceName = instanceName;
+            this.currentInstanceName = currentInstanceName;
             this.fileSystem = fileSystem;
             this.instanceStore = instanceStore;
             this.log = log;
@@ -30,12 +30,12 @@ namespace Octopus.Shared.Configuration
 
         LoadedApplicationInstance current;
 
-        public bool TryLoadCurrentInstance(out LoadedApplicationInstance instance)
+        public bool TryGetCurrentInstance(out LoadedApplicationInstance instance)
         {
             instance = null;
             try
             {
-                instance = Current;
+                instance = GetCurrentInstance();
                 return true;
             }
             catch
@@ -44,29 +44,22 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-        public LoadedApplicationInstance Current
+        public LoadedApplicationInstance GetCurrentInstance()
         {
-            get
+            if (current == null)
             {
-                if (current == null)
+                lock (@lock)
                 {
-                    lock (@lock)
-                    {
-                        if (current == null)
-                            current = DoLoad();
-                    }
+                    if (current == null)
+                        current = LoadCurrentInstance();
                 }
-                return current;
             }
+            return current;
         }
 
-        LoadedApplicationInstance DoLoad()
+        LoadedApplicationInstance LoadCurrentInstance()
         {
-            LoadedApplicationInstance instance;
-            if (string.IsNullOrWhiteSpace(instanceName))
-                instance = LoadDefaultInstance();
-            else
-                instance = LoadInstance(instanceName);
+            var instance = string.IsNullOrWhiteSpace(currentInstanceName) ? LoadDefaultInstance() : LoadInstance(currentInstanceName);
 
             // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
             // back to here
@@ -104,7 +97,7 @@ namespace Octopus.Shared.Configuration
                     : $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
             }
 
-            return Load(instance);
+            return LoadFrom(instance);
         }
 
         LoadedApplicationInstance LoadInstance(string instanceName)
@@ -118,7 +111,7 @@ namespace Octopus.Shared.Configuration
                     : $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
             }
 
-            return Load(instance);
+            return LoadFrom(instance);
         }
 
         public void CreateDefaultInstance(string configurationFile, string homeDirectory = null)
@@ -146,13 +139,13 @@ namespace Octopus.Shared.Configuration
             log.Info($"Setting home directory to: {home}");
             homeConfig.HomeDirectory = home;
 
-            this.instanceName = instanceName;
-            DoLoad();
+            currentInstanceName = instanceName;
+            LoadCurrentInstance();
         }
 
-        LoadedApplicationInstance Load(ApplicationInstanceRecord record)
+        LoadedApplicationInstance LoadFrom(ApplicationInstanceRecord record)
         {
-            if (record == null) throw new ArgumentNullException("record");
+            if (record == null) throw new ArgumentNullException(nameof(record));
             return new LoadedApplicationInstance(
                 applicationName,
                 record.InstanceName,
