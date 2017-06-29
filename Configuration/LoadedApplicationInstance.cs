@@ -1,5 +1,6 @@
 using System;
 using Octopus.Configuration;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
@@ -26,6 +27,11 @@ namespace Octopus.Shared.Configuration
         public ApplicationName ApplicationName
         {
             get { return applicationName; }
+        }
+
+        public string ApplicationDescription
+        {
+            get { return ApplicationName.GetDescription(); }
         }
 
         public IKeyValueStore Configuration
