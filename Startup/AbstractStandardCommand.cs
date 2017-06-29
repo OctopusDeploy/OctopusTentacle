@@ -36,10 +36,10 @@ namespace Octopus.Shared.Startup
             var unused = instanceSelector.GetCurrentInstance();
         }
 
-
-        protected override void Stop()
+        protected override void Completed()
         {
-            base.Stop();
+            base.Completed();
+
             if (voteForRestart)
             {
                 var applicationName = instanceSelector.TryGetCurrentInstance(out var instance) ? instance.ApplicationDescription : "service";
