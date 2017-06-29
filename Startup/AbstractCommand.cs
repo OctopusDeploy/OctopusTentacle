@@ -11,7 +11,7 @@ namespace Octopus.Shared.Startup
 
         public virtual bool SuppressConsoleLogging => false;
 
-        protected OptionSet Options { get; } = new OptionSet();
+        public OptionSet Options { get; } = new OptionSet();
 
         protected ICommandRuntime Runtime { get; private set; }
 
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Startup
             Options.WriteOptionDescriptions(writer);
         }
 
-        void ICommand.Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
+        public virtual void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
             Runtime = commandRuntime;
 

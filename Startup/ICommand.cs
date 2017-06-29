@@ -14,6 +14,7 @@ namespace Octopus.Shared.Startup
         /// </summary>
         bool SuppressConsoleLogging { get; }
         void WriteHelp(TextWriter writer);
+        OptionSet Options { get; }
         // Common options are provided so that the Help command can inspect them
         void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions);
         void Stop();

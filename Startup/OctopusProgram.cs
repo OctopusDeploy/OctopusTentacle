@@ -7,6 +7,7 @@ using System.Security;
 using System.Threading.Tasks;
 using Autofac;
 using NLog;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
@@ -27,7 +28,7 @@ namespace Octopus.Shared.Startup
             GeneralException = 100
         }
 
-        readonly ILogWithContext log = Log.Octopus();
+        readonly ILog log = Log.Octopus();
         readonly string displayName;
         readonly string version;
         readonly string informationalVersion;
@@ -50,7 +51,7 @@ namespace Octopus.Shared.Startup
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
             AddNoLogoOption();
             AddNoConsoleLoggingOption();
-            commonOptions.Add("help", "", v => { showHelpForCommand = true; });
+            commonOptions.Add("help", "Show detailed help for this command", v => { showHelpForCommand = true; });
         }
 
         [ObsoleteEx(Message = "We should consider removing '--nologo'", TreatAsErrorFromVersion = "4.0")]
@@ -324,7 +325,7 @@ namespace Octopus.Shared.Startup
             builder.Update(builtContainer);
         }
 
-        public static string ParseCommandName(string[] args)
+        static string ParseCommandName(string[] args)
         {
             var first = (args.FirstOrDefault() ?? string.Empty).ToLowerInvariant().TrimStart('-', '/');
             return first;
