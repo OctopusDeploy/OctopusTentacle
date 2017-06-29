@@ -20,7 +20,7 @@ namespace Octopus.Shared.Startup
         public enum ExitCode
         {
             UnknownCommand = -1,
-            Ok = 0,
+            Success = 0,
             ControlledFailureException = 1,
             SecurityException = 42,
             ReflectionTypeLoadException = 43,
@@ -189,7 +189,7 @@ namespace Octopus.Shared.Startup
 
             host?.OnExit(exitCode);
 
-            if (exitCode > 1 && Debugger.IsAttached)
+            if (exitCode != (int)ExitCode.Success && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
         }

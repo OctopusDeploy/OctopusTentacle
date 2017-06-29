@@ -38,7 +38,7 @@ namespace Octopus.Shared.Startup
 
         static readonly OctopusProgram.ExitCode[] FriendlyExitCodes =
         {
-            OctopusProgram.ExitCode.Ok,
+            OctopusProgram.ExitCode.Success,
             OctopusProgram.ExitCode.UnknownCommand,
             OctopusProgram.ExitCode.ControlledFailureException
         };
