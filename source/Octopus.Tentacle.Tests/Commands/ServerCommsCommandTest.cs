@@ -50,12 +50,7 @@ namespace Octopus.Tentacle.Tests.Commands
             command.Start(
                 parameters.ToArray(),
                 Substitute.For<ICommandRuntime>(),
-                new OptionSet(),
-                "",
-                "",
-                "",
-                new string[0],
-                ""
+                new OptionSet()
             );
         }
 
