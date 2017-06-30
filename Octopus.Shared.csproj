@@ -48,9 +48,6 @@
     <PackageReference Include="TaskScheduler" Version="2.5.21">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Octopus.Configuration" Version="1.0.10" />
-    <PackageReference Include="Octopus.Diagnostics" Version="1.0.11" />
-    <PackageReference Include="Octopus.Time" Version="1.0.8" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETStandard' ">
