@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Selectors;
+#if HAS_SECURITY_TOKEN_VALIDATION_EXCEPTION
 using System.IdentityModel.Tokens;
+#else
+using SecurityTokenValidationException = System.Exception;
+#endif
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Diagnostics;
 

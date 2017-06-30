@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Services.Client;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -14,23 +13,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
 
         static ExceptionKnowledgeBase()
         {
-            AddRule(r => r.ExceptionIs<InvalidOperationException>(
-                ex => ex.Message.StartsWith("Could not connect to the feed"),
-                (ex, s) => s["Generic"] = ex.Message)
-                .HasInnerException<DataServiceClientException>(
-                    (ex, s) => s["Client"] = ex.Message)
-                .EntrySummaryIs(
-                    s => s["Generic"] + " The feed responded with: " + s["Client"]));
 
-            AddRule(r => r.ExceptionIs<InvalidOperationException>(
-                ex => (ex.Message.Contains("Cannot load Counter Name data because an invalid index") ||
-                    ex.Message.Contains("The configuration registry key is invalid")) &&
-                    ex.StackTrace.Contains("System.Diagnostics.PerformanceCounterCategory") &&
-                    ex.StackTrace.Contains("Raven."))
-                .EntrySummaryIs("Storage initialization failed because Windows Performance Counters are corrupted.")
-                .EntryHelpTextIs("From time to time the Windows Performance Counters used by RavenDB become corrupted. " +
-                    "These can be fixed by rebuilding them with the Windows `lodctr /R` command.")
-                .EntryHelpLinkIs("http://g.octopushq.com/RebuildingPerfCounters"));
 
             AddRule(r => r.ExceptionIs<FileNotFoundException>(
                 ex => ex.Message.Contains("Could not load file or assembly") &&

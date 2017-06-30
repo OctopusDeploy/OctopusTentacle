@@ -241,14 +241,17 @@ namespace Octopus.Shared.Startup
                 return new ConsoleHost(displayName);
             }
 
+#if WINDOWS_SERVICE
             if (Environment.UserInteractive)
             {
                 log.Trace("The program is running interactively; using a console host");
                 return new ConsoleHost(displayName);
             }
-
             log.Trace("The program is not running interactively; using a Windows Service host");
             return new WindowsServiceHost();
+#else
+            return new ConsoleHost(displayName);
+#endif
         }
 
         string[] ProcessCommonOptions()
@@ -281,7 +284,9 @@ namespace Octopus.Shared.Startup
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule(new CommandModule());
+#pragma warning disable 618
             builder.Update(builtContainer);
+#pragma warning restore 618
         }
 
         static string ExtractCommandName(ref string[] args)

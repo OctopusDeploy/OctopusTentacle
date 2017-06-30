@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if WINDOWS_SERVICE
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -95,3 +96,4 @@ namespace Octopus.Shared.Startup
         }
     }
 }
+#endif
