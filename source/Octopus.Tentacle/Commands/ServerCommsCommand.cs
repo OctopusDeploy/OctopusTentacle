@@ -61,6 +61,8 @@ namespace Octopus.Tentacle.Commands
             else
                 SetupPassive(servers);
 
+            VoteForRestart();
+
             log.Info("Updated server communications configuration");
         }
 

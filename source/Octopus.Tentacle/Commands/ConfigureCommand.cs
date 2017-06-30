@@ -39,6 +39,7 @@ namespace Octopus.Tentacle.Commands
                 fileSystem.EnsureDirectoryExists(fullPath);
                 home.Value.HomeDirectory = fullPath;
                 log.Info("Home directory set to: " + fullPath);
+                VoteForRestart();
             }));
             Options.Add("app=|appdir=", "Default directory to deploy applications to", v => QueueOperation(delegate
             {
@@ -46,11 +47,13 @@ namespace Octopus.Tentacle.Commands
                 fileSystem.EnsureDirectoryExists(fullPath);
                 tentacleConfiguration.Value.ApplicationDirectory = fullPath;
                 log.Info("Application directory set to: " + fullPath);
+                VoteForRestart();
             }));
             Options.Add("port=", "TCP port on which Tentacle should listen to connections", v => QueueOperation(delegate
             {
                 tentacleConfiguration.Value.ServicesPortNumber = int.Parse(v);
                 log.Info("Services listen port: " + v);
+                VoteForRestart();
             }));
             Options.Add("noListen=", "Suppress listening on a TCP port (intended for polling Tentacles only)", v => QueueOperation(delegate
             {
@@ -61,6 +64,7 @@ namespace Octopus.Tentacle.Commands
                     server.CommunicationStyle = noListen ? CommunicationStyle.TentacleActive : CommunicationStyle.TentaclePassive;
 
                 log.Info(tentacleConfiguration.Value.NoListen ? "Tentacle will not listen on a port" : "Tentacle will listen on a TCP port");
+                VoteForRestart();
             }));
             Options.Add("listenIpAddress=", "IP address on which Tentacle should listen. Default: any", v => QueueOperation(delegate
             {
@@ -75,6 +79,7 @@ namespace Octopus.Tentacle.Commands
                     tentacleConfiguration.Value.ListenIpAddress = v;
                     log.Info("Listen on IP address: " + parsed);
                 }
+                VoteForRestart();
             }));
             Options.Add("trust=", "The thumbprint of the Octopus Server to trust", v => octopusToAdd.Add(v));
             Options.Add("remove-trust=", "The thumbprint of the Octopus Server to remove from the trusted list", v => octopusToRemove.Add(v));
@@ -87,6 +92,7 @@ namespace Octopus.Tentacle.Commands
             {
                 log.Info("Removing all trusted Octopus servers...");
                 tentacleConfiguration.Value.ResetTrustedOctopusServers();
+                VoteForRestart();
             }
 
             if (octopusToRemove.Count > 0)
@@ -95,6 +101,7 @@ namespace Octopus.Tentacle.Commands
                 foreach (var toRemove in octopusToRemove)
                 {
                     tentacleConfiguration.Value.RemoveTrustedOctopusServersWithThumbprint(toRemove);
+                    VoteForRestart();
                 }
             }
 
@@ -106,6 +113,7 @@ namespace Octopus.Tentacle.Commands
                 {
                     var config = new OctopusServerConfiguration(toAdd) { CommunicationStyle = CommunicationStyle.TentaclePassive };
                     tentacleConfiguration.Value.AddOrUpdateTrustedOctopusServer(config);
+                    VoteForRestart();
                 }
             }
 
