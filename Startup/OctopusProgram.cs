@@ -49,28 +49,16 @@ namespace Octopus.Shared.Startup
             this.environmentInformation = environmentInformation;
             commonOptions = new OptionSet();
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
-            AddNoLogoOption();
-            AddNoConsoleLoggingOption();
-            commonOptions.Add("help", "Show detailed help for this command", v => { showHelpForCommand = true; });
-        }
-
-        [ObsoleteEx(Message = "We should consider removing '--nologo'", TreatAsErrorFromVersion = "4.0")]
-        void AddNoLogoOption()
-        {
             commonOptions.Add("nologo", "DEPRECATED: Don't print title or version information. This switch will be removed in Octopus 4.0 since it is no longer required.", v =>
             {
                 LogFileOnlyLogger.Warn("'--nologo' has been deprecated and will be removed in Octopus 4.0 since the title and version information are not printed any more.");
             });
-        }
-
-        [ObsoleteEx(Message = "We should consider removing '--noconsolelogging'", TreatAsErrorFromVersion = "4.0")]
-        void AddNoConsoleLoggingOption()
-        {
             commonOptions.Add("noconsolelogging", "DEPRECATED: Don't log informational messages to the console (stdout) - errors are still logged to stderr. This switch has been deprecated and will be removed in Octopus 4.0 since it is no longer required.", v =>
             {
                 DisableConsoleLogging();
                 LogFileOnlyLogger.Warn("'--noconsolelogging' has been deprecated and will be removed in Octopus 4.0 since each command has been configured to keep its stdout nice, clean and parsable.");
             });
+            commonOptions.Add("help", "Show detailed help for this command", v => { showHelpForCommand = true; });
         }
 
         protected OptionSet CommonOptions => commonOptions;
