@@ -155,6 +155,7 @@ namespace Octopus.Tentacle.Commands
             await registerMachineOperation.ExecuteAsync(repository);
 
             configuration.Value.AddOrUpdateTrustedOctopusServer(machine);
+            VoteForRestart();
 
             log.Info("Machine registered successfully");
         }

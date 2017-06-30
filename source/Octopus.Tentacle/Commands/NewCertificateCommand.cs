@@ -74,6 +74,7 @@ namespace Octopus.Tentacle.Commands
 
                 log.Verbose("Generating and installing a new certificate...");
                 var certificate = configuration.Value.GenerateNewCertificate();
+                VoteForRestart();
                 log.Info("A new certificate has been generated and installed. Thumbprint:");
                 log.Info(certificate.Thumbprint);
             }

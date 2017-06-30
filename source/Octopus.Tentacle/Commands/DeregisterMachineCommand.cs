@@ -86,6 +86,7 @@ namespace Octopus.Tentacle.Commands
             configuration.Value.RemoveTrustedOctopusServersWithThumbprint(serverThumbprint);
 
             log.Info(DeregistrationSuccessMsg);
+            VoteForRestart();
         }
     }
 }

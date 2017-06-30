@@ -72,6 +72,7 @@ namespace Octopus.Tentacle.Commands
                 throw new Exception("Failed to retrieve certificate with the parameters specified.");
 
             tentacleConfiguration.Value.ImportCertificate(x509Certificate);
+            VoteForRestart();
 
             if (x509Certificate.PrivateKey.KeySize < CertificateGenerator.RecommendedKeyBitLength)
                 log.Warn("The imported certificate's private key is smaller than the currently-recommended bit length; generating a new key for the tentacle is advised.");
