@@ -1,3 +1,4 @@
+#if WINDOWS_SERVICE
 using System;
 using System.Reflection;
 using Octopus.Diagnostics;
@@ -50,3 +51,4 @@ namespace Octopus.Shared.Startup
         }
     }
 }
+#endif

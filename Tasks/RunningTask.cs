@@ -66,7 +66,9 @@ namespace Octopus.Shared.Tasks
                         var builder = new ContainerBuilder();
                         builder.RegisterInstance<ITaskContext>(this);
                         builder.RegisterInstance(arguments).AsSelf().AsImplementedInterfaces();
+#pragma warning disable 618
                         builder.Update(workScope.ComponentRegistry);
+#pragma warning restore 618
 
                         var controller = (ITaskController)workScope.Resolve(rootTaskControllerType);
                         workThread.Priority = controller.ExecutionPriority;

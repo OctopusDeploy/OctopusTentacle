@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
@@ -18,7 +19,7 @@ namespace Octopus.Shared.Util
             }
             catch (AggregateException ex)
             {
-                throw ExceptionHelpers.PrepareForRethrow(ex.InnerException);
+                throw PrepareForRethrow(ex.InnerException);
             }
         }
 
@@ -32,8 +33,14 @@ namespace Octopus.Shared.Util
             }
             catch (AggregateException ex)
             {
-                throw ExceptionHelpers.PrepareForRethrow(ex.InnerException);
+                throw PrepareForRethrow(ex.InnerException);
             }
+        }
+
+        public static Exception PrepareForRethrow(Exception exception)
+        {
+            ExceptionDispatchInfo.Capture(exception).Throw();
+            return exception;
         }
     }
 }
