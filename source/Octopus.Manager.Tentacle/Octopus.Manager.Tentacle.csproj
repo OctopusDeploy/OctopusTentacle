@@ -111,8 +111,8 @@
     <Reference Include="NuGet.Versioning, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NuGet.Versioning.3.6.0-octopus-58672\lib\net45\NuGet.Versioning.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Client, Version=4.17.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Client.4.17.0\lib\net45\Octopus.Client.dll</HintPath>
+    <Reference Include="Octopus.Client, Version=4.19.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Client.4.19.0-enh-machine-tenant11\lib\net45\Octopus.Client.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Configuration, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Configuration.1.0.11\lib\net45\Octopus.Configuration.dll</HintPath>
@@ -120,11 +120,11 @@
     <Reference Include="Octopus.Diagnostics, Version=1.0.12.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Diagnostics.1.0.12\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Manager.Core, Version=3.14.15.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Manager.Core.3.14.15\lib\Octopus.Manager.Core.dll</HintPath>
+    <Reference Include="Octopus.Manager.Core, Version=3.15.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Manager.Core.3.15.0-beta0045\lib\Octopus.Manager.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Shared, Version=3.14.15.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Shared.3.14.15\lib\Octopus.Shared.dll</HintPath>
+    <Reference Include="Octopus.Shared, Version=3.15.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Shared.3.15.0-beta0045\lib\Octopus.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.0.9.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Time.1.0.9\lib\netstandard1.0\Octopus.Time.dll</HintPath>

@@ -1,3 +1,4 @@
+using System;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
@@ -32,17 +33,17 @@ namespace Octopus.Tentacle.Tests.Commands
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
             Command = new RunAgentCommand(
-                halibut,
-                tentacleConfiguration,
-                home,
-                Substitute.For<IProxyConfiguration>(), 
-                sleep, 
+                new Lazy<IHalibutInitializer>(() => halibut),
+                new Lazy<ITentacleConfiguration>(() => tentacleConfiguration),
+                new Lazy<IHomeConfiguration>(() => home),
+                new Lazy<IProxyConfiguration>(() => Substitute.For<IProxyConfiguration>()),
+                sleep,
                 Substitute.For<ILog>(),
                 selector = Substitute.For<IApplicationInstanceSelector>(),
-                Substitute.For<IProxyInitializer>(),
+                new Lazy<IProxyInitializer>(() => Substitute.For<IProxyInitializer>()),
                 new AppVersion(GetType().Assembly));
 
-            selector.Current.Returns(new LoadedApplicationInstance(ApplicationName.Tentacle, "MyTentacle", "", new DictionaryKeyValueStore()));
+            selector.GetCurrentInstance().Returns(new LoadedApplicationInstance(ApplicationName.Tentacle, "MyTentacle", "", new DictionaryKeyValueStore()));
         }
 
         [Test]
