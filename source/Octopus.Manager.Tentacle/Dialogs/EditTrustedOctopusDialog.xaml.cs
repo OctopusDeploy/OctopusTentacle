@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Octopus.Client.Model;
@@ -17,20 +16,20 @@ namespace Octopus.Manager.Tentacle.Dialogs
 
         public string Thumbprint
         {
-            get { return thumbprintText.Text; }
-            set { thumbprintText.Text = value; }
+            get => thumbprintText.Text;
+            set => thumbprintText.Text = value;
         }
 
         public CommunicationStyle CommunicationStyle
         {
-            get { return ((ComboBoxItem)style.SelectedItem).Tag.Equals("Poll") ? CommunicationStyle.TentacleActive : CommunicationStyle.TentaclePassive; }
-            set { style.SelectedIndex = value == CommunicationStyle.TentacleActive ? 1 : 0; }
+            get => ((ComboBoxItem)style.SelectedItem).Tag.Equals("Poll") ? CommunicationStyle.TentacleActive : CommunicationStyle.TentaclePassive;
+            set => style.SelectedIndex = value == CommunicationStyle.TentacleActive ? 1 : 0;
         }
 
         public string ServerAddress
         {
-            get { return address.Text; }
-            set { address.Text = value; }
+            get => address.Text;
+            set => address.Text = value;
         }
 
         void SaveClicked(object sender, RoutedEventArgs e)

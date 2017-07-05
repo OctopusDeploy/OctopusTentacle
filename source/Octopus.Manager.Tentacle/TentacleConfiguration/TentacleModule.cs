@@ -1,11 +1,12 @@
-﻿using System;
-using Autofac;
-using Octopus.Manager.Core.Shared.DeleteWizard;
-using Octopus.Manager.Core.Shared.ProxyWizard;
-using Octopus.Manager.Core.Shared.Shell;
+﻿using Autofac;
+using Octopus.Manager.Tentacle.DeleteWizard;
+using Octopus.Manager.Tentacle.Proxy;
+using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Shared.Configuration;
+using InstanceSelectionModel = Octopus.Manager.Tentacle.Shell.InstanceSelectionModel;
+using ShellViewModel = Octopus.Manager.Tentacle.Shell.ShellViewModel;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration
 {

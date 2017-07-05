@@ -2,10 +2,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
-using Octopus.Manager.Core.Shared.DeleteWizard;
-using Octopus.Manager.Core.Shared.Dialogs;
-using Octopus.Manager.Core.Shared.ProxyWizard;
-using Octopus.Manager.Core.Shared.Shell;
+using Octopus.Manager.Tentacle.DeleteWizard;
+using Octopus.Manager.Tentacle.Dialogs;
+using Octopus.Manager.Tentacle.Proxy;
+using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;

@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Octopus.Client.Model;
-using Octopus.Manager.Core.Infrastructure;
-using Octopus.Manager.Core.Shared.Controls;
 using Octopus.Configuration;
-using Octopus.Manager.Core.Util;
+using Octopus.Manager.Tentacle.Controls;
+using Octopus.Manager.Tentacle.Infrastructure;
+using Octopus.Manager.Tentacle.Util;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Security;
 using Octopus.Shared.Util;
@@ -26,7 +25,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         public string ConfigurationFilePath
         {
-            get { return configurationFilePath; }
+            get => configurationFilePath;
             set
             {
                 if (value == configurationFilePath) return;
@@ -37,7 +36,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         public string HomeDirectory
         {
-            get { return homeDirectory; }
+            get => homeDirectory;
             set
             {
                 if (value == homeDirectory) return;
@@ -48,7 +47,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         public string LogsDirectory
         {
-            get { return logsDirectory; }
+            get => logsDirectory;
             set
             {
                 if (value == logsDirectory) return;
@@ -59,7 +58,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         public string Thumbprint
         {
-            get { return thumbprint; }
+            get => thumbprint;
             set
             {
                 if (Equals(value, thumbprint)) return;
@@ -70,7 +69,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         public string Trust
         {
-            get { return trust; }
+            get => trust;
             set
             {
                 if (Equals(value, trust)) return;
@@ -81,7 +80,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         public ServiceWatcher ServiceWatcher
         {
-            get { return serviceWatcher; }
+            get => serviceWatcher;
             set
             {
                 if (Equals(value, serviceWatcher)) return;
@@ -92,7 +91,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         public string ProxyStatus
         {
-            get { return proxyStatus; }
+            get => proxyStatus;
             set
             {
                 if (value == proxyStatus) return;

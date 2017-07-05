@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:controls="clr-namespace:Octopus.Manager.Core.Shared.Controls;assembly=Octopus.Manager.Core"
+    xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
     mc:Ignorable="d" 
     d:DesignHeight="600" d:DesignWidth="800"
     >
@@ -71,8 +71,8 @@
 
                                     <StackPanel Margin="0,0,10,0" DataContext="{Binding Path=ServiceWatcher}">
                                         <controls:ImageLink
-                                            BigImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_next@2.png"
-                                            SmallImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_next.png"
+                                            BigImage="/Resources/Images/button_rounded_green_next@2.png"
+                                            SmallImage="/Resources/Images/button_rounded_green_next.png"
                                             Text="Start"
                                             Margin="0,10,0,0"
                                             IsEnabled="{Binding Path=CanStart, Mode=OneWay}"
@@ -80,8 +80,8 @@
                                             Visibility="{Binding Path=CanStart, Mode=OneWay, Converter={StaticResource Converter.InverseBooleanToVisibilityConverter}}"
                                             />
                                         <controls:ImageLink
-                                            BigImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_next@2.png"
-                                            SmallImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_next.png"
+                                            BigImage="/Resources/Images/button_rounded_green_next@2.png"
+                                            SmallImage="/Resources/Images/button_rounded_green_next.png"
                                             Text="Start"
                                             Margin="0,10,0,0"
                                             IsEnabled="{Binding Path=CanStart, Mode=OneWay}"
@@ -90,24 +90,24 @@
                                             Visibility="{Binding Path=CanStart, Mode=OneWay, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"
                                             />
                                         <controls:ImageLink
-                                            BigImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_last@2.png"
-                                            SmallImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_last.png"
+                                            BigImage="/Resources/Images/button_rounded_green_last@2.png"
+                                            SmallImage="/Resources/Images/button_rounded_green_last.png"
                                             Text="Restart"
                                             Click="RestartServiceClicked"
                                             IsEnabled="{Binding Path=CanRestart, Mode=OneWay}"
                                             Margin="0,10,0,0" 
                                             />
                                         <controls:ImageLink
-                                            BigImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_delete@2.png"
-                                            SmallImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_green_delete.png"
+                                            BigImage="/Resources/Images/button_rounded_green_delete@2.png"
+                                            SmallImage="/Resources/Images/button_rounded_green_delete.png"
                                             Text="Stop"
                                             Click="StopServiceClicked"
                                             IsEnabled="{Binding Path=CanStop}"
                                             Margin="0,10,0,0" 
                                             />
                                         <controls:ImageLink
-                                            BigImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_orange_next@2.png"
-                                            SmallImage="/Octopus.Manager.Core;component/Resources/Images/button_rounded_orange_next.png"
+                                            BigImage="/Resources/Images/button_rounded_orange_next@2.png"
+                                            SmallImage="/Resources/Images/button_rounded_orange_next.png"
                                             Text="Reinstall"
                                             Click="RepairServiceClicked"
                                             Margin="0,10,0,0" 
@@ -135,15 +135,15 @@
 
                                     <StackPanel Margin="0,0,10,0">
                                         <controls:ImageLink
-                                        BigImage="/Octopus.Manager.Core;component/Resources/Images/server_network-internet@2.png"
-                                        SmallImage="/Octopus.Manager.Core;component/Resources/Images/server_network-internet.png"
+                                        BigImage="/Resources/Images/server_network-internet@2.png"
+                                        SmallImage="/Resources/Images/server_network-internet.png"
                                         Text="Change proxy server settings..."
                                         Margin="0,10,0,0" 
                                         Click="ShowProxy"
                                         />
                                         <controls:ImageLink
-                                        BigImage="/Octopus.Manager.Core;component/Resources/Images/delete@2.png"
-                                        SmallImage="/Octopus.Manager.Core;component/Resources/Images/delete.png"
+                                        BigImage="/Resources/Images/delete@2.png"
+                                        SmallImage="/Resources/Images/delete.png"
                                         Text="Delete this Tentacle instance..."
                                         Margin="0,10,0,0" 
                                         Click="DeleteInstance"
