@@ -13,6 +13,8 @@ namespace Octopus.Shared.Startup
         /// Errors will still be written to stderr.
         /// </summary>
         bool SuppressConsoleLogging { get; }
+        bool CanUseInteractiveHost { get; }
+        bool CanUseNonInteractiveHost { get; }
         void WriteHelp(TextWriter writer);
         OptionSet Options { get; }
         // Common options are provided so that the Help command can inspect them

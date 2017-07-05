@@ -10,6 +10,8 @@ namespace Octopus.Shared.Startup
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
 
         public virtual bool SuppressConsoleLogging => false;
+        public virtual bool CanUseInteractiveHost => true;
+        public virtual bool CanUseNonInteractiveHost => false;
 
         public OptionSet Options { get; } = new OptionSet();
 

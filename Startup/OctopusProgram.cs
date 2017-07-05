@@ -35,10 +35,10 @@ namespace Octopus.Shared.Startup
         readonly string[] environmentInformation;
         readonly OptionSet commonOptions;
         IContainer container;
-        ICommand commandInstance;
+        ICommand commandFromCommandLine;
+        ICommand responsibleCommand;
         string[] commandLineArguments;
-        bool forceConsole;
-        bool showHelpForCommand;
+        bool helpSwitchProvidedInCommandArguments;
 
         protected OctopusProgram(string displayName, string version, string informationalVersion, string[] environmentInformation, string[] commandLineArguments)
         {
@@ -48,7 +48,6 @@ namespace Octopus.Shared.Startup
             this.informationalVersion = informationalVersion;
             this.environmentInformation = environmentInformation;
             commonOptions = new OptionSet();
-            commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
             commonOptions.Add("nologo", "DEPRECATED: Don't print title or version information. This switch will be removed in Octopus 4.0 since it is no longer required.", v =>
             {
                 LogFileOnlyLogger.Warn("'--nologo' has been deprecated and will be removed in Octopus 4.0 since the title and version information are not printed any more.");
@@ -58,10 +57,8 @@ namespace Octopus.Shared.Startup
                 DisableConsoleLogging();
                 LogFileOnlyLogger.Warn("'--noconsolelogging' has been deprecated and will be removed in Octopus 4.0 since each command has been configured to keep its stdout nice, clean and parsable.");
             });
-            commonOptions.Add("help", "Show detailed help for this command", v => { showHelpForCommand = true; });
+            commonOptions.Add("help", "Show detailed help for this command", v => { helpSwitchProvidedInCommandArguments = true; });
         }
-
-        protected OptionSet CommonOptions => commonOptions;
 
         public IContainer Container
         {
@@ -94,7 +91,7 @@ namespace Octopus.Shared.Startup
             {
                 EnsureTempPathIsWriteable();
 
-                commandLineArguments = ProcessCommonOptions();
+                commandLineArguments = ProcessCommonOptions(commonOptions, commandLineArguments, log);
 
                 // Write diagnostics information early as possible - note this will target the global log file since we haven't loaded the instance yet.
                 // This is nice because the global log file will always have a history of every application invocation, regardless of instance
@@ -112,11 +109,28 @@ namespace Octopus.Shared.Startup
                     WriteDiagnosticsInfoToLogFile(instance.InstanceName);
                 }
 
+                // Now register extensions and their modules into the container
                 RegisterAdditionalModules(container);
 
-                host = SelectMostAppropriateHost();
+                // This means we should have the full gamut of all available commands, let's try resolve that now
+                commandLineArguments = TryResolveCommand(
+                    container.Resolve<ICommandLocator>(),
+                    commandLineArguments,
+                    helpSwitchProvidedInCommandArguments,
+                    out commandFromCommandLine,
+                    out responsibleCommand);
+
+                // Suppress logging as soon as practical
+                if (responsibleCommand.SuppressConsoleLogging) DisableConsoleLogging();
+                
+                // Now we should have everything we need to select the most appropriate host and run the responsible command
+                commandLineArguments = TryLoadCommandHostFromCommandLineArguments(commandLineArguments, out var forceConsoleHost);
+
+                host = SelectMostAppropriateHost(responsibleCommand, displayName, log, forceConsoleHost);
                 host.Run(Start, Stop);
-                exitCode = Environment.ExitCode;
+
+                // If we make it to here we can set the error code as either an UnknownCommand for which you got some help, or Success!
+                exitCode = (int)(commandFromCommandLine == null ? ExitCode.UnknownCommand : ExitCode.Success);
             }
             catch (ControlledFailureException ex)
             {
@@ -190,11 +204,22 @@ namespace Octopus.Shared.Startup
                 $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
         }
 
-        static string TryLoadInstanceNameFromCommandLineArguments(string[] arguments)
+        static string TryLoadInstanceNameFromCommandLineArguments(string[] commandLineArguments)
         {
             var instanceName = string.Empty;
-            new OptionSet {{"instance=", "Name of the instance to use", v => instanceName = v}}.Parse(arguments);
+            new OptionSet {{"instance=", "Name of the instance to use", v => instanceName = v}}.Parse(commandLineArguments);
             return instanceName;
+        }
+
+        static string[] TryLoadCommandHostFromCommandLineArguments(string[] commandLineArguments, out bool forceConsoleHost)
+        {
+            // Sorry for the mess, we can't set the out param in a lambda
+            var console = false;
+            var optionSet = new OptionSet {{"console", "This switch can be used to force the ConsoleHost for commands which support that concept", v => console = true}};
+            // We actually want to remove the --console switch if it was provided since we've parsed it here
+            var resultingCommandLineArguments = optionSet.Parse(commandLineArguments).ToArray();
+            forceConsoleHost = console;
+            return resultingCommandLineArguments;
         }
 
         void LogUnhandledException(object sender, UnhandledExceptionEventArgs args)
@@ -237,13 +262,25 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        ICommandHost SelectMostAppropriateHost()
+        static ICommandHost SelectMostAppropriateHost(ICommand command, string displayName, ILog log, bool forceConsoleHost)
         {
             log.Trace("Selecting the most appropriate host");
 
-            if (forceConsole)
+            var commandSupportsConsoleSwitch = command.Options.Any(o => o.Names.Contains("console", StringComparer.OrdinalIgnoreCase));
+            if (forceConsoleHost && !commandSupportsConsoleSwitch)
             {
-                log.Trace("The --console switch was passed; using a console host");
+                log.Warn($"The --console switch will be removed from the {command.GetType().Name.Replace("Command", string.Empty)} command in Octopus 4.0. Please remove the --console switch now to avoid failures after you upgrade to Octopus 4.0.");
+            }
+
+            if (!command.CanUseNonInteractiveHost)
+            {
+                log.Trace($"The {command.GetType().Name} must run interactively; using a console host");
+                return new ConsoleHost(displayName);
+            }
+
+            if (forceConsoleHost && commandSupportsConsoleSwitch)
+            {
+                log.Trace("The --console switch was provided for a supported command, must run interactively; using a console host");
                 return new ConsoleHost(displayName);
             }
 
@@ -256,41 +293,57 @@ namespace Octopus.Shared.Startup
             log.Trace("The program is not running interactively; using a Windows Service host");
             return new WindowsServiceHost();
 #else
+            log.Trace("The current runtime does not support Windows Services; using a console host");
             return new ConsoleHost(displayName);
 #endif
         }
 
-        string[] ProcessCommonOptions()
+        static string[] ProcessCommonOptions(OptionSet commonOptions, string[] commandLineArguments, ILog log)
         {
             log.Trace("Processing common command-line options");
-            return CommonOptions.Parse(commandLineArguments).ToArray();
+            return commonOptions.Parse(commandLineArguments).ToArray();
         }
 
         void Start(ICommandRuntime commandRuntime)
         {
-            var commandLocator = container.Resolve<ICommandLocator>();
+            responsibleCommand.Start(commandLineArguments, commandRuntime, commonOptions);
+        }
 
+        static string[] TryResolveCommand(
+            ICommandLocator commandLocator,
+            string[] commandLineArguments,
+            bool showHelpForCommand,
+            out ICommand commandFromCommandLine,
+            out ICommand responsibleCommand)
+        {
             var commandName = ParseCommandName(commandLineArguments);
 
-            var command = string.IsNullOrWhiteSpace(commandName) ? null : commandLocator.Find(commandName);
-            if (command == null)
+            var foundCommandMetadata = string.IsNullOrWhiteSpace(commandName) ? null : commandLocator.Find(commandName);
+            var cannotFindCommand = foundCommandMetadata == null;
+
+            // <unknowncommand>
+            if (cannotFindCommand)
             {
-                command = commandLocator.Find("help");
-                Environment.ExitCode = (int)ExitCode.UnknownCommand;
-            }
-            else if (showHelpForCommand)
-            {
-                command = commandLocator.Find("help");
-            }
-            else
-            {
-                // For all other commands, strip the command name argument from the list
-                commandLineArguments = commandLineArguments.Skip(1).ToArray();
+                commandFromCommandLine = null;
+                responsibleCommand = commandLocator.Find("help").Value;
+                return commandLineArguments;
             }
 
-            commandInstance = command.Value;
-            if (commandInstance.SuppressConsoleLogging) DisableConsoleLogging();
-            commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions);
+            // <command> --help
+            if (showHelpForCommand)
+            {
+                commandFromCommandLine = foundCommandMetadata.Value;
+                responsibleCommand = commandLocator.Find("help").Value;
+                return commandLineArguments;
+            }
+
+            // In this case we've found the command, which could be a normal command,
+            // or could be the help command if the command line was "help <command>"
+            commandFromCommandLine = foundCommandMetadata.Value;
+            responsibleCommand = foundCommandMetadata.Value;
+
+            // Strip the command name argument we parsed from the list so the responsible command can simply parse its options
+            return commandLineArguments.Skip(1).ToArray();
         }
 
         static void DisableConsoleLogging()
@@ -326,10 +379,10 @@ namespace Octopus.Shared.Startup
 
         void Stop()
         {
-            if (commandInstance != null)
+            if (responsibleCommand != null)
             {
                 log.TraceFormat("Sending stop signal to current command");
-                commandInstance.Stop();
+                responsibleCommand.Stop();
             }
 
             log.TraceFormat("Disposing of the container");
