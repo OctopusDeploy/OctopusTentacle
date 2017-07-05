@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Windows;
 using Autofac;
-using Octopus.Manager.Core.Infrastructure;
-using Octopus.Manager.Core.PreReq;
-using Octopus.Manager.Core.Shared.CommonTabs;
-using Octopus.Manager.Core.Shared.Controls;
-using Octopus.Manager.Core.Shared.Dialogs;
-using Octopus.Manager.Core.Shared.Shell;
-using Octopus.Manager.Core.Util;
+using Octopus.Manager.Tentacle.Dialogs;
+using Octopus.Manager.Tentacle.Infrastructure;
+using Octopus.Manager.Tentacle.PreReq;
+using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration;
 using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Shared.Configuration;
@@ -49,10 +45,7 @@ namespace Octopus.Manager.Tentacle
 
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            var remaining = commonOptions.Parse(e.Args);
-            var command = NormalizeCommand(GetCommandLineSwitch(remaining));
-
-            var container = ConfigureContainer(command, e.Args);
+            var container = ConfigureContainer();
 
             if (reconfigure)
             {
@@ -62,7 +55,7 @@ namespace Octopus.Manager.Tentacle
             CreateAndShowShell(container);
         }
 
-        IContainer ConfigureContainer(string command, string[] args)
+        static IContainer ConfigureContainer()
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule(new CertificatesModule());
@@ -106,29 +99,6 @@ namespace Octopus.Manager.Tentacle
             MainWindow = shell;
             shell.ShowDialog();
             Shutdown(0);
-        }
-
-        static string NormalizeCommand(string command)
-        {
-            if (command == "")
-            {
-                try
-                {
-                    CommandLine.PathToOctopusServerExe();
-                    command = "octopus";
-                }
-                catch (Exception)
-                {
-                    // If we can't find Octopus then assume we're a Tentacle only
-                    command = "tentacle";
-                }
-            }
-            return command;
-        }
-
-        static string GetCommandLineSwitch(IEnumerable<string> args)
-        {
-            return (args.FirstOrDefault() ?? string.Empty).Replace("/", "").Replace("-", "");
         }
     }
 }
