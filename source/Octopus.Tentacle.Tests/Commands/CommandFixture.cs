@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
         protected void Start(params string[] args)
         {
-            Command.Start(args, Substitute.For<ICommandRuntime>(), new OptionSet(), "TestTentacle", "1.0.0", "1.0.0", new string[0], "TestInstance");
+            Command.Start(args, Substitute.For<ICommandRuntime>(), new OptionSet());
         }
 
         protected void Stop()

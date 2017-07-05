@@ -31,6 +31,7 @@
   </targets>
 
   <rules>
+    <logger name="LogFileOnlyLogger" writeTo="octopus-log-file" final="true" />
     <logger name="*" minlevel="Info" maxLevel="Warn" writeTo="stdout" />
     <logger name="*" minlevel="Error" writeTo="stderr" />
     <logger name="*" minlevel="Info" writeTo="octopus-log-file" />

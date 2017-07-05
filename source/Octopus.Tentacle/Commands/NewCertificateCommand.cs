@@ -18,7 +18,6 @@ namespace Octopus.Tentacle.Commands
         readonly ILog log;
         readonly Lazy<ICertificateGenerator> generator;
         bool preserve;
-        [ObsoleteEx(Message="--export-file is deprecated, as it is insecure", RemoveInVersion = "4.0", ReplacementTypeOrMember="exportPfx", TreatAsErrorFromVersion="4.0")]
         string exportFile;
         string exportPfx;
         string password;
@@ -75,6 +74,7 @@ namespace Octopus.Tentacle.Commands
 
                 log.Verbose("Generating and installing a new certificate...");
                 var certificate = configuration.Value.GenerateNewCertificate();
+                VoteForRestart();
                 log.Info("A new certificate has been generated and installed. Thumbprint:");
                 log.Info(certificate.Thumbprint);
             }

@@ -73,6 +73,7 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<ImportCertificateCommand>("import-certificate", "Replace the certificate that Tentacle uses to authenticate itself");
             builder.RegisterCommand<PollCommand>("poll-server", "Configures an Octopus Server that this Tentacle will poll");
             builder.RegisterCommand<ListInstancesCommand>("list-instances", "Lists all installed Tentacle instances");
+            builder.RegisterCommand<VersionCommand>("version", "Show the Tentacle version information");
 
             return builder.Build();
         }

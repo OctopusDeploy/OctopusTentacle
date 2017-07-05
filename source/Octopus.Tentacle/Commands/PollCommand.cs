@@ -80,6 +80,7 @@ namespace Octopus.Tentacle.Commands
                 };
 
                 configuration.Value.AddOrUpdateTrustedOctopusServer(octopusServerConfiguration);
+                VoteForRestart();
 
                 log.Info("Polling endpoint configured");
             }
