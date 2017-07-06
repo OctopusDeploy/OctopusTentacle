@@ -124,7 +124,7 @@ namespace Octopus.Shared.Startup
                 if (responsibleCommand.SuppressConsoleLogging) DisableConsoleLogging();
                 
                 // Now we should have everything we need to select the most appropriate host and run the responsible command
-                commandLineArguments = TryLoadCommandHostFromCommandLineArguments(commandLineArguments, out var forceConsoleHost);
+                commandLineArguments = ParseCommandHostArgumentsFromCommandLineArguments(commandLineArguments, out var forceConsoleHost);
 
                 host = SelectMostAppropriateHost(responsibleCommand, displayName, log, forceConsoleHost);
                 host.Run(Start, Stop);
@@ -207,19 +207,23 @@ namespace Octopus.Shared.Startup
         static string TryLoadInstanceNameFromCommandLineArguments(string[] commandLineArguments)
         {
             var instanceName = string.Empty;
-            new OptionSet {{"instance=", "Name of the instance to use", v => instanceName = v}}.Parse(commandLineArguments);
+            var options = AbstractStandardCommand.AddInstanceOption(new OptionSet(), v => instanceName = v);
+            
+            // Ignore the return parameter here, we want to leave the instance option for the responsible command
+            // We're just peeking to see if we can load the instance as early as possible
+            options.Parse(commandLineArguments);
             return instanceName;
         }
 
-        static string[] TryLoadCommandHostFromCommandLineArguments(string[] commandLineArguments, out bool forceConsoleHost)
+        static string[] ParseCommandHostArgumentsFromCommandLineArguments(string[] commandLineArguments, out bool forceConsoleHost)
         {
             // Sorry for the mess, we can't set the out param in a lambda
-            var console = false;
-            var optionSet = new OptionSet {{"console", "This switch can be used to force the ConsoleHost for commands which support that concept", v => console = true}};
+            var forceConsole = false;
+            var optionSet = ConsoleHost.AddConsoleSwitch(new OptionSet(), v => forceConsole = true);
             // We actually want to remove the --console switch if it was provided since we've parsed it here
-            var resultingCommandLineArguments = optionSet.Parse(commandLineArguments).ToArray();
-            forceConsoleHost = console;
-            return resultingCommandLineArguments;
+            var remainingCommandLineArguments = optionSet.Parse(commandLineArguments).ToArray();
+            forceConsoleHost = forceConsole;
+            return remainingCommandLineArguments;
         }
 
         void LogUnhandledException(object sender, UnhandledExceptionEventArgs args)
@@ -266,10 +270,10 @@ namespace Octopus.Shared.Startup
         {
             log.Trace("Selecting the most appropriate host");
 
-            var commandSupportsConsoleSwitch = command.Options.Any(o => o.Names.Contains("console", StringComparer.OrdinalIgnoreCase));
+            var commandSupportsConsoleSwitch = ConsoleHost.HasConsoleSwitch(command.Options);
             if (forceConsoleHost && !commandSupportsConsoleSwitch)
             {
-                log.Warn($"The --console switch will be removed from the {command.GetType().Name.Replace("Command", string.Empty)} command in Octopus 4.0. Please remove the --console switch now to avoid failures after you upgrade to Octopus 4.0.");
+                log.Warn($"The {ConsoleHost.ConsoleSwitchExample} switch will be removed from the {command.GetType().Name.Replace("Command", string.Empty)} command in Octopus 4.0. Please remove the {ConsoleHost.ConsoleSwitchExample} switch now to avoid failures after you upgrade to Octopus 4.0.");
             }
 
             if (!command.CanRunAsService)
@@ -280,7 +284,7 @@ namespace Octopus.Shared.Startup
 
             if (forceConsoleHost && commandSupportsConsoleSwitch)
             {
-                log.Trace("The --console switch was provided for a supported command, must run interactively; using a console host");
+                log.Trace($"The {ConsoleHost.ConsoleSwitchExample} switch was provided for a supported command, must run interactively; using a console host");
                 return new ConsoleHost(displayName);
             }
 
