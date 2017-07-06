@@ -13,8 +13,12 @@ namespace Octopus.Shared.Startup
         /// Errors will still be written to stderr.
         /// </summary>
         bool SuppressConsoleLogging { get; }
-        bool CanUseInteractiveHost { get; }
-        bool CanUseNonInteractiveHost { get; }
+
+        /// <summary>
+        /// Indicates this command can run as a non-interactive service, like a Windows Service or daemon.
+        /// Most commands should always run interactively.
+        /// </summary>
+        bool CanRunAsService { get; }
         void WriteHelp(TextWriter writer);
         OptionSet Options { get; }
         // Common options are provided so that the Help command can inspect them

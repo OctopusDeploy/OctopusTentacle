@@ -272,7 +272,7 @@ namespace Octopus.Shared.Startup
                 log.Warn($"The --console switch will be removed from the {command.GetType().Name.Replace("Command", string.Empty)} command in Octopus 4.0. Please remove the --console switch now to avoid failures after you upgrade to Octopus 4.0.");
             }
 
-            if (!command.CanUseNonInteractiveHost)
+            if (!command.CanRunAsService)
             {
                 log.Trace($"The {command.GetType().Name} must run interactively; using a console host");
                 return new ConsoleHost(displayName);
