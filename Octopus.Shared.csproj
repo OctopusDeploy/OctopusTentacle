@@ -27,7 +27,6 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="AsyncStackTraceEx" Version="1.0.1.1" />
     <PackageReference Include="Autofac" Version="3.5.2" />
     <PackageReference Include="Halibut" Version="2.6.1" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
@@ -61,7 +60,6 @@
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
     <PackageReference Include="Autofac" Version="3.5.2" />
-    <PackageReference Include="AsyncStackTraceEx" Version="1.0.1.1" />
     <PackageReference Include="NLog" Version="4.0.1" />
     <PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
      <PackageReference Include="TaskScheduler" Version="2.5.21">
@@ -99,5 +97,11 @@
     <EmbeddedResource Include="Internals\Options\_Readme.txt" />
     <EmbeddedResource Include="Internals\CertificateGeneration\_Readme.txt" />
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Update="Startup\WindowsServiceAdapter.cs">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
 </Project>
