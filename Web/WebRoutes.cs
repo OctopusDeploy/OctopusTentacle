@@ -220,7 +220,7 @@ namespace Octopus.Shared.Web
 
             public static class Tasks
             {
-                public static string Template = "~/api/tasks{/id}{?skip,active,environment,project,name,node,running,hasPendingInterruptions,take}";
+                public static string Template = "~/api/tasks{/id}{?skip,active,environment,project,name,node,running,hasPendingInterruptions,take,tenant}";
                 public static string Index = "~/api/tasks{?skip,active,environment,project,name,node,running,hasPendingInterruptions,take}";
                 public static string Get = "~/api/tasks/{id}";
                 public static string Details = "~/api/tasks/{id}/details{?verbose,tail}";
