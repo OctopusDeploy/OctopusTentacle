@@ -273,7 +273,8 @@ namespace Octopus.Shared.Startup
             var commandSupportsConsoleSwitch = ConsoleHost.HasConsoleSwitch(command.Options);
             if (forceConsoleHost && !commandSupportsConsoleSwitch)
             {
-                log.Warn($"The {ConsoleHost.ConsoleSwitchExample} switch will be removed from the {command.GetType().Name.Replace("Command", string.Empty)} command in Octopus 4.0. Please remove the {ConsoleHost.ConsoleSwitchExample} switch now to avoid failures after you upgrade to Octopus 4.0.");
+                var commandName = command.GetType().Name.Replace("Command", string.Empty);
+                log.Warn($"The {ConsoleHost.ConsoleSwitchExample} switch has been deprecated for the {commandName} command because it should always run interactively. This switch will be removed from the {commandName} command in Octopus 4.0. Please remove the {ConsoleHost.ConsoleSwitchExample} switch now to avoid failures after you upgrade to Octopus 4.0.");
             }
 
             if (!command.CanRunAsService)
