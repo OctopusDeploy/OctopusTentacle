@@ -205,7 +205,7 @@ namespace Octopus.Shared.Web
                 public static string Index = "~/api/projects{?skip,take}";
                 public static string Get = "~/api/projects/{id}";
                 public static string Logo = "~/api/projects/{id}/logo";
-                public static string GetReleases = "~/api/projects/{id}/releases{/version}{?skip,take}";
+                public static string GetReleases = "~/api/projects/{id}/releases{/version}{?skip,take,searchByVersion}";
                 public static string GetChannels = "~/api/projects/{id}/channels{?skip,take}";
                 public static string GetTriggers = "~/api/projects/{id}/triggers{?skip,take}";
                 public static string OrderChannels = "~/api/projects/{id}/channels/order";
