@@ -24,7 +24,7 @@ namespace Octopus.Shared.Startup
             this.applicationInstanceStore = applicationInstanceStore;
             this.applicationName = applicationName;
 
-            Options.Add("instances=", "List of instances to check", v =>
+            Options.Add("instances=", "Comma-separated list of instances to check, or * to check all instances", v =>
             {
                 instances = new HashSet<string>(v.Split(',', ';'));
             });
@@ -32,6 +32,9 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
+            if (instances == null)
+                throw new ControlledFailureException("Use --instances argument to specify which instances to check. Use --instances=* to check all instances.");
+
             var startAll = instances.Count == 1 && instances.First() == "*";
             var serviceControllers = ServiceController.GetServices();
             try

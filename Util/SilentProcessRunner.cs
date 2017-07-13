@@ -6,6 +6,7 @@ using System.Linq;
 #if CAN_FIND_CHILD_PROCESSES
 using System.Management;
 #endif
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -191,6 +192,33 @@ namespace Octopus.Shared.Util
             catch (Exception ex)
             {
                 throw new Exception(string.Format("Error when attempting to execute {0}: {1}", executable, ex.Message), ex);
+            }
+        }
+
+        public static void ExecuteBackgroundCommand(string executable, string arguments, string workingDirectory, string username = null, string password = null)
+        {
+            try
+            {
+                using (var process = new Process())
+                {
+                    process.StartInfo.FileName = executable;
+                    process.StartInfo.Arguments = arguments;
+                    process.StartInfo.WorkingDirectory = workingDirectory;
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
+
+                    if (username != null)
+                    {
+                        process.StartInfo.UserName = username;
+                        process.StartInfo.Password = new NetworkCredential("", password ?? "").SecurePassword;
+                    }
+
+                    process.Start();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error when attempting to execute {executable}: {ex.Message}", ex);
             }
         }
 

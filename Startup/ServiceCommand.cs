@@ -39,8 +39,10 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
-            var thisServiceName = ServiceName.GetWindowsServiceName(instanceSelector.Current.ApplicationName, instanceSelector.Current.InstanceName);
-            var instance = instanceSelector.Current.InstanceName;
+            base.Start();
+
+            var thisServiceName = ServiceName.GetWindowsServiceName(instanceSelector.GetCurrentInstance().ApplicationName, instanceSelector.GetCurrentInstance().InstanceName);
+            var instance = instanceSelector.GetCurrentInstance().InstanceName;
             var exePath = assemblyContainingService.FullLocalPath();
 
             var serverInstaller = new ConfigureServiceHelper(log, thisServiceName, exePath, instance, serviceDescription, serviceConfigurationState);

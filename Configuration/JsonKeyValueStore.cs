@@ -17,7 +17,7 @@ namespace Octopus.Shared.Configuration
         {
             if (!useHierarchicalOutput)
             {
-                WriteSerializedData(JsonConvert.SerializeObject(settingsToSave));
+                WriteSerializedData(JsonConvert.SerializeObject(settingsToSave, Formatting.Indented));
                 return;
             }
 
@@ -51,7 +51,7 @@ namespace Octopus.Shared.Configuration
                 }
             }
 
-            var serializedData = JsonConvert.SerializeObject(data);
+            var serializedData = JsonConvert.SerializeObject(data, Formatting.Indented);
             WriteSerializedData(serializedData);
         }
 

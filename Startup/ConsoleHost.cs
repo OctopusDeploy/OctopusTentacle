@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using Autofac.Core;
 using Octopus.Diagnostics;
@@ -35,9 +36,16 @@ namespace Octopus.Shared.Startup
             }
         }
 
+        static readonly OctopusProgram.ExitCode[] FriendlyExitCodes =
+        {
+            OctopusProgram.ExitCode.Success,
+            OctopusProgram.ExitCode.UnknownCommand,
+            OctopusProgram.ExitCode.ControlledFailureException
+        };
+
         public void OnExit(int exitCode)
         {
-            if (exitCode == 0) return;
+            if (FriendlyExitCodes.Cast<int>().Contains(exitCode)) return;
 
             var sb = new StringBuilder()
                 .AppendLine(new string('-', 79))

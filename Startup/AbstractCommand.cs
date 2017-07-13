@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
 
 namespace Octopus.Shared.Startup
@@ -9,15 +8,10 @@ namespace Octopus.Shared.Startup
     public abstract class AbstractCommand : ICommand
     {
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
-        bool showLogo = true;
-        static readonly ILogWithContext Log = Diagnostics.Log.Octopus();
 
-        protected AbstractCommand()
-        {
-            Options.Add("nologo", "Don't print title or version information", v => showLogo = false);
-        }
+        public virtual bool SuppressConsoleLogging => false;
 
-        protected OptionSet Options { get; } = new OptionSet();
+        public OptionSet Options { get; } = new OptionSet();
 
         protected ICommandRuntime Runtime { get; private set; }
 
@@ -37,18 +31,6 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        protected virtual void Initialize(string displayName, string version, string informationalVersion, string[] environmentInformation, string instanceName)
-        {
-            if (showLogo)
-            {
-                var instanceNameToLog = string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName;
-                Log.Info($"{displayName} version {version} ({informationalVersion}) instance {instanceNameToLog}");
-                Log.Info($"Environment Information:{Environment.NewLine}" +
-                    $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
-            }
-            Log.Info($"==== {GetType().Name} ====");
-        }
-
         protected abstract void Start();
         protected virtual void Completed() { }
 
@@ -61,7 +43,7 @@ namespace Octopus.Shared.Startup
             Options.WriteOptionDescriptions(writer);
         }
 
-        void ICommand.Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions, string displayName, string version, string informationalVersion, string[] environmentInformation, string instanceName)
+        public virtual void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
             Runtime = commandRuntime;
 
@@ -71,7 +53,7 @@ namespace Octopus.Shared.Startup
             foreach (var opset in optionSets)
                 opset.Validate();
 
-            Initialize(displayName, version, informationalVersion, environmentInformation, instanceName);
+            LogFileOnlyLogger.Info($"==== {GetType().Name} ====");
             Start();
             Completed();
         }
@@ -79,6 +61,54 @@ namespace Octopus.Shared.Startup
         void ICommand.Stop()
         {
             Stop();
+        }
+
+        protected void AssertNotNullOrWhitespace(string value, string name, string errorMessage = null)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ControlledFailureException(errorMessage ?? $"--{name} must be supplied");
+        }
+
+        protected void AssertFileExists(string path, string errorMessage = null)
+        {
+            if (!File.Exists(path))
+                throw new ControlledFailureException(errorMessage ?? $"File '{path}' cannot be found");
+        }
+
+        protected void AssertFileDoesNotExist(string path, string errorMessage = null)
+        {
+            if (File.Exists(path))
+            {
+                throw new ControlledFailureException(errorMessage ?? $"A file already exists at '{path}'");
+            }
+        }
+
+        protected void AssertDirectoryExists(string path, string errorMessage = null)
+        {
+            if (!Directory.Exists(path))
+                throw new ControlledFailureException(errorMessage ?? $"Directory '{path}' cannot be found");
+        }
+
+        static readonly Lazy<List<string>> SpecialLocations = new Lazy<List<string>>(() =>
+        {
+            var result = new List<string>();
+            foreach (var specialLocation in Enum.GetValues(typeof(Environment.SpecialFolder)))
+            {
+                var location = Environment.GetFolderPath((Environment.SpecialFolder)specialLocation, Environment.SpecialFolderOption.None);
+                result.Add(location);
+            }
+            result.Add("C:");
+            result.Add("C:\\");
+            return result;
+        });
+
+        protected void AssertNotSpecialLocation(string path)
+        {
+            foreach (var specialLocation in SpecialLocations.Value)
+            {
+                if (string.Equals(path, specialLocation, StringComparison.OrdinalIgnoreCase))
+                    throw new ControlledFailureException($"Directory '{path}' is not a good place, pick a safe subdirectory");
+            }
         }
     }
 }

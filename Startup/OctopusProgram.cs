@@ -7,6 +7,7 @@ using System.Security;
 using System.Threading.Tasks;
 using Autofac;
 using NLog;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
@@ -17,7 +18,17 @@ namespace Octopus.Shared.Startup
 {
     public abstract class OctopusProgram
     {
-        readonly ILogWithContext log = Log.Octopus();
+        public enum ExitCode
+        {
+            UnknownCommand = -1,
+            Success = 0,
+            ControlledFailureException = 1,
+            SecurityException = 42,
+            ReflectionTypeLoadException = 43,
+            GeneralException = 100
+        }
+
+        readonly ILog log = Log.Octopus();
         readonly string displayName;
         readonly string version;
         readonly string informationalVersion;
@@ -27,7 +38,7 @@ namespace Octopus.Shared.Startup
         ICommand commandInstance;
         string[] commandLineArguments;
         bool forceConsole;
-        string instanceName;
+        bool showHelpForCommand;
 
         protected OctopusProgram(string displayName, string version, string informationalVersion, string[] environmentInformation, string[] commandLineArguments)
         {
@@ -38,27 +49,19 @@ namespace Octopus.Shared.Startup
             this.environmentInformation = environmentInformation;
             commonOptions = new OptionSet();
             commonOptions.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v => forceConsole = true);
-            commonOptions.Add("noconsolelogging", "Don't log messages to the stdout - errors are still logged to stderr", v => { DisableConsoleLogging(); });
-        }
-
-        static void DisableConsoleLogging()
-        {
-            // Suppress logging to the console by removing the console logger for stdout
-            var c = LogManager.Configuration;
-
-            // Note: this matches the target name in octopus.server.exe.nlog
-            var stdoutTarget = c.FindTargetByName("stdout");
-            foreach (var rule in c.LoggingRules)
+            commonOptions.Add("nologo", "DEPRECATED: Don't print title or version information. This switch will be removed in Octopus 4.0 since it is no longer required.", v =>
             {
-                rule.Targets.Remove(stdoutTarget);
-            }
-            LogManager.Configuration = c;
+                LogFileOnlyLogger.Warn("'--nologo' has been deprecated and will be removed in Octopus 4.0 since the title and version information are not printed any more.");
+            });
+            commonOptions.Add("noconsolelogging", "DEPRECATED: Don't log informational messages to the console (stdout) - errors are still logged to stderr. This switch has been deprecated and will be removed in Octopus 4.0 since it is no longer required.", v =>
+            {
+                DisableConsoleLogging();
+                LogFileOnlyLogger.Warn("'--noconsolelogging' has been deprecated and will be removed in Octopus 4.0 since each command has been configured to keep its stdout nice, clean and parsable.");
+            });
+            commonOptions.Add("help", "Show detailed help for this command", v => { showHelpForCommand = true; });
         }
 
-        protected OptionSet CommonOptions
-        {
-            get { return commonOptions; }
-        }
+        protected OptionSet CommonOptions => commonOptions;
 
         public IContainer Container
         {
@@ -92,15 +95,23 @@ namespace Octopus.Shared.Startup
                 EnsureTempPathIsWriteable();
 
                 commandLineArguments = ProcessCommonOptions();
-                instanceName = TryLoadInstanceName(commandLineArguments);
+
+                // Write diagnostics information early as possible - note this will target the global log file since we haven't loaded the instance yet.
+                // This is nice because the global log file will always have a history of every application invocation, regardless of instance
+                // See: OctopusLogsDirectoryRenderer.DefaultLogsDirectory
+                var instanceName = TryLoadInstanceNameFromCommandLineArguments(commandLineArguments);
+                WriteDiagnosticsInfoToLogFile(instanceName);
 
                 log.Trace("Creating and configuring the Autofac container");
                 container = BuildContainer(instanceName);
 
                 // Try to load the instance here so we can log into the instance's log file as soon as possible
-                // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on anyhow
-                TryLoadInstance();
-                
+                // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on when we try to load the instance for real
+                if (container.Resolve<IApplicationInstanceSelector>().TryGetCurrentInstance(out var instance))
+                {
+                    WriteDiagnosticsInfoToLogFile(instance.InstanceName);
+                }
+
                 RegisterAdditionalModules(container);
 
                 host = SelectMostAppropriateHost();
@@ -110,13 +121,13 @@ namespace Octopus.Shared.Startup
             catch (ControlledFailureException ex)
             {
                 log.Fatal(ex.Message);
-                exitCode = 1;
+                exitCode = (int)ExitCode.ControlledFailureException;
             }
             catch (SecurityException ex)
             {
                 log.Fatal(ex, "A security exception was encountered. Please try re-running the command as an Administrator from an elevated command prompt.");
                 log.Fatal(ex);
-                exitCode = 42;
+                exitCode = (int)ExitCode.SecurityException;
             }
             catch (ReflectionTypeLoadException ex)
             {
@@ -136,7 +147,7 @@ namespace Octopus.Shared.Startup
                     }
                 }
 
-                exitCode = 43;
+                exitCode = (int)ExitCode.ReflectionTypeLoadException;
             }
             catch (Exception ex)
             {
@@ -162,29 +173,24 @@ namespace Octopus.Shared.Startup
                         }
                     }
                 }
-                exitCode = 100;
+                exitCode = (int)ExitCode.GeneralException;
             }
 
             host?.OnExit(exitCode);
 
-            if (exitCode != 0 && Debugger.IsAttached)
+            if (exitCode != (int)ExitCode.Success && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
         }
 
-        void TryLoadInstance()
+        void WriteDiagnosticsInfoToLogFile(string instanceName)
         {
-            try
-            {
-                var instance = container.Resolve<IApplicationInstanceSelector>().Current;
-            }
-            catch (ControlledFailureException)
-            {
-                // ignore
-            }
+            LogFileOnlyLogger.Info($"Starting {displayName} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName)}");
+            LogFileOnlyLogger.Info($"Environment Information:{Environment.NewLine}" +
+                $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
         }
 
-        static string TryLoadInstanceName(string[] arguments)
+        static string TryLoadInstanceNameFromCommandLineArguments(string[] arguments)
         {
             var instanceName = string.Empty;
             new OptionSet {{"instance=", "Name of the instance to use", v => instanceName = v}}.Parse(arguments);
@@ -256,7 +262,7 @@ namespace Octopus.Shared.Startup
 
         string[] ProcessCommonOptions()
         {
-            log.Trace("Processing common command line options");
+            log.Trace("Processing common command-line options");
             return CommonOptions.Parse(commandLineArguments).ToArray();
         }
 
@@ -264,18 +270,41 @@ namespace Octopus.Shared.Startup
         {
             var commandLocator = container.Resolve<ICommandLocator>();
 
-            var commandName = ExtractCommandName(ref commandLineArguments);
+            var commandName = ParseCommandName(commandLineArguments);
 
-            var command = commandLocator.Find(commandName);
+            var command = string.IsNullOrWhiteSpace(commandName) ? null : commandLocator.Find(commandName);
             if (command == null)
             {
                 command = commandLocator.Find("help");
-                Environment.ExitCode = -1;
+                Environment.ExitCode = (int)ExitCode.UnknownCommand;
+            }
+            else if (showHelpForCommand)
+            {
+                command = commandLocator.Find("help");
+            }
+            else
+            {
+                // For all other commands, strip the command name argument from the list
+                commandLineArguments = commandLineArguments.Skip(1).ToArray();
             }
 
             commandInstance = command.Value;
+            if (commandInstance.SuppressConsoleLogging) DisableConsoleLogging();
+            commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions);
+        }
 
-            commandInstance.Start(commandLineArguments, commandRuntime, CommonOptions, displayName, version, informationalVersion, environmentInformation, instanceName);
+        static void DisableConsoleLogging()
+        {
+            // Suppress logging to the console by removing the console logger for stdout
+            var c = LogManager.Configuration;
+
+            // Note: this matches the target name in octopus.server.exe.nlog
+            var stdoutTarget = c.FindTargetByName("stdout");
+            foreach (var rule in c.LoggingRules)
+            {
+                rule.Targets.Remove(stdoutTarget);
+            }
+            LogManager.Configuration = c;
         }
 
         protected abstract IContainer BuildContainer(string instanceName);
@@ -289,10 +318,9 @@ namespace Octopus.Shared.Startup
 #pragma warning restore 618
         }
 
-        static string ExtractCommandName(ref string[] args)
+        static string ParseCommandName(string[] args)
         {
             var first = (args.FirstOrDefault() ?? string.Empty).ToLowerInvariant().TrimStart('-', '/');
-            args = args.Skip(1).ToArray();
             return first;
         }
 
