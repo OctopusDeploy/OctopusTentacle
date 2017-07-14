@@ -192,6 +192,12 @@ Task("__CreateChocolateyPackage")
         Information("UTF7 " + System.Text.Encoding.UTF7.GetString(checksum.ComputedHash));
         Information("UTF32 " + System.Text.Encoding.UTF32.GetString(checksum.ComputedHash));
         Information("Unicode " + System.Text.Encoding.Unicode.GetString(checksum.ComputedHash));
+        
+        var hashValue = "";
+        for (i = 0; i < checksum.ComputedHash.Length; ++i) {
+        	hashValue += Convert.ToChar( checksum.ComputedHash[i]);
+        }
+        Information("hashValue " + hashValue);
 
         var chocolateyInstallScriptPath = "./source/Chocolatey/chocolateyInstall.ps1";
         RestoreFileOnCleanup(chocolateyInstallScriptPath);
