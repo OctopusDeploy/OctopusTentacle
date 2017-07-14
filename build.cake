@@ -192,12 +192,15 @@ Task("__CreateChocolateyPackage")
         Information("UTF7 " + System.Text.Encoding.UTF7.GetString(checksum.ComputedHash));
         Information("UTF32 " + System.Text.Encoding.UTF32.GetString(checksum.ComputedHash));
         Information("Unicode " + System.Text.Encoding.Unicode.GetString(checksum.ComputedHash));
-        
+        Information("BitConverter " + BitConverter.ToString(checksum.ComputedHash));
+                
         var hashValue = "";
         for (i = 0; i < checksum.ComputedHash.Length; ++i) {
         	hashValue += Convert.ToChar( checksum.ComputedHash[i]);
         }
         Information("hashValue " + hashValue);
+        
+        var FileStream filestream = new FileStream($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}-x64.msi"), FileMode.Open);
 
         var chocolateyInstallScriptPath = "./source/Chocolatey/chocolateyInstall.ps1";
         RestoreFileOnCleanup(chocolateyInstallScriptPath);
