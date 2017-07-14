@@ -195,12 +195,11 @@ Task("__CreateChocolateyPackage")
         Information("BitConverter " + BitConverter.ToString(checksum.ComputedHash));
                 
         var hashValue = "";
-        for (i = 0; i < checksum.ComputedHash.Length; ++i) {
+        for (var i = 0; i < checksum.ComputedHash.Length; ++i) {
         	hashValue += Convert.ToChar( checksum.ComputedHash[i]);
         }
         Information("hashValue " + hashValue);
-        
-        var FileStream filestream = new FileStream($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}-x64.msi"), FileMode.Open);
+       
 
         var chocolateyInstallScriptPath = "./source/Chocolatey/chocolateyInstall.ps1";
         RestoreFileOnCleanup(chocolateyInstallScriptPath);
