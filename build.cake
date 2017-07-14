@@ -181,22 +181,20 @@ Task("__CreateChocolateyPackage")
     InBlock ("Create Chocolatey package...", () =>
     {
         var checksum = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}.msi"));
-        Information($"Checksum: Octopus.Tentacle.msi = {checksum}");
+        var checksumValue = BitConverter.ToString(checksum.ComputedHash).Replace("-", "");
+        Information($"Checksum: Octopus.Tentacle.msi = {checksumValue}");
 
         var checksum64 = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}-x64.msi"));
-        Information($"Checksum: Octopus.Tentacle-x64.msi = {checksum64}");
-        
-        Information("Default " + System.Text.Encoding.Default.GetString(checksum.ComputedHash));
-        Information("ASCII " + System.Text.Encoding.ASCII.GetString(checksum.ComputedHash));
-        Information("UTF8 " + System.Text.Encoding.UTF8.GetString(checksum.ComputedHash));
+        var checksum64Value = BitConverter.ToString(checksum64.ComputedHash).Replace("-", "");
+        Information($"Checksum: Octopus.Tentacle-x64.msi = {checksum64Value}");               
 
         var chocolateyInstallScriptPath = "./source/Chocolatey/chocolateyInstall.ps1";
         RestoreFileOnCleanup(chocolateyInstallScriptPath);
 
         ReplaceTextInFiles(chocolateyInstallScriptPath, "0.0.0", gitVersion.NuGetVersion);
-        ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum>", System.Text.Encoding.Default.GetString(checksum.ComputedHash));
+        ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum>", checksumValue);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype>", checksum.Algorithm.ToString());
-        ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", System.Text.Encoding.Default.GetString(checksum64.ComputedHash));
+        ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", checksum64Value);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype64>", checksum64.Algorithm.ToString());
 
         var chocolateyArtifactsDir = $"{artifactsDir}/Chocolatey";
