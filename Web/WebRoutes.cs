@@ -69,7 +69,7 @@ namespace Octopus.Shared.Web
 
             public static class Environments
             {
-                public static string Template = "~/api/environments{/id}{?skip,ids,take}";
+                public static string Template = "~/api/environments{/id}{?name,skip,ids,take}";
                 public static string Index = "~/api/environments{?skip,ids,take}";
                 public static string Get = "~/api/environments/{id}";
                 public static string GetMachines = "~/api/environments/{id}/machines{?skip,take}";
@@ -202,7 +202,7 @@ namespace Octopus.Shared.Web
             public static class Projects
             {
                 public static string Template = "~/api/projects{/id}{?skip,ids,clone,take}";
-                public static string Index = "~/api/projects{?skip,take,ids}";
+                public static string Index = "~/api/projects{?name,skip,take,ids}";
                 public static string Get = "~/api/projects/{id}";
                 public static string Logo = "~/api/projects/{id}/logo";
                 public static string GetReleases = "~/api/projects/{id}/releases{/version}{?skip,take,searchByVersion}";
