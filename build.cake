@@ -181,11 +181,11 @@ Task("__CreateChocolateyPackage")
     InBlock ("Create Chocolatey package...", () =>
     {
         var checksum = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}.msi"));
-        var checksumValue = BitConverter.ToString(checksum.ComputedHash).ReplaceAll("-", "")
+        var checksumValue = BitConverter.ToString(checksum.ComputedHash).Replace("-", "");
         Information($"Checksum: Octopus.Tentacle.msi = {checksumValue}");
 
         var checksum64 = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}-x64.msi"));
-        var checksum64Value = BitConverter.ToString(checksum64.ComputedHash).ReplaceAll("-", "")
+        var checksum64Value = BitConverter.ToString(checksum64.ComputedHash).Replace("-", "");
         Information($"Checksum: Octopus.Tentacle-x64.msi = {checksum64Value}");               
 
         var chocolateyInstallScriptPath = "./source/Chocolatey/chocolateyInstall.ps1";
