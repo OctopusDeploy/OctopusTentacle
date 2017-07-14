@@ -192,7 +192,7 @@ Task("__CreateChocolateyPackage")
         Information("UTF7 " + System.Text.Encoding.UTF7.GetString(checksum.ComputedHash));
         Information("UTF32 " + System.Text.Encoding.UTF32.GetString(checksum.ComputedHash));
         Information("Unicode " + System.Text.Encoding.Unicode.GetString(checksum.ComputedHash));
-        Information("BitConverter " + BitConverter.ToString(checksum.ComputedHash));
+        Information("BitConverter " + BitConverter.ToString(checksum.ComputedHash).ReplaceAll("-", "");
                 
         var hashValue = "";
         for (var i = 0; i < checksum.ComputedHash.Length; ++i) {
