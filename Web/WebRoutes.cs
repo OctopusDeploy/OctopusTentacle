@@ -201,7 +201,7 @@ namespace Octopus.Shared.Web
 
             public static class Projects
             {
-                public static string Template = "~/api/projects{/id}{?skip,ids,clone,take}";
+                public static string Template = "~/api/projects{/id}{?name,skip,ids,clone,take}";
                 public static string Index = "~/api/projects{?name,skip,take,ids}";
                 public static string Get = "~/api/projects/{id}";
                 public static string Logo = "~/api/projects/{id}/logo";
