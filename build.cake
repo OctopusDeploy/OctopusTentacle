@@ -24,7 +24,7 @@ var signingCertificatPassword = Argument("signing_certificate_password", "Passwo
 var signingTimestampUrls = new string[] {
     "http://timestamp.globalsign.com/scripts/timestamp.dll",
     "http://www.startssl.com/timestamp",
-    "http://timestamp.comodoca.com/rfc3161", 
+    "http://timestamp.comodoca.com/rfc3161",
     "http://timestamp.verisign.com/scripts/timstamp.dll",
     "http://tsa.starfieldtech.com"};
 
@@ -186,7 +186,7 @@ Task("__CreateChocolateyPackage")
 
         var checksum64 = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}-x64.msi"));
         var checksum64Value = BitConverter.ToString(checksum64.ComputedHash).Replace("-", "");
-        Information($"Checksum: Octopus.Tentacle-x64.msi = {checksum64Value}");               
+        Information($"Checksum: Octopus.Tentacle-x64.msi = {checksum64Value}");
 
         var chocolateyInstallScriptPath = "./source/Chocolatey/chocolateyInstall.ps1";
         RestoreFileOnCleanup(chocolateyInstallScriptPath);
