@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Commands
         readonly AppVersion appVersion;
         int wait;
 
-        public override bool CanUseNonInteractiveHost => true;
+        public override bool CanRunAsService => true;
 
         public RunAgentCommand(
             Lazy<IHalibutInitializer> halibut,
