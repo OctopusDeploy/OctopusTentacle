@@ -17,14 +17,14 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
 
-var signingCertificatePath = Argument("signing_certicifate_path", "./certificates/OctopusDevelopment.pfx");
+var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
 var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
 
 // Keep this list in order by most likely to succeed
 var signingTimestampUrls = new string[] {
     "http://timestamp.globalsign.com/scripts/timestamp.dll",
     "http://www.startssl.com/timestamp",
-    "http://timestamp.comodoca.com/rfc3161", 
+    "http://timestamp.comodoca.com/rfc3161",
     "http://timestamp.verisign.com/scripts/timstamp.dll",
     "http://tsa.starfieldtech.com"};
 
@@ -186,7 +186,7 @@ Task("__CreateChocolateyPackage")
 
         var checksum64 = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}-x64.msi"));
         var checksum64Value = BitConverter.ToString(checksum64.ComputedHash).Replace("-", "");
-        Information($"Checksum: Octopus.Tentacle-x64.msi = {checksum64Value}");               
+        Information($"Checksum: Octopus.Tentacle-x64.msi = {checksum64Value}");
 
         var chocolateyInstallScriptPath = "./source/Chocolatey/chocolateyInstall.ps1";
         RestoreFileOnCleanup(chocolateyInstallScriptPath);
