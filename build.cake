@@ -17,7 +17,7 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
 
-var signingCertificatePath = Argument("signing_certicifate_path", "./certificates/OctopusDevelopment.pfx");
+var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
 var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
 
 // Keep this list in order by most likely to succeed
