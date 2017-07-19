@@ -222,7 +222,8 @@ namespace Octopus.Shared.Startup
 
         void WriteDiagnosticsInfoToLogFile(string instanceName)
         {
-            LogFileOnlyLogger.Info($"Starting {displayName} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName)}");
+            var executable = Path.GetFileName(Assembly.GetEntryAssembly().FullLocalPath());
+            LogFileOnlyLogger.Info($"{executable} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName)}");
             LogFileOnlyLogger.Info($"Environment Information:{Environment.NewLine}" +
                 $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
         }
@@ -232,7 +233,7 @@ namespace Octopus.Shared.Startup
             // Suppress logging to the console by removing the console logger for stdout
             var c = LogManager.Configuration;
 
-            // Note: this matches the target name in octopus.server.exe.nlog
+            // Note: this matches the target name in *.nlog
             var stdoutTarget = c.FindTargetByName(StdOutTargetName);
             foreach (var rule in c.LoggingRules)
             {
