@@ -14,7 +14,7 @@ namespace Octopus.Shared.Startup
     {
         static readonly string LoggerName = nameof(LogFileOnlyLogger);
         static readonly ILogger Log = LogManager.GetLogger(LoggerName);
-        static readonly string HelpMessage = $"The {Path.GetFileName(Assembly.GetEntryAssembly().FullLocalPath())}.nlog file should have a rule matching the name {LoggerName} where log messages are restricted to the log file, never written to stdout or stderr.";
+        static readonly string HelpMessage = $"The {Path.GetFileName(Assembly.GetEntryAssembly()?.FullLocalPath()) ?? "*"}.nlog file should have a rule matching the name {LoggerName} where log messages are restricted to the log file, never written to stdout or stderr.";
 
         public static void AssertConfigurationIsCorrect()
         {
