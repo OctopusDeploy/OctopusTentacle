@@ -48,15 +48,11 @@ namespace Octopus.Shared.Startup
             this.informationalVersion = informationalVersion;
             this.environmentInformation = environmentInformation;
             commonOptions = new OptionSet();
-            commonOptions.Add("nologo", "DEPRECATED: Don't print title or version information. This switch will be removed in Octopus 4.0 since it is no longer required.", v =>
-            {
-                LogFileOnlyLogger.Warn("'--nologo' has been deprecated and will be removed in Octopus 4.0 since the title and version information are not printed any more.");
-            });
-            commonOptions.Add("noconsolelogging", "DEPRECATED: Don't log informational messages to the console (stdout) - errors are still logged to stderr. This switch has been deprecated and will be removed in Octopus 4.0 since it is no longer required.", v =>
+            commonOptions.Add("nologo", "DEPRECATED: Don't print title or version information. This switch is no longer required, but we want to leave it around so automation scripts don't break.", v => {}, hide: true);
+            commonOptions.Add("noconsolelogging", "DEPRECATED: Don't log informational messages to the console (stdout) - errors are still logged to stderr. This switch has been deprecated since it is no longer required. We want to leave it around so automation scripts don't break.", v =>
             {
                 DisableConsoleLogging();
-                LogFileOnlyLogger.Warn("'--noconsolelogging' has been deprecated and will be removed in Octopus 4.0 since each command has been configured to keep its stdout nice, clean and parsable.");
-            });
+            }, hide: true);
             commonOptions.Add("help", "Show detailed help for this command", v => { helpSwitchProvidedInCommandArguments = true; });
         }
 
