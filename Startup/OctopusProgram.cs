@@ -7,6 +7,7 @@ using System.Security;
 using System.Threading.Tasks;
 using Autofac;
 using NLog;
+using NLog.Targets;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
@@ -27,6 +28,9 @@ namespace Octopus.Shared.Startup
             ReflectionTypeLoadException = 43,
             GeneralException = 100
         }
+
+        static readonly string StdOutTargetName = "stdout";
+        static readonly string StdErrTargetName = "stderr";
 
         readonly ILog log = Log.Octopus();
         readonly string displayName;
@@ -70,8 +74,8 @@ namespace Octopus.Shared.Startup
         public int Run()
         {
             // Initialize logging as soon as possible - waiting for the Container to be built is too late
-            Log.Appenders.Add(new NLogAppender());
-            
+            InitializeLogging();
+
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 if (Debugger.IsAttached) Debugger.Break();
@@ -193,11 +197,48 @@ namespace Octopus.Shared.Startup
             return exitCode;
         }
 
+        static void InitializeLogging()
+        {
+            Log.Appenders.Add(new NLogAppender());
+            AssertLoggingConfigurationIsCorrect();
+        }
+
+        static void AssertLoggingConfigurationIsCorrect()
+        {
+            var stdout = LogManager.Configuration.FindTargetByName(StdOutTargetName) as ColoredConsoleTarget;
+            if (stdout == null)
+                throw new Exception($"Invalid logging configuration: missing target '{StdOutTargetName}'");
+            if (stdout.ErrorStream)
+                throw new Exception($"Invalid logging configuration: {StdOutTargetName} should not be redirecting to stderr.");
+
+            var stderr = LogManager.Configuration.FindTargetByName(StdErrTargetName);
+            if (stderr == null)
+                throw new Exception($"Invalid logging configuration: missing target '{StdErrTargetName}'");
+            if (stdout.ErrorStream)
+                throw new Exception($"Invalid logging configuration: {StdErrTargetName} should be redirecting to stderr, but isn't.");
+
+            LogFileOnlyLogger.AssertConfigurationIsCorrect();
+        }
+
         void WriteDiagnosticsInfoToLogFile(string instanceName)
         {
             LogFileOnlyLogger.Info($"Starting {displayName} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName)}");
             LogFileOnlyLogger.Info($"Environment Information:{Environment.NewLine}" +
                 $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
+        }
+
+        static void DisableConsoleLogging()
+        {
+            // Suppress logging to the console by removing the console logger for stdout
+            var c = LogManager.Configuration;
+
+            // Note: this matches the target name in octopus.server.exe.nlog
+            var stdoutTarget = c.FindTargetByName(StdOutTargetName);
+            foreach (var rule in c.LoggingRules)
+            {
+                rule.Targets.Remove(stdoutTarget);
+            }
+            LogManager.Configuration = c;
         }
 
         static string TryLoadInstanceNameFromCommandLineArguments(string[] commandLineArguments)
@@ -345,20 +386,6 @@ namespace Octopus.Shared.Startup
 
             // Strip the command name argument we parsed from the list so the responsible command can simply parse its options
             return commandLineArguments.Skip(1).ToArray();
-        }
-
-        static void DisableConsoleLogging()
-        {
-            // Suppress logging to the console by removing the console logger for stdout
-            var c = LogManager.Configuration;
-
-            // Note: this matches the target name in octopus.server.exe.nlog
-            var stdoutTarget = c.FindTargetByName("stdout");
-            foreach (var rule in c.LoggingRules)
-            {
-                rule.Targets.Remove(stdoutTarget);
-            }
-            LogManager.Configuration = c;
         }
 
         protected abstract IContainer BuildContainer(string instanceName);
