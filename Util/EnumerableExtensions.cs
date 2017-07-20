@@ -69,5 +69,14 @@ namespace Octopus.Shared.Util
 
         public static bool None<T>(this IEnumerable<T> items, Func<T, bool> predicate) => !items.Any(predicate);
 
+        public static IEnumerable<T> TakeUntilIncluding<T>(this IEnumerable<T> list, Func<T, bool> predicate)
+        {
+            foreach (T el in list)
+            {
+                yield return el;
+                if (predicate(el))
+                    yield break;
+            }
+        }
     }
 }
