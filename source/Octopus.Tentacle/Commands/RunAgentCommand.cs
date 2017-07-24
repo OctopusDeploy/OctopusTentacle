@@ -24,6 +24,8 @@ namespace Octopus.Tentacle.Commands
         readonly AppVersion appVersion;
         int wait;
 
+        public override bool CanRunAsService => true;
+
         public RunAgentCommand(
             Lazy<IHalibutInitializer> halibut,
             Lazy<ITentacleConfiguration> configuration,
@@ -46,6 +48,11 @@ namespace Octopus.Tentacle.Commands
             this.appVersion = appVersion;
 
             Options.Add("wait=", "Delay (ms) before starting", arg => wait = int.Parse(arg));
+            Options.Add("console", "Don't attempt to run as a service, even if the user is non-interactive", v =>
+            {
+                // There's actually nothing to do here. The CommandHost should have already been determined before Start() was called
+                // This option is added to show help
+            });
         }
 
         protected override void Start()
