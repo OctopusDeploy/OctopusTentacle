@@ -44,7 +44,8 @@ namespace Octopus.Shared.Util
             return string.Join(", ", items.Take(items.Length - 1)) + " and " + items.Last();
         }
 
-        public static string NewLineSeperate(this IEnumerable<object> items) => string.Join(Environment.NewLine, items);
+        public static string CommaSeparate(this IEnumerable<object> items) => string.Join(", ", items);
+        public static string NewLineSeparate(this IEnumerable<object> items) => string.Join(Environment.NewLine, items);
 
         public static string ConstructAngularFriendlyQueryString(this System.Collections.Specialized.NameValueCollection @params)
         {
