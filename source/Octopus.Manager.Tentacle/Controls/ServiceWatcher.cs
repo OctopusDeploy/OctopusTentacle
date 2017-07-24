@@ -161,7 +161,7 @@ namespace Octopus.Manager.Tentacle.Controls
         /// <param name="arguments">The list of arguments for the command-line, typically something like "service --instance --start". Note: --instance will be replaced with the correctly formatted instance name argument.</param>
         /// <param name="systemArguments">Any extra arguments you want to use.</param>
         /// <param name="ignoreFailedExitCode">What it says on the box.</param>
-        public CommandLineInvocation BuildCommand(string arguments, string systemArguments = "--nologo --console", bool ignoreFailedExitCode = false)
+        public CommandLineInvocation BuildCommand(string arguments, string systemArguments = null, bool ignoreFailedExitCode = false)
         {
             return new CommandLineInvocation(executablePath, arguments.Replace("--instance", $"--instance \"{instanceName}\""), systemArguments) { IgnoreFailedExitCode = ignoreFailedExitCode};
         }
