@@ -1,32 +1,49 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
+using Octopus.Diagnostics;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {
-    public class HelpCommand : ICommand
+    public class HelpCommand : AbstractCommand
     {
+        readonly ILog log = Log.Octopus();
+
+        static readonly string TextFormat = "text";
+        static readonly string JsonFormat = "json";
+        static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
+
         readonly ICommandLocator commands;
+
+        public string Format { get; set; } = TextFormat;
 
         public HelpCommand(ICommandLocator commands)
         {
             this.commands = commands;
+
+            Options.Add("format=", $"The format of the output ({string.Join(",", SupportedFormats)}). Defaults to {Format}.", v => Format = v);
         }
 
         public void WriteHelp(TextWriter writer)
         {
         }
 
-        public void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions, string displayName, string version, string informationalVersion, string[] environmentInformation, string instanceName)
+        public override void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
+            base.Start(commandLineArguments, commandRuntime, commonOptions);
+
             var executable = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullLocalPath());
 
-            var commandName = commandLineArguments.Length > 0 ? commandLineArguments[0] : null;
+            var firstArgument = commandLineArguments.FirstOrDefault() ?? string.Empty;
+            var commandName = LooksLikeCommand(firstArgument) ? firstArgument : null;
 
-            if (string.IsNullOrEmpty(commandName))
+            if (string.IsNullOrWhiteSpace(commandName))
             {
                 PrintGeneralHelp(executable);
             }
@@ -36,10 +53,8 @@ namespace Octopus.Shared.Startup
 
                 if (command == null)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Command '{0}' is not supported", commandName);
-                    Console.ResetColor();
-                    PrintGeneralHelp(executable);
+                    log.Error($"Command '{commandName}' is not supported");
+                    Console.WriteLine($"See '{executable} help'");
                 }
                 else
                 {
@@ -48,11 +63,53 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        public void Stop()
+        bool LooksLikeCommand(string candidate)
+        {
+            return candidate.Length > 0 && char.IsLetter(candidate.First());
+        }
+
+        protected override void UnrecognizedArguments(IList<string> arguments)
+        {
+            // Ignore - we're showing help!
+        }
+
+        protected override void Start()
         {
         }
 
         void PrintCommandHelp(string executable, ICommand command, CommandMetadata metadata, OptionSet commonOptions)
+        {
+            if (string.Equals(Format, JsonFormat, StringComparison.OrdinalIgnoreCase))
+            {
+                PrintCommandHelpAsJson(command, metadata, commonOptions);
+            }
+            else
+            {
+                PrintCommandHelpAsText(executable, command, metadata, commonOptions);
+            }
+        }
+
+        void PrintCommandHelpAsJson(ICommand command, CommandMetadata metadata, OptionSet commonOptions)
+        {
+            Console.Write(JsonConvert.SerializeObject(new
+            {
+                Name = metadata.Name,
+                Description = metadata.Description,
+                Aliases = metadata.Aliases,
+                Options = command.Options.Where(o => !o.Hide).Select(o => new
+                {
+                    Name = o.Names.First(),
+                    Description = o.Description
+                }).ToArray(),
+                CommonOptions = commonOptions.Where(o => !o.Hide).Select(o => new
+                {
+                    Name = o.Names.First(),
+                    Description = o.Description
+                }).ToArray()
+            }, Formatting.Indented));
+        }
+
+        static void PrintCommandHelpAsText(string executable, ICommand command, CommandMetadata metadata, OptionSet commonOptions)
         {
             Console.ResetColor();
             Console.Write("Usage: ");
@@ -77,13 +134,42 @@ namespace Octopus.Shared.Startup
 
         void PrintGeneralHelp(string executable)
         {
+            if (string.Equals(Format, JsonFormat, StringComparison.OrdinalIgnoreCase))
+            {
+                PrintGeneralHelpAsJson();
+            }
+            else
+            {
+                PrintGeneralHelpAsText(executable);
+            }
+        }
+
+        void PrintGeneralHelpAsJson()
+        {
+            Console.Write(JsonConvert.SerializeObject(new
+            {
+                Commands = commands.List().OrderBy(x => x.Name).Select(x => new
+                {
+                    Name = x.Name,
+                    Description = x.Description,
+                    Aliases = x.Aliases
+                })
+            }, Formatting.Indented));
+        }
+
+        void PrintGeneralHelpAsText(string executable)
+        {
             Console.ResetColor();
             Console.Write("Usage: ");
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(executable + " <command> [<options>]");
             Console.ResetColor();
             Console.WriteLine();
-            Console.WriteLine("Where <command> is one of: ");
+            Console.Write("Where ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("<command>");
+            Console.ResetColor();
+            Console.WriteLine(" is one of: ");
             Console.WriteLine();
 
             foreach (var possible in commands.List().OrderBy(x => x.Name))
@@ -97,7 +183,7 @@ namespace Octopus.Shared.Startup
             Console.WriteLine();
             Console.Write("Or use ");
             Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("help <command>");
+            Console.Write("<command> --help");
             Console.ResetColor();
             Console.WriteLine(" for more details.");
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Util
@@ -24,7 +25,8 @@ namespace Octopus.Shared.Util
                 var exitCode = SilentProcessRunner.ExecuteCommand(invocation.Executable, (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? ""),
                     Environment.CurrentDirectory,
                     log.Info,
-                    log.Error);
+                    log.Error,
+                    CancellationToken.None);
 
                 if (exitCode != 0)
                 {

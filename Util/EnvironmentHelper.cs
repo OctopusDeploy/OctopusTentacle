@@ -47,6 +47,7 @@ namespace Octopus.Shared.Util
         static IEnumerable<string> GetProcessVars()
         {
             yield return SafelyGet(() => $"HostProcessName: {Process.GetCurrentProcess().ProcessName}");
+            yield return SafelyGet(() => $"PID: {Process.GetCurrentProcess().Id}");
         }
     }
 }

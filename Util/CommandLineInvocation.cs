@@ -8,7 +8,7 @@ namespace Octopus.Shared.Util
         readonly string arguments;
         readonly string systemArguments;
 
-        public CommandLineInvocation(string executable, string arguments, string systemArguments)
+        public CommandLineInvocation(string executable, string arguments, string systemArguments = null)
         {
             this.executable = executable;
             this.arguments = arguments;
@@ -26,7 +26,7 @@ namespace Octopus.Shared.Util
         }
 
         // Arguments only used when we are invoking this directly from within the tools - not used when 
-        // exporting the script for use later. Typically used for --noLogo arguments.
+        // exporting the script for use later.
         public string SystemArguments
         {
             get { return systemArguments; }

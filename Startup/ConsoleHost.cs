@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using System.Text;
 using Autofac.Core;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Internals.Options;
 
 namespace Octopus.Shared.Startup
 {
@@ -35,9 +37,16 @@ namespace Octopus.Shared.Startup
             }
         }
 
+        static readonly OctopusProgram.ExitCode[] FriendlyExitCodes =
+        {
+            OctopusProgram.ExitCode.Success,
+            OctopusProgram.ExitCode.UnknownCommand,
+            OctopusProgram.ExitCode.ControlledFailureException
+        };
+
         public void OnExit(int exitCode)
         {
-            if (exitCode == 0) return;
+            if (FriendlyExitCodes.Cast<int>().Contains(exitCode)) return;
 
             var sb = new StringBuilder()
                 .AppendLine(new string('-', 79))
@@ -77,6 +86,34 @@ namespace Octopus.Shared.Startup
             Console.Title = displayName + " - Shutting down...";
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine();
+        }
+
+        public static readonly string ConsoleSwitchPrototype = "console";
+        public static readonly string ConsoleSwitchExample = $"--{ConsoleSwitchPrototype}";
+
+        /// <summary>
+        /// Use this method to reliably add the --console switch to commands that want to provide an option to run as a service, or interactively.
+        /// </summary>
+        /// <param name="options">The OptionSet to update, adding the --console switch.</param>
+        /// <param name="action">[Optional] The custom action to perform when the switch is provided.</param>
+        /// <returns>The resulting OptionSet after adding the --console switch. Can be used as a convenience for method chaining.</returns>
+        public static OptionSet AddConsoleSwitch(OptionSet options, Action<string> action = null)
+        {
+            return options.Add(ConsoleSwitchPrototype, "Don't attempt to run as a service, even if the user is non-interactive", action ?? (v =>
+            {
+                // There's actually nothing to do here. The CommandHost should have already been determined at startup.
+                // This option is added to show help and provide a hook for determining the appropriate CommandHost.
+            }));
+        }
+
+        /// <summary>
+        /// Use this method to reliably detect if this OptionsSet supports the --console switch.
+        /// </summary>
+        /// <param name="options">The OptionSet to inspect.</param>
+        /// <returns>true if the OptionSet supports the --console switch; false otherwise.</returns>
+        public static bool HasConsoleSwitch(OptionSet options)
+        {
+            return options.Any(o => o.Prototype == ConsoleSwitchPrototype);
         }
     }
 }

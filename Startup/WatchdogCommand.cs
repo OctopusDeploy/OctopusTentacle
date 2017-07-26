@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if WINDOWS_SERVICE
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -81,7 +82,7 @@ namespace Octopus.Shared.Startup
                     }
 
                     taskDefinition.Actions.Clear();
-                    taskDefinition.Actions.Add(new ExecAction(Assembly.GetEntryAssembly().Location, "checkservices --instances " + instanceNames + " --console --nologo", null));
+                    taskDefinition.Actions.Add(new ExecAction(Assembly.GetEntryAssembly().Location, "checkservices --instances " + instanceNames, null));
 
                     taskDefinition.Triggers.Clear();
                     taskDefinition.Triggers.Add(new TimeTrigger
@@ -95,3 +96,4 @@ namespace Octopus.Shared.Startup
         }
     }
 }
+#endif

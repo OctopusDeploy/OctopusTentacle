@@ -1,3 +1,4 @@
+#if WINDOWS_SERVICE
 using System;
 using System.Reflection;
 using System.ServiceProcess;
@@ -30,3 +31,4 @@ namespace Octopus.Shared.Startup
         public string Description { get; set; }
     }
 }
+#endif

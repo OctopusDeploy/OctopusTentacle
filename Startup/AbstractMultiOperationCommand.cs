@@ -14,6 +14,7 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
+            base.Start();
             foreach (var operation in operations) operation();
         }
 
