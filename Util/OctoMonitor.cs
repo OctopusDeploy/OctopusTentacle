@@ -71,7 +71,7 @@ namespace Octopus.Shared.Util
         {
             SystemLog.Verbose($"Monitor {obj} in use, waiting. {waitMessage}");
             if (!string.IsNullOrWhiteSpace(waitMessage))
-                Log.Verbose(waitMessage);
+                Log.Info(waitMessage);
         }
 
         class OctoMonitorReleaser : IDisposable

@@ -74,7 +74,7 @@ namespace Octopus.Shared.Util
         {
             systemLog.Verbose($"Machine-wide mutex {name} in use, waiting. {waitMessage}");
             if (!string.IsNullOrWhiteSpace(waitMessage))
-                log.Verbose(waitMessage);
+                log.Info(waitMessage);
         }
 
         static string Normalize(string name)
