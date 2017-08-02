@@ -41,6 +41,17 @@ namespace Octopus.Shared.Internals.CertificateGeneration
             [In] SystemTime endTime,
             IntPtr extensions);
 
+        [DllImport("Crypt32.dll", ExactSpelling = true, SetLastError = true, EntryPoint = "CertCreateSelfSignCertificate")]
+        internal static extern IntPtr CertCreateSelfSignCertificate_2008(
+            IntPtr providerHandle,
+            [In] CryptoApiBlob subjectIssuerBlob,
+            int flags,
+            [In] CryptKeyProviderInformation keyProviderInfo,
+            IntPtr signatureAlgorithm,
+            [In] SystemTime startTime,
+            [In] SystemTime endTime,
+            IntPtr extensions);
+
         [DllImport("Crypt32.dll", ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool CertFreeCertificateContext(IntPtr certContext);

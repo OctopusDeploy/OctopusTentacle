@@ -1,5 +1,6 @@
 using System;
 using System.Security.Cryptography.X509Certificates;
+using Octopus.Diagnostics;
 using Octopus.Shared.Internals.CertificateGeneration;
 
 namespace Octopus.Shared.Security
@@ -8,19 +9,19 @@ namespace Octopus.Shared.Security
     {
         public const int RecommendedKeyBitLength = 2048;
 
-        public X509Certificate2 GenerateNew(string fullName)
+        public X509Certificate2 GenerateNew(string fullName, ILog log)
         {
-            return Generate(fullName, true);
+            return Generate(fullName, true, log);
         }
 
-        public X509Certificate2 GenerateNewNonExportable(string fullName)
+        public X509Certificate2 GenerateNewNonExportable(string fullName, ILog log)
         {
-            return Generate(fullName, false);
+            return Generate(fullName, false, log);
         }
 
-        static X509Certificate2 Generate(string fullName, bool exportable)
+        static X509Certificate2 Generate(string fullName, bool exportable, ILog log)
         {
-            using (var cryptography = new CryptContext())
+            using (var cryptography = new CryptContext(log))
             {
                 cryptography.Open();
 
