@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
-                TentacleCertificate = new CertificateGenerator().GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator().GenerateNew($"CN={Guid.NewGuid()}", new Shared.Diagnostics.NullLog())
             };
             Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration), 
                                                    log, 
@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
-                TentacleCertificate = new CertificateGenerator().GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator().GenerateNew($"CN={Guid.NewGuid()}", new Shared.Diagnostics.NullLog())
             };
 
             Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
@@ -98,7 +98,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { expectedThumbPrint },
-                TentacleCertificate = new CertificateGenerator().GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator().GenerateNew($"CN={Guid.NewGuid()}", new Shared.Diagnostics.NullLog())
             };
 
             Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
