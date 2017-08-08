@@ -76,7 +76,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
         public X509Certificate2 GenerateNewCertificate()
         {
-            var cert = new CertificateGenerator().GenerateNew("cn=foo");
+            var cert = new CertificateGenerator().GenerateNew("cn=foo", new Shared.Diagnostics.NullLog());
             TentacleCertificate = cert;
             return cert;
         }

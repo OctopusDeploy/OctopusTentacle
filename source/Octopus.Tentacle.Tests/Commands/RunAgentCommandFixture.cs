@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             halibut = Substitute.For<IHalibutInitializer>();
             tentacleConfiguration = Substitute.For<ITentacleConfiguration>();
-            var certificate = new CertificateGenerator().GenerateNew("cn=Test.Cert.For.Octopus.Tests");
+            var certificate = new CertificateGenerator().GenerateNew("cn=Test.Cert.For.Octopus.Tests", new Shared.Diagnostics.NullLog());
             tentacleConfiguration.TentacleCertificate.Returns(certificate);
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
