@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Commands
                                                  octopusClientInitializer);
 
             configuration.ServicesPortNumber.Returns(90210);
-            certificate = new CertificateGenerator().GenerateNew("CN=Hello");
+            certificate = new CertificateGenerator().GenerateNew("CN=Hello", new Shared.Diagnostics.NullLog());
             configuration.TentacleCertificate.Returns(certificate);
         }
 

@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using Octopus.Configuration;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Security;
 using Octopus.Shared.Security.Certificates;
@@ -19,20 +20,22 @@ namespace Octopus.Tentacle.Configuration
         readonly ICertificateGenerator certificateGenerator;
         readonly IProxyConfiguration proxyConfiguration;
         readonly IPollingProxyConfiguration pollingProxyConfiguration;
+        readonly ILog log;
 
         public TentacleConfiguration(
             IKeyValueStore settings,
             IHomeConfiguration home, 
             ICertificateGenerator certificateGenerator, 
             IProxyConfiguration proxyConfiguration,
-            IPollingProxyConfiguration pollingProxyConfiguration)
+            IPollingProxyConfiguration pollingProxyConfiguration,
+            ILog log)
         {
             this.settings = settings;
             this.home = home;
             this.certificateGenerator = certificateGenerator;
             this.proxyConfiguration = proxyConfiguration;
             this.pollingProxyConfiguration = pollingProxyConfiguration;
-     
+            this.log = log;
         }
 
         [Obsolete("This configuration entry is obsolete as of 3.0. It is only used as a Subscription ID where one does not exist.")]
@@ -199,7 +202,7 @@ namespace Octopus.Tentacle.Configuration
 
         public X509Certificate2 GenerateNewCertificate()
         {
-            var certificate = certificateGenerator.GenerateNew(CertificateExpectations.TentacleCertificateFullName);
+            var certificate = certificateGenerator.GenerateNew(CertificateExpectations.TentacleCertificateFullName, log);
             TentacleCertificate = certificate;
             return certificate;
         }
