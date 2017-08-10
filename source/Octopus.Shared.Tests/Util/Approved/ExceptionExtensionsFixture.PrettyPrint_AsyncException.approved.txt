@@ -1,0 +1,5 @@
+The method or operation is not implemented.
+System.NotImplementedException
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.GenerateException1 in ExceptionExtensionsFixture.cs:line <n>
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.GenerateException in ExceptionExtensionsFixture.cs:line <n>
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.PrettyPrint_AsyncException in ExceptionExtensionsFixture.cs:line <n>

@@ -1,0 +1,9 @@
+Outer
+System.Exception
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.GenerateInnerException() in ExceptionExtensionsFixture.cs:line <n>
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.PrettyPrint_InnerExceptions() in ExceptionExtensionsFixture.cs:line <n>
+
+--Inner Exception--
+Inner
+System.Exception
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.GenerateInnerException() in ExceptionExtensionsFixture.cs:line <n>

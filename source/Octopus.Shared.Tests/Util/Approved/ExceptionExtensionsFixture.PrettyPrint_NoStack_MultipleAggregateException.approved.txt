@@ -1,0 +1,7 @@
+Aggregate Exception
+--Inner Exception 1--
+Inner
+--Inner Exception 2--
+Inner
+--Inner Exception 3--
+Inner
