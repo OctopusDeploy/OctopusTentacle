@@ -90,7 +90,7 @@ namespace Octopus.Shared.Tests.Security.Certificates
         static string GetPfxFilePath(string pfxFileName)
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "Octopus.Tests.Resources." + pfxFileName;
+            var resourceName = "Octopus.Shared.Tests.Resources." + pfxFileName;
             var stream = assembly.GetManifestResourceStream(resourceName);
             var bytes = GetBytesFromStream(stream);
             var pfxFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".pfx");

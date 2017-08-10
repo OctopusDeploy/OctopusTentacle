@@ -13,7 +13,7 @@ namespace Octopus.Shared.Tests.Bcl.IO
         {
             var path = Path.Combine(
                 Path.GetDirectoryName(typeof (IOUtilFixture).Assembly.Location) ?? ".",
-                @"Octopus.Shared\Bcl\IO",
+                @"Bcl\IO",
                 filename);
 
             var fs = new OctopusPhysicalFileSystem();
