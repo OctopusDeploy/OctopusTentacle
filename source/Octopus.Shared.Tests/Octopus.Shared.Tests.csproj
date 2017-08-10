@@ -81,7 +81,6 @@
     <Compile Include="Util\ThrottleFixture.cs" />
     <Compile Include="Util\UniquifierFixture.cs" />
     <Compile Include="Variables\SpecialVariablesFixture.cs" />
-    <Compile Include="Versioning\VersioningFixture.cs" />
     <Compile Include="Web\WebRoutesFixture.cs" />
   </ItemGroup>
   <ItemGroup>
