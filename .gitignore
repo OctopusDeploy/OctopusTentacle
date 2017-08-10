@@ -52,3 +52,5 @@ source/.idea
 source/Octopus.sln.iml
 launchSettings.json
 .cr/
+
+/tools/
