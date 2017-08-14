@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Configuration
         public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers
         {
             get { return settings.Get("Tentacle.Communication.TrustedOctopusServers", new OctopusServerConfiguration[0]); }
-            private set { settings.Set("Tentacle.Communication.TrustedOctopusServers", (value ?? new OctopusServerConfiguration[0]).ToArray()); }
+            set { settings.Set("Tentacle.Communication.TrustedOctopusServers", (value ?? new OctopusServerConfiguration[0]).ToArray()); }
         }
 
         public IEnumerable<string> TrustedOctopusThumbprints
@@ -109,7 +109,7 @@ namespace Octopus.Tentacle.Configuration
                 var encoded = settings.Get("Tentacle.Certificate", protectionScope: DataProtectionScope.LocalMachine);
                 return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint, encoded);
             }
-            private set
+            set
             {
                 settings.Set("Tentacle.Certificate", CertificateEncoder.ToBase64String(value), DataProtectionScope.LocalMachine);
                 settings.Set("Tentacle.CertificateThumbprint", value.Thumbprint);
