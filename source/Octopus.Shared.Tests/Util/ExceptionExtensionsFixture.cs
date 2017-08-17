@@ -18,6 +18,8 @@ namespace Octopus.Shared.Tests.Util
             .UsingSanitiser(r => Regex.Replace(r, ":line [0-9]+", ":line <n>"))
             .UsingNamer(new SubdirectoryNamer("Approved"));
 
+        readonly AssentRunner assentRunner = new AssentRunner(configuration);
+
         [Test]
         public async Task PrettyPrint_AsyncException()
         {
@@ -53,7 +55,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                this.Assent(e.PrettyPrint(), configuration);
+                assentRunner.Assent(this, e.PrettyPrint());
             }
         }
 
@@ -109,7 +111,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                this.Assent(e.PrettyPrint(), configuration);
+                assentRunner.Assent(this, e.PrettyPrint());
             }
         }
 
@@ -122,7 +124,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                this.Assent(e.PrettyPrint(), configuration);
+                assentRunner.Assent(this, e.PrettyPrint());
             }
         }
 
@@ -148,7 +150,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                this.Assent(e.PrettyPrint(false), configuration);
+                assentRunner.Assent(this, e.PrettyPrint(false));
             }
         }
 

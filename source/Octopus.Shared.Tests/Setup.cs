@@ -1,0 +1,17 @@
+﻿using System.Globalization;
+using System.Threading;
+using NUnit.Framework;
+
+namespace Octopus.Shared.Tests
+{
+    [SetUpFixture]
+    public class Setup
+    {
+        [SetUp]
+        public void RunBeforeAnyTests()
+        {
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-AU");
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("en-AU");
+        }
+    }
+}

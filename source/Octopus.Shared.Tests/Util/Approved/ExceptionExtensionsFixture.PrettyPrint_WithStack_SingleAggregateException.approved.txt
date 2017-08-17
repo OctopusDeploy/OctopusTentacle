@@ -9,6 +9,6 @@ System.AggregateException
 --Inner Exception 1--
 Inner
 System.Exception
-   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.<>c.<RaiseAggregateException>b__11_1() in ExceptionExtensionsFixture.cs:line <n>
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.<>c.<RaiseAggregateException>b__12_1() in ExceptionExtensionsFixture.cs:line <n>
    at System.Threading.Tasks.Task`1.InnerInvoke()
    at System.Threading.Tasks.Task.Execute()

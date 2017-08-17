@@ -63,6 +63,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssentRunner.cs" />
     <Compile Include="Bcl\IO\IOUtilFixture.cs" />
     <Compile Include="Configuration\ProxyInitializerTests.cs" />
     <Compile Include="Diagnostics\AbstractLogFixture.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\AesEncryptionFixture.cs" />
     <Compile Include="Security\Certificates\CertificateEncoderFixture.cs" />
+    <Compile Include="Setup.cs" />
     <Compile Include="Support\InMemoryLog.cs" />
     <Compile Include="Support\TestConsoleLog.cs" />
     <Compile Include="TestExecutionContext.cs" />
