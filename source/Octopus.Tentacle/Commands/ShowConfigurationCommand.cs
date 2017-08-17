@@ -103,10 +103,12 @@ namespace Octopus.Tentacle.Commands
                 ApplicationDirectory = tentacleConfiguration.ApplicationDirectory,
                 ListenIpAddress = tentacleConfiguration.ListenIpAddress,
                 NoListen = tentacleConfiguration.NoListen,
-                TentacleCertificate = tentacleConfiguration.TentacleCertificate,
                 ServicesPortNumber = tentacleConfiguration.ServicesPortNumber,
                 TrustedOctopusServers = tentacleConfiguration.TrustedOctopusServers
             };
+
+            //we dont want the actual certificate, as its encrypted, and we get a different output everytime
+            outputStore.Set("Tentacle.CertificateThumbprint", tentacleConfiguration.TentacleCertificate.Thumbprint);
 
             var watchdogConfiguration = watchdog.Value.GetConfiguration();
             watchdogConfiguration.WriteTo(outputStore);
