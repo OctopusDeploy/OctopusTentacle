@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Commands
 
         readonly IApplicationInstanceSelector instanceSelector;
         readonly IOctopusFileSystem fileSystem;
-        readonly ITentacleConfiguration tentacleConfiguration;
+        readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
         readonly Lazy<IWatchdog> watchdog;
         string file;
 
@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Commands
         public ShowConfigurationCommand(
             IApplicationInstanceSelector instanceSelector,
             IOctopusFileSystem fileSystem,
-            ITentacleConfiguration tentacleConfiguration,
+            Lazy<ITentacleConfiguration> tentacleConfiguration,
             Lazy<IWatchdog> watchdog) : base(instanceSelector)
         {
             this.instanceSelector = instanceSelector;
@@ -98,17 +98,17 @@ namespace Octopus.Tentacle.Commands
             };
 
             var certificateGenerator = new CertificateGenerator();
-            var newTentacleConfiguration = new TentacleConfiguration(outputStore, homeConfiguration, certificateGenerator, tentacleConfiguration.ProxyConfiguration, tentacleConfiguration.PollingProxyConfiguration, new NullLog())
+            var newTentacleConfiguration = new TentacleConfiguration(outputStore, homeConfiguration, certificateGenerator, tentacleConfiguration.Value.ProxyConfiguration, tentacleConfiguration.Value.PollingProxyConfiguration, new NullLog())
             {
-                ApplicationDirectory = tentacleConfiguration.ApplicationDirectory,
-                ListenIpAddress = tentacleConfiguration.ListenIpAddress,
-                NoListen = tentacleConfiguration.NoListen,
-                ServicesPortNumber = tentacleConfiguration.ServicesPortNumber,
-                TrustedOctopusServers = tentacleConfiguration.TrustedOctopusServers
+                ApplicationDirectory = tentacleConfiguration.Value.ApplicationDirectory,
+                ListenIpAddress = tentacleConfiguration.Value.ListenIpAddress,
+                NoListen = tentacleConfiguration.Value.NoListen,
+                ServicesPortNumber = tentacleConfiguration.Value.ServicesPortNumber,
+                TrustedOctopusServers = tentacleConfiguration.Value.TrustedOctopusServers
             };
 
             //we dont want the actual certificate, as its encrypted, and we get a different output everytime
-            outputStore.Set("Tentacle.CertificateThumbprint", tentacleConfiguration.TentacleCertificate.Thumbprint);
+            outputStore.Set("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
 
             var watchdogConfiguration = watchdog.Value.GetConfiguration();
             watchdogConfiguration.WriteTo(outputStore);
