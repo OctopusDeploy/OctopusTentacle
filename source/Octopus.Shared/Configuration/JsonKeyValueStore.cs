@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Octopus.Shared.Configuration
 {
@@ -39,7 +40,10 @@ namespace Octopus.Shared.Configuration
                     {
                         if (i == keyHierarchyItems.Length - 1)
                         {
-                            node.Add(keyHierarchyItem, kvp.Value);
+                            if (kvp.Value != null && kvp.Value.StartsWith("[{"))
+                                node.Add(keyHierarchyItem, JArray.Parse(kvp.Value));
+                            else
+                                node.Add(keyHierarchyItem, kvp.Value);
                         }
                         else
                         {
