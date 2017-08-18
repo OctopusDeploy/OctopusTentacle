@@ -1,11 +1,9 @@
 ﻿#if WINDOWS_SERVICE
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Octopus.Shared.Configuration;
-using Microsoft.Win32.TaskScheduler;
 using Octopus.Diagnostics;
+using Octopus.Shared.Services;
 
 namespace Octopus.Shared.Startup
 {
@@ -13,6 +11,7 @@ namespace Octopus.Shared.Startup
     {
         readonly ILog log;
         readonly ApplicationName applicationName;
+        readonly Lazy<IWatchdog> watchdog;
         int interval = 5;
         bool createTask;
         bool deleteTask;
@@ -20,10 +19,12 @@ namespace Octopus.Shared.Startup
 
         public WatchdogCommand(
             ILog log, 
-            ApplicationName applicationName)
+            ApplicationName applicationName,
+            Lazy<IWatchdog> watchdog)
         {
             this.log = log;
             this.applicationName = applicationName;
+            this.watchdog = watchdog;
 
             Options.Add("create", "Create the watchdog task for the given instances", v =>
             {
@@ -52,46 +53,13 @@ namespace Octopus.Shared.Startup
             var instanceNames = string.Join(",", instances);
             log.Info("Instances: " + instanceNames);
 
-            using (var taskService = new TaskService())
+            if (deleteTask)
             {
-                var taskName = "Octopus Watchdog " + applicationName;
-
-                if (deleteTask)
-                {
-                    if (taskService.FindAllTasks(t => t.Name == taskName).SingleOrDefault() != null)
-                    {
-                        taskService.RootFolder.DeleteTask(taskName);
-                        log.Info($"Deleted scheduled task {taskName}");
-                    }
-                }
-
-                if (createTask)
-                {
-                    var taskDefinition = taskService.FindAllTasks(t => t.Name == taskName).SingleOrDefault()?.Definition;
-                    if (taskDefinition == null)
-                    {
-                        taskDefinition = taskService.NewTask();
-
-                        taskDefinition.Principal.UserId = "SYSTEM";
-                        taskDefinition.Principal.LogonType = TaskLogonType.ServiceAccount;
-                        log.Info($"Creating scheduled task {taskName}");
-                    }
-                    else
-                    {
-                        log.Info($"Updating scheduled task {taskName}");
-                    }
-
-                    taskDefinition.Actions.Clear();
-                    taskDefinition.Actions.Add(new ExecAction(Assembly.GetEntryAssembly().Location, "checkservices --instances " + instanceNames, null));
-
-                    taskDefinition.Triggers.Clear();
-                    taskDefinition.Triggers.Add(new TimeTrigger
-                    {
-                        Repetition = new RepetitionPattern(TimeSpan.FromMinutes(interval), TimeSpan.Zero)
-                    });
-
-                    taskService.RootFolder.RegisterTaskDefinition(taskName, taskDefinition);
-                }
+                watchdog.Value.Delete();
+            }
+            if (createTask)
+            {
+                watchdog.Value.Create(instanceNames, interval);
             }
         }
     }
