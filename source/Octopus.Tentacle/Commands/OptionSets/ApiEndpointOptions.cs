@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Commands.OptionSets
             options.Add("server=", "The Octopus server - e.g., 'http://octopus'", s => Server = s);
             options.Add("apiKey=", "Your API key; you can get this from the Octopus web portal", s => ApiKey = s);
             options.Add("u|username=", "If not using API keys, your username", s => Username = s);
-            options.Add("p|password=", "In not using API keys, your password", s => Password = s);
+            options.Add("p|password=", "If not using API keys, your password", s => Password = s);
         }
 
         public Uri ServerUri => new Uri(Server);
