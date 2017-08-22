@@ -139,24 +139,38 @@ namespace Octopus.Tentacle.Commands
                 {
                     var repository = new OctopusAsyncRepository(client);
                     var matchingMachines = await repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
-                    if (matchingMachines.Count > 1)
-                        throw new ControlledFailureException("This Tentacle is registered multiple times with the server - unable to display configuration");
 
-                    if (matchingMachines.Count == 1)
+                    switch (matchingMachines.Count)
                     {
-                        var machine = matchingMachines.First();
-                        var environments = await repository.Environments.FindAll();
-                        outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
-                        var tenants = await repository.Tenants.FindAll();
-                        outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
-                        outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
-                        outputStore.Set("Tentacle.Roles", machine.Roles);
-                        var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
-                        outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
-                        outputStore.Set("Tentacle.DisplayName", machine.Name);
-                        if (machine.Endpoint is ListeningTentacleEndpointResource)
-                            outputStore.Set("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
+                        case 0:
+                            Log.Error($"No machines were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
+                            break;
+
+                        case 1:
+                            var machine = matchingMachines.First();
+                            var environments = await repository.Environments.FindAll();
+                            outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+                            var featuresConfiguration = await repository.FeaturesConfiguration.GetFeaturesConfiguration();
+                            if (featuresConfiguration.IsMultiTenancyEnabled)
+                            {
+                                var tenants = await repository.Tenants.FindAll();
+                                outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+                                outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
+                            }
+                            outputStore.Set("Tentacle.Roles", machine.Roles);
+                            var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
+                            outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
+                            outputStore.Set("Tentacle.DisplayName", machine.Name);
+                            if (machine.Endpoint is ListeningTentacleEndpointResource)
+                                outputStore.Set("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
+                            break;
+
+                        default:
+                            if (matchingMachines.Count > 1)
+                                throw new ControlledFailureException("This Tentacle is registered multiple times with the server - unable to display configuration");
+                            break;
                     }
+
                 }
             }
 
