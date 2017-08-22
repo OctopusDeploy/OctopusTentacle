@@ -1,68 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Octopus.Shared.Configuration
 {
-    public abstract class JsonKeyValueStore : DictionaryKeyValueStore
+    public abstract class JsonFlatKeyValueStore : FlatDictionaryKeyValueStore
     {
-        readonly bool useHierarchicalOutput;
-
-        protected JsonKeyValueStore(bool useHierarchicalOutput, bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        protected JsonFlatKeyValueStore(bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
-            this.useHierarchicalOutput = useHierarchicalOutput;
         }
 
-        protected override void SaveSettings(IDictionary<string, string> settingsToSave)
+        protected override void SaveSettings(IDictionary<string, object> settingsToSave)
         {
-            if (!useHierarchicalOutput)
-            {
-                WriteSerializedData(JsonConvert.SerializeObject(settingsToSave, Formatting.Indented));
-                return;
-            }
-
-            var data = new ObjectHierarchy();
-            foreach (var kvp in settingsToSave)
-            {
-                var keyHierarchyItems = kvp.Key.Split('.');
-
-                var node = data;
-                for (var i = 0; i < keyHierarchyItems.Length; i++)
-                {
-                    var keyHierarchyItem = keyHierarchyItems[i];
-
-                    if (node.ContainsKey(keyHierarchyItem))
-                    {
-                        node = (ObjectHierarchy)node[keyHierarchyItem];
-                    }
-                    else
-                    {
-                        if (i == keyHierarchyItems.Length - 1)
-                        {
-                            if (kvp.Value != null && kvp.Value.StartsWith("[{"))
-                                node.Add(keyHierarchyItem, JArray.Parse(kvp.Value));
-                            else
-                                node.Add(keyHierarchyItem, kvp.Value);
-                        }
-                        else
-                        {
-                            var newNode = new ObjectHierarchy();
-                            node.Add(keyHierarchyItem, newNode);
-                            node = newNode;
-                        }
-                    }
-                }
-            }
-
-            var serializedData = JsonConvert.SerializeObject(data, Formatting.Indented);
-            WriteSerializedData(serializedData);
+            WriteSerializedData(JsonConvert.SerializeObject(settingsToSave, Formatting.Indented));
         }
 
         protected abstract void WriteSerializedData(string serializedData);
-    }
-
-    public class ObjectHierarchy : Dictionary<string, object>
-    {
     }
 }

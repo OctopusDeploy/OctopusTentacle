@@ -4,23 +4,23 @@ using System.Linq;
 
 namespace Octopus.Shared.Configuration
 {
-    public class DictionaryKeyValueStore : AbstractKeyValueStore
+    public abstract class DictionaryKeyValueStore : AbstractKeyValueStore
     {
-        readonly Lazy<IDictionary<string, string>> settings;
+        readonly Lazy<IDictionary<string, object>> settings;
 
-        public DictionaryKeyValueStore(bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet)
+        protected DictionaryKeyValueStore(bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet)
         {
-            settings = isWriteOnly ? new Lazy<IDictionary<string, string>>(() => new Dictionary<string, string>()) : new Lazy<IDictionary<string, string>>(Load);
+            settings = isWriteOnly ? new Lazy<IDictionary<string, object>>(() => new Dictionary<string, object>()) : new Lazy<IDictionary<string, object>>(Load);
         }
 
-        protected override sealed void Write(string key, string value)
+        protected sealed override void Write(string key, object value)
         {
             settings.Value[key] = value;
         }
 
-        protected override sealed string Read(string key)
+        protected sealed override object Read(string key)
         {
-            string result;
+            object result;
             return settings.Value.TryGetValue(key, out result) ? result : null;
         }
 
@@ -29,23 +29,23 @@ namespace Octopus.Shared.Configuration
             settings.Value.Remove(key);
         }
 
-        public override sealed void Save()
+        public sealed override void Save()
         {
             SaveSettings(settings.Value);
         }
 
-        IDictionary<string, string> Load()
+        protected IDictionary<string, object> Load()
         {
-            var dictionary = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var dictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
             LoadSettings(dictionary);
             return dictionary;
         }
 
-        protected virtual void LoadSettings(IDictionary<string, string> settingsToFill)
+        protected virtual void LoadSettings(IDictionary<string, object> settingsToFill)
         {
         }
 
-        protected virtual void SaveSettings(IDictionary<string, string> settingsToSave)
+        protected virtual void SaveSettings(IDictionary<string, object> settingsToSave)
         {
         }
 

@@ -29,7 +29,7 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var value = settings.Get("Octopus.Home", null);
+                var value = settings.Get<string>("Octopus.Home", null);
                 if (value != null && !Path.IsPathRooted(value))
                     value = PathHelper.ResolveRelativeDirectoryPath(value);
                 return value;

@@ -15,7 +15,7 @@ namespace Octopus.Shared.Configuration
             this.configurationFile = PathHelper.ResolveRelativeFilePath(configurationFile);
         }
 
-        protected override void LoadSettings(IDictionary<string, string> settingsToFill)
+        protected override void LoadSettings(IDictionary<string, object> settingsToFill)
         {
             if (!ExistsForReading())
                 throw new Exception(string.Format("Configuration file {0} could not be found.", configurationFile));

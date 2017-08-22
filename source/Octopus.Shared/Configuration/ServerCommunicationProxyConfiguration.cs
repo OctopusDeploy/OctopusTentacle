@@ -26,7 +26,7 @@ namespace Octopus.Shared.Configuration
 
         public string CustomProxyPassword
         {
-            get { return settings.Get("Octopus.Server.Proxy.ProxyPassword", protectionScope: DataProtectionScope.LocalMachine); }
+            get { return settings.Get<string>("Octopus.Server.Proxy.ProxyPassword", protectionScope: DataProtectionScope.LocalMachine); }
             set { settings.Set("Octopus.Server.Proxy.ProxyPassword", value, DataProtectionScope.LocalMachine); }
         }
 
