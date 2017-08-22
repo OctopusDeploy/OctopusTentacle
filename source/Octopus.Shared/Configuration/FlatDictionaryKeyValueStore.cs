@@ -7,7 +7,7 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class FlatDictionaryKeyValueStore : DictionaryKeyValueStore
     {
-        public FlatDictionaryKeyValueStore(bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        protected FlatDictionaryKeyValueStore(bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
         }
 
@@ -34,8 +34,6 @@ namespace Octopus.Shared.Configuration
                         null,
                         protectionScope.Value));
             }
-            if (s == null)
-                return defaultValue;
 
             if (typeof(TData) == typeof(string))
                 return (TData)s;

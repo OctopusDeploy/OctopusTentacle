@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {
@@ -40,7 +38,7 @@ namespace Octopus.Shared.Configuration
             var settings = new XmlSettingsRoot();
             foreach (var key in settingsToSave.Keys.OrderBy(k => k))
             {
-                settings.Settings.Add(new XmlSetting { Key = key, Value = (string)settingsToSave[key] });
+                settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key]?.ToString() });
             }
 
             var serializer = new XmlSerializer(typeof (XmlSettingsRoot));
