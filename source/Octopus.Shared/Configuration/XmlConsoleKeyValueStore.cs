@@ -19,7 +19,7 @@ namespace Octopus.Shared.Configuration
             var settings = new XmlSettingsRoot();
             foreach (var key in settingsToSave.Keys.OrderBy(k => k))
             {
-                settings.Settings.Add(new XmlSetting { Key = key, Value = (string)settingsToSave[key] });
+                settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key]?.ToString() });
             }
 
             var serializer = new XmlSerializer(typeof(XmlSettingsRoot));
