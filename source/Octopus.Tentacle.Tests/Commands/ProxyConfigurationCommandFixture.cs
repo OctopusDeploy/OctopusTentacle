@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void TurnOnDefaultProxy()
         {
-            var config = new Lazy<IProxyConfiguration>(() => new ProxyConfiguration(Substitute.For<IKeyValueStore>()));
+            var config = new Lazy<IProxyConfiguration>(() => new ProxyConfiguration(new XmlConsoleKeyValueStore()));
             Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ILog>());
 
             Start("--proxyEnable=true");
@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void UseACustomHostAndIgnoreHttpAndPort()
         {
-            var config = new Lazy<IProxyConfiguration>(() => new ProxyConfiguration(Substitute.For<IKeyValueStore>()));
+            var config = new Lazy<IProxyConfiguration>(() => new ProxyConfiguration(new XmlConsoleKeyValueStore()));
             Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ILog>());
 
             Start("--proxyEnable=true", "--proxyHost=http://127.0.0.1:8888");
