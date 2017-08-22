@@ -51,3 +51,4 @@ source/.idea
 source/Octopus.sln.iml
 
 /tools/
+source/Octopus.Tentacle/Properties/launchSettings.json
