@@ -2,7 +2,6 @@
 using Octopus.Shared;
 using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
 
 namespace Octopus.Tentacle.Commands.OptionSets
 {
@@ -13,6 +12,8 @@ namespace Octopus.Tentacle.Commands.OptionSets
         public string Username { get; private set; }
         public string Password { get; private set; }
 
+        public bool Optional { private get; set; }
+
         public ApiEndpointOptions(OptionSet options)
         {
             options.Add("server=", "The Octopus server - e.g., 'http://octopus'", s => Server = s);
@@ -21,13 +22,15 @@ namespace Octopus.Tentacle.Commands.OptionSets
             options.Add("p|password=", "In not using API keys, your password", s => Password = s);
         }
 
-        public Uri ServerUri
-        {
-            get { return new Uri(Server); }
-        }
+        public Uri ServerUri => new Uri(Server);
+
+        public bool IsSupplied => !string.IsNullOrWhiteSpace(Server) && (!string.IsNullOrEmpty(Username) || !string.IsNullOrEmpty(ApiKey));
 
         public void Validate()
         {
+            if (Optional)
+                return;
+
             if (string.IsNullOrWhiteSpace(Server))
                 throw new ControlledFailureException("Please specify an Octopus server, e.g., --server=http://your-octopus-server");
 

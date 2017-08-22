@@ -78,7 +78,7 @@ namespace Octopus.Tentacle.Configuration
         {
             get
             {
-                var path = settings.Get("Tentacle.Deployment.ApplicationDirectory");
+                var path = settings.Get<string>("Tentacle.Deployment.ApplicationDirectory");
                 if (string.IsNullOrWhiteSpace(path))
                 {
                     var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
@@ -105,8 +105,8 @@ namespace Octopus.Tentacle.Configuration
         {
             get
             {
-                var thumbprint = settings.Get("Tentacle.CertificateThumbprint");
-                var encoded = settings.Get("Tentacle.Certificate", protectionScope: DataProtectionScope.LocalMachine);
+                var thumbprint = settings.Get<string>("Tentacle.CertificateThumbprint");
+                var encoded = settings.Get<string>("Tentacle.Certificate", protectionScope: DataProtectionScope.LocalMachine);
                 return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint, encoded);
             }
             set
@@ -132,7 +132,7 @@ namespace Octopus.Tentacle.Configuration
         {
             get
             {
-                var setting = settings.Get("Tentacle.Communication.LastReceivedHandshake");
+                var setting = settings.Get<string>("Tentacle.Communication.LastReceivedHandshake");
                 if (string.IsNullOrWhiteSpace(setting)) return null;
                 return JsonConvert.DeserializeObject<OctopusServerConfiguration>(setting);
             }
