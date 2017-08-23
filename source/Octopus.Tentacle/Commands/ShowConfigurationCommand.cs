@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Octopus.Client;
@@ -18,13 +17,6 @@ namespace Octopus.Tentacle.Commands
 {
     public class ShowConfigurationCommand : AbstractStandardCommand
     {
-        static readonly string XmlFormat = "XML";
-        static readonly string JsonFormat = "json";
-        static readonly string JsonHierarchicalFormat = "json-hierarchical";
-        static readonly string[] SupportedFormats = { XmlFormat, JsonFormat, JsonHierarchicalFormat };
-
-        string format = XmlFormat;
-
         readonly IApplicationInstanceSelector instanceSelector;
         readonly IOctopusFileSystem fileSystem;
         readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
@@ -52,52 +44,22 @@ namespace Octopus.Tentacle.Commands
             this.octopusClientInitializer = octopusClientInitializer;
 
             Options.Add("file=", "Exports the server configuration to a file. If not specified output goes to the console", v => file = v);
-            Options.Add("format=", $"The format of the output ({string.Join(",", SupportedFormats)}); defaults to {format}", v => format = v);
-            apiEndpointOptions = AddOptionSet(new ApiEndpointOptions(Options) { Optional = true });
+            apiEndpointOptions = AddOptionSet(new ApiEndpointOptions(Options) {Optional = true});
         }
 
         protected override void Start()
         {
             base.Start();
 
-            if (!SupportedFormats.Contains(format, StringComparer.OrdinalIgnoreCase))
-                throw new ControlledFailureException($"The format '{format}' is not supported. Try {string.Join(" or ", SupportedFormats)}.");
-
             DictionaryKeyValueStore outputFile;
 
-            if (string.Equals(format, XmlFormat, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(file))
             {
-                if (!string.IsNullOrWhiteSpace(file))
-                {
-                    EnsureXmlConfigExists(file);
-                    outputFile = new XmlFileKeyValueStore(file, autoSaveOnSet: false, isWriteOnly: true);
-                }
-                else
-                {
-                    outputFile = new XmlConsoleKeyValueStore();
-                }
-            }
-            else if (string.Compare(format.Substring(0, 4), JsonFormat, StringComparison.OrdinalIgnoreCase) == 0)
-            {
-                var useHierarchicalOutput = string.Equals(format, JsonHierarchicalFormat, StringComparison.OrdinalIgnoreCase);
-                if (!string.IsNullOrWhiteSpace(file))
-                {
-                    if (useHierarchicalOutput)
-                        outputFile = new JsonHierarchicalFileKeyValueStore(file, fileSystem, autoSaveOnSet: false, isWriteOnly: true);
-                    else
-                        outputFile = new JsonFileKeyValueStore(file, fileSystem, autoSaveOnSet: false, isWriteOnly: true);
-                }
-                else
-                {
-                    if (useHierarchicalOutput)
-                        outputFile = new JsonHierarchicalConsoleKeyValueStore();
-                    else
-                        outputFile = new JsonConsoleKeyValueStore();
-                }
+                outputFile = new JsonHierarchicalFileKeyValueStore(file, fileSystem, autoSaveOnSet: false, isWriteOnly: true);
             }
             else
             {
-                throw new ControlledFailureException($"The format '{format}' is not supported. Try {string.Join(" or ", SupportedFormats)}.");
+                outputFile = new JsonHierarchicalConsoleKeyValueStore();
             }
 
             CollectConfigurationSettings(outputFile).GetAwaiter().GetResult();
@@ -149,20 +111,20 @@ namespace Octopus.Tentacle.Commands
                         case 1:
                             var machine = matchingMachines.First();
                             var environments = await repository.Environments.FindAll();
-                            outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+                            outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new {x.Id, x.Name}));
                             var featuresConfiguration = await repository.FeaturesConfiguration.GetFeaturesConfiguration();
                             if (featuresConfiguration.IsMultiTenancyEnabled)
                             {
                                 var tenants = await repository.Tenants.FindAll();
-                                outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+                                outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new {x.Id, x.Name}));
                                 outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
                             }
                             outputStore.Set("Tentacle.Roles", machine.Roles);
                             var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
-                            outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
+                            outputStore.Set("Tentacle.MachinePolicy", new {machinePolicy.Id, machinePolicy.Name});
                             outputStore.Set("Tentacle.DisplayName", machine.Name);
                             if (machine.Endpoint is ListeningTentacleEndpointResource)
-                                outputStore.Set("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
+                                outputStore.Set("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource) machine.Endpoint).Uri);
                             break;
 
                         default:
@@ -170,20 +132,7 @@ namespace Octopus.Tentacle.Commands
                                 throw new ControlledFailureException("This Tentacle is registered multiple times with the server - unable to display configuration");
                             break;
                     }
-
                 }
-            }
-
-        }
-
-        void EnsureXmlConfigExists(string configurationFile)
-        {
-            var parentDirectory = Path.GetDirectoryName(configurationFile);
-            fileSystem.EnsureDirectoryExists(parentDirectory);
-
-            if (!fileSystem.FileExists(configurationFile))
-            {
-                fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
             }
         }
     }
