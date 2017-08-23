@@ -104,4 +104,8 @@
       <SubType>Component</SubType>
     </Compile>
   </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="Web\" />
+  </ItemGroup>
 </Project>
