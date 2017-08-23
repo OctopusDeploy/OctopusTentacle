@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using NuGet.Versioning;
-using Octopus.Shared.Util;
 
 namespace Octopus.Tentacle.Versioning
 {
