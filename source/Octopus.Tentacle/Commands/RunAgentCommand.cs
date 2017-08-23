@@ -4,6 +4,7 @@ using Octopus.Diagnostics;
 using Octopus.Time;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Startup;
+using Octopus.Shared.Util;
 using Octopus.Shared.Variables;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
