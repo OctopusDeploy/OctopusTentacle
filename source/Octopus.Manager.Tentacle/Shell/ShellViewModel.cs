@@ -1,5 +1,5 @@
 ﻿using Octopus.Manager.Tentacle.Infrastructure;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Versioning;
 
 namespace Octopus.Manager.Tentacle.Shell
 {
