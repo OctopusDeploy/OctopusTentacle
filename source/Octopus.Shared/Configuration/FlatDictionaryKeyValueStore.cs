@@ -41,7 +41,7 @@ namespace Octopus.Shared.Configuration
             return JsonConvert.DeserializeObject<TData>((string)s);
         }
 
-        private void Set(string name, string value, DataProtectionScope? protectionScope = null)
+        private void SetInternal(string name, string value, DataProtectionScope? protectionScope = null)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -74,9 +74,9 @@ namespace Octopus.Shared.Configuration
             if (name == null) throw new ArgumentNullException(nameof(name));
 
             if (typeof(TData) == typeof(string))
-                Set(name, (string)(object)value, protectionScope);
+                SetInternal(name, (string)(object)value, protectionScope);
             else
-                Set(name, JsonConvert.SerializeObject(value), protectionScope);
+                SetInternal(name, JsonConvert.SerializeObject(value), protectionScope);
         }
     }
 }

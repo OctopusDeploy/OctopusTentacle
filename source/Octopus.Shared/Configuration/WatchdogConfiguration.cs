@@ -1,5 +1,3 @@
-using System;
-
 namespace Octopus.Shared.Configuration
 {
     public class WatchdogConfiguration
@@ -19,7 +17,7 @@ namespace Octopus.Shared.Configuration
         {
             outputStore.Set("Octopus.Watchdog.Enabled", Enabled);
             outputStore.Set("Octopus.Watchdog.Interval", Interval);
-            outputStore.Set("Octopus.Watchdog.Instances", Instances);
+            outputStore.Set<string>("Octopus.Watchdog.Instances", Instances);
         }
     }
 }
