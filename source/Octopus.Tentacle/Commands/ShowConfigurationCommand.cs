@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Commands
             };
 
             //we dont want the actual certificate, as its encrypted, and we get a different output everytime
-            outputStore.Set("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
+            outputStore.Set<string>("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
 
             var watchdogConfiguration = watchdog.Value.GetConfiguration();
             watchdogConfiguration.WriteTo(outputStore);
@@ -122,9 +122,9 @@ namespace Octopus.Tentacle.Commands
                             outputStore.Set("Tentacle.Roles", machine.Roles);
                             var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
                             outputStore.Set("Tentacle.MachinePolicy", new {machinePolicy.Id, machinePolicy.Name});
-                            outputStore.Set("Tentacle.DisplayName", machine.Name);
+                            outputStore.Set<string>("Tentacle.DisplayName", machine.Name);
                             if (machine.Endpoint is ListeningTentacleEndpointResource)
-                                outputStore.Set("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource) machine.Endpoint).Uri);
+                                outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource) machine.Endpoint).Uri);
                             break;
 
                         default:
