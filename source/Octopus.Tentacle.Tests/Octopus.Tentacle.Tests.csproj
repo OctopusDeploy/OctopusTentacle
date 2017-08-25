@@ -129,7 +129,7 @@
       <HintPath>..\packages\Octopus.Client.4.19.0\lib\net45\Octopus.Client.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Configuration, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Configuration.1.1.0-enh-typedconfigu0007\lib\net45\Octopus.Configuration.dll</HintPath>
+      <HintPath>..\packages\Octopus.Configuration.1.1.0-ci0003\lib\net45\Octopus.Configuration.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Data, Version=1.0.24.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Data.1.0.24\lib\netstandard1.0\Octopus.Data.dll</HintPath>
