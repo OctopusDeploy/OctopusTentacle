@@ -82,7 +82,6 @@
     <Compile Include="Util\PathSegmentValidatorFixture.cs" />
     <Compile Include="Util\ThrottleFixture.cs" />
     <Compile Include="Util\UniquifierFixture.cs" />
-    <Compile Include="Variables\SpecialVariablesFixture.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Bcl\IO\UTF16.txt">
