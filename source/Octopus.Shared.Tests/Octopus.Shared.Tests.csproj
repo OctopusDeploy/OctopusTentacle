@@ -83,8 +83,6 @@
     <Compile Include="Util\PathSegmentValidatorFixture.cs" />
     <Compile Include="Util\ThrottleFixture.cs" />
     <Compile Include="Util\UniquifierFixture.cs" />
-    <Compile Include="Variables\SpecialVariablesFixture.cs" />
-    <Compile Include="Web\WebRoutesFixture.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Bcl\IO\UTF16.txt">
@@ -119,6 +117,9 @@
       <Project>{14b62699-bbd8-4b6a-9633-dab3d790d400}</Project>
       <Name>Octopus.Shared</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Web\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
