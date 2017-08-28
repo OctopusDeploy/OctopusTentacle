@@ -11,28 +11,19 @@ namespace Octopus.Shared.Configuration
         {
         }
 
-        public override TData Get<TData>(string name, TData defaultValue = default(TData), DataProtectionScope? protectionScope = null)
+        public override TData Get<TData>(string name, TData defaultValue, DataProtectionScope? protectionScope)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
             var s = Read(name);
-            if (s == null)
-                return defaultValue;
-
-            var value = s as string;
-            if (value != null && string.IsNullOrWhiteSpace(value))
+            var valueAsString = s as string;
+            if (string.IsNullOrWhiteSpace(valueAsString))
                 return defaultValue;
 
             if (protectionScope != null)
             {
-                if (!(s is string))
-                    throw new InvalidOperationException("Cannot decrypt value for " + name + ", as its not stored as string. The value is stored as " + s.GetType() + ".");
-
-                s = Encoding.UTF8.GetString(
-                    ProtectedData.Unprotect(
-                        Convert.FromBase64String(value),
-                        null,
-                        protectionScope.Value));
+                var decryptedBytes = ProtectedData.Unprotect(Convert.FromBase64String(valueAsString), null, protectionScope.Value);
+                s = Encoding.UTF8.GetString(decryptedBytes);
             }
 
             if (typeof(TData) == typeof(string))
@@ -48,7 +39,7 @@ namespace Octopus.Shared.Configuration
             if (string.IsNullOrWhiteSpace(value))
             {
                 Write(name, null);
-                if (autoSaveOnSet)
+                if (AutoSaveOnSet)
                     Save();
                 return;
             }
@@ -65,7 +56,7 @@ namespace Octopus.Shared.Configuration
             }
 
             Write(name, v);
-            if (autoSaveOnSet)
+            if (AutoSaveOnSet)
                 Save();
         }
 

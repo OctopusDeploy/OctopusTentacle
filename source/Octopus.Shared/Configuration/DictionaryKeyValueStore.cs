@@ -6,22 +6,21 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class DictionaryKeyValueStore : AbstractKeyValueStore
     {
-        readonly Lazy<IDictionary<string, object>> settings;
+        private readonly Lazy<IDictionary<string, object>> settings;
 
         protected DictionaryKeyValueStore(bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet)
         {
             settings = isWriteOnly ? new Lazy<IDictionary<string, object>>(() => new Dictionary<string, object>()) : new Lazy<IDictionary<string, object>>(Load);
         }
 
-        protected sealed override void Write(string key, object value)
+        protected void Write(string key, object value)
         {
             settings.Value[key] = value;
         }
 
-        protected sealed override object Read(string key)
+        protected object Read(string key)
         {
-            object result;
-            return settings.Value.TryGetValue(key, out result) ? result : null;
+            return settings.Value.TryGetValue(key, out var result) ? result : null;
         }
 
         protected override void Delete(string key)
@@ -34,7 +33,7 @@ namespace Octopus.Shared.Configuration
             SaveSettings(settings.Value);
         }
 
-        protected IDictionary<string, object> Load()
+        private IDictionary<string, object> Load()
         {
             var dictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
             LoadSettings(dictionary);

@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Octopus.Shared.Configuration
 {
-    public abstract class JsonHierarchicalKeyValueStore : NestedDictionaryKeyValueStore
+    public abstract class JsonHierarchicalKeyValueStore : HierarchicalDictionaryKeyValueStore
     {
         protected JsonHierarchicalKeyValueStore(bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
