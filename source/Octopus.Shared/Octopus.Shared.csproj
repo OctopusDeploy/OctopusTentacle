@@ -42,9 +42,6 @@
     <PackageReference Include="System.Collections" Version="4.0.11" />
     <PackageReference Include="System.Runtime" Version="4.1.0" />
     <PackageReference Include="System.Runtime.Extensions" Version="4.1.0" />
-    <PackageReference Include="TaskScheduler" Version="2.5.21">
-      <PrivateAssets>All</PrivateAssets>
-    </PackageReference>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETStandard' ">
@@ -62,9 +59,7 @@
     <PackageReference Include="Autofac" Version="3.5.2" />
     <PackageReference Include="NLog" Version="4.0.1" />
     <PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
-     <PackageReference Include="TaskScheduler" Version="2.5.21">
-      <PrivateAssets>All</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="TaskScheduler" Version="2.5.21" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
