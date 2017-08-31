@@ -138,8 +138,8 @@
     <Reference Include="Octopus.Diagnostics, Version=1.0.12.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Diagnostics.1.0.12\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Shared, Version=3.16.5.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Shared.3.16.5\lib\net45\Octopus.Shared.dll</HintPath>
+    <Reference Include="Octopus.Shared, Version=3.17.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Shared.3.17.0\lib\net45\Octopus.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.0.9.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Time.1.0.9\lib\netstandard1.0\Octopus.Time.dll</HintPath>
@@ -152,8 +152,11 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Services.Client" />
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\PowerShell\System.Management.Automation.dll</HintPath>
@@ -173,6 +176,7 @@
     <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -194,6 +198,7 @@
     </Compile>
     <Compile Include="Commands\ListInstancesCommandFixture.cs" />
     <Compile Include="Commands\DeregisterMachineCommandFixture.cs" />
+    <Compile Include="Commands\OptionSets\ApiEndpointOptionsFixture.cs" />
     <Compile Include="Commands\ProxyConfigurationCommandFixture.cs" />
     <Compile Include="Commands\ServerCommsCommandTest.cs" />
     <Compile Include="Communications\HalibutInitializerFixture.cs" />
