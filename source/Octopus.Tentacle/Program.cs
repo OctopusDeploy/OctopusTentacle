@@ -1,4 +1,5 @@
 using System.Net;
+using System.Threading;
 using Autofac;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
@@ -74,6 +75,7 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<PollCommand>("poll-server", "Configures an Octopus Server that this Tentacle will poll");
             builder.RegisterCommand<ListInstancesCommand>("list-instances", "Lists all installed Tentacle instances");
             builder.RegisterCommand<VersionCommand>("version", "Show the Tentacle version information");
+            builder.RegisterCommand<ShowConfigurationCommand>("show-configuration", "Outputs the Tentacle configuration");
 
             return builder.Build();
         }
