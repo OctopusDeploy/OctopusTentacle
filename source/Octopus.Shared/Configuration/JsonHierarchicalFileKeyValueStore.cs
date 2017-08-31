@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
@@ -6,12 +5,12 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
-    public class JsonFileKeyValueStore : JsonFlatKeyValueStore
+    public class JsonHierarchicalFileKeyValueStore : JsonHierarchicalKeyValueStore
     {
         readonly string configurationFile;
         readonly IOctopusFileSystem fileSystem;
 
-        public JsonFileKeyValueStore(string configurationFile, IOctopusFileSystem fileSystem, bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        public JsonHierarchicalFileKeyValueStore(string configurationFile, IOctopusFileSystem fileSystem, bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
             this.configurationFile = configurationFile;
             this.fileSystem = fileSystem;

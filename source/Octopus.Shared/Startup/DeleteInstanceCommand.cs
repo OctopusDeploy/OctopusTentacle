@@ -34,8 +34,8 @@ namespace Octopus.Shared.Startup
 
         private void RemoveNodeFromDatabase()
         {
-            var connectionString = instanceSelector.GetCurrentInstance().Configuration.Get("Octopus.Storage.ExternalDatabaseConnectionString");
-            var serverName = instanceSelector.GetCurrentInstance().Configuration.Get("Octopus.Server.NodeName");
+            var connectionString = instanceSelector.GetCurrentInstance().Configuration.Get<string>("Octopus.Storage.ExternalDatabaseConnectionString");
+            var serverName = instanceSelector.GetCurrentInstance().Configuration.Get<string>("Octopus.Server.NodeName");
 
             if (string.IsNullOrWhiteSpace(connectionString) || string.IsNullOrWhiteSpace(serverName))
                 return;

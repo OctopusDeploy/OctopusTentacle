@@ -2,9 +2,9 @@
 
 namespace Octopus.Shared.Configuration
 {
-    public class JsonConsoleKeyValueStore : JsonFlatKeyValueStore
+    public class JsonHierarchicalConsoleKeyValueStore : JsonHierarchicalKeyValueStore
     {
-        public JsonConsoleKeyValueStore() : base(autoSaveOnSet: false, isWriteOnly: true)
+        public JsonHierarchicalConsoleKeyValueStore() : base((bool) false, (bool) true)
         {
         }
 

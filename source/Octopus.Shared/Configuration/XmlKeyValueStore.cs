@@ -1,21 +1,19 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {
-    public abstract class XmlKeyValueStore : DictionaryKeyValueStore
+    public abstract class XmlKeyValueStore : FlatDictionaryKeyValueStore
     {
         protected XmlKeyValueStore(bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
         }
 
-        protected override void LoadSettings(IDictionary<string, string> settingsToFill)
+        protected override void LoadSettings(IDictionary<string, object> settingsToFill)
         {
             if (!ExistsForReading())
             {
@@ -35,12 +33,12 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-        protected override void SaveSettings(IDictionary<string, string> settingsToSave)
+        protected override void SaveSettings(IDictionary<string, object> settingsToSave)
         {
             var settings = new XmlSettingsRoot();
             foreach (var key in settingsToSave.Keys.OrderBy(k => k))
             {
-                settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key] });
+                settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key]?.ToString() });
             }
 
             var serializer = new XmlSerializer(typeof (XmlSettingsRoot));

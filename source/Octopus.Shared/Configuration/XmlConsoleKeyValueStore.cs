@@ -8,18 +8,18 @@ using System.Xml.Serialization;
 
 namespace Octopus.Shared.Configuration
 {
-    public class XmlConsoleKeyValueStore : DictionaryKeyValueStore
+    public class XmlConsoleKeyValueStore : FlatDictionaryKeyValueStore
     {
         public XmlConsoleKeyValueStore() : base(autoSaveOnSet:false, isWriteOnly:true)
         {
         }
 
-        protected override void SaveSettings(IDictionary<string, string> settingsToSave)
+        protected override void SaveSettings(IDictionary<string, object> settingsToSave)
         {
             var settings = new XmlSettingsRoot();
             foreach (var key in settingsToSave.Keys.OrderBy(k => k))
             {
-                settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key] });
+                settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key]?.ToString() });
             }
 
             var serializer = new XmlSerializer(typeof(XmlSettingsRoot));

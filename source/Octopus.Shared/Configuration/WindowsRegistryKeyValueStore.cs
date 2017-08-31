@@ -8,7 +8,7 @@ namespace Octopus.Shared.Configuration
     /// <summary>
     /// Makes it easy to store key/value pairs in the Windows Registry.
     /// </summary>
-    public class WindowsRegistryKeyValueStore : DictionaryKeyValueStore
+    public class WindowsRegistryKeyValueStore : FlatDictionaryKeyValueStore
     {
         const RegistryHive Hive = RegistryHive.LocalMachine;
         const RegistryView View = RegistryView.Registry64;
@@ -20,7 +20,7 @@ namespace Octopus.Shared.Configuration
             this.log = log;
         }
 
-        protected override void LoadSettings(IDictionary<string, string> settingsToFill)
+        protected override void LoadSettings(IDictionary<string, object> settingsToFill)
         {
             log.Info("Loading configuration settings from the Windows registry...");
 
@@ -40,7 +40,7 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-        protected override void SaveSettings(IDictionary<string, string> settingsToSave)
+        protected override void SaveSettings(IDictionary<string, object> settingsToSave)
         {
             log.Info("Saving configuration settings to the Windows registry...");
 
