@@ -350,6 +350,7 @@ private void SignAndTimeStamp(params FilePath[] assemblies)
     {
         CertPath = File(signingCertificatePath),
         Password = signingCertificatPassword,
+        DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
         Description = "Octopus Tentacle Agent",
         DescriptionUri = new Uri("http://octopus.com")
     };
