@@ -2,7 +2,10 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Octopus.Client;
+using Octopus.Client.Exceptions;
+using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
+using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
@@ -25,6 +28,7 @@ namespace Octopus.Tentacle.Commands
         readonly ApiEndpointOptions apiEndpointOptions;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
+        readonly ILog log;
 
         public override bool SuppressConsoleLogging => true;
 
@@ -34,7 +38,8 @@ namespace Octopus.Tentacle.Commands
             Lazy<ITentacleConfiguration> tentacleConfiguration,
             Lazy<IWatchdog> watchdog,
             IProxyConfigParser proxyConfig,
-            IOctopusClientInitializer octopusClientInitializer) : base(instanceSelector)
+            IOctopusClientInitializer octopusClientInitializer,
+            ILog log) : base(instanceSelector)
         {
             this.instanceSelector = instanceSelector;
             this.fileSystem = fileSystem;
@@ -42,6 +47,7 @@ namespace Octopus.Tentacle.Commands
             this.watchdog = watchdog;
             this.proxyConfig = proxyConfig;
             this.octopusClientInitializer = octopusClientInitializer;
+            this.log = log;
 
             Options.Add("file=", "Exports the server configuration to a file. If not specified output goes to the console", v => file = v);
             apiEndpointOptions = AddOptionSet(new ApiEndpointOptions(Options) {Optional = true});
@@ -96,7 +102,15 @@ namespace Octopus.Tentacle.Commands
             //advanced settings
             if (apiEndpointOptions.IsSupplied)
             {
-                var proxyOverride = proxyConfig.ParseToWebProxy(tentacleConfiguration.Value.PollingProxyConfiguration);
+                await CollectServerSideConfiguration(outputStore);
+            }
+        }
+
+        async Task CollectServerSideConfiguration(DictionaryKeyValueStore outputStore)
+        {
+            var proxyOverride = proxyConfig.ParseToWebProxy(tentacleConfiguration.Value.PollingProxyConfiguration);
+            try
+            {
                 using (var client = await octopusClientInitializer.CreateClient(apiEndpointOptions, proxyOverride))
                 {
                     var repository = new OctopusAsyncRepository(client);
@@ -109,22 +123,7 @@ namespace Octopus.Tentacle.Commands
                             break;
 
                         case 1:
-                            var machine = matchingMachines.First();
-                            var environments = await repository.Environments.FindAll();
-                            outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new {x.Id, x.Name}));
-                            var featuresConfiguration = await repository.FeaturesConfiguration.GetFeaturesConfiguration();
-                            if (featuresConfiguration.IsMultiTenancyEnabled)
-                            {
-                                var tenants = await repository.Tenants.FindAll();
-                                outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new {x.Id, x.Name}));
-                                outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
-                            }
-                            outputStore.Set("Tentacle.Roles", machine.Roles);
-                            var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
-                            outputStore.Set("Tentacle.MachinePolicy", new {machinePolicy.Id, machinePolicy.Name});
-                            outputStore.Set<string>("Tentacle.DisplayName", machine.Name);
-                            if (machine.Endpoint is ListeningTentacleEndpointResource)
-                                outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource) machine.Endpoint).Uri);
+                            await CollectionServerSideConfigurationFromMachine(outputStore, repository, matchingMachines.First());
                             break;
 
                         default:
@@ -134,6 +133,31 @@ namespace Octopus.Tentacle.Commands
                     }
                 }
             }
+            catch (OctopusResourceNotFoundException ex)
+            {
+                log.Warn(ex, $"Error contacting server '{apiEndpointOptions.Server}'.");
+                throw new ControlledFailureException($"Unable to contact the specified server '{apiEndpointOptions.Server}'.", ex);
+            }
+        }
+
+        async Task<bool> CollectionServerSideConfigurationFromMachine(DictionaryKeyValueStore outputStore, OctopusAsyncRepository repository, MachineResource machine)
+        {
+            var environments = await repository.Environments.FindAll();
+            outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+            var featuresConfiguration = await repository.FeaturesConfiguration.GetFeaturesConfiguration();
+            if (featuresConfiguration.IsMultiTenancyEnabled)
+            {
+                var tenants = await repository.Tenants.FindAll();
+                outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+                outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
+            }
+            outputStore.Set("Tentacle.Roles", machine.Roles);
+            var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
+            outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
+            outputStore.Set<string>("Tentacle.DisplayName", machine.Name);
+            if (machine.Endpoint is ListeningTentacleEndpointResource)
+                outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
+            return await Task.FromResult(true);
         }
     }
 }
