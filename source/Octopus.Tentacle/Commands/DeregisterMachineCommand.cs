@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Commands
         {
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
-            using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
+            using (var client = await octopusClientInitializer.CreateAsyncClient(api, proxyOverride))
             {
                 await Deregister(new OctopusAsyncRepository(client));
             }
