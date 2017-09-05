@@ -136,7 +136,7 @@ namespace Octopus.Tentacle.Commands
             catch (OctopusResourceNotFoundException ex)
             {
                 log.Warn(ex, $"Error contacting server '{apiEndpointOptions.Server}'.");
-                throw new ControlledFailureException($"Unable to contact the specified server '{apiEndpointOptions.Server}'.", ex);
+                throw new ControlledFailureException($"Unable to contact the specified server '{apiEndpointOptions.Server}'. Check the server URL and try again.", ex);
             }
         }
 
