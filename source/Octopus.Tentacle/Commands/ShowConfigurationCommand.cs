@@ -140,7 +140,7 @@ namespace Octopus.Tentacle.Commands
             }
         }
 
-        async Task<bool> CollectionServerSideConfigurationFromMachine(DictionaryKeyValueStore outputStore, OctopusAsyncRepository repository, MachineResource machine)
+        async Task CollectionServerSideConfigurationFromMachine(DictionaryKeyValueStore outputStore, OctopusAsyncRepository repository, MachineResource machine)
         {
             var environments = await repository.Environments.FindAll();
             outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
@@ -157,7 +157,6 @@ namespace Octopus.Tentacle.Commands
             outputStore.Set<string>("Tentacle.DisplayName", machine.Name);
             if (machine.Endpoint is ListeningTentacleEndpointResource)
                 outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
-            return await Task.FromResult(true);
         }
     }
 }
