@@ -73,6 +73,9 @@ namespace Octopus.Shared.Startup
 
         public int Run()
         {
+            // Need to clean up old files before anything else as they may interfere with initialization
+            CleanFileSystem();
+
             // Initialize logging as soon as possible - waiting for the Container to be built is too late
             InitializeLogging();
 
@@ -195,6 +198,13 @@ namespace Octopus.Shared.Startup
             if (exitCode != (int)ExitCode.Success && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
+        }
+
+        static void CleanFileSystem()
+        {
+            var fileSystem = new OctopusPhysicalFileSystem();
+            var fileSystemCleaner = new FileSystemCleaner(fileSystem, Log.Octopus());
+            fileSystemCleaner.Clean(FileSystemCleaner.PathsToDeleteOnStartupResource);
         }
 
         static void InitializeLogging()
