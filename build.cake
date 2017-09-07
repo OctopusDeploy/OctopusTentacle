@@ -111,6 +111,7 @@ Task("__CreateNuGet")
     {
         Configuration = "Release",
         NoBuild = true,
+        IncludeSymbols = true,
         OutputDirectory = new DirectoryPath(artifactsDir),
         ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
     };
@@ -125,6 +126,7 @@ Task("__CopyToLocalPackages")
 {
     CreateDirectory(localPackagesDir);
     CopyFileToDirectory(Path.Combine(artifactsDir, $"Octopus.Shared.{gitVersion.NuGetVersion}.nupkg"), localPackagesDir);
+    CopyFileToDirectory(Path.Combine(artifactsDir, $"Octopus.Shared.{gitVersion.NuGetVersion}.symbols.nupkg"), localPackagesDir);
 });
 
 private void InBlock(string block, Action action)

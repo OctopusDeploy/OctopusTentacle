@@ -1,1 +1,3 @@
 mode: ContinuousDeployment
+legacy-semver-padding: 0
+build-metadata-padding: 0
