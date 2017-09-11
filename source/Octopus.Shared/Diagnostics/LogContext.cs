@@ -6,22 +6,18 @@ using Octopus.Shared.Security.Masking;
 
 namespace Octopus.Shared.Diagnostics
 {
-    public class LogContext 
+    public class LogContext
     {
         readonly string[] sensitiveValues;
         readonly string correlationId;
-        readonly SensitiveDataMask sensitiveDataMask;
+        SensitiveDataMask sensitiveDataMask;
+        object sensitiveDataMaskLock = new object();
 
         [JsonConstructor]
         public LogContext(string correlationId = null, string[] sensitiveValues = null)
         {
             this.correlationId = correlationId ?? GenerateId();
             this.sensitiveValues = sensitiveValues ?? new string[0];
-            if (this.sensitiveValues.Any())
-            {
-                sensitiveDataMask = new SensitiveDataMask();
-                sensitiveDataMask.MaskInstancesOf(sensitiveValues);
-            }
         }
 
         public string CorrelationId
@@ -39,6 +35,14 @@ namespace Octopus.Shared.Diagnostics
         {
             try
             {
+                lock (sensitiveDataMaskLock)
+                {
+                    if (sensitiveDataMask == null && sensitiveValues.Any())
+                    {
+                        sensitiveDataMask = new SensitiveDataMask();
+                        sensitiveDataMask.MaskInstancesOf(sensitiveValues);
+                    }
+                }
                 if (sensitiveDataMask != null)
                     sensitiveDataMask.ApplyTo(raw, action);
                 else
@@ -95,6 +99,5 @@ namespace Octopus.Shared.Diagnostics
         {
             sensitiveDataMask?.Flush();
         }
-
     }
 }

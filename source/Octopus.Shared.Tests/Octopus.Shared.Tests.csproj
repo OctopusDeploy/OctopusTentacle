@@ -72,6 +72,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\AesEncryptionFixture.cs" />
     <Compile Include="Security\Certificates\CertificateEncoderFixture.cs" />
+    <Compile Include="Security\SensitiveDataMaskFixture.cs" />
+    <Compile Include="Security\SensitiveDataMaskMultiLineFixture.cs" />
     <Compile Include="Setup.cs" />
     <Compile Include="Startup\FileSystemCleanerFixture.cs" />
     <Compile Include="Support\InMemoryLog.cs" />
