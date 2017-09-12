@@ -10,8 +10,8 @@ namespace Octopus.Shared.Diagnostics
     {
         readonly string[] sensitiveValues;
         readonly string correlationId;
+        readonly object sensitiveDataMaskLock = new object();
         SensitiveDataMask sensitiveDataMask;
-        object sensitiveDataMaskLock = new object();
 
         [JsonConstructor]
         public LogContext(string correlationId = null, string[] sensitiveValues = null)
@@ -35,14 +35,15 @@ namespace Octopus.Shared.Diagnostics
         {
             try
             {
-                lock (sensitiveDataMaskLock)
-                {
-                    if (sensitiveDataMask == null && sensitiveValues.Any())
+                if (sensitiveDataMask == null && sensitiveValues.Length > 0)
+                    lock (sensitiveDataMaskLock)
                     {
-                        sensitiveDataMask = new SensitiveDataMask();
-                        sensitiveDataMask.MaskInstancesOf(sensitiveValues);
+                        if (sensitiveDataMask == null && sensitiveValues.Length > 0)
+                        {
+                            sensitiveDataMask = new SensitiveDataMask();
+                            sensitiveDataMask.MaskInstancesOf(sensitiveValues);
+                        }
                     }
-                }
                 if (sensitiveDataMask != null)
                     sensitiveDataMask.ApplyTo(raw, action);
                 else
