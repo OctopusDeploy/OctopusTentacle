@@ -22,6 +22,7 @@
 // Slightly modified to track partial matches
 // Heavily modified for memory optimisation
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -234,10 +235,24 @@ namespace Octopus.Shared.Security.Masking
                 /// </summary>
                 public Node<TNode, TNodeValue> Fail { get; set; }
 
+                bool valueSet;
+                TNodeValue value;
+
                 /// <summary>
                 /// Values for words that end at this node.
                 /// </summary>
-                public TNodeValue Value { get; set; }
+                public TNodeValue Value
+                {
+                    get => value;
+                    set
+                    {
+                        if (valueSet)
+                            throw new Exception("Trie Node Value already set");
+
+                        this.value = value;
+                        valueSet = true;
+                    }
+                }
 
                 public bool HasChildren => hasKey || children != null;
 
