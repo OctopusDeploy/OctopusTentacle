@@ -68,6 +68,7 @@
     <Compile Include="Bcl\IO\IOUtilFixture.cs" />
     <Compile Include="Configuration\ProxyInitializerTests.cs" />
     <Compile Include="Diagnostics\AbstractLogFixture.cs" />
+    <Compile Include="Diagnostics\LogContextFixture.cs" />
     <Compile Include="Integration\CertificateValidatorFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\AesEncryptionFixture.cs" />
