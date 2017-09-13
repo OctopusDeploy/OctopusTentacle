@@ -1,15 +1,15 @@
 ﻿// Copyright (c) 2013 Pēteris Ņikiforovs
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,6 +20,7 @@
 
 // Obtained from https://github.com/pdonald/aho-corasick
 // Slightly modified to track partial matches
+// Heavily modified for memory optimisation
 
 using System.Collections;
 using System.Collections.Generic;
@@ -81,6 +82,7 @@ namespace Octopus.Shared.Security.Masking
             /// Root of the trie. It has no value and no parent.
             /// </summary>
             private readonly Node<T, TValue> root = new Node<T, TValue>();
+
             private Node<T, TValue> node;
 
             /// <summary>
@@ -113,9 +115,8 @@ namespace Octopus.Shared.Security.Masking
 
                 // mark the end of the branch
                 // by adding a value that will be returned when this word is found in a text
-                node.Values.Add(value);
+                node.Value = value;
             }
-
 
             /// <summary>
             /// Constructs fail or fall links.
@@ -178,10 +179,8 @@ namespace Octopus.Shared.Security.Masking
                     {
                         result.IsPartial = node.HasChildren;
 
-                        foreach (var value in t.Values)
-                        {
-                            result.Found.Add(new KeyValuePair<int, TValue>(index, value));
-                        }
+                        if (!EqualityComparer<TValue>.Default.Equals(t.Value, default(TValue)))
+                            result.Found.Add(new KeyValuePair<int, TValue>(index, t.Value));
                     }
 
                     index++;
@@ -197,10 +196,10 @@ namespace Octopus.Shared.Security.Masking
             /// <typeparam name="TNodeValue">The same as the parent value type.</typeparam>
             private class Node<TNode, TNodeValue> : IEnumerable<Node<TNode, TNodeValue>>
             {
-                private readonly TNode word;
-                private readonly Node<TNode, TNodeValue> parent;
-                private readonly Dictionary<TNode, Node<TNode, TNodeValue>> children = new Dictionary<TNode, Node<TNode, TNodeValue>>();
-                private readonly List<TNodeValue> values = new List<TNodeValue>();
+                private Dictionary<TNode, Node<TNode, TNodeValue>> children;
+                private bool hasKey;
+                private TNode singleKey;
+                private Node<TNode, TNodeValue> singleValue;
 
                 /// <summary>
                 /// Constructor for the root node.
@@ -216,36 +215,31 @@ namespace Octopus.Shared.Security.Masking
                 /// <param name="parent"></param>
                 public Node(TNode word, Node<TNode, TNodeValue> parent)
                 {
-                    this.word = word;
-                    this.parent = parent;
+                    this.Word = word;
+                    this.Parent = parent;
                 }
 
                 /// <summary>
                 /// Word (or letter) for this node.
                 /// </summary>
-                public TNode Word
-                {
-                    get { return word; }
-                }
+                public TNode Word { get; }
 
                 /// <summary>
                 /// Parent node.
                 /// </summary>
-                public Node<TNode, TNodeValue> Parent
-                {
-                    get { return parent; }
-                }
+                public Node<TNode, TNodeValue> Parent { get; }
 
                 /// <summary>
                 /// Fail or fall node.
                 /// </summary>
-                public Node<TNode, TNodeValue> Fail
-                {
-                    get;
-                    set;
-                }
+                public Node<TNode, TNodeValue> Fail { get; set; }
 
-                public bool HasChildren => children.Any();
+                /// <summary>
+                /// Values for words that end at this node.
+                /// </summary>
+                public TNodeValue Value { get; set; }
+
+                public bool HasChildren => hasKey || children != null;
 
                 /// <summary>
                 /// Children for this node.
@@ -254,22 +248,46 @@ namespace Octopus.Shared.Security.Masking
                 /// <returns>Child node.</returns>
                 public Node<TNode, TNodeValue> this[TNode c]
                 {
-                    get { return children.ContainsKey(c) ? children[c] : null; }
-                    set { children[c] = value; }
-                }
-
-                /// <summary>
-                /// Values for words that end at this node.
-                /// </summary>
-                public List<TNodeValue> Values
-                {
-                    get { return values; }
+                    get
+                    {
+                        if (children != null && children.TryGetValue(c, out var result))
+                        {
+                            return result;
+                        }
+                        if (hasKey && EqualityComparer<TNode>.Default.Equals(singleKey, c))
+                        {
+                            return singleValue;
+                        }
+                        return null;
+                    }
+                    set
+                    {
+                        if (!hasKey)
+                        {
+                            hasKey = true;
+                            singleKey = c;
+                            singleValue = value;
+                            return;
+                        }
+                        if (children == null)
+                        {
+                            children = new Dictionary<TNode, Node<TNode, TNodeValue>>();
+                            children[singleKey] = singleValue;
+                        }
+                        children[c] = value;
+                    }
                 }
 
                 /// <inherit/>
                 public IEnumerator<Node<TNode, TNodeValue>> GetEnumerator()
                 {
-                    return children.Values.GetEnumerator();
+                    if (children != null)
+                        return children.Values.GetEnumerator();
+
+                    if (hasKey)
+                        return ((IEnumerable<Node<TNode, TNodeValue>>)new[] { singleValue }).GetEnumerator();
+
+                    return Enumerable.Empty<Node<TNode, TNodeValue>>().GetEnumerator();
                 }
 
                 /// <inherit/>
@@ -290,7 +308,7 @@ namespace Octopus.Shared.Security.Masking
                 public FindResult()
                 {
                     Found = new List<KeyValuePair<int, TValue>>();
-                } 
+                }
 
                 public bool IsPartial { get; set; }
 
