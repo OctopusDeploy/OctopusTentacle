@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Newtonsoft.Json;
 using Octopus.Shared.Model;
 using Octopus.Shared.Security.Masking;
@@ -68,7 +69,7 @@ namespace Octopus.Shared.Diagnostics
         public LogContext CreateChild() => new LogContext((correlationId + '/' + GenerateId()), parent: this);
 
         public LogContext WithSensitiveValues(string[] sensitiveValues)
-            => new LogContext(correlationId, sensitiveValues, parent: parent);
+            => new LogContext(correlationId, this.sensitiveValues.Union(sensitiveValues).ToArray(), parent: parent);
 
         static string GenerateId() => Guid.NewGuid().ToString("N");
 

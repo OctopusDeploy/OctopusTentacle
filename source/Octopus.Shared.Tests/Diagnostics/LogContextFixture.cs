@@ -54,5 +54,23 @@ namespace Octopus.Shared.Tests.Diagnostics
             childContext.SafeSanitize(raw, sanitized => result = sanitized);
             Assert.AreEqual(expectedChild, result);
         }
+
+        [Test]
+        public void ChainedWithSensitiveValuesCombine()
+        {
+            const string sensitive1 = "sensitive",
+                sensitive2 = "value",
+                raw = "This contains a sensitive value",
+                expected = "This contains a ******** ********";
+
+            var logContext = new LogContext();
+            var childContext = logContext.CreateChild()
+                .WithSensitiveValues(new[] { sensitive1 })
+                .WithSensitiveValues(new[] { sensitive2 });
+            string result = null;
+
+            childContext.SafeSanitize(raw, sanitized => result = sanitized);
+            Assert.AreEqual(expected, result);
+        }
     }
 }
