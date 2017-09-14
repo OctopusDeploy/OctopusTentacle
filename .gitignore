@@ -54,3 +54,4 @@ launchSettings.json
 .cr/
 
 /tools/
+!tools/packages.config
