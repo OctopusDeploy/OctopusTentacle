@@ -10,7 +10,7 @@ namespace Octopus.Shared.Security.Masking
         public static readonly string Mask = "********";
         static readonly object sync = new object();
         readonly StringBuilder builder = new StringBuilder();
-        readonly AhoCorasick.Trie trie = new AhoCorasick.Trie();
+        readonly AhoCorasick trie = new AhoCorasick();
         readonly Queue<DeferredAction> deferred = new Queue<DeferredAction>();
 
         public SensitiveDataMask()
