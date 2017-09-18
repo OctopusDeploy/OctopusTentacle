@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
@@ -20,8 +19,9 @@ namespace Octopus.Shared.Tests.Security
                 raw = "This contains a sensitiveHELLO value",
                 expected = "This contains a ******** value";
 
-            var sdm = new SensitiveDataMask(verysensitive, sensitive, prettysensitive);
-            sdm.ApplyTo(raw, result =>
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(verysensitive, sensitive, prettysensitive);
+            sdm.ApplyTo(trie, raw, result =>
             {
                 Assert.AreEqual(expected, result);
             });
@@ -34,9 +34,10 @@ namespace Octopus.Shared.Tests.Security
                 raw = "This contains a sensitive value",
                 expected = "This contains a ******** value";
 
-            var sdm = new SensitiveDataMask(sensitive);
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(sensitive);
             string result = null;
-            sdm.ApplyTo(raw, sanitized => result = sanitized);
+            sdm.ApplyTo(trie, raw, sanitized => result = sanitized);
 
             Assert.AreEqual(expected, result);
         }
@@ -47,9 +48,10 @@ namespace Octopus.Shared.Tests.Security
             const string sensitive = "sensitive",
                 raw = "This contains no such value";
 
-            var sdm = new SensitiveDataMask(sensitive);
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(sensitive);
             string result = null;
-            sdm.ApplyTo(raw, sanitized => result = sanitized);
+            sdm.ApplyTo(trie, raw, sanitized => result = sanitized);
 
             Assert.AreSame(raw, result);
         }
@@ -61,9 +63,10 @@ namespace Octopus.Shared.Tests.Security
                 raw = "This contains a sensitive value in a sensitive place at a sensitive time",
                 expected = "This contains a ******** value in a ******** place at a ******** time";
 
-            var sdm = new SensitiveDataMask(sensitive);
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(sensitive);
             string result = null;
-            sdm.ApplyTo(raw, sanitized => result = sanitized);
+            sdm.ApplyTo(trie, raw, sanitized => result = sanitized);
 
             Assert.AreEqual(expected, result);
         }
@@ -71,9 +74,10 @@ namespace Octopus.Shared.Tests.Security
         [Test]
         public void ShouldMaskMultipleMatches()
         {
-            var sdm = new SensitiveDataMask("bacon", "eggs");
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie("bacon", "eggs");
             string result = null;
-            sdm.ApplyTo("I love bacon and eggs!", sanitized => result = sanitized);
+            sdm.ApplyTo(trie, "I love bacon and eggs!", sanitized => result = sanitized);
 
             Assert.AreEqual("I love ******** and ********!", result);
         }
@@ -81,9 +85,10 @@ namespace Octopus.Shared.Tests.Security
         [Test]
         public void ShouldMaskOverlappingMatches()
         {
-            var sdm = new SensitiveDataMask("meenie mi", "nie minie");
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie("meenie mi", "nie minie");
             string result = null;
-            sdm.ApplyTo("eenie meenie minie mo", sanitized => result = sanitized);
+            sdm.ApplyTo(trie, "eenie meenie minie mo", sanitized => result = sanitized);
 
             Assert.AreEqual("eenie ******** mo", result);
         }
@@ -94,10 +99,11 @@ namespace Octopus.Shared.Tests.Security
             const string sensitive = "123",
                 raw = "Easy as 123";
 
-            var sdm = new SensitiveDataMask(sensitive);
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(sensitive);
 
             string result = null;
-            sdm.ApplyTo(raw, sanitized => result = sanitized);
+            sdm.ApplyTo(trie, raw, sanitized => result = sanitized);
 
             Assert.AreSame(raw, result);
         }
@@ -106,17 +112,18 @@ namespace Octopus.Shared.Tests.Security
         [Ignore]
         public void HeavyLoadPerformance()
         {
-            var sensitiveValues = new List<string>();
+            var sensitiveValues = new string[1000];
             var rng = new Random();
             var watch = new Stopwatch();
 
-            for (var i = 0; i < 1000; i++)
+            for (var i = 0; i < sensitiveValues.Length; i++)
             {
-                sensitiveValues.Add(RandomStringGenerator.Generate(rng.Next(8, 50)));
+                sensitiveValues[i] = RandomStringGenerator.Generate(rng.Next(8, 50));
             }
 
             watch.Start();
-            var sdm = new SensitiveDataMask(sensitiveValues);
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(sensitiveValues);
             watch.Stop();
             var preProcessingTime = watch.ElapsedMilliseconds;
 
@@ -128,7 +135,7 @@ namespace Octopus.Shared.Tests.Security
                 if (i % 100 == 0)
                     raw += sensitiveValues[rng.Next(0, 999)];
 
-                sdm.ApplyTo(raw, sensitive => { });
+                sdm.ApplyTo(trie, raw, sensitive => { });
             }
             watch.Stop();
             var processingTime = watch.ElapsedMilliseconds;
@@ -149,13 +156,14 @@ namespace Octopus.Shared.Tests.Security
                 + password
                 + string.Concat(Enumerable.Range(0, 10).Select(g => Guid.NewGuid().ToString()));
 
-            var sdm = new SensitiveDataMask(password);
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(password);
 
             var watch = Stopwatch.StartNew();
             var count = 0;
             while (watch.ElapsedMilliseconds < 5000)
             {
-                sdm.ApplyTo(line, sanitized => { });
+                sdm.ApplyTo(trie, line, sanitized => { });
                 count++;
             }
 
@@ -169,18 +177,36 @@ namespace Octopus.Shared.Tests.Security
         {
             var line = string.Concat(Enumerable.Range(0, 21).Select(g => Guid.NewGuid().ToString()));
 
-            var sdm = new SensitiveDataMask(Guid.NewGuid().ToString());
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(Guid.NewGuid().ToString());
 
             var watch = Stopwatch.StartNew();
             var count = 0;
             while (watch.ElapsedMilliseconds < 5000)
             {
-                sdm.ApplyTo(line, sanitized => { });
+                sdm.ApplyTo(trie, line, sanitized => { });
                 count++;
             }
 
             Console.WriteLine(count.ToString("n0"));
             Assert.That(count, Is.GreaterThan(1000));
+        }
+
+        private AhoCorasick CreateTrie(params string[] args)
+        {
+            var trie = new AhoCorasick();
+            foreach (var instance in args)
+            {
+                if (string.IsNullOrWhiteSpace(instance) || instance.Length < 4)
+                    continue;
+
+                var normalized = instance.Replace("\r\n", "").Replace("\n", "");
+
+                trie.Add(normalized);
+            }
+
+            trie.Build();
+            return trie;
         }
     }
 }

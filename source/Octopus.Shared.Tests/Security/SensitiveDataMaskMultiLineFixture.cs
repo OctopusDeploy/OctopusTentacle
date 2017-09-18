@@ -13,12 +13,13 @@ namespace Octopus.Shared.Tests.Security
 
             string[] raw = { "Show me", "the monkey!" };
 
-            var sdm = new SensitiveDataMask(sensitive);
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(sensitive);
             string result = "";
 
             foreach (var line in raw)
             {
-                sdm.ApplyTo(line, sanitized =>
+                sdm.ApplyTo(trie, line, sanitized =>
                 {
                     result += sanitized;
                 });
@@ -34,12 +35,13 @@ namespace Octopus.Shared.Tests.Security
 
             string[] raw = { "Humpty Dumpty sat on a wall", "Humpty Dumpty had a great fall", "All the kings horses and all the kings men", "Something something" };
 
-            var sdm = new SensitiveDataMask(sensitive);
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(sensitive);
             string result = "";
 
             foreach (var line in raw)
             {
-                sdm.ApplyTo(line, sanitized =>
+                sdm.ApplyTo(trie, line, sanitized =>
                 {
                     result += sanitized;
                 });
@@ -55,12 +57,13 @@ namespace Octopus.Shared.Tests.Security
 
             string[] raw = { "<Message>Humpty Dumpty sat on a wall", "Humpty Dumpty had a great fall", "All the kings horses and all the kings men", "Couldn't put Humpty together again</Message>" };
 
-            var sdm = new SensitiveDataMask(sensitive);
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(sensitive);
             string result = "";
 
             foreach (var line in raw)
             {
-                sdm.ApplyTo(line, sanitized =>
+                sdm.ApplyTo(trie, line, sanitized =>
                 {
                     result += sanitized;
                 });
@@ -79,12 +82,13 @@ namespace Octopus.Shared.Tests.Security
 
             string[] raw = { "Single Line Secret: " + singleLineSensitive + " Multi-line Secret: " + "multi", "line", "secret" };
 
-            var sdm = new SensitiveDataMask(singleLineSensitive, multiLineSensitive);
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(singleLineSensitive, multiLineSensitive);
             string result = "";
 
             foreach (var line in raw)
             {
-                sdm.ApplyTo(line, sanitized =>
+                sdm.ApplyTo(trie, line, sanitized =>
                 {
                     result += sanitized;
                 });
@@ -100,18 +104,36 @@ namespace Octopus.Shared.Tests.Security
 
             string[] raw = { "multi", "multi", "line", "secret", "secret" };
 
-            var sdm = new SensitiveDataMask(multiLineSensitive);
+            var sdm = new SensitiveDataMask();
+            var trie = CreateTrie(multiLineSensitive);
             string result = "";
 
             foreach (var line in raw)
             {
-                sdm.ApplyTo(line, sanitized =>
+                sdm.ApplyTo(trie, line, sanitized =>
                 {
                     result += sanitized;
                 });
             }
 
             Assert.AreEqual("multi" + SensitiveDataMask.Mask + "secret", result);
+        }
+
+        private AhoCorasick CreateTrie(params string[] args)
+        {
+            var trie = new AhoCorasick();
+            foreach (var instance in args)
+            {
+                if (string.IsNullOrWhiteSpace(instance) || instance.Length < 4)
+                    continue;
+
+                var normalized = instance.Replace("\r\n", "").Replace("\n", "");
+
+                trie.Add(normalized);
+            }
+
+            trie.Build();
+            return trie;
         }
     }
 }

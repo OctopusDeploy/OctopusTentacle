@@ -10,41 +10,11 @@ namespace Octopus.Shared.Security.Masking
         public static readonly string Mask = "********";
         static readonly object sync = new object();
         readonly StringBuilder builder = new StringBuilder();
-        readonly AhoCorasick trie = new AhoCorasick();
         readonly Queue<DeferredAction> deferred = new Queue<DeferredAction>();
+        string lastSearchPath;
 
         public SensitiveDataMask()
         {
-        }
-
-        public SensitiveDataMask(params string[] instancesToMask)
-        {
-            MaskInstancesOf(instancesToMask);
-        }
-
-        public SensitiveDataMask(IEnumerable<string> instancesToMask)
-        {
-            MaskInstancesOf(instancesToMask);
-        }
-
-        void MaskInstancesOf(IEnumerable<string> instancesToMask)
-        {
-            if (instancesToMask == null) return;
-
-            lock (sync)
-            {
-                foreach (var instance in instancesToMask)
-                {
-                    if (string.IsNullOrWhiteSpace(instance) || instance.Length < 4)
-                        continue;
-
-                    var normalized = instance.Replace("\r\n", "").Replace("\n", "");
-
-                    trie.Add(normalized);
-                }
-
-                trie.Build();
-            }
         }
 
         /// <summary>
@@ -54,11 +24,13 @@ namespace Octopus.Shared.Security.Masking
         /// sanitizing and invoking the callback will be delayed until it is confirmed it is/isn't a match, or until
         /// Flush() is called.
         /// </summary>
-        public void ApplyTo(string raw, Action<string> action)
+        public void ApplyTo(AhoCorasick trie, string raw, Action<string> action)
         {
             lock (sync)
             {
-                var found = trie.Find(raw);
+                var found = trie.Find(raw, lastSearchPath ?? "");
+
+                lastSearchPath = found.PartialPath;
 
                 // If we are in a pending partial match then defer processing until we are sure it
                 // is/isn't a match
@@ -73,7 +45,7 @@ namespace Octopus.Shared.Security.Masking
                 if (deferred.Any())
                 {
                     deferred.Enqueue(new DeferredAction(raw, action));
-                    ProcessDeferred();
+                    ProcessDeferred(trie);
                     return;
                 }
 
@@ -130,7 +102,7 @@ namespace Octopus.Shared.Security.Masking
         /// 3) There are one or more matches that start or end within the action.  In this case we need to mask the appropriate
         /// // sections.
         /// </summary>
-        void ProcessDeferred()
+        void ProcessDeferred(AhoCorasick trie)
         {
             // Concatenate all the deferred actions into one string and find matches in it
             builder.Clear();
@@ -221,10 +193,10 @@ namespace Octopus.Shared.Security.Masking
         /// <summary>
         /// Process any deferred potential multi-line matches
         /// </summary>
-        public void Flush()
+        public void Flush(AhoCorasick trie)
         {
             lock (sync)
-                ProcessDeferred();
+                ProcessDeferred(trie);
         }
 
         class DeferredAction

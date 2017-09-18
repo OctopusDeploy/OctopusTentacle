@@ -13,6 +13,7 @@ namespace Octopus.Shared.Diagnostics
         readonly LogContext parent;
         readonly object sensitiveDataMaskLock = new object();
         SensitiveDataMask sensitiveDataMask;
+        AhoCorasick trie;
 
         [JsonConstructor]
         public LogContext(string correlationId = null, string[] sensitiveValues = null, LogContext parent = null)
@@ -37,7 +38,19 @@ namespace Octopus.Shared.Diagnostics
                     {
                         if (sensitiveDataMask == null && sensitiveValues.Length > 0)
                         {
-                            sensitiveDataMask = new SensitiveDataMask(sensitiveValues);
+                            sensitiveDataMask = new SensitiveDataMask();
+                            trie = new AhoCorasick();
+                            foreach (var instance in sensitiveValues)
+                            {
+                                if (string.IsNullOrWhiteSpace(instance) || instance.Length < 4)
+                                    continue;
+
+                                var normalized = instance.Replace("\r\n", "").Replace("\n", "");
+
+                                trie.Add(normalized);
+                            }
+
+                            trie.Build();
                         }
                     }
 
@@ -51,7 +64,7 @@ namespace Octopus.Shared.Diagnostics
                 };
 
                 if (sensitiveDataMask != null)
-                    sensitiveDataMask.ApplyTo(raw, actionWithParent);
+                    sensitiveDataMask.ApplyTo(trie, raw, actionWithParent);
                 else
                     actionWithParent(raw);
             }
@@ -71,7 +84,7 @@ namespace Octopus.Shared.Diagnostics
 
         public void Flush()
         {
-            sensitiveDataMask?.Flush();
+            sensitiveDataMask?.Flush(trie);
         }
     }
 }

@@ -8,7 +8,6 @@ namespace Octopus.Shared.Security.Masking
     public class AhoCorasick
     {
         private readonly Node root = new Node();
-        private Node node;
 
         public void Add(string value)
         {
@@ -54,14 +53,17 @@ namespace Octopus.Shared.Security.Masking
                 if (node.Fail == node)
                     node.Fail = root;
             }
-
-            node = root;
         }
 
-        public FindResult Find(string text)
+        public FindResult Find(string text, string path = "")
         {
             var index = 0;
             var result = new FindResult();
+
+            var node = root;
+
+            foreach (var c in path)
+                node = node[c];
 
             foreach (var c in text)
             {
@@ -84,6 +86,11 @@ namespace Octopus.Shared.Security.Masking
                 index++;
             }
 
+            if (result.IsPartial)
+            {
+                result.PartialPath = node.Path;
+            }
+
             return result;
         }
 
@@ -97,15 +104,19 @@ namespace Octopus.Shared.Security.Masking
 
             public Node()
             {
+                Path = "";
             }
 
             public Node(char prefix, Node parent)
             {
                 this.Prefix = prefix;
                 this.Parent = parent;
+                Path = parent.Path + Prefix;
             }
 
             public char Prefix { get; }
+
+            public string Path { get; }
 
             public Node Parent { get; }
 
@@ -194,6 +205,8 @@ namespace Octopus.Shared.Security.Masking
             }
 
             public bool IsPartial { get; set; }
+
+            public string PartialPath { get; set; }
 
             public ICollection<KeyValuePair<int, string>> Found { get; }
         }
