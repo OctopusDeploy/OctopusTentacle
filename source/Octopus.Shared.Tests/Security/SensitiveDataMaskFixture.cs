@@ -20,10 +20,7 @@ namespace Octopus.Shared.Tests.Security
                 raw = "This contains a sensitiveHELLO value",
                 expected = "This contains a ******** value";
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(verysensitive);
-            sdm.MaskInstancesOf(sensitive);
-            sdm.MaskInstancesOf(prettysensitive);
+            var sdm = new SensitiveDataMask(verysensitive, sensitive, prettysensitive);
             sdm.ApplyTo(raw, result =>
             {
                 Assert.AreEqual(expected, result);
@@ -37,8 +34,7 @@ namespace Octopus.Shared.Tests.Security
                 raw = "This contains a sensitive value",
                 expected = "This contains a ******** value";
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(sensitive);
+            var sdm = new SensitiveDataMask(sensitive);
             string result = null;
             sdm.ApplyTo(raw, sanitized => result = sanitized);
 
@@ -51,8 +47,7 @@ namespace Octopus.Shared.Tests.Security
             const string sensitive = "sensitive",
                 raw = "This contains no such value";
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(sensitive);
+            var sdm = new SensitiveDataMask(sensitive);
             string result = null;
             sdm.ApplyTo(raw, sanitized => result = sanitized);
 
@@ -66,8 +61,7 @@ namespace Octopus.Shared.Tests.Security
                 raw = "This contains a sensitive value in a sensitive place at a sensitive time",
                 expected = "This contains a ******** value in a ******** place at a ******** time";
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(sensitive);
+            var sdm = new SensitiveDataMask(sensitive);
             string result = null;
             sdm.ApplyTo(raw, sanitized => result = sanitized);
 
@@ -77,9 +71,7 @@ namespace Octopus.Shared.Tests.Security
         [Test]
         public void ShouldMaskMultipleMatches()
         {
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf("bacon");
-            sdm.MaskInstancesOf("eggs");
+            var sdm = new SensitiveDataMask("bacon", "eggs");
             string result = null;
             sdm.ApplyTo("I love bacon and eggs!", sanitized => result = sanitized);
 
@@ -89,9 +81,7 @@ namespace Octopus.Shared.Tests.Security
         [Test]
         public void ShouldMaskOverlappingMatches()
         {
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf("meenie mi");
-            sdm.MaskInstancesOf("nie minie");
+            var sdm = new SensitiveDataMask("meenie mi", "nie minie");
             string result = null;
             sdm.ApplyTo("eenie meenie minie mo", sanitized => result = sanitized);
 
@@ -104,8 +94,7 @@ namespace Octopus.Shared.Tests.Security
             const string sensitive = "123",
                 raw = "Easy as 123";
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(sensitive);
+            var sdm = new SensitiveDataMask(sensitive);
 
             string result = null;
             sdm.ApplyTo(raw, sanitized => result = sanitized);
@@ -127,8 +116,7 @@ namespace Octopus.Shared.Tests.Security
             }
 
             watch.Start();
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(sensitiveValues);
+            var sdm = new SensitiveDataMask(sensitiveValues);
             watch.Stop();
             var preProcessingTime = watch.ElapsedMilliseconds;
 
@@ -161,8 +149,7 @@ namespace Octopus.Shared.Tests.Security
                 + password
                 + string.Concat(Enumerable.Range(0, 10).Select(g => Guid.NewGuid().ToString()));
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(password);
+            var sdm = new SensitiveDataMask(password);
 
             var watch = Stopwatch.StartNew();
             var count = 0;
@@ -182,8 +169,7 @@ namespace Octopus.Shared.Tests.Security
         {
             var line = string.Concat(Enumerable.Range(0, 21).Select(g => Guid.NewGuid().ToString()));
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(Guid.NewGuid().ToString());
+            var sdm = new SensitiveDataMask(Guid.NewGuid().ToString());
 
             var watch = Stopwatch.StartNew();
             var count = 0;

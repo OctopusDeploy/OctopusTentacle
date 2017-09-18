@@ -9,7 +9,7 @@ namespace Octopus.Shared.Diagnostics
 
         public NullLog()
         {
-            currentContext = LogContext.CreateNew("Null");
+            currentContext = new LogContext("Null");
         }
 
         public override LogContext CurrentContext

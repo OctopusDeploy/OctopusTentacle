@@ -37,8 +37,7 @@ namespace Octopus.Shared.Diagnostics
                     {
                         if (sensitiveDataMask == null && sensitiveValues.Length > 0)
                         {
-                            sensitiveDataMask = new SensitiveDataMask();
-                            sensitiveDataMask.MaskInstancesOf(sensitiveValues);
+                            sensitiveDataMask = new SensitiveDataMask(sensitiveValues);
                         }
                     }
 
@@ -62,24 +61,13 @@ namespace Octopus.Shared.Diagnostics
             }
         }
 
-        public LogContext CreateSibling() => Parent().CreateChild();
+        public LogContext CreateSibling(string[] sensitiveValues = null) => Parent().CreateChild(sensitiveValues);
 
         public LogContext Parent() => parent;
 
-        public LogContext CreateChild() => new LogContext((correlationId + '/' + GenerateId()), parent: this);
-
-        public LogContext WithSensitiveValues(string[] sensitiveValues)
-            => new LogContext(correlationId, this.sensitiveValues.Union(sensitiveValues).ToArray(), parent: parent);
+        public LogContext CreateChild(string[] sensitiveValues = null) => new LogContext((correlationId + '/' + GenerateId()), this.sensitiveValues.Union(sensitiveValues ?? new string[0]).ToArray(), this);
 
         static string GenerateId() => Guid.NewGuid().ToString("N");
-
-        public static LogContext Null() => new LogContext(GenerateId());
-
-        public static LogContext CreateNew(string correlationId)
-        {
-            if (correlationId == null) throw new ArgumentNullException("correlationId");
-            return new LogContext(correlationId);
-        }
 
         public void Flush()
         {

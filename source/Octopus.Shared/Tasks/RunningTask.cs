@@ -33,7 +33,7 @@ namespace Octopus.Shared.Tasks
             this.lifetimeScope = lifetimeScope;
             this.completeCallback = completeCallback;
 
-            taskLogContext = LogContext.CreateNew(logCorrelationId);
+            taskLogContext = new LogContext(logCorrelationId);
             workThread = new Thread(RunMainThread) { Name = taskId + ": " + description };
         }
 
@@ -93,7 +93,6 @@ namespace Octopus.Shared.Tasks
                         CompleteTask();
                     }
                 }
-              
             }
         }
 
@@ -172,6 +171,5 @@ namespace Octopus.Shared.Tasks
                 FinishLog();
             }
         }
-
     }
 }

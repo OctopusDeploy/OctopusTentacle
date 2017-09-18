@@ -45,7 +45,7 @@ namespace Octopus.Shared.Tests.Diagnostics
                 expectedChild = "This contains a ******** ******** value";
 
             var logContext = new LogContext(sensitiveValues: new[] { sensitive });
-            var childContext = logContext.CreateChild().WithSensitiveValues(new[] { childSensitive });
+            var childContext = logContext.CreateChild(new[] { childSensitive });
             string result = null;
 
             logContext.SafeSanitize(raw, sanitized => result = sanitized);
@@ -56,7 +56,7 @@ namespace Octopus.Shared.Tests.Diagnostics
         }
 
         [Test]
-        public void ChainedWithSensitiveValuesCombine()
+        public void ChainedChildrenCombineSensitiveValues()
         {
             const string sensitive1 = "sensitive",
                 sensitive2 = "value",
@@ -64,9 +64,9 @@ namespace Octopus.Shared.Tests.Diagnostics
                 expected = "This contains a ******** ********";
 
             var logContext = new LogContext();
-            var childContext = logContext.CreateChild()
-                .WithSensitiveValues(new[] { sensitive1 })
-                .WithSensitiveValues(new[] { sensitive2 });
+            var childContext = logContext
+                .CreateChild(new[] { sensitive1 })
+                .CreateChild(new[] { sensitive2 });
             string result = null;
 
             childContext.SafeSanitize(raw, sanitized => result = sanitized);

@@ -17,17 +17,17 @@ namespace Octopus.Shared.Security.Masking
         {
         }
 
+        public SensitiveDataMask(params string[] instancesToMask)
+        {
+            MaskInstancesOf(instancesToMask);
+        }
+
         public SensitiveDataMask(IEnumerable<string> instancesToMask)
         {
             MaskInstancesOf(instancesToMask);
         }
 
-        public void MaskInstancesOf(string instanceToMask)
-        {
-            MaskInstancesOf(new[] { instanceToMask });
-        }
-
-        public void MaskInstancesOf(IEnumerable<string> instancesToMask)
+        void MaskInstancesOf(IEnumerable<string> instancesToMask)
         {
             if (instancesToMask == null) return;
 

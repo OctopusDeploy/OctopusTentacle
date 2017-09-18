@@ -13,8 +13,7 @@ namespace Octopus.Shared.Tests.Security
 
             string[] raw = { "Show me", "the monkey!" };
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(sensitive);
+            var sdm = new SensitiveDataMask(sensitive);
             string result = "";
 
             foreach (var line in raw)
@@ -35,8 +34,7 @@ namespace Octopus.Shared.Tests.Security
 
             string[] raw = { "Humpty Dumpty sat on a wall", "Humpty Dumpty had a great fall", "All the kings horses and all the kings men", "Something something" };
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(sensitive);
+            var sdm = new SensitiveDataMask(sensitive);
             string result = "";
 
             foreach (var line in raw)
@@ -57,8 +55,7 @@ namespace Octopus.Shared.Tests.Security
 
             string[] raw = { "<Message>Humpty Dumpty sat on a wall", "Humpty Dumpty had a great fall", "All the kings horses and all the kings men", "Couldn't put Humpty together again</Message>" };
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(sensitive);
+            var sdm = new SensitiveDataMask(sensitive);
             string result = "";
 
             foreach (var line in raw)
@@ -82,9 +79,7 @@ namespace Octopus.Shared.Tests.Security
 
             string[] raw = { "Single Line Secret: " + singleLineSensitive + " Multi-line Secret: " + "multi", "line", "secret" };
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(singleLineSensitive);
-            sdm.MaskInstancesOf(multiLineSensitive);
+            var sdm = new SensitiveDataMask(singleLineSensitive, multiLineSensitive);
             string result = "";
 
             foreach (var line in raw)
@@ -105,8 +100,7 @@ namespace Octopus.Shared.Tests.Security
 
             string[] raw = { "multi", "multi", "line", "secret", "secret" };
 
-            var sdm = new SensitiveDataMask();
-            sdm.MaskInstancesOf(multiLineSensitive);
+            var sdm = new SensitiveDataMask(multiLineSensitive);
             string result = "";
 
             foreach (var line in raw)
