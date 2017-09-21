@@ -36,6 +36,23 @@ namespace Octopus.Shared.Tests.Diagnostics
         }
 
         [Test]
+        public void ChildContextUsesParentsMultilineSensitiveMask()
+        {
+            const string sensitive = "multiline\nsensitive",
+                expected = "This contains a **************** value";
+
+            string[] raw = new[] { "This contains a multiline", "sensitive value" };
+
+            var logContext = new LogContext();
+            var childContext = logContext.CreateChild(new[] { sensitive });
+            string result = "";
+            foreach (var line in raw)
+                childContext.SafeSanitize(line, sanitized => result += sanitized);
+
+            Assert.AreEqual(expected, result);
+        }
+
+        [Test]
         public void ChildContextCanHaveOwnSensitiveValues()
         {
             const string sensitive = "sensitive",
@@ -71,6 +88,29 @@ namespace Octopus.Shared.Tests.Diagnostics
 
             childContext.SafeSanitize(raw, sanitized => result = sanitized);
             Assert.AreEqual(expected, result);
+        }
+
+        [Test]
+        public void ChildContextsKeepSearchStateOnDifferentThreads()
+        {
+            const string sensitive = "multi\nline\nsecret",
+                childSensitive = "child\nsecret";
+
+            string[] raw = { "This has a multi", "line", "secret agent with a child", "secret agent" };
+
+            var parentContext = new LogContext(sensitiveValues: new[] { sensitive });
+            var childContext1 = parentContext.CreateChild(new[] { childSensitive });
+            var childContext2 = parentContext.CreateChild(new[] { childSensitive });
+            string result1 = "", result2 = "";
+
+            foreach (var line in raw)
+            {
+                childContext1.SafeSanitize(line, sanitized => result1 += sanitized);
+                childContext2.SafeSanitize(line, sanitized => result2 += sanitized);
+            }
+
+            Assert.AreEqual("This has a **************** agent with a **************** agent", result1);
+            Assert.AreEqual("This has a **************** agent with a **************** agent", result2);
         }
     }
 }

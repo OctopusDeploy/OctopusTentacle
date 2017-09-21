@@ -29,7 +29,10 @@ namespace Octopus.Shared.Security.Masking
         public void Build()
         {
             var queue = new Queue<Node>();
-            queue.Enqueue(root);
+
+            root.Fail = root;
+            foreach (var child in root)
+                queue.Enqueue(child);
 
             while (queue.Count > 0)
             {
@@ -37,12 +40,6 @@ namespace Octopus.Shared.Security.Masking
 
                 foreach (var child in node)
                     queue.Enqueue(child);
-
-                if (node == root)
-                {
-                    root.Fail = root;
-                    continue;
-                }
 
                 var fail = node.Parent.Fail;
 
@@ -77,10 +74,10 @@ namespace Octopus.Shared.Security.Masking
 
                 for (var t = node; t != root; t = t.Fail)
                 {
-                    result.IsPartial = node.HasChildren;
+                    result.IsPartial = node.ChildCount > 0;
 
                     if (!string.IsNullOrEmpty(t.Value))
-                        result.Found.Add(new KeyValuePair<int, string>(index, t.Value));
+                        result.Found.Add(new KeyValuePair<int, string>(index, t.Path));
                 }
 
                 index++;
@@ -104,27 +101,36 @@ namespace Octopus.Shared.Security.Masking
 
             public Node()
             {
-                Path = "";
             }
 
             public Node(char prefix, Node parent)
             {
                 this.Prefix = prefix;
                 this.Parent = parent;
-                Path = parent.Path + Prefix;
             }
 
             public char Prefix { get; }
 
-            public string Path { get; }
+            public string Path
+            {
+                get
+                {
+                    ICollection<char> chars = new List<char>();
+                    var node = this;
+                    while (node.Parent != null)
+                    {
+                        chars.Add(node.Prefix);
+                        node = node.Parent;
+                    }
+                    return new string(chars.Reverse().ToArray());
+                }
+            }
 
             public Node Parent { get; }
 
             public Node Fail { get; set; }
 
             public string Value { get; set; }
-
-            public bool HasChildren => singleNode != null;
 
             public int ChildCount => children != null ? children.Count : singleNode != null ? 1 : 0;
 
@@ -194,9 +200,14 @@ namespace Octopus.Shared.Security.Masking
                 }
 
                 public string Value => node.Value;
+
+                public Node Parent => node.Parent;
+
+                public Node Fail => node.Fail;
             }
         }
 
+        [DebuggerDisplay("Partial {IsPartial} | PartialPath {PartialPath} | Count {Found.Count}")]
         public class FindResult
         {
             public FindResult()

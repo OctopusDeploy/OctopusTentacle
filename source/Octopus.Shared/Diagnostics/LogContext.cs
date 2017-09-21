@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json;
 using Octopus.Shared.Model;
@@ -6,21 +7,28 @@ using Octopus.Shared.Security.Masking;
 
 namespace Octopus.Shared.Diagnostics
 {
+    [DebuggerDisplay("{CorrelationId}")]
     public class LogContext
     {
         readonly string[] sensitiveValues;
         readonly string correlationId;
-        readonly LogContext parent;
         readonly object sensitiveDataMaskLock = new object();
+        readonly Lazy<AhoCorasick> trie;
         SensitiveDataMask sensitiveDataMask;
-        AhoCorasick trie;
 
         [JsonConstructor]
-        public LogContext(string correlationId = null, string[] sensitiveValues = null, LogContext parent = null)
+        public LogContext(string correlationId = null, string[] sensitiveValues = null)
         {
             this.correlationId = correlationId ?? GenerateId();
             this.sensitiveValues = sensitiveValues ?? new string[0];
-            this.parent = parent ?? this;
+            trie = new Lazy<AhoCorasick>(CreateTrie);
+        }
+
+        private LogContext(string correlationId, string[] sensitiveValues, Lazy<AhoCorasick> trie)
+        {
+            this.correlationId = correlationId;
+            this.sensitiveValues = sensitiveValues;
+            this.trie = trie;
         }
 
         public string CorrelationId => correlationId;
@@ -39,34 +47,13 @@ namespace Octopus.Shared.Diagnostics
                         if (sensitiveDataMask == null && sensitiveValues.Length > 0)
                         {
                             sensitiveDataMask = new SensitiveDataMask();
-                            trie = new AhoCorasick();
-                            foreach (var instance in sensitiveValues)
-                            {
-                                if (string.IsNullOrWhiteSpace(instance) || instance.Length < 4)
-                                    continue;
-
-                                var normalized = instance.Replace("\r\n", "").Replace("\n", "");
-
-                                trie.Add(normalized);
-                            }
-
-                            trie.Build();
                         }
                     }
 
-                // Chain action with parents SafeSanitize
-                Action<string> actionWithParent = s =>
-                {
-                    if (parent == this)
-                        action(s);
-                    else
-                        parent.SafeSanitize(s, action);
-                };
-
                 if (sensitiveDataMask != null)
-                    sensitiveDataMask.ApplyTo(trie, raw, actionWithParent);
+                    sensitiveDataMask.ApplyTo(trie.Value, raw, action);
                 else
-                    actionWithParent(raw);
+                    action(raw);
             }
             catch
             {
@@ -74,17 +61,50 @@ namespace Octopus.Shared.Diagnostics
             }
         }
 
-        public LogContext CreateSibling(string[] sensitiveValues = null) => Parent().CreateChild(sensitiveValues);
+        public LogContext CreateChild(string[] sensitiveValues = null)
+        {
+            var id = correlationId + '/' + GenerateId();
 
-        public LogContext Parent() => parent;
+            if (sensitiveValues == null || sensitiveValues.Length == 0)
+            {
+                // Reuse parent trie
+                return new LogContext(id, this.sensitiveValues, trie);
+            }
 
-        public LogContext CreateChild(string[] sensitiveValues = null) => new LogContext((correlationId + '/' + GenerateId()), this.sensitiveValues.Union(sensitiveValues ?? new string[0]).ToArray(), this);
+            return new LogContext(id, this.sensitiveValues.Union(sensitiveValues).ToArray());
+        }
 
-        static string GenerateId() => Guid.NewGuid().ToString("N");
+        public LogContext WithSensitiveValues(string[] sensitiveValues)
+        {
+            if (sensitiveValues == null || sensitiveValues.Length == 0)
+                throw new ArgumentException(nameof(sensitiveValues) + " must contain at least one value.", nameof(sensitiveValues));
+            return new LogContext(correlationId, this.sensitiveValues.Union(sensitiveValues).ToArray());
+        }
 
         public void Flush()
         {
-            sensitiveDataMask?.Flush(trie);
+            sensitiveDataMask?.Flush(trie.Value);
+        }
+
+        static string GenerateId() => Guid.NewGuid().ToString("N");
+
+        AhoCorasick CreateTrie()
+        {
+            if (sensitiveValues.Length == 0)
+                return null;
+
+            var trie = new AhoCorasick();
+            foreach (var instance in sensitiveValues)
+            {
+                if (string.IsNullOrWhiteSpace(instance) || instance.Length < 4)
+                    continue;
+
+                var normalized = instance.Replace("\r\n", "").Replace("\n", "");
+
+                trie.Add(normalized);
+            }
+            trie.Build();
+            return trie;
         }
     }
 }
