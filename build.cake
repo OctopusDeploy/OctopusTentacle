@@ -4,7 +4,7 @@
 #tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
 #tool "nuget:?package=WiX&version=3.10.3"
 
-#addin "Cake.FileHelpers"
+#addin "nuget:..\Libs?package=Cake.FileHelpers&version=1.0.4"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
