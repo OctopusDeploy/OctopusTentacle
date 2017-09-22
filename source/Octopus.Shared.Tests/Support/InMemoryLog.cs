@@ -23,7 +23,7 @@ namespace Octopus.Shared.Tests.Support
             this.log = log ?? new TestConsoleLog();
         }
 
-        public override LogContext CurrentContext => LogContext.Null();
+        public override LogContext CurrentContext => new LogContext();
 
         protected override void WriteEvent(LogEvent logEvent)
         {

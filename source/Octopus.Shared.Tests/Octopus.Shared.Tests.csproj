@@ -68,10 +68,14 @@
     <Compile Include="Bcl\IO\IOUtilFixture.cs" />
     <Compile Include="Configuration\ProxyInitializerTests.cs" />
     <Compile Include="Diagnostics\AbstractLogFixture.cs" />
+    <Compile Include="Diagnostics\LogContextFixture.cs" />
     <Compile Include="Integration\CertificateValidatorFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\AesEncryptionFixture.cs" />
+    <Compile Include="Security\AhoCorasickMemoryPerfTests.cs" />
     <Compile Include="Security\Certificates\CertificateEncoderFixture.cs" />
+    <Compile Include="Security\SensitiveDataMaskFixture.cs" />
+    <Compile Include="Security\SensitiveDataMaskMultiLineFixture.cs" />
     <Compile Include="Setup.cs" />
     <Compile Include="Startup\FileSystemCleanerFixture.cs" />
     <Compile Include="Support\InMemoryLog.cs" />

@@ -12,39 +12,43 @@ namespace Octopus.Shared.Tests.Startup
     [TestFixture]
     public class FileSystemCleanerFixture
     {
-        readonly Random random = new Random();
-
         [Test]
-        public void ShouldDeleteFilesAndDirectories()
+        public void ShouldDeleteDirectories()
         {
             var paths = LoadPaths();
-            string directoryPath;
-            string filePath;
-            do
-            {
-                directoryPath = GetRandomPath(paths);
-                filePath = GetRandomPath(paths);
-            } while (directoryPath == filePath);
-            var fileSystem = Substitute.For<IOctopusFileSystem>();
-            fileSystem.FileExists(Arg.Is(filePath)).Returns(true);
-            fileSystem.DirectoryExists(Arg.Is(directoryPath)).Returns(true);
-
             var log = new InMemoryLog();
 
-            var target = new FileSystemCleaner(fileSystem, log);
+            foreach (var path in paths)
+            {
+                var fileSystem = Substitute.For<IOctopusFileSystem>();
+                fileSystem.DirectoryExists(Arg.Is(path)).Returns(true);
 
-            target.Clean(FileSystemCleaner.PathsToDeleteOnStartupResource);
+                var target = new FileSystemCleaner(fileSystem, log);
+                target.Clean(FileSystemCleaner.PathsToDeleteOnStartupResource);
 
-            fileSystem.Received(1).DeleteFile(filePath, DeletionOptions.TryThreeTimes);
-            fileSystem.Received(1).DeleteDirectory(directoryPath, DeletionOptions.TryThreeTimes);
+                fileSystem.Received(1).DeleteDirectory(path, DeletionOptions.TryThreeTimes);
+            }
         }
 
-        string GetRandomPath(IReadOnlyList<string> paths)
+        [Test]
+        public void ShouldDeleteFiles()
         {
-            return paths[random.Next(paths.Count)];
+            var paths = LoadPaths();
+            var log = new InMemoryLog();
+
+            foreach (var path in paths)
+            {
+                var fileSystem = Substitute.For<IOctopusFileSystem>();
+                fileSystem.FileExists(Arg.Is(path)).Returns(true);
+
+                var target = new FileSystemCleaner(fileSystem, log);
+                target.Clean(FileSystemCleaner.PathsToDeleteOnStartupResource);
+
+                fileSystem.Received(1).DeleteFile(path, DeletionOptions.TryThreeTimes);
+            }
         }
 
-        static List<string> LoadPaths()
+        static IEnumerable<string> LoadPaths()
         {
             var assembly = typeof(FileSystemCleaner).Assembly;
             var root = Path.GetDirectoryName(assembly.FullLocalPath());
@@ -53,13 +57,14 @@ namespace Octopus.Shared.Tests.Startup
             using (var reader = new StreamReader(stream))
             {
                 string line;
-                var paths = new List<string>();
                 while ((line = reader.ReadLine()) != null)
                 {
+                    if (line.StartsWith("#", StringComparison.Ordinal))
+                        continue;
+
                     var path = Path.Combine(root, line);
-                    paths.Add(path);
+                    yield return path;
                 }
-                return paths;
             }
         }
     }

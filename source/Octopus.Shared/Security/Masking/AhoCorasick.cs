@@ -1,301 +1,225 @@
-﻿// Copyright (c) 2013 Pēteris Ņikiforovs
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-
-// Obtained from https://github.com/pdonald/aho-corasick
-// Slightly modified to track partial matches
-
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Octopus.Shared.Security.Masking
 {
-    internal class AhoCorasick
+    public class AhoCorasick
     {
-        /// <summary>
-        /// Trie that will find and return strings found in a text.
-        /// </summary>
-        public class Trie : Trie<string>
+        private readonly Node root = new Node();
+
+        public void Add(string value)
         {
-            /// <summary>
-            /// Adds a string.
-            /// </summary>
-            /// <param name="s">The string to add.</param>
-            public void Add(string s)
+            var node = root;
+
+            foreach (var c in value)
             {
-                Add(s, s);
+                var child = node[c];
+
+                if (child == null)
+                    child = node[c] = new Node(c, node);
+
+                node = child;
             }
 
-            /// <summary>
-            /// Adds multiple strings.
-            /// </summary>
-            /// <param name="strings">The strings to add.</param>
-            public void Add(IEnumerable<string> strings)
+            node.Value = value;
+        }
+
+        public void Build()
+        {
+            var queue = new Queue<Node>();
+
+            root.Fail = root;
+            foreach (var child in root)
+                queue.Enqueue(child);
+
+            while (queue.Count > 0)
             {
-                foreach (string s in strings)
-                {
-                    Add(s);
-                }
+                var node = queue.Dequeue();
+
+                foreach (var child in node)
+                    queue.Enqueue(child);
+
+                var fail = node.Parent.Fail;
+
+                while (fail[node.Prefix] == null && fail != root)
+                    fail = fail.Fail;
+
+                node.Fail = fail[node.Prefix] ?? root;
+                if (node.Fail == node)
+                    node.Fail = root;
             }
         }
 
-        /// <summary>
-        /// Trie that will find strings in a text and return values of type <typeparamref name="TValue"/>
-        /// for each string found.
-        /// </summary>
-        /// <typeparam name="TValue">Value type.</typeparam>
-        public class Trie<TValue> : Trie<char, TValue>
+        public FindResult Find(string text, string path = "")
         {
+            var index = 0;
+            var result = new FindResult();
+
+            var node = root;
+
+            foreach (var c in path)
+                node = node[c];
+
+            foreach (var c in text)
+            {
+                while (node[c] == null && node != root)
+                {
+                    result.IsPartial = false;
+                    node = node.Fail;
+                }
+
+                node = node[c] ?? root;
+
+                for (var t = node; t != root; t = t.Fail)
+                {
+                    result.IsPartial = node.ChildCount > 0;
+
+                    if (!string.IsNullOrEmpty(t.Value))
+                        result.Found.Add(new KeyValuePair<int, string>(index, t.Path));
+                }
+
+                index++;
+            }
+
+            if (result.IsPartial)
+            {
+                result.PartialPath = node.Path;
+            }
+
+            return result;
         }
 
-        /// <summary>
-        /// Trie that will find strings or phrases and return values of type <typeparamref name="T"/>
-        /// for each string or phrase found.
-        /// </summary>
-        /// <remarks>
-        /// <typeparamref name="T"/> will typically be a char for finding strings
-        /// or a string for finding phrases or whole words.
-        /// </remarks>
-        /// <typeparam name="T">The type of a letter in a word.</typeparam>
-        /// <typeparam name="TValue">The type of the value that will be returned when the word is found.</typeparam>
-        public class Trie<T, TValue>
+        [DebuggerDisplay("{Prefix} | Children: {ChildCount}")]
+        [DebuggerTypeProxy(typeof(NodeDebugView))]
+        private class Node : IEnumerable<Node>
         {
-            /// <summary>
-            /// Root of the trie. It has no value and no parent.
-            /// </summary>
-            private readonly Node<T, TValue> root = new Node<T, TValue>();
-            private Node<T, TValue> node;
+            private Dictionary<char, Node> children;
+            private char singleKey;
+            private Node singleNode;
 
-            /// <summary>
-            /// Adds a word to the tree.
-            /// </summary>
-            /// <remarks>
-            /// A word consists of letters. A node is built for each letter.
-            /// If the letter type is char, then the word will be a string, since it consists of letters.
-            /// But a letter could also be a string which means that a node will be added
-            /// for each word and so the word is actually a phrase.
-            /// </remarks>
-            /// <param name="word">The word that will be searched.</param>
-            /// <param name="value">The value that will be returned when the word is found.</param>
-            public void Add(IEnumerable<T> word, TValue value)
+            public Node()
             {
-                // start at the root
-                var node = root;
-
-                // build a branch for the word, one letter at a time
-                // if a letter node doesn't exist, add it
-                foreach (T c in word)
-                {
-                    var child = node[c];
-
-                    if (child == null)
-                        child = node[c] = new Node<T, TValue>(c, node);
-
-                    node = child;
-                }
-
-                // mark the end of the branch
-                // by adding a value that will be returned when this word is found in a text
-                node.Values.Add(value);
             }
 
-
-            /// <summary>
-            /// Constructs fail or fall links.
-            /// </summary>
-            public void Build()
+            public Node(char prefix, Node parent)
             {
-                // construction is done using breadth-first-search
-                var queue = new Queue<Node<T, TValue>>();
-                queue.Enqueue(root);
-
-                while (queue.Count > 0)
-                {
-                    var node = queue.Dequeue();
-
-                    // visit children
-                    foreach (var child in node)
-                        queue.Enqueue(child);
-
-                    // fail link of root is root
-                    if (node == root)
-                    {
-                        root.Fail = root;
-                        continue;
-                    }
-
-                    var fail = node.Parent.Fail;
-
-                    while (fail[node.Word] == null && fail != root)
-                        fail = fail.Fail;
-
-                    node.Fail = fail[node.Word] ?? root;
-                    if (node.Fail == node)
-                        node.Fail = root;
-                }
-
-                node = root;
+                this.Prefix = prefix;
+                this.Parent = parent;
             }
 
-            /// <summary>
-            /// Finds all added words in a text.
-            /// </summary>
-            /// <param name="text">The text to search in.</param>
-            /// <returns>The values that were added for the found words.</returns>
-            public FindResult Find(IEnumerable<T> text)
+            public char Prefix { get; }
+
+            public string Path
             {
-                var index = 0;
-                var result = new FindResult();
-
-                foreach (T c in text)
+                get
                 {
-                    while (node[c] == null && node != root)
+                    ICollection<char> chars = new List<char>();
+                    var node = this;
+                    while (node.Parent != null)
                     {
-                        result.IsPartial = false;
-                        node = node.Fail;
+                        chars.Add(node.Prefix);
+                        node = node.Parent;
                     }
-
-                    node = node[c] ?? root;
-
-                    for (var t = node; t != root; t = t.Fail)
-                    {
-                        result.IsPartial = node.HasChildren;
-
-                        foreach (var value in t.Values)
-                        {
-                            result.Found.Add(new KeyValuePair<int, TValue>(index, value));
-                        }
-                    }
-
-                    index++;
+                    return new string(chars.Reverse().ToArray());
                 }
-
-                return result;
             }
 
-            /// <summary>
-            /// Node in a trie.
-            /// </summary>
-            /// <typeparam name="TNode">The same as the parent type.</typeparam>
-            /// <typeparam name="TNodeValue">The same as the parent value type.</typeparam>
-            private class Node<TNode, TNodeValue> : IEnumerable<Node<TNode, TNodeValue>>
+            public Node Parent { get; }
+
+            public Node Fail { get; set; }
+
+            public string Value { get; set; }
+
+            public int ChildCount => children != null ? children.Count : singleNode != null ? 1 : 0;
+
+            public Node this[char c]
             {
-                private readonly TNode word;
-                private readonly Node<TNode, TNodeValue> parent;
-                private readonly Dictionary<TNode, Node<TNode, TNodeValue>> children = new Dictionary<TNode, Node<TNode, TNodeValue>>();
-                private readonly List<TNodeValue> values = new List<TNodeValue>();
-
-                /// <summary>
-                /// Constructor for the root node.
-                /// </summary>
-                public Node()
+                get
                 {
+                    if (children != null && children.TryGetValue(c, out var node))
+                    {
+                        return node;
+                    }
+                    if (singleNode != null && c == singleKey)
+                    {
+                        return singleNode;
+                    }
+                    return null;
                 }
-
-                /// <summary>
-                /// Constructor for a node with a word
-                /// </summary>
-                /// <param name="word"></param>
-                /// <param name="parent"></param>
-                public Node(TNode word, Node<TNode, TNodeValue> parent)
+                set
                 {
-                    this.word = word;
-                    this.parent = parent;
+                    if (singleNode == null)
+                    {
+                        singleKey = c;
+                        singleNode = value;
+                        return;
+                    }
+                    if (children == null)
+                    {
+                        children = new Dictionary<char, Node> { { singleKey, singleNode } };
+                    }
+                    children[c] = value;
                 }
+            }
 
-                /// <summary>
-                /// Word (or letter) for this node.
-                /// </summary>
-                public TNode Word
-                {
-                    get { return word; }
-                }
-
-                /// <summary>
-                /// Parent node.
-                /// </summary>
-                public Node<TNode, TNodeValue> Parent
-                {
-                    get { return parent; }
-                }
-
-                /// <summary>
-                /// Fail or fall node.
-                /// </summary>
-                public Node<TNode, TNodeValue> Fail
-                {
-                    get;
-                    set;
-                }
-
-                public bool HasChildren => children.Any();
-
-                /// <summary>
-                /// Children for this node.
-                /// </summary>
-                /// <param name="c">Child word.</param>
-                /// <returns>Child node.</returns>
-                public Node<TNode, TNodeValue> this[TNode c]
-                {
-                    get { return children.ContainsKey(c) ? children[c] : null; }
-                    set { children[c] = value; }
-                }
-
-                /// <summary>
-                /// Values for words that end at this node.
-                /// </summary>
-                public List<TNodeValue> Values
-                {
-                    get { return values; }
-                }
-
-                /// <inherit/>
-                public IEnumerator<Node<TNode, TNodeValue>> GetEnumerator()
-                {
+            public IEnumerator<Node> GetEnumerator()
+            {
+                if (children != null)
                     return children.Values.GetEnumerator();
-                }
-
-                /// <inherit/>
-                IEnumerator IEnumerable.GetEnumerator()
-                {
-                    return GetEnumerator();
-                }
-
-                /// <inherit/>
-                public override string ToString()
-                {
-                    return Word.ToString();
-                }
+                if (singleNode != null)
+                    return ((IEnumerable<Node>)new[] { singleNode }).GetEnumerator();
+                return Enumerable.Empty<Node>().GetEnumerator();
             }
 
-            public class FindResult
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+            public override string ToString() => Prefix.ToString();
+
+            private sealed class NodeDebugView
             {
-                public FindResult()
+                private Node node;
+
+                public NodeDebugView(Node node)
                 {
-                    Found = new List<KeyValuePair<int, TValue>>();
-                } 
+                    this.node = node;
+                }
 
-                public bool IsPartial { get; set; }
+                [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+                public Node[] Children
+                {
+                    get
+                    {
+                        if (node.children != null)
+                            return node.children.Values.ToArray();
+                        if (node.singleNode != null)
+                            return new[] { node.singleNode };
+                        return new Node[0];
+                    }
+                }
 
-                public ICollection<KeyValuePair<int, TValue>> Found { get; }
+                public string Value => node.Value;
+
+                public Node Parent => node.Parent;
+
+                public Node Fail => node.Fail;
             }
+        }
+
+        [DebuggerDisplay("Partial {IsPartial} | PartialPath {PartialPath} | Count {Found.Count}")]
+        public class FindResult
+        {
+            public FindResult()
+            {
+                Found = new List<KeyValuePair<int, string>>();
+            }
+
+            public bool IsPartial { get; set; }
+
+            public string PartialPath { get; set; }
+
+            public ICollection<KeyValuePair<int, string>> Found { get; }
         }
     }
 }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-
 namespace Octopus.Shared.Diagnostics
 {
     public class Log : AbstractLog
@@ -17,7 +16,7 @@ namespace Octopus.Shared.Diagnostics
 
         public Log()
         {
-            threadLocalLogContext = new ThreadLocal<LogContext>(() => LogContext.CreateNew("system/" + Environment.MachineName));
+            threadLocalLogContext = new ThreadLocal<LogContext>(() => new LogContext("system/" + Environment.MachineName));
         }
 
         public static List<ILogAppender> Appenders
