@@ -77,7 +77,7 @@ namespace Octopus.Shared.Diagnostics
         public LogContext WithSensitiveValues(string[] sensitiveValues)
         {
             if (sensitiveValues == null || sensitiveValues.Length == 0)
-                throw new ArgumentException(nameof(sensitiveValues) + " must contain at least one value.", nameof(sensitiveValues));
+                return this;
             return new LogContext(correlationId, this.sensitiveValues.Union(sensitiveValues).ToArray());
         }
 
