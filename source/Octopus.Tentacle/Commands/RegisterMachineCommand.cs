@@ -38,6 +38,8 @@ namespace Octopus.Tentacle.Commands
         bool allowOverwrite;
         string comms = "TentaclePassive";
         int serverCommsPort = 10943;
+        string proxy;
+        ProxyResource proxyResource;
         string serverWebSocketAddress;
         int? tentacleCommsPort = null;
 
@@ -68,6 +70,7 @@ namespace Octopus.Tentacle.Commands
             Options.Add("h|publicHostName=", "An Octopus-accessible DNS name/IP address for this machine; the default is the hostname", s => publicName = s);
             Options.Add("f|force", "Allow overwriting of existing machines", s => allowOverwrite = true);
             Options.Add("comms-style=", "The communication style to use - either TentacleActive or TentaclePassive; the default is " + comms, s => comms = s);
+            Options.Add("proxy=", "When using passive communication, the name of a proxy that Octopus should connect to the Tentacle through - e.g., 'Proxy ABC' where the proxy name is already configured in Octopus; the default is to connect to the machine directly", s => proxy = s);
             Options.Add("server-comms-port=", "When using active communication, the comms port on the Octopus server; the default is " + serverCommsPort, s => serverCommsPort = int.Parse(s));
             Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
             Options.Add("tentacle-comms-port=", "When using passive communication, the comms port that the Octopus server is instructed to call back on to reach this machine; defaults to the configured listening port", s => tentacleCommsPort = int.Parse(s));
@@ -93,6 +96,9 @@ namespace Octopus.Tentacle.Commands
             if (configuration.Value.TentacleCertificate == null)
                 throw new ControlledFailureException("No certificate has been generated for this Tentacle. Please run the new-certificate command first.");
 
+            if(communicationStyle == CommunicationStyle.TentacleActive && !string.IsNullOrWhiteSpace(proxy))
+                throw new ControlledFailureException("Option --proxy can only be used with --comms-style=TentaclePassive.  To set a proxy for a polling Tentacle use the polling-proxy command first and then register the Tentacle with register-with.");
+
             Uri serverAddress = null;
 
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
@@ -109,6 +115,14 @@ namespace Octopus.Tentacle.Commands
 
             using (var client = await octopusClientInitializer.CreateAsyncClient(api, proxyOverride))
             {
+                // if a proxy was asked for, check that it exists on the server
+                if (!string.IsNullOrWhiteSpace(proxy))
+                {
+                    proxyResource = await client.Repository.Proxies.FindByName(proxy);
+                    if(proxyResource?.Id == null)
+                        throw new ControlledFailureException($"Proxy name {proxy} not found.  Check that the name matches a proxy name configured on the Octopus server.");
+                }
+
                 await RegisterMachine(client.Repository, serverAddress, sslThumbprint, communicationStyle);
             }
         }
@@ -131,6 +145,7 @@ namespace Octopus.Tentacle.Commands
             {
                 registerMachineOperation.TentacleHostname = string.IsNullOrWhiteSpace(publicName) ? Environment.MachineName : publicName;
                 registerMachineOperation.TentaclePort = tentacleCommsPort ?? configuration.Value.ServicesPortNumber;
+                registerMachineOperation.ProxyId = proxyResource?.Id;
             }
             else if (communicationStyle == CommunicationStyle.TentacleActive)
             {
