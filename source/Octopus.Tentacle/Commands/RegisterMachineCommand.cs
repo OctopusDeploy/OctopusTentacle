@@ -39,7 +39,6 @@ namespace Octopus.Tentacle.Commands
         string comms = "TentaclePassive";
         int serverCommsPort = 10943;
         string proxy;
-        ProxyResource proxyResource;
         string serverWebSocketAddress;
         int? tentacleCommsPort = null;
 
@@ -115,14 +114,6 @@ namespace Octopus.Tentacle.Commands
 
             using (var client = await octopusClientInitializer.CreateAsyncClient(api, proxyOverride))
             {
-                // if a proxy was asked for, check that it exists on the server
-                if (!string.IsNullOrWhiteSpace(proxy))
-                {
-                    proxyResource = await client.Repository.Proxies.FindByName(proxy);
-                    if(proxyResource?.Id == null)
-                        throw new ControlledFailureException($"Proxy name {proxy} not found.  Check that the name matches a proxy name configured on the Octopus server.");
-                }
-
                 await RegisterMachine(client.Repository, serverAddress, sslThumbprint, communicationStyle);
             }
         }
@@ -145,7 +136,7 @@ namespace Octopus.Tentacle.Commands
             {
                 registerMachineOperation.TentacleHostname = string.IsNullOrWhiteSpace(publicName) ? Environment.MachineName : publicName;
                 registerMachineOperation.TentaclePort = tentacleCommsPort ?? configuration.Value.ServicesPortNumber;
-                registerMachineOperation.ProxyId = proxyResource?.Id;
+                registerMachineOperation.ProxyName = proxy;
             }
             else if (communicationStyle == CommunicationStyle.TentacleActive)
             {
