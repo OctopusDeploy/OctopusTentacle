@@ -46,10 +46,6 @@ namespace Octopus.Tentacle.Tests.Commands
             repository.Client.Returns(octopusAsyncClient);
             octopusAsyncClient.Repository.Returns(repository);
 
-            var proxy = Substitute.For<ProxyResource>();
-            proxy.Id = "ProxyId";
-            repository.Proxies.FindByName("Proxy").Returns(Task.FromResult(proxy));
-
             var certificateConfigurationRepository = Substitute.For<ICertificateConfigurationRepository>();
             var certificateConfigurationResource = new CertificateConfigurationResource { Thumbprint = serverThumbprint };
             certificateConfigurationRepository.GetOctopusCertificate().Returns(Task.FromResult(certificateConfigurationResource));
@@ -98,7 +94,7 @@ namespace Octopus.Tentacle.Tests.Commands
             Assert.That(operation.SubscriptionId, Is.Null);
             Assert.That(operation.TenantTags.Single(), Is.EqualTo("CustomerType/VIP"));
             Assert.That(operation.Tenants.Single(), Is.EqualTo("Tenant1"));
-            Assert.That(operation.ProxyId, Is.EqualTo("ProxyId"));
+            Assert.That(operation.ProxyName, Is.EqualTo("Proxy"));
 
             configuration.Received().AddOrUpdateTrustedOctopusServer(
                 Arg.Is<OctopusServerConfiguration>(x => x.Address == null && 
