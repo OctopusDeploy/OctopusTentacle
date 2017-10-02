@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac" Version="3.5.2" />
-    <PackageReference Include="Octopus.Client" Version="4.24.0-enh-registermachin23" />
+    <PackageReference Include="Octopus.Client" Version="4.24.0" />
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
     <PackageReference Include="Octopus.Shared" Version="3.17.1" />
     <PackageReference Include="System.Net.Http" Version="4.1.0" />
