@@ -45,12 +45,14 @@ namespace Octopus.Tentacle.Tests.Commands
             repository = Substitute.For<IOctopusAsyncRepository>();
             repository.Client.Returns(octopusAsyncClient);
             octopusAsyncClient.Repository.Returns(repository);
+
             var certificateConfigurationRepository = Substitute.For<ICertificateConfigurationRepository>();
             var certificateConfigurationResource = new CertificateConfigurationResource { Thumbprint = serverThumbprint };
             certificateConfigurationRepository.GetOctopusCertificate().Returns(Task.FromResult(certificateConfigurationResource));
             repository.CertificateConfiguration.Returns(certificateConfigurationRepository);
             octopusClientInitializer.CreateAsyncClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<IWebProxy>())
                 .Returns(Task.FromResult(octopusAsyncClient));
+
             Command = new RegisterMachineCommand(new Lazy<IRegisterMachineOperation>(() => operation),
                                                  new Lazy<ITentacleConfiguration>(() => configuration),
                                                  log,
@@ -73,6 +75,7 @@ namespace Octopus.Tentacle.Tests.Commands
                   "--publicHostName=mymachine.test",
                   "--apiKey=ABC123", 
                   "--force",
+                  "--proxy=Proxy",
                   "--role=app-server",
                   "--role=web-server",
                   "--tenant=Tenant1",
@@ -91,6 +94,7 @@ namespace Octopus.Tentacle.Tests.Commands
             Assert.That(operation.SubscriptionId, Is.Null);
             Assert.That(operation.TenantTags.Single(), Is.EqualTo("CustomerType/VIP"));
             Assert.That(operation.Tenants.Single(), Is.EqualTo("Tenant1"));
+            Assert.That(operation.ProxyName, Is.EqualTo("Proxy"));
 
             configuration.Received().AddOrUpdateTrustedOctopusServer(
                 Arg.Is<OctopusServerConfiguration>(x => x.Address == null && 
