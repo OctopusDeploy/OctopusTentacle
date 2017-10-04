@@ -15,7 +15,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             this.textBox = textBox;
         }
 
-        public override LogContext CurrentContext => LogContext.Null();
+        public override LogContext CurrentContext => new LogContext();
 
         public void Clear()
         {

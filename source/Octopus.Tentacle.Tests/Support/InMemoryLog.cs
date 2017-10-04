@@ -22,10 +22,7 @@ namespace Octopus.Tentacle.Tests.Support
             this.log = log ?? Log.Octopus();
         }
 
-        public override LogContext CurrentContext
-        {
-            get { return LogContext.Null(); }
-        }
+        public override LogContext CurrentContext => new LogContext();
 
         protected override void WriteEvent(LogEvent logEvent)
         {
