@@ -24,14 +24,14 @@ namespace Octopus.Shared.Util
             return Execute(invocation, Log.System().Info, log.Info, log.Error, log.Error);
         }
 
-        public bool Execute(CommandLineInvocation invocation, Action<string> metaOutput, Action<string> output, Action<string> error, Action<Exception, string> exception)
+        public bool Execute(CommandLineInvocation invocation, Action<string> debug, Action<string> info, Action<string> error, Action<Exception, string> exception)
         {
             try
             {
                 var exitCode = SilentProcessRunner.ExecuteCommand(invocation.Executable, (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? ""),
                     Environment.CurrentDirectory,
-                    metaOutput,
-                    output,
+                    debug,
+                    info,
                     error,
                     CancellationToken.None);
 
@@ -39,9 +39,9 @@ namespace Octopus.Shared.Util
                 {
                     if (invocation.IgnoreFailedExitCode)
                     {
-                        output("The previous command returned a non-zero exit code of: " + exitCode);
-                        output("The command that failed was: " + invocation);
-                        output("The invocation is set to ignore failed exit codes, continuing...");
+                        info("The previous command returned a non-zero exit code of: " + exitCode);
+                        info("The command that failed was: " + invocation);
+                        info("The invocation is set to ignore failed exit codes, continuing...");
                     }
                     else
                     {

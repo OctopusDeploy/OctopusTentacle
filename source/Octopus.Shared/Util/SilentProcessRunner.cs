@@ -84,29 +84,29 @@ namespace Octopus.Shared.Util
             return new CmdResult(exitCode, infos, errors);
         }
 
-        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error)
+        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error)
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, output, error, CancellationToken.None);
+            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, info, error, CancellationToken.None);
         }
 
-        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> metaOutput, Action<string> output, Action<string> error)
+        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error)
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, metaOutput, output, error, CancellationToken.None);
+            return ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, CancellationToken.None);
         }
 
-        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error, CancellationToken cancel)
+        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error, CancellationToken cancel)
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, output, error, cancel);
+            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, info, error, cancel);
         }
 
-        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> metaOutput, Action<string> output, Action<string> error, CancellationToken cancel)
+        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error, CancellationToken cancel)
         {
             try
             {
                 // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
                 var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
-                metaOutput($"Starting {exeFileNameOrFullPath} in {workingDirectory}");
+                debug($"Starting {exeFileNameOrFullPath} in {workingDirectory}");
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -129,7 +129,7 @@ namespace Octopus.Shared.Util
                                 if (e.Data == null)
                                     outputWaitHandle.Set();
                                 else
-                                    output(e.Data);
+                                    info(e.Data);
                             }
                             catch (Exception ex)
                             {
@@ -187,7 +187,7 @@ namespace Octopus.Shared.Util
 
                         process.WaitForExit();
 
-                        metaOutput($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {process.ExitCode}");
+                        debug($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {process.ExitCode}");
 
                         running = false;
 
