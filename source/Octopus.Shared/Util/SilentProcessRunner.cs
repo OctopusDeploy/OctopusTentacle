@@ -20,7 +20,6 @@ namespace Octopus.Shared.Util
         // ReSharper disable once InconsistentNaming
         const int CP_OEMCP = 1;
         static readonly Encoding oemEncoding;
-        static readonly ILog SystemLog = Log.System();
 
         static SilentProcessRunner()
         {
@@ -87,17 +86,27 @@ namespace Octopus.Shared.Util
 
         public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error)
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, output, error, CancellationToken.None);
+            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, output, error, CancellationToken.None);
+        }
+
+        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> metaOutput, Action<string> output, Action<string> error)
+        {
+            return ExecuteCommand(executable, arguments, workingDirectory, metaOutput, output, error, CancellationToken.None);
         }
 
         public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> output, Action<string> error, CancellationToken cancel)
+        {
+            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, output, error, cancel);
+        }
+
+        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> metaOutput, Action<string> output, Action<string> error, CancellationToken cancel)
         {
             try
             {
                 // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
                 var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
-                SystemLog.Info($"Starting {exeFileNameOrFullPath} in {workingDirectory}");
+                metaOutput($"Starting {exeFileNameOrFullPath} in {workingDirectory}");
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -178,7 +187,7 @@ namespace Octopus.Shared.Util
 
                         process.WaitForExit();
 
-                        SystemLog.Info($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {process.ExitCode}");
+                        metaOutput($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {process.ExitCode}");
 
                         running = false;
 
