@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Nevermore.Contracts;
+﻿using System.Collections.Generic;
 
 namespace Octopus.Core.Extensions
 {
     public static class EnumerableExtensions
     {
-        public static ReferenceCollection ToReferenceCollection(this IEnumerable<string> source)
-        {
-            return new ReferenceCollection(source);
-        }
-
         public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
         {
             return new HashSet<T>(source);
