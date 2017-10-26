@@ -49,7 +49,7 @@
         <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/EnumerableExtensions.cs">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="1539">
-              <caret line="27" column="1" lean-forward="true" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
+              <caret line="27" column="1" lean-forward="false" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
               <folding>
                 <marker date="1509049470246" expanded="true" signature="68:789" ph="{...}" />
                 <marker date="1509049470246" expanded="true" signature="115:787" ph="{...}" />
@@ -175,12 +175,12 @@
       <updated>1508986398697</updated>
       <workItem from="1508986400762" duration="8000" />
       <workItem from="1508986582574" duration="903000" />
-      <workItem from="1508989467503" duration="2088000" />
+      <workItem from="1508989467503" duration="2578000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="2999000" />
+    <option name="totallyTimeSpent" value="3489000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -193,6 +193,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="9512" y="-5469" width="6432" height="3532" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Errors In Solution" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -314,7 +315,7 @@
     <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/EnumerableExtensions.cs">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1539">
-          <caret line="27" column="1" lean-forward="true" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
+          <caret line="27" column="1" lean-forward="false" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
           <folding>
             <marker date="1509049470246" expanded="true" signature="68:789" ph="{...}" />
             <marker date="1509049470246" expanded="true" signature="115:787" ph="{...}" />
