@@ -18,9 +18,6 @@
     <iconUrl>http://i.octopusdeploy.com/resources/Avatar3_360.png</iconUrl>
     <tags>automation deployment</tags>
     <developmentDependency>true</developmentDependency>
-    <dependencies>
-      <dependency id="Ensure.That" version="6.0.1" />
-    </dependencies>
   </metadata>
   <files>
     <file src="*" target="lib\net40" />
