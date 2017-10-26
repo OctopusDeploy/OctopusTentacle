@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd" xmlns:octopus="http://octopus.org">
+  <metadata>
+    <id>Octopus.Server.Core.Versioning</id>
+    <title>Octopus Server Version Support</title>
+    <version>$version$</version>
+    <authors>Octopus Deploy</authors>
+    <owners>Octopus Deploy</owners>
+    <summary>Octopus Deploy server version contracts.</summary>
+    <description>
+      Provides the agreed version contracts between Octopus Server and Calamari.
+    </description>
+    <releaseNotes></releaseNotes>
+    <language>en-US</language>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://octopus.com/</licenseUrl>
+    <projectUrl>https://octopus.com/</projectUrl>
+    <iconUrl>http://i.octopusdeploy.com/resources/Avatar3_360.png</iconUrl>
+    <tags>automation deployment</tags>
+    <developmentDependency>true</developmentDependency>
+    <dependencies>
+      <dependency id="Ensure.That" version="6.0.1" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="*" target="lib\net45" />
+  </files>
+</package>
