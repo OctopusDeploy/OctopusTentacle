@@ -21,5 +21,6 @@
   </metadata>
   <files>
     <file src="*" target="lib\net40" />
+	<file src="*" target="lib\netcoreapp2.0" />
   </files>
 </package>
