@@ -3,7 +3,7 @@
     <RootNamespace>Octopus.Shared.Tests</RootNamespace>
     <AssemblyName>Octopus.Shared.Tests</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <TargetFrameworks>net452</TargetFrameworks>
+    <TargetFrameworks>net462</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
