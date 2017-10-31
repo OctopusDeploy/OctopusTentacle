@@ -62,8 +62,10 @@ namespace Octopus.Shared.Tests.Security
 
             var after = GC.GetTotalMemory(true);
 
-            // Currently this code uses ~12Mb of memory. Fail if it exceeds 15Mb.
-            Assert.That(after - before, Is.LessThan(15 * 1024 * 1024));
+            // Currently this code uses ~12Mb of memory. Fail if it exceeds 15Mb (on 32bit).
+            var allowedMb = Environment.Is64BitProcess ? 30 : 15;
+            Console.WriteLine($"Allowing up to {allowedMb}MB");
+            Assert.That(after - before, Is.LessThan(allowedMb * 1024 * 1024));
         }
     }
 }

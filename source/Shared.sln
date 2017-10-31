@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.4
+VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Shared", "Octopus.Shared\Octopus.Shared.csproj", "{14B62699-BBD8-4B6A-9633-DAB3D790D400}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Shared.Tests", "Octopus.Shared.Tests\Octopus.Shared.Tests.csproj", "{E9F81754-D491-4B29-968A-7BFFBC02DE62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Shared.Tests", "Octopus.Shared.Tests\Octopus.Shared.Tests.csproj", "{E9F81754-D491-4B29-968A-7BFFBC02DE62}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +24,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E4B45C2C-E2B2-4E2F-BA76-CB37179609FD}
 	EndGlobalSection
 EndGlobal

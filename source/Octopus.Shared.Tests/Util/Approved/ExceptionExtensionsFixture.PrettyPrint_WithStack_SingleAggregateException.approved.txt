@@ -1,6 +1,8 @@
 Aggregate Exception
 System.AggregateException
    at System.Threading.Tasks.Task.WaitAll(Task[] tasks, Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.WaitAll(Task[] tasks, Int32 millisecondsTimeout)
+   at System.Threading.Tasks.Task.WaitAll(Task[] tasks)
    at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.RaiseAggregateException(Int32 i) in ExceptionExtensionsFixture.cs:line <n>
    at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.PrettyPrint_WithStack_SingleAggregateException() in ExceptionExtensionsFixture.cs:line <n>
 
