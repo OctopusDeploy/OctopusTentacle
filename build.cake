@@ -52,6 +52,7 @@ Task("__Default")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
+    .IsDependentOn("__Test")
     .IsDependentOn("__CreateNuGet")
     .IsDependentOn("__CopyToLocalPackages");
 
@@ -86,6 +87,7 @@ Task("__Clean")
 {
     CleanDirectories("./source/**/bin");
     CleanDirectories("./source/**/obj");
+    CleanDirectories("./source/**/TestResults");
     CleanDirectory(packageDir);
     CleanDirectory(artifactsDir);
 });
@@ -102,6 +104,17 @@ Task("__Build")
             .SetVerbosity(verbosity)
             .UseToolVersion(MSBuildToolVersion.VS2017)
     );
+});
+
+Task("__Test")
+    .IsDependentOn("__Build")
+    .Does(() =>
+{
+    DotNetCoreTest("./source/Octopus.Shared.Tests/Octopus.Shared.Tests.csproj", new DotNetCoreTestSettings
+    {
+        Configuration = configuration,
+        NoBuild = true
+    });
 });
 
 Task("__CreateNuGet")
