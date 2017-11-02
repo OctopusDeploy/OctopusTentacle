@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Autofac;
 using Halibut;
 using Halibut.ServiceModel;
@@ -27,6 +28,7 @@ namespace Octopus.Tentacle.Communications
                 var services = c.Resolve<IServiceFactory>();
                 var halibutRuntime = new HalibutRuntime(services, configuration.TentacleCertificate);
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
+                halibutRuntime.SetFriendlyHtmlPageHeaders(FriendlyHtmlPageHeaders);
                 return halibutRuntime;
             }).As<HalibutRuntime>().SingleInstance();
             builder.RegisterType<OctopusServerChecker>().As<IOctopusServerChecker>();
@@ -59,5 +61,14 @@ namespace Octopus.Tentacle.Communications
     <p>This landing page is displayed when no X509 certificate is provided. Only Octopus Servers with a trusted certificate can control this Tentacle.</p>
 </body>
 </html>";
+
+        static readonly IEnumerable<KeyValuePair<string, string>> FriendlyHtmlPageHeaders = new List<KeyValuePair<string, string>>
+        {
+            new KeyValuePair<string, string>("Content-Security-Policy", "default-src 'none'; style-src 'sha256-Og27Evh417GekW0LSWwdTR+KDPHniSjRY3CDgH5olCw='; img-src 'self'"),
+            new KeyValuePair<string, string>("Referrer-Policy", "no-referrer"),
+            new KeyValuePair<string, string>("X-Content-Type-Options", "nosniff"),
+            new KeyValuePair<string, string>("X-Frame-Options", "DENY"),
+            new KeyValuePair<string, string>("X-XSS-Protection",  "1; mode=block")
+        };
     }
 }
