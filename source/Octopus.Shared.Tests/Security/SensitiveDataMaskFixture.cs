@@ -109,7 +109,7 @@ namespace Octopus.Shared.Tests.Security
         }
 
         [Test]
-        [Ignore]
+        [Ignore("Development time testing only")]
         public void HeavyLoadPerformance()
         {
             var sensitiveValues = new string[1000];
@@ -148,7 +148,7 @@ namespace Octopus.Shared.Tests.Security
         }
 
         [Test]
-        [Ignore]
+        [Ignore("Development time testing only")]
         public void PerformanceOnMatches()
         {
             var password = Guid.NewGuid().ToString();
@@ -172,7 +172,7 @@ namespace Octopus.Shared.Tests.Security
         }
 
         [Test]
-        [Ignore]
+        [Ignore("Development time testing only")]
         public void PerformanceOnNonMatches()
         {
             var line = string.Concat(Enumerable.Range(0, 21).Select(g => Guid.NewGuid().ToString()));
