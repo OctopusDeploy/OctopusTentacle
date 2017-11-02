@@ -24,7 +24,7 @@
 
         <!-- Top header -->
         <Border>
-            <Border Height="55" Margin="-10, 0, -10, 0" Background="#3370a2" BorderThickness="0,0,0,8" BorderBrush="#215680">
+            <Border Height="55" Margin="-10, 0, -10, 0" Background="#2f93e0" BorderThickness="0,0,0,8" BorderBrush="#74c0fb">
                 <Grid Margin="30,0,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="170" />
