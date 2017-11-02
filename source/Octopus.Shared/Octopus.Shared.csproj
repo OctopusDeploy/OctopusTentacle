@@ -29,6 +29,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Web\**" />
+    <EmbeddedResource Remove="Web\**" />
+    <None Remove="Web\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Startup\PathsToDeleteOnStartup.txt" />
   </ItemGroup>
 
@@ -105,9 +111,5 @@
     <Compile Update="Startup\WindowsServiceAdapter.cs">
       <SubType>Component</SubType>
     </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Web\" />
   </ItemGroup>
 </Project>
