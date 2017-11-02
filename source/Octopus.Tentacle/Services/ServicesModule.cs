@@ -2,7 +2,6 @@
 using Autofac;
 using Octopus.Shared.Packages;
 using Octopus.Shared.Scripts;
-using Octopus.Shared.Tasks;
 
 namespace Octopus.Tentacle.Services
 {
@@ -11,11 +10,6 @@ namespace Octopus.Tentacle.Services
         protected override void Load(ContainerBuilder builder)
         {
             base.Load(builder);
-
-            builder.RegisterAssemblyTypes(ThisAssembly)
-                .AssignableTo<ITaskController>()
-                .AsSelf()
-                .InstancePerDependency();
 
             builder.RegisterType<ScriptWorkspaceFactory>().As<IScriptWorkspaceFactory>();
 
