@@ -45,10 +45,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="EnumerableExtensions.cs" pinned="false" current-in-tab="true">
+      <file leaf-file-name="EnumerableExtensions.cs" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/EnumerableExtensions.cs">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1539">
+            <state relative-caret-position="1007">
               <caret line="27" column="1" lean-forward="false" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
               <folding>
                 <marker date="1509049470246" expanded="true" signature="68:789" ph="{...}" />
@@ -57,6 +57,24 @@
                 <marker date="1509049470246" expanded="true" signature="364:437" ph="{...}" />
                 <marker date="1509049470246" expanded="true" signature="526:653" ph="{...}" />
                 <marker date="1509049470246" expanded="true" signature="722:781" ph="{...}" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FunctionalExtensions.cs" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/FunctionalExtensions.cs">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-959">
+              <caret line="8" column="53" lean-forward="false" selection-start-line="8" selection-start-column="53" selection-end-line="8" selection-end-column="53" />
+              <folding>
+                <marker date="1509680968279" expanded="true" signature="48:1126" ph="{...}" />
+                <marker date="1509680968279" expanded="true" signature="55:411" ph="/// https://davefancher.com/2015/06/14/functional-c-fluent-interfaces-and-functional-method-chaining/ ... " />
+                <marker date="1509680968279" expanded="true" signature="456:1124" ph="{...}" />
+                <marker date="1509680968279" expanded="true" signature="525:598" ph="{...}" />
+                <marker date="1509680968279" expanded="true" signature="801:935" ph="{...}" />
+                <marker date="1509680968279" expanded="true" signature="858:925" ph="{...}" />
+                <marker date="1509680968279" expanded="true" signature="1068:1118" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -80,15 +98,17 @@
     </findStrings>
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/FunctionalExtensions.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Util/Maybe.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/EnumerableExtensions.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Util/HashCodeCombiner.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/000F8C30-4EF0-44B1-8C38-0A35CD9EF8D4/8c/08802e2e/ReferenceCollection.cs" root0="SKIP_INSPECTION" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/000F8C30-4EF0-44B1-8C38-0A35CD9EF8D4/8c/08802e2e/ReferenceCollection.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/EnumerableExtensions.cs" />
+        <option value="$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/FunctionalExtensions.cs" />
       </list>
     </option>
   </component>
@@ -99,10 +119,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="9512" />
-    <option name="y" value="-5469" />
-    <option name="width" value="6432" />
-    <option name="height" value="3532" />
+    <option name="x" value="-16" />
+    <option name="y" value="-16" />
+    <option name="width" value="3872" />
+    <option name="height" value="2092" />
   </component>
   <component name="ProjectView">
     <navigator currentView="SolutionExplorer" proportions="" version="1">
@@ -119,7 +139,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="SolutionExplorer">
         <subPane>
           <expand>
@@ -127,12 +146,47 @@
               <item name="" type="13324e5d:SolutionExplorerViewPane$ProjectViewPaneTreeStructure$createRoot$1" />
               <item name="Octopus.Server.Core.Utilities (1 project)" type="977d5f41:SolutionExplorerNodeRider" />
             </path>
+            <path>
+              <item name="" type="13324e5d:SolutionExplorerViewPane$ProjectViewPaneTreeStructure$createRoot$1" />
+              <item name="Octopus.Server.Core.Utilities (1 project)" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Octopus.Server.Core.Utilities" type="977d5f41:SolutionExplorerNodeRider" />
+            </path>
+            <path>
+              <item name="" type="13324e5d:SolutionExplorerViewPane$ProjectViewPaneTreeStructure$createRoot$1" />
+              <item name="Octopus.Server.Core.Utilities (1 project)" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Octopus.Server.Core.Utilities" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Octopus" type="977d5f41:SolutionExplorerNodeRider" />
+            </path>
+            <path>
+              <item name="" type="13324e5d:SolutionExplorerViewPane$ProjectViewPaneTreeStructure$createRoot$1" />
+              <item name="Octopus.Server.Core.Utilities (1 project)" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Octopus.Server.Core.Utilities" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Octopus" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Core" type="977d5f41:SolutionExplorerNodeRider" />
+            </path>
+            <path>
+              <item name="" type="13324e5d:SolutionExplorerViewPane$ProjectViewPaneTreeStructure$createRoot$1" />
+              <item name="Octopus.Server.Core.Utilities (1 project)" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Octopus.Server.Core.Utilities" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Octopus" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Core" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Extensions" type="977d5f41:SolutionExplorerNodeRider" />
+            </path>
+            <path>
+              <item name="" type="13324e5d:SolutionExplorerViewPane$ProjectViewPaneTreeStructure$createRoot$1" />
+              <item name="Octopus.Server.Core.Utilities (1 project)" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Octopus.Server.Core.Utilities" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Octopus" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Core" type="977d5f41:SolutionExplorerNodeRider" />
+              <item name="Util" type="977d5f41:SolutionExplorerNodeRider" />
+            </path>
           </expand>
           <select />
         </subPane>
         <option name="show-file-system" value="false" />
         <option name="show-all-items" value="false" />
       </pane>
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -176,11 +230,12 @@
       <workItem from="1508986400762" duration="8000" />
       <workItem from="1508986582574" duration="903000" />
       <workItem from="1508989467503" duration="2681000" />
+      <workItem from="1509680823255" duration="158000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="3592000" />
+    <option name="totallyTimeSpent" value="3750000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -192,28 +247,29 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="9512" y="-5469" width="6432" height="3532" extended-state="6" />
+    <frame x="-16" y="-16" width="3872" height="2092" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Errors In Solution" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Unit Tests" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="NuGet" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32956687" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2557143" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Build" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3298807" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="NuGet" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32932416" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2590909" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Build" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3298807" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -228,6 +284,59 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Util/Maybe.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Util/HashCodeCombiner.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <marker date="1508989471523" expanded="true" signature="0:177" ph="/* Based on HashCodeCombiner from https://github.com/NuGet/NuGet.Client ... */" />
+            <marker date="1508989471523" expanded="true" signature="229:374" ph="/// Hash code creator, based on the original NuGet hash code combiner/ASP hash code combiner implementations ... " />
+            <marker date="1508989471523" expanded="true" signature="415:1741" ph="{...}" />
+            <marker date="1508989471523" expanded="true" signature="561:614" ph="{...}" />
+            <marker date="1508989471523" expanded="true" signature="647:722" ph="{...}" />
+            <marker date="1508989471523" expanded="true" signature="771:885" ph="{...}" />
+            <marker date="1508989471523" expanded="true" signature="935:1005" ph="{...}" />
+            <marker date="1508989471523" expanded="true" signature="1056:1140" ph="{...}" />
+            <marker date="1508989471523" expanded="true" signature="1193:1336" ph="{...}" />
+            <marker date="1508989471523" expanded="true" signature="1230:1301" ph="{...}" />
+            <marker date="1508989471523" expanded="true" signature="1346:1447" ph="/// Create a unique hash code for the given set of items ... " />
+            <marker date="1508989471523" expanded="true" signature="1510:1735" ph="{...}" />
+            <marker date="1508989471523" expanded="true" signature="1613:1682" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/000F8C30-4EF0-44B1-8C38-0A35CD9EF8D4/8c/08802e2e/ReferenceCollection.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="684">
+          <caret line="12" column="15" lean-forward="false" selection-start-line="12" selection-start-column="15" selection-end-line="12" selection-end-column="15" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/EnumerableExtensions.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1539">
+          <caret line="27" column="1" lean-forward="false" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
+          <folding>
+            <marker date="1509049470246" expanded="true" signature="68:789" ph="{...}" />
+            <marker date="1509049470246" expanded="true" signature="115:787" ph="{...}" />
+            <marker date="1509049470246" expanded="true" signature="195:258" ph="{...}" />
+            <marker date="1509049470246" expanded="true" signature="364:437" ph="{...}" />
+            <marker date="1509049470246" expanded="true" signature="526:653" ph="{...}" />
+            <marker date="1509049470246" expanded="true" signature="722:781" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Util/Maybe.cs">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -313,7 +422,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/EnumerableExtensions.cs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1539">
+        <state relative-caret-position="1007">
           <caret line="27" column="1" lean-forward="false" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
           <folding>
             <marker date="1509049470246" expanded="true" signature="68:789" ph="{...}" />
@@ -322,6 +431,22 @@
             <marker date="1509049470246" expanded="true" signature="364:437" ph="{...}" />
             <marker date="1509049470246" expanded="true" signature="526:653" ph="{...}" />
             <marker date="1509049470246" expanded="true" signature="722:781" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/FunctionalExtensions.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-959">
+          <caret line="8" column="53" lean-forward="false" selection-start-line="8" selection-start-column="53" selection-end-line="8" selection-end-column="53" />
+          <folding>
+            <marker date="1509680968279" expanded="true" signature="48:1126" ph="{...}" />
+            <marker date="1509680968279" expanded="true" signature="55:411" ph="/// https://davefancher.com/2015/06/14/functional-c-fluent-interfaces-and-functional-method-chaining/ ... " />
+            <marker date="1509680968279" expanded="true" signature="456:1124" ph="{...}" />
+            <marker date="1509680968279" expanded="true" signature="525:598" ph="{...}" />
+            <marker date="1509680968279" expanded="true" signature="801:935" ph="{...}" />
+            <marker date="1509680968279" expanded="true" signature="858:925" ph="{...}" />
+            <marker date="1509680968279" expanded="true" signature="1068:1118" ph="{...}" />
           </folding>
         </state>
       </provider>

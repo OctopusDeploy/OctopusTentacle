@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="Class1.cs" />
     <Compile Include="Octopus\Core\Extensions\EnumerableExtensions.cs" />
+    <Compile Include="Octopus\Core\Extensions\FunctionalExtensions.cs" />
     <Compile Include="Octopus\Core\Util\HashCodeCombiner.cs" />
     <Compile Include="Octopus\Core\Util\Maybe.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

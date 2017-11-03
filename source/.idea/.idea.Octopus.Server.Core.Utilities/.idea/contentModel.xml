@@ -11,6 +11,7 @@
           <e p="Core" t="Include">
             <e p="Extensions" t="Include">
               <e p="EnumerableExtensions.cs" t="Include" />
+              <e p="FunctionalExtensions.cs" t="Include" />
             </e>
             <e p="Util" t="Include">
               <e p="HashCodeCombiner.cs" t="Include" />
