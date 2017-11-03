@@ -65,16 +65,17 @@
       <file leaf-file-name="FunctionalExtensions.cs" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/FunctionalExtensions.cs">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-959">
-              <caret line="8" column="53" lean-forward="false" selection-start-line="8" selection-start-column="53" selection-end-line="8" selection-end-column="53" />
+            <state relative-caret-position="684">
+              <caret line="12" column="17" lean-forward="false" selection-start-line="12" selection-start-column="17" selection-end-line="12" selection-end-column="17" />
               <folding>
-                <marker date="1509680968279" expanded="true" signature="48:1126" ph="{...}" />
-                <marker date="1509680968279" expanded="true" signature="55:411" ph="/// https://davefancher.com/2015/06/14/functional-c-fluent-interfaces-and-functional-method-chaining/ ... " />
-                <marker date="1509680968279" expanded="true" signature="456:1124" ph="{...}" />
-                <marker date="1509680968279" expanded="true" signature="525:598" ph="{...}" />
-                <marker date="1509680968279" expanded="true" signature="801:935" ph="{...}" />
-                <marker date="1509680968279" expanded="true" signature="858:925" ph="{...}" />
-                <marker date="1509680968279" expanded="true" signature="1068:1118" ph="{...}" />
+                <marker date="1509681059927" expanded="true" signature="6:39" ph="..." />
+                <marker date="1509681059927" expanded="true" signature="74:1178" ph="{...}" />
+                <marker date="1509681059927" expanded="true" signature="81:437" ph="/// https://davefancher.com/2015/06/14/functional-c-fluent-interfaces-and-functional-method-chaining/ ... " />
+                <marker date="1509681059927" expanded="true" signature="508:1176" ph="{...}" />
+                <marker date="1509681059927" expanded="true" signature="577:650" ph="{...}" />
+                <marker date="1509681059927" expanded="true" signature="853:987" ph="{...}" />
+                <marker date="1509681059927" expanded="true" signature="910:977" ph="{...}" />
+                <marker date="1509681059927" expanded="true" signature="1120:1170" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -230,12 +231,12 @@
       <workItem from="1508986400762" duration="8000" />
       <workItem from="1508986582574" duration="903000" />
       <workItem from="1508989467503" duration="2681000" />
-      <workItem from="1509680823255" duration="158000" />
+      <workItem from="1509680823255" duration="241000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="3750000" />
+    <option name="totallyTimeSpent" value="3833000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -437,16 +438,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Octopus.Server.Core.Utilities/Octopus/Core/Extensions/FunctionalExtensions.cs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-959">
-          <caret line="8" column="53" lean-forward="false" selection-start-line="8" selection-start-column="53" selection-end-line="8" selection-end-column="53" />
+        <state relative-caret-position="684">
+          <caret line="12" column="17" lean-forward="false" selection-start-line="12" selection-start-column="17" selection-end-line="12" selection-end-column="17" />
           <folding>
-            <marker date="1509680968279" expanded="true" signature="48:1126" ph="{...}" />
-            <marker date="1509680968279" expanded="true" signature="55:411" ph="/// https://davefancher.com/2015/06/14/functional-c-fluent-interfaces-and-functional-method-chaining/ ... " />
-            <marker date="1509680968279" expanded="true" signature="456:1124" ph="{...}" />
-            <marker date="1509680968279" expanded="true" signature="525:598" ph="{...}" />
-            <marker date="1509680968279" expanded="true" signature="801:935" ph="{...}" />
-            <marker date="1509680968279" expanded="true" signature="858:925" ph="{...}" />
-            <marker date="1509680968279" expanded="true" signature="1068:1118" ph="{...}" />
+            <marker date="1509681059927" expanded="true" signature="6:39" ph="..." />
+            <marker date="1509681059927" expanded="true" signature="74:1178" ph="{...}" />
+            <marker date="1509681059927" expanded="true" signature="81:437" ph="/// https://davefancher.com/2015/06/14/functional-c-fluent-interfaces-and-functional-method-chaining/ ... " />
+            <marker date="1509681059927" expanded="true" signature="508:1176" ph="{...}" />
+            <marker date="1509681059927" expanded="true" signature="577:650" ph="{...}" />
+            <marker date="1509681059927" expanded="true" signature="853:987" ph="{...}" />
+            <marker date="1509681059927" expanded="true" signature="910:977" ph="{...}" />
+            <marker date="1509681059927" expanded="true" signature="1120:1170" ph="{...}" />
           </folding>
         </state>
       </provider>

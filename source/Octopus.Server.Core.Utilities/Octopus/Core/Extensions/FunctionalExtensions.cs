@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Octopus.Core.Extensions
 {
@@ -9,6 +10,7 @@ namespace Octopus.Core.Extensions
     /// Function extension libraries from the course:
     /// Functional Programming with C# by Dave Fancher
     /// </summary>
+    [DebuggerNonUserCode]
     public static class FunctionalExtensions
     {
         public static T Tee<T>(this T @this, Action<T> action)
