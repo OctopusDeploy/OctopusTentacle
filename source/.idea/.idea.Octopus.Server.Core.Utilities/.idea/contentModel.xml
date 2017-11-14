@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
-    <e p="C:\Users\matth\.Rider2017.2\system\resharper-host\local\Transient\ReSharperHost\v10\SolutionCaches\_Octopus.Server.Core.Utilities.-1924376327.00" t="ExcludeRecursive" />
+    <e p="C:\Users\matth\.Rider2017.3\system\resharper-host\local\Transient\ReSharperHost\v11\SolutionCaches\_Octopus.Server.Core.Utilities.-1924376327.00" t="ExcludeRecursive" />
     <e p="C:\Users\matth\Octopus\CoreUtilities\source" t="IncludeFlat">
       <e p="Octopus.Server.Core.Utilities" t="IncludeRecursive">
         <e p="bin" t="ExcludeRecursive" />
@@ -12,6 +12,7 @@
             <e p="Extensions" t="Include">
               <e p="EnumerableExtensions.cs" t="Include" />
               <e p="FunctionalExtensions.cs" t="Include" />
+              <e p="HttpResponseExtensions.cs" t="Include" />
             </e>
             <e p="Util" t="Include">
               <e p="HashCodeCombiner.cs" t="Include" />
