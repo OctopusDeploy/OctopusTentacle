@@ -23,7 +23,7 @@ namespace Octopus.Shared.Startup
             try
             {
                 Console.ResetColor();
-                Console.Title = displayName;
+                SetConsoleTitle(displayName);
 
                 start(this);
 
@@ -63,7 +63,7 @@ namespace Octopus.Shared.Startup
 
         public void WaitForUserToExit()
         {
-            Console.Title = displayName + " - Running";
+            SetConsoleTitle(displayName + " - Running");
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Running. Press <enter> to shut down...");
@@ -83,7 +83,7 @@ namespace Octopus.Shared.Startup
             }
 
             Console.ResetColor();
-            Console.Title = displayName + " - Shutting down...";
+            SetConsoleTitle(displayName + " - Shutting down...");
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine();
         }
@@ -114,6 +114,12 @@ namespace Octopus.Shared.Startup
         public static bool HasConsoleSwitch(OptionSet options)
         {
             return options.Any(o => o.Prototype == ConsoleSwitchPrototype);
+        }
+
+        static void SetConsoleTitle(string title)
+        {
+            if(Environment.UserInteractive)
+                Console.Title = title;
         }
     }
 }
