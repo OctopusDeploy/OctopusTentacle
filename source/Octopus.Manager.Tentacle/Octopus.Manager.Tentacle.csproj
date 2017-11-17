@@ -93,22 +93,22 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="NuGet.Common, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Common.3.6.0-octopus-58672\lib\net45\NuGet.Common.dll</HintPath>
+      <HintPath>..\packages\NuGet.Common.3.6.0-octopus-58676\lib\net45\NuGet.Common.dll</HintPath>
     </Reference>
     <Reference Include="NuGet.Frameworks, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Frameworks.3.6.0-octopus-58672\lib\net45\NuGet.Frameworks.dll</HintPath>
+      <HintPath>..\packages\NuGet.Frameworks.3.6.0-octopus-58676\lib\net45\NuGet.Frameworks.dll</HintPath>
     </Reference>
     <Reference Include="NuGet.Packaging, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Packaging.3.6.0-octopus-58672\lib\net45\NuGet.Packaging.dll</HintPath>
+      <HintPath>..\packages\NuGet.Packaging.3.6.0-octopus-58676\lib\net45\NuGet.Packaging.dll</HintPath>
     </Reference>
     <Reference Include="NuGet.Packaging.Core, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Packaging.Core.3.6.0-octopus-58672\lib\net45\NuGet.Packaging.Core.dll</HintPath>
+      <HintPath>..\packages\NuGet.Packaging.Core.3.6.0-octopus-58676\lib\net45\NuGet.Packaging.Core.dll</HintPath>
     </Reference>
     <Reference Include="NuGet.Packaging.Core.Types, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Packaging.Core.Types.3.6.0-octopus-58672\lib\net45\NuGet.Packaging.Core.Types.dll</HintPath>
+      <HintPath>..\packages\NuGet.Packaging.Core.Types.3.6.0-octopus-58676\lib\net45\NuGet.Packaging.Core.Types.dll</HintPath>
     </Reference>
     <Reference Include="NuGet.Versioning, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NuGet.Versioning.3.6.0-octopus-58672\lib\net45\NuGet.Versioning.dll</HintPath>
+      <HintPath>..\packages\NuGet.Versioning.3.6.0-octopus-58676\lib\net45\NuGet.Versioning.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Client, Version=4.24.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Client.4.24.0\lib\net45\Octopus.Client.dll</HintPath>
@@ -119,8 +119,8 @@
     <Reference Include="Octopus.Diagnostics, Version=1.0.12.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Diagnostics.1.0.12\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Shared, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Shared.4.0.0\lib\net45\Octopus.Shared.dll</HintPath>
+    <Reference Include="Octopus.Shared, Version=4.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Shared.4.0.2\lib\net45\Octopus.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.0.9.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Time.1.0.9\lib\netstandard1.0\Octopus.Time.dll</HintPath>
