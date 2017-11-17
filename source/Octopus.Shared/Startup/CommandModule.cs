@@ -11,7 +11,6 @@ namespace Octopus.Shared.Startup
 
             builder.RegisterCommand<HelpCommand>("help", "Prints this help text", "h", "?");
             builder.RegisterType<CommandLocator>().As<ICommandLocator>().SingleInstance();
-            builder.RegisterType<ServiceInstaller>().As<IServiceInstaller>();
         }
     }
 }
