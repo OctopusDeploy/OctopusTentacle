@@ -93,7 +93,7 @@ Task("__Clean")
 });
 
 Task("__Restore")
-    .Does(() => NuGetRestore("./source/Shared.sln"));
+    .Does(() => DotNetCoreRestore("./source"));
 
 Task("__Build")
     .Does(() =>
