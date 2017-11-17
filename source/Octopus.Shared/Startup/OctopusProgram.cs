@@ -332,7 +332,6 @@ namespace Octopus.Shared.Startup
                 return new ConsoleHost(displayName);
             }
 
-#if WINDOWS_SERVICE
             if (Environment.UserInteractive)
             {
                 log.Trace("The program is running interactively; using a console host");
@@ -340,10 +339,6 @@ namespace Octopus.Shared.Startup
             }
             log.Trace("The program is not running interactively; using a Windows Service host");
             return new WindowsServiceHost();
-#else
-            log.Trace("The current runtime does not support Windows Services; using a console host");
-            return new ConsoleHost(displayName);
-#endif
         }
 
         static string[] ProcessCommonOptions(OptionSet commonOptions, string[] commandLineArguments, ILog log)

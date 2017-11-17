@@ -1,5 +1,4 @@
-﻿#if WINDOWS_SERVICE
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Management;
@@ -784,4 +783,3 @@ namespace Octopus.Shared.Startup
         }
     }
 }
-#endif

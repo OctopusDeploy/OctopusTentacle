@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-#if CAN_FIND_CHILD_PROCESSES
 using System.Management;
-#endif
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -274,7 +272,6 @@ namespace Octopus.Shared.Util
 
         static void KillProcessAndChildren(int pid)
         {
-#if CAN_FIND_CHILD_PROCESSES
             using (var searcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid))
             {
                 using (var moc = searcher.Get())
@@ -285,7 +282,6 @@ namespace Octopus.Shared.Util
                     }
                 }
             }
-#endif
 
             try
             {

@@ -1,4 +1,3 @@
-#if WINDOWS_SERVICE
 using System;
 
 namespace Octopus.Shared.Startup
@@ -16,4 +15,3 @@ namespace Octopus.Shared.Startup
         string GetExecutable(string serviceName);
     }
 }
-#endif
