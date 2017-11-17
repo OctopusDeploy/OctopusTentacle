@@ -3,23 +3,30 @@
     <RootNamespace>Octopus.Shared.Tests</RootNamespace>
     <AssemblyName>Octopus.Shared.Tests</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <TargetFrameworks>net462</TargetFrameworks>
+    <TargetFrameworks>net462;netcoreapp2.0</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
   </PropertyGroup>
 
-
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net462' ">
+    <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS</DefineConstants>
+  </PropertyGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\Octopus.Shared\Octopus.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
     <PackageReference Include="NUnit" Version="3.8.1" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.8.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
     <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.3" />
     <PackageReference Include="NSubstitute" Version="2.0.3" />
     <PackageReference Include="FluentAssertions" Version="4.15.0" />
-    <PackageReference Include="Assent" Version="1.0.0" />
+    <PackageReference Include="Assent" Version="1.2.1" />
+    <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+  </ItemGroup>
+
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.IdentityModel" />
   </ItemGroup>

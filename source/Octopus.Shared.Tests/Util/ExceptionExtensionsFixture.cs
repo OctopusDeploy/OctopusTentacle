@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,10 @@ namespace Octopus.Shared.Tests.Util
             .UsingSanitiser(r => Regex.Replace(r, ":line [0-9]+", ":line <n>"))
             .UsingNamer(new SubdirectoryNamer("Approved"));
 
+        static readonly string framework = string.Concat(RuntimeInformation.FrameworkDescription.Split(' ').Take(2));
+
         readonly AssentRunner assentRunner = new AssentRunner(configuration);
+        readonly AssentRunner assentFrameworkSpecificRunner = new AssentRunner(configuration.UsingNamer(new SubdirectoryNamer("Approved", framework)));
 
         [Test]
         public async Task PrettyPrint_AsyncException()
@@ -29,7 +33,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                this.Assent(e.PrettyPrint(), configuration);
+                assentRunner.Assent(e.PrettyPrint(), configuration);
             }
         }
 
@@ -42,7 +46,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                this.Assent(e.PrettyPrint(), configuration);
+                assentFrameworkSpecificRunner.Assent(this, e.PrettyPrint());
             }
         }
 
@@ -111,7 +115,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                assentRunner.Assent(this, e.PrettyPrint());
+                assentFrameworkSpecificRunner.Assent(this, e.PrettyPrint());
             }
         }
 
@@ -124,7 +128,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                assentRunner.Assent(this, e.PrettyPrint());
+                assentFrameworkSpecificRunner.Assent(this, e.PrettyPrint());
             }
         }
 

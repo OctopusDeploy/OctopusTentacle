@@ -41,7 +41,7 @@ namespace Octopus.Shared.Tests.Security.Certificates
 
             try
             { 
-                action.ShouldThrow<CryptographicException>().WithMessage("The specified network password is not correct.");
+                action.ShouldThrow<CryptographicException>().WithMessage("The specified network password is not correct*");
             }
             finally
             {

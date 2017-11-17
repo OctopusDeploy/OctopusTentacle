@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Selectors;
-#if HAS_SECURITY_TOKEN_VALIDATION_EXCEPTION
+#if HAS_SYSTEM_IDENTITYMODEL_TOKENS
 using System.IdentityModel.Tokens;
 #else
 using SecurityTokenValidationException = System.Exception;

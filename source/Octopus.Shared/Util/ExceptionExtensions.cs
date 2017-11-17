@@ -88,7 +88,6 @@ namespace Octopus.Shared.Util
                 AddReflectionTypeLoadExceptionDetails(rtle, sb);
 
             sb.AppendLine(ex.GetType().FullName);
-#if HAS_STACK_TRACE_EX
             try
             {
                 sb.AppendLine(ex.StackTraceEx()); // Sometimes fails printing the trace
@@ -97,9 +96,6 @@ namespace Octopus.Shared.Util
             {
                 sb.AppendLine(ex.StackTrace);
             }
-#else
-            sb.AppendLine(ex.StackTrace);
-#endif
         }
 
         static void AddReflectionTypeLoadExceptionDetails(ReflectionTypeLoadException rtle, StringBuilder sb)

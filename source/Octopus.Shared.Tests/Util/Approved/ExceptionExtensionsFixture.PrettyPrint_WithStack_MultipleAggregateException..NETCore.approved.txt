@@ -1,0 +1,32 @@
+Aggregate Exception
+System.AggregateException
+   at System.ThrowHelper.ThrowAggregateException(List`1 exceptions)
+   at System.Threading.Tasks.Task.WaitAll(Task[] tasks, Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.WaitAll(Task[] tasks, Int32 millisecondsTimeout)
+   at System.Threading.Tasks.Task.WaitAll(Task[] tasks)
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.RaiseAggregateException(Int32 i) in ExceptionExtensionsFixture.cs:line <n>
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.PrettyPrint_WithStack_MultipleAggregateException() in ExceptionExtensionsFixture.cs:line <n>
+
+--Inner Exception 1--
+Inner
+System.Exception
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.<>c.<RaiseAggregateException>b__14_1() in ExceptionExtensionsFixture.cs:line <n>
+   at System.Threading.Tasks.Task`1.InnerInvoke()
+   at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot)
+
+--Inner Exception 2--
+Inner
+System.Exception
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.<>c.<RaiseAggregateException>b__14_1() in ExceptionExtensionsFixture.cs:line <n>
+   at System.Threading.Tasks.Task`1.InnerInvoke()
+   at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot)
+
+--Inner Exception 3--
+Inner
+System.Exception
+   at Octopus.Shared.Tests.Util.ExceptionExtensionsFixture.<>c.<RaiseAggregateException>b__14_1() in ExceptionExtensionsFixture.cs:line <n>
+   at System.Threading.Tasks.Task`1.InnerInvoke()
+   at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot)
