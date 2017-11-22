@@ -79,7 +79,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         #endregion
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct CryptoAlgorithmIdentifier
+        public class CryptoAlgorithmIdentifier
         {
             [MarshalAs(UnmanagedType.LPStr)]
             public string pszObjId;
