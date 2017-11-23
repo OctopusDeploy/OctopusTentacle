@@ -1,7 +1,7 @@
 #if HAS_SYSTEM_IDENTITYMODEL_TOKENS
 using System.IdentityModel.Tokens;
 #else
-using SecurityTokenValidationException = Microsoft.IdentityModel.Tokens.SecurityTokenValidationException;
+using SecurityTokenValidationException = System.Exception;
 #endif
 using NSubstitute;
 using NUnit.Framework;
