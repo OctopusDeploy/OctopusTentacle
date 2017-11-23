@@ -26,7 +26,9 @@ namespace Octopus.Tentacle
             commandLineArguments)
         {
             ServicePointManager.SecurityProtocol =
+#pragma warning disable 618
                 SecurityProtocolType.Ssl3
+#pragma warning restore 618
                 | SecurityProtocolType.Tls
                 | SecurityProtocolType.Tls11
                 | SecurityProtocolType.Tls12;
