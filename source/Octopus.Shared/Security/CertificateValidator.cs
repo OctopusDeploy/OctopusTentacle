@@ -4,7 +4,7 @@ using System.IdentityModel.Selectors;
 #if HAS_SYSTEM_IDENTITYMODEL_TOKENS
 using System.IdentityModel.Tokens;
 #else
-using SecurityTokenValidationException = SYstem.Exception;
+using SecurityTokenValidationException = System.Exception;
 #endif
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Diagnostics;
