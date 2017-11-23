@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var certificateConfigurationResource = new CertificateConfigurationResource { Thumbprint = serverThumbprint };
             certificateConfigurationRepository.GetOctopusCertificate().Returns(Task.FromResult(certificateConfigurationResource));
             repository.CertificateConfiguration.Returns(certificateConfigurationRepository);
-            octopusClientInitializer.CreateAsyncClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<IWebProxy>())
+            octopusClientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<IWebProxy>())
                 .Returns(Task.FromResult(octopusAsyncClient));
 
             Command = new RegisterMachineCommand(new Lazy<IRegisterMachineOperation>(() => operation),

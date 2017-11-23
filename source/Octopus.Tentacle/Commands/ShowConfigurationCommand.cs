@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Octopus.Client;
 using Octopus.Client.Exceptions;
 using Octopus.Client.Model;
@@ -55,6 +56,11 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
+            StartAsync().GetAwaiter().GetResult();
+        }
+
+        async Task StartAsync()
+        {
             base.Start();
 
             DictionaryKeyValueStore outputFile;
@@ -68,12 +74,12 @@ namespace Octopus.Tentacle.Commands
                 outputFile = new JsonHierarchicalConsoleKeyValueStore();
             }
 
-            CollectConfigurationSettings(outputFile);
+            await CollectConfigurationSettings(outputFile);
 
             outputFile.Save();
         }
 
-        void CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
+        async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
         {
             var configStore = new XmlFileKeyValueStore(instanceSelector.GetCurrentInstance().ConfigurationPath);
 
@@ -102,19 +108,19 @@ namespace Octopus.Tentacle.Commands
             //advanced settings
             if (apiEndpointOptions.IsSupplied)
             {
-                CollectServerSideConfiguration(outputStore);
+                await CollectServerSideConfiguration(outputStore);
             }
         }
 
-        void CollectServerSideConfiguration(IKeyValueStore outputStore)
+        async Task CollectServerSideConfiguration(IKeyValueStore outputStore)
         {
             var proxyOverride = proxyConfig.ParseToWebProxy(tentacleConfiguration.Value.PollingProxyConfiguration);
             try
             {
-                using (var client = octopusClientInitializer.CreateSyncClient(apiEndpointOptions, proxyOverride))
+                using (var client = await octopusClientInitializer.CreateClient(apiEndpointOptions, proxyOverride))
                 {
-                    var repository = new OctopusRepository(client);
-                    var matchingMachines = repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
+                    var repository = new OctopusAsyncRepository(client);
+                    var matchingMachines = await repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
 
                     switch (matchingMachines.Count)
                     {
@@ -123,7 +129,7 @@ namespace Octopus.Tentacle.Commands
                             break;
 
                         case 1:
-                            CollectionServerSideConfigurationFromMachine(outputStore, repository, matchingMachines.First());
+                            await CollectionServerSideConfigurationFromMachine(outputStore, repository, matchingMachines.First());
                             break;
 
                         default:
@@ -145,19 +151,19 @@ namespace Octopus.Tentacle.Commands
             }
         }
 
-        void CollectionServerSideConfigurationFromMachine(IKeyValueStore outputStore, IOctopusRepository repository, MachineResource machine)
+        async Task CollectionServerSideConfigurationFromMachine(IKeyValueStore outputStore, IOctopusAsyncRepository repository, MachineResource machine)
         {
-            var environments = repository.Environments.FindAll();
+            var environments = await repository.Environments.FindAll();
             outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
-            var featuresConfiguration = repository.FeaturesConfiguration.GetFeaturesConfiguration();
+            var featuresConfiguration = await repository.FeaturesConfiguration.GetFeaturesConfiguration();
             if (featuresConfiguration.IsMultiTenancyEnabled)
             {
-                var tenants = repository.Tenants.FindAll();
+                var tenants = await repository.Tenants.FindAll();
                 outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
                 outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
             }
             outputStore.Set("Tentacle.Roles", machine.Roles);
-            var machinePolicy = repository.MachinePolicies.Get(machine.MachinePolicyId);
+            var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
             outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
             outputStore.Set<string>("Tentacle.DisplayName", machine.Name);
             if (machine.Endpoint is ListeningTentacleEndpointResource)
