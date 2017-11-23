@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
 using Octopus.Shared.Tests.Support;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Security.Certificates
 {
@@ -38,9 +39,9 @@ namespace Octopus.Shared.Tests.Security.Certificates
         public void CanGenerateNonExportableCertificates()
         {
             var cert = generator.GenerateNewNonExportable("CN=test", new NullLog());
-
+            Action act = () => cert.Export(X509ContentType.Pkcs12);
             // Pkcs12 exports include the private key - since the cert is non-exportable, this isn't allowed
-            Assert.Throws<CryptographicException>(() => cert.Export(X509ContentType.Pkcs12));
+            act.ShouldThrow<CryptographicException>().WithMessage("Key not valid for use in specified state*");
         }
     }
 }
