@@ -73,11 +73,13 @@ namespace Octopus.Shared.Startup
 
         public int Run()
         {
+            var delayedLog = new DelayedLog();
             // Need to clean up old files before anything else as they may interfere with initialization
-            CleanFileSystem();
+            CleanFileSystem(delayedLog);
 
             // Initialize logging as soon as possible - waiting for the Container to be built is too late
             InitializeLogging();
+            delayedLog.FlushTo(Log.System());
 
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
@@ -200,10 +202,10 @@ namespace Octopus.Shared.Startup
             return exitCode;
         }
 
-        static void CleanFileSystem()
+        static void CleanFileSystem(ILog log)
         {
             var fileSystem = new OctopusPhysicalFileSystem();
-            var fileSystemCleaner = new FileSystemCleaner(fileSystem, Log.Octopus());
+            var fileSystemCleaner = new FileSystemCleaner(fileSystem, log);
             fileSystemCleaner.Clean(FileSystemCleaner.PathsToDeleteOnStartupResource);
         }
 
