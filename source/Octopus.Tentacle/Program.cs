@@ -1,6 +1,10 @@
+using System;
+using System.IO;
 using System.Net;
 using System.Threading;
 using Autofac;
+using NLog;
+using NLog.Config;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
@@ -26,16 +30,19 @@ namespace Octopus.Tentacle
             commandLineArguments)
         {
             ServicePointManager.SecurityProtocol =
-#pragma warning disable 618
-                SecurityProtocolType.Ssl3
-#pragma warning restore 618
-                | SecurityProtocolType.Tls
+#if !NETCOREAPP2_0
+                SecurityProtocolType.Ssl3 |
+#endif
+                SecurityProtocolType.Tls
                 | SecurityProtocolType.Tls11
                 | SecurityProtocolType.Tls12;
         }
 
         static int Main(string[] args)
         {
+#if NETCOREAPP2_0
+            LogManager.Configuration = new XmlLoggingConfiguration(Path.Combine(AppContext.BaseDirectory, "Tentacle.exe.nlog"), false);
+#endif
             return new Program(args).Run();
         }
 
