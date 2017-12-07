@@ -8,7 +8,7 @@ namespace Octopus.Shared.Tests.Support
 {
     public class TestConsoleLog : AbstractLog
     {
-        public override LogContext CurrentContext => LogContext.Null();
+        public override LogContext CurrentContext => new LogContext();
 
         protected override void WriteEvent(LogEvent logEvent)
         {

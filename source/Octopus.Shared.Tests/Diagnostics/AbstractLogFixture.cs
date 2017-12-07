@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using FluentAssertions;
+using NUnit.Framework;
 using Octopus.Shared.Tests.Support;
 
 namespace Octopus.Shared.Tests.Diagnostics
@@ -12,9 +13,10 @@ namespace Octopus.Shared.Tests.Diagnostics
             var log = new InMemoryLog();
             log.InfoFormat("I'm {0} this parameter: {1}", "missing");
             var text = log.GetLog();
-            Assert.That(text, Is.StringContaining("I'm {0} this parameter: {1}"));
-            Assert.That(text, Is.StringContaining("missing"));
-            Assert.That(text, Is.StringContaining("=> Index"));
+
+            text.Should().Contain("I'm {0} this parameter: {1}");
+            text.Should().Contain("missing");
+            text.Should().Contain("=> Index");
         }
     }
 }

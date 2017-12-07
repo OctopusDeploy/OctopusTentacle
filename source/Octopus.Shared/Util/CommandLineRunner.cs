@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Octopus.Diagnostics;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Util
 {
@@ -20,34 +21,39 @@ namespace Octopus.Shared.Util
 
         public bool Execute(CommandLineInvocation invocation, ILog log)
         {
+            return Execute(invocation, Log.System().Info, log.Info, log.Error, log.Error);
+        }
+
+        public bool Execute(CommandLineInvocation invocation, Action<string> debug, Action<string> info, Action<string> error, Action<Exception, string> exception)
+        {
             try
             {
                 var exitCode = SilentProcessRunner.ExecuteCommand(invocation.Executable, (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? ""),
                     Environment.CurrentDirectory,
-                    log.Info,
-                    log.Error,
+                    debug,
+                    info,
+                    error,
                     CancellationToken.None);
 
                 if (exitCode != 0)
                 {
                     if (invocation.IgnoreFailedExitCode)
                     {
-                        log.Info("The previous command returned a non-zero exit code of: " + exitCode);
-                        log.Info("The command that failed was: " + invocation);
-                        log.Info("The invocation is set to ignore failed exit codes, continuing...");
+                        info("The previous command returned a non-zero exit code of: " + exitCode);
+                        info("The command that failed was: " + invocation);
+                        info("The invocation is set to ignore failed exit codes, continuing...");
                     }
                     else
                     {
-                        log.Error("The previous command returned a non-zero exit code of: " + exitCode);
-                        log.Error("The command that failed was: " + invocation);
+                        error("The previous command returned a non-zero exit code of: " + exitCode);
+                        error("The command that failed was: " + invocation);
                         return false;
                     }
                 }
             }
             catch (Exception ex)
             {
-                log.Error(ex);
-                log.Error("The command that caused the exception was: " + invocation);
+                exception(ex, "Exception calling command: " + invocation);
                 return false;
             }
             return true;

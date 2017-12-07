@@ -52,6 +52,7 @@ Task("__Default")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
+    .IsDependentOn("__Test")
     .IsDependentOn("__CreateNuGet")
     .IsDependentOn("__CopyToLocalPackages");
 
@@ -86,6 +87,7 @@ Task("__Clean")
 {
     CleanDirectories("./source/**/bin");
     CleanDirectories("./source/**/obj");
+    CleanDirectories("./source/**/TestResults");
     CleanDirectory(packageDir);
     CleanDirectory(artifactsDir);
 });
@@ -104,6 +106,17 @@ Task("__Build")
     );
 });
 
+Task("__Test")
+    .IsDependentOn("__Build")
+    .Does(() =>
+{
+    DotNetCoreTest("./source/Octopus.Shared.Tests/Octopus.Shared.Tests.csproj", new DotNetCoreTestSettings
+    {
+        Configuration = configuration,
+        NoBuild = true
+    });
+});
+
 Task("__CreateNuGet")
     .Does(() =>
 {
@@ -111,6 +124,7 @@ Task("__CreateNuGet")
     {
         Configuration = "Release",
         NoBuild = true,
+        IncludeSymbols = true,
         OutputDirectory = new DirectoryPath(artifactsDir),
         ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
     };
@@ -125,6 +139,7 @@ Task("__CopyToLocalPackages")
 {
     CreateDirectory(localPackagesDir);
     CopyFileToDirectory(Path.Combine(artifactsDir, $"Octopus.Shared.{gitVersion.NuGetVersion}.nupkg"), localPackagesDir);
+    CopyFileToDirectory(Path.Combine(artifactsDir, $"Octopus.Shared.{gitVersion.NuGetVersion}.symbols.nupkg"), localPackagesDir);
 });
 
 private void InBlock(string block, Action action)

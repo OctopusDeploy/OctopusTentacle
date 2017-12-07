@@ -22,6 +22,7 @@ namespace Octopus.Shared.Startup
             if (rule == null)
                 throw new Exception($"It looks like the {LoggerName} logging rule is not configured. {HelpMessage}");
             
+
             if (rule.Targets.Count != 1)
                 throw new Exception($"The {LoggerName} rule should only have a single target. {HelpMessage}");
 
@@ -32,5 +33,7 @@ namespace Octopus.Shared.Startup
 
         public static void Info(string message) => Log.Info(message);
         public static void Warn(string message) => Log.Warn(message);
+        public static void Error(string message) => Log.Error(message);
+        public static void Error(Exception ex, string message) => Log.Error(ex, message);
     }
 }
