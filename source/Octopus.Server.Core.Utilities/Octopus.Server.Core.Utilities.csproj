@@ -43,7 +43,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
     <Compile Include="Octopus\Core\Extensions\EnumerableExtensions.cs" />
     <Compile Include="Octopus\Core\Extensions\FunctionalExtensions.cs" />
     <Compile Include="Octopus\Core\Extensions\HttpResponseExtensions.cs" />
