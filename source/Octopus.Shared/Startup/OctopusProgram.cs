@@ -7,6 +7,7 @@ using System.Security;
 using System.Threading.Tasks;
 using Autofac;
 using NLog;
+using NLog.Config;
 using NLog.Targets;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
@@ -207,8 +208,12 @@ namespace Octopus.Shared.Startup
             fileSystemCleaner.Clean(FileSystemCleaner.PathsToDeleteOnStartupResource);
         }
 
-        static void InitializeLogging()
+        void InitializeLogging()
         {
+#if REQUIRES_EXPLICIT_LOG_CONFIG
+            var nLogFile = Path.ChangeExtension(GetType().Assembly.Location, "exe.nlog");
+            LogManager.Configuration = new XmlLoggingConfiguration(nLogFile, false);
+#endif
             Log.Appenders.Add(new NLogAppender());
             AssertLoggingConfigurationIsCorrect();
         }

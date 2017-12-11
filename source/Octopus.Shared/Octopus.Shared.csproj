@@ -19,6 +19,10 @@
     <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Halibut" Version="2.6.14" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
