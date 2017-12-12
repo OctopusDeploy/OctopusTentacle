@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,6 +14,7 @@ using System.Text;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Variables;
 
 namespace Octopus.Shared.Util
 {
@@ -108,11 +110,7 @@ namespace Octopus.Shared.Util
                     process.StartInfo.CreateNoWindow = true;
                     if (runAs != default(NetworkCredential))
                     {
-                        process.StartInfo.Domain = runAs.Domain;
-                        process.StartInfo.UserName = runAs.UserName;
-                        process.StartInfo.Password = runAs.SecurePassword;
-                        process.StartInfo.LoadUserProfile = true;
-                        WindowStationAndDesktopAccess.GrantAccessToWindowStationAndDesktop(runAs.UserName, runAs.Domain);
+                        RunAsDifferentUser(process.StartInfo, runAs);
                     }
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
@@ -218,11 +216,7 @@ namespace Octopus.Shared.Util
 
                     if (runAs != default(NetworkCredential))
                     {
-                        process.StartInfo.Domain = runAs.Domain;
-                        process.StartInfo.UserName = runAs.UserName;
-                        process.StartInfo.Password = runAs.SecurePassword;
-                        process.StartInfo.LoadUserProfile = true;
-                        WindowStationAndDesktopAccess.GrantAccessToWindowStationAndDesktop(runAs.UserName, runAs.Domain);
+                        RunAsDifferentUser(process.StartInfo, runAs);
                     }
 
                     process.Start();
@@ -231,6 +225,32 @@ namespace Octopus.Shared.Util
             catch (Exception ex)
             {
                 throw new Exception($"Error when attempting to execute {executable}: {ex.Message}", ex);
+            }
+        }
+
+        private static void RunAsDifferentUser(ProcessStartInfo startInfo, NetworkCredential runAs)
+        {
+            startInfo.Domain = runAs.Domain;
+            startInfo.UserName = runAs.UserName;
+            startInfo.Password = runAs.SecurePassword;
+            startInfo.LoadUserProfile = true;
+
+            WindowStationAndDesktopAccess.GrantAccessToWindowStationAndDesktop(runAs.UserName, runAs.Domain);
+            
+            CopyWellKnownEnvironmentVariables(startInfo);
+        }
+
+        private static void CopyWellKnownEnvironmentVariables(ProcessStartInfo startInfo)
+        {
+            // Environment variables are usually inherited from the parent process.
+            // When running as a different user they are not inherited, so manually add them to the ProcessStartInfo.
+            foreach (DictionaryEntry environmentVariable in Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Process))
+            {
+                var key = environmentVariable.Key.ToString();
+                if (EnvironmentVariables.AllWellKnownEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+                {
+                    startInfo.EnvironmentVariables[key] = environmentVariable.Value.ToString();
+                }
             }
         }
 

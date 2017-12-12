@@ -8,6 +8,7 @@ using System.Threading;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Shared.Util;
+using Octopus.Shared.Variables;
 
 namespace Octopus.Shared.Tests.Util
 {
@@ -72,6 +73,30 @@ namespace Octopus.Shared.Tests.Util
                     .And.ContainEquivalentOf($@"{user.DomainName}\{user.UserName}", "the custom user details should be logged")
                     .And.ContainEquivalentOf(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "the working directory should be logged");
                 infoMessages.ToString().Should().ContainEquivalentOf($@"{user.DomainName}\{user.UserName}");
+                errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
+            }
+        }
+
+        [Test]
+        public void RunningAsDifferentUser_ShouldCopySpecialEnvironmentVariales()
+        {
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+            using (var user = new TransientUserPrincipal())
+            {
+                // Set the environment variable as part of this process
+                var tentacleHome = "TestTentacleHome";
+                Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleHome, tentacleHome);
+                
+                var command = "cmd.exe";
+                var arguments = $@"/c echo %{EnvironmentVariables.TentacleHome}%";
+                // Target the CommonApplicationData folder since this is a place the particular user can get to
+                var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+                var networkCredential = new NetworkCredential(user.UserName, user.Password, user.DomainName);
+
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
+
+                exitCode.Should().Be(0, "the process should have run to completion");
+                infoMessages.ToString().Should().ContainEquivalentOf(tentacleHome, "the environment variable should have been copied to the child process");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
         }
@@ -186,7 +211,7 @@ namespace Octopus.Shared.Tests.Util
                 },
                 x =>
                 {
-                    Console.WriteLine($"{DateTime.UtcNow} INF:  {x}");
+                    Console.WriteLine($"{DateTime.UtcNow} INF: {x}");
                     info.Append(x);
                 },
                 x =>
