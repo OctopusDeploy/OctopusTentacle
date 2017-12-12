@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Text;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Util;
@@ -18,6 +19,8 @@ namespace Octopus.Shared.Scripts
             fileSystem.EnsureDiskHasEnoughFreeSpace(workingDirectory);
             BootstrapScriptFilePath = Path.Combine(workingDirectory, BootstrapScriptName);
         }
+
+        public NetworkCredential RunAs { get; set; }
 
         public ScriptIsolationLevel IsolationLevel { get; set; }
 

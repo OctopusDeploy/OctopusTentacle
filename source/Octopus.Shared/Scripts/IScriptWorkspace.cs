@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using Octopus.Shared.Contracts;
 
 namespace Octopus.Shared.Scripts
@@ -8,6 +9,7 @@ namespace Octopus.Shared.Scripts
         string WorkingDirectory { get; }
         string BootstrapScriptFilePath { get; }
         string[] ScriptArguments { get; set; }
+        NetworkCredential RunAs { get; set; }
         ScriptIsolationLevel IsolationLevel { get; set; }
         TimeSpan ScriptMutexAcquireTimeout { get; set; }
         void BootstrapScript(string scriptBody);

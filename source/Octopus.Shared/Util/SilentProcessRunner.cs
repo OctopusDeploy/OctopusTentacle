@@ -8,6 +8,8 @@ using System.Management;
 #endif
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Claims;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using Octopus.Diagnostics;
@@ -84,29 +86,20 @@ namespace Octopus.Shared.Util
             return new CmdResult(exitCode, infos, errors);
         }
 
-        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error)
+        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error, NetworkCredential runAs = default(NetworkCredential), CancellationToken cancel = default(CancellationToken))
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, info, error, CancellationToken.None);
+            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, info, error, runAs, cancel);
         }
 
-        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error)
-        {
-            return ExecuteCommand(executable, arguments, workingDirectory, debug, info, error, CancellationToken.None);
-        }
-
-        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error, CancellationToken cancel)
-        {
-            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, info, error, cancel);
-        }
-
-        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error, CancellationToken cancel)
+        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error, NetworkCredential runAs = default(NetworkCredential), CancellationToken cancel = default(CancellationToken))
         {
             try
             {
                 // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
                 var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
-                debug($"Starting {exeFileNameOrFullPath} in {workingDirectory}");
+                var runningAs = runAs == default(NetworkCredential) ? $@"{WindowsIdentity.GetCurrent().Name}" : $@"{runAs.Domain}\{runAs.UserName}";
+                debug($"Starting {exeFileNameOrFullPath} in {workingDirectory} as {runningAs}");
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -114,6 +107,13 @@ namespace Octopus.Shared.Util
                     process.StartInfo.WorkingDirectory = workingDirectory;
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
+                    if (runAs != default(NetworkCredential))
+                    {
+                        process.StartInfo.Domain = runAs.Domain;
+                        process.StartInfo.UserName = runAs.UserName;
+                        process.StartInfo.Password = runAs.SecurePassword;
+                        process.StartInfo.LoadUserProfile = true;
+                    }
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
                     process.StartInfo.StandardOutputEncoding = oemEncoding;
@@ -200,11 +200,11 @@ namespace Octopus.Shared.Util
             }
             catch (Exception ex)
             {
-                throw new Exception(string.Format("Error when attempting to execute {0}: {1}", executable, ex.Message), ex);
+                throw new Exception($"Error when attempting to execute {executable}: {ex.Message}", ex);
             }
         }
 
-        public static void ExecuteBackgroundCommand(string executable, string arguments, string workingDirectory, string username = null, string password = null)
+        public static void ExecuteCommandWithoutWaiting(string executable, string arguments, string workingDirectory, NetworkCredential runAs = default(NetworkCredential))
         {
             try
             {
@@ -216,10 +216,12 @@ namespace Octopus.Shared.Util
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
 
-                    if (username != null)
+                    if (runAs != default(NetworkCredential))
                     {
-                        process.StartInfo.UserName = username;
-                        process.StartInfo.Password = new NetworkCredential("", password ?? "").SecurePassword;
+                        process.StartInfo.Domain = runAs.Domain;
+                        process.StartInfo.UserName = runAs.UserName;
+                        process.StartInfo.Password = runAs.SecurePassword;
+                        process.StartInfo.LoadUserProfile = true;
                     }
 
                     process.Start();

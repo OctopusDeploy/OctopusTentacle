@@ -71,9 +71,13 @@ namespace Octopus.Shared.Scripts
             {
                 State = ProcessState.Running;
 
-                var exitCode = SilentProcessRunner.ExecuteCommand(powerShellPath, PowerShell.FormatCommandArguments(workspace.BootstrapScriptFilePath, workspace.ScriptArguments, false), workspace.WorkingDirectory,
+                var exitCode = SilentProcessRunner.ExecuteCommand(
+                    powerShellPath,
+                    PowerShell.FormatCommandArguments(workspace.BootstrapScriptFilePath, workspace.ScriptArguments, false),
+                    workspace.WorkingDirectory,
                     output => writer.WriteOutput(ProcessOutputSource.StdOut, output),
                     output => writer.WriteOutput(ProcessOutputSource.StdErr, output),
+                    workspace.RunAs,
                     token);
 
                 ExitCode = exitCode;
