@@ -8,7 +8,6 @@ using System.Management;
 #endif
 using System.Net;
 using System.Runtime.InteropServices;
-using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
@@ -113,6 +112,7 @@ namespace Octopus.Shared.Util
                         process.StartInfo.UserName = runAs.UserName;
                         process.StartInfo.Password = runAs.SecurePassword;
                         process.StartInfo.LoadUserProfile = true;
+                        WindowStationAndDesktopAccess.GrantAccessToWindowStationAndDesktop(runAs.UserName, runAs.Domain);
                     }
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
@@ -222,6 +222,7 @@ namespace Octopus.Shared.Util
                         process.StartInfo.UserName = runAs.UserName;
                         process.StartInfo.Password = runAs.SecurePassword;
                         process.StartInfo.LoadUserProfile = true;
+                        WindowStationAndDesktopAccess.GrantAccessToWindowStationAndDesktop(runAs.UserName, runAs.Domain);
                     }
 
                     process.Start();

@@ -90,7 +90,7 @@ namespace Octopus.Shared.Tests.Util
 
                 var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
 
-                exitCode.Should().Be(-1, "the process should have been terminated");
+                exitCode.Should().BeLessOrEqualTo(0, "the process should have been terminated");
                 infoMessages.ToString().Should().ContainEquivalentOf("Microsoft Windows", "the default command-line header would be written to stdout");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
