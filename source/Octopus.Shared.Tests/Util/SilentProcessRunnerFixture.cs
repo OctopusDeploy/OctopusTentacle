@@ -24,10 +24,7 @@ namespace Octopus.Shared.Tests.Util
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
 
-                var debugMessages = new StringBuilder();
-                var infoMessages = new StringBuilder();
-                var errorMessages = new StringBuilder();
-                var exitCode = SilentProcessRunner.ExecuteCommand(command, arguments, workingDirectory, debug => debugMessages.Append(debug), info => infoMessages.Append(info), error => errorMessages.Append(error), networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
 
                 exitCode.Should().Be(9999, "our custom exit code should be reflected");
                 debugMessages.ToString().Should().ContainEquivalentOf($"Starting {command} in  as {WindowsIdentity.GetCurrent().Name}");
@@ -35,7 +32,7 @@ namespace Octopus.Shared.Tests.Util
                 infoMessages.ToString().Should().BeEmpty("no messages should be written to stdout");
             }
         }
-        
+
         [Test]
         public void DebugLogging_ShouldContainDiagnosticsInfo_ForDefault()
         {
@@ -46,10 +43,7 @@ namespace Octopus.Shared.Tests.Util
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
 
-                var debugMessages = new StringBuilder();
-                var infoMessages = new StringBuilder();
-                var errorMessages = new StringBuilder();
-                var exitCode = SilentProcessRunner.ExecuteCommand(command, arguments, workingDirectory, debug => debugMessages.Append(debug), info => infoMessages.Append(info), error => errorMessages.Append(error), networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 debugMessages.ToString().Should().ContainEquivalentOf(command, "the command should be logged")
@@ -58,7 +52,7 @@ namespace Octopus.Shared.Tests.Util
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
         }
-        
+
         [Test]
         public void DebugLogging_ShouldContainDiagnosticsInfo_DifferentUser()
         {
@@ -71,10 +65,7 @@ namespace Octopus.Shared.Tests.Util
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                 var networkCredential = new NetworkCredential(user.UserName, user.Password, user.DomainName);
 
-                var debugMessages = new StringBuilder();
-                var infoMessages = new StringBuilder();
-                var errorMessages = new StringBuilder();
-                var exitCode = SilentProcessRunner.ExecuteCommand(command, arguments, workingDirectory, debug => debugMessages.Append(debug), info => infoMessages.Append(info), error => errorMessages.Append(error), networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 debugMessages.ToString().Should().ContainEquivalentOf(command, "the command should be logged")
@@ -84,7 +75,7 @@ namespace Octopus.Shared.Tests.Util
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
         }
-        
+
         [Test]
         public void CancellationToken_ShouldForceKillTheProcess()
         {
@@ -97,17 +88,14 @@ namespace Octopus.Shared.Tests.Util
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
 
-                var debugMessages = new StringBuilder();
-                var infoMessages = new StringBuilder();
-                var errorMessages = new StringBuilder();
-                var exitCode = SilentProcessRunner.ExecuteCommand(command, arguments, workingDirectory, debug => debugMessages.Append(debug), info => infoMessages.Append(info), error => errorMessages.Append(error), networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
 
                 exitCode.Should().Be(-1, "the process should have been terminated");
                 infoMessages.ToString().Should().ContainEquivalentOf("Microsoft Windows", "the default command-line header would be written to stdout");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
         }
-        
+
         [Test]
         public void EchoHello_ShouldWriteToStdOut()
         {
@@ -118,17 +106,14 @@ namespace Octopus.Shared.Tests.Util
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
 
-                var debugMessages = new StringBuilder();
-                var infoMessages = new StringBuilder();
-                var errorMessages = new StringBuilder();
-                var exitCode = SilentProcessRunner.ExecuteCommand(command, arguments, workingDirectory, debug => debugMessages.Append(debug), info => infoMessages.Append(info), error => errorMessages.Append(error), networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
                 infoMessages.ToString().Should().ContainEquivalentOf("hello");
             }
         }
-        
+
         [Test]
         public void EchoError_ShouldWriteToStdErr()
         {
@@ -139,17 +124,14 @@ namespace Octopus.Shared.Tests.Util
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
 
-                var debugMessages = new StringBuilder();
-                var infoMessages = new StringBuilder();
-                var errorMessages = new StringBuilder();
-                var exitCode = SilentProcessRunner.ExecuteCommand(command, arguments, workingDirectory, debug => debugMessages.Append(debug), info => infoMessages.Append(info), error => errorMessages.Append(error), networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 infoMessages.ToString().Should().BeEmpty("no messages should be written to stdout");
                 errorMessages.ToString().Should().ContainEquivalentOf("Something went wrong!");
             }
         }
-        
+
         [Test]
         public void RunAsCurrentUser_ShouldWork()
         {
@@ -160,10 +142,7 @@ namespace Octopus.Shared.Tests.Util
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
 
-                var debugMessages = new StringBuilder();
-                var infoMessages = new StringBuilder();
-                var errorMessages = new StringBuilder();
-                var exitCode = SilentProcessRunner.ExecuteCommand(command, arguments, workingDirectory, debug => debugMessages.Append(debug), info => infoMessages.Append(info), error => errorMessages.Append(error), networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
@@ -183,10 +162,7 @@ namespace Octopus.Shared.Tests.Util
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                 var networkCredential = new NetworkCredential(user.UserName, user.Password, user.DomainName);
 
-                var debugMessages = new StringBuilder();
-                var infoMessages = new StringBuilder();
-                var errorMessages = new StringBuilder();
-                var exitCode = SilentProcessRunner.ExecuteCommand(command, arguments, workingDirectory, debug => debugMessages.Append(debug), info => infoMessages.Append(info), error => errorMessages.Append(error), networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
@@ -194,11 +170,44 @@ namespace Octopus.Shared.Tests.Util
             }
         }
 
+        private static int Execute(string command, string arguments, string workingDirectory, out StringBuilder debugMessages, out StringBuilder infoMessages, out StringBuilder errorMessages, NetworkCredential networkCredential, CancellationToken cancel)
+        {
+            var debug = new StringBuilder();
+            var info = new StringBuilder();
+            var error = new StringBuilder();
+            var exitCode = SilentProcessRunner.ExecuteCommand(
+                command,
+                arguments,
+                workingDirectory, 
+                x =>
+                {
+                    Console.WriteLine($"{DateTime.UtcNow} DBG: {x}");
+                    debug.Append(x);
+                },
+                x =>
+                {
+                    Console.WriteLine($"{DateTime.UtcNow} INF:  {x}");
+                    info.Append(x);
+                },
+                x =>
+                {
+                    Console.WriteLine($"{DateTime.UtcNow} ERR: {x}");
+                    error.Append(x);
+                },
+                networkCredential, cancel);
+
+            debugMessages = debug;
+            infoMessages = info;
+            errorMessages = error;
+
+            return exitCode;
+        }
+
         class TransientUserPrincipal : IDisposable
         {
             readonly PrincipalContext principalContext;
             readonly UserPrincipal principal;
-            string password;
+            readonly string password;
 
             public TransientUserPrincipal(string name = null, string password = "Password01!", ContextType contextType = ContextType.Machine)
             {
