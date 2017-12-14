@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -9,12 +9,13 @@ using System.Management;
 #endif
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+using Microsoft.Win32.SafeHandles;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Variables;
 
 namespace Octopus.Shared.Util
 {
@@ -87,12 +88,29 @@ namespace Octopus.Shared.Util
             return new CmdResult(exitCode, infos, errors);
         }
 
-        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> info, Action<string> error, NetworkCredential runAs = default(NetworkCredential), CancellationToken cancel = default(CancellationToken))
+        public static int ExecuteCommand(
+            string executable, 
+            string arguments,
+            string workingDirectory,
+            Action<string> info,
+            Action<string> error,
+            NetworkCredential runAs = default(NetworkCredential),
+            IDictionary<string, string> customEnvironmentVariables = null,
+            CancellationToken cancel = default(CancellationToken))
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, info, error, runAs, cancel);
+            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, info, error, runAs, customEnvironmentVariables, cancel);
         }
 
-        public static int ExecuteCommand(string executable, string arguments, string workingDirectory, Action<string> debug, Action<string> info, Action<string> error, NetworkCredential runAs = default(NetworkCredential), CancellationToken cancel = default(CancellationToken))
+        public static int ExecuteCommand(
+            string executable,
+            string arguments,
+            string workingDirectory,
+            Action<string> debug,
+            Action<string> info,
+            Action<string> error,
+            NetworkCredential runAs = default(NetworkCredential),
+            IDictionary<string, string> customEnvironmentVariables = null,
+            CancellationToken cancel = default(CancellationToken))
         {
             try
             {
@@ -100,7 +118,12 @@ namespace Octopus.Shared.Util
                 var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
                 var runningAs = runAs == default(NetworkCredential) ? $@"{WindowsIdentity.GetCurrent().Name}" : $@"{runAs.Domain}\{runAs.UserName}";
-                debug($"Starting {exeFileNameOrFullPath} in {workingDirectory} as {runningAs}");
+                var customEnvironmentVars = runAs == default(NetworkCredential)
+                    ? "the same environment variables as the launching process"
+                    : customEnvironmentVariables == null
+                        ? "that user's default environment variables"
+                        : $"that user's environment variables plus {customEnvironmentVariables.Count} custom variable(s)";
+                debug($"Starting {exeFileNameOrFullPath} in {workingDirectory} as {runningAs} with {customEnvironmentVars}");
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -110,7 +133,7 @@ namespace Octopus.Shared.Util
                     process.StartInfo.CreateNoWindow = true;
                     if (runAs != default(NetworkCredential))
                     {
-                        RunAsDifferentUser(process.StartInfo, runAs);
+                        RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
                     }
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
@@ -202,7 +225,12 @@ namespace Octopus.Shared.Util
             }
         }
 
-        public static void ExecuteCommandWithoutWaiting(string executable, string arguments, string workingDirectory, NetworkCredential runAs = default(NetworkCredential))
+        public static void ExecuteCommandWithoutWaiting(
+            string executable,
+            string arguments,
+            string workingDirectory,
+            NetworkCredential runAs = default(NetworkCredential),
+            IDictionary<string, string> customEnvironmentVariables = null)
         {
             try
             {
@@ -216,7 +244,7 @@ namespace Octopus.Shared.Util
 
                     if (runAs != default(NetworkCredential))
                     {
-                        RunAsDifferentUser(process.StartInfo, runAs);
+                        RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
                     }
 
                     process.Start();
@@ -228,7 +256,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        private static void RunAsDifferentUser(ProcessStartInfo startInfo, NetworkCredential runAs)
+        private static void RunAsDifferentUser(ProcessStartInfo startInfo, NetworkCredential runAs, IDictionary<string, string> customEnvironmentVariables)
         {
             startInfo.Domain = runAs.Domain;
             startInfo.UserName = runAs.UserName;
@@ -236,21 +264,48 @@ namespace Octopus.Shared.Util
             startInfo.LoadUserProfile = true;
 
             WindowStationAndDesktopAccess.GrantAccessToWindowStationAndDesktop(runAs.UserName, runAs.Domain);
-            
-            CopyWellKnownEnvironmentVariables(startInfo);
+
+            if (customEnvironmentVariables != null && customEnvironmentVariables.Any())
+            {
+                SetEnvironmentVariablesForTargetUser(startInfo, runAs, customEnvironmentVariables);
+            }
         }
 
-        private static void CopyWellKnownEnvironmentVariables(ProcessStartInfo startInfo)
+        private static void SetEnvironmentVariablesForTargetUser(ProcessStartInfo startInfo, NetworkCredential runAs, IDictionary<string, string> customEnvironmentVariables)
         {
-            // Environment variables are usually inherited from the parent process.
-            // When running as a different user they are not inherited, so manually add them to the ProcessStartInfo.
-            foreach (DictionaryEntry environmentVariable in Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Process))
+            // Double check before we go doing p/invoke gymnastics
+            if (customEnvironmentVariables == null || !customEnvironmentVariables.Any()) return;
+
+            // If ProcessStartInfo.enviromentVariables (field) is null, the new process will build its environment variables from scratch
+            // This will be the system environment variables, plus the user's profile variables (if the user profile is loaded)
+            // However, if the ProcessStartInfo.environmentVariables (field) is not null, these environment variables will be used instead
+            // As soon as we touch ProcessStartInfo.EnvironmentVariables (property) it lazy loads the environment variables for the current process
+            // which in turn means the launched process will get the environment variables for the wrong user profile!
+ 
+            // See https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx (CreateProcess) used when ProcessStartInfo.Username is not set
+            // See https://msdn.microsoft.com/en-us/library/windows/desktop/ms682431(v=vs.85).aspx (CreateProcessWithLogonW) used when ProcessStartInfo.Username is set
+
+            // Start by getting the environment variables for the target user (as if they started a process themselves)
+            // This will get the system environment variables along with the user's profile variables
+            Dictionary<string, string> targetUserEnvironmentVariables;
+            using (var token = AccessToken.Logon(runAs.UserName, runAs.Password, runAs.Domain))
+            using (var userProfile = UserProfile.Load(token))
             {
-                var key = environmentVariable.Key.ToString();
-                if (EnvironmentVariables.AllWellKnownEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
-                {
-                    startInfo.EnvironmentVariables[key] = environmentVariable.Value.ToString();
-                }
+                targetUserEnvironmentVariables = EnvironmentBlock.GetEnvironmentVariablesForUser(token, false);
+                userProfile.Unload();
+            }
+
+            // Now copy in the extra environment variables we want to propagate from this process
+            foreach (var variable in customEnvironmentVariables)
+            {
+                targetUserEnvironmentVariables[variable.Key] = variable.Value;
+            }
+
+            // Starting from a clean slate, copy the resulting environment variables into the ProcessStartInfo
+            startInfo.EnvironmentVariables.Clear();
+            foreach (var variable in targetUserEnvironmentVariables)
+            {
+                startInfo.EnvironmentVariables[variable.Key] = variable.Value;
             }
         }
 
@@ -319,6 +374,227 @@ namespace Octopus.Shared.Util
             {
                 // Process already exited.
             }
+        }
+
+        internal class AccessToken : IDisposable
+        {
+            public string Username { get; }
+            public SafeAccessTokenHandle Handle { get; }
+
+            private AccessToken(string username, SafeAccessTokenHandle handle)
+            {
+                Username = username;
+                Handle = handle;
+            }
+
+            public static AccessToken Logon(string username, string password, string domain = ".", LogonType logonType = LogonType.Network, LogonProvider logonProvider = LogonProvider.Default)
+            {
+                // See https://msdn.microsoft.com/en-us/library/windows/desktop/aa378184(v=vs.85).aspx
+                if (!LogonUser(username, domain, password, LogonType.Network, LogonProvider.Default, out var hToken))
+                    Win32Helper.ThrowWin32Exception($"Logon failed for the user '{username}'");
+
+                return new AccessToken(username, new SafeAccessTokenHandle(hToken));
+            }
+
+            public void Dispose()
+            {
+                Handle?.Dispose();
+            }
+
+            public enum LogonType
+            {
+                Interactive = 2,
+                Network = 3,
+                Batch = 4,
+                Service = 5,
+                Unlock = 7,
+                NetworkClearText = 8,
+                NewCredentials = 9
+            }
+
+            public enum LogonProvider
+            {
+                Default = 0,
+                WinNT40 = 2,
+                WinNT50 = 3,
+            }
+
+            [DllImport("advapi32.dll", SetLastError = true)]
+            private static extern bool LogonUser(string username, string domain, string password, LogonType logonType, LogonProvider logonProvider, out IntPtr hToken);
+        }
+
+        internal class UserProfile : IDisposable
+        {
+            readonly AccessToken token;
+            readonly SafeRegistryHandle userProfile;
+
+            private UserProfile(AccessToken token, SafeRegistryHandle userProfile)
+            {
+                this.token = token;
+                this.userProfile = userProfile;
+            }
+
+            public static UserProfile Load(AccessToken token)
+            {
+                var userProfile = new PROFILEINFO
+                {
+                    lpUserName = token.Username
+                };
+                userProfile.dwSize = Marshal.SizeOf(userProfile);
+
+                // See https://msdn.microsoft.com/en-us/library/windows/desktop/bb762281(v=vs.85).aspx
+                if (!LoadUserProfile(token.Handle, ref userProfile))
+                    Win32Helper.ThrowWin32Exception($"Failed to load user profile for user '{token.Username}'");
+
+                return new UserProfile(token, new SafeRegistryHandle(userProfile.hProfile, false));
+            }
+
+            public void Unload()
+            {
+                // See https://msdn.microsoft.com/en-us/library/windows/desktop/bb762282(v=vs.85).aspx
+                // This function closes the registry handle for the user profile too
+                if (!UnloadUserProfile(token.Handle, userProfile))
+                    Win32Helper.ThrowWin32Exception($"Failed to unload user profile for user '{token.Username}'");
+            }
+
+            public void Dispose()
+            {
+
+                if (userProfile != null && !userProfile.IsClosed)
+                {
+                    try
+                    {
+                        Unload();
+                    }
+                    catch
+                    {
+                        // Don't throw in dispose method
+                    }
+
+                    userProfile.Dispose();
+                }
+            }
+
+            [DllImport("userenv.dll", SetLastError = true)]
+            static extern bool LoadUserProfile(SafeAccessTokenHandle hToken, ref PROFILEINFO lpProfileInfo);
+
+            [DllImport("userenv.dll", SetLastError = true)]
+            static extern bool UnloadUserProfile(SafeAccessTokenHandle hToken, SafeRegistryHandle hProfile);
+
+            [StructLayout(LayoutKind.Sequential)]
+            struct PROFILEINFO
+            {
+                public int dwSize;
+                public int dwFlags;
+                public string lpUserName;
+                public string lpProfilePath;
+                public string lpDefaultPath;
+                public string lpServerName;
+                public string lpPolicyPath;
+                public IntPtr hProfile;
+            }
+        }
+
+        internal class Win32Helper
+        {
+            public static void ThrowWin32Exception(string whatFailed)
+            {
+                try
+                {
+                    throw new Win32Exception();
+                }
+                catch (Win32Exception ex)
+                {
+                    throw new Exception($"{whatFailed}: {ex.Message}", ex);
+                }
+            }
+        }
+
+        internal class EnvironmentBlock
+        {
+            internal static Dictionary<string, string> GetEnvironmentVariablesForUser(AccessToken token, bool inheritFromCurrentProcess)
+            {
+                // See https://msdn.microsoft.com/en-us/library/windows/desktop/bb762270(v=vs.85).aspx
+                if (!CreateEnvironmentBlock(out var env, token.Handle, inheritFromCurrentProcess))
+                    Win32Helper.ThrowWin32Exception($"Failed to load the environment variables for the user '{token.Username}'");
+
+                var userEnvironment = new Dictionary<string, string>();
+                try
+                {
+                    var testData = new StringBuilder();
+                    unsafe
+                    {
+                        // The environment block is an array of null-terminated Unicode strings.
+                        // Key and Value are separated by =
+                        // The list ends with two nulls (\0\0).
+                        var start = (short*)env.ToPointer();
+                        var done = false;
+                        var current = start;
+                        while (!done)
+                        {
+                            if (testData.Length > 0 && *current == 0 && current != start)
+                            {
+                                var data = testData.ToString();
+                                var index = data.IndexOf('=');
+                                if (index == -1)
+                                {
+                                    userEnvironment.Add(data, "");
+                                }
+                                else if (index == data.Length - 1)
+                                {
+                                    userEnvironment.Add(data.Substring(0, index), "");
+                                }
+                                else
+                                {
+                                    userEnvironment.Add(data.Substring(0, index), data.Substring(index + 1));
+                                }
+                                testData.Length = 0;
+                            }
+                            if (*current == 0 && current != start && *(current - 1) == 0)
+                            {
+                                done = true;
+                            }
+                            if (*current != 0)
+                            {
+                                testData.Append((char)*current);
+                            }
+                            current++;
+                        }
+                    }
+                }
+                finally
+                {
+                    // See https://msdn.microsoft.com/en-us/library/windows/desktop/bb762274(v=vs.85).aspx
+                    if (!DestroyEnvironmentBlock(env))
+                        Win32Helper.ThrowWin32Exception($"Failed to destroy the environment variables structure for user '{token.Username}'");
+                }
+
+                return userEnvironment;
+            }
+
+            [DllImport("userenv.dll", SetLastError = true)]
+            private static extern bool CreateEnvironmentBlock(out IntPtr lpEnvironment, SafeAccessTokenHandle hToken, bool inheritFromCurrentProcess);
+
+            [DllImport("userenv.dll", SetLastError = true)]
+            private static extern bool DestroyEnvironmentBlock(IntPtr lpEnvironment);
+        }
+
+        internal sealed class SafeAccessTokenHandle : SafeHandle
+        {
+            // 0 is an Invalid Handle
+            public SafeAccessTokenHandle(IntPtr handle) : base(handle, true) { }
+
+            public static SafeAccessTokenHandle InvalidHandle => new SafeAccessTokenHandle(IntPtr.Zero);
+
+            public override bool IsInvalid => handle == IntPtr.Zero || handle == new IntPtr(-1);
+
+            protected override bool ReleaseHandle()
+            {
+                return CloseHandle(handle);
+            }
+
+            [DllImport("kernel32.dll", SetLastError = true)]
+            static extern bool CloseHandle(IntPtr hHandle);
         }
     }
 }

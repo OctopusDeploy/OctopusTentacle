@@ -1,17 +1,124 @@
 ﻿using System;
-using System.DirectoryServices.AccountManagement;
-using System.Linq;
+using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using FluentAssertions;
+using NSubstitute;
 using NUnit.Framework;
+using Octopus.Shared.Configuration;
+using Octopus.Shared.Contracts;
+using Octopus.Shared.Scripts;
 using Octopus.Shared.Util;
-using Octopus.Shared.Variables;
 
 namespace Octopus.Shared.Tests.Util
 {
+    [TestFixture]
+    public class RunningScriptFixture
+    {
+        [Test]
+        public void Monkey()
+        {
+            using (var user = new TransientUserPrincipal())
+            {
+                var testRootPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $"OctopusTest-{nameof(RunningScriptFixture)}");
+                using (var temporaryDirectory = new TemporaryDirectory(testRootPath))
+                {
+                    var homeConfiguration = Substitute.For<IHomeConfiguration>();
+                    homeConfiguration.HomeDirectory.Returns(temporaryDirectory.DirectoryPath);
+                    homeConfiguration.ApplicationSpecificHomeDirectory.Returns(temporaryDirectory.DirectoryPath);
+                    var workspaceFactory = new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration);
+                    var taskId = Guid.NewGuid().ToString();
+                    var scriptLog = new TestScriptLog();
+                    var workspace = workspaceFactory.GetWorkspace(new ScriptTicket(taskId));
+                    var runningScript = new RunningScript(workspace, scriptLog, taskId, CancellationToken.None);
+
+                    Console.WriteLine(workspace.WorkingDirectory);
+                    workspace.RunAs = user.GetCredential();
+                    workspace.BootstrapScript("get-childitem -path env:");
+                    runningScript.Execute();
+
+
+                    scriptLog.StdErr.ToString().Should().BeEmpty("stderr should not be written to");
+                }
+            }
+        }
+    }
+
+    public class TemporaryEnvironmentVariable : IDisposable
+    {
+        public string Name { get; }
+        public string Value { get; }
+        public EnvironmentVariableTarget Target { get; }
+
+        public TemporaryEnvironmentVariable(string name, string value, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process)
+        {
+            this.Name = name;
+            this.Value = value;
+            this.Target = target;
+            Environment.SetEnvironmentVariable(name, value, target);
+        }
+
+        public void Dispose()
+        {
+            Environment.SetEnvironmentVariable(Name, null, Target);
+        }
+    }
+
+    public class TestScriptLog : IScriptLog, IScriptLogWriter
+    {
+        public readonly StringBuilder StdOut = new StringBuilder();
+        public readonly StringBuilder StdErr = new StringBuilder();
+
+        public IScriptLogWriter CreateWriter()
+        {
+            return this;
+        }
+
+        public List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public void WriteOutput(ProcessOutputSource source, string message)
+        {
+            Console.WriteLine($"{DateTime.UtcNow} {source} {message}");
+            switch (source)
+            {
+                case ProcessOutputSource.StdOut:
+                    StdOut.AppendLine(message);
+                    break;
+
+                case ProcessOutputSource.StdErr:
+                    StdErr.AppendLine(message);
+                    break;
+            }
+        }
+    }
+
+    public class TemporaryDirectory : IDisposable
+    {
+        public string DirectoryPath { get; }
+
+        readonly IOctopusFileSystem fileSystem = new OctopusPhysicalFileSystem();
+
+        public TemporaryDirectory(string directoryPath = null)
+        {
+            DirectoryPath = directoryPath ?? fileSystem.CreateTemporaryDirectory();
+        }
+
+        public void Dispose()
+        {
+            fileSystem.DeleteDirectory(DirectoryPath, DeletionOptions.TryThreeTimesIgnoreFailure);
+        }
+    }
+
     [TestFixture]
     public class SilentProcessRunnerFixture
     {
@@ -24,8 +131,9 @@ namespace Octopus.Shared.Tests.Util
                 var arguments = @"/c exit 9999";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
+                var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
                 exitCode.Should().Be(9999, "our custom exit code should be reflected");
                 debugMessages.ToString().Should().ContainEquivalentOf($"Starting {command} in  as {WindowsIdentity.GetCurrent().Name}");
@@ -43,8 +151,9 @@ namespace Octopus.Shared.Tests.Util
                 var arguments = @"/c echo hello";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
+                var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 debugMessages.ToString().Should().ContainEquivalentOf(command, "the command should be logged")
@@ -65,8 +174,9 @@ namespace Octopus.Shared.Tests.Util
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                 var networkCredential = new NetworkCredential(user.UserName, user.Password, user.DomainName);
+                var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 debugMessages.ToString().Should().ContainEquivalentOf(command, "the command should be logged")
@@ -78,25 +188,45 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        public void RunningAsDifferentUser_ShouldCopySpecialEnvironmentVariales()
+        public void RunningAsDifferentUser_ShouldCopySpecialEnvironmentVariables()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             using (var user = new TransientUserPrincipal())
             {
-                // Set the environment variable as part of this process
-                var tentacleHome = "TestTentacleHome";
-                Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleHome, tentacleHome);
-                
                 var command = "cmd.exe";
-                var arguments = $@"/c echo %{EnvironmentVariables.TentacleHome}%";
+                var arguments = @"/c echo %customenvironmentvariable%";
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                 var networkCredential = new NetworkCredential(user.UserName, user.Password, user.DomainName);
+                var customEnvironmentVariables = new Dictionary<string, string>
+                {
+                    {"customenvironmentvariable", "customvalue"}
+                };
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
-                infoMessages.ToString().Should().ContainEquivalentOf(tentacleHome, "the environment variable should have been copied to the child process");
+                infoMessages.ToString().Should().ContainEquivalentOf("customvalue", "the environment variable should have been copied to the child process");
+                errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
+            }
+        }
+        
+        [Test]
+        public void RunningAsDifferentUser_CanWriteToItsOwnTempPath()
+        {
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+            using (var user = new TransientUserPrincipal())
+            {
+                var command = "cmd.exe";
+                var arguments = @"/c echo hello > %temp%hello.txt";
+                // Target the CommonApplicationData folder since this is a place the particular user can get to
+                var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+                var networkCredential = new NetworkCredential(user.UserName, user.Password, user.DomainName);
+                var customEnvironmentVariables = new Dictionary<string, string>();
+
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+
+                exitCode.Should().Be(0, "the process should have run to completion after writing to the temp folder for the other user");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
         }
@@ -112,8 +242,9 @@ namespace Octopus.Shared.Tests.Util
                 var arguments = "";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
+                var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
                 exitCode.Should().BeLessOrEqualTo(0, "the process should have been terminated");
                 infoMessages.ToString().Should().ContainEquivalentOf("Microsoft Windows", "the default command-line header would be written to stdout");
@@ -130,8 +261,9 @@ namespace Octopus.Shared.Tests.Util
                 var arguments = @"/c echo hello";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
+                var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
@@ -148,8 +280,9 @@ namespace Octopus.Shared.Tests.Util
                 var arguments = @"/c echo Something went wrong! 1>&2";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
+                var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 infoMessages.ToString().Should().BeEmpty("no messages should be written to stdout");
@@ -158,16 +291,17 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        public void RunAsCurrentUser_ShouldWork()
+        [TestCase("cmd.exe", @"/c echo %userdomain%\%username%")]
+        [TestCase("powershell.exe", "-command \"Write-Host $env:userdomain\\$env:username\"")]
+        public void RunAsCurrentUser_ShouldWork(string command, string arguments)
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
-                var command = "cmd.exe";
-                var arguments = @"/c echo %userdomain%\%username%";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
+                var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
@@ -176,18 +310,19 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        public void RunAsDifferentUser_ShouldWork()
+        [TestCase("cmd.exe", @"/c echo %userdomain%\%username%")]
+        [TestCase("powershell.exe", "-command \"Write-Host $env:userdomain\\$env:username\"")]
+        public void RunAsDifferentUser_ShouldWork(string command, string arguments)
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             using (var user = new TransientUserPrincipal())
             {
-                var command = "cmd.exe";
-                var arguments = @"/c echo %userdomain%\%username%";
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                 var networkCredential = new NetworkCredential(user.UserName, user.Password, user.DomainName);
+                var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, cts.Token);
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
@@ -195,7 +330,16 @@ namespace Octopus.Shared.Tests.Util
             }
         }
 
-        private static int Execute(string command, string arguments, string workingDirectory, out StringBuilder debugMessages, out StringBuilder infoMessages, out StringBuilder errorMessages, NetworkCredential networkCredential, CancellationToken cancel)
+        private static int Execute(
+            string command, 
+            string arguments,
+            string workingDirectory,
+            out StringBuilder debugMessages,
+            out StringBuilder infoMessages,
+            out StringBuilder errorMessages,
+            NetworkCredential networkCredential,
+            IDictionary<string, string> customEnvironmentVariables,
+            CancellationToken cancel)
         {
             var debug = new StringBuilder();
             var info = new StringBuilder();
@@ -203,7 +347,7 @@ namespace Octopus.Shared.Tests.Util
             var exitCode = SilentProcessRunner.ExecuteCommand(
                 command,
                 arguments,
-                workingDirectory, 
+                workingDirectory,
                 x =>
                 {
                     Console.WriteLine($"{DateTime.UtcNow} DBG: {x}");
@@ -219,61 +363,15 @@ namespace Octopus.Shared.Tests.Util
                     Console.WriteLine($"{DateTime.UtcNow} ERR: {x}");
                     error.Append(x);
                 },
-                networkCredential, cancel);
+                networkCredential,
+                customEnvironmentVariables,
+                cancel);
 
             debugMessages = debug;
             infoMessages = info;
             errorMessages = error;
 
             return exitCode;
-        }
-
-        class TransientUserPrincipal : IDisposable
-        {
-            readonly PrincipalContext principalContext;
-            readonly UserPrincipal principal;
-            readonly string password;
-
-            public TransientUserPrincipal(string name = null, string password = "Password01!", ContextType contextType = ContextType.Machine)
-            {
-                // We have seen cases where the random username is invalid - trying again should help reduce false-negatives
-                // System.DirectoryServices.AccountManagement.PrincipalOperationException : The specified username is invalid.
-                var attempts = 0;
-                while (true)
-                {
-                    try
-                    {
-                        attempts++;
-                        principalContext = new PrincipalContext(contextType);
-                        {
-                            principal = new UserPrincipal(principalContext);
-                            principal.Name = name ?? new string(Guid.NewGuid().ToString("N").ToLowerInvariant().Where(char.IsLetter).ToArray());
-                            principal.SetPassword(password);
-                            principal.Save();
-                            this.password = password;
-                            break;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Failed to create the Windows User Account called '{principal.Name}': {ex.Message}");
-                        if (attempts >= 5) throw;
-                    }
-                }
-            }
-
-            public string NTAccountName => principal.Sid.Translate(typeof(NTAccount)).ToString();
-            public string DomainName => NTAccountName.Split(new[] {'\\'}, 2)[0];
-            public string UserName => NTAccountName.Split(new[] {'\\'}, 2)[1];
-            public string SamAccountName => principal.SamAccountName;
-            public string Password => password;
-
-            public void Dispose()
-            {
-                principal.Delete();
-                principal.Dispose();
-                principalContext.Dispose();
-            }
         }
     }
 }
