@@ -21,12 +21,12 @@ namespace Octopus.Shared.Tests.Util
             var attempts = 0;
             while (true)
             {
+                attempts++;
+                var username = name ?? new string(Guid.NewGuid().ToString("N").ToLowerInvariant().Where(char.IsLetter).ToArray());
+                Console.WriteLine($"Trying to create a temporary Windows User Account on the local machine called '{username}'...");
+
                 try
                 {
-                    attempts++;
-                    var username = name ?? new string(Guid.NewGuid().ToString("N").ToLowerInvariant().Where(char.IsLetter).ToArray());
-                    Console.WriteLine($"Trying to create a temporary Windows User Account on the local machine called '{principal.Name}'...");
-
                     principalContext = new PrincipalContext(contextType);
                     {
                         principal = new UserPrincipal(principalContext);
@@ -39,7 +39,7 @@ namespace Octopus.Shared.Tests.Util
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to create the temporary Windows User Account called '{principal.Name}': {ex.Message}");
+                    Console.WriteLine($"Failed to create the temporary Windows User Account called '{username}': {ex.Message}");
                     if (attempts >= 5) throw;
                 }
             }
