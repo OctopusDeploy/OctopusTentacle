@@ -1,124 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using FluentAssertions;
-using NSubstitute;
 using NUnit.Framework;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Contracts;
-using Octopus.Shared.Scripts;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Util
 {
-    [TestFixture]
-    public class RunningScriptFixture
-    {
-        [Test]
-        public void Monkey()
-        {
-            using (var user = new TransientUserPrincipal())
-            {
-                var testRootPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $"OctopusTest-{nameof(RunningScriptFixture)}");
-                using (var temporaryDirectory = new TemporaryDirectory(testRootPath))
-                {
-                    var homeConfiguration = Substitute.For<IHomeConfiguration>();
-                    homeConfiguration.HomeDirectory.Returns(temporaryDirectory.DirectoryPath);
-                    homeConfiguration.ApplicationSpecificHomeDirectory.Returns(temporaryDirectory.DirectoryPath);
-                    var workspaceFactory = new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration);
-                    var taskId = Guid.NewGuid().ToString();
-                    var scriptLog = new TestScriptLog();
-                    var workspace = workspaceFactory.GetWorkspace(new ScriptTicket(taskId));
-                    var runningScript = new RunningScript(workspace, scriptLog, taskId, CancellationToken.None);
-
-                    Console.WriteLine(workspace.WorkingDirectory);
-                    workspace.RunAs = user.GetCredential();
-                    workspace.BootstrapScript("get-childitem -path env:");
-                    runningScript.Execute();
-
-
-                    scriptLog.StdErr.ToString().Should().BeEmpty("stderr should not be written to");
-                }
-            }
-        }
-    }
-
-    public class TemporaryEnvironmentVariable : IDisposable
-    {
-        public string Name { get; }
-        public string Value { get; }
-        public EnvironmentVariableTarget Target { get; }
-
-        public TemporaryEnvironmentVariable(string name, string value, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process)
-        {
-            this.Name = name;
-            this.Value = value;
-            this.Target = target;
-            Environment.SetEnvironmentVariable(name, value, target);
-        }
-
-        public void Dispose()
-        {
-            Environment.SetEnvironmentVariable(Name, null, Target);
-        }
-    }
-
-    public class TestScriptLog : IScriptLog, IScriptLogWriter
-    {
-        public readonly StringBuilder StdOut = new StringBuilder();
-        public readonly StringBuilder StdErr = new StringBuilder();
-
-        public IScriptLogWriter CreateWriter()
-        {
-            return this;
-        }
-
-        public List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Dispose()
-        {
-        }
-
-        public void WriteOutput(ProcessOutputSource source, string message)
-        {
-            Console.WriteLine($"{DateTime.UtcNow} {source} {message}");
-            switch (source)
-            {
-                case ProcessOutputSource.StdOut:
-                    StdOut.AppendLine(message);
-                    break;
-
-                case ProcessOutputSource.StdErr:
-                    StdErr.AppendLine(message);
-                    break;
-            }
-        }
-    }
-
-    public class TemporaryDirectory : IDisposable
-    {
-        public string DirectoryPath { get; }
-
-        readonly IOctopusFileSystem fileSystem = new OctopusPhysicalFileSystem();
-
-        public TemporaryDirectory(string directoryPath = null)
-        {
-            DirectoryPath = directoryPath ?? fileSystem.CreateTemporaryDirectory();
-        }
-
-        public void Dispose()
-        {
-            fileSystem.DeleteDirectory(DirectoryPath, DeletionOptions.TryThreeTimesIgnoreFailure);
-        }
-    }
-
     [TestFixture]
     public class SilentProcessRunnerFixture
     {
@@ -173,7 +64,7 @@ namespace Octopus.Shared.Tests.Util
                 var arguments = @"/c echo %userdomain%\%username%";
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-                var networkCredential = new NetworkCredential(user.UserName, user.Password, user.DomainName);
+                var networkCredential = user.GetCredential();
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
                 var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
@@ -197,7 +88,7 @@ namespace Octopus.Shared.Tests.Util
                 var arguments = @"/c echo %customenvironmentvariable%";
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-                var networkCredential = new NetworkCredential(user.UserName, user.Password, user.DomainName);
+                var networkCredential = user.GetCredential();
                 var customEnvironmentVariables = new Dictionary<string, string>
                 {
                     {"customenvironmentvariable", "customvalue"}
@@ -221,7 +112,7 @@ namespace Octopus.Shared.Tests.Util
                 var arguments = @"/c echo hello > %temp%hello.txt";
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-                var networkCredential = new NetworkCredential(user.UserName, user.Password, user.DomainName);
+                var networkCredential = user.GetCredential();
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
                 var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
@@ -319,7 +210,7 @@ namespace Octopus.Shared.Tests.Util
             {
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-                var networkCredential = new NetworkCredential(user.UserName, user.Password, user.DomainName);
+                var networkCredential = user.GetCredential();
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
                 var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
