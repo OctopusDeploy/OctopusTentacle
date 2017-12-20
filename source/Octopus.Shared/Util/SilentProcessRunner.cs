@@ -9,7 +9,6 @@ using System.Management;
 #endif
 using System.Net;
 using System.Runtime.InteropServices;
-using System.Security;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
@@ -390,8 +389,9 @@ namespace Octopus.Shared.Util
             public static AccessToken Logon(string username, string password, string domain = ".", LogonType logonType = LogonType.Network, LogonProvider logonProvider = LogonProvider.Default)
             {
                 // See https://msdn.microsoft.com/en-us/library/windows/desktop/aa378184(v=vs.85).aspx
-                if (!LogonUser(username, domain, password, LogonType.Network, LogonProvider.Default, out var hToken))
-                    Win32Helper.ThrowWin32Exception($"Logon failed for the user '{username}'");
+                var hToken = IntPtr.Zero;
+                Win32Helper.Invoke(() => LogonUser(username, domain, password, LogonType.Network, LogonProvider.Default, out hToken),
+                    $"Logon failed for the user '{username}'");
 
                 return new AccessToken(username, new SafeAccessTokenHandle(hToken));
             }
@@ -443,8 +443,8 @@ namespace Octopus.Shared.Util
                 userProfile.dwSize = Marshal.SizeOf(userProfile);
 
                 // See https://msdn.microsoft.com/en-us/library/windows/desktop/bb762281(v=vs.85).aspx
-                if (!LoadUserProfile(token.Handle, ref userProfile))
-                    Win32Helper.ThrowWin32Exception($"Failed to load user profile for user '{token.Username}'");
+                Win32Helper.Invoke(() => LoadUserProfile(token.Handle, ref userProfile),
+                    $"Failed to load user profile for user '{token.Username}'");
 
                 return new UserProfile(token, new SafeRegistryHandle(userProfile.hProfile, false));
             }
@@ -453,8 +453,8 @@ namespace Octopus.Shared.Util
             {
                 // See https://msdn.microsoft.com/en-us/library/windows/desktop/bb762282(v=vs.85).aspx
                 // This function closes the registry handle for the user profile too
-                if (!UnloadUserProfile(token.Handle, userProfile))
-                    Win32Helper.ThrowWin32Exception($"Failed to unload user profile for user '{token.Username}'");
+                Win32Helper.Invoke(() => UnloadUserProfile(token.Handle, userProfile),
+                    $"Failed to unload user profile for user '{token.Username}'");
             }
 
             public void Dispose()
@@ -495,17 +495,17 @@ namespace Octopus.Shared.Util
             }
         }
 
-        internal class Win32Helper
+        private class Win32Helper
         {
-            public static void ThrowWin32Exception(string whatFailed)
+            public static bool Invoke(Func<bool> nativeMethod, string failureDescription)
             {
                 try
                 {
-                    throw new Win32Exception();
+                    return nativeMethod() ? true : throw new Win32Exception();
                 }
                 catch (Win32Exception ex)
                 {
-                    throw new Exception($"{whatFailed}: {ex.Message}", ex);
+                    throw new Exception($"{failureDescription}: {ex.Message}", ex);
                 }
             }
         }
@@ -514,9 +514,11 @@ namespace Octopus.Shared.Util
         {
             internal static Dictionary<string, string> GetEnvironmentVariablesForUser(AccessToken token, bool inheritFromCurrentProcess)
             {
+                var env = IntPtr.Zero;
+
                 // See https://msdn.microsoft.com/en-us/library/windows/desktop/bb762270(v=vs.85).aspx
-                if (!CreateEnvironmentBlock(out var env, token.Handle, inheritFromCurrentProcess))
-                    Win32Helper.ThrowWin32Exception($"Failed to load the environment variables for the user '{token.Username}'");
+                Win32Helper.Invoke(() => CreateEnvironmentBlock(out env, token.Handle, inheritFromCurrentProcess),
+                    $"Failed to load the environment variables for the user '{token.Username}'");
 
                 var userEnvironment = new Dictionary<string, string>();
                 try
@@ -565,8 +567,8 @@ namespace Octopus.Shared.Util
                 finally
                 {
                     // See https://msdn.microsoft.com/en-us/library/windows/desktop/bb762274(v=vs.85).aspx
-                    if (!DestroyEnvironmentBlock(env))
-                        Win32Helper.ThrowWin32Exception($"Failed to destroy the environment variables structure for user '{token.Username}'");
+                    Win32Helper.Invoke(() => DestroyEnvironmentBlock(env),
+                        $"Failed to destroy the environment variables structure for user '{token.Username}'");
                 }
 
                 return userEnvironment;
