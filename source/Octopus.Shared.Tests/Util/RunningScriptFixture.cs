@@ -122,7 +122,7 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var user = new TransientUserPrincipal())
             {
-                workspace.BootstrapScript("Write-Host $env:userdomain\\$env:username");
+                workspace.BootstrapScript("Write-Host Attempting to create a file in $env:temp\n\"hello\"");
                 workspace.RunAs = user.GetCredential();
                 runningScript.Execute();
                 runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
