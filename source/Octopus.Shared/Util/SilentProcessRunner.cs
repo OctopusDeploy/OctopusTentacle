@@ -117,12 +117,13 @@ namespace Octopus.Shared.Util
                 // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
                 var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
-                var runningAs = runAs == default(NetworkCredential) ? $@"{WindowsIdentity.GetCurrent().Name}" : $@"{runAs.Domain}\{runAs.UserName}";
-                var customEnvironmentVars = runAs == default(NetworkCredential)
-                    ? "the same environment variables as the launching process"
-                    : customEnvironmentVariables == null
-                        ? "that user's default environment variables"
-                        : $"that user's environment variables plus {customEnvironmentVariables.Count} custom variable(s)";
+                var runAsSameUser = runAs == default(NetworkCredential);
+                var runningAs = runAsSameUser ? $@"{WindowsIdentity.GetCurrent().Name}" : $@"{runAs.Domain}\{runAs.UserName}";
+                var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
+                var customEnvironmentVars =
+                    hasCustomEnvironmentVariables
+                    ? (runAsSameUser ? $"the same environment variables as the launching process plus {customEnvironmentVariables.Count} custom variable(s)" : $"that user's environment variables plus {customEnvironmentVariables.Count} custom variable(s)")
+                    : (runAsSameUser ? "the same environment variables as the launching process" : "that user's default environment variables");
                 debug($"Starting {exeFileNameOrFullPath} in {workingDirectory} as {runningAs} with {customEnvironmentVars}");
                 using (var process = new Process())
                 {
@@ -134,6 +135,10 @@ namespace Octopus.Shared.Util
                     if (runAs != default(NetworkCredential))
                     {
                         RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
+                    }
+                    else
+                    {
+                        RunAsSameUser(process.StartInfo, customEnvironmentVariables);
                     }
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
@@ -246,6 +251,10 @@ namespace Octopus.Shared.Util
                     {
                         RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
                     }
+                    else
+                    {
+                        RunAsSameUser(process.StartInfo, customEnvironmentVariables);
+                    }
 
                     process.Start();
                 }
@@ -253,6 +262,16 @@ namespace Octopus.Shared.Util
             catch (Exception ex)
             {
                 throw new Exception($"Error when attempting to execute {executable}: {ex.Message}", ex);
+            }
+        }
+
+        private static void RunAsSameUser(ProcessStartInfo processStartInfo, IDictionary<string, string> customEnvironmentVariables)
+        {
+            // Accessing the ProcessStartInfo.EnvironmentVariables dictionary will pre-load the environment variables for the current process
+            // Then we'll add/overwrite with the customEnvironmentVariables
+            foreach (var variable in customEnvironmentVariables)
+            {
+                processStartInfo.EnvironmentVariables[variable.Key] = variable.Value;
             }
         }
 

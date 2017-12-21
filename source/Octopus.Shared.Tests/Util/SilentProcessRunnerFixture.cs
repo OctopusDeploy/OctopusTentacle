@@ -79,6 +79,28 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        public void RunningAsSameUser_ShouldCopySpecialEnvironmentVariables()
+        {
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+            {
+                var command = "cmd.exe";
+                var arguments = @"/c echo %customenvironmentvariable%";
+                var workingDirectory = "";
+                var networkCredential = default(NetworkCredential);
+                var customEnvironmentVariables = new Dictionary<string, string>
+                {
+                    {"customenvironmentvariable", "customvalue"}
+                };
+
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+
+                exitCode.Should().Be(0, "the process should have run to completion");
+                infoMessages.ToString().Should().ContainEquivalentOf("customvalue", "the environment variable should have been copied to the child process");
+                errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
+            }
+        }
+
+        [Test]
         public void RunningAsDifferentUser_ShouldCopySpecialEnvironmentVariables()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))

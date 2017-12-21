@@ -145,5 +145,31 @@ namespace Octopus.Shared.Tests.Util
                 scriptLog.StdOut.ToString().Should().NotContainEquivalentOf("Finito", "the script should have canceled before writing the finish message");
             }
         }
+
+        [Test]
+        public void RunAsCurrentUser_ShouldCopyCustomEnvironmentVariables()
+        {
+            workspace.CustomEnvironmentVariables.Add("customenvironmentvariable", "customvalue");
+            workspace.BootstrapScript("Write-Host $env:customenvironmentvariable");
+            runningScript.Execute();
+            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
+            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
+            scriptLog.StdOut.ToString().Should().ContainEquivalentOf("customvalue");
+        }
+
+        [Test]
+        public void RunAsDifferentUser_ShouldCopyCustomEnvironmentVariables()
+        {
+            using (var user = new TransientUserPrincipal())
+            {
+                workspace.RunAs = user.GetCredential();
+                workspace.CustomEnvironmentVariables.Add("customenvironmentvariable", "customvalue");
+                workspace.BootstrapScript("Write-Host $env:customenvironmentvariable");
+                runningScript.Execute();
+                runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
+                scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
+                scriptLog.StdOut.ToString().Should().ContainEquivalentOf("customvalue");
+            }
+        }
     }
 }
