@@ -24,8 +24,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="2.6.14" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="Halibut" Version="3.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58676" />
     <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58676" />
     <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58676" />
@@ -35,25 +36,22 @@
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
     <PackageReference Include="Octopus.Diagnostics" Version="1.0.12" />
     <PackageReference Include="Octopus.Time" Version="1.0.9" />
+    <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETStandard' ">
-    <PackageReference Include="Autofac" Version="4.6.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.4.0" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.4.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0-preview1-25914-04" />
     <PackageReference Include="System.Management" Version="4.5.0-preview1-25914-04" />
-    <PackageReference Include="NLog" Version="5.0.0-beta11" />
+    <PackageReference Include="NLog" Version="4.5.0-rc03" />
     <PackageReference Include="Nito.AsyncEx" Version="5.0.0-pre-05" />
-    <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-    <PackageReference Include="Autofac" Version="3.5.2" />
     <PackageReference Include="NLog" Version="4.0.1" />
     <PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
-    <PackageReference Include="TaskScheduler" Version="2.5.21" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
