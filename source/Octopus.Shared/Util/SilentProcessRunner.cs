@@ -21,31 +21,6 @@ namespace Octopus.Shared.Util
 {
     public static class SilentProcessRunner
     {
-        // ReSharper disable once InconsistentNaming
-        const int CP_OEMCP = 1;
-        static readonly Encoding oemEncoding;
-
-        static SilentProcessRunner()
-        {
-            try
-            {
-                CPINFOEX info;
-                if (GetCPInfoEx(CP_OEMCP, 0, out info))
-                {
-                    oemEncoding = Encoding.GetEncoding(info.CodePage);
-                }
-                else
-                {
-                    oemEncoding = Encoding.GetEncoding(850);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Octopus().Warn(ex, "Couldn't get default OEM encoding");
-                oemEncoding = Encoding.UTF8;
-            }
-        }
-
         public static int ExecuteCommand(this CommandLineInvocation invocation, ILog log)
         {
             return ExecuteCommand(invocation, Environment.CurrentDirectory, log);
@@ -124,7 +99,8 @@ namespace Octopus.Shared.Util
                     hasCustomEnvironmentVariables
                     ? (runAsSameUser ? $"the same environment variables as the launching process plus {customEnvironmentVariables.Count} custom variable(s)" : $"that user's environment variables plus {customEnvironmentVariables.Count} custom variable(s)")
                     : (runAsSameUser ? "the same environment variables as the launching process" : "that user's default environment variables");
-                debug($"Starting {exeFileNameOrFullPath} in {workingDirectory} as {runningAs} with {customEnvironmentVars}");
+                var encoding = EncodingDetector.GetOEMEncoding();
+                debug($"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVars}");
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -142,8 +118,8 @@ namespace Octopus.Shared.Util
                     }
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
-                    process.StartInfo.StandardOutputEncoding = oemEncoding;
-                    process.StartInfo.StandardErrorEncoding = oemEncoding;
+                    process.StartInfo.StandardOutputEncoding = encoding;
+                    process.StartInfo.StandardErrorEncoding = encoding;
 
                     using (var outputWaitHandle = new AutoResetEvent(false))
                     using (var errorWaitHandle = new AutoResetEvent(false))
@@ -200,12 +176,12 @@ namespace Octopus.Shared.Util
                         {
                             if (!running)
                                 return;
-                            DoOurBestToCleanUp(process);
+                            DoOurBestToCleanUp(process, error);
                         });
 
                         if (cancel.IsCancellationRequested)
                         {
-                            DoOurBestToCleanUp(process);
+                            DoOurBestToCleanUp(process, error);
                         }
 
                         process.BeginOutputReadLine();
@@ -328,70 +304,102 @@ namespace Octopus.Shared.Util
             }
         }
 
-        static void DoOurBestToCleanUp(Process process)
+        static void DoOurBestToCleanUp(Process process, Action<string> error)
         {
             try
             {
-                KillProcessAndChildren(process.Id);
+                Hitman.TryKillProcessAndChildrenRecursively(process.Id);
             }
-            catch (Exception)
+            catch (Exception hitmanException)
             {
+                error($"Failed to kill the launched process and its children: {hitmanException}");
                 try
                 {
                     process.Kill();
                 }
-                catch (Exception)
+                catch (Exception killProcessException)
                 {
+                    error($"Failed to kill the launched process: {killProcessException}");
                 }
             }
         }
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool GetCPInfoEx([MarshalAs(UnmanagedType.U4)] int CodePage, [MarshalAs(UnmanagedType.U4)] int dwFlags, out CPINFOEX lpCPInfoEx);
-
-        const int MAX_DEFAULTCHAR = 2;
-        const int MAX_LEADBYTES = 12;
-        const int MAX_PATH = 260;
-
-        [StructLayout(LayoutKind.Sequential)]
-        struct CPINFOEX
+        internal class EncodingDetector
         {
-            [MarshalAs(UnmanagedType.U4)] public readonly int MaxCharSize;
+            public static Encoding GetOEMEncoding()
+            {
+                try
+                {
+                    // Get the OEM CodePage for the installation, otherwise fall back to code page 850 (DOS Western Europe)
+                    // https://en.wikipedia.org/wiki/Code_page_850
+                    const int CP_OEMCP = 1;
+                    const int dwFlags = 0;
+                    const int CodePage850 = 850;
 
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_DEFAULTCHAR)] public readonly byte[] DefaultChar;
+                    return Encoding.GetEncoding(GetCPInfoEx(CP_OEMCP, dwFlags, out var info) ? info.CodePage : CodePage850);
+                }
+                catch
+                {
+                    // Fall back to UTF8 if everything goes wrong
+                    return Encoding.UTF8;
+                }
+            }
 
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_LEADBYTES)] public readonly byte[] LeadBytes;
+            [DllImport("kernel32.dll", SetLastError = true)]
+            static extern bool GetCPInfoEx([MarshalAs(UnmanagedType.U4)] int codePage, [MarshalAs(UnmanagedType.U4)] int dwFlags, out CPINFOEX lpCPInfoEx);
 
-            public readonly char UnicodeDefaultChar;
+            const int MAX_DEFAULTCHAR = 2;
+            const int MAX_LEADBYTES = 12;
+            const int MAX_PATH = 260;
 
-            [MarshalAs(UnmanagedType.U4)] public readonly int CodePage;
+            [StructLayout(LayoutKind.Sequential)]
+            public struct CPINFOEX
+            {
+                [MarshalAs(UnmanagedType.U4)]
+                public readonly int MaxCharSize;
 
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MAX_PATH)] public readonly string CodePageName;
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_DEFAULTCHAR)]
+                public readonly byte[] DefaultChar;
+
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_LEADBYTES)]
+                public readonly byte[] LeadBytes;
+
+                public readonly char UnicodeDefaultChar;
+
+                [MarshalAs(UnmanagedType.U4)]
+                public readonly int CodePage;
+
+                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MAX_PATH)]
+                public readonly string CodePageName;
+            }
         }
 
-        static void KillProcessAndChildren(int pid)
+        internal class Hitman
         {
-#if CAN_FIND_CHILD_PROCESSES
-            using (var searcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid))
+            public static void TryKillProcessAndChildrenRecursively(int pid)
             {
-                using (var moc = searcher.Get())
+#if CAN_FIND_CHILD_PROCESSES
+                using (var searcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid))
                 {
-                    foreach (var mo in moc.OfType<ManagementObject>())
+                    using (var moc = searcher.Get())
                     {
-                        KillProcessAndChildren(Convert.ToInt32(mo["ProcessID"]));
+                        foreach (var mo in moc.OfType<ManagementObject>())
+                        {
+                            TryKillProcessAndChildrenRecursively(Convert.ToInt32(mo["ProcessID"]));
+                        }
                     }
                 }
-            }
 #endif
 
-            try
-            {
-                var proc = Process.GetProcessById(pid);
-                proc.Kill();
-            }
-            catch (ArgumentException)
-            {
-                // Process already exited.
+                try
+                {
+                    var proc = Process.GetProcessById(pid);
+                    proc.Kill();
+                }
+                catch (ArgumentException)
+                {
+                    // Process already exited.
+                }
             }
         }
 
@@ -636,6 +644,19 @@ namespace Octopus.Shared.Util
                 try
                 {
                     return nativeMethod() ? true : throw new Win32Exception();
+                }
+                catch (Win32Exception ex)
+                {
+                    throw new Exception($"{failureDescription}: {ex.Message}", ex);
+                }
+            }
+            
+            public static T Invoke<T>(Func<T> nativeMethod, Func<T, bool> successful, string failureDescription)
+            {
+                try
+                {
+                    var result = nativeMethod();
+                    return successful(result) ? result : throw new Win32Exception();
                 }
                 catch (Win32Exception ex)
                 {
