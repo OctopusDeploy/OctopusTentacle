@@ -118,7 +118,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        public void RunAsDifferentUser_ShouldWork2()
+        public void RunAsDifferentUser_ShouldWork_TempPath()
         {
             using (var user = new TransientUserPrincipal())
             {
