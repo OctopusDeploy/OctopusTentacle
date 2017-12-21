@@ -104,6 +104,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [Retry(3)]
         public void RunAsDifferentUser_ShouldWork()
         {
             using (var user = new TransientUserPrincipal())
@@ -118,6 +119,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [Retry(3)]
         public void RunAsDifferentUser_ShouldWork_TempPath()
         {
             using (var user = new TransientUserPrincipal())
@@ -158,6 +160,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [Retry(3)]
         public void RunAsDifferentUser_ShouldCopyCustomEnvironmentVariables()
         {
             using (var user = new TransientUserPrincipal())
