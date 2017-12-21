@@ -122,10 +122,11 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var user = new TransientUserPrincipal())
             {
-                workspace.BootstrapScript("\"hello\" | Out-File $env:temp\\hello.txt");
+                workspace.BootstrapScript("Write-Host Attempting to create a file in $env:temp\n\"hello\" | Out-File $env:temp\\hello.txt\ndir $env:temp");
                 workspace.RunAs = user.GetCredential();
                 runningScript.Execute();
                 runningScript.ExitCode.Should().Be(0, "the script should have run to completion after writing to the temp folder");
+                scriptLog.StdOut.ToString().Should().ContainEquivalentOf("hello.txt", "the dir command should have logged the presence of the file we just wrote");
                 scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
             }
         }
