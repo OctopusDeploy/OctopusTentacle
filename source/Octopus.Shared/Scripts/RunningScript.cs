@@ -75,6 +75,7 @@ namespace Octopus.Shared.Scripts
                     powerShellPath,
                     PowerShell.FormatCommandArguments(workspace.BootstrapScriptFilePath, workspace.ScriptArguments, false),
                     workspace.WorkingDirectory,
+                    output => writer.WriteOutput(ProcessOutputSource.Debug, output),
                     output => writer.WriteOutput(ProcessOutputSource.StdOut, output),
                     output => writer.WriteOutput(ProcessOutputSource.StdErr, output),
                     workspace.RunAs,

@@ -8,6 +8,7 @@ namespace Octopus.Shared.Tests.Util
 {
     public class TestScriptLog : IScriptLog, IScriptLogWriter
     {
+        public readonly StringBuilder Debug = new StringBuilder();
         public readonly StringBuilder StdOut = new StringBuilder();
         public readonly StringBuilder StdErr = new StringBuilder();
 
@@ -30,6 +31,10 @@ namespace Octopus.Shared.Tests.Util
             Console.WriteLine($"{DateTime.UtcNow} {source} {message}");
             switch (source)
             {
+                case ProcessOutputSource.Debug:
+                    Debug.AppendLine(message);
+                    break;
+                    
                 case ProcessOutputSource.StdOut:
                     StdOut.AppendLine(message);
                     break;
