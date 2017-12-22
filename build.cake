@@ -67,6 +67,7 @@ Task("__Default")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
+    .IsDependentOn("__Test")
     .IsDependentOn("__SignBuiltFiles")
     .IsDependentOn("__CreateTentacleInstaller")
     .IsDependentOn("__CreateChocolateyPackage")
@@ -123,6 +124,17 @@ Task("__Build")
             .SetVerbosity(verbosity)
             .UseToolVersion(MSBuildToolVersion.VS2017)
     );
+});
+
+Task("__Test")
+    .IsDependentOn("__Build")
+    .Does(() =>
+{
+    DotNetCoreTest("./source/Octopus.Tentacle.Tests/Octopus.Tentacle.Tests.csproj", new DotNetCoreTestSettings
+    {
+        Configuration = configuration,
+        NoBuild = true
+    });
 });
 
 Task("__SignBuiltFiles")
