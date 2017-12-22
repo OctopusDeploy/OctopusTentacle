@@ -22,7 +22,7 @@ namespace Octopus.Shared.Tests.Util
                 var arguments = @"/c exit 9999";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
-                var customEnvironmentVariables = new Dictionary<string, string>();
+                IDictionary<string, string> customEnvironmentVariables = null;
 
                 var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 

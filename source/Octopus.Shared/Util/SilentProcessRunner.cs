@@ -93,7 +93,7 @@ namespace Octopus.Shared.Util
                 var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
                 var runAsSameUser = runAs == default(NetworkCredential);
-                var runningAs = runAsSameUser ? $@"{WindowsIdentity.GetCurrent().Name}" : $@"{runAs.Domain}\{runAs.UserName}";
+                var runningAs = runAsSameUser ? $@"{WindowsIdentity.GetCurrent().Name}" : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
                 var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
                 var customEnvironmentVars =
                     hasCustomEnvironmentVariables
@@ -245,9 +245,12 @@ namespace Octopus.Shared.Util
         {
             // Accessing the ProcessStartInfo.EnvironmentVariables dictionary will pre-load the environment variables for the current process
             // Then we'll add/overwrite with the customEnvironmentVariables
-            foreach (var variable in customEnvironmentVariables)
+            if (customEnvironmentVariables != null && customEnvironmentVariables.Any())
             {
-                processStartInfo.EnvironmentVariables[variable.Key] = variable.Value;
+                foreach (var variable in customEnvironmentVariables)
+                {
+                    processStartInfo.EnvironmentVariables[variable.Key] = variable.Value;
+                }
             }
         }
 
