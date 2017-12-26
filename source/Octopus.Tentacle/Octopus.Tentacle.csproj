@@ -16,9 +16,8 @@
 
   <ItemGroup>
     <PackageReference Include="Octopus.Client" Version="4.24.0" />
-    <PackageReference Include="Halibut" Version="2.6.15" />
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
-    <PackageReference Include="Octopus.Shared" Version="4.0.4-core10" />
+    <PackageReference Include="Octopus.Shared" Version="4.0.5-core11" />
   </ItemGroup>
     
   <ItemGroup>
