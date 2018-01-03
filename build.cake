@@ -113,7 +113,13 @@ Task("__Clean")
 });
 
 Task("__Restore")
-    .Does(() => NuGetRestore("./source/Tentacle.sln"));
+    .Does(() => {
+        DotNetCoreRestore("./source/Tentacle.sln");
+        NuGetRestore(
+            "./source/Octopus.Manager.Tentacle/Octopus.Manager.Tentacle.csproj",
+            new NuGetRestoreSettings { PackagesDirectory = "./source/packages" }
+        );
+    });
 
 Task("__Build")
     .Does(() =>
