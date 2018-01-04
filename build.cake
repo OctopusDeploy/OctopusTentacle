@@ -283,6 +283,11 @@ Task("__CreateBinariesNuGet")
 
     // netcoreapp version
 
+    CreateDirectory($"{winCorePackageDir}/lib");
+    // This is still the NetFX build, but it is just used in the E2E tests.
+    CopyFileToDirectory($"./source/Octopus.Manager.Tentacle/bin/Octopus.Manager.Tentacle.exe", $"{winCorePackageDir}/lib");
+    CleanBinariesDirectory($"{winCorePackageDir}/lib");
+
     CreateDirectory($"{winCorePackageDir}/build/Tentacle");
 
     CopyFiles($"{coreWinPublishDir}/*", $"{winCorePackageDir}/build/Tentacle");
