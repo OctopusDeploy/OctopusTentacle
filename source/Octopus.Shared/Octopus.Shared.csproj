@@ -24,6 +24,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Startup\PathsToDeleteOnStartup.core.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Halibut" Version="3.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Autofac" Version="4.6.2" />
@@ -85,7 +89,8 @@
     <EmbeddedResource Include="Internals\Options\_Readme.txt" />
     <EmbeddedResource Include="Internals\CertificateGeneration\_Readme.txt" />
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
-    <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.txt" />
+    <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
+    <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
     <Compile Update="Startup\WindowsServiceAdapter.cs">
       <SubType>Component</SubType>
     </Compile>

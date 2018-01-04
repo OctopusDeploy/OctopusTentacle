@@ -1,6 +1,7 @@
 #if !NLOG_HAS_EVENT_LOG_TARGET
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using NLog;
 using NLog.Common;
