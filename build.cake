@@ -109,10 +109,7 @@ Task("__Clean")
 {
     CleanDirectories("./source/**/bin");
     CleanDirectories("./source/**/obj");
-    CleanDirectory(installerPackageDir);
-    CleanDirectory(binariesPackageDir);
-    CleanDirectory(installerDir);
-    CleanDirectory(artifactsDir);
+    CleanDirectory("./build");
 });
 
 Task("__Restore")
@@ -156,7 +153,7 @@ Task("__DotnetPublish")
             {
                 Framework = "netcoreapp2.0",
                 Configuration = configuration,
-                Runtime = "win-x64",
+                Runtime = "win7-x64",
                 OutputDirectory = coreWinPublishDir,
                 ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
             }

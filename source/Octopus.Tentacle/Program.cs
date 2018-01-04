@@ -3,8 +3,7 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using Autofac;
-using NLog;
-using NLog.Config;
+using NLog.Targets;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
@@ -40,11 +39,10 @@ namespace Octopus.Tentacle
 
         static int Main(string[] args)
         {
-#if NETCOREAPP2_0
-            LogManager.Configuration = new XmlLoggingConfiguration(Path.Combine(AppContext.BaseDirectory, "Tentacle.exe.nlog"), false);
-#endif
             return new Program(args).Run();
         }
+
+
 
         protected override IContainer BuildContainer(string instanceName)
         {

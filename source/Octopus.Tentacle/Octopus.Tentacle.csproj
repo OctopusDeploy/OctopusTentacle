@@ -17,7 +17,7 @@
   <ItemGroup>
     <PackageReference Include="Octopus.Client" Version="4.24.0" />
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
-    <PackageReference Include="Octopus.Shared" Version="4.0.5-core11" />
+    <PackageReference Include="Octopus.Shared" Version="4.0.5-core13" />
   </ItemGroup>
     
   <ItemGroup>
