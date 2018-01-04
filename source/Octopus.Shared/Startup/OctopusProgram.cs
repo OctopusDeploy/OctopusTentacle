@@ -210,6 +210,9 @@ namespace Octopus.Shared.Startup
 
         void InitializeLogging()
         {
+#if !NLOG_HAS_EVENT_LOG_TARGET
+            Target.Register<EventLogTarget>("EventLog");
+#endif
 #if REQUIRES_EXPLICIT_LOG_CONFIG
             var nLogFile = Path.ChangeExtension(GetType().Assembly.Location, "exe.nlog");
             LogManager.Configuration = new XmlLoggingConfiguration(nLogFile, false);
