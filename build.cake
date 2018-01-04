@@ -45,10 +45,6 @@ var cleanups = new List<Action>();
 Setup(context =>
 {
     context.Tools.RegisterFile("./signtool.exe");
-    CreateDirectory(installerPackageDir);
-    CreateDirectory(binariesPackageDir);
-    CreateDirectory(installerDir);
-    CreateDirectory(artifactsDir);
 });
 
 Teardown(context =>
@@ -110,6 +106,10 @@ Task("__Clean")
     CleanDirectories("./source/**/bin");
     CleanDirectories("./source/**/obj");
     CleanDirectory("./build");
+    CreateDirectory(installerPackageDir);
+    CreateDirectory(binariesPackageDir);
+    CreateDirectory(installerDir);
+    CreateDirectory(artifactsDir);
 });
 
 Task("__Restore")
