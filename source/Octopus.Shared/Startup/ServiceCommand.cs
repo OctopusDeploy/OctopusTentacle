@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
@@ -42,7 +43,7 @@ namespace Octopus.Shared.Startup
 
             var thisServiceName = ServiceName.GetWindowsServiceName(instanceSelector.GetCurrentInstance().ApplicationName, instanceSelector.GetCurrentInstance().InstanceName);
             var instance = instanceSelector.GetCurrentInstance().InstanceName;
-            var exePath = assemblyContainingService.FullLocalPath();
+            var exePath = Path.ChangeExtension(assemblyContainingService.FullLocalPath(), "exe");
 
             var serverInstaller = new ConfigureServiceHelper(log, thisServiceName, exePath, instance, serviceDescription, serviceConfigurationState);
 

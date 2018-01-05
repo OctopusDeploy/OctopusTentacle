@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
@@ -340,13 +341,60 @@ namespace Octopus.Shared.Startup
                 return new ConsoleHost(displayName);
             }
 
-            if (Environment.UserInteractive)
+            if (IsRunningAsAWindowsService(log))
             {
-                log.Trace("The program is running interactively; using a console host");
-                return new ConsoleHost(displayName);
+                log.Trace("The program is not running interactively; using a Windows Service host");
+                return new WindowsServiceHost();
             }
-            log.Trace("The program is not running interactively; using a Windows Service host");
-            return new WindowsServiceHost();
+
+            log.Trace("The program is running interactively; using a console host");
+            return new ConsoleHost(displayName);
+        }
+
+        private static bool IsRunningAsAWindowsService(ILog log)
+        {
+#if USER_INTERACTIVE_DOES_NOT_WORK
+            try
+            {
+                var child = Process.GetCurrentProcess();
+
+                var parentPid = 0;
+
+                var hnd = Kernel32.CreateToolhelp32Snapshot(Kernel32.TH32CS_SNAPPROCESS, 0);
+
+                if (hnd == IntPtr.Zero)
+                    return false;
+
+                var processInfo = new Kernel32.PROCESSENTRY32
+                {
+                    dwSize = (uint)Marshal.SizeOf(typeof(Kernel32.PROCESSENTRY32))
+                };
+
+                if (Kernel32.Process32First(hnd, ref processInfo) == false)
+                    return false;
+
+                do
+                {
+                    if (child.Id == processInfo.th32ProcessID)
+                        parentPid = (int)processInfo.th32ParentProcessID;
+                }
+                while (parentPid == 0 && Kernel32.Process32Next(hnd, ref processInfo));
+
+                if (parentPid <= 0)
+                    return false;
+
+                var parent =  Process.GetProcessById(parentPid);
+                return parent.ProcessName.ToLower() == "services";
+
+            }
+            catch (Exception ex)
+            {
+                log.Trace(ex, "Could not determine whether the parent process was the service host, assuming it isn't");
+                return false;
+            }
+#else
+            return !Environment.UserInteractive;
+#endif
         }
 
         static string[] ProcessCommonOptions(OptionSet commonOptions, string[] commandLineArguments, ILog log)
@@ -425,5 +473,36 @@ namespace Octopus.Shared.Startup
             log.TraceFormat("Disposing of the container");
             container.Dispose();
         }
+
+#if USER_INTERACTIVE_DOES_NOT_WORK
+        static class Kernel32
+        {
+            public static uint TH32CS_SNAPPROCESS = 2;
+
+            [StructLayout(LayoutKind.Sequential)]
+            public struct PROCESSENTRY32
+            {
+                public uint dwSize;
+                public uint cntUsage;
+                public uint th32ProcessID;
+                public IntPtr th32DefaultHeapID;
+                public uint th32ModuleID;
+                public uint cntThreads;
+                public uint th32ParentProcessID;
+                public int pcPriClassBase;
+                public uint dwFlags;
+                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string szExeFile;
+            };
+
+            [DllImport("kernel32.dll", SetLastError = true)]
+            public static extern IntPtr CreateToolhelp32Snapshot(uint dwFlags, uint th32ProcessID);
+
+            [DllImport("kernel32.dll")]
+            public static extern bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+
+            [DllImport("kernel32.dll")]
+            public static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+        }
+#endif
     }
 }
