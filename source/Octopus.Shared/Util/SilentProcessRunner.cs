@@ -23,15 +23,14 @@ namespace Octopus.Shared.Util
         {
             try
             {
-                CPINFOEX info;
-                if (GetCPInfoEx(CP_OEMCP, 0, out info))
-                {
-                    oemEncoding = Encoding.GetEncoding(info.CodePage);
-                }
-                else
-                {
-                    oemEncoding = Encoding.GetEncoding(850);
-                }
+
+                var codepage = GetCPInfoEx(CP_OEMCP, 0, out var info) ? info.CodePage : 850;
+#if REQUIRES_CODE_PAGE_PROVIDER
+                oemEncoding = CodePagesEncodingProvider.Instance.GetEncoding(codepage);
+#else
+                oemEncoding = Encoding.GetEncoding(codepage);
+#endif
+
             }
             catch (Exception ex)
             {
