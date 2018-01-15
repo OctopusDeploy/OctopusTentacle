@@ -312,7 +312,7 @@ namespace Octopus.Shared.Util
 
         public string RemoveInvalidFileNameChars(string path)
         {
-            var invalidChars = Path.GetInvalidPathChars();
+            var invalidChars = Path.GetInvalidFileNameChars();
             path = new string(path.Where(c => !invalidChars.Contains(c)).ToArray());
             return path;
         }
