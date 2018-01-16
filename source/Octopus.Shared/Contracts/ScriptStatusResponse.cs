@@ -13,9 +13,9 @@ namespace Octopus.Shared.Contracts
 
     public enum ProcessOutputSource
     {
-        Debug,
         StdOut,
-        StdErr
+        StdErr,
+        Debug
     }
 
     public class ProcessOutput
