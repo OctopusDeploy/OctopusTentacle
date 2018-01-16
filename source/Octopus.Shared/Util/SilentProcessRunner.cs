@@ -285,13 +285,7 @@ namespace Octopus.Shared.Util
 
             // Start by getting the environment variables for the target user (as if they started a process themselves)
             // This will get the system environment variables along with the user's profile variables
-            Dictionary<string, string> targetUserEnvironmentVariables;
-            using (var token = AccessToken.Logon(runAs.UserName, runAs.Password, runAs.Domain))
-            using (var userProfile = UserProfile.Load(token))
-            {
-                targetUserEnvironmentVariables = EnvironmentBlock.GetEnvironmentVariablesForUser(token, false);
-                userProfile.Unload();
-            }
+            var targetUserEnvironmentVariables = GetTargetUserEnvironmentVariables(runAs);
 
             // Now copy in the extra environment variables we want to propagate from this process
             foreach (var variable in customEnvironmentVariables)
@@ -305,6 +299,29 @@ namespace Octopus.Shared.Util
             {
                 startInfo.EnvironmentVariables[variable.Key] = variable.Value;
             }
+        }
+
+        private static readonly Dictionary<string, Dictionary<string, string>> EnvironmentVariablesForUserCache = new Dictionary<string, Dictionary<string, string>>();
+        
+        private static Dictionary<string, string> GetTargetUserEnvironmentVariables(NetworkCredential runAs)
+        {
+            var cacheKey = $"{runAs.Domain}\\{runAs.UserName}";
+            if (EnvironmentVariablesForUserCache.TryGetValue(cacheKey, out var cached))
+                return cached;
+
+            // We don't really need to worry about locking, multiple initialization shouldn't be a problem since the result should always be the same
+            Dictionary<string, string> targetUserEnvironmentVariables;
+            using (var token = AccessToken.Logon(runAs.UserName, runAs.Password, runAs.Domain))
+            using (var userProfile = UserProfile.Load(token))
+            {
+                targetUserEnvironmentVariables = EnvironmentBlock.GetEnvironmentVariablesForUser(token, false);
+                userProfile.Unload();
+            }
+
+            // Cache the target user's environment variables so we don't have to load them every time
+            // The downside is that once we target a certain user account, their variables are snapshotted in time
+            EnvironmentVariablesForUserCache[cacheKey] = targetUserEnvironmentVariables;
+            return targetUserEnvironmentVariables;
         }
 
         static void DoOurBestToCleanUp(Process process, Action<string> error)
