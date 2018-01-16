@@ -57,12 +57,18 @@ namespace Octopus.Shared.Tests.Util
             using (var principal = UserPrincipal.FindByIdentity(principalContext, IdentityType.Sid, Sid.Value))
             {
                 if (principal == null) throw new Exception($"Couldn't find a user account for {UserName} by the SID {Sid.Value}");
-                var group = GroupPrincipal.FindByIdentity(principalContext, IdentityType.Name, groupName);
-                if (group == null) throw new Exception($"Couldn't find a group with the name {groupName}");
-                group.Members.Add(principal);
-                group.Save();
-                return this;
+                using (var group = GroupPrincipal.FindByIdentity(principalContext, IdentityType.Name, groupName))
+                {
+                    if (group == null) throw new Exception($"Couldn't find a group with the name {groupName}");
+                    if (!group.Members.Contains(principal))
+                    {
+                        group.Members.Add(principal);
+                        group.Save();
+                    }
+                }
             }
+
+            return this;
         }
 
         public SecurityIdentifier Sid { get; }
