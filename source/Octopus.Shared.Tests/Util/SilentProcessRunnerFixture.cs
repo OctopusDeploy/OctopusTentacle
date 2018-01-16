@@ -13,6 +13,14 @@ namespace Octopus.Shared.Tests.Util
     [TestFixture]
     public class SilentProcessRunnerFixture
     {
+        private TestUserPrincipal user;
+
+        [SetUp]
+        public void SetUp()
+        {
+            user = new TestUserPrincipal("test-silentprocess");
+        }
+
         [Test]
         public void ExitCode_ShouldBeReturned()
         {
@@ -58,7 +66,6 @@ namespace Octopus.Shared.Tests.Util
         public void DebugLogging_ShouldContainDiagnosticsInfo_DifferentUser()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
-            using (var user = new TransientUserPrincipal())
             {
                 var command = "cmd.exe";
                 var arguments = @"/c echo %userdomain%\%username%";
@@ -104,7 +111,6 @@ namespace Octopus.Shared.Tests.Util
         public void RunningAsDifferentUser_ShouldCopySpecialEnvironmentVariables()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
-            using (var user = new TransientUserPrincipal())
             {
                 var command = "cmd.exe";
                 var arguments = @"/c echo %customenvironmentvariable%";
@@ -123,12 +129,35 @@ namespace Octopus.Shared.Tests.Util
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
         }
+
+        [Test]
+        public void RunningAsDifferentUser_ShouldWorkLotsOfTimes()
+        {
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120)))
+            for (int i = 0; i < 20; i++)
+            {
+                var command = "cmd.exe";
+                var arguments = @"/c echo %customenvironmentvariable%";
+                // Target the CommonApplicationData folder since this is a place the particular user can get to
+                var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+                var networkCredential = user.GetCredential();
+                var customEnvironmentVariables = new Dictionary<string, string>
+                {
+                    {"customenvironmentvariable", $"customvalue-{i}"}
+                };
+
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+
+                exitCode.Should().Be(0, "the process should have run to completion");
+                infoMessages.ToString().Should().ContainEquivalentOf($"customvalue-{i}", "the environment variable should have been copied to the child process");
+                errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
+            }
+        }
         
         [Test]
         public void RunningAsDifferentUser_CanWriteToItsOwnTempPath()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
-            using (var user = new TransientUserPrincipal())
             {
                 var command = "cmd.exe";
                 var arguments = @"/c echo hello > %temp%hello.txt";
@@ -228,7 +257,6 @@ namespace Octopus.Shared.Tests.Util
         public void RunAsDifferentUser_ShouldWork(string command, string arguments)
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
-            using (var user = new TransientUserPrincipal())
             {
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);

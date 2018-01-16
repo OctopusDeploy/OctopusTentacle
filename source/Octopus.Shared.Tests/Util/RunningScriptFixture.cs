@@ -21,6 +21,7 @@ namespace Octopus.Shared.Tests.Util
         IScriptWorkspace workspace;
         TestScriptLog scriptLog;
         RunningScript runningScript;
+        TestUserPrincipal user;
 
         [SetUp]
         public void SetUp()
@@ -36,6 +37,7 @@ namespace Octopus.Shared.Tests.Util
             scriptLog = new TestScriptLog();
             cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             runningScript = new RunningScript(workspace, scriptLog, taskId, cancellationTokenSource.Token);
+            user = new TestUserPrincipal("test-runningscript");
         }
 
         [TearDown]
@@ -107,30 +109,24 @@ namespace Octopus.Shared.Tests.Util
         [Retry(3)]
         public void RunAsDifferentUser_ShouldWork()
         {
-            using (var user = new TransientUserPrincipal())
-            {
-                workspace.BootstrapScript("Write-Host $env:userdomain\\$env:username");
-                workspace.RunAs = user.GetCredential();
-                runningScript.Execute();
-                runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
-                scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
-                scriptLog.StdOut.ToString().Should().ContainEquivalentOf($@"{user.DomainName}\{user.UserName}");
-            }
+            workspace.BootstrapScript("Write-Host $env:userdomain\\$env:username");
+            workspace.RunAs = user.GetCredential();
+            runningScript.Execute();
+            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
+            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
+            scriptLog.StdOut.ToString().Should().ContainEquivalentOf($@"{user.DomainName}\{user.UserName}");
         }
 
         [Test]
         [Retry(3)]
         public void RunAsDifferentUser_ShouldWork_TempPath()
         {
-            using (var user = new TransientUserPrincipal())
-            {
-                workspace.BootstrapScript("Write-Host Attempting to create a file in $env:temp\n\"hello\" | Out-File $env:temp\\hello.txt\ndir $env:temp");
-                workspace.RunAs = user.GetCredential();
-                runningScript.Execute();
-                runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
-                scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
-                scriptLog.StdOut.ToString().Should().ContainEquivalentOf("hello.txt", "the dir command should have logged the presence of the file we just wrote");
-            }
+            workspace.BootstrapScript("Write-Host Attempting to create a file in $env:temp\n\"hello\" | Out-File $env:temp\\hello.txt\ndir $env:temp");
+            workspace.RunAs = user.GetCredential();
+            runningScript.Execute();
+            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
+            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
+            scriptLog.StdOut.ToString().Should().ContainEquivalentOf("hello.txt", "the dir command should have logged the presence of the file we just wrote");
         }
 
         [Test]
@@ -163,16 +159,13 @@ namespace Octopus.Shared.Tests.Util
         [Retry(3)]
         public void RunAsDifferentUser_ShouldCopyCustomEnvironmentVariables()
         {
-            using (var user = new TransientUserPrincipal())
-            {
-                workspace.RunAs = user.GetCredential();
-                workspace.CustomEnvironmentVariables.Add("customenvironmentvariable", "customvalue");
-                workspace.BootstrapScript("Write-Host $env:customenvironmentvariable");
-                runningScript.Execute();
-                runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
-                scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
-                scriptLog.StdOut.ToString().Should().ContainEquivalentOf("customvalue");
-            }
+            workspace.RunAs = user.GetCredential();
+            workspace.CustomEnvironmentVariables.Add("customenvironmentvariable", "customvalue");
+            workspace.BootstrapScript("Write-Host $env:customenvironmentvariable");
+            runningScript.Execute();
+            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
+            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
+            scriptLog.StdOut.ToString().Should().ContainEquivalentOf("customvalue");
         }
     }
 }
