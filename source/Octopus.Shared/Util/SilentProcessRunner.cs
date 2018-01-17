@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -301,27 +302,51 @@ namespace Octopus.Shared.Util
             }
         }
 
+        private static readonly object EnvironmentVariablesCacheLock = new object();
+        private static IDictionary mostRecentMachineEnvironmentVariables = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
         private static readonly Dictionary<string, Dictionary<string, string>> EnvironmentVariablesForUserCache = new Dictionary<string, Dictionary<string, string>>();
-        
+
         private static Dictionary<string, string> GetTargetUserEnvironmentVariables(NetworkCredential runAs)
         {
             var cacheKey = $"{runAs.Domain}\\{runAs.UserName}";
-            if (EnvironmentVariablesForUserCache.TryGetValue(cacheKey, out var cached))
-                return cached;
 
-            // We don't really need to worry about locking, multiple initialization shouldn't be a problem since the result should always be the same
-            Dictionary<string, string> targetUserEnvironmentVariables;
-            using (var token = AccessToken.Logon(runAs.UserName, runAs.Password, runAs.Domain))
-            using (var userProfile = UserProfile.Load(token))
+            // Start with a pessimistic lock until such a time where we want more throughput for concurrent processes
+            // In the real world we shouldn't have too many processes wanting to run concurrently
+            lock (EnvironmentVariablesCacheLock)
             {
-                targetUserEnvironmentVariables = EnvironmentBlock.GetEnvironmentVariablesForUser(token, false);
-                userProfile.Unload();
-            }
+                // If the machine environment variables have changed we should invalidate the entire cache
+                InvalidateEnvironmentVariablesForUserCacheIfMachineEnvironmentVariablesHaveChanged();
 
-            // Cache the target user's environment variables so we don't have to load them every time
-            // The downside is that once we target a certain user account, their variables are snapshotted in time
-            EnvironmentVariablesForUserCache[cacheKey] = targetUserEnvironmentVariables;
-            return targetUserEnvironmentVariables;
+                // Otherwise the cache will generally be valid, except for the (hopefully) rare case where a variable was added/changed for the specific user
+                if (EnvironmentVariablesForUserCache.TryGetValue(cacheKey, out var cached))
+                    return cached;
+
+                Dictionary<string, string> targetUserEnvironmentVariables;
+                using (var token = AccessToken.Logon(runAs.UserName, runAs.Password, runAs.Domain))
+                using (var userProfile = UserProfile.Load(token))
+                {
+                    targetUserEnvironmentVariables = EnvironmentBlock.GetEnvironmentVariablesForUser(token, false);
+                    userProfile.Unload();
+                }
+
+                // Cache the target user's environment variables so we don't have to load them every time
+                // The downside is that once we target a certain user account, their variables are snapshotted in time
+                EnvironmentVariablesForUserCache[cacheKey] = targetUserEnvironmentVariables;
+                return targetUserEnvironmentVariables;
+            }
+        }
+
+        private static void InvalidateEnvironmentVariablesForUserCacheIfMachineEnvironmentVariablesHaveChanged()
+        {
+            var currentMachineEnvironmentVariables = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
+            var machineEnvironmentVariablesHaveChanged =
+                !currentMachineEnvironmentVariables.Cast<DictionaryEntry>().OrderBy(e => e.Key)
+                    .SequenceEqual(mostRecentMachineEnvironmentVariables.Cast<DictionaryEntry>().OrderBy(e => e.Key));
+            if (machineEnvironmentVariablesHaveChanged)
+            {
+                mostRecentMachineEnvironmentVariables = currentMachineEnvironmentVariables;
+                EnvironmentVariablesForUserCache.Clear();
+            }
         }
 
         static void DoOurBestToCleanUp(Process process, Action<string> error)
