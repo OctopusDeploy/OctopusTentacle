@@ -41,13 +41,13 @@ namespace Octopus.Tentacle.Services.FileTransfer
             // is a race condition doing it here. We could open here and
             // close in the DataStream lambda, but that risks leaving
             // the file open if the lambda isn't executed.
-            using (fileSystem.OpenFile(fullPath, FileAccess.Read, FileShare.Read))
+            using (fileSystem.OpenFile(fullPath, FileAccess.Read, FileShare.ReadWrite))
             {}
 
             return new DataStream(fileSize, writer =>
             {
                 log.Trace("Begin streaming file download: " + fullPath);
-                using (var stream = fileSystem.OpenFile(fullPath, FileAccess.Read, FileShare.Read))
+                using (var stream = fileSystem.OpenFile(fullPath, FileAccess.Read, FileShare.ReadWrite))
                 {
                     stream.CopyTo(writer);
                     writer.Flush();
