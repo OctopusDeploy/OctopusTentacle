@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Client;
@@ -32,7 +33,7 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public async Task ShouldNotContinueIfMultipleMatchesButAllowMultipleIsNotSupplied()
+        public void ShouldNotContinueIfMultipleMatchesButAllowMultipleIsNotSupplied()
         {
             const string expectedThumbPrint1 = "ABCDEFGHIJKLMNOP";
             const string expectedThumbPrint2 = "1234124123412344";
@@ -55,10 +56,9 @@ namespace Octopus.Tentacle.Tests.Commands
             };
             asyncRepository.Machines.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
-                
-            var result = Assert.Throws<ControlledFailureException>( async () => await Command.Deregister(asyncRepository));
 
-            Assert.That(result.Message.Equals(DeregisterMachineCommand.MultipleMatchErrorMsg));
+            Func<Task> exec = () => Command.Deregister(asyncRepository);
+            exec.ShouldThrow<ControlledFailureException>().WithMessage(DeregisterMachineCommand.MultipleMatchErrorMsg);
         }
 
         [Test]
