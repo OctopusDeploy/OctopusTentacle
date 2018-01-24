@@ -32,8 +32,6 @@ namespace Octopus.Shared.Configuration
                 return selector.GetCurrentInstance().Configuration;
             }).As<IKeyValueStore>().SingleInstance();
 
-            builder.RegisterType<UpgradeCheckConfiguration>().As<IUpgradeCheckConfiguration>().SingleInstance();
-
             builder.RegisterType<HomeConfiguration>()
                 .WithParameter("application", applicationName)
                 .As<IHomeConfiguration>()

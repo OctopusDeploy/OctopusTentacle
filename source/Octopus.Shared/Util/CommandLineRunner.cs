@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
@@ -32,8 +31,7 @@ namespace Octopus.Shared.Util
                     Environment.CurrentDirectory,
                     debug,
                     info,
-                    error,
-                    CancellationToken.None);
+                    error);
 
                 if (exitCode != 0)
                 {
