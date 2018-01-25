@@ -484,7 +484,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                         logger.Info("Getting available tenant tags...");
                         PotentialTenantTags = (await repository.TagSets.GetAll()).SelectMany(tt => tt.Tags.Select(t => t.CanonicalTagName)).ToArray();
 
-                        logger.Info("Getting available tenant tags...");
+                        logger.Info("Getting available tenants...");
                         PotentialTenants = (await repository.Tenants.GetAll()).Select(tt => tt.Name).ToArray();
                     }
 
