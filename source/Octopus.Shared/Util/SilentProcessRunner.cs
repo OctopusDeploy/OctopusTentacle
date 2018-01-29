@@ -21,13 +21,6 @@ namespace Octopus.Shared.Util
     public static class SilentProcessRunner
     {
 
-                if (GetCPInfoEx(CP_OEMCP, 0, out info))
-                {
-                    oemEncoding = Encoding.GetEncoding(info.CodePage);
-                else
-                    oemEncoding = Encoding.GetEncoding(850);
-#endif
-
         public static int ExecuteCommand(this CommandLineInvocation invocation, ILog log)
         {
             return ExecuteCommand(invocation, Environment.CurrentDirectory, log);
@@ -387,7 +380,13 @@ namespace Octopus.Shared.Util
                     const int dwFlags = 0;
                     const int CodePage850 = 850;
 
-                    return Encoding.GetEncoding(GetCPInfoEx(CP_OEMCP, dwFlags, out var info) ? info.CodePage : CodePage850);
+                    var codepage = GetCPInfoEx(CP_OEMCP, dwFlags, out var info) ? info.CodePage : CodePage850;
+
+#if REQUIRES_CODE_PAGE_PROVIDER
+                    return CodePagesEncodingProvider.Instance.GetEncoding(codepage);
+#else
+                    return Encoding.GetEncoding(codepage);
+#endif
                 }
                 catch
                 {

@@ -73,11 +73,13 @@ Task("__GitVersionAssemblies")
 
     RestoreFileOnCleanup(gitVersionFile);
 
+    Information("Getting version information and updating attributes");
     gitVersion = GitVersion(new GitVersionSettings {
         UpdateAssemblyInfo = true,
         UpdateAssemblyInfoFilePath = gitVersionFile
     });
 
+    Information("Setting BranchName and NuGetVersion");
     ReplaceRegexInFiles(gitVersionFile, "BranchName = \".*?\"", $"BranchName = \"{gitVersion.BranchName}\"");
     ReplaceRegexInFiles(gitVersionFile, "NuGetVersion = \".*?\"", $"NuGetVersion = \"{gitVersion.NuGetVersion}\"");
 });
