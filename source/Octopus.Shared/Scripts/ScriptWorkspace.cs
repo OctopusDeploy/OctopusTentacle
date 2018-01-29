@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Text;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Util;
@@ -19,11 +21,15 @@ namespace Octopus.Shared.Scripts
             BootstrapScriptFilePath = Path.Combine(workingDirectory, BootstrapScriptName);
         }
 
+        public NetworkCredential RunAs { get; set; }
+
+        public IDictionary<string, string> CustomEnvironmentVariables { get; set; } = new Dictionary<string, string>();
+
         public ScriptIsolationLevel IsolationLevel { get; set; }
 
         TimeSpan scriptMutexAcquireTimeout = ScriptIsolationMutex.NoTimeout;
         public TimeSpan ScriptMutexAcquireTimeout {
-            get { return scriptMutexAcquireTimeout; }
+            get => scriptMutexAcquireTimeout;
             set
             {
                 if (value == TimeSpan.Zero) // backwards compatability with old Server versions

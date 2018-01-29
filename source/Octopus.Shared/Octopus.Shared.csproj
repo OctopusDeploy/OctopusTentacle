@@ -23,6 +23,21 @@
     <DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
+    <PlatformTarget></PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Web\**" />
+    <EmbeddedResource Remove="Web\**" />
+    <None Remove="Web\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Remove="Startup\PathsToDeleteOnStartup.core.txt" />
   </ItemGroup>
@@ -31,6 +46,9 @@
     <PackageReference Include="Halibut" Version="3.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Autofac" Version="4.6.2" />
+    <PackageReference Include="Autofac" Version="3.5.2" />
+    <PackageReference Include="Halibut" Version="2.6.15" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58676" />
     <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58676" />
     <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58676" />
