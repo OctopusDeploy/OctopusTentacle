@@ -5,9 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-#if CAN_FIND_CHILD_PROCESSES
 using System.Management;
-#endif
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
@@ -22,6 +20,7 @@ namespace Octopus.Shared.Util
 {
     public static class SilentProcessRunner
     {
+
         public static int ExecuteCommand(this CommandLineInvocation invocation, ILog log)
         {
             return ExecuteCommand(invocation, Environment.CurrentDirectory, log);
@@ -381,7 +380,13 @@ namespace Octopus.Shared.Util
                     const int dwFlags = 0;
                     const int CodePage850 = 850;
 
-                    return Encoding.GetEncoding(GetCPInfoEx(CP_OEMCP, dwFlags, out var info) ? info.CodePage : CodePage850);
+                    var codepage = GetCPInfoEx(CP_OEMCP, dwFlags, out var info) ? info.CodePage : CodePage850;
+
+#if REQUIRES_CODE_PAGE_PROVIDER
+                    return CodePagesEncodingProvider.Instance.GetEncoding(codepage);
+#else
+                    return Encoding.GetEncoding(codepage);
+#endif
                 }
                 catch
                 {
@@ -423,7 +428,6 @@ namespace Octopus.Shared.Util
         {
             public static void TryKillProcessAndChildrenRecursively(int pid)
             {
-#if CAN_FIND_CHILD_PROCESSES
                 using (var searcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid))
                 {
                     using (var moc = searcher.Get())
@@ -434,7 +438,6 @@ namespace Octopus.Shared.Util
                         }
                     }
                 }
-#endif
 
                 try
                 {

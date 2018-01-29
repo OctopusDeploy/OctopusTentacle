@@ -25,7 +25,6 @@ namespace Octopus.Shared.Services
             var interval = 0;
             var instances = "*";
 
-#if WINDOWS_SERVICE
             using (var taskService = new TaskService())
             {
                 var taskDefinition = taskService.FindAllTasks(t => t.Name == taskName).SingleOrDefault()?.Definition;
@@ -41,17 +40,15 @@ namespace Octopus.Shared.Services
                     var action = taskDefinition.Actions.FirstOrDefault(x => x is ExecAction);
                     if (action != null)
                     {
-                        instances = ((ExecAction) action).Arguments.Replace(argsPrefix, "");
+                        instances = ((ExecAction)action).Arguments.Replace(argsPrefix, "");
                     }
                 }
             }
-#endif
             return new WatchdogConfiguration(enabled, interval, instances);
         }
 
         public void Delete()
         {
-#if WINDOWS_SERVICE
             using (var taskService = new TaskService())
             {
                 if (taskService.FindAllTasks(t => t.Name == taskName).SingleOrDefault() == null)
@@ -64,17 +61,13 @@ namespace Octopus.Shared.Services
                     log.Info($"Deleted scheduled task {taskName}");
                 }
             }
-#else
-            throw NotSupportedException("The watchdog is not supported on this platform");
-#endif
         }
 
         public void Create(string instanceNames, int interval)
         {
-#if WINDOWS_SERVICE
             using (var taskService = new TaskService())
             {
-                var taskDefinition = taskService.FindAllTasks(t => t.Name == taskName).SingleOrDefault()? .Definition;
+                var taskDefinition = taskService.FindAllTasks(t => t.Name == taskName).SingleOrDefault()?.Definition;
                 if (taskDefinition == null)
                 {
                     taskDefinition = taskService.NewTask();
@@ -88,7 +81,7 @@ namespace Octopus.Shared.Services
                     log.Info($"Updating scheduled task {taskName}");
                 }
 
-                
+
                 taskDefinition.Actions.Clear();
                 taskDefinition.Actions.Add(new ExecAction(Assembly.GetEntryAssembly().Location, argsPrefix + instanceNames));
 
@@ -101,9 +94,6 @@ namespace Octopus.Shared.Services
                 var task = taskService.RootFolder.RegisterTaskDefinition(taskName, taskDefinition);
                 task.Enabled = true;
             }
-#else
-            throw NotSupportedException("The watchdog is not supported on this platform");
-#endif
         }
     }
 }

@@ -21,6 +21,7 @@ namespace Octopus.Shared.Configuration
             try
             {
                 var proxy = configParser.ParseToWebProxy(proxyConfiguration);
+                var _ = WebRequest.DefaultWebProxy; // https://github.com/dotnet/corefx/issues/23886
                 WebRequest.DefaultWebProxy = proxy;
             }
             catch (DependencyResolutionException dre) when (dre.InnerException is ArgumentException)

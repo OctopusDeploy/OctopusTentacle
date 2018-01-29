@@ -9,8 +9,11 @@ namespace Octopus.Shared.Startup
     {
         readonly IOctopusFileSystem fileSystem;
         readonly ILog log;
-
-        public const string PathsToDeleteOnStartupResource = "Octopus.Shared.Startup.PathsToDeleteOnStartup.txt";
+#if NETFX
+        public const string PathsToDeleteOnStartupResource = "Octopus.Shared.Startup.PathsToDeleteOnStartup.netfx.txt";
+#else
+        public const string PathsToDeleteOnStartupResource = "Octopus.Shared.Startup.PathsToDeleteOnStartup.core.txt";
+#endif
 
         public FileSystemCleaner(IOctopusFileSystem fileSystem, ILog log)
         {

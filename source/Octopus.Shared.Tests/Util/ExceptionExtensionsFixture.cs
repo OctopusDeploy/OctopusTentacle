@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,10 +16,29 @@ namespace Octopus.Shared.Tests.Util
     public class ExceptionExtensionsFixture
     {
         static readonly Assent.Configuration configuration = new Assent.Configuration()
-            .UsingSanitiser(r => Regex.Replace(r, ":line [0-9]+", ":line <n>"))
+            .UsingSanitiser(new Sanitiser())
             .UsingNamer(new SubdirectoryNamer("Approved"));
 
+        static readonly string framework = string.Concat(RuntimeInformation.FrameworkDescription.Split(' ').Take(2));
+
         readonly AssentRunner assentRunner = new AssentRunner(configuration);
+        readonly AssentRunner assentFrameworkSpecificRunner = new AssentRunner(configuration.UsingNamer(new SubdirectoryNamer("Approved", framework)));
+
+        class Sanitiser : ISanitiser<string>
+        {
+            public string Sanatise(string recieved)
+            {
+                recieved = Regex.Replace(recieved, ":line [0-9]+", ":line <n>");
+                recieved = Regex.Replace(recieved, "__[0-9]+_", "__n_");
+                var lines = recieved.Split(new[] {'\n'})
+                    .Select(l => l.TrimEnd('\r'))
+                    .Where(l => !l.Contains(".nLoad"))
+                    .Where(l => !l.EndsWith("at System.Threading.Tasks.Task.WaitAll(Task[] tasks, Int32 millisecondsTimeout)"))
+                    .Where(l => !l.EndsWith("at System.Threading.Tasks.Task.WaitAll(Task[] tasks)"));
+
+                return string.Join("\r\n", lines);
+            }
+        }
 
         [Test]
         public async Task PrettyPrint_AsyncException()
@@ -29,7 +49,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                this.Assent(e.PrettyPrint(), configuration);
+                assentRunner.Assent(e.PrettyPrint(), configuration);
             }
         }
 
@@ -42,7 +62,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                this.Assent(e.PrettyPrint(), configuration);
+                assentFrameworkSpecificRunner.Assent(this, e.PrettyPrint());
             }
         }
 
@@ -111,7 +131,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                assentRunner.Assent(this, e.PrettyPrint());
+                assentFrameworkSpecificRunner.Assent(this, e.PrettyPrint());
             }
         }
 
@@ -124,7 +144,7 @@ namespace Octopus.Shared.Tests.Util
             }
             catch (Exception e)
             {
-                assentRunner.Assent(this, e.PrettyPrint());
+                assentFrameworkSpecificRunner.Assent(this, e.PrettyPrint());
             }
         }
 
