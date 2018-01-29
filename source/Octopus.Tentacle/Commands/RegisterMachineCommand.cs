@@ -215,7 +215,7 @@ namespace Octopus.Tentacle.Commands
             if (serverVersion.Version.Major == 0 || tentacleVersion.Version.Major == 0)
                 return;
 
-            if (serverVersion.Version.Major < tentacleVersion.Version.Major)
+            if (serverVersion.Version.Major < 3)
                 throw new ControlledFailureException($"You cannot register a {tentacleVersion.Version.Major}.* Octopus Tentacle with a {serverVersion.Version.Major}.* Octopus Server.");
         }
 
