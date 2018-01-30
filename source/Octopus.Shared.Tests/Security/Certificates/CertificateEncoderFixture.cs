@@ -2,6 +2,8 @@
 using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
+using FluentAssertions;
+using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Shared.Security.Certificates;
 
@@ -31,16 +33,15 @@ namespace Octopus.Shared.Tests.Security.Certificates
         }
 
         [Test]
-        [ExpectedException(typeof(CryptographicException), ExpectedMessage = "The specified network password is not correct.", MatchType = MessageMatch.StartsWith)]
         public void GivenPfxWithPasswordButDontUseItThenThrows()
         {
             // Given
             var pfxFilePath = GetPfxFilePath("TestCertificateWithPassword.pfx");
+            Action action = () => CertificateEncoder.FromPfxFile(pfxFilePath, "");
 
-            // When / Then
             try
-            {
-                CertificateEncoder.FromPfxFile(pfxFilePath, "");
+            { 
+                action.ShouldThrow<CryptographicException>().WithMessage("The specified network password is not correct*");
             }
             finally
             {
@@ -69,22 +70,22 @@ namespace Octopus.Shared.Tests.Security.Certificates
         }
 
         [Test]
-        [ExpectedException(typeof(CryptographicException), ExpectedMessage = "Unable to load X509 Certificate file. The X509 certificate file you provided does not include the private key. Please make sure the private key is included in your X509 certificate file and try again.")]
         public void GivenPfxWithOneCertWithoutPrivateKeyThenThrows()
         {
             // Given
             var pfxFilePath = GetPfxFilePath("TestCertificateNoPrivateKey.pfx");
 
-            // When / Then
+            Action action = () => CertificateEncoder.FromPfxFile(pfxFilePath, "Password01!");
+
             try
             {
-                CertificateEncoder.FromPfxFile(pfxFilePath, "Password01!");
+                action.ShouldThrow<CryptographicException>()
+                    .WithMessage("Unable to load X509 Certificate file. The X509 certificate file you provided does not include the private key. Please make sure the private key is included in your X509 certificate file and try again.");
             }
             finally
             {
                 File.Delete(pfxFilePath);
             }
-            Assert.Fail();
         }
 
         static string GetPfxFilePath(string pfxFileName)

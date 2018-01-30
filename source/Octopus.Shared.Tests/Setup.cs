@@ -7,7 +7,7 @@ namespace Octopus.Shared.Tests
     [SetUpFixture]
     public class Setup
     {
-        [SetUp]
+        [OneTimeSetUp]
         public void RunBeforeAnyTests()
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-AU");

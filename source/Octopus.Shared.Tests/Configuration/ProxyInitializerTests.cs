@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using NUnit.Framework;
 using Octopus.Shared.Configuration;

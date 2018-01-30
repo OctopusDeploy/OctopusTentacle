@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json;
 using Octopus.Shared.Model;
@@ -6,41 +7,51 @@ using Octopus.Shared.Security.Masking;
 
 namespace Octopus.Shared.Diagnostics
 {
-    public class LogContext 
+    [DebuggerDisplay("{CorrelationId}")]
+    public class LogContext
     {
         readonly string[] sensitiveValues;
         readonly string correlationId;
-        readonly SensitiveDataMask sensitiveDataMask;
+        readonly object sensitiveDataMaskLock = new object();
+        readonly Lazy<AhoCorasick> trie;
+        SensitiveDataMask sensitiveDataMask;
 
         [JsonConstructor]
         public LogContext(string correlationId = null, string[] sensitiveValues = null)
         {
             this.correlationId = correlationId ?? GenerateId();
             this.sensitiveValues = sensitiveValues ?? new string[0];
-            if (this.sensitiveValues.Any())
-            {
-                sensitiveDataMask = new SensitiveDataMask();
-                sensitiveDataMask.MaskInstancesOf(sensitiveValues);
-            }
+            trie = new Lazy<AhoCorasick>(CreateTrie);
         }
 
-        public string CorrelationId
+        private LogContext(string correlationId, string[] sensitiveValues, Lazy<AhoCorasick> trie)
         {
-            get { return correlationId; }
+            this.correlationId = correlationId;
+            this.sensitiveValues = sensitiveValues;
+            this.trie = trie;
         }
+
+        public string CorrelationId => correlationId;
 
         [Encrypted]
-        public string[] SensitiveValues
-        {
-            get { return sensitiveValues; }
-        }
+        public string[] SensitiveValues => sensitiveValues;
 
         public void SafeSanitize(string raw, Action<string> action)
         {
             try
             {
+                // JIT creation of sensitiveDataMask
+                if (sensitiveDataMask == null && sensitiveValues.Length > 0)
+                    lock (sensitiveDataMaskLock)
+                    {
+                        if (sensitiveDataMask == null && sensitiveValues.Length > 0)
+                        {
+                            sensitiveDataMask = new SensitiveDataMask();
+                        }
+                    }
+
                 if (sensitiveDataMask != null)
-                    sensitiveDataMask.ApplyTo(raw, action);
+                    sensitiveDataMask.ApplyTo(trie.Value, raw, action);
                 else
                     action(raw);
             }
@@ -50,51 +61,50 @@ namespace Octopus.Shared.Diagnostics
             }
         }
 
-        public LogContext CreateSibling()
+        public LogContext CreateChild(string[] sensitiveValues = null)
         {
-            return Parent().CreateChild();
-        }
+            var id = correlationId + '/' + GenerateId();
 
-        public LogContext Parent()
-        {
-            var lastSlash = correlationId.LastIndexOf('/');
-            if (lastSlash < 0)
-                return new LogContext();
+            if (sensitiveValues == null || sensitiveValues.Length == 0)
+            {
+                // Reuse parent trie
+                return new LogContext(id, this.sensitiveValues, trie);
+            }
 
-            return new LogContext(correlationId.Substring(0, lastSlash), sensitiveValues);
-        }
-
-        public LogContext CreateChild()
-        {
-            return new LogContext((correlationId + '/' + GenerateId()), sensitiveValues);
+            return new LogContext(id, this.sensitiveValues.Union(sensitiveValues).ToArray());
         }
 
         public LogContext WithSensitiveValues(string[] sensitiveValues)
         {
+            if (sensitiveValues == null || sensitiveValues.Length == 0)
+                return this;
             return new LogContext(correlationId, this.sensitiveValues.Union(sensitiveValues).ToArray());
-        }
-
-        static string GenerateId()
-        {
-            return Guid.NewGuid().ToString("N");
-        }
-
-        public static LogContext Null()
-        {
-            var correlationId = GenerateId();
-            return new LogContext(correlationId);
-        }
-
-        public static LogContext CreateNew(string correlationId)
-        {
-            if (correlationId == null) throw new ArgumentNullException("correlationId");
-            return new LogContext(correlationId);
         }
 
         public void Flush()
         {
-            sensitiveDataMask?.Flush();
+            sensitiveDataMask?.Flush(trie.Value);
         }
 
+        static string GenerateId() => Guid.NewGuid().ToString("N");
+
+        AhoCorasick CreateTrie()
+        {
+            if (sensitiveValues.Length == 0)
+                return null;
+
+            var trie = new AhoCorasick();
+            foreach (var instance in sensitiveValues)
+            {
+                if (string.IsNullOrWhiteSpace(instance) || instance.Length < 4)
+                    continue;
+
+                var normalized = instance.Replace("\r\n", "").Replace("\n", "");
+
+                trie.Add(normalized);
+            }
+            trie.Build();
+            return trie;
+        }
     }
 }

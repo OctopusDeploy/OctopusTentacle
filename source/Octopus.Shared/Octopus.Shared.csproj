@@ -3,8 +3,7 @@
     <RootNamespace>Octopus.Shared</RootNamespace>
     <AssemblyName>Octopus.Shared</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <TargetFrameworks>net45</TargetFrameworks>
-    <!--<TargetFrameworks>net45;netstandard2.0</TargetFrameworks>-->
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
     <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
@@ -13,75 +12,67 @@
     <PackageIconUrl>http://i.octopusdeploy.com/resources/Avatar3_360.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/OctopusDeploy/OctopusDeploy</PackageProjectUrl>
     <RepositoryUrl>https://github.com/OctopusDeploy/OctopusDeploy.git</RepositoryUrl>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <Optimize>True</Optimize>
+    <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
-  <DefineConstants>$(DefineConstants);WINDOWS_SERVICE;CAN_FIND_CHILD_PROCESSES;HAS_SECURITY_TOKEN_VALIDATION_EXCEPTION;HAS_STACK_TRACE_EX</DefineConstants>
+    <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-    <DefineConstants>$(DefineConstants)</DefineConstants>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK</DefineConstants>
   </PropertyGroup>
-  
+
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="3.5.2" />
-    <PackageReference Include="Halibut" Version="2.6.8" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58672" />
-    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58672" />
-    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58672" />
-    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58672" />
-    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58672" />
-    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58672" />
+    <Compile Remove="Web\**" />
+    <EmbeddedResource Remove="Web\**" />
+    <None Remove="Web\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Startup\PathsToDeleteOnStartup.core.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Halibut" Version="3.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="Autofac" Version="4.6.2" />
+    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58676" />
+    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58676" />
+    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58676" />
+    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58676" />
+    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58676" />
+    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58676" />
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
     <PackageReference Include="Octopus.Diagnostics" Version="1.0.12" />
-    <PackageReference Include="Octopus.Time" Version="1.0.9" />
-    <PackageReference Include="System.Collections" Version="4.0.11" />
-    <PackageReference Include="System.Runtime" Version="4.1.0" />
-    <PackageReference Include="System.Runtime.Extensions" Version="4.1.0" />
+    <PackageReference Include="Octopus.Time" Version="1.1.2" />
+    <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETStandard' ">
-    <PackageReference Include="Autofac" Version="4.6.0" />
-    <PackageReference Include="Microsoft.Win32.Registry" Version="4.4.0-preview1-25305-02" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.3.1" />
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.3.0" />
-    <PackageReference Include="System.Security.AccessControl" Version="4.4.0-preview1-25305-02" />
-    <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.4.0-preview1-25305-02" />
-    <PackageReference Include="NLog" Version="5.0.0-beta09" />
-    <PackageReference Include="Nito.AsyncEx" Version="5.0.0-pre-02" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.4.0" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0-preview1-25914-04" />
+    <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.5.0-preview1-25914-04" />
+    <PackageReference Include="System.Management" Version="4.5.0-preview1-25914-04" />
+    <PackageReference Include="NLog" Version="4.5.0-rc04" />
+    <PackageReference Include="Nito.AsyncEx" Version="5.0.0-pre-05" />
+    <PackageReference Include="System.Diagnostics.EventLog" Version="4.5.0-preview1-25914-04" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="4.5.0-preview1-25914-04" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-    <PackageReference Include="Autofac" Version="3.5.2" />
     <PackageReference Include="NLog" Version="4.0.1" />
     <PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
-    <PackageReference Include="TaskScheduler" Version="2.5.21" />
-    <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Data.Services.Client" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.IdentityModel" />
-    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Management" />
-    <Reference Include="System.Net" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.Caching" />
-    <Reference Include="System.Security" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="WindowsBase" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>
@@ -92,15 +83,10 @@
     <EmbeddedResource Include="Internals\Options\_Readme.txt" />
     <EmbeddedResource Include="Internals\CertificateGeneration\_Readme.txt" />
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
-  </ItemGroup>
-  
-  <ItemGroup>
+    <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
+    <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
     <Compile Update="Startup\WindowsServiceAdapter.cs">
       <SubType>Component</SubType>
     </Compile>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="Web\" />
   </ItemGroup>
 </Project>

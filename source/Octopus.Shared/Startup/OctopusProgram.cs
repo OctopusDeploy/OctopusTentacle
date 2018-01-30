@@ -3,10 +3,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
 using NLog;
+using NLog.Config;
 using NLog.Targets;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
@@ -73,8 +75,13 @@ namespace Octopus.Shared.Startup
 
         public int Run()
         {
+            var delayedLog = new DelayedLog();
+            // Need to clean up old files before anything else as they may interfere with initialization
+            CleanFileSystem(delayedLog);
+
             // Initialize logging as soon as possible - waiting for the Container to be built is too late
             InitializeLogging();
+            delayedLog.FlushTo(Log.System());
 
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
@@ -197,8 +204,22 @@ namespace Octopus.Shared.Startup
             return exitCode;
         }
 
-        static void InitializeLogging()
+        static void CleanFileSystem(ILog log)
         {
+            var fileSystem = new OctopusPhysicalFileSystem();
+            var fileSystemCleaner = new FileSystemCleaner(fileSystem, log);
+            fileSystemCleaner.Clean(FileSystemCleaner.PathsToDeleteOnStartupResource);
+        }
+
+        void InitializeLogging()
+        {
+#if !NLOG_HAS_EVENT_LOG_TARGET
+            Target.Register<EventLogTarget>("EventLog");
+#endif
+#if REQUIRES_EXPLICIT_LOG_CONFIG
+            var nLogFile = Path.ChangeExtension(GetType().Assembly.Location, "exe.nlog");
+            LogManager.Configuration = new XmlLoggingConfiguration(nLogFile, false);
+#endif
             Log.Appenders.Add(new NLogAppender());
             AssertLoggingConfigurationIsCorrect();
         }
@@ -322,17 +343,59 @@ namespace Octopus.Shared.Startup
                 return new ConsoleHost(displayName);
             }
 
-#if WINDOWS_SERVICE
-            if (Environment.UserInteractive)
+            if (IsRunningAsAWindowsService(log))
             {
-                log.Trace("The program is running interactively; using a console host");
-                return new ConsoleHost(displayName);
+                log.Trace("The program is not running interactively; using a Windows Service host");
+                return new WindowsServiceHost();
             }
-            log.Trace("The program is not running interactively; using a Windows Service host");
-            return new WindowsServiceHost();
-#else
-            log.Trace("The current runtime does not support Windows Services; using a console host");
+
+            log.Trace("The program is running interactively; using a console host");
             return new ConsoleHost(displayName);
+        }
+
+        private static bool IsRunningAsAWindowsService(ILog log)
+        {
+#if USER_INTERACTIVE_DOES_NOT_WORK
+            try
+            {
+                var child = Process.GetCurrentProcess();
+
+                var parentPid = 0;
+
+                var hnd = Kernel32.CreateToolhelp32Snapshot(Kernel32.TH32CS_SNAPPROCESS, 0);
+
+                if (hnd == IntPtr.Zero)
+                    return false;
+
+                var processInfo = new Kernel32.PROCESSENTRY32
+                {
+                    dwSize = (uint)Marshal.SizeOf(typeof(Kernel32.PROCESSENTRY32))
+                };
+
+                if (Kernel32.Process32First(hnd, ref processInfo) == false)
+                    return false;
+
+                do
+                {
+                    if (child.Id == processInfo.th32ProcessID)
+                        parentPid = (int)processInfo.th32ParentProcessID;
+                }
+                while (parentPid == 0 && Kernel32.Process32Next(hnd, ref processInfo));
+
+                if (parentPid <= 0)
+                    return false;
+
+                var parent =  Process.GetProcessById(parentPid);
+                return parent.ProcessName.ToLower() == "services";
+
+            }
+            catch (Exception ex)
+            {
+                log.Trace(ex, "Could not determine whether the parent process was the service host, assuming it isn't");
+                return false;
+            }
+#else
+            return !Environment.UserInteractive;
 #endif
         }
 
@@ -412,5 +475,36 @@ namespace Octopus.Shared.Startup
             log.TraceFormat("Disposing of the container");
             container.Dispose();
         }
+
+#if USER_INTERACTIVE_DOES_NOT_WORK
+        static class Kernel32
+        {
+            public static uint TH32CS_SNAPPROCESS = 2;
+
+            [StructLayout(LayoutKind.Sequential)]
+            public struct PROCESSENTRY32
+            {
+                public uint dwSize;
+                public uint cntUsage;
+                public uint th32ProcessID;
+                public IntPtr th32DefaultHeapID;
+                public uint th32ModuleID;
+                public uint cntThreads;
+                public uint th32ParentProcessID;
+                public int pcPriClassBase;
+                public uint dwFlags;
+                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string szExeFile;
+            };
+
+            [DllImport("kernel32.dll", SetLastError = true)]
+            public static extern IntPtr CreateToolhelp32Snapshot(uint dwFlags, uint th32ProcessID);
+
+            [DllImport("kernel32.dll")]
+            public static extern bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+
+            [DllImport("kernel32.dll")]
+            public static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+        }
+#endif
     }
 }
