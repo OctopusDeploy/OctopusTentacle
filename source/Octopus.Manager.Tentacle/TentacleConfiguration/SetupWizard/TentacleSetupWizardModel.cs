@@ -600,6 +600,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
             if (IsTentacleActive)
             {
+                ProxyWizardModel.Executable = TentacleExe;
                 foreach (var script in ProxyWizardModel.GenerateScript())
                 {
                     yield return script;
