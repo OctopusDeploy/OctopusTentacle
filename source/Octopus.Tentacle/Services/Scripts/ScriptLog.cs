@@ -73,8 +73,12 @@ namespace Octopus.Tentacle.Services.Scripts
             {
                 case ProcessOutputSource.StdErr:
                     return "stderr";
-                default:
+                case ProcessOutputSource.Debug:
+                    return "debug";
+                case ProcessOutputSource.StdOut:
                     return "stdout";
+                default:
+                    throw new NotSupportedException($"The {nameof(ProcessOutputSource)} option of '{source}' is not understood yet. Update the {nameof(ScriptLog)}.{nameof(SourceToString)} method so it can process these messages succssfully.");
             }
         }
 
@@ -84,8 +88,12 @@ namespace Octopus.Tentacle.Services.Scripts
             {
                 case "stderr":
                     return ProcessOutputSource.StdErr;
-                default:
+                case "stdout":
                     return ProcessOutputSource.StdOut;
+                case "debug":
+                    return ProcessOutputSource.Debug;
+                default:
+                    throw new NotSupportedException($"The source '{source}' is not understood yet. Update the {nameof(ScriptLog)}.{nameof(StringToSource)} method so it can process these messages succssfully.");
             }
         }
 

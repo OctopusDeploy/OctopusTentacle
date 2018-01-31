@@ -112,7 +112,7 @@ namespace Octopus.Tentacle.Commands
 
             log.Info($"Registering the tentacle with the server at {api.ServerUri}");
 
-            using (var client = await octopusClientInitializer.CreateAsyncClient(api, proxyOverride))
+            using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
                 await RegisterMachine(client.Repository, serverAddress, sslThumbprint, communicationStyle);
             }
