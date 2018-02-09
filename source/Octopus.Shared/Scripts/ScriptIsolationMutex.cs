@@ -5,6 +5,7 @@ using System.Threading;
 using Nito.AsyncEx;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Scripts
 {
@@ -159,7 +160,7 @@ namespace Octopus.Shared.Scripts
 
             void Busy()
             {
-                taskLog($"Cannot start this task yet because {taskLock.Report()} tasks are currently running and this task cannot be run in conjunction with any other tasks. Please wait...");
+                taskLog.WriteWait($"Cannot start this task yet because {taskLock.Report()} tasks are currently running and this task cannot be run in conjunction with any other tasks. Please wait...");
             }
 
             void Canceled()
