@@ -45,7 +45,7 @@
     <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58676" />
     <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58676" />
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
-    <PackageReference Include="Octopus.Diagnostics" Version="1.0.12" />
+    <PackageReference Include="Octopus.Diagnostics" Version="1.2.0" />
     <PackageReference Include="Octopus.Time" Version="1.1.2" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
