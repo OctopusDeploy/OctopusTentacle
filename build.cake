@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
-#tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
+#tool "nuget:?package=GitVersion.CommandLine&version=3.6.5"
 
 #addin nuget:?package=Cake.FileHelpers&version=2.0.0
 
@@ -39,7 +39,7 @@ Teardown(context =>
     foreach(var cleanup in cleanups)
         cleanup();
 
-    Information("Finished running tasks for build v{0}", gitVersion.NuGetVersion);
+    Information("Finished running tasks for build v{0}", gitVersion?.NuGetVersion);
 });
 
 
@@ -68,19 +68,28 @@ Task("__Version")
 Task("__GitVersionAssemblies")
     .Does(() =>
 {
-    var gitVersionFile = "./source/Solution Items/VersionInfo.cs";
+    try
+    {
+        var gitVersionFile = "./source/Solution Items/VersionInfo.cs";
 
-    RestoreFileOnCleanup(gitVersionFile);
+        RestoreFileOnCleanup(gitVersionFile);
 
-    Information("Getting version information and updating attributes");
-    gitVersion = GitVersion(new GitVersionSettings {
-        UpdateAssemblyInfo = true,
-        UpdateAssemblyInfoFilePath = gitVersionFile
-    });
+        Information("Getting version information and updating attributes");
+        gitVersion = GitVersion(new GitVersionSettings {
+            UpdateAssemblyInfo = true,
+            UpdateAssemblyInfoFilePath = gitVersionFile,
+            OutputType = GitVersionOutput.Json
+        });
 
-    Information("Setting BranchName and NuGetVersion");
-    ReplaceRegexInFiles(gitVersionFile, "BranchName = \".*?\"", $"BranchName = \"{gitVersion.BranchName}\"");
-    ReplaceRegexInFiles(gitVersionFile, "NuGetVersion = \".*?\"", $"NuGetVersion = \"{gitVersion.NuGetVersion}\"");
+        Information("Setting BranchName and NuGetVersion");
+        ReplaceRegexInFiles(gitVersionFile, "BranchName = \".*?\"", $"BranchName = \"{gitVersion.BranchName}\"");
+        ReplaceRegexInFiles(gitVersionFile, "NuGetVersion = \".*?\"", $"NuGetVersion = \"{gitVersion.NuGetVersion}\"");
+    }
+    catch(Exception ex)
+    {
+        Error("Exception " + ex);
+        throw;
+    }
 });
 
 Task("__Clean")
@@ -168,7 +177,14 @@ private void RestoreFileOnCleanup(string file)
     var contents = System.IO.File.ReadAllBytes(file);
     cleanups.Add(() => {
         Information("Restoring {0}", file);
-        System.IO.File.WriteAllBytes(file, contents);
+        try
+        {
+            System.IO.File.WriteAllBytes(file, contents);
+        }
+        catch(Exception ex)
+        {
+            Warning("Could not restore {0}: {1}", file, ex);
+        }
     });
 }
 
