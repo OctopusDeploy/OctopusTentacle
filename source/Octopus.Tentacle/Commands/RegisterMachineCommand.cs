@@ -41,6 +41,7 @@ namespace Octopus.Tentacle.Commands
         string proxy;
         string serverWebSocketAddress;
         int? tentacleCommsPort = null;
+        TenantedDeploymentMode tenantedDeploymentMode;
 
         public RegisterMachineCommand(Lazy<IRegisterMachineOperation> lazyRegisterMachineOperation, 
                                       Lazy<ITentacleConfiguration> configuration, 
@@ -73,6 +74,14 @@ namespace Octopus.Tentacle.Commands
             Options.Add("server-comms-port=", "When using active communication, the comms port on the Octopus server; the default is " + serverCommsPort, s => serverCommsPort = int.Parse(s));
             Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
             Options.Add("tentacle-comms-port=", "When using passive communication, the comms port that the Octopus server is instructed to call back on to reach this machine; defaults to the configured listening port", s => tentacleCommsPort = int.Parse(s));
+            Options.Add("tenanted-deployment-participation=", $"How the machine should participate in tenanted deployments. Allowed values are {Enum.GetNames(typeof(TenantedDeploymentMode)).ReadableJoin()}.", s =>
+            {
+                if (Enum.TryParse<TenantedDeploymentMode>(s, out var result))
+                    tenantedDeploymentMode = result;
+                else
+                    throw new ControlledFailureException($"The value '{s}' is not valid. Valid values are {Enum.GetNames(typeof(TenantedDeploymentMode)).ReadableJoin()}.");
+            });
+
         }
 
         protected override void Start()
@@ -157,6 +166,7 @@ namespace Octopus.Tentacle.Commands
             registerMachineOperation.MachinePolicy = policy;
             registerMachineOperation.AllowOverwrite = allowOverwrite;
             registerMachineOperation.CommunicationStyle = communicationStyle;
+            registerMachineOperation.TenantedDeploymentParticipation = tenantedDeploymentMode;
 
             await registerMachineOperation.ExecuteAsync(repository);
 
