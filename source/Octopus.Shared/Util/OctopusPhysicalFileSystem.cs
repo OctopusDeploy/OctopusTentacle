@@ -424,13 +424,20 @@ namespace Octopus.Shared.Util
 
         public string GetFullPath(string relativeOrAbsoluteFilePath)
         {
-            if (!Path.IsPathRooted(relativeOrAbsoluteFilePath))
+            try
             {
-                relativeOrAbsoluteFilePath = Path.Combine(Environment.CurrentDirectory, relativeOrAbsoluteFilePath);
-            }
+                if (!Path.IsPathRooted(relativeOrAbsoluteFilePath))
+                {
+                    relativeOrAbsoluteFilePath = Path.Combine(Environment.CurrentDirectory, relativeOrAbsoluteFilePath);
+                }
 
-            relativeOrAbsoluteFilePath = Path.GetFullPath(relativeOrAbsoluteFilePath);
-            return relativeOrAbsoluteFilePath;
+                relativeOrAbsoluteFilePath = Path.GetFullPath(relativeOrAbsoluteFilePath);
+                return relativeOrAbsoluteFilePath;
+            }
+            catch (ArgumentException e)
+            {
+                throw new ArgumentException($"Error processing path {relativeOrAbsoluteFilePath}. If the path was quoted check you are not accidentally escaping the closing quote with a \\ character. Otherwise ensure the path does not contain any illegal characters.", e);
+            }
         }
 
         /// <summary>
