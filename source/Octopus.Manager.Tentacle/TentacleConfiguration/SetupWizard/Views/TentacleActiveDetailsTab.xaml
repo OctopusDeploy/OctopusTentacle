@@ -22,9 +22,14 @@
                 <Run>This machine will be registered with your Octopus Server using the details below.</Run>
             </TextBlock>
 
-            <controls:ControlGroup Header="Machine name" Target="{Binding ElementName=MachineNameTextBox}">
+            <controls:ControlGroup Header="Display name" Target="{Binding ElementName=MachineNameTextBox}">
                 <TextBox Text="{Binding Path=MachineName, UpdateSourceTrigger=PropertyChanged}" Name="MachineNameTextBox" Width="200" />
                 <controls:ErrorMessage ErrorPath="MachineName" />
+            </controls:ControlGroup>
+
+            <controls:ControlGroup Header="Overwrite" Target="{Binding ElementName=EnvironmentComboBox}">
+                <CheckBox IsChecked="{Binding Path=OverwriteExistingMachine, UpdateSourceTrigger=PropertyChanged}" Margin="0,7,0,5"></CheckBox>
+                <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Overwrite an existing machine with the same name" />
             </controls:ControlGroup>
 
             <controls:ControlGroup Header="Environment" Target="{Binding ElementName=EnvironmentComboBox}">

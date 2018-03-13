@@ -35,11 +35,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string selectedTenants;
         string selectedMachinePolicy;
         string[] potentialEnvironments;
+        string[] activeMachines;
         string[] potentialRoles;
         string[] potentialMachinePolicies;
         string[] potentialTenantTags;
         string[] potentialTenants;
         string machineName;
+        bool overwriteExistingMachine;
         string homeDirectory;
         string applicationInstallDirectory;
         string pathToConfig;
@@ -362,6 +364,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
+        public bool OverwriteExistingMachine
+        {
+            get => overwriteExistingMachine;
+            set
+            {
+                if (value == overwriteExistingMachine) return;
+                overwriteExistingMachine = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string OctopusThumbprint
         {
             get => octopusThumbprint;
@@ -478,6 +491,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     logger.Info("Getting available environments...");
                     PotentialEnvironments = (await repository.Environments.GetAll()).Select(e => e.Name).ToArray();
 
+                    activeMachines = (await repository.Machines.FindAll()).Select(e => e.Name).ToArray();
+
                     AreTenantsSupported = repository.Client.RootDocument.HasLink("Tenants");
                     if (AreTenantsSupported)
                     {
@@ -550,12 +565,20 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             });
             validator.RuleSet("TentacleActiveDetails", delegate
             {
-                validator.RuleFor(m => m.MachineName).NotEmpty().WithMessage("Please enter a machine name");
+                validator.RuleFor(m => m.MachineName).NotEmpty().WithMessage("Please enter a display name");
+                validator.RuleFor(m => m.MachineName).Must(IsMachineNameValid).WithMessage("A deployment target with this name already exists, select the Overwrite option to replace the existing target.");
                 validator.RuleFor(m => m.SelectedRoles).NotEmpty().WithMessage("Please select or enter at least one role");
                 validator.RuleFor(m => m.SelectedEnvironment).NotEmpty().WithMessage("Please select an environment");
                 //validator.RuleFor(m => m.SelectedMachinePolicy).NotEmpty().WithMessage("Please select a machine policy");
             });
             return validator;
+        }
+
+        bool IsMachineNameValid(string machineNameValue)
+        {
+            if (overwriteExistingMachine) return true;
+
+            return !activeMachines.Contains(machineNameValue, StringComparer.InvariantCultureIgnoreCase);
         }
 
         bool BeAValidUrl(string s)
@@ -610,8 +633,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     .Argument("server", OctopusServerUrl)
                     .Argument("name", machineName)
                     .Argument("comms-style", CommunicationStyle.TentacleActive)
-                    .Argument("server-comms-port", serverCommsPort)
-                    .Flag("force");
+                    .Argument("server-comms-port", serverCommsPort);
+
+                if (overwriteExistingMachine)
+                    register = register.Flag("force");
 
                 if (!string.IsNullOrWhiteSpace(serverWebSocket))
                     register = register.Argument("server-web-socket", serverWebSocket);
