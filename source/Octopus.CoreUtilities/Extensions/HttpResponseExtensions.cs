@@ -1,7 +1,6 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 
-namespace Octopus.Core.Extensions
+namespace Octopus.CoreUtilities.Extensions
 {
     public static class HttpResponseExtensions
     {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Octopus.Core.Extensions
+namespace Octopus.CoreUtilities.Extensions
 {
     public static class EnumerableExtensions
     {

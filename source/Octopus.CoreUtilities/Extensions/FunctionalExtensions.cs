@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Octopus.Core.Extensions
+namespace Octopus.CoreUtilities.Extensions
 {
     /// <summary>
     /// https://davefancher.com/2015/06/14/functional-c-fluent-interfaces-and-functional-method-chaining/
