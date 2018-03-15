@@ -10,5 +10,6 @@
     <RepositoryUrl>https://github.com/OctopusDeploy/CoreUtilities</RepositoryUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Copyright>Copyright © Octopus Deploy 2017</Copyright>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 </Project>
