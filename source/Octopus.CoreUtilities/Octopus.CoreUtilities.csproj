@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net40</TargetFrameworks>
     <AssemblyName>Octopus.CoreUtilities</AssemblyName>
     <PackageId>Octopus.CoreUtilities</PackageId>
     <PackageIconUrl>http://i.octopusdeploy.com/resources/Avatar3_360.png</PackageIconUrl>
