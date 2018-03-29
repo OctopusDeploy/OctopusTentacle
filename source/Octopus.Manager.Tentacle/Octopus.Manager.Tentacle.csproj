@@ -119,7 +119,7 @@
       <HintPath>..\packages\Octopus.Diagnostics.1.2.0\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Shared, Version=4.2.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Shared.4.2.3-enh-logcmdlineargum6\lib\net45\Octopus.Shared.dll</HintPath>
+      <HintPath>..\packages\Octopus.Shared.4.2.3-enh-logcmdlineargum8\lib\net45\Octopus.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Time.1.1.2\lib\netstandard1.0\Octopus.Time.dll</HintPath>
