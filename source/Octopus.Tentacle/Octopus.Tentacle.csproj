@@ -17,7 +17,7 @@
   <ItemGroup>
     <PackageReference Include="Octopus.Client" Version="4.31.0" />
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
-    <PackageReference Include="Octopus.Shared" Version="4.2.2" />
+    <PackageReference Include="Octopus.Shared" Version="4.2.3-enh-logcmdlineargum6" />
   </ItemGroup>
     
   <ItemGroup>

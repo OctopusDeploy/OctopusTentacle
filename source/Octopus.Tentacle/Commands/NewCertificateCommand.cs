@@ -35,7 +35,7 @@ namespace Octopus.Tentacle.Commands
             Options.Add("b|if-blank", "Generates a new certificate only if there is none", v => preserve = true);
             Options.Add("e|export-file=", "DEPRECATED: Exports a new certificate to the specified file as unprotected base64 text, but does not save it to the Tentacle configuration; for use with the import-certificate command", v => exportFile = v);
             Options.Add("export-pfx=", "Exports the new certificate to the specified file as a password protected pfx, but does not save it to the Tentacle configuration; for use with the import-certificate command", v => exportPfx = v);
-            Options.Add("pfx-password=", "The password to use for the exported pfx file", v => password = v);
+            Options.Add("pfx-password=", "The password to use for the exported pfx file", v => password = v, sensitive: true);
         }
 
         protected override void Start()
