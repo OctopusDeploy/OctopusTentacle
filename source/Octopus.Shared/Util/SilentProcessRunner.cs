@@ -15,6 +15,7 @@ using System.Threading;
 using Microsoft.Win32.SafeHandles;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Util
 {
@@ -73,7 +74,7 @@ namespace Octopus.Shared.Util
             IDictionary<string, string> customEnvironmentVariables = null,
             CancellationToken cancel = default(CancellationToken))
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, Log.System().Info, info, error, runAs, customEnvironmentVariables, cancel);
+            return ExecuteCommand(executable, arguments, workingDirectory, LogFileOnlyLogger.Info, info, error, runAs, customEnvironmentVariables, cancel);
         }
 
         public static int ExecuteCommand(

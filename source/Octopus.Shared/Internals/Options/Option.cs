@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 
 namespace Octopus.Shared.Internals.Options
 {
@@ -78,6 +79,7 @@ namespace Octopus.Shared.Internals.Options
 
         internal string[] ValueSeparators { get; set; }
         public bool Hide { get; set; }
+        public bool Sensitive { get; set; }
 
         public string[] GetNames()
         {
@@ -191,10 +193,13 @@ namespace Octopus.Shared.Internals.Options
         public void Invoke(OptionContext c)
         {
             OnParseComplete(c);
+            Values = c.OptionValues.ToArray();
             c.OptionName = null;
             c.Option = null;
             c.OptionValues.Clear();
         }
+
+        public string[] Values { get; private set; } = new string[0];
 
         protected abstract void OnParseComplete(OptionContext c);
 

@@ -116,7 +116,7 @@ namespace Octopus.Shared.Internals.Options
             return Add(prototype, null, action);
         }
 
-        public OptionSet Add(string prototype, string description, Action<string> action, bool hide = false)
+        public OptionSet Add(string prototype, string description, Action<string> action, bool hide = false, bool sensitive = false)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
@@ -126,6 +126,7 @@ namespace Octopus.Shared.Internals.Options
                     action(v[0]);
                 });
             p.Hide = hide;
+            p.Sensitive = sensitive;
             base.Add(p);
             return this;
         }

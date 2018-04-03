@@ -1,6 +1,6 @@
-using System;
+using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Util;
+using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration
 {
@@ -8,7 +8,7 @@ namespace Octopus.Shared.Configuration
     {
         readonly ILoggingConfiguration configuration;
 
-        public LogInitializer(ILoggingConfiguration configuration, IOctopusFileSystem fileSystem)
+        public LogInitializer(ILoggingConfiguration configuration)
         {
             this.configuration = configuration;
         }
@@ -24,7 +24,18 @@ namespace Octopus.Shared.Configuration
             var logDirectory = configuration.LogsDirectory;
             if (logDirectory == null) return;
 
-            OctopusLogsDirectoryRenderer.SetLogsDirectory(logDirectory);
+            var previousLogDirectory = OctopusLogsDirectoryRenderer.LogsDirectory;
+            if (previousLogDirectory != logDirectory)
+            {
+                //log to the old log file that we are now logging somewhere else
+                LogFileOnlyLogger.Info($"Changing log folder from {previousLogDirectory} to {logDirectory}");
+
+                OctopusLogsDirectoryRenderer.SetLogsDirectory(logDirectory);
+
+                //log to the new log file that we were logging somewhere else
+                LogFileOnlyLogger.Info(new string('=', 80));
+                LogFileOnlyLogger.Info($"Changed log folder from {previousLogDirectory} to {logDirectory}");
+            }
         }
     }
 }

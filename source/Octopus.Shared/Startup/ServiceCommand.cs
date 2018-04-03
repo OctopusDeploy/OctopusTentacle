@@ -33,7 +33,7 @@ namespace Octopus.Shared.Startup
             Options.Add("password=", "Password for the username specified with --username. Only used when --install is used.", v =>
             {
                 serviceConfigurationState.Password = v;
-            });
+            }, sensitive: true);
             Options.Add("dependOn=", "", v => serviceConfigurationState.DependOn = v);
         }
 

@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NLog;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
@@ -22,7 +23,7 @@ namespace Octopus.Shared.Startup
             var rule = LogManager.Configuration.LoggingRules.SingleOrDefault(r => r.LoggerNamePattern == LoggerName);
             if (rule == null)
                 throw new Exception($"It looks like the {LoggerName} logging rule is not configured. {HelpMessage}");
-            
+
 
             if (rule.Targets.Count != 1)
                 throw new Exception($"The {LoggerName} rule should only have a single target. {HelpMessage}");
@@ -32,9 +33,16 @@ namespace Octopus.Shared.Startup
                 throw new Exception($"The {LoggerName} rule should write to a file target. {HelpMessage}");
         }
 
-        public static void Info(string message) => Log.Info(message);
-        public static void Warn(string message) => Log.Warn(message);
-        public static void Error(string message) => Log.Error(message);
-        public static void Error(Exception ex, string message) => Log.Error(ex, message);
+        public static LogContext Context { get; set; } = new LogContext();
+
+        public static void Info(string message) => Context.SafeSanitize(message, s => Log.Info(s));
+        public static void Warn(string message) => Context.SafeSanitize(message, s => Log.Warn(s));
+        public static void Error(string message) => Context.SafeSanitize(message, s => Log.Error(s));
+        public static void Error(Exception ex, string message) => Context.SafeSanitize(message, s => Log.Error(ex, s));
+
+        public static void AddSensitiveValues(string[] values)
+        {
+            Context = Context.WithSensitiveValues(values);
+        }
     }
 }

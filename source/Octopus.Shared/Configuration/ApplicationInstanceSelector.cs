@@ -64,7 +64,7 @@ namespace Octopus.Shared.Configuration
             // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
             // back to here
             var homeConfig = new HomeConfiguration(applicationName, instance.Configuration);
-            var logInit = new LogInitializer(new LoggingConfiguration(homeConfig), fileSystem);
+            var logInit = new LogInitializer(new LoggingConfiguration(homeConfig));
             logInit.Start();
 
             return instance;

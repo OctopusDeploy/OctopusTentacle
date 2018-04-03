@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
 
 namespace Octopus.Shared.Startup
@@ -54,9 +57,32 @@ namespace Octopus.Shared.Startup
             foreach (var opset in optionSets)
                 opset.Validate();
 
+            EnsureSensitiveParametersAreNotLoggedToLogFileOnlyLogger();
+            
             LogFileOnlyLogger.Info($"==== {GetType().Name} ====");
+            LogFileOnlyLogger.Info($"CommandLine: {string.Join(" ", Environment.GetCommandLineArgs())}");
+            
             Start();
             Completed();
+        }
+
+        private void EnsureSensitiveParametersAreNotLoggedToLogFileOnlyLogger()
+        {
+            foreach (var sensitiveOption in Options.Where(x => x.Sensitive))
+            {
+                foreach (var name in sensitiveOption.GetNames())
+                {
+                    var option = Options.GetOptionForName(name);
+                    //Ideally, we'd ensure that no logging anywhere would log these values, but its way harder than it sounds.
+                    //The LogContext is immutable, and designed so that is a tree structure - usually, you only care about
+                    //sensitive values for the scope of a deployment, not after that. Changing it to be not immutable
+                    //is very bad from a perf pespective, as the AhoCorasick masking algoritm is pretty perf intensive.
+                    //Also, due to timing issues of when loggers are created, it gets very difficult to ensure that the logger
+                    //will have the sensitive values set. Its all rather complicated, and its preventing a theoritcal problem 
+                    //whereas this LogFileOnlyLogger is definitely logging sensitive values, so we need to mask there
+                    LogFileOnlyLogger.AddSensitiveValues(option.Values);
+                }
+            }
         }
 
         void ICommand.Stop()

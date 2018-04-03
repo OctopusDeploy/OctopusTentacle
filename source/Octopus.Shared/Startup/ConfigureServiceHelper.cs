@@ -34,7 +34,11 @@ namespace Octopus.Shared.Startup
 
             if (serviceConfigurationState.Stop)
             {
-                if (controller != null)
+                if (controller == null)
+                {
+                    LogFileOnlyLogger.Info($"Stop requested for service {thisServiceName}, but service controller was not found. Skipping.");
+                }
+                else
                 {
                     if (controller.Status != ServiceControllerStatus.Stopped && controller.Status != ServiceControllerStatus.StopPending)
                     {
@@ -72,7 +76,11 @@ namespace Octopus.Shared.Startup
 
             if (serviceConfigurationState.Uninstall)
             {
-                if (controller != null)
+                if (controller == null)
+                {
+                    LogFileOnlyLogger.Info($"Uninstall requested for service {thisServiceName}, but service controller was not found. Skipping.");
+                }
+                else
                 {
                     Sc(
                         string.Format(
@@ -85,7 +93,7 @@ namespace Octopus.Shared.Startup
             }
 
             var serviceDependencies = new List<string>();
-            serviceDependencies.AddRange(new [] {"LanmanWorkstation", "TCPIP"});
+            serviceDependencies.AddRange(new[] { "LanmanWorkstation", "TCPIP" });
 
             if (!string.IsNullOrWhiteSpace(serviceConfigurationState.DependOn))
             {
@@ -96,6 +104,7 @@ namespace Octopus.Shared.Startup
             {
                 if (controller != null)
                 {
+                    LogFileOnlyLogger.Info($"Install requested for service {thisServiceName}, but service controller already existing. Triggering 'Reconfigure' mode.");
                     serviceConfigurationState.Reconfigure = true;
                 }
                 else
@@ -172,7 +181,9 @@ namespace Octopus.Shared.Startup
             if (serviceConfigurationState.Start)
             {
                 if (controller == null)
-                    return;
+                {
+                    throw new ControlledFailureException($"Start requested for service {thisServiceName}, but no service with this name was found.");
+                }
 
                 if (controller.Status != ServiceControllerStatus.Running)
                 {
@@ -219,8 +230,15 @@ namespace Octopus.Shared.Startup
         void Sc(string arguments)
         {
             var outputBuilder = new StringBuilder();
+            var argumentsToLog = string.Join(" ", arguments);
+
+            LogFileOnlyLogger.Info($"Executing sc.exe {argumentsToLog}");
             var exitCode = SilentProcessRunner.ExecuteCommand("sc.exe", arguments, Environment.CurrentDirectory, output => outputBuilder.AppendLine(output), error => outputBuilder.AppendLine("Error: " + error));
-            if (exitCode != 0)
+            if (exitCode == 0)
+            {
+                LogFileOnlyLogger.Info(outputBuilder.ToString());
+            }
+            else
             {
                 log.Error(outputBuilder.ToString());
             }

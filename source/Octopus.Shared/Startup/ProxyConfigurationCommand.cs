@@ -42,7 +42,7 @@ namespace Octopus.Shared.Startup
             {
                 proxyConfiguration.Value.CustomProxyPassword = v;
                 log.Info(string.IsNullOrWhiteSpace(v) ? "Proxy password cleared" : "Proxy password set to: *******");
-            }));
+            }), sensitive: true);
 
             Options.Add("proxyHost=", "The proxy host to use. Leave empty to use the default Internet Explorer proxy", v => QueueOperation(delegate
             {
