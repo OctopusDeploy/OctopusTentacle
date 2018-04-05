@@ -78,5 +78,9 @@ namespace Octopus.Shared.Util
                     yield break;
             }
         }
+
+        public static bool Missing<T>(this IEnumerable<T> items, T item) => !items.Contains(item);
+
+        public static bool Missing<T>(this IEnumerable<T> items, T item, IEqualityComparer<T> equalityComparer) => !items.Contains(item, equalityComparer);
     }
 }
