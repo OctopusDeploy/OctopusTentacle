@@ -9,17 +9,17 @@
     <NoWin32Manifest>true</NoWin32Manifest>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>True</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Octopus.Client" Version="4.33.1" />
+    <PackageReference Include="Octopus.Client" Version="4.36.0-fix-4391-2" />
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
     <PackageReference Include="Octopus.Shared" Version="4.2.3" />
   </ItemGroup>
-    
+
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>
