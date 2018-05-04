@@ -107,6 +107,15 @@ namespace Octopus.Tentacle.Commands
             if(communicationStyle == CommunicationStyle.TentacleActive && !string.IsNullOrWhiteSpace(proxy))
                 throw new ControlledFailureException("Option --proxy can only be used with --comms-style=TentaclePassive.  To set a proxy for a polling Tentacle use the polling-proxy command first and then register the Tentacle with register-with.");
 
+            if (tenants.None() && tenantTgs.None() && tenantedDeploymentMode != TenantedDeploymentMode.Untenanted)
+                throw new ControlledFailureException($"tenanted-deployment-participation was set to but no tennants or tentant tags were provided.");
+
+            if ((tenants.Any() || tenantTgs.Any()) && tenantedDeploymentMode == TenantedDeploymentMode.Untenanted)
+            {
+                log.Info($"Setting to tenanted mode because {(tenants.Any() ? "tenant" : "tenanttag")} option was set.");
+                tenantedDeploymentMode = TenantedDeploymentMode.Tenanted;
+            }
+
             Uri serverAddress = null;
 
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
