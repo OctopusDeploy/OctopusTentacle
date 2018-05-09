@@ -112,5 +112,23 @@ namespace Octopus.Shared.Tests.Diagnostics
             Assert.AreEqual("This has a **************** agent with a **************** agent", result1);
             Assert.AreEqual("This has a **************** agent with a **************** agent", result2);
         }
+        
+        [Test]
+        public void CanAddSensitiveValueToExistingContext()
+        {
+            const string sensitive = "sensitive",
+                anotherSensitive = "&3avh3#dhe@",
+                raw = "This contains a sensitive value and &3avh3#dhe@",
+                expected = "This contains a ******** value and ********";
+
+            var logContext = new LogContext(sensitiveValues: new[] { sensitive });
+            string result = null;
+            logContext.SafeSanitize(raw, sanitized => {});
+            
+            logContext.WithSensitiveValue(anotherSensitive);
+            logContext.SafeSanitize(raw, sanitized => result = sanitized );
+            
+            Assert.AreEqual(expected, result);
+        }
     }
 }
