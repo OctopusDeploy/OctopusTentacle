@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Commands
         readonly List<string> roles = new List<string>();
         readonly List<string> tenants = new List<string>();
         readonly List<string> tenantTgs = new List<string>();
-
+        TenantedDeploymentMode tenantedDeploymentMode;
 
         public RegisterMachineCommand(Lazy<IRegisterMachineOperation> lazyRegisterMachineOperation,
                                       Lazy<ITentacleConfiguration> configuration,
@@ -40,6 +40,13 @@ namespace Octopus.Tentacle.Commands
             Options.Add("r|role=", "The machine role that the machine will assume - e.g., 'web-server'; specify this argument multiple times to add multiple roles", s => roles.Add(s));
             Options.Add("tenant=", "A tenant who the machine will be connected to; specify this argument multiple times to add multiple tenants", s => tenants.Add(s));
             Options.Add("tenanttag=", "A tenant tag which the machine will be tagged with - e.g., 'CustomerType/VIP'; specify this argument multiple times to add multiple tenant tags", s => tenantTgs.Add(s));
+            Options.Add("tenanted-deployment-participation=", $"How the machine should participate in tenanted deployments. Allowed values are {Enum.GetNames(typeof(TenantedDeploymentMode)).ReadableJoin()}.", s =>
+            {
+                if (Enum.TryParse<TenantedDeploymentMode>(s, out var result))
+                    tenantedDeploymentMode = result;
+                else
+                    throw new ControlledFailureException($"The value '{s}' is not valid. Valid values are {Enum.GetNames(typeof(TenantedDeploymentMode)).ReadableJoin()}.");
+            });
         }
 
         protected override void CheckArgs()
@@ -57,6 +64,7 @@ namespace Octopus.Tentacle.Commands
             registerOperation.TenantTags = tenantTgs.ToArray();
             registerOperation.EnvironmentNames = environmentNames.ToArray();
             registerOperation.Roles = roles.ToArray();
+            registerOperation.TenantedDeploymentParticipation = tenantedDeploymentMode;
         }
     }
 }
