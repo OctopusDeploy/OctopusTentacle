@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using FluentValidation;
+using Octopus.Manager.Tentacle.Controls;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Shared.Configuration;
@@ -36,8 +37,10 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         public ProxyWizardModel(string selectedInstance, ApplicationName application)
         {
+            var commandLinePath = CommandLine.PathToTentacleExe();
+            var serviceWatcher = new ServiceWatcher(application, selectedInstance, commandLinePath);
             UseDefaultProxy = true;
-            ToggleService = true;
+            ToggleService = serviceWatcher.IsRunning;
             ProxyServerPort = 80;
 
             InstanceName = selectedInstance;
