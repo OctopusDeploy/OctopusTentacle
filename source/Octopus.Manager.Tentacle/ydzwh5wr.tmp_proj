@@ -1,0 +1,325 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A9E01394-4A21-418F-9ACC-D5A164E8491B}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Octopus.Manager.Tentacle</RootNamespace>
+    <AssemblyName>Octopus.Manager.Tentacle</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Solution Items\SolutionInfo.cs">
+      <Link>Properties\SolutionInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Solution Items\VersionInfo.cs">
+      <Link>Properties\VersionInfo.cs</Link>
+    </Compile>
+    <Compile Include="Controls\ControlGroup.cs" />
+    <Compile Include="Controls\ErrorMessage.cs" />
+    <Compile Include="Controls\ImageLink.cs" />
+    <Compile Include="Controls\PasswordEditor.cs" />
+    <Compile Include="Controls\RetinaImage.cs" />
+    <Compile Include="Controls\ServiceWatcher.cs" />
+    <Compile Include="Controls\TaggingAutoCompleteBox.cs" />
+    <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="Converters\BooleanToYesNoConverter.cs" />
+    <Compile Include="Converters\InverseBooleanConverter.cs" />
+    <Compile Include="Converters\InverseBooleanToVisibilityConverter.cs" />
+    <Compile Include="DeleteWizard\DeleteWizardLauncher.cs" />
+    <Compile Include="DeleteWizard\DeleteWizardModel.cs" />
+    <Compile Include="DeleteWizard\Views\DeleteWelcome.cs" />
+    <Compile Include="Dialogs\EditTrustedOctopusDialog.xaml.cs">
+      <DependentUpon>EditTrustedOctopusDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ErrorDialog.cs" />
+    <Compile Include="Dialogs\NewInstanceNameDialog.cs" />
+    <Compile Include="Dialogs\RunProcessDialog.cs" />
+    <Compile Include="Dialogs\SetPasswordDialog.cs" />
+    <Compile Include="Dialogs\ViewScriptDialog.cs" />
+    <Compile Include="Infrastructure\DispatchHelper.cs" />
+    <Compile Include="Infrastructure\ElevationHelper.cs" />
+    <Compile Include="Infrastructure\IHaveServices.cs" />
+    <Compile Include="Infrastructure\IScriptableViewModel.cs" />
+    <Compile Include="Infrastructure\OctoService.cs" />
+    <Compile Include="Infrastructure\TextBoxLogger.cs" />
+    <Compile Include="Infrastructure\UnhandledErrorTrapper.cs" />
+    <Compile Include="Infrastructure\ViewModel.cs" />
+    <Compile Include="PreReq\IPrerequisite.cs" />
+    <Compile Include="PreReq\IPrerequisiteProfile.cs" />
+    <Compile Include="PreReq\PowerShellPrerequisite.cs" />
+    <Compile Include="PreReq\PrerequisiteCheckResult.cs" />
+    <Compile Include="PreReq\PreReqWindow.cs" />
+    <Compile Include="PreReq\TentaclePrerequisiteProfile.cs" />
+    <Compile Include="Proxy\ProxyConfigurationTab.cs" />
+    <Compile Include="Proxy\ProxyWizardLauncher.cs" />
+    <Compile Include="Proxy\ProxyWizardModel.cs" />
+    <Compile Include="Proxy\TentacleProxyWizardModel.cs" />
+    <Compile Include="Shell\InstanceSelectionModel.cs" />
+    <Compile Include="Shell\ITab.cs" />
+    <Compile Include="Shell\ITabWithNotifications.cs" />
+    <Compile Include="Shell\ShellView.cs" />
+    <Compile Include="Shell\ShellViewModel.cs" />
+    <Compile Include="Shell\TabbedWizard.cs" />
+    <Compile Include="Shell\TabView.cs" />
+    <Compile Include="TentacleConfiguration\SetupWizard\TentacleSetupWizardLauncher.cs" />
+    <Compile Include="TentacleConfiguration\SetupWizard\TentacleSetupWizardModel.cs" />
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\CommunicationStyleTab.xaml.cs">
+      <DependentUpon>CommunicationStyleTab.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\InstallTab.cs" />
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\StorageTab.xaml.cs">
+      <DependentUpon>StorageTab.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\TentacleActiveDetailsTab.xaml.cs">
+      <DependentUpon>TentacleActiveDetailsTab.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\TentacleActiveTab.xaml.cs">
+      <DependentUpon>TentacleActiveTab.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\TentaclePassiveTab.xaml.cs">
+      <DependentUpon>TentaclePassiveTab.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\WelcomeTab.xaml.cs">
+      <DependentUpon>WelcomeTab.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TentacleConfiguration\TentacleManager\TentacleManagerModel.cs" />
+    <Compile Include="TentacleConfiguration\TentacleManager\TentacleManagerView.xaml.cs">
+      <DependentUpon>TentacleManagerView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TentacleConfiguration\TentacleModule.cs" />
+    <Compile Include="TentacleManager.cs" />
+    <Compile Include="Util\BrowserHelper.cs" />
+    <Compile Include="Util\CommandLine.cs" />
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>
+      </SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="app.manifest" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj">
+      <Project>{0fca52bd-3d2c-4f05-9f87-42920c1fa4f4}</Project>
+      <Name>Octopus.Tentacle</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ItemGroup>
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\AsyncStackTraceEx.1.0.1.1\lib\dotnet\AsyncStackTraceEx.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Autofac.4.6.2\lib\net45\Autofac.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\FluentValidation.7.2.1\lib\net45\FluentValidation.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Halibut.3.0.4\lib\net45\Halibut.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Microsoft.CSharp.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\TaskScheduler.2.7.2\lib\net40\Microsoft.Win32.TaskScheduler.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\mscorlib.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Nancy.1.2.0\lib\net40\Nancy.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Nancy.Serialization.JsonNet.1.2.0\lib\net40\Nancy.Serialization.JsonNet.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Newtonsoft.Json.Bson.1.0.1\lib\net45\Newtonsoft.Json.Bson.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Concurrent.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Enlightenment.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\NLog.4.0.1\lib\net45\NLog.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\NuGet.Common.3.6.0-octopus-58676\lib\net45\NuGet.Common.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\NuGet.Frameworks.3.6.0-octopus-58676\lib\net45\NuGet.Frameworks.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\NuGet.Packaging.Core.3.6.0-octopus-58676\lib\net45\NuGet.Packaging.Core.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\NuGet.Packaging.Core.Types.3.6.0-octopus-58676\lib\net45\NuGet.Packaging.Core.Types.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\NuGet.Packaging.3.6.0-octopus-58676\lib\net45\NuGet.Packaging.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\NuGet.Versioning.3.6.0-octopus-58676\lib\net45\NuGet.Versioning.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Octopus.Client.4.36.0-enh-registerworker49\lib\net45\Octopus.Client.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Octopus.Configuration.1.0.11\lib\net45\Octopus.Configuration.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Octopus.Diagnostics.1.2.0\lib\netstandard1.0\Octopus.Diagnostics.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Octopus.Shared.4.2.3\lib\net45\Octopus.Shared.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\Octopus.Time.1.1.2\lib\netstandard1.0\Octopus.Time.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\PresentationCore.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\PresentationFramework.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.ComponentModel.Composition.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.ComponentModel.DataAnnotations.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Configuration.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Core.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Data.DataSetExtensions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Data.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Data.Services.Client.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.DirectoryServices.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Drawing.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.IdentityModel.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.IO.Compression.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.IO.Compression.FileSystem.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Management.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Net.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Net.Http.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Net.Http.WebRequest.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Numerics.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Runtime.Caching.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Runtime.Serialization.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Security.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.ServiceProcess.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Web.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\WPFToolkit.3.5.50211.1\lib\System.Windows.Controls.Input.Toolkit.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\WPFToolkit.3.5.50211.1\lib\System.Windows.Controls.Layout.Toolkit.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Windows.Forms.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Xaml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Xml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Xml.Linq.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Tentacle\bin\net45\Tentacle.exe" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\WindowsBase.dll" />
+    <ReferencePath Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\packages\WPFToolkit.3.5.50211.1\lib\WPFToolkit.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Collections.Concurrent.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Collections.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.ComponentModel.Annotations.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.ComponentModel.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.ComponentModel.EventBasedAsync.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Diagnostics.Contracts.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Diagnostics.Debug.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Diagnostics.Tools.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Diagnostics.Tracing.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Dynamic.Runtime.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Globalization.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.IO.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Linq.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Linq.Expressions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Linq.Parallel.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Linq.Queryable.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Net.NetworkInformation.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Net.Primitives.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Net.Requests.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.ObjectModel.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Reflection.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Reflection.Emit.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Reflection.Emit.ILGeneration.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Reflection.Emit.Lightweight.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Reflection.Extensions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Reflection.Primitives.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Resources.ResourceManager.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Runtime.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Runtime.Extensions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Runtime.InteropServices.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Runtime.InteropServices.WindowsRuntime.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Runtime.Numerics.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Runtime.Serialization.Json.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Runtime.Serialization.Primitives.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Runtime.Serialization.Xml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Security.Principal.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.ServiceModel.Duplex.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.ServiceModel.Http.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.ServiceModel.NetTcp.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.ServiceModel.Primitives.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.ServiceModel.Security.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Text.Encoding.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Text.Encoding.Extensions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Text.RegularExpressions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Threading.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Threading.Tasks.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Threading.Tasks.Parallel.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Xml.ReaderWriter.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Xml.XDocument.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\Facades\System.Xml.XmlSerializer.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\DeleteWizard\Views\DeleteWelcome.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\Dialogs\EditTrustedOctopusDialog.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\Dialogs\ErrorDialog.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\Dialogs\NewInstanceNameDialog.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\Dialogs\RunProcessDialog.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\Dialogs\SetPasswordDialog.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\Dialogs\ViewScriptDialog.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\PreReq\PreReqWindow.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\Proxy\ProxyConfigurationTab.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\Shell\ShellView.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\Shell\TabbedWizard.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\TentacleConfiguration\SetupWizard\Views\CommunicationStyleTab.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\TentacleConfiguration\SetupWizard\Views\InstallTab.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\TentacleConfiguration\SetupWizard\Views\StorageTab.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\TentacleConfiguration\SetupWizard\Views\TentacleActiveDetailsTab.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\TentacleConfiguration\SetupWizard\Views\TentacleActiveTab.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\TentacleConfiguration\SetupWizard\Views\TentaclePassiveTab.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\TentacleConfiguration\SetupWizard\Views\WelcomeTab.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\TentacleConfiguration\TentacleManager\TentacleManagerView.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\App.g.cs" />
+    <Compile Include="C:\Users\michael\Projects\Octopus\OctopusTentacle\source\Octopus.Manager.Tentacle\obj\Debug\GeneratedInternalTypeHelper.g.cs" />
+  </ItemGroup>
+</Project>
