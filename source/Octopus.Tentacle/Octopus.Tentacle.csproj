@@ -15,8 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Octopus.Client" Version="4.31.0-enh-tentacleregist56" />
-    <PackageReference Include="Octopus.Client" Version="4.33.1" />
+    <PackageReference Include="Octopus.Client" Version="4.36.0-enh-registerworker49" />
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
     <PackageReference Include="Octopus.Shared" Version="4.2.3" />
   </ItemGroup>
