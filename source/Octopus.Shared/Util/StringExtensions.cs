@@ -64,8 +64,12 @@ namespace Octopus.Shared.Util
 
         public static byte[] EncodeInUtf8Bom(this string source)
         {
-            var encodedString = Encoding.UTF8.GetBytes(source);
-            return Encoding.UTF8.GetPreamble().Concat(encodedString).ToArray();
+            return Encoding.UTF8.GetPreamble().Concat(source.EncodeInUtf8NoBom()).ToArray();
+        }
+
+        public static byte[] EncodeInUtf8NoBom(this string source)
+        {
+            return Encoding.UTF8.GetBytes(source);
         }
     }
 }
