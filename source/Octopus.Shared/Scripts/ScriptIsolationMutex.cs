@@ -160,17 +160,17 @@ namespace Octopus.Shared.Scripts
 
             void Busy()
             {
-                taskLog.WriteWait($"Cannot start this task yet because {taskLock.Report()} tasks are currently running and this task cannot be run in conjunction with any other tasks. Please wait...");
+                taskLog.WriteWait(taskLock.GetBusyMessage());
             }
 
             void Canceled()
             {
-                taskLog("This task was canceled before it could start. The other task is still running.");
+                taskLog(taskLock.GetCanceledMessage());
             }
 
             void TimedOut(TimeSpan timeout)
             {
-                taskLog($"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. {taskLock.Report()} task is still running.");
+                taskLog(taskLock.GetTimedOutMessage(timeout));
             }
 
             void WriteToSystemLog(string message)
@@ -180,7 +180,7 @@ namespace Octopus.Shared.Scripts
             }
         }
 
-        class TaskLock
+        internal class TaskLock
         {
             readonly ConcurrentDictionary<string, object> readersTaskIds = new ConcurrentDictionary<string, object>();
             readonly AsyncReaderWriterLock asyncReaderWriterLock;
@@ -257,6 +257,48 @@ namespace Octopus.Shared.Scripts
                 }
 
                 return result;
+            }
+
+            private string ListTasksWithMarkdownLinks()
+            {
+                if (writerTaskId != null)
+                {
+                    return $"[{writerTaskId}](~/app#/tasks/{writerTaskId}) (RW)";
+                }
+
+                var ids = readersTaskIds.Keys.OrderBy(x => x).ToArray();
+
+                return ids.Any() 
+                    ? ids.Select(x => $"[{x}](~/app#/tasks/{x}) (R)").ReadableJoin() 
+                    : "(error - task not found)";
+            }
+
+            private bool IsWaitingOnMultipleTasks()
+            {
+                if (writerTaskId != null)
+                    return false;
+                return readersTaskIds.Keys.Count > 1;
+            }
+
+            public string GetBusyMessage()
+            {
+                return IsWaitingOnMultipleTasks() 
+                    ? $"Cannot start this task yet because tasks {ListTasksWithMarkdownLinks()} are currently running and this task cannot be run in conjunction with any other tasks. Please wait..."
+                    : $"Cannot start this task yet because task {ListTasksWithMarkdownLinks()} is currently running and this task cannot be run in conjunction with any other tasks. Please wait...";
+            }
+
+            public string GetCanceledMessage()
+            {
+                return IsWaitingOnMultipleTasks() 
+                    ? $"This task was canceled before it could start. Tasks {ListTasksWithMarkdownLinks()} are still running."
+                    : $"This task was canceled before it could start. Task {ListTasksWithMarkdownLinks()} is still running.";
+            }
+
+            public string GetTimedOutMessage(TimeSpan timeout)
+            {
+                return IsWaitingOnMultipleTasks()
+                    ? $"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. Tasks {ListTasksWithMarkdownLinks()} are still running."
+                    : $"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. Task {ListTasksWithMarkdownLinks()} is still running.";
             }
         }
     }
