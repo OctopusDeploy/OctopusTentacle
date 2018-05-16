@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Octopus.Client;
 using Octopus.Client.Operations;
 using Octopus.Diagnostics;
@@ -16,7 +15,6 @@ namespace Octopus.Tentacle.Commands
     public class RegisterWorkerMachineCommand : RegisterMachineCommandBase<IRegisterWorkerMachineOperation>
     {
         readonly List<string> workerpoolNames = new List<string>();
-
 
         public RegisterWorkerMachineCommand(Lazy<IRegisterWorkerMachineOperation> lazyRegisterMachineOperation,
             Lazy<ITentacleConfiguration> configuration,
