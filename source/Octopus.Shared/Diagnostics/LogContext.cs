@@ -10,10 +10,10 @@ namespace Octopus.Shared.Diagnostics
     [DebuggerDisplay("{CorrelationId}")]
     public class LogContext
     {
-        readonly string[] sensitiveValues;
         readonly string correlationId;
         readonly object sensitiveDataMaskLock = new object();
-        readonly Lazy<AhoCorasick> trie;
+        string[] sensitiveValues;
+        Lazy<AhoCorasick> trie;
         SensitiveDataMask sensitiveDataMask;
 
         [JsonConstructor]
@@ -74,11 +74,35 @@ namespace Octopus.Shared.Diagnostics
             return new LogContext(id, this.sensitiveValues.Union(sensitiveValues).ToArray());
         }
 
+        /// <summary>
+        /// Adds additional sensitive-variables to the LogContext. 
+        /// </summary>
+        /// <returns>The existing LogContext</returns>
         public LogContext WithSensitiveValues(string[] sensitiveValues)
         {
             if (sensitiveValues == null || sensitiveValues.Length == 0)
                 return this;
-            return new LogContext(correlationId, this.sensitiveValues.Union(sensitiveValues).ToArray());
+
+            var initialSensitiveValuesCount = this.sensitiveValues.Length;
+            var sensitiveValuesUnion = this.sensitiveValues.Union(sensitiveValues).ToArray();
+
+            // If no new sensitive-values were added, avoid the cost of rebuilding the trie
+            if (initialSensitiveValuesCount == sensitiveValuesUnion.Length)
+                return this;
+
+            // New sensitive-values were added, so reset.
+            this.sensitiveValues = sensitiveValuesUnion;
+            this.trie = new Lazy<AhoCorasick>(CreateTrie);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an additional sensitive-variable to the LogContext. 
+        /// </summary>
+        /// <returns>The existing LogContext</returns>
+        public LogContext WithSensitiveValue(string sensitiveValue)
+        {
+            return WithSensitiveValues(new[] {sensitiveValue});
         }
 
         public void Flush()
