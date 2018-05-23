@@ -13,6 +13,10 @@ namespace Octopus.Shared.Util
 {
     public class OctopusPhysicalFileSystem : IOctopusFileSystem
     {
+        // https://referencesource.microsoft.com/#mscorlib/system/io/pathinternal.cs,30
+        // This even applies to long file names https://stackoverflow.com/a/265782/10784
+        public const int MaxComponentLength = 255;
+        
         public bool FileExists(string path)
         {
             return File.Exists(path);
