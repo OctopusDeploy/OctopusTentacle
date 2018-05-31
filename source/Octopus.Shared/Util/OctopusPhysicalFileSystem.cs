@@ -414,8 +414,8 @@ namespace Octopus.Shared.Util
                 return;
 
             var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;
-            // Make sure there is 1MB more than we need
-            required += 1024 * 1024;
+            // Make sure there is 10% (and a bit extra) more than we need
+            required += required / 10 + 1024 * 1024;
             if (totalNumberOfFreeBytes < required)
             {
                 throw new IOException($"The drive containing the directory '{directoryPath}' on machine '{Environment.MachineName}' does not have enough free disk space available for this operation to proceed. The disk only has {totalNumberOfFreeBytes.ToFileSizeString()} available; please free up at least {required.ToFileSizeString()}.");
