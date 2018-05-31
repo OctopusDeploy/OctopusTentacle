@@ -51,16 +51,7 @@
   </Target>
 
   <ItemGroup>
-    <Content Include="Bcl\IO\UTF16.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Bcl\IO\UTF8-BOM.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Bcl\IO\UTF8-no-BOM.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Bcl\IO\Zero.txt">
+    <Content Include="Bcl\IO\*.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="Resources\TestCertificateNoPassword.pfx" />
