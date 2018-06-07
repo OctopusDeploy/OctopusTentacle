@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Commands
             base.Load(builder);
             builder.RegisterType<OctopusClientFactory>().AsSelf().AsImplementedInterfaces();
             builder.RegisterType<RegisterMachineOperation>().AsSelf().AsImplementedInterfaces();
-            builder.RegisterType<RegisterWorkerMachineOperation>().AsSelf().AsImplementedInterfaces();
+            builder.RegisterType<RegisterWorkerOperation>().AsSelf().AsImplementedInterfaces();
         }
     }
 }

@@ -12,11 +12,11 @@ using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Tentacle.Commands
 {
-    public class RegisterWorkerMachineCommand : RegisterMachineCommandBase<IRegisterWorkerMachineOperation>
+    public class RegisterWorkerCommand : RegisterMachineCommandBase<IRegisterWorkerOperation>
     {
         readonly List<string> workerpoolNames = new List<string>();
 
-        public RegisterWorkerMachineCommand(Lazy<IRegisterWorkerMachineOperation> lazyRegisterMachineOperation,
+        public RegisterWorkerCommand(Lazy<IRegisterWorkerOperation> lazyRegisterMachineOperation,
             Lazy<ITentacleConfiguration> configuration,
             ILog log,
             IApplicationInstanceSelector selector,
@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException("Please specify a worker pool name, e.g., --workerpool=Default");
         }
 
-        protected override void EnhanceOperation(IOctopusAsyncRepository repository, IRegisterWorkerMachineOperation registerOperation)
+        protected override void EnhanceOperation(IOctopusAsyncRepository repository, IRegisterWorkerOperation registerOperation)
         {
             registerOperation.WorkerPoolNames = workerpoolNames.ToArray();
         }

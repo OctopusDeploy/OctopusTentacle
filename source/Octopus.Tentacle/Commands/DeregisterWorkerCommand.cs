@@ -11,7 +11,7 @@ using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Tentacle.Commands
 {
-    public class DeregisterWorkerMachineCommand : AbstractStandardCommand
+    public class DeregisterWorkerCommand : AbstractStandardCommand
     {
         readonly Lazy<ITentacleConfiguration> configuration;
         readonly ILog log;
@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Commands
         public const string DeregistrationSuccessMsg = "Machine deregistered successfully";
         public const string MultipleMatchErrorMsg = "The worker matches more than one machine on the server. To deregister all of these machines specify the --multiple flag.";
 
-        public DeregisterWorkerMachineCommand(Lazy<ITentacleConfiguration> configuration,
+        public DeregisterWorkerCommand(Lazy<ITentacleConfiguration> configuration,
             ILog log,
             IApplicationInstanceSelector selector,
             IProxyConfigParser proxyConfig,
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Commands
         public async Task Deregister(IOctopusAsyncRepository repository)
         {
             // 1. check: do the machine count/allowMultiple checks first to prevent partial trust removal
-            var matchingMachines = await repository.WorkerMachines.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
+            var matchingMachines = await repository.Workers.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
 
             if (matchingMachines.Count == 0)
                 throw new ControlledFailureException("No worker machine was found on the server matching this Tentacle's thumbprint.");
@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Commands
             foreach (var machineResource in matchingMachines)
             {
                 log.Info($"Deleting worker machine '{machineResource.Name}' from the Octopus server...");
-                await repository.WorkerMachines.Delete(machineResource);
+                await repository.Workers.Delete(machineResource);
             }
 
             // 3. remove the trust from the tentancle cconfiguration
