@@ -10,17 +10,17 @@
     <OutputPath>bin\</OutputPath>
     <ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>True</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Octopus.Client" Version="4.33.1" />
+    <PackageReference Include="Octopus.Client" Version="4.37.0" />
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
     <PackageReference Include="Octopus.Shared" Version="4.2.3" />
   </ItemGroup>
-    
+
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>
