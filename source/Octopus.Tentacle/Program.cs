@@ -70,10 +70,10 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<RunAgentCommand>("agent", "Starts the Tentacle Agent in debug mode", "", "run");
             builder.RegisterCommand<ConfigureCommand>("configure", "Sets Tentacle settings such as the port number and thumbprints");
             builder.RegisterCommand<RegisterMachineCommand>("register-with", "Registers this machine with an Octopus Server");
-            builder.RegisterCommand<RegisterWorkerMachineCommand>("register-worker", "Registers this machine with an Octopus Server");
+            builder.RegisterCommand<RegisterWorkerCommand>("register-worker", "Registers this machine with an Octopus Server");
             builder.RegisterCommand<ExtractCommand>("extract", "Extracts a NuGet package");
             builder.RegisterCommand<DeregisterMachineCommand>("deregister-from", "Deregisters this machine from an Octopus Server");
-            builder.RegisterCommand<DeregisterWorkerMachineCommand>("deregister-worker", "Deregisters this worker machine from an Octopus Server");
+            builder.RegisterCommand<DeregisterWorkerCommand>("deregister-worker", "Deregisters this worker machine from an Octopus Server");
             builder.RegisterCommand<NewCertificateCommand>("new-certificate", "Creates and installs a new certificate for this Tentacle");
             builder.RegisterCommand<ShowThumbprintCommand>("show-thumbprint", "Show the thumbprint of this Tentacle's certificate");
             builder.RegisterCommand<ServiceCommand>("service", "Start, stop, install and configure the Tentacle service").WithParameter("serviceName", "OctopusDeploy Tentacle").WithParameter("serviceDescription", "Octopus Deploy: Tentacle deployment agent").WithParameter("assemblyContainingService", typeof (Program).Assembly);

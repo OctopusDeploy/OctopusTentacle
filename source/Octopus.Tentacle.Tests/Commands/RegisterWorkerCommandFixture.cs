@@ -21,12 +21,12 @@ using Octopus.Tentacle.Configuration;
 namespace Octopus.Tentacle.Tests.Commands
 {
     [TestFixture]
-    public class RegisterWorkerMachineCommandFixture : CommandFixture<RegisterWorkerMachineCommand>
+    public class RegisterWorkerCommandFixture : CommandFixture<RegisterWorkerCommand>
     {
         ITentacleConfiguration configuration;
         ILog log;
         X509Certificate2 certificate;
-        IRegisterWorkerMachineOperation operation;
+        IRegisterWorkerOperation operation;
         IOctopusServerChecker serverChecker;
         IOctopusAsyncRepository repository;
         string serverThumbprint;
@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             serverThumbprint = Guid.NewGuid().ToString();
             configuration = Substitute.For<ITentacleConfiguration>();
-            operation = Substitute.For<IRegisterWorkerMachineOperation>();
+            operation = Substitute.For<IRegisterWorkerOperation>();
             serverChecker = Substitute.For<IOctopusServerChecker>();
             log = Substitute.For<ILog>();
             var octopusClientInitializer = Substitute.For<IOctopusClientInitializer>();
@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Tests.Commands
             octopusClientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<IWebProxy>())
                 .Returns(Task.FromResult(octopusAsyncClient));
 
-            Command = new RegisterWorkerMachineCommand(new Lazy<IRegisterWorkerMachineOperation>(() => operation),
+            Command = new RegisterWorkerCommand(new Lazy<IRegisterWorkerOperation>(() => operation),
                 new Lazy<ITentacleConfiguration>(() => configuration),
                 log,
                 Substitute.For<IApplicationInstanceSelector>(),
