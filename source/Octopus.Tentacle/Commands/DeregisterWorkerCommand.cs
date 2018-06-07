@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Commands
             this.octopusClientInitializer = octopusClientInitializer;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
-            Options.Add("m|multiple", "Deregister all worker machines that use the same thumbprint", s => allowMultiple = true);
+            Options.Add("m|multiple", "Deregister all workers that use the same thumbprint", s => allowMultiple = true);
         }
 
         protected override void Start()
@@ -61,7 +61,7 @@ namespace Octopus.Tentacle.Commands
             var matchingMachines = await repository.Workers.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
 
             if (matchingMachines.Count == 0)
-                throw new ControlledFailureException("No worker machine was found on the server matching this Tentacle's thumbprint.");
+                throw new ControlledFailureException("No worker was found on the server matching this Tentacle's thumbprint.");
 
             if (matchingMachines.Count > 1 && !allowMultiple)
                 throw new ControlledFailureException(MultipleMatchErrorMsg);
@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Commands
             // 2. contact the server and de-register, this is independant to any tentacle configuration
             foreach (var machineResource in matchingMachines)
             {
-                log.Info($"Deleting worker machine '{machineResource.Name}' from the Octopus server...");
+                log.Info($"Deleting worker '{machineResource.Name}' from the Octopus server...");
                 await repository.Workers.Delete(machineResource);
             }
 
