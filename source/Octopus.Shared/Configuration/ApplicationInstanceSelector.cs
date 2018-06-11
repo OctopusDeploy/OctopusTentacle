@@ -139,7 +139,7 @@ namespace Octopus.Shared.Configuration
             var instance = new ApplicationInstanceRecord(instanceName, applicationName, configurationFile);
             instanceStore.SaveInstance(instance);
 
-            var homeConfig = new HomeConfiguration(applicationName, new XmlFileKeyValueStore(configurationFile));
+            var homeConfig = new HomeConfiguration(applicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
             var home = !string.IsNullOrWhiteSpace(homeDirectory) ? homeDirectory : parentDirectory;
             log.Info($"Setting home directory to: {home}");
             homeConfig.HomeDirectory = home;
@@ -155,7 +155,7 @@ namespace Octopus.Shared.Configuration
                 applicationName,
                 record.InstanceName,
                 record.ConfigurationFilePath,
-                new XmlFileKeyValueStore(record.ConfigurationFilePath));
+                new XmlFileKeyValueStore(fileSystem, record.ConfigurationFilePath));
         }
     }
 }

@@ -409,20 +409,16 @@ namespace Octopus.Shared.Util
 
         public void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
-            ulong freeBytesAvailable;
-            ulong totalNumberOfBytes;
-            ulong totalNumberOfFreeBytes;
-
-            var success = GetDiskFreeSpaceEx(directoryPath, out freeBytesAvailable, out totalNumberOfBytes, out totalNumberOfFreeBytes);
+            var success = GetDiskFreeSpaceEx(directoryPath, out _, out _, out var totalNumberOfFreeBytes);
             if (!success)
                 return;
 
-            // Always make sure at least 500MB are available regardless of what we need 
             var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;
-            required = Math.Max(required, 500L*1024*1024);
+            // Make sure there is 10% (and a bit extra) more than we need
+            required += required / 10 + 1024 * 1024;
             if (totalNumberOfFreeBytes < required)
             {
-                throw new IOException(string.Format("The drive containing the directory '{0}' on machine '{1}' does not have enough free disk space available for this operation to proceed. The disk only has {2} available; please free up at least {3}.", directoryPath, Environment.MachineName, totalNumberOfFreeBytes.ToFileSizeString(), required.ToFileSizeString()));
+                throw new IOException($"The drive containing the directory '{directoryPath}' on machine '{Environment.MachineName}' does not have enough free disk space available for this operation to proceed. The disk only has {totalNumberOfFreeBytes.ToFileSizeString()} available; please free up at least {required.ToFileSizeString()}.");
             }
         }
 

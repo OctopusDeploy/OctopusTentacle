@@ -40,6 +40,7 @@ namespace Octopus.Shared.Configuration
         {
             var parentDirectory = Path.GetDirectoryName(configurationFile);
             fileSystem.EnsureDirectoryExists(parentDirectory);
+            fileSystem.EnsureDiskHasEnoughFreeSpace(configurationFile, 1024 * 1024);
 
             using (var writer = new StreamWriter(fileSystem.OpenFile(configurationFile, FileMode.Create)))
             {

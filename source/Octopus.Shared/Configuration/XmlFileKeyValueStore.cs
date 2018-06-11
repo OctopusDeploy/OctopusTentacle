@@ -8,10 +8,12 @@ namespace Octopus.Shared.Configuration
 {
     public class XmlFileKeyValueStore : XmlKeyValueStore
     {
+        private readonly IOctopusFileSystem fileSystem;
         readonly string configurationFile;
 
-        public XmlFileKeyValueStore(string configurationFile, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        public XmlFileKeyValueStore(IOctopusFileSystem fileSystem, string configurationFile, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
+            this.fileSystem = fileSystem;
             this.configurationFile = PathHelper.ResolveRelativeFilePath(configurationFile);
         }
 
@@ -35,6 +37,7 @@ namespace Octopus.Shared.Configuration
 
         protected override Stream OpenForWriting()
         {
+            fileSystem.EnsureDiskHasEnoughFreeSpace(configurationFile, 1024 * 1024);
             return new FileStream(configurationFile, FileMode.OpenOrCreate, FileAccess.Write);
         }
     }
