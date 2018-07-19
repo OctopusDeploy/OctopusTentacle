@@ -18,10 +18,17 @@ using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 {
+    public enum MachineType
+    {
+        DeploymentTarget,
+        Worker
+    }
+
     public class TentacleSetupWizardModel : ViewModel, IScriptableViewModel, IHaveServices
     {
         readonly ApplicationName applicationName;
         CommunicationStyle communicationStyle;
+        MachineType machineType;
         string octopusServerUrl;
         bool useUsernamePasswordAuthMode;
         bool useApiKeyAuthMode;
@@ -34,11 +41,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string selectedTenantTags;
         string selectedTenants;
         string selectedMachinePolicy;
+        string selectedWorkerPool;
         string[] potentialEnvironments;
         string[] potentialRoles;
         string[] potentialMachinePolicies;
         string[] potentialTenantTags;
         string[] potentialTenants;
+        string[] potentialWorkerPools;
         string machineName;
         string homeDirectory;
         string applicationInstallDirectory;
@@ -79,6 +88,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             Validator = CreateValidator();
             ServerCommsPort = "10943";
             CommunicationStyle = CommunicationStyle.TentaclePassive;
+            
 
             // It would be nice to do this by sniffing for the advfirewall command, but doing
             // so would slow down showing the wizard. This check identifies and excludes Windows Server 2003.
@@ -115,6 +125,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 if (value == applicationInstallDirectory) return;
                 applicationInstallDirectory = value;
                 OnPropertyChanged();
+            }
+        }
+
+        public MachineType MachineType
+        {
+            get => machineType;
+            set
+            {
+                if (value == machineType) return;
+                machineType = value;
+                OnPropertyChanged("MachineType");
             }
         }
 
@@ -275,6 +296,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
+        public string[] PotentialWorkerPools
+        {
+            get => potentialWorkerPools;
+            set
+            {
+                if (Equals(value, potentialWorkerPools)) return;
+                potentialWorkerPools = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string[] PotentialRoles
         {
             get => potentialRoles;
@@ -336,6 +368,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 if (value == selectedTenants) return;
                 selectedTenants = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string SelectedWorkerPool
+        {
+            get => selectedWorkerPool;
+            set
+            {
+                if (value == selectedWorkerPool) return;
+                selectedWorkerPool = value;
                 OnPropertyChanged();
             }
         }
@@ -478,6 +521,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     logger.Info("Getting available environments...");
                     PotentialEnvironments = (await repository.Environments.GetAll()).Select(e => e.Name).ToArray();
 
+                    var workerPools = await repository.WorkerPools.GetAll();
+                    PotentialWorkerPools = workerPools.Select(e => e.Name).ToArray();
+                    SelectedWorkerPool = workerPools.FirstOrDefault(wp => wp.IsDefault)?.Name;
+
                     AreTenantsSupported = repository.Client.RootDocument.HasLink("Tenants");
                     if (AreTenantsSupported)
                     {
@@ -551,8 +598,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             validator.RuleSet("TentacleActiveDetails", delegate
             {
                 validator.RuleFor(m => m.MachineName).NotEmpty().WithMessage("Please enter a machine name");
-                validator.RuleFor(m => m.SelectedRoles).NotEmpty().WithMessage("Please select or enter at least one role");
-                validator.RuleFor(m => m.SelectedEnvironment).NotEmpty().WithMessage("Please select an environment");
+                validator.RuleFor(m => m.SelectedRoles).NotEmpty().WithMessage("Please select or enter at least one role").Unless(m => m.MachineType == MachineType.Worker);
+                validator.RuleFor(m => m.SelectedEnvironment).NotEmpty().WithMessage("Please select an environment").Unless(m => m.MachineType == MachineType.Worker);
+                validator.RuleFor(m => m.SelectedWorkerPool).NotEmpty().WithMessage("Please select a worker pool").Unless(m => m.MachineType == MachineType.DeploymentTarget);
                 //validator.RuleFor(m => m.SelectedMachinePolicy).NotEmpty().WithMessage("Please select a machine policy");
             });
             return validator;
@@ -606,7 +654,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     yield return script;
                 }
 
-                var register = Cli("register-with")
+                var register = Cli(MachineType==MachineType.Worker ? "register-worker" : "register-with")
                     .Argument("server", OctopusServerUrl)
                     .Argument("name", machineName)
                     .Argument("comms-style", CommunicationStyle.TentacleActive)
@@ -622,19 +670,26 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     register.Argument("username", username)
                         .Argument("password", password);
 
-                register.Argument("environment", SelectedEnvironment);
-
-                if (AreTenantsSupported)
+                if (MachineType == MachineType.DeploymentTarget)
                 {
-                    foreach (var tag in SelectedTenantTagsArray)
-                        register.Argument("tenanttag", tag);
+                    register.Argument("environment", SelectedEnvironment);
 
-                    foreach (var tenant in SelectedTenantsArray)
-                        register.Argument("tenant", tenant);
+                    if (AreTenantsSupported)
+                    {
+                        foreach (var tag in SelectedTenantTagsArray)
+                            register.Argument("tenanttag", tag);
+
+                        foreach (var tenant in SelectedTenantsArray)
+                            register.Argument("tenant", tenant);
+                    }
+
+                    foreach (var role in SelectedRolesArray)
+                        register.Argument("role", role);
                 }
-
-                foreach (var role in SelectedRolesArray)
-                    register.Argument("role", role);
+                else if(MachineType == MachineType.Worker)
+                {
+                    register.Argument("workerpool", SelectedWorkerPool);
+                }
 
                 register.Argument("policy", SelectedMachinePolicy);
 

@@ -27,13 +27,15 @@
                 <controls:ErrorMessage ErrorPath="MachineName" />
             </controls:ControlGroup>
 
-            <controls:ControlGroup Header="Environment" Target="{Binding ElementName=EnvironmentComboBox}">
-                <ComboBox ItemsSource="{Binding Path=PotentialEnvironments}" SelectedItem="{Binding Path=SelectedEnvironment}" Width="200" Name="EnvironmentComboBox" />
-                <controls:ErrorMessage ErrorPath="SelectedEnvironment" />
-            </controls:ControlGroup>
+            <!-- Deployment Target Options -->
+            <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=DeploymentTarget}">
+                <controls:ControlGroup Header="Environment" Target="{Binding ElementName=EnvironmentComboBox}">
+                    <ComboBox ItemsSource="{Binding Path=PotentialEnvironments}" SelectedItem="{Binding Path=SelectedEnvironment}" Width="200" Name="EnvironmentComboBox" />
+                    <controls:ErrorMessage ErrorPath="SelectedEnvironment" />
+                </controls:ControlGroup>
 
-            <controls:ControlGroup Header="Roles" Target="{Binding ElementName=RolesTextBox}">
-                <controls:TaggingAutoCompleteBox 
+                <controls:ControlGroup Header="Roles" Target="{Binding ElementName=RolesTextBox}">
+                    <controls:TaggingAutoCompleteBox 
                     Text="{Binding Path=SelectedRoles, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                     x:Name="RolesAutoCompleteBox" 
                     Width="350" 
@@ -42,20 +44,20 @@
                     TagsSource="{Binding Path=PotentialRoles}"
                     HorizontalAlignment="Left"
                     TextBoxStyle="{StaticResource TextBox.Default}">
-                    <controls:TaggingAutoCompleteBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Path=Name}" />
-                        </DataTemplate>
-                    </controls:TaggingAutoCompleteBox.ItemTemplate>
-                </controls:TaggingAutoCompleteBox>
-                <controls:ErrorMessage ErrorPath="SelectedRoles" />
-                <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Enter the machine roles, using spaces or commas as separators. For example: web-server, app-server" />
-            </controls:ControlGroup>
+                        <controls:TaggingAutoCompleteBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=Name}" />
+                            </DataTemplate>
+                        </controls:TaggingAutoCompleteBox.ItemTemplate>
+                    </controls:TaggingAutoCompleteBox>
+                    <controls:ErrorMessage ErrorPath="SelectedRoles" />
+                    <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Enter the machine roles, using spaces or commas as separators. For example: web-server, app-server" />
+                </controls:ControlGroup>
 
-            <controls:ControlGroup Header="Tenants" 
+                <controls:ControlGroup Header="Tenants" 
                                    Target="{Binding ElementName=TenantsAutoCompleteBox}" 
                                    Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
-                <controls:TaggingAutoCompleteBox 
+                    <controls:TaggingAutoCompleteBox 
                     Text="{Binding Path=SelectedTenants, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                     x:Name="TenantsAutoCompleteBox" 
                     Width="350" 
@@ -64,22 +66,22 @@
                     TagsSource="{Binding Path=PotentialTenants}"
                     HorizontalAlignment="Left"
                     TextBoxStyle="{StaticResource TextBox.Default}">
-                    <controls:TaggingAutoCompleteBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Path=Name}" />
-                        </DataTemplate>
-                    </controls:TaggingAutoCompleteBox.ItemTemplate>
-                </controls:TaggingAutoCompleteBox>
-                <controls:ErrorMessage ErrorPath="SelectedTenants" />
-                <TextBlock TextWrapping="Wrap" 
+                        <controls:TaggingAutoCompleteBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=Name}" />
+                            </DataTemplate>
+                        </controls:TaggingAutoCompleteBox.ItemTemplate>
+                    </controls:TaggingAutoCompleteBox>
+                    <controls:ErrorMessage ErrorPath="SelectedTenants" />
+                    <TextBlock TextWrapping="Wrap" 
                            Foreground="Gray" 
                            Text="Enter the tenants, using spaces or commas as separators, wrapping with quotes if they contain a space. For example: &quot;Acme&quot;, &quot;Globex&quot;" />
-            </controls:ControlGroup>
+                </controls:ControlGroup>
 
-            <controls:ControlGroup Header="Tenant Tags" 
+                <controls:ControlGroup Header="Tenant Tags" 
                                    Target="{Binding ElementName=TenantTagsAutoCompleteBox}" 
                                    Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
-                <controls:TaggingAutoCompleteBox 
+                    <controls:TaggingAutoCompleteBox 
                     Text="{Binding Path=SelectedTenantTags, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                     x:Name="TenantTagsAutoCompleteBox" 
                     Width="350" 
@@ -88,17 +90,26 @@
                     TagsSource="{Binding Path=PotentialTenantTags}"
                     HorizontalAlignment="Left"
                     TextBoxStyle="{StaticResource TextBox.Default}">
-                    <controls:TaggingAutoCompleteBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Path=Name}" />
-                        </DataTemplate>
-                    </controls:TaggingAutoCompleteBox.ItemTemplate>
-                </controls:TaggingAutoCompleteBox>
-                <controls:ErrorMessage ErrorPath="SelectedTenantTags" />
-                <TextBlock TextWrapping="Wrap" 
+                        <controls:TaggingAutoCompleteBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=Name}" />
+                            </DataTemplate>
+                        </controls:TaggingAutoCompleteBox.ItemTemplate>
+                    </controls:TaggingAutoCompleteBox>
+                    <controls:ErrorMessage ErrorPath="SelectedTenantTags" />
+                    <TextBlock TextWrapping="Wrap" 
                            Foreground="Gray" 
                            Text="Enter the tenant tags, using spaces or commas as separators, wrapping with quotes if they contain a space. For example: &quot;Hosting/Shared&quot;, &quot;Type/External&quot;" />
-            </controls:ControlGroup>
+                </controls:ControlGroup>
+            </StackPanel>
+
+            <!-- Deployment Target Options -->
+            <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=Worker}">
+                <controls:ControlGroup Header="Worker Pool" Target="{Binding ElementName=WorkerPoolComboBox}">
+                    <ComboBox ItemsSource="{Binding Path=PotentialWorkerPools}" SelectedItem="{Binding Path=SelectedWorkerPool}" Width="200" Name="WorkerPoolComboBox" />
+                    <controls:ErrorMessage ErrorPath="SelectedWorkerPool" />
+                </controls:ControlGroup>
+            </StackPanel>
 
             <controls:ControlGroup Header="Machine Policy" 
                                    Target="{Binding ElementName=MachinePolicyComboBox}"

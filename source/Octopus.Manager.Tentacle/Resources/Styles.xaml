@@ -206,6 +206,8 @@
     <converters:InverseBooleanToVisibilityConverter x:Key="Converter.InverseBooleanToVisibilityConverter" />
     <converters:InverseBooleanConverter x:Key="Converter.InverseBooleanConverter" />
     <converters:BooleanToYesNoConverter x:Key="Converter.BooleanToYesNoConverter" />
+    <converters:EnumBooleanConverter x:Key="Converter.EnumBooleanConverter" />
+    <converters:EnumToVisibilityConverter x:Key="Converter.EnumToVisibilityConverter" />
 
     <Style TargetType="controls:ErrorMessage" x:Key="ErrorMessage.Default">
         <Setter Property="Visibility" Value="{Binding RelativeSource={RelativeSource Self}, Path=HasError, Converter={StaticResource Converter.BooleanToVisibilityConverter}}" />
