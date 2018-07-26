@@ -134,7 +134,9 @@
                         </Grid.RowDefinitions>
                         <TabPanel x:Name="HeaderPanel" Grid.Column="0" IsItemsHost="true" Margin="12,22,2,0" Grid.Row="0" KeyboardNavigation.TabIndex="1" Panel.ZIndex="1"/>
                         <Border x:Name="ContentPanel" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="4,0,0,0" Background="{TemplateBinding Background}" Grid.Column="0" KeyboardNavigation.DirectionalNavigation="Contained" Grid.Row="1" KeyboardNavigation.TabIndex="2" KeyboardNavigation.TabNavigation="Local">
-                            <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" Margin="{TemplateBinding Padding}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,0,50">
+                                <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" Margin="{TemplateBinding Padding}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                            </ScrollViewer>
                         </Border>
                     </Grid>
                     <ControlTemplate.Triggers>
@@ -726,4 +728,31 @@
             </Path>
         </Canvas>
     </Viewbox>
+    <Style
+        x:Key="LinkButton"
+        TargetType="Button">
+        <Setter
+            Property="Template">
+            <Setter.Value>
+                <ControlTemplate
+                    TargetType="Button">
+                    <TextBlock
+                        TextDecorations="Underline">
+                        <ContentPresenter /></TextBlock>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter
+            Property="Foreground"
+            Value="Blue" />
+        <Style.Triggers>
+            <Trigger
+                Property="IsMouseOver"
+                Value="true">
+                <Setter
+                    Property="Foreground"
+                    Value="Red" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
 </ResourceDictionary>

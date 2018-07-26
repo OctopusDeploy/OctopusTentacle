@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 
 namespace Octopus.Manager.Tentacle.Shell
 {
@@ -7,7 +8,7 @@ namespace Octopus.Manager.Tentacle.Shell
     {
         bool IsNextEnabled { get; }
         event Action OnNavigateNext;
-        void OnNext(CancelEventArgs e);
+        Task OnNext(CancelEventArgs e);
         void OnBack(CancelEventArgs e);
     }
 }

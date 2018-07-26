@@ -1,7 +1,13 @@
-﻿using System.Windows;
+﻿using System.ComponentModel;
+using System.Drawing;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Navigation;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Util;
+using Color = System.Drawing.Color;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 {
@@ -16,7 +22,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
         public TentacleActiveTab(TentacleSetupWizardModel model)
         {
             InitializeComponent();
-
+        
             DataContext = this.model = model;
             logger = new TextBoxLogger(outputLog);
             Loaded += (a, e) =>
@@ -36,19 +42,53 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             e.Handled = true;
         }
 
-        async void AuthenticateClicked(object sender, RoutedEventArgs e)
+        public override async Task OnNext(CancelEventArgs e)
         {
+            await base.OnNext(e);
             model.PushRuleSet("TentacleActive");
+            model.ProxyWizardModel.PushRuleSet("ProxySettings");
             model.Validate();
-            if (!model.IsValid)
+            model.ProxyWizardModel.Validate();
+            if (!model.IsValid || !model.ProxyWizardModel.IsValid)
+            {
+                e.Cancel = true;
                 return;
+            }
 
-            authenticateButton.IsEnabled = false;
+            setProgressBarToStatus(false, false);
+            connectionDialog.Visibility = Visibility.Visible;
             outputLog.Visibility = Visibility.Visible;
             logger.Clear();
 
             await model.VerifyCredentials(logger);
-            authenticateButton.IsEnabled = true;
+            if (model.HaveCredentialsBeenVerified)
+            {
+                setProgressBarToStatus(false, true);
+                connectionDialog.Visibility = Visibility.Hidden;
+            }
+            else
+            {
+                setProgressBarToStatus(true, true);
+                e.Cancel = true;
+            }
+        }
+
+        void setProgressBarToStatus(bool error, bool isComplete)
+        {
+            progressBar.Value = (error || isComplete) ? 100 : 0;
+            progressBar.IsIndeterminate = (!error && !isComplete);
+            progressBar.Foreground = new SolidColorBrush(error ? Colors.Red : Colors.Green);
+        }
+
+        void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        {
+            connectionDialog.Visibility = Visibility.Hidden;
+        }
+
+        void ConnectionDialog_OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            IsNextEnabled = ((Grid) sender).Visibility != Visibility.Visible;
+            IsBackEnabled = ((Grid) sender).Visibility != Visibility.Visible;
         }
     }
 }
