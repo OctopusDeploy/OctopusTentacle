@@ -6,20 +6,15 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
     xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
+    xmlns:proxy="clr-namespace:Octopus.Manager.Tentacle.Proxy"
     mc:Ignorable="d" 
     d:DesignHeight="500" d:DesignWidth="650"
     Header="Octopus Server"
     RuleSet="TentacleActive"
     Style="{StaticResource TabView.Normal}"
     Visibility="{Binding Path=IsTentacleActive, Converter={StaticResource Converter.BooleanToVisibility}}"
-    IsNextEnabled="{Binding Path=HaveCredentialsBeenVerified}"
     >
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        
         <StackPanel>
             <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Octopus Credentials" />
 
@@ -42,7 +37,7 @@
                 <TextBlock Style="{StaticResource TextBlock.Small}">
                     <Run>This account is only used for registering the Tentacle and is never used again (nor stored). Alternatively you may use an API key.</Run>
                 </TextBlock>
-                
+
                 <controls:ControlGroup Header="Username" Target="{Binding ElementName=UsernameTextBox}">
                     <TextBox Text="{Binding Path=Username, UpdateSourceTrigger=PropertyChanged}" Name="UsernameTextBox" Width="300" />
                     <controls:ErrorMessage ErrorPath="Username" />
@@ -59,16 +54,36 @@
                     <Run>This API key is only used for registering the Tentacle and is never used again (nor stored).</Run>
                     <Hyperlink NavigateUri="http://g.octopushq.com/ApiKey" RequestNavigate="Navigate">Learn about creating an API key here.</Hyperlink>
                 </TextBlock>
-                
+
                 <controls:ControlGroup Header="API key" Target="{Binding ElementName=ApiKeyTextBox}">
                     <TextBox Text="{Binding Path=ApiKey, UpdateSourceTrigger=PropertyChanged}" Name="ApiKeyTextBox" Width="300" />
                     <controls:ErrorMessage ErrorPath="ApiKey" />
                 </controls:ControlGroup>
             </StackPanel>
-
-            <Button Click="AuthenticateClicked" Style="{StaticResource Button.Success}" Padding="18,8,18,8" Width="150" Margin="10" Name="authenticateButton">Verify credentials</Button>
+            <Expander Header="Proxy Settings">
+                <proxy:ProxyConfigurationControl DataContext="{Binding ProxyWizardModel}"/>
+            </Expander>
         </StackPanel>
-
-        <TextBox Grid.Row="1" Margin="0,0,0,40" Name="outputLog" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Foreground="SteelBlue" TextWrapping="NoWrap" />
+        <Grid Name="connectionDialog" Background="Transparent" IsVisibleChanged="ConnectionDialog_OnIsVisibleChanged" Visibility="Hidden">
+            <StackPanel Margin="15" Background="White" VerticalAlignment="Center" MinHeight="200">
+                <StackPanel.Effect>
+                    <DropShadowEffect BlurRadius="10" Opacity="0.4" ShadowDepth="0"/>
+                </StackPanel.Effect>
+                <Border>
+                    <Grid Margin="20" Height="200">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Margin="0,0,0,15" Style="{StaticResource TextBlock.Big}">Establishing connection with your Octopus Server...</TextBlock>
+                        <ProgressBar Name="progressBar" Value="100" IsIndeterminate="True" Grid.Row="1" Margin="0,0,0,15" Height="20"/>
+                        <TextBox Grid.Row="2" Name="outputLog" IsReadOnly="True" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Foreground="SteelBlue" TextWrapping="NoWrap" />
+                        <Button Click="ButtonBase_OnClick" Grid.Row="3" Style="{StaticResource LinkButton}" Content="close" HorizontalAlignment="Right"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </Grid>
     </Grid>
 </shell:TabView>

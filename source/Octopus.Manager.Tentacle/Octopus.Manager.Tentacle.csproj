@@ -223,6 +223,9 @@
     <Compile Include="PreReq\PrerequisiteCheckResult.cs" />
     <Compile Include="PreReq\PreReqWindow.cs" />
     <Compile Include="PreReq\TentaclePrerequisiteProfile.cs" />
+    <Compile Include="Proxy\ProxyConfigurationControl.xaml.cs">
+      <DependentUpon>ProxyConfigurationControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Proxy\ProxyConfigurationTab.cs" />
     <Compile Include="Proxy\ProxyWizardLauncher.cs" />
     <Compile Include="Proxy\ProxyWizardModel.cs" />
@@ -302,6 +305,10 @@
     <Page Include="PreReq\PreReqWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Proxy\ProxyConfigurationControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Proxy\ProxyConfigurationTab.xaml">
       <Generator>MSBuild:Compile</Generator>

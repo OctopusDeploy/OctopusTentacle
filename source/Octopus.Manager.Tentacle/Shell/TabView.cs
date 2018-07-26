@@ -1,13 +1,23 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Nito.AsyncEx;
 using Octopus.Manager.Tentacle.Infrastructure;
 
 namespace Octopus.Manager.Tentacle.Shell
 {
     public class TabView : TabItem, ITab
     {
+        public TabView()
+        {
+            if (DesignerProperties.GetIsInDesignMode(this))
+            {
+                Loaded += (sender, args) => { Header = Content; };
+            }
+        }
+
         static TabView()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof (TabView), new FrameworkPropertyMetadata(typeof (TabView)));
@@ -31,6 +41,12 @@ namespace Octopus.Manager.Tentacle.Shell
         {
             get => (bool)GetValue(IsNextEnabledProperty);
             set => SetValue(IsNextEnabledProperty, value);
+        }
+
+        public bool IsBackEnabled
+        {
+            get => (bool)GetValue(IsBackEnabledProperty);
+            set => SetValue(IsBackEnabledProperty, value);
         }
 
         public bool IsViewed
@@ -66,7 +82,7 @@ namespace Octopus.Manager.Tentacle.Shell
         {
         }
 
-        public virtual void OnNext(CancelEventArgs e)
+        public virtual async Task OnNext(CancelEventArgs e)
         {
             Model.PushRuleSet(RuleSet);
 
@@ -91,6 +107,7 @@ namespace Octopus.Manager.Tentacle.Shell
         }
 
         public static readonly DependencyProperty IsNextEnabledProperty = DependencyProperty.Register("IsNextEnabled", typeof (bool), typeof (TabView), new PropertyMetadata(true));
+        public static readonly DependencyProperty IsBackEnabledProperty = DependencyProperty.Register("IsBackEnabled", typeof (bool), typeof (TabView), new PropertyMetadata(true));
         public static readonly DependencyProperty IsViewedProperty = DependencyProperty.Register("IsViewed", typeof (bool), typeof (TabView), new PropertyMetadata(false, IsViewedChanged));
         public static readonly DependencyProperty RuleSetProperty = DependencyProperty.Register("RuleSet", typeof (string), typeof (TabView), new PropertyMetadata(null));
         public static readonly DependencyProperty IsPreviousTabProperty = DependencyProperty.Register("IsPreviousTab", typeof (bool), typeof (TabView), new PropertyMetadata(false));

@@ -69,13 +69,13 @@ namespace Octopus.Manager.Tentacle.Shell
             tabs.Items.Add(tabItem);
         }
 
-        void NextClicked(object sender, EventArgs e)
+        async void NextClicked(object sender, EventArgs e)
         {
             var current = tabs.SelectedItem as ITab;
             if (current != null)
             {
                 var args = new CancelEventArgs();
-                current.OnNext(args);
+                await current.OnNext(args);
                 if (args.Cancel)
                     return;
             }
@@ -124,8 +124,8 @@ namespace Octopus.Manager.Tentacle.Shell
 
         void RefreshWizardButtons()
         {
-            nextButton.Content = "Next »";
-            backButton.Content = "« Back";
+            nextButton.Content = "Next";
+            backButton.Content = "Back";
 
             var visibleTabIndexes = GetVisibleTabIndexes();
 

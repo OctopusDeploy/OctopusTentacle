@@ -11,5 +11,10 @@
 
             DataContext = model;
         }
+
+        public ProxyConfigurationTab()
+        {
+            InitializeComponent();
+        }
     }
 }
