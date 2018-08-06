@@ -1,5 +1,5 @@
 ﻿<shell:TabView 
-    x:Class="Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views.TentacleActiveTab"
+    x:Class="Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views.OctopusServerConnectionTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -11,8 +11,8 @@
     d:DesignHeight="500" d:DesignWidth="650"
     Header="Octopus Server"
     RuleSet="TentacleActive"
+    IsSkipEnabled="True"
     Style="{StaticResource TabView.Normal}"
-    Visibility="{Binding Path=IsTentacleActive, Converter={StaticResource Converter.BooleanToVisibility}}"
     >
     <Grid>
         <StackPanel>

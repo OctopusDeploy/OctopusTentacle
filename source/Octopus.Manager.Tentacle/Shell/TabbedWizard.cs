@@ -69,6 +69,33 @@ namespace Octopus.Manager.Tentacle.Shell
             tabs.Items.Add(tabItem);
         }
 
+        async void SkipClicked(object sender, RoutedEventArgs e)
+        {
+            var current = tabs.SelectedItem as ITab;
+            if (current != null)
+            {
+                var args = new CancelEventArgs();
+                await current.OnSkip(args);
+                if (args.Cancel)
+                    return;
+            }
+
+            var visibleTabIndexes = GetVisibleTabIndexes();
+
+            if (tabs.SelectedIndex == visibleTabIndexes.LastOrDefault())
+            {
+                Window.GetWindow(this)?.Close();
+                return;
+            }
+
+            do
+            {
+                tabs.SelectedIndex++;
+            } while (((TabView)tabs.SelectedItem).Visibility != Visibility.Visible && tabs.SelectedIndex < tabs.Items.Count - 1);
+
+            RefreshWizardButtons();
+        }
+
         async void NextClicked(object sender, EventArgs e)
         {
             var current = tabs.SelectedItem as ITab;

@@ -37,6 +37,12 @@ namespace Octopus.Manager.Tentacle.Shell
 
         public ViewModel Model => ((ViewModel)DataContext);
 
+        public bool IsSkipEnabled
+        {
+            get => (bool)GetValue(IsSkipEnabledProperty);
+            set => SetValue(IsSkipEnabledProperty, value);
+        }
+
         public bool IsNextEnabled
         {
             get => (bool)GetValue(IsNextEnabledProperty);
@@ -82,6 +88,10 @@ namespace Octopus.Manager.Tentacle.Shell
         {
         }
 
+        public virtual async Task OnSkip(CancelEventArgs e)
+        {
+        }
+
         public virtual async Task OnNext(CancelEventArgs e)
         {
             Model.PushRuleSet(RuleSet);
@@ -106,6 +116,7 @@ namespace Octopus.Manager.Tentacle.Shell
             }
         }
 
+        public static readonly DependencyProperty IsSkipEnabledProperty = DependencyProperty.Register("IsSkipEnabled", typeof (bool), typeof (TabView), new PropertyMetadata(false));
         public static readonly DependencyProperty IsNextEnabledProperty = DependencyProperty.Register("IsNextEnabled", typeof (bool), typeof (TabView), new PropertyMetadata(true));
         public static readonly DependencyProperty IsBackEnabledProperty = DependencyProperty.Register("IsBackEnabled", typeof (bool), typeof (TabView), new PropertyMetadata(true));
         public static readonly DependencyProperty IsViewedProperty = DependencyProperty.Register("IsViewed", typeof (bool), typeof (TabView), new PropertyMetadata(false, IsViewedChanged));
