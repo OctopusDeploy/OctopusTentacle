@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Threading.Tasks;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 {
@@ -15,6 +17,18 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             InitializeComponent();
 
             DataContext = this.model = model;
+        }
+
+        public override async Task OnNext(CancelEventArgs e)
+        {
+            await base.OnNext(e);
+            model.SkipServerRegistration = false;
+        }
+
+        public override async Task OnSkip(CancelEventArgs e)
+        {
+            await base.OnSkip(e);
+            model.SkipServerRegistration = true;
         }
     }
 }

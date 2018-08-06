@@ -10,7 +10,7 @@
     Header="Machine Type"
     RuleSet="MachineType"
     Style="{StaticResource TabView.Normal}"
-    Visibility="{Binding Path=IsTentacleActive, Converter={StaticResource Converter.BooleanToVisibility}}"
+    Visibility="{Binding Path=HaveCredentialsBeenVerified, Converter={StaticResource Converter.BooleanToVisibility}}"
     >
     <Grid>
         <StackPanel>

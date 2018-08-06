@@ -57,6 +57,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string octopusThumbprint;
         string serverCommsPort;
         string serverWebSocket;
+        bool skipServerRegistration;
         readonly ProxyWizardModel proxyWizardModel;
 
         public TentacleSetupWizardModel(string selectedInstance) : this(selectedInstance, ApplicationName.Tentacle, new ProxyWizardModel(selectedInstance, ApplicationName.Tentacle))
@@ -466,6 +467,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public bool AwaitingHandshake => Handshake == null;
 
+        public bool SkipServerRegistration
+        {
+            get => skipServerRegistration;
+            set
+            {
+                if (value == skipServerRegistration) return;
+                skipServerRegistration = value;
+                OnPropertyChanged();
+            }
+        }
+
         public IEnumerable<OctoService> Services
         {
             get { yield return new OctoService(TentacleExe, InstanceName); }
@@ -524,6 +536,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     var workerPools = await repository.WorkerPools.GetAll();
                     PotentialWorkerPools = workerPools.Select(e => e.Name).ToArray();
                     SelectedWorkerPool = workerPools.FirstOrDefault(wp => wp.IsDefault)?.Name;
+
+                    var cofiguration = await repository.CertificateConfiguration.GetOctopusCertificate();
+                    OctopusThumbprint = cofiguration.Thumbprint;
 
                     AreTenantsSupported = repository.Client.RootDocument.HasLink("Tenants");
                     if (AreTenantsSupported)
@@ -644,22 +659,27 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
             yield return config.Build();
 
-            // TODO: Use octopus server
-
-            if (IsTentacleActive)
+            if(!SkipServerRegistration && HaveCredentialsBeenVerified)
             {
-                ProxyWizardModel.Executable = TentacleExe;
-                foreach (var script in ProxyWizardModel.GenerateScript())
+                if (CommunicationStyle == CommunicationStyle.TentacleActive)
                 {
-                    yield return script;
+                    ProxyWizardModel.Executable = TentacleExe;
+                    foreach (var script in ProxyWizardModel.GenerateScript())
+                    {
+                        yield return script;
+                    }
                 }
 
                 var register = Cli(MachineType==MachineType.Worker ? "register-worker" : "register-with")
                     .Argument("server", OctopusServerUrl)
                     .Argument("name", machineName)
-                    .Argument("comms-style", CommunicationStyle.TentacleActive)
-                    .Argument("server-comms-port", serverCommsPort)
+                    .Argument("comms-style", CommunicationStyle)
                     .Flag("force");
+
+                if (CommunicationStyle == CommunicationStyle.TentacleActive)
+                {
+                    register = register.Argument("server-comms-port", serverCommsPort);
+                }
 
                 if (!string.IsNullOrWhiteSpace(serverWebSocket))
                     register = register.Argument("server-web-socket", serverWebSocket);
@@ -695,7 +715,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                 yield return register.Build();
             }
-            else
+            if (IsTentaclePassive)
             {
                 if (!string.IsNullOrWhiteSpace(OctopusThumbprint))
                     yield return Cli("configure").Argument("trust", OctopusThumbprint).Build();

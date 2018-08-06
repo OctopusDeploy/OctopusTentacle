@@ -252,8 +252,8 @@
     <Compile Include="TentacleConfiguration\SetupWizard\Views\TentacleActiveDetailsTab.xaml.cs">
       <DependentUpon>TentacleActiveDetailsTab.xaml</DependentUpon>
     </Compile>
-    <Compile Include="TentacleConfiguration\SetupWizard\Views\TentacleActiveTab.xaml.cs">
-      <DependentUpon>TentacleActiveTab.xaml</DependentUpon>
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\OctopusServerConnectionTab.xaml.cs">
+      <DependentUpon>OctopusServerConnectionTab.xaml</DependentUpon>
     </Compile>
     <Compile Include="TentacleConfiguration\SetupWizard\Views\TentaclePassiveTab.xaml.cs">
       <DependentUpon>TentaclePassiveTab.xaml</DependentUpon>
@@ -346,7 +346,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TentacleConfiguration\SetupWizard\Views\TentacleActiveTab.xaml">
+    <Page Include="TentacleConfiguration\SetupWizard\Views\OctopusServerConnectionTab.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

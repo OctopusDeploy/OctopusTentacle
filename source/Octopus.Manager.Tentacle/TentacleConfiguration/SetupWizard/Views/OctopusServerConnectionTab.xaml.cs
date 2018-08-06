@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -7,19 +6,18 @@ using System.Windows.Media;
 using System.Windows.Navigation;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Util;
-using Color = System.Drawing.Color;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 {
     /// <summary>
-    /// Interaction logic for TentacleActiveTab.xaml
+    /// Interaction logic for OctopusServerConnectionTab.xaml
     /// </summary>
-    public partial class TentacleActiveTab
+    public partial class OctopusServerConnectionTab
     {
         readonly TentacleSetupWizardModel model;
         readonly TextBoxLogger logger;
 
-        public TentacleActiveTab(TentacleSetupWizardModel model)
+        public OctopusServerConnectionTab(TentacleSetupWizardModel model)
         {
             InitializeComponent();
         

@@ -6,13 +6,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
     xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
-    xmlns:controls1="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Input.Toolkit"
     mc:Ignorable="d" 
     d:DesignHeight="500" d:DesignWidth="650"
     Header="Registration"
     RuleSet="TentacleActiveDetails"
     Style="{StaticResource TabView.Normal}"
-    Visibility="{Binding Path=IsTentacleActive, Converter={StaticResource Converter.BooleanToVisibility}}"
+    IsSkipEnabled="{Binding Path=IsTentaclePassive}"
+    Visibility="{Binding Path=HaveCredentialsBeenVerified, Converter={StaticResource Converter.BooleanToVisibility}}"
     >
     <Grid>
         <StackPanel>
