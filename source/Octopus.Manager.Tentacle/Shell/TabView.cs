@@ -90,6 +90,7 @@ namespace Octopus.Manager.Tentacle.Shell
 
         public virtual async Task OnSkip(CancelEventArgs e)
         {
+            Model.PopRuleSet(RuleSet);
         }
 
         public virtual async Task OnNext(CancelEventArgs e)
