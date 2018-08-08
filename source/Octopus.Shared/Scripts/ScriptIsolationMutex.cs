@@ -27,7 +27,7 @@ namespace Octopus.Shared.Scripts
             return new ScriptIsolationMutexReleaser(isolation, taskLog, taskLock, token, mutexAcquireTimeout, lockName, taskId).EnterLock();
         }
 
-        class ScriptIsolationMutexReleaser: IDisposable
+        class ScriptIsolationMutexReleaser : IDisposable
         {
             readonly TimeSpan mutexAcquireTimeout;
             readonly string lockName;
@@ -90,7 +90,7 @@ namespace Octopus.Shared.Scripts
 
                 WriteToSystemLog($"Failed to acquire lock within {InitialWaitTime}.");
 
-                Busy();
+                Busy(true);
 
                 EnterWriteLockWithTimeout();
             }
@@ -105,7 +105,7 @@ namespace Octopus.Shared.Scripts
 
                 WriteToSystemLog($"Failed to acquire lock within {InitialWaitTime}.");
 
-                Busy();
+                Busy(false);
 
                 EnterReadLockWithTimeout();
             }
@@ -158,25 +158,25 @@ namespace Octopus.Shared.Scripts
                 throw new TimeoutException($"Could not acquire write mutex within timeout {mutexAcquireTimeout}.");
             }
 
-            void Busy()
+            void Busy(bool isWaitingOnWrite)
             {
-                taskLog.WriteWait(taskLock.GetBusyMessage());
+                taskLog.WriteWait(taskLock.GetBusyMessage(taskId, isWaitingOnWrite));
             }
 
             void Canceled()
             {
-                taskLog(taskLock.GetCanceledMessage());
+                taskLog(taskLock.GetCanceledMessage(taskId));
             }
 
             void TimedOut(TimeSpan timeout)
             {
-                taskLog(taskLock.GetTimedOutMessage(timeout));
+                taskLog(taskLock.GetTimedOutMessage(timeout, taskId));
             }
 
             void WriteToSystemLog(string message)
             {
                 var lockTaken = $" [{taskLock.Report()}]";
-                systemLog.Info($"[{taskId}] [{lockName}] [{lockType}]{lockTaken} {message}");
+                systemLog.Trace($"[{taskId}] [{lockName}] [{lockType}]{lockTaken} {message}");
             }
         }
 
@@ -259,46 +259,52 @@ namespace Octopus.Shared.Scripts
                 return result;
             }
 
-            private string ListTasksWithMarkdownLinks()
+            private (string message, bool multiple, bool thisTaskAlreadyHasLock) ListTasksWithMarkdownLinks(string taskId)
             {
-                if (writerTaskId != null)
+                var localWriterTaskId = writerTaskId; // This could change during the execution of the method
+                if (localWriterTaskId != null)
                 {
-                    return $"[{writerTaskId}](~/app#/tasks/{writerTaskId}) (RW)";
+                    return ($"[{localWriterTaskId}](~/app#/tasks/{localWriterTaskId})", false, localWriterTaskId == taskId);
                 }
 
                 var ids = readersTaskIds.Keys.OrderBy(x => x).ToArray();
 
-                return ids.Any() 
-                    ? ids.Select(x => $"[{x}](~/app#/tasks/{x}) (R)").ReadableJoin() 
+                var message = ids.Any()
+                    ? ids.Select(x => x == taskId ? "This Task" : $"[{x}](~/app#/tasks/{x})").ReadableJoin()
                     : "(error - task not found)";
+
+                return (message, ids.Length > 1, ids.Contains(taskId));
             }
 
-            private bool IsWaitingOnMultipleTasks()
+            public string GetBusyMessage(string taskId, bool isWaitingOnWrite)
             {
-                if (writerTaskId != null)
-                    return false;
-                return readersTaskIds.Keys.Count > 1;
+                var listTasksWithMarkdownLinks = ListTasksWithMarkdownLinks(taskId);
+
+                if (listTasksWithMarkdownLinks.multiple) // Waiting on multiple, that means they are all read and this is a write
+                    return $"Waiting on scripts in tasks {listTasksWithMarkdownLinks.message} to finish as this script requires that no other Octopus scripts are executing on this target at the same time.";
+
+                if (listTasksWithMarkdownLinks.thisTaskAlreadyHasLock)
+                    return $"Waiting on another script in this task to finish as {(isWaitingOnWrite ? "this" : "another")} task requires that no other Octopus scripts are executing on this target at the same time.";
+
+                return $"Waiting for the script in task {listTasksWithMarkdownLinks.message} to finish as as {(isWaitingOnWrite ? "this" : "that")} script requires that no other Octopus scripts are executing on this target at the same time.";
             }
 
-            public string GetBusyMessage()
+            public string GetCanceledMessage(string taskId)
             {
-                return IsWaitingOnMultipleTasks() 
-                    ? $"Cannot start this task yet because tasks {ListTasksWithMarkdownLinks()} are currently running and this task cannot be run in conjunction with any other tasks. Please wait..."
-                    : $"Cannot start this task yet because task {ListTasksWithMarkdownLinks()} is currently running and this task cannot be run in conjunction with any other tasks. Please wait...";
+                var listTasksWithMarkdownLinks = ListTasksWithMarkdownLinks(taskId);
+
+                return listTasksWithMarkdownLinks.multiple
+                    ? $"This task was canceled before it could start. Tasks {listTasksWithMarkdownLinks.message} are still running."
+                    : $"This task was canceled before it could start. Task {listTasksWithMarkdownLinks.message} is still running.";
             }
 
-            public string GetCanceledMessage()
+            public string GetTimedOutMessage(TimeSpan timeout, string taskId)
             {
-                return IsWaitingOnMultipleTasks() 
-                    ? $"This task was canceled before it could start. Tasks {ListTasksWithMarkdownLinks()} are still running."
-                    : $"This task was canceled before it could start. Task {ListTasksWithMarkdownLinks()} is still running.";
-            }
+                var listTasksWithMarkdownLinks = ListTasksWithMarkdownLinks(taskId);
 
-            public string GetTimedOutMessage(TimeSpan timeout)
-            {
-                return IsWaitingOnMultipleTasks()
-                    ? $"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. Tasks {ListTasksWithMarkdownLinks()} are still running."
-                    : $"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. Task {ListTasksWithMarkdownLinks()} is still running.";
+                return listTasksWithMarkdownLinks.multiple
+                    ? $"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. Tasks {listTasksWithMarkdownLinks.message} are still running."
+                    : $"This task waited more than {timeout.TotalMinutes:N0} minutes and timed out. Task {listTasksWithMarkdownLinks.message} is still running.";
             }
         }
     }
