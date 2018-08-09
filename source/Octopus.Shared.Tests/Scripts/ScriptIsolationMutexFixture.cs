@@ -22,7 +22,7 @@ namespace Octopus.Shared.Tests.Scripts
                 gotLock1.Should().BeTrue("Should have got a write lock on a brand new mutex");
                 gotLock2.Should().BeFalse("Should not have got a write lock when there was already a write lock");
                 
-                taskLock.GetBusyMessage("ServerTask-2", true).Should().Be("Waiting for the script in task [ServerTask-1](~/app#/tasks/ServerTask-1) to finish. This script requires that no other Octopus scripts are executing on this target at the same time.");
+                taskLock.GetBusyMessage("ServerTask-2", true).Should().Be("Waiting for the script in task [ServerTask-1](~/app#/tasks/ServerTask-1) to finish as this script requires that no other Octopus scripts are executing on this target at the same time.");
                 taskLock.GetTimedOutMessage(TimeSpan.FromMinutes(15), "ServerTask-2").Should().Be("This task waited more than 15 minutes and timed out. Task [ServerTask-1](~/app#/tasks/ServerTask-1) is still running.");
                 taskLock.GetCanceledMessage("ServerTask-2").Should().Be("This task was canceled before it could start. Task [ServerTask-1](~/app#/tasks/ServerTask-1) is still running.");
                 lockReleaser.Dispose();
@@ -38,7 +38,7 @@ namespace Octopus.Shared.Tests.Scripts
                 gotLock2.Should().BeFalse("Should not have got a write lock when there was already a read lock");
                 
                 taskLock.GetTimedOutMessage(TimeSpan.FromMinutes(15), "ServerTask-2").Should().Be("This task waited more than 15 minutes and timed out. Task [ServerTask-1](~/app#/tasks/ServerTask-1) is still running.");
-                taskLock.GetBusyMessage("ServerTask-2", true).Should().Be("Waiting for the script in task [ServerTask-1](~/app#/tasks/ServerTask-1) to finish. This script requires that no other Octopus scripts are executing on this target at the same time.");
+                taskLock.GetBusyMessage("ServerTask-2", true).Should().Be("Waiting for the script in task [ServerTask-1](~/app#/tasks/ServerTask-1) to finish as this script requires that no other Octopus scripts are executing on this target at the same time.");
                 taskLock.GetCanceledMessage("ServerTask-2").Should().Be("This task was canceled before it could start. Task [ServerTask-1](~/app#/tasks/ServerTask-1) is still running.");
                 lockReleaser.Dispose();
             }
