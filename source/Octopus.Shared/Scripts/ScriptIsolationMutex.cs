@@ -281,12 +281,12 @@ namespace Octopus.Shared.Scripts
                 var listTasksWithMarkdownLinks = ListTasksWithMarkdownLinks(taskId);
 
                 if (listTasksWithMarkdownLinks.multiple) // Waiting on multiple, that means they are all read and this is a write
-                    return $"Waiting on scripts in tasks {listTasksWithMarkdownLinks.message} to finish as this script requires that no other Octopus scripts are executing on this target at the same time.";
+                    return $"Waiting on scripts in tasks {listTasksWithMarkdownLinks.message} to finish. This script requires that no other Octopus scripts are executing on this target at the same time.";
 
                 if (listTasksWithMarkdownLinks.thisTaskAlreadyHasLock)
                     return $"Waiting on another script in this task to finish as {(isWaitingOnWrite ? "this" : "another")} task requires that no other Octopus scripts are executing on this target at the same time.";
 
-                return $"Waiting for the script in task {listTasksWithMarkdownLinks.message} to finish as as {(isWaitingOnWrite ? "this" : "that")} script requires that no other Octopus scripts are executing on this target at the same time.";
+                return $"Waiting for the script in task {listTasksWithMarkdownLinks.message} to finish as {(isWaitingOnWrite ? "this" : "that")} script requires that no other Octopus scripts are executing on this target at the same time.";
             }
 
             public string GetCanceledMessage(string taskId)
