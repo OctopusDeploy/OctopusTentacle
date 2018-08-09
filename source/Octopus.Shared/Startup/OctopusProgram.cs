@@ -199,6 +199,8 @@ namespace Octopus.Shared.Startup
 
             host?.OnExit(exitCode);
 
+            LogManager.Shutdown();
+            
             if (exitCode != (int)ExitCode.Success && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
