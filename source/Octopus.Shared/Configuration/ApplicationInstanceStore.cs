@@ -84,7 +84,7 @@ namespace Octopus.Shared.Configuration
             using (var file = fileSystem.OpenFile(path, FileAccess.Write))
             using (var writer = new StreamWriter(file))
             {
-                var data = JsonConvert.SerializeObject(instance);
+                var data = JsonConvert.SerializeObject(instance, Formatting.Indented);
                 writer.Write(data);
             }
         }

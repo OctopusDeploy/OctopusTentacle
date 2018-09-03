@@ -52,12 +52,13 @@ namespace Octopus.Shared.Configuration
                 if (subKey == null)
                     return;
 
-                using (var applicationNameKey = subKey.OpenSubKey(name.ToString(), false))
+                using (var applicationNameKey = subKey.OpenSubKey(name.ToString(), true))
                 {
                     if (applicationNameKey == null)
                         return;
 
                     applicationNameKey.DeleteSubKey(instanceName);
+                    applicationNameKey.Flush();
                 }
             }
         }
