@@ -13,12 +13,18 @@ namespace Octopus.Shared.Configuration
         private readonly ILog log;
         private readonly IOctopusFileSystem fileSystem;
         private readonly IRegistryApplicationInstanceStore registryApplicationInstanceStore;
+        private readonly string machineConfigurationHomeDirectory;
 
-        public ApplicationInstanceStore(ILog log, IOctopusFileSystem fileSystem, IRegistryApplicationInstanceStore registryApplicationInstanceStore)
+        public ApplicationInstanceStore(
+            ILog log,
+            IOctopusFileSystem fileSystem, 
+            IRegistryApplicationInstanceStore registryApplicationInstanceStore,
+            string machineConfigurationHomeDirectory)
         {
             this.log = log;
             this.fileSystem = fileSystem;
             this.registryApplicationInstanceStore = registryApplicationInstanceStore;
+            this.machineConfigurationHomeDirectory = machineConfigurationHomeDirectory;
         }
 
         public class Instance
@@ -27,9 +33,9 @@ namespace Octopus.Shared.Configuration
             public string ConfigurationFilePath { get; set; }
         }
 
-        private static string InstancesFolder(ApplicationName name)
+        private string InstancesFolder(ApplicationName name)
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus", name.ToString(), "Instances");
+            return Path.Combine(machineConfigurationHomeDirectory, name.ToString(), "Instances");
         }
 
         public IList<ApplicationInstanceRecord> ListInstances(ApplicationName name)

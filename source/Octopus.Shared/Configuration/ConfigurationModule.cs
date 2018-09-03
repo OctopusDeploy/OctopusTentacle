@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Autofac;
 using Octopus.Configuration;
 using Octopus.Shared.Services;
@@ -8,9 +10,14 @@ namespace Octopus.Shared.Configuration
     {
         readonly ApplicationName applicationName;
         readonly string instanceName;
+        readonly string machineConfigurationHomeDirectory;
 
-        public ConfigurationModule(ApplicationName applicationName, string instanceName)
+        public ConfigurationModule(string machineConfigurationHomeDirectory, ApplicationName applicationName, string instanceName)
         {
+            this.machineConfigurationHomeDirectory = machineConfigurationHomeDirectory;
+            if (string.IsNullOrWhiteSpace(this.machineConfigurationHomeDirectory))
+                this.machineConfigurationHomeDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus");
+
             this.applicationName = applicationName;
             this.instanceName = instanceName;
         }
@@ -20,7 +27,9 @@ namespace Octopus.Shared.Configuration
             base.Load(builder);
             
             builder.RegisterType<RegistryApplicationInstanceStore>().As<IRegistryApplicationInstanceStore>();
-            builder.RegisterType<ApplicationInstanceStore>().As<IApplicationInstanceStore>();
+            builder.RegisterType<ApplicationInstanceStore>()
+                .WithParameter("machineConfigurationHomeDirectory", machineConfigurationHomeDirectory)
+                .As<IApplicationInstanceStore>();
             builder.RegisterType<ApplicationInstanceSelector>()
                 .WithParameter("applicationName", applicationName)
                 .WithParameter("currentInstanceName", instanceName)
