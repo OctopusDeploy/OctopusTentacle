@@ -26,7 +26,7 @@ namespace Octopus.Shared.Configuration
 
         private static string InstancesFolder(ApplicationName name)
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), name.ToString(), "Instances");
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus", name.ToString(), "Instances");
         }
 
         public IList<ApplicationInstanceRecord> ListInstances(ApplicationName name)
