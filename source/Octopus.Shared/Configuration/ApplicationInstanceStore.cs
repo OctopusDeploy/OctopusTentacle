@@ -40,8 +40,8 @@ namespace Octopus.Shared.Configuration
                 foreach (var instanceRecord in listFromRegistry)
                 {
                     SaveInstance(instanceRecord);
+                    registryApplicationInstanceStore.DeleteFromRegistry(name, instanceRecord.InstanceName);
                 }
-                registryApplicationInstanceStore.DeleteFromRegistry(name);
             }
 
             var results = Directory.EnumerateFiles(instancesFolder)

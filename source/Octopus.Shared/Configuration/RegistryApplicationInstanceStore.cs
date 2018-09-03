@@ -44,7 +44,7 @@ namespace Octopus.Shared.Configuration
             return results;
         }
 
-        public void DeleteFromRegistry(ApplicationName name)
+        public void DeleteFromRegistry(ApplicationName name, string instanceName)
         {
             using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
             using (var subKey = rootKey.OpenSubKey(KeyName, true))
@@ -52,7 +52,13 @@ namespace Octopus.Shared.Configuration
                 if (subKey == null)
                     return;
 
-                subKey.DeleteSubKey(name.ToString(), false);
+                using (var applicationNameKey = subKey.OpenSubKey(name.ToString(), false))
+                {
+                    if (applicationNameKey == null)
+                        return;
+
+                    applicationNameKey.DeleteSubKey(instanceName);
+                }
             }
         }
     }
