@@ -3,17 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
+using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
     public class ApplicationInstanceStore : IApplicationInstanceStore
     {
+        private readonly ILog log;
         private readonly IOctopusFileSystem fileSystem;
         private readonly IRegistryApplicationInstanceStore registryApplicationInstanceStore;
 
-        public ApplicationInstanceStore(IOctopusFileSystem fileSystem, IRegistryApplicationInstanceStore registryApplicationInstanceStore)
+        public ApplicationInstanceStore(ILog log, IOctopusFileSystem fileSystem, IRegistryApplicationInstanceStore registryApplicationInstanceStore)
         {
+            this.log = log;
             this.fileSystem = fileSystem;
             this.registryApplicationInstanceStore = registryApplicationInstanceStore;
         }
@@ -35,12 +38,22 @@ namespace Octopus.Shared.Configuration
 
             if (!fileSystem.DirectoryExists(instancesFolder))
             {
+                log.InfoFormat("Migrating {0} instance data from the registry", name.ToString());
                 // migrate the list of instances from the registry to the folder.
                 var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
                 foreach (var instanceRecord in listFromRegistry)
                 {
-                    SaveInstance(instanceRecord);
-                    registryApplicationInstanceStore.DeleteFromRegistry(name, instanceRecord.InstanceName);
+                    log.InfoFormat("Migrating instance - {0}", instanceRecord.InstanceName);
+                    try
+                    {
+                        SaveInstance(instanceRecord);
+                        registryApplicationInstanceStore.DeleteFromRegistry(name, instanceRecord.InstanceName);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex, "Error migrating instance data");
+                        throw;
+                    }
                 }
             }
 
@@ -54,6 +67,9 @@ namespace Octopus.Shared.Configuration
 
         Instance LoadInstanceConfiguration(string path)
         {
+            if (!fileSystem.FileExists(path))
+                return null;
+
             using (var file = fileSystem.OpenFile(path, FileAccess.Read))
             using (var reader = new StreamReader(file, true))
             {
@@ -96,7 +112,11 @@ namespace Octopus.Shared.Configuration
                 fileSystem.CreateDirectory(instancesFolder);
             }
             var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceRecord.InstanceName) + ".config");
-            var instance = LoadInstanceConfiguration(instanceConfiguration);
+            var instance = LoadInstanceConfiguration(instanceConfiguration) ?? new Instance
+            {
+                Name = instanceRecord.InstanceName
+            };
+
             instance.ConfigurationFilePath = instanceRecord.ConfigurationFilePath;
 
             WriteInstanceConfiguration(instance, instanceConfiguration);
