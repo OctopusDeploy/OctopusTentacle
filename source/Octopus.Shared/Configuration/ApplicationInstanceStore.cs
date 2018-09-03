@@ -42,6 +42,7 @@ namespace Octopus.Shared.Configuration
         {
             var instancesFolder = InstancesFolder(name);
 
+            // TODO: should we have a machine wide lock here to stop 2 instances trying to migrate this data?
             if (!fileSystem.DirectoryExists(instancesFolder))
             {
                 log.InfoFormat("Migrating {0} instance data from the registry", name.ToString());
@@ -63,7 +64,7 @@ namespace Octopus.Shared.Configuration
                 }
             }
 
-            var results = Directory.EnumerateFiles(instancesFolder)
+            var results = fileSystem.EnumerateFiles(instancesFolder)
                 .Select(LoadInstanceConfiguration)
                 .Select(instance => new ApplicationInstanceRecord(instance.Name, name, instance.ConfigurationFilePath))
                 .ToList();
@@ -76,23 +77,15 @@ namespace Octopus.Shared.Configuration
             if (!fileSystem.FileExists(path))
                 return null;
 
-            using (var file = fileSystem.OpenFile(path, FileAccess.Read))
-            using (var reader = new StreamReader(file, true))
-            {
-                var data = reader.ReadToEnd();
-                var instance = JsonConvert.DeserializeObject<Instance>(data);
-                return instance;
-            }
+            var data = fileSystem.ReadFile(path);
+            var instance = JsonConvert.DeserializeObject<Instance>(data);
+            return instance;
         }
 
         void WriteInstanceConfiguration(Instance instance, string path)
         {
-            using (var file = fileSystem.OpenFile(path, FileAccess.Write))
-            using (var writer = new StreamWriter(file))
-            {
-                var data = JsonConvert.SerializeObject(instance, Formatting.Indented);
-                writer.Write(data);
-            }
+            var data = JsonConvert.SerializeObject(instance, Formatting.Indented);
+            fileSystem.OverwriteFile(path, data);
         }
 
         public ApplicationInstanceRecord GetInstance(ApplicationName name, string instanceName)
