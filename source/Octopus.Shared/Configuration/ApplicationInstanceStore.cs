@@ -26,7 +26,7 @@ namespace Octopus.Shared.Configuration
 
         private static string InstancesFolder(ApplicationName name)
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), name.ToString());
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), name.ToString(), "Instances");
         }
 
         public IList<ApplicationInstanceRecord> ListInstances(ApplicationName name)
@@ -91,6 +91,10 @@ namespace Octopus.Shared.Configuration
         public void SaveInstance(ApplicationInstanceRecord instanceRecord)
         {
             var instancesFolder = InstancesFolder(instanceRecord.ApplicationName);
+            if (!fileSystem.DirectoryExists(instancesFolder))
+            {
+                fileSystem.CreateDirectory(instancesFolder);
+            }
             var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceRecord.InstanceName) + ".config");
             var instance = LoadInstanceConfiguration(instanceConfiguration);
             instance.ConfigurationFilePath = instanceRecord.ConfigurationFilePath;

@@ -231,6 +231,13 @@ namespace Octopus.Shared.Util
             return Path.Combine(path, "Temp");
         }
 
+        public void CreateDirectory(string path)
+        {
+            if (Directory.Exists(path))
+                return;
+            Directory.CreateDirectory(path);
+        }
+
         public string CreateTemporaryDirectory()
         {
             var path = Path.Combine(GetTempBasePath(), Guid.NewGuid().ToString());
