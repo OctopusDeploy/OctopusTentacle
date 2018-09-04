@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
+using Octopus.Shared.Threading;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
@@ -42,24 +44,27 @@ namespace Octopus.Shared.Configuration
         {
             var instancesFolder = InstancesFolder(name);
 
-            // TODO: should we have a machine wide lock here to stop 2 instances trying to migrate this data?
-            if (!fileSystem.DirectoryExists(instancesFolder))
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var mutex = new MachineWideMutex().Acquire($"{name}InstanceStore", "migrating from registry", cts.Token))
             {
-                log.InfoFormat("Migrating {0} instance data from the registry", name.ToString());
-                // migrate the list of instances from the registry to the folder.
-                var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
-                foreach (var instanceRecord in listFromRegistry)
+                if (!fileSystem.DirectoryExists(instancesFolder))
                 {
-                    log.InfoFormat("Migrating instance - {0}", instanceRecord.InstanceName);
-                    try
+                    log.InfoFormat("Migrating {0} instance data from the registry", name.ToString());
+                    // migrate the list of instances from the registry to the folder.
+                    var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
+                    foreach (var instanceRecord in listFromRegistry)
                     {
-                        SaveInstance(instanceRecord);
-                        registryApplicationInstanceStore.DeleteFromRegistry(name, instanceRecord.InstanceName);
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error(ex, "Error migrating instance data");
-                        throw;
+                        log.InfoFormat("Migrating instance - {0}", instanceRecord.InstanceName);
+                        try
+                        {
+                            SaveInstance(instanceRecord);
+                            registryApplicationInstanceStore.DeleteFromRegistry(name, instanceRecord.InstanceName);
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error(ex, "Error migrating instance data");
+                            throw;
+                        }
                     }
                 }
             }
