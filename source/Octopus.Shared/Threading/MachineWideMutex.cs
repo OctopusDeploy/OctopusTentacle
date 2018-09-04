@@ -6,7 +6,7 @@ using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Threading
 {
-    public class MachineWideMutex
+    public class MachineWideMutex : IMachineWideMutex
     {
         static readonly string DirectorySeparatorString = Path.DirectorySeparatorChar.ToString();
         static readonly string VolumeSeparatorString = Path.VolumeSeparatorChar.ToString();
