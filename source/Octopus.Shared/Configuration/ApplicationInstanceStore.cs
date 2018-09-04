@@ -18,13 +18,13 @@ namespace Octopus.Shared.Configuration
         public ApplicationInstanceStore(
             ILog log,
             IOctopusFileSystem fileSystem, 
-            IRegistryApplicationInstanceStore registryApplicationInstanceStore,
-            string machineConfigurationHomeDirectory)
+            IRegistryApplicationInstanceStore registryApplicationInstanceStore)
         {
             this.log = log;
             this.fileSystem = fileSystem;
             this.registryApplicationInstanceStore = registryApplicationInstanceStore;
-            this.machineConfigurationHomeDirectory = machineConfigurationHomeDirectory;
+
+            machineConfigurationHomeDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus");
         }
 
         public class Instance

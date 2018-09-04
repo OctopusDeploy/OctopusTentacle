@@ -3,12 +3,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
 using NLog;
-using NLog.Config;
 using NLog.Targets;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
@@ -103,11 +101,11 @@ namespace Octopus.Shared.Startup
                 // Write diagnostics information early as possible - note this will target the global log file since we haven't loaded the instance yet.
                 // This is nice because the global log file will always have a history of every application invocation, regardless of instance
                 // See: OctopusLogsDirectoryRenderer.DefaultLogsDirectory
-                var instanceConfig = TryLoadInstanceNameFromCommandLineArguments(commandLineArguments);
-                WriteDiagnosticsInfoToLogFile(instanceConfig.InstanceName);
+                var instanceName = TryLoadInstanceNameFromCommandLineArguments(commandLineArguments);
+                WriteDiagnosticsInfoToLogFile(instanceName);
 
                 log.Trace("Creating and configuring the Autofac container");
-                container = BuildContainer(instanceConfig.MachineConfigurationHomeDirectory, instanceConfig.InstanceName);
+                container = BuildContainer(instanceName);
 
                 // Try to load the instance here so we can log into the instance's log file as soon as possible
                 // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on when we try to load the instance for real
@@ -265,18 +263,16 @@ namespace Octopus.Shared.Startup
             LogManager.Configuration = c;
         }
 
-        static (string MachineConfigurationHomeDirectory, string InstanceName) TryLoadInstanceNameFromCommandLineArguments(string[] commandLineArguments)
+        static string TryLoadInstanceNameFromCommandLineArguments(string[] commandLineArguments)
         {
             var instanceName = string.Empty;
             var machineConfigurationHomeDirectory = string.Empty;
-            var options = AbstractStandardCommand.AddInstanceOption(new OptionSet(), 
-                x => machineConfigurationHomeDirectory = x, 
-                v => instanceName = v);
+            var options = AbstractStandardCommand.AddInstanceOption(new OptionSet(), v => instanceName = v);
             
             // Ignore the return parameter here, we want to leave the instance option for the responsible command
             // We're just peeking to see if we can load the instance as early as possible
             options.Parse(commandLineArguments);
-            return ( machineConfigurationHomeDirectory, instanceName );
+            return instanceName;
         }
 
         static string[] ParseCommandHostArgumentsFromCommandLineArguments(string[] commandLineArguments, out bool forceConsoleHost)
@@ -452,7 +448,7 @@ namespace Octopus.Shared.Startup
             return commandLineArguments.Skip(1).ToArray();
         }
 
-        protected abstract IContainer BuildContainer(string machineConfigurationHomeDirectory, string instanceName);
+        protected abstract IContainer BuildContainer(string instanceName);
 
         protected virtual void RegisterAdditionalModules(IContainer builtContainer)
         {

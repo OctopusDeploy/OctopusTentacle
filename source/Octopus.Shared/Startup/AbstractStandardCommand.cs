@@ -48,11 +48,9 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        public static OptionSet AddInstanceOption(OptionSet options, Action<string> configurationHomeAction = null, Action<string> instanceAction = null)
+        public static OptionSet AddInstanceOption(OptionSet options, Action<string> instanceAction = null)
         {
-            return options
-                .Add("instance=", "Name of the instance to use", instanceAction ?? (v => {}))
-                .Add("machineConfigurationHomeDirectory=", "Home directory for the machine's configuration files", configurationHomeAction ?? (v => {}));
+            return options.Add("instance=", "Name of the instance to use", instanceAction ?? (v => {}));
         }
     }
 }
