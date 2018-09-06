@@ -131,9 +131,12 @@ namespace Octopus.Shared.Startup
                 if (responsibleCommand.SuppressConsoleLogging) DisableConsoleLogging();
                 
                 // Now we should have everything we need to select the most appropriate host and run the responsible command
-                commandLineArguments = ParseCommandHostArgumentsFromCommandLineArguments(commandLineArguments, out var forceConsoleHost);
+                commandLineArguments = ParseCommandHostArgumentsFromCommandLineArguments(
+                    commandLineArguments, 
+                    out var forceConsoleHost,
+                    out var forceNoninteractiveHost);
 
-                host = SelectMostAppropriateHost(responsibleCommand, displayName, log, forceConsoleHost);
+                host = SelectMostAppropriateHost(responsibleCommand, displayName, log, forceConsoleHost, forceNoninteractiveHost);
                 host.Run(Start, Stop);
 
                 // If we make it to here we can set the error code as either an UnknownCommand for which you got some help, or Success!
@@ -276,14 +279,22 @@ namespace Octopus.Shared.Startup
             return instanceName;
         }
 
-        static string[] ParseCommandHostArgumentsFromCommandLineArguments(string[] commandLineArguments, out bool forceConsoleHost)
+        static string[] ParseCommandHostArgumentsFromCommandLineArguments(
+            string[] commandLineArguments, 
+            out bool forceConsoleHost,
+            out bool forceNoninteractiveHost)
         {
             // Sorry for the mess, we can't set the out param in a lambda
             var forceConsole = false;
             var optionSet = ConsoleHost.AddConsoleSwitch(new OptionSet(), v => forceConsole = true);
+
+            var forceNoninteractive = false;
+            optionSet.Add("--noninteractive", v => forceNoninteractive = true);
+
             // We actually want to remove the --console switch if it was provided since we've parsed it here
             var remainingCommandLineArguments = optionSet.Parse(commandLineArguments).ToArray();
             forceConsoleHost = forceConsole;
+            forceNoninteractiveHost = forceNoninteractive;
             return remainingCommandLineArguments;
         }
 
@@ -327,11 +338,22 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        static ICommandHost SelectMostAppropriateHost(ICommand command, string displayName, ILog log, bool forceConsoleHost)
+        static ICommandHost SelectMostAppropriateHost(
+            ICommand command, 
+            string displayName, 
+            ILog log,
+            bool forceConsoleHost,
+            bool forceNoninteractiveHost)
         {
             log.Trace("Selecting the most appropriate host");
 
             var commandSupportsConsoleSwitch = ConsoleHost.HasConsoleSwitch(command.Options);
+
+            if (forceNoninteractiveHost && commandSupportsConsoleSwitch)
+            {
+                log.Trace($"The --noninteractive switch was provided for a supported command");
+                return new NoninteractiveHost();
+            }
 
             if (!command.CanRunAsService)
             {
