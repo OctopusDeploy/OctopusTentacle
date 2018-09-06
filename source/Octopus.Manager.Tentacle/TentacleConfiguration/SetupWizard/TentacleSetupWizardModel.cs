@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using FluentValidation;
 using Octopus.Client;
@@ -474,7 +475,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     logger.Info("Authenticated successfully");
 
                     logger.Info("Getting available roles...");
-                    PotentialRoles = (await repository.MachineRoles.GetAllRoleNames()).ToArray();
+                    PotentialRoles = (await repository.MachineRoles.GetAllRoleNames()).Select(r => r.QuoteIfHasSeperator()).ToArray();
                     logger.Info("Getting available environments...");
                     PotentialEnvironments = (await repository.Environments.GetAll()).Select(e => e.Name).ToArray();
 
@@ -482,10 +483,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     if (AreTenantsSupported)
                     {
                         logger.Info("Getting available tenant tags...");
-                        PotentialTenantTags = (await repository.TagSets.GetAll()).SelectMany(tt => tt.Tags.Select(t => t.CanonicalTagName)).ToArray();
+                        PotentialTenantTags = (await repository.TagSets.GetAll()).SelectMany(tt => tt.Tags.Select(t => t.CanonicalTagName.QuoteIfHasSeperator())).ToArray();
 
                         logger.Info("Getting available tenants...");
-                        PotentialTenants = (await repository.Tenants.GetAll()).Select(tt => tt.Name).ToArray();
+                        PotentialTenants = (await repository.Tenants.GetAll()).Select(tt => tt.Name.QuoteIfHasSeperator()).ToArray();
                     }
 
                     SelectedEnvironment = PotentialEnvironments.FirstOrDefault();
@@ -565,21 +566,14 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 && Uri.TryCreate(s, UriKind.Absolute, out uri)
                 && (uri.Scheme == "http" || uri.Scheme == "https");
         }
-        string[] SelectedRolesArray
-        {
-            get { return (selectedRoles ?? string.Empty).Split(';', ',', ' ').Select(r => r.Trim()).NotNullOrWhiteSpace().ToArray(); }
-        }
 
-        string[] SelectedTenantTagsArray
-        {
-            get { return (selectedTenantTags ?? string.Empty).Split(';', ',').Select(r => r.Trim().Trim('"')).NotNullOrWhiteSpace().ToArray(); }
-        }
+        string[] SelectedRolesArray => selectedRoles.SplitOnSeperators();
 
-        string[] SelectedTenantsArray
-        {
-            get { return (selectedTenants ?? string.Empty).Split(';', ',').Select(r => r.Trim().Trim('"')).NotNullOrWhiteSpace().ToArray(); }
-        }
+        string[] SelectedTenantTagsArray => selectedTenantTags.SplitOnSeperators();
 
+        string[] SelectedTenantsArray => selectedTenants.SplitOnSeperators();
+
+    
 
         public IEnumerable<CommandLineInvocation> GenerateScript()
         {

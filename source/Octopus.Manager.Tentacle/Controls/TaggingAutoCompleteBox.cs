@@ -9,7 +9,7 @@ namespace Octopus.Manager.Tentacle.Controls
 {
     public class TaggingAutoCompleteBox : AutoCompleteBox
     {
-        public static readonly DependencyProperty TagsSourceProperty = DependencyProperty.Register("TagsSource", typeof (object), typeof (TaggingAutoCompleteBox), new PropertyMetadata(null));
+        public static readonly DependencyProperty TagsSourceProperty = DependencyProperty.Register("TagsSource", typeof(object), typeof(TaggingAutoCompleteBox), new PropertyMetadata(null));
 
         public TaggingAutoCompleteBox()
         {
@@ -34,7 +34,7 @@ namespace Octopus.Manager.Tentacle.Controls
 
         void HandlePopulating(object sender, PopulatingEventArgs e)
         {
-            var possibleTags = (IEnumerable<string>)TagsSource;
+            var possibleTags = (IEnumerable<string>) TagsSource;
             if (possibleTags == null)
                 return;
 
@@ -45,12 +45,13 @@ namespace Octopus.Manager.Tentacle.Controls
             var text = TextBox.Text;
             var caretIndex = TextBox.CaretIndex;
             string currentSearch = null;
+            var inQuotes = false;
 
             for (var i = 0; i < text.Length; i++)
             {
                 var c = text[i];
 
-                if (c == ';' || c == ',' || c == ' ' || c == '\t' || c == '\r' || c == '\n')
+                if (!inQuotes && (c == ';' || c == ',' || c == '\t' || c == '\r' || c == '\n'))
                 {
                     if (currentTag.Length > 0)
                     {
@@ -70,6 +71,8 @@ namespace Octopus.Manager.Tentacle.Controls
                 }
                 else
                 {
+                    if (c == '"')
+                        inQuotes = !inQuotes;
                     currentTag.Append(c);
                 }
             }
@@ -87,7 +90,7 @@ namespace Octopus.Manager.Tentacle.Controls
                 }
             }
 
-            var formatStringText = string.Join(" ", tokens);
+            var formatStringText = string.Join(", ", tokens);
             if (!formatStringText.Contains("{0}"))
             {
                 formatStringText += " {0}";

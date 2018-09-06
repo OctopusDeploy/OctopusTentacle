@@ -261,6 +261,7 @@
     <Compile Include="TentacleManager.cs" />
     <Compile Include="Util\BrowserHelper.cs" />
     <Compile Include="Util\CommandLine.cs" />
+    <Compile Include="Util\StringExtensions.cs" />
     <Page Include="DeleteWizard\Views\DeleteWelcome.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

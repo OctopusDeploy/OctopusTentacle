@@ -49,7 +49,7 @@
                     </controls:TaggingAutoCompleteBox.ItemTemplate>
                 </controls:TaggingAutoCompleteBox>
                 <controls:ErrorMessage ErrorPath="SelectedRoles" />
-                <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Enter the machine roles, using spaces or commas as separators. For example: web-server, app-server" />
+                <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Enter the machine roles, using commas as separators, wrapping with double quotes if they contain a comma. For example: web-server, app-server, &quot;Web,Server&quot;" />
             </controls:ControlGroup>
 
             <controls:ControlGroup Header="Tenants" 
@@ -73,7 +73,7 @@
                 <controls:ErrorMessage ErrorPath="SelectedTenants" />
                 <TextBlock TextWrapping="Wrap" 
                            Foreground="Gray" 
-                           Text="Enter the tenants, using spaces or commas as separators, wrapping with quotes if they contain a space. For example: &quot;Acme&quot;, &quot;Globex&quot;" />
+                           Text="Enter the tenants, using commas as separators, wrapping with double quotes if they contain a comma. For example: &quot;Acme&quot;, &quot;Globex&quot;" />
             </controls:ControlGroup>
 
             <controls:ControlGroup Header="Tenant Tags" 
@@ -97,7 +97,7 @@
                 <controls:ErrorMessage ErrorPath="SelectedTenantTags" />
                 <TextBlock TextWrapping="Wrap" 
                            Foreground="Gray" 
-                           Text="Enter the tenant tags, using spaces or commas as separators, wrapping with quotes if they contain a space. For example: &quot;Hosting/Shared&quot;, &quot;Type/External&quot;" />
+                           Text="Enter the tenant tags, using commas as separators, wrapping with double quotes if they contain a comma. For example: &quot;Hosting/Shared,Primary&quot;, &quot;Type/External&quot;" />
             </controls:ControlGroup>
 
             <controls:ControlGroup Header="Machine Policy" 
