@@ -279,7 +279,7 @@ namespace Octopus.Shared.Startup
             return instanceName;
         }
 
-        static string[] ParseCommandHostArgumentsFromCommandLineArguments(
+        public static string[] ParseCommandHostArgumentsFromCommandLineArguments(
             string[] commandLineArguments, 
             out bool forceConsoleHost,
             out bool forceNoninteractiveHost)
@@ -289,7 +289,7 @@ namespace Octopus.Shared.Startup
             var optionSet = ConsoleHost.AddConsoleSwitch(new OptionSet(), v => forceConsole = true);
 
             var forceNoninteractive = false;
-            optionSet.Add("--noninteractive", v => forceNoninteractive = true);
+            optionSet.Add("noninteractive", v => forceNoninteractive = true);
 
             // We actually want to remove the --console switch if it was provided since we've parsed it here
             var remainingCommandLineArguments = optionSet.Parse(commandLineArguments).ToArray();
