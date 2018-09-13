@@ -7,10 +7,12 @@ namespace Octopus.Shared.Util
 {
     public static class ListExtensions
     {
-        public static void RemoveWhere<TElement>(this IList<TElement> source, Func<TElement, bool> remove)
+        public static int RemoveWhere<TElement>(this IList<TElement> source, Func<TElement, bool> remove)
         {
             if (source == null)
-                return;
+                return 0;
+
+            var removedCount = 0;
 
             for (var i = 0; i < source.Count; i++)
             {
@@ -20,7 +22,10 @@ namespace Octopus.Shared.Util
 
                 source.RemoveAt(i);
                 i--;
+                removedCount++;
             }
+
+            return removedCount;
         }
 
         public static void AddRange<TElement>(this ICollection<TElement> source, IEnumerable<TElement> itemsToAdd)
