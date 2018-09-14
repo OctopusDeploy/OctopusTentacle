@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="3.0.0" />
+    <PackageReference Include="Halibut" Version="4.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58676" />
