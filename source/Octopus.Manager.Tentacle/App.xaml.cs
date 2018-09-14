@@ -49,7 +49,7 @@ namespace Octopus.Manager.Tentacle
 
             if (reconfigure)
             {
-                ReconfigureTentacleService(container.Resolve<IApplicationInstanceStore>());
+                ReconfigureTentacleService(container);
             }
 
             CreateAndShowShell(container);
@@ -78,14 +78,15 @@ namespace Octopus.Manager.Tentacle
             return new PreReqWindow(profile).ShowDialog() == true;
         }
 
-        void ReconfigureTentacleService(IApplicationInstanceStore applicationInstanceStore)
+        void ReconfigureTentacleService(IComponentContext container)
         {
+            var applicationInstanceStore = container.Resolve<IApplicationInstanceStore>();
             var instances = applicationInstanceStore.ListInstances(ApplicationName.Tentacle);
             var defaultInstance = instances.Where(x => x.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(x.ApplicationName)).ToArray();
             var instancesWithDefaultFirst = defaultInstance.Concat(instances.Except(defaultInstance).OrderBy(x => x.InstanceName));
             foreach (var instance in instancesWithDefaultFirst)
             {
-                var model = new TentacleManagerModel();
+                var model = container.Resolve<TentacleManagerModel>();
                 model.Load(instance);
                 var isDefaultInstance = instance.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(instance.ApplicationName);
                 var title = isDefaultInstance ? "Reconfiguring Tentacle..." : $"Reconfiguring Tentacle {instance.InstanceName}...";
