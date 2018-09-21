@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,6 +14,33 @@ using Octopus.Manager.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.Controls
 {
+    internal class CustomDataTemplateSelector : DataTemplateSelector
+    {
+        #region Data Templates
+        /// <summary>
+        /// The text data template
+        /// </summary>
+        private static readonly DataTemplate CreateATagTemplate = Application.Current.Resources["CreateATagTemplate"] as DataTemplate;
+        private static readonly DataTemplate SuggestedTagTemplate = Application.Current.Resources["SuggestedTagTemplate"] as DataTemplate;
+
+        #endregion
+
+        /// <summary>
+        /// When overridden in a derived class, returns a <see cref="T:System.Windows.DataTemplate" /> based on custom logic.
+        /// </summary>
+        /// <param name="item">The data object for which to select the template.</param>
+        /// <param name="container">The data-bound object.</param>
+        /// <returns>
+        /// Returns a <see cref="T:System.Windows.DataTemplate" /> or null. The default value is null.
+        /// </returns>
+        public override DataTemplate SelectTemplate(object item, DependencyObject container)
+        {
+            var tagContainer = (SuggestedTagContainer)item;
+            if (tagContainer == null) return null;
+            return tagContainer.IsCreateEntry ? CreateATagTemplate : SuggestedTagTemplate;
+        }
+    }
+
     /// <summary>
     /// Interaction logic for AutoCompleteTagControl.xaml
     /// </summary>
@@ -18,14 +49,14 @@ namespace Octopus.Manager.Tentacle.Controls
         public ICommand RemoveCommand { get; }
         public ICommand EnterCommand { get; }
 
-        public List<string> SuggestedTags
+        public IEnumerable<string> SuggestedTags
         {
-            get => (List<string>)GetValue(SuggestedTagsProperty);
+            get => (IEnumerable<string>)GetValue(SuggestedTagsProperty);
             set => SetValue(SuggestedTagsProperty, value);
         }
 
         public static readonly DependencyProperty SuggestedTagsProperty = DependencyProperty.Register("SuggestedTags",
-            typeof(List<string>), typeof(AutoCompleteTagControl), new PropertyMetadata(new List<string>(), PropertyChangedCallback));
+            typeof(IEnumerable<string>), typeof(AutoCompleteTagControl), new PropertyMetadata(new List<string>(), PropertyChangedCallback));
 
         private static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -60,38 +91,79 @@ namespace Octopus.Manager.Tentacle.Controls
         public static readonly DependencyProperty TagNameProperty = DependencyProperty.Register(
             "TagName", typeof(string), typeof(AutoCompleteTagControl), new PropertyMetadata("tag"));
 
+        public bool CanCreateNewTags { get; set; }
+
         public CollectionViewSource FilteredSuggestedTags { get; }
+
+        List<SuggestedTagContainer> InternalSuggestedTags  = new List<SuggestedTagContainer>();
 
         public AutoCompleteTagControl()
         {
             RemoveCommand = new RelayCommand<string>(ExecuteRemoveCommand);
             EnterCommand = new RelayCommand<string>(ExecuteEnterCommand);
-            FilteredSuggestedTags = new CollectionViewSource { Source = SuggestedTags };
+
+            if (CanCreateNewTags)
+                InternalSuggestedTags.Add(new SuggestedTagContainer(string.Empty, true));
+            InternalSuggestedTags.AddRange(SuggestedTags.Select(t => new SuggestedTagContainer(t)));
+
+            FilteredSuggestedTags = new CollectionViewSource { Source = InternalSuggestedTags };
             FilteredSuggestedTags.Filter += FilteredSuggestedTagsOnFilter;
+            FilteredSuggestedTags.View.CollectionChanged += ViewOnCollectionChanged;
+
             InitializeComponent();
+        }
+
+
+        void ViewOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (FilteredSuggestedTags.View.IsEmpty)
+            {
+                NoResultsTest.Visibility = Visibility.Visible;
+                SuggestionsList.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                NoResultsTest.Visibility = Visibility.Collapsed;
+                SuggestionsList.Visibility = Visibility.Visible;
+            }
         }
 
         private void UpdateFilteredSource()
         {
-            FilteredSuggestedTags.Source = SuggestedTags;
+            InternalSuggestedTags.Clear();
+            if(CanCreateNewTags)
+                InternalSuggestedTags.Add(new SuggestedTagContainer(string.Empty, true));
+
+            if (SuggestedTags != null)
+                InternalSuggestedTags.AddRange(SuggestedTags.Select(t => new SuggestedTagContainer(t)));
+
+            SelectedTags.CollectionChanged += (sender, args) => FilteredSuggestedTags.View.Refresh();
+
+            FilteredSuggestedTags.View.Refresh();
         }
 
         private void FilteredSuggestedTagsOnFilter(object sender, FilterEventArgs filterEventArgs)
         {
-            var item = filterEventArgs.Item as string;
+            var item = filterEventArgs.Item as SuggestedTagContainer;
             if (item == null)
             {
                 filterEventArgs.Accepted = false;
                 return;
             }
 
-            if (SelectedTags.Contains(item, StringComparison.CurrentCultureIgnoreCase))
+            if (item.IsCreateEntry)
+            {
+                filterEventArgs.Accepted = !string.IsNullOrWhiteSpace(Text) && !SuggestedTags.Contains(Text, StringComparison.InvariantCultureIgnoreCase) && !SelectedTags.Contains(Text, StringComparison.InvariantCultureIgnoreCase);
+                return;
+            }
+
+            if (SelectedTags.Contains(item.Value, StringComparison.CurrentCultureIgnoreCase))
             {
                 filterEventArgs.Accepted = false;
                 return;
             }
 
-            if (item.Contains(Text, StringComparison.CurrentCultureIgnoreCase))
+            if (item.Value.Contains(Text, StringComparison.CurrentCultureIgnoreCase))
             {
                 filterEventArgs.Accepted = true;
                 return;
@@ -125,42 +197,36 @@ namespace Octopus.Manager.Tentacle.Controls
 
         }
 
-        private void SuggestionsPopup_OnGotFocus(object sender, RoutedEventArgs e)
+        private void TextBox_OnGotFocus(object sender, RoutedEventArgs e)
         {
             SuggestionsPopup.IsOpen = true;
+        }
+
+        void TextBox_OnLostFocus(object sender, RoutedEventArgs e)
+        {
+            if(!SuggestionsPopup.IsKeyboardFocusWithin && !TextBox.IsKeyboardFocusWithin)
+                SuggestionsPopup.IsOpen = false;
+        }
+
+        void SuggestionsList_OnLostFocus(object sender, RoutedEventArgs e)
+        {
+            if (!SuggestionsPopup.IsKeyboardFocusWithin && !TextBox.IsKeyboardFocusWithin)
+                SuggestionsPopup.IsOpen = false;
         }
 
         private void TextBoxBase_OnTextChanged(object sender, TextChangedEventArgs e)
         {
             FilteredSuggestedTags.View.Refresh();
-            ValidateText();
-            if (string.IsNullOrEmpty(Text))
-            {
-                SuggestionsPopup.IsOpen = false;
-            }
-            else
-            {
-                SuggestionsPopup.IsOpen = !FilteredSuggestedTags.View.IsEmpty;
-            }
-
-        }
-
-        private void ValidateText()
-        {
-            if (string.IsNullOrEmpty(Text))
-            {
-                ValidationError.Visibility = Visibility.Collapsed;
-                return;
-            }
-
-            ValidationError.Visibility = SelectedTags.Contains(Text, StringComparison.CurrentCultureIgnoreCase) ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void EventSetter_OnHandler(object sender, MouseButtonEventArgs e)
         {
             if (sender is ListViewItem item)
             {
-                ExecuteEnterCommand(item.Content as string);
+                if (item.DataContext is SuggestedTagContainer container)
+                {
+                    ExecuteEnterCommand(container.IsCreateEntry ? Text : container.Value);
+                }
             }
         }
 
@@ -169,18 +235,42 @@ namespace Octopus.Manager.Tentacle.Controls
             if (e.Key != Key.Enter) return;
             if (sender is ListViewItem item)
             {
-                ExecuteEnterCommand(item.Content as string);
+                if (item.DataContext is SuggestedTagContainer container)
+                {
+                    e.Handled = true;
+                    ExecuteEnterCommand(container.IsCreateEntry ? Text : container.Value);
+                }
             }
         }
 
         private void TextBox_OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (e.Key == Key.Enter) e.Handled = true;
             if (e.Key == Key.Down)
             {
-                SuggestionsList.SelectedIndex = 1;
+                SuggestionsList.SelectedIndex = 0;
                 SuggestionsList.Focus();
             }
         }
+
+        void TextBox_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            SuggestionsPopup.IsOpen = true;
+        }
+    }
+
+    internal class SuggestedTagContainer
+    {
+        public bool IsCreateEntry { get; }
+
+        public string Value { get; }
+
+        public SuggestedTagContainer(string value, bool isCreateEntry = false)
+        {
+            IsCreateEntry = isCreateEntry;
+            Value = value;
+        }
+
     }
 
     public static class ExtensionMethods

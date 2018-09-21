@@ -755,4 +755,13 @@
             </Trigger>
         </Style.Triggers>
     </Style>
+
+    <DataTemplate x:Key="CreateATagTemplate">
+        <TextBlock VerticalAlignment="Center" Width="Auto">"<Run Text="{Binding ElementName=Root, Path=Text}"/>" (add new <Run Text="{Binding ElementName=Root, Path=TagName}"/>)</TextBlock>
+    </DataTemplate>
+
+    <DataTemplate x:Key="SuggestedTagTemplate">
+        <TextBlock Text="{Binding Value}" VerticalAlignment="Center" Width="Auto"/>
+    </DataTemplate>
+
 </ResourceDictionary>

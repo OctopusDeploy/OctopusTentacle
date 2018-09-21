@@ -30,26 +30,13 @@
             <!-- Deployment Target Options -->
             <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=DeploymentTarget}">
                 <controls:ControlGroup Header="Environment" Target="{Binding ElementName=EnvironmentComboBox}">
-                    <ComboBox ItemsSource="{Binding Path=PotentialEnvironments}" SelectedItem="{Binding Path=SelectedEnvironment}" Width="200" Name="EnvironmentComboBox" />
+                    <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialEnvironments}" SelectedTags="{Binding SelectedEnvironments}" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="False"/>
                     <controls:ErrorMessage ErrorPath="SelectedEnvironment" />
                 </controls:ControlGroup>
 
                 <controls:ControlGroup Header="Roles" Target="{Binding ElementName=RolesTextBox}">
-                    <controls:TaggingAutoCompleteBox 
-                    Text="{Binding Path=SelectedRoles, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                    x:Name="RolesAutoCompleteBox" 
-                    Width="350" 
-                    Margin="0,0,0,5"
-                    ValueMemberPath="Value"
-                    TagsSource="{Binding Path=PotentialRoles}"
-                    HorizontalAlignment="Left"
-                    TextBoxStyle="{StaticResource TextBox.Default}">
-                        <controls:TaggingAutoCompleteBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Path=Name}" />
-                            </DataTemplate>
-                        </controls:TaggingAutoCompleteBox.ItemTemplate>
-                    </controls:TaggingAutoCompleteBox>
+
+                    <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles}" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="True"/>
                     <controls:ErrorMessage ErrorPath="SelectedRoles" />
                     <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Enter the machine roles, using spaces or commas as separators. For example: web-server, app-server" />
                 </controls:ControlGroup>

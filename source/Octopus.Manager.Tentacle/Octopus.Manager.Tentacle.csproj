@@ -185,6 +185,9 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Controls\AutoCompleteTagControl.xaml.cs">
+      <DependentUpon>AutoCompleteTagControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ControlGroup.cs" />
     <Compile Include="Controls\ErrorMessage.cs" />
     <Compile Include="Controls\ImageLink.cs" />
@@ -192,6 +195,7 @@
     <Compile Include="Controls\RetinaImage.cs" />
     <Compile Include="Controls\ServiceWatcher.cs" />
     <Compile Include="Controls\TaggingAutoCompleteBox.cs" />
+    <Compile Include="Controls\WatermarkService.cs" />
     <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\BooleanToYesNoConverter.cs" />
     <Compile Include="Converters\EnumBooleanConverter.cs" />
@@ -269,6 +273,11 @@
     <Compile Include="TentacleManager.cs" />
     <Compile Include="Util\BrowserHelper.cs" />
     <Compile Include="Util\CommandLine.cs" />
+    <Compile Include="Util\RelayCommand.cs" />
+    <Page Include="Controls\AutoCompleteTagControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="DeleteWizard\Views\DeleteWelcome.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
