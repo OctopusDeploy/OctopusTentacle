@@ -50,5 +50,6 @@ source/_ReSharper*
 source/.idea
 source/Octopus.sln.iml
 
-/tools/
+/tools/*
+!/tools/wix
 source/Octopus.Tentacle/Properties/launchSettings.json
