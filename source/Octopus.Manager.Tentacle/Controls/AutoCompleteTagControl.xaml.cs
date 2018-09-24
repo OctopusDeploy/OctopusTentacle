@@ -93,6 +93,8 @@ namespace Octopus.Manager.Tentacle.Controls
 
         public bool CanCreateNewTags { get; set; }
 
+        public string Watermark => CanCreateNewTags ? $"{TagName.FirstCharToUpper()} (type to add a new {TagName})" : $"Select {TagName.ToLower()}";
+
         public CollectionViewSource FilteredSuggestedTags { get; }
 
         List<SuggestedTagContainer> InternalSuggestedTags  = new List<SuggestedTagContainer>();
@@ -275,6 +277,13 @@ namespace Octopus.Manager.Tentacle.Controls
 
     public static class ExtensionMethods
     {
+        public static string FirstCharToUpper(this string input)
+        {
+            if (!string.IsNullOrEmpty(input))
+                return input.First().ToString().ToUpper() + input.Substring(1);
+            return input;
+        }
+
         public static bool Contains(this IEnumerable<string> source, string value, StringComparison comparison)
         {
             return source.ToList().FindAll(s => s.Equals(value, StringComparison.OrdinalIgnoreCase)).Count > 0;

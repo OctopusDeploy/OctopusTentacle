@@ -46,7 +46,7 @@
         <ItemsControl Grid.Row="0" ItemsSource="{Binding SelectedTags, ElementName=Root}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="#e7e7e7" CornerRadius="11" Margin="0,2,5,2">
+                    <Border Background="#e7e7e7" CornerRadius="11" Margin="0,0,5,5">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
@@ -74,8 +74,14 @@
         </ItemsControl>
         <Grid Grid.Row="1" HorizontalAlignment="Stretch">
             <TextBox Name="TextBox" FontSize="12" Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus" TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown" PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center" HorizontalAlignment="Stretch">
+                <TextBox.Resources>
+                    <DiscreteObjectKeyFrame x:Key="Watermark" 
+                                            Value="{Binding Path=Watermark, 
+                                            RelativeSource={RelativeSource FindAncestor,
+                                            AncestorType=controls:AutoCompleteTagControl}}"/>
+                </TextBox.Resources>
                 <controls:WatermarkService.Watermark>
-                    <TextBlock FontSize="12" Margin="3,0,0,0">Roles (type to add a new role)</TextBlock>
+                    <TextBlock FontSize="12" Margin="3,0,0,0"  Text="{Binding Value, Source={StaticResource Watermark}}"/>
                 </controls:WatermarkService.Watermark>
             </TextBox>
             <Popup Name="SuggestionsPopup" AllowsTransparency="True" IsOpen="False" StaysOpen="True">
