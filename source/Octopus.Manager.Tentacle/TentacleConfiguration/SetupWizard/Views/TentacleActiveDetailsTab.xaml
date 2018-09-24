@@ -30,64 +30,41 @@
             <!-- Deployment Target Options -->
             <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=DeploymentTarget}">
                 <controls:ControlGroup Header="Environment" Target="{Binding ElementName=EnvironmentComboBox}">
-                    <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialEnvironments}" SelectedTags="{Binding SelectedEnvironments}" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="False"/>
+                    <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialEnvironments}" SelectedTags="{Binding SelectedEnvironments}" TagName="environments" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="False"/>
                     <controls:ErrorMessage ErrorPath="SelectedEnvironment" />
+                    <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one environment for the deployment target." />
                 </controls:ControlGroup>
 
                 <controls:ControlGroup Header="Roles" Target="{Binding ElementName=RolesTextBox}">
 
-                    <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles}" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="True"/>
+                    <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles}" TagName="roles" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="True"/>
                     <controls:ErrorMessage ErrorPath="SelectedRoles" />
-                    <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Enter the machine roles, using spaces or commas as separators. For example: web-server, app-server" />
+                    <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one role that this deployment target will provide." />
                 </controls:ControlGroup>
 
-                <controls:ControlGroup Header="Tenants" 
+                <Expander Header="Tenants" IsExpanded="{Binding AreTenantsSupported}">
+                    <StackPanel>
+                        <controls:ControlGroup Header="Tenants" 
                                    Target="{Binding ElementName=TenantsAutoCompleteBox}" 
                                    Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
-                    <controls:TaggingAutoCompleteBox 
-                    Text="{Binding Path=SelectedTenants, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                    x:Name="TenantsAutoCompleteBox" 
-                    Width="350" 
-                    Margin="0,0,0,5"
-                    ValueMemberPath="Value"
-                    TagsSource="{Binding Path=PotentialTenants}"
-                    HorizontalAlignment="Left"
-                    TextBoxStyle="{StaticResource TextBox.Default}">
-                        <controls:TaggingAutoCompleteBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Path=Name}" />
-                            </DataTemplate>
-                        </controls:TaggingAutoCompleteBox.ItemTemplate>
-                    </controls:TaggingAutoCompleteBox>
-                    <controls:ErrorMessage ErrorPath="SelectedTenants" />
-                    <TextBlock TextWrapping="Wrap" 
+                            <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenants}" SelectedTags="{Binding SelectedTenants}" TagName="tenants" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="False"/>
+                            <controls:ErrorMessage ErrorPath="SelectedTenants" />
+                            <TextBlock TextWrapping="Wrap" 
                            Foreground="Gray" 
-                           Text="Enter the tenants, using spaces or commas as separators, wrapping with quotes if they contain a space. For example: &quot;Acme&quot;, &quot;Globex&quot;" />
-                </controls:ControlGroup>
+                           Text="Choose tenants this deployment target should be associated with." />
+                        </controls:ControlGroup>
 
-                <controls:ControlGroup Header="Tenant Tags" 
+                        <controls:ControlGroup Header="Tenant Tags" 
                                    Target="{Binding ElementName=TenantTagsAutoCompleteBox}" 
                                    Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
-                    <controls:TaggingAutoCompleteBox 
-                    Text="{Binding Path=SelectedTenantTags, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                    x:Name="TenantTagsAutoCompleteBox" 
-                    Width="350" 
-                    Margin="0,0,0,5"
-                    ValueMemberPath="Value"
-                    TagsSource="{Binding Path=PotentialTenantTags}"
-                    HorizontalAlignment="Left"
-                    TextBoxStyle="{StaticResource TextBox.Default}">
-                        <controls:TaggingAutoCompleteBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Path=Name}" />
-                            </DataTemplate>
-                        </controls:TaggingAutoCompleteBox.ItemTemplate>
-                    </controls:TaggingAutoCompleteBox>
-                    <controls:ErrorMessage ErrorPath="SelectedTenantTags" />
-                    <TextBlock TextWrapping="Wrap" 
+                            <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenantTags}" SelectedTags="{Binding SelectedTenantTags}" TagName="tenant tags" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="False"/>
+                            <controls:ErrorMessage ErrorPath="SelectedTenantTags" />
+                            <TextBlock TextWrapping="Wrap" 
                            Foreground="Gray" 
-                           Text="Enter the tenant tags, using spaces or commas as separators, wrapping with quotes if they contain a space. For example: &quot;Hosting/Shared&quot;, &quot;Type/External&quot;" />
-                </controls:ControlGroup>
+                           Text="Choose tenant tags this deployment target should be associated with." />
+                        </controls:ControlGroup>
+                    </StackPanel>
+                </Expander>
             </StackPanel>
 
             <!-- Deployment Target Options -->

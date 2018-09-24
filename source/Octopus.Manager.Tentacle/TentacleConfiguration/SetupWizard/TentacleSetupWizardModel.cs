@@ -37,9 +37,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string password;
         string apiKey;
         bool haveCredentialsBeenVerified;
-        //string selectedEnvironment;
-        string selectedTenantTags;
-        string selectedTenants;
         string selectedMachinePolicy;
         string selectedWorkerPool;
         string[] potentialEnvironments;
@@ -59,6 +56,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string serverWebSocket;
         bool skipServerRegistration;
         readonly ProxyWizardModel proxyWizardModel;
+        bool areTenantsSupported;
 
         public TentacleSetupWizardModel(string selectedInstance) : this(selectedInstance, ApplicationName.Tentacle, new ProxyWizardModel(selectedInstance, ApplicationName.Tentacle))
         {
@@ -68,6 +66,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         {
             SelectedRoles = new ObservableCollection<string>();
             SelectedEnvironments = new ObservableCollection<string>();
+            SelectedTenants = new ObservableCollection<string>();
+            SelectedTenantTags = new ObservableCollection<string>();
 
             this.applicationName = applicationName;
             this.proxyWizardModel = proxyWizardModel;
@@ -100,7 +100,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 Environment.OSVersion.Version.Major > 5;
         }
 
-        public bool AreTenantsSupported { get; private set; } = false;
         public bool ShowMachinePolicySelection { get; private set; } = false;
         public string InstanceName { get; private set; }
         public bool FirewallException { get; set; }
@@ -109,6 +108,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string TentacleExe => string.IsNullOrEmpty(PathToTentacleExe) ? CommandLine.PathToTentacleExe() : PathToTentacleExe;
 
         public string PathToTentacleExe { get; set; }
+
+        public bool AreTenantsSupported
+        {
+            get => areTenantsSupported;
+            set
+            {
+                if (value == areTenantsSupported) return;
+                areTenantsSupported = value;
+                OnPropertyChanged();
+            }
+        }
 
         public string HomeDirectory
         {
@@ -334,28 +344,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public ObservableCollection<string> SelectedRoles { get; }
         public ObservableCollection<string> SelectedEnvironments { get; }
-
-        public string SelectedTenantTags
-        {
-            get => selectedTenantTags;
-            set
-            {
-                if (value == selectedTenantTags) return;
-                selectedTenantTags = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string SelectedTenants
-        {
-            get => selectedTenants;
-            set
-            {
-                if (value == selectedTenants) return;
-                selectedTenants = value;
-                OnPropertyChanged();
-            }
-        }
+        public ObservableCollection<string> SelectedTenants { get; }
+        public ObservableCollection<string> SelectedTenantTags { get; }
 
         public string SelectedWorkerPool
         {
@@ -611,21 +601,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 && Uri.TryCreate(s, UriKind.Absolute, out uri)
                 && (uri.Scheme == "http" || uri.Scheme == "https");
         }
-        /*
-        string[] SelectedRolesArray
-        {
-            get { return (selectedRoles ?? string.Empty).Split(';', ',', ' ').Select(r => r.Trim()).NotNullOrWhiteSpace().ToArray(); }
-        }*/
-
-        string[] SelectedTenantTagsArray
-        {
-            get { return (selectedTenantTags ?? string.Empty).Split(';', ',').Select(r => r.Trim().Trim('"')).NotNullOrWhiteSpace().ToArray(); }
-        }
-
-        string[] SelectedTenantsArray
-        {
-            get { return (selectedTenants ?? string.Empty).Split(';', ',').Select(r => r.Trim().Trim('"')).NotNullOrWhiteSpace().ToArray(); }
-        }
 
 
         public IEnumerable<CommandLineInvocation> GenerateScript()
@@ -681,10 +656,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                     if (AreTenantsSupported)
                     {
-                        foreach (var tag in SelectedTenantTagsArray)
+                        foreach (var tag in SelectedTenantTags)
                             register.Argument("tenanttag", tag);
 
-                        foreach (var tenant in SelectedTenantsArray)
+                        foreach (var tenant in SelectedTenants)
                             register.Argument("tenant", tenant);
                     }
 
