@@ -31,14 +31,14 @@
                 <!-- Deployment Target Options -->
                 <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=DeploymentTarget}">
                     <controls:ControlGroup Header="Environment" Target="{Binding ElementName=EnvironmentComboBox}">
-                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialEnvironments}" SelectedTags="{Binding SelectedEnvironments}" TagName="environments" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="False"/>
-                        <controls:ErrorMessage ErrorPath="SelectedEnvironment" />
+                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialEnvironments}" SelectedTags="{Binding SelectedEnvironments}" TagName="environments" Width="350" HorizontalAlignment="Left" CanCreateNewTags="False"/>
+                        <controls:ErrorMessage ErrorPath="SelectedEnvironments" />
                         <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one environment for the deployment target." />
                     </controls:ControlGroup>
 
                     <controls:ControlGroup Header="Roles" Target="{Binding ElementName=RolesTextBox}">
 
-                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles}" TagName="roles" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="True"/>
+                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles}" TagName="roles" Width="350" HorizontalAlignment="Left" CanCreateNewTags="True"/>
                         <controls:ErrorMessage ErrorPath="SelectedRoles" />
                         <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one role that this deployment target will provide." />
                     </controls:ControlGroup>
@@ -48,7 +48,7 @@
                             <controls:ControlGroup Header="Tenants" 
                                    Target="{Binding ElementName=TenantsAutoCompleteBox}" 
                                    Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
-                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenants}" SelectedTags="{Binding SelectedTenants}" TagName="tenants" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="False"/>
+                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenants}" SelectedTags="{Binding SelectedTenants}" TagName="tenants" Width="350" HorizontalAlignment="Left" CanCreateNewTags="False"/>
                                 <controls:ErrorMessage ErrorPath="SelectedTenants" />
                                 <TextBlock TextWrapping="Wrap" 
                            Foreground="Gray" 
@@ -58,7 +58,7 @@
                             <controls:ControlGroup Header="Tenant Tags" 
                                    Target="{Binding ElementName=TenantTagsAutoCompleteBox}" 
                                    Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
-                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenantTags}" SelectedTags="{Binding SelectedTenantTags}" TagName="tenant tags" Width="350" Margin="0,0,0,5" HorizontalAlignment="Left" CanCreateNewTags="False"/>
+                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenantTags}" SelectedTags="{Binding SelectedTenantTags}" TagName="tenant tags" Width="350" HorizontalAlignment="Left" CanCreateNewTags="False"/>
                                 <controls:ErrorMessage ErrorPath="SelectedTenantTags" />
                                 <TextBlock TextWrapping="Wrap" 
                            Foreground="Gray" 
