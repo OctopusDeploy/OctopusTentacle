@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,14 +11,46 @@ using Octopus.Manager.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.Controls
 {
+    internal class CustomIconDataTemplateSelector : DataTemplateSelector
+    {
+        #region Data Templates
+        static readonly DataTemplate RoleIconDataTemplate = Application.Current.Resources["RoleIconDataTemplate"] as DataTemplate;
+        static readonly DataTemplate EnvironmentIconDataTemplate = Application.Current.Resources["EnvironmentIconDataTemplate"] as DataTemplate;
+        static readonly DataTemplate TenantIconDataTemplate = Application.Current.Resources["TenantIconDataTemplate"] as DataTemplate;
+
+        #endregion
+
+        /// <summary>
+        /// When overridden in a derived class, returns a <see cref="T:System.Windows.DataTemplate" /> based on custom logic.
+        /// </summary>
+        /// <param name="item">The data object for which to select the template.</param>
+        /// <param name="container">The data-bound object.</param>
+        /// <returns>
+        /// Returns a <see cref="T:System.Windows.DataTemplate" /> or null. The default value is null.
+        /// </returns>
+        public override DataTemplate SelectTemplate(object item, DependencyObject container)
+        {
+            var tagName = (string)item;
+            if (string.IsNullOrEmpty(tagName)) return null;
+            switch (tagName.ToLowerInvariant())
+            {
+                case "roles":
+                    return RoleIconDataTemplate;
+                case "environments":
+                    return EnvironmentIconDataTemplate;
+                case "tenants":
+                    return TenantIconDataTemplate;
+                default:
+                    return RoleIconDataTemplate;
+            }
+        }
+    }
+
     internal class CustomDataTemplateSelector : DataTemplateSelector
     {
         #region Data Templates
-        /// <summary>
-        /// The text data template
-        /// </summary>
-        private static readonly DataTemplate CreateATagTemplate = Application.Current.Resources["CreateATagTemplate"] as DataTemplate;
-        private static readonly DataTemplate SuggestedTagTemplate = Application.Current.Resources["SuggestedTagTemplate"] as DataTemplate;
+        static readonly DataTemplate CreateATagTemplate = Application.Current.Resources["CreateATagTemplate"] as DataTemplate;
+        static readonly DataTemplate SuggestedTagTemplate = Application.Current.Resources["SuggestedTagTemplate"] as DataTemplate;
 
         #endregion
 

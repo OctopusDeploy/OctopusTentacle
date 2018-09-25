@@ -8,6 +8,7 @@
              Name="Root"
              Width="350">
     <UserControl.Resources>
+        <controls:CustomIconDataTemplateSelector x:Key="CustomIconDataTemplateSelector"/>
         <controls:CustomDataTemplateSelector x:Key="CustomDataTemplateSelector"/>
         <Style x:Key="RoundCorner" TargetType="{x:Type Button}">
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -54,11 +55,7 @@
                                 <ColumnDefinition/>
                             </Grid.ColumnDefinitions>
                             <Border Height="22" Width="22" Background="#42000000" CornerRadius="100">
-                                <Viewbox Width="13" Height="13" Stretch="Uniform">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Name="path4541" Fill="#333333" Data="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
-                                    </Canvas>
-                                </Viewbox>
+                                <ContentPresenter Content="{Binding TagName, ElementName=Root}" ContentTemplateSelector="{StaticResource CustomIconDataTemplateSelector}"/>
                             </Border>
                             <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding}" Padding="5,2" Foreground="#333333"></TextBlock>
                             <Button Style="{StaticResource RoundCorner}" Grid.Column="2" Width="22" Height="22" Command="{Binding RemoveCommand, ElementName=Root}" CommandParameter="{Binding}" Margin="0,0,2,0"/>
@@ -85,13 +82,19 @@
                 </controls:WatermarkService.Watermark>
             </TextBox>
             <Popup Name="SuggestionsPopup" AllowsTransparency="True" IsOpen="False" StaysOpen="True">
-                <Border BorderBrush="Black" BorderThickness="1" Width="{Binding ElementName=TextBox, Path=ActualWidth}" Background="White">
+                <Border BorderThickness="1" Width="{Binding ElementName=TextBox, Path=ActualWidth}" Background="White">
+                    <Border.BorderBrush>
+                        <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">
+                            <GradientStop Color="#617585" Offset="0.0" />
+                            <GradientStop Color="#a2adb8" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.BorderBrush>
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Margin="5,2" Name="NoResultsTest" Text="No results found"/>
+                        <TextBlock Padding="5,2" Name="NoResultsTest" Text="No results found"/>
                         <ListView Grid.Row="1" LostFocus="SuggestionsList_OnLostFocus" Name="SuggestionsList" ClipToBounds="False" Background="White" ItemsSource="{Binding FilteredSuggestedTags.View, ElementName=Root}" SelectionMode="Single">
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem">

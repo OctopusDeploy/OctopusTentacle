@@ -35,7 +35,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             var shellModel = container.Resolve<ShellViewModel>();
             var shell = new ShellView("Tentacle Setup Wizard", shellModel)
             {
-                Height = 610,
+                Height = 650,
                 Width = 890
             };
             shell.SetViewContent(wizard);
