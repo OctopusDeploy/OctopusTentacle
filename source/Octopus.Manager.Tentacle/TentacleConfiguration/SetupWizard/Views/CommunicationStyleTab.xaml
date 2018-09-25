@@ -11,56 +11,58 @@
     RuleSet="CommunicationStyle"
     Style="{StaticResource TabView.Normal}"
     >
-    <Grid>
-        <StackPanel>
-            <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Communication style" />
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,0,50">
+        <Grid>
+            <StackPanel>
+                <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Communication style" />
 
-            <TextBlock Style="{StaticResource TextBlock.Big}">
+                <TextBlock Style="{StaticResource TextBlock.Big}">
                 <Run>Octopus and Tentacle can communicate in two ways, and the best choice depends on your network topology.</Run>
                 <Hyperlink NavigateUri="http://g.octopushq.com/ChooseCommunicationStyle" RequestNavigate="Navigate">Learn more about choosing a communication style.</Hyperlink>
-            </TextBlock>
+                </TextBlock>
 
-            <RadioButton Margin="0,10,0,10" Content="Listening Tentacle (recommended)" IsChecked="{Binding Path=IsTentaclePassive, Mode=TwoWay}" />
+                <RadioButton Margin="0,10,0,10" Content="Listening Tentacle (recommended)" IsChecked="{Binding Path=IsTentaclePassive, Mode=TwoWay}" />
 
-            <Grid Margin="20,10,0,10" Width="450">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="120" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="120" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                <Grid Margin="20,10,0,10" Width="450">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="120" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                <Image Grid.ColumnSpan="3" HorizontalAlignment="Center" Source="/Resources/Images/TentaclePassive.png" Width="416" Height="98" />
-                <TextBlock Text="Octopus Server" Grid.Column="0" Grid.Row="1" TextAlignment="Center" />
-                <TextBlock Text="Tentacle Agent" Grid.Column="2" Grid.Row="1" TextAlignment="Center" />
-            </Grid>
+                    <Image Grid.ColumnSpan="3" HorizontalAlignment="Center" Source="/Resources/Images/TentaclePassive.png" Width="416" Height="98" />
+                    <TextBlock Text="Octopus Server" Grid.Column="0" Grid.Row="1" TextAlignment="Center" />
+                    <TextBlock Text="Tentacle Agent" Grid.Column="2" Grid.Row="1" TextAlignment="Center" />
+                </Grid>
 
-            <Border Background="Orange" Visibility="{Binding HaveCredentialsBeenVerified, Converter={StaticResource Converter.InverseBooleanToVisibilityConverter}}">
-                <StackPanel Orientation="Horizontal">
-                    <Image Source="../../../Resources/Images/warning@4.png" Width="16" Height="16"/>
-                    <TextBlock Margin="5,0,0,0">A connection to your Octopus Server is required to setup a Polling Tentacle</TextBlock>
-                </StackPanel>
-            </Border>
-            <RadioButton IsEnabled="{Binding HaveCredentialsBeenVerified}" Margin="0,10,0,10" Content="Polling Tentacle" IsChecked="{Binding Path=IsTentacleActive, Mode=TwoWay}" />
+                <Border Background="Orange" Visibility="{Binding HaveCredentialsBeenVerified, Converter={StaticResource Converter.InverseBooleanToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="../../../Resources/Images/warning@4.png" Width="16" Height="16"/>
+                        <TextBlock Margin="5,0,0,0">A connection to your Octopus Server is required to setup a Polling Tentacle</TextBlock>
+                    </StackPanel>
+                </Border>
+                <RadioButton IsEnabled="{Binding HaveCredentialsBeenVerified}" Margin="0,10,0,10" Content="Polling Tentacle" IsChecked="{Binding Path=IsTentacleActive, Mode=TwoWay}" />
 
-            <Grid Margin="20,10,0,0" Width="450">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="120" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="120" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                <Grid Margin="20,10,0,0" Width="450">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="120" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                <Image Grid.ColumnSpan="3" HorizontalAlignment="Center" Source="/Resources/Images/TentacleActive.png" Width="417" Height="98" />
-                <TextBlock Text="Octopus Server" Grid.Column="0" Grid.Row="1" TextAlignment="Center" />
-                <TextBlock Text="Tentacle Agent" Grid.Column="2" Grid.Row="1" TextAlignment="Center" />
-            </Grid>
-        </StackPanel>
-    </Grid>
+                    <Image Grid.ColumnSpan="3" HorizontalAlignment="Center" Source="/Resources/Images/TentacleActive.png" Width="417" Height="98" />
+                    <TextBlock Text="Octopus Server" Grid.Column="0" Grid.Row="1" TextAlignment="Center" />
+                    <TextBlock Text="Tentacle Agent" Grid.Column="2" Grid.Row="1" TextAlignment="Center" />
+                </Grid>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
 </shell:TabView>
