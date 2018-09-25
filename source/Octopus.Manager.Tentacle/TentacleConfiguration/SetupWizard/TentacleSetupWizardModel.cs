@@ -589,7 +589,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 validator.RuleFor(m => m.SelectedRoles).NotEmpty().WithMessage("Please select or enter at least one role").Unless(m => m.MachineType == MachineType.Worker);
                 validator.RuleFor(m => m.SelectedEnvironments).NotEmpty().WithMessage("Please select an environment").Unless(m => m.MachineType == MachineType.Worker);
                 validator.RuleFor(m => m.SelectedWorkerPool).NotEmpty().WithMessage("Please select a worker pool").Unless(m => m.MachineType == MachineType.DeploymentTarget);
-                //validator.RuleFor(m => m.SelectedMachinePolicy).NotEmpty().WithMessage("Please select a machine policy");
             });
             return validator;
         }
