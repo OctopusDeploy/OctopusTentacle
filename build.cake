@@ -158,10 +158,10 @@ Task("Publish")
     .WithCriteria(BuildSystem.IsRunningOnTeamCity)
     .Does(() =>
 {
-	NuGetPush($"{artifactsDir}Octopus.Shared.{gitVersion.NuGetVersion}.nupkg", new NuGetPushSettings {
-		Source = "https://f.feedz.io/octopus-deploy/dependencies/nuget",
-		ApiKey = EnvironmentVariable("FeedzIoApiKey")
-	});
+    NuGetPush(Path.Combine(artifactsDir, $"Octopus.Shared.{gitVersion.NuGetVersion}.nupkg"), new NuGetPushSettings {
+        Source = "https://f.feedz.io/octopus-deploy/dependencies/nuget",
+        ApiKey = EnvironmentVariable("FeedzIoApiKey")
+    });
 });
 
 
