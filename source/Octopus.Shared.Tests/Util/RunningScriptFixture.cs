@@ -11,6 +11,10 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Util
 {
+    // These tests are flakey on the build server.
+    // Sometimes powershell just returns -1 when running these scripts.
+    // That's why every test has a retry attribute.
+
     [TestFixture]
     public class RunningScriptFixture
     {
@@ -48,20 +52,17 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [Retry(3)]
         public void ExitCode_ShouldBeReturned()
         {
             workspace.BootstrapScript("exit 9999");
             runningScript.Execute();
-
-            // This test is flakey, so output everything
-            Console.WriteLine($"Debug: {scriptLog.Debug}");
-            Console.WriteLine($"StdOut: {scriptLog.StdOut}");
-            Console.WriteLine($"StdErr: {scriptLog.StdErr}");
-
             runningScript.ExitCode.Should().Be(9999, "the exit code of the script should be returned");
+
         }
 
         [Test]
+        [Retry(3)]
         public void WriteHost_WritesToStdOut_AndIsReturned()
         {
             workspace.BootstrapScript("Write-Host Hello");
@@ -72,6 +73,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [Retry(3)]
         public void WriteDebug_DoesNotWriteAnywhere()
         {
             workspace.BootstrapScript("Write-Debug Hello");
@@ -82,6 +84,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [Retry(3)]
         public void WriteOutput_WritesToStdOut_AndIsReturned()
         {
             workspace.BootstrapScript("Write-Output Hello");
@@ -92,6 +95,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [Retry(3)]
         public void WriteError_WritesToStdErr_AndIsReturned()
         {
             workspace.BootstrapScript("Write-Error EpicFail");
@@ -102,6 +106,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [Retry(3)]
         public void RunAsCurrentUser_ShouldWork()
         {
             workspace.BootstrapScript("Write-Host $env:userdomain\\$env:username");
@@ -136,21 +141,23 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [Retry(3)]
         public void CancellationToken_ShouldKillTheProcess()
         {
             using (new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
                 var script = new RunningScript(workspace, scriptLog, taskId, cancellationTokenSource.Token);
                 workspace.BootstrapScript("Write-Host Starting\nStart-Sleep -seconds 10\nWrite-Host Finito");
-            script.Execute();
-            runningScript.ExitCode.Should().Be(0, "the script should have been canceled");
-            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
-            scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Starting", "the starting message should be written to stdout");
-            scriptLog.StdOut.ToString().Should().NotContainEquivalentOf("Finito", "the script should have canceled before writing the finish message");
-        }
+                script.Execute();
+                runningScript.ExitCode.Should().Be(0, "the script should have been canceled");
+                scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
+                scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Starting", "the starting message should be written to stdout");
+                scriptLog.StdOut.ToString().Should().NotContainEquivalentOf("Finito", "the script should have canceled before writing the finish message");
+            }
         }
 
         [Test]
+        [Retry(3)]
         public void RunAsCurrentUser_ShouldCopyCustomEnvironmentVariables()
         {
             workspace.CustomEnvironmentVariables.Add("customenvironmentvariable", "customvalue");
