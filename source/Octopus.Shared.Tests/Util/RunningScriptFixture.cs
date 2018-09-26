@@ -52,6 +52,12 @@ namespace Octopus.Shared.Tests.Util
         {
             workspace.BootstrapScript("exit 9999");
             runningScript.Execute();
+
+            // This test is flakey, so output everything
+            Console.WriteLine($"Debug: {scriptLog.Debug}");
+            Console.WriteLine($"StdOut: {scriptLog.StdOut}");
+            Console.WriteLine($"StdErr: {scriptLog.StdErr}");
+
             runningScript.ExitCode.Should().Be(9999, "the exit code of the script should be returned");
         }
 
@@ -136,12 +142,12 @@ namespace Octopus.Shared.Tests.Util
             {
                 var script = new RunningScript(workspace, scriptLog, taskId, cancellationTokenSource.Token);
                 workspace.BootstrapScript("Write-Host Starting\nStart-Sleep -seconds 10\nWrite-Host Finito");
-                script.Execute();
-                runningScript.ExitCode.Should().Be(0, "the script should have been canceled");
-                scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
-                scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Starting", "the starting message should be written to stdout");
-                scriptLog.StdOut.ToString().Should().NotContainEquivalentOf("Finito", "the script should have canceled before writing the finish message");
-            }
+            script.Execute();
+            runningScript.ExitCode.Should().Be(0, "the script should have been canceled");
+            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
+            scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Starting", "the starting message should be written to stdout");
+            scriptLog.StdOut.ToString().Should().NotContainEquivalentOf("Finito", "the script should have canceled before writing the finish message");
+        }
         }
 
         [Test]
