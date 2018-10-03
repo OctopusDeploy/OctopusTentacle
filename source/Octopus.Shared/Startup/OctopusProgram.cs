@@ -268,7 +268,6 @@ namespace Octopus.Shared.Startup
         static string TryLoadInstanceNameFromCommandLineArguments(string[] commandLineArguments)
         {
             var instanceName = string.Empty;
-            var machineConfigurationHomeDirectory = string.Empty;
             var options = AbstractStandardCommand.AddInstanceOption(new OptionSet(), v => instanceName = v);
             
             // Ignore the return parameter here, we want to leave the instance option for the responsible command
