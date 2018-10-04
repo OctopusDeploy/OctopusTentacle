@@ -144,9 +144,9 @@ namespace Octopus.Shared.Tests.Util
         [Retry(3)]
         public void CancellationToken_ShouldKillTheProcess()
         {
-            using (new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
-                var script = new RunningScript(workspace, scriptLog, taskId, cancellationTokenSource.Token);
+                var script = new RunningScript(workspace, scriptLog, taskId, cts.Token);
                 workspace.BootstrapScript("Write-Host Starting\nStart-Sleep -seconds 10\nWrite-Host Finito");
                 script.Execute();
                 runningScript.ExitCode.Should().Be(0, "the script should have been canceled");
