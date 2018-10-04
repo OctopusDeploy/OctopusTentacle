@@ -118,6 +118,11 @@ namespace Octopus.Shared.Configuration
 
         public void CreateInstance(string instanceName, string configurationFile, string homeDirectory = null)
         {
+            var instances = instanceStore.ListInstances(applicationName);
+            var existingInstance = instances.FirstOrDefault(s => string.Equals(s.InstanceName, currentInstanceName, StringComparison.InvariantCultureIgnoreCase));
+            if (existingInstance != null)
+                throw new ControlledFailureException($"Instance {existingInstance.InstanceName} of {applicationName} already exists on this machine, using configuration file {existingInstance.ConfigurationFilePath}.");
+
             var parentDirectory = Path.GetDirectoryName(configurationFile);
             fileSystem.EnsureDirectoryExists(parentDirectory);
 

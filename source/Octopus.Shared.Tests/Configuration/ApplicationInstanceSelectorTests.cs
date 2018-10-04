@@ -112,6 +112,19 @@ namespace Octopus.Shared.Tests.Configuration
                 .WithMessage("Instance instance 2 of OctopusServer could not be matched to one of the existing instances: Instance 2, INSTANCE 2.");
         }
 
+        [Test]
+        public void CreateInstanceDoesNotAllowMultipleInstancesThatDifferByCase()
+        {
+            var instanceRecords = new List<ApplicationInstanceRecord>
+            {
+                new ApplicationInstanceRecord("Instance 2", ApplicationName.OctopusServer, "c:\\temp\\2a.config"),
+            };
+            var selector = GetApplicationInstanceSelector(instanceRecords, "instance 2");
+            ((Action)(() => selector.CreateInstance("INSTANCE 2", "c:\\temp\\2b.config", "c:\\temp\\2b")))
+                .ShouldThrow<ControlledFailureException>()
+                .WithMessage("Instance Instance 2 of OctopusServer already exists on this machine, using configuration file c:\\temp\\2a.config.");
+        }
+
         private static ApplicationInstanceSelector GetApplicationInstanceSelector(List<ApplicationInstanceRecord> instanceRecords, string currentInstanceName)
         {
             var instanceStore = Substitute.For<IApplicationInstanceStore>();
