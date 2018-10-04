@@ -8,6 +8,7 @@
     <OutputType>Exe</OutputType>
     <NoWin32Manifest>true</NoWin32Manifest>
     <OutputPath>bin\</OutputPath>
+    <ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
