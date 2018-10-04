@@ -9,18 +9,12 @@ namespace Octopus.Shared.Configuration
     {
         readonly ApplicationName application;
         readonly IKeyValueStore settings;
-        readonly string defaultHome;
+        
 
         public HomeConfiguration(ApplicationName application, IKeyValueStore settings)
         {
             this.application = application;
             this.settings = settings;
-
-            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            if (string.IsNullOrWhiteSpace(programFiles)) // 32 bit
-                programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-
-            defaultHome = Path.Combine(Directory.GetDirectoryRoot(programFiles), "Octopus");
         }
 
         public string ApplicationSpecificHomeDirectory => HomeDirectory == null ? null : Path.Combine(HomeDirectory, application.ToString());
