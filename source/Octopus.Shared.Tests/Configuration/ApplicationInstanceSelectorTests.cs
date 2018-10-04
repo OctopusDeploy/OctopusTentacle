@@ -95,6 +95,11 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void LoadInstanceThrowsWhenMultipleCaseInsensitiveMatchesButNoExactMatch()
         {
+            //note: this could only happen:
+            // - once we've stopped using the registry as the instance store
+            // - on a case sensitive operating system (ie linux or mac)
+            // - where the instance configuration was done manually (as `create-instance` blocks it)
+
             var instanceRecords = new List<ApplicationInstanceRecord>
             {
                 new ApplicationInstanceRecord("Instance 2", ApplicationName.OctopusServer, "c:\\temp\\2a.config"),
