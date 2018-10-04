@@ -8,7 +8,6 @@
     <OutputType>Exe</OutputType>
     <NoWin32Manifest>true</NoWin32Manifest>
     <OutputPath>bin\</OutputPath>
-    <ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -18,7 +17,7 @@
   <ItemGroup>
     <PackageReference Include="Octopus.Client" Version="4.37.0" />
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
-    <PackageReference Include="Octopus.Shared" Version="4.3.7" />
+    <PackageReference Include="Octopus.Shared" Version="4.3.10-enh-improveinstance1" />
   </ItemGroup>
 
   <ItemGroup>

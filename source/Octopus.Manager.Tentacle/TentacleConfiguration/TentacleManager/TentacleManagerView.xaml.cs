@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using Octopus.Manager.Tentacle.DeleteWizard;
 using Octopus.Manager.Tentacle.Dialogs;
@@ -51,7 +52,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             Dispatcher.BeginInvoke(new Action(delegate
             {
-                var defaultInstall = instanceStore.GetInstance(instanceSelection.ApplicationName, instanceSelection.SelectedInstance);
+                var instances = instanceStore.ListInstances(ApplicationName.OctopusServer);
+                var defaultInstall = instances.SingleOrDefault(s => s.InstanceName == instanceSelection.SelectedInstance);
                 if (defaultInstall != null && !File.Exists(defaultInstall.ConfigurationFilePath))
                 {
                     Log.Octopus().WarnFormat("An instance of {0} named {1} was configured, but the associated configuration file {2} does not exist. Deleting the instance.", defaultInstall.ApplicationName, defaultInstall.InstanceName, defaultInstall.ConfigurationFilePath);
