@@ -59,7 +59,7 @@ namespace Octopus.Shared.Configuration
 
         LoadedApplicationInstance LoadCurrentInstance()
         {
-            var instance = string.IsNullOrWhiteSpace(currentInstanceName) ? LoadDefaultInstance() : LoadInstance(currentInstanceName);
+            var instance = LoadFrom(LoadInstance());
 
             // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
             // back to here
@@ -70,53 +70,45 @@ namespace Octopus.Shared.Configuration
             return instance;
         }
 
-        public void DeleteDefaultInstance()
+        public void DeleteInstance()
         {
-            var instance = instanceStore.GetDefaultInstance(applicationName);
+            var instance = LoadInstance();
             if (instance == null) return;
             instanceStore.DeleteInstance(instance);
-            log.Info("Deleted default instance");
+            log.Info($"Deleted instance: {instance.InstanceName}");
         }
 
-        public void DeleteInstance(string instanceName)
+        internal ApplicationInstanceRecord LoadInstance()
         {
-            var instance = instanceStore.GetInstance(applicationName, instanceName);
-            if (instance == null) return;
-            instanceStore.DeleteInstance(instance);
-            log.Info("Deleted instance: " + instanceName);
-        }
+            var instances = instanceStore.ListInstances(applicationName);
 
-        LoadedApplicationInstance LoadDefaultInstance()
-        {
-            var instance = instanceStore.GetDefaultInstance(applicationName);
-            if (instance == null)
+            if (instances.Count == 0)
+                throw new ControlledFailureException(
+                    $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
+
+            if (string.IsNullOrEmpty(currentInstanceName))
             {
-                var instances = instanceStore.ListInstances(applicationName);
-                throw new ControlledFailureException(instances.Any()
-                    ? $"There is no default instance of {applicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}."
-                    : BuildNoInstancesMessage(applicationName));
+                if (instances.Count == 1)
+                    return instances.First();
+
+                throw new ControlledFailureException(
+                    $"There is more than one instance of {applicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
             }
 
-            return LoadFrom(instance);
-        }
+            var instance = instances.SingleOrDefault(s => s.InstanceName == currentInstanceName);
+            if (instance != null)
+                return instance;
 
-        LoadedApplicationInstance LoadInstance(string instanceName)
-        {
-            var instance = instanceStore.GetInstance(applicationName, instanceName);
-            if (instance == null)
-            {
-                var instances = instanceStore.ListInstances(applicationName);
-                throw new ControlledFailureException(instances.Any()
-                    ? $"Instance {instanceName} of {applicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}."
-                    : BuildNoInstancesMessage(applicationName));
-            }
+            var caseInsensitiveMatches = instances.Where(s => string.Equals(s.InstanceName, currentInstanceName, StringComparison.InvariantCultureIgnoreCase)).ToArray();
+            if (caseInsensitiveMatches.Length == 1)
+                return caseInsensitiveMatches.First();
 
-            return LoadFrom(instance);
-        }
+            if (caseInsensitiveMatches.Length > 1)
+                throw new ControlledFailureException(
+                    $"Instance {currentInstanceName} of {applicationName} could not be matched to one of the existing instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
 
-        static string BuildNoInstancesMessage(ApplicationName applicationName)
-        {
-            return $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.";
+            throw new ControlledFailureException(
+                $"Instance {currentInstanceName} of {applicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
         }
 
         public void CreateDefaultInstance(string configurationFile, string homeDirectory = null)

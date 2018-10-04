@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Win32;
 
 namespace Octopus.Shared.Configuration
@@ -43,16 +41,6 @@ namespace Octopus.Shared.Configuration
             }
 
             return results;
-        }
-
-        public ApplicationInstanceRecord GetInstance(ApplicationName name, string instanceName)
-        {
-            return ListInstances(name).SingleOrDefault(s => s.InstanceName == instanceName);
-        }
-
-        public ApplicationInstanceRecord GetDefaultInstance(ApplicationName name)
-        {
-            return GetInstance(name, ApplicationInstanceRecord.GetDefaultInstance(name));
         }
 
         public void SaveInstance(ApplicationInstanceRecord instanceRecord)
