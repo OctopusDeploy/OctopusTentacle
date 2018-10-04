@@ -100,7 +100,7 @@ namespace Octopus.Tentacle.Commands
             };
 
             //we dont want the actual certificate, as its encrypted, and we get a different output everytime
-            outputStore.Set<string>("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
+            outputStore.Set<string>("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate?.Thumbprint);
 
             var watchdogConfiguration = watchdog.Value.GetConfiguration();
             watchdogConfiguration.WriteTo(outputStore);
