@@ -11,28 +11,27 @@ namespace Octopus.Shared.Configuration
         {
         }
 
-        public override TData Get<TData>(string name, TData defaultValue, DataProtectionScope? protectionScope)
+        public override TData Get<TData>(string name, TData defaultValue, bool? machineKeyEncrypted = false)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
-            var s = Read(name);
-            var valueAsString = s as string;
+            var data = Read(name);
+            var valueAsString = data as string;
             if (string.IsNullOrWhiteSpace(valueAsString))
                 return defaultValue;
 
-            if (protectionScope != null)
+            if (machineKeyEncrypted != null)
             {
-                var decryptedBytes = ProtectedData.Unprotect(Convert.FromBase64String(valueAsString), null, protectionScope.Value);
-                s = Encoding.UTF8.GetString(decryptedBytes);
+                data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
             }
 
             if (typeof(TData) == typeof(string))
-                return (TData)s;
+                return (TData)data;
 
-            return JsonConvert.DeserializeObject<TData>((string)s);
+            return JsonConvert.DeserializeObject<TData>((string)data);
         }
 
-        private void SetInternal(string name, string value, DataProtectionScope? protectionScope = null)
+        private void SetInternal(string name, string value, bool? machineKeyEncrypted = false)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -44,30 +43,24 @@ namespace Octopus.Shared.Configuration
                 return;
             }
 
-            var v = value;
-
-            if (protectionScope != null)
+            if (machineKeyEncrypted != null)
             {
-                v = Convert.ToBase64String(
-                    ProtectedData.Protect(
-                        Encoding.UTF8.GetBytes(v),
-                        null,
-                        protectionScope.Value));
+                value = MachineKeyEncrypter.Current.Encrypt(value);
             }
 
-            Write(name, v);
+            Write(name, value);
             if (AutoSaveOnSet)
                 Save();
         }
 
-        public override void Set<TData>(string name, TData value, DataProtectionScope? protectionScope = null)
+        public override void Set<TData>(string name, TData value, bool? machineKeyEncrypted = false)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
             if (typeof(TData) == typeof(string))
-                SetInternal(name, (string)(object)value, protectionScope);
+                SetInternal(name, (string)(object)value, machineKeyEncrypted);
             else
-                SetInternal(name, JsonConvert.SerializeObject(value), protectionScope);
+                SetInternal(name, JsonConvert.SerializeObject(value), machineKeyEncrypted);
         }
     }
 }

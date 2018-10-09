@@ -11,12 +11,12 @@ namespace Octopus.Shared.Configuration
         {
         }
 
-        public override TData Get<TData>(string name, TData defaultValue, DataProtectionScope? protectionScope)
+        public override TData Get<TData>(string name, TData defaultValue, bool? machineKeyEncrypted = false)
         {
             throw new NotImplementedException("This ");
         }
 
-        public override void Set<TData>(string name, TData value, DataProtectionScope? protectionScope = null)
+        public override void Set<TData>(string name, TData value, bool? machineKeyEncrypted = false)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -30,12 +30,11 @@ namespace Octopus.Shared.Configuration
 
             var valueAsObject = (object) value;
 
-            if (protectionScope != null)
+            if (machineKeyEncrypted != null)
             {
                 if (!(valueAsObject is string))
                     valueAsObject = JsonConvert.SerializeObject(value);
-                var protectedBytes = ProtectedData.Protect(Encoding.UTF8.GetBytes((string)valueAsObject), null, protectionScope.Value);
-                valueAsObject = Convert.ToBase64String(protectedBytes);
+                valueAsObject = MachineKeyEncrypter.Current.Encrypt((string)valueAsObject);
             }
 
             Write(name, valueAsObject);

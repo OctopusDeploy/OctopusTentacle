@@ -3,7 +3,7 @@
     <RootNamespace>Octopus.Shared</RootNamespace>
     <AssemblyName>Octopus.Shared</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
     <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
@@ -15,25 +15,20 @@
     <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
     <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX</DefineConstants>
   </PropertyGroup>
-
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK</DefineConstants>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Remove="Web\**" />
     <EmbeddedResource Remove="Web\**" />
     <None Remove="Web\**" />
   </ItemGroup>
-
   <ItemGroup>
     <None Remove="Startup\PathsToDeleteOnStartup.core.txt" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Halibut" Version="4.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
@@ -44,13 +39,13 @@
     <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58676" />
     <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58676" />
     <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
+    <PackageReference Include="Octopus.Configuration" Version="1.1.0-linux-machinekey0005" />
     <PackageReference Include="Octopus.Diagnostics" Version="1.2.0" />
     <PackageReference Include="Octopus.Time" Version="1.1.2" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
-
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETStandard' ">
     <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.4.0" />
@@ -63,7 +58,6 @@
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0" />
     <PackageReference Include="System.DirectoryServices.AccountManagement" Version="4.5.0-preview1-25914-04" />
   </ItemGroup>
-
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
     <PackageReference Include="NLog" Version="4.0.1" />
     <PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
@@ -73,7 +67,6 @@
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>
