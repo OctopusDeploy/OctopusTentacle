@@ -174,6 +174,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [Retry(3)]
         public void CancellationToken_ShouldForceKillTheProcess()
         {
             // Terminate the process after a very short time so the test doesn't run forever

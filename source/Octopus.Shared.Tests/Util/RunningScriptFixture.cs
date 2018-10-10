@@ -157,7 +157,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        [Retry(3)]
+        [Retry(5)]
         public void RunAsCurrentUser_ShouldCopyCustomEnvironmentVariables()
         {
             workspace.CustomEnvironmentVariables.Add("customenvironmentvariable", "customvalue");
@@ -169,7 +169,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        [Retry(3)]
+        [Retry(5)]
         public void RunAsDifferentUser_ShouldCopyCustomEnvironmentVariables()
         {
             workspace.RunAs = user.GetCredential();
