@@ -11,12 +11,12 @@ namespace Octopus.Shared.Configuration
         {
         }
 
-        public override TData Get<TData>(string name, TData defaultValue, bool? machineKeyEncrypted = false)
+        public override TData Get<TData>(string name, TData defaultValue, bool machineKeyEncrypted = false)
         {
             throw new NotImplementedException("This ");
         }
 
-        public override void Set<TData>(string name, TData value, bool? machineKeyEncrypted = false)
+        public override void Set<TData>(string name, TData value, bool machineKeyEncrypted = false)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -30,7 +30,7 @@ namespace Octopus.Shared.Configuration
 
             var valueAsObject = (object) value;
 
-            if (machineKeyEncrypted != null)
+            if (machineKeyEncrypted)
             {
                 if (!(valueAsObject is string))
                     valueAsObject = JsonConvert.SerializeObject(value);

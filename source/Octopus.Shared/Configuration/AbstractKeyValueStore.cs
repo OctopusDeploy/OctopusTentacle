@@ -16,20 +16,20 @@ namespace Octopus.Shared.Configuration
         }
 
         [Obsolete("Please use the generic overload instead")]
-        public string Get(string name, bool? machineKeyEncrypted = false)
+        public string Get(string name, bool machineKeyEncrypted = false)
         {
             return Get(name, default(string), machineKeyEncrypted);
         }
 
-        public abstract TData Get<TData>(string name, TData defaultValue, bool? machineKeyEncrypted = false);
+        public abstract TData Get<TData>(string name, TData defaultValue, bool machineKeyEncrypted = false);
 
         [Obsolete("Please use the generic overload instead")]
-        public void Set(string name, string value, bool? machineKeyEncrypted = false)
+        public void Set(string name, string value, bool machineKeyEncrypted = false)
         {
             Set<string>(name, value, machineKeyEncrypted);
         }
 
-        public abstract void Set<TData>(string name, TData value, bool? machineKeyEncrypted = false);
+        public abstract void Set<TData>(string name, TData value, bool machineKeyEncrypted = false);
        
         public void Remove(string name)
         {

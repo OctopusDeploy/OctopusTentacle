@@ -13,7 +13,7 @@ namespace Octopus.Shared.Configuration
 
         public bool UseDefaultProxy
         {
-            get { return settings.Get("Octopus.Server.Proxy.UseDefaultProxy", true); }
+            get { return settings.Get<bool>("Octopus.Server.Proxy.UseDefaultProxy", true); }
             set { settings.Set("Octopus.Server.Proxy.UseDefaultProxy", value); }
         }
 

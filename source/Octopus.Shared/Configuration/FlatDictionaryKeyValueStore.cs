@@ -11,7 +11,7 @@ namespace Octopus.Shared.Configuration
         {
         }
 
-        public override TData Get<TData>(string name, TData defaultValue, bool? machineKeyEncrypted = false)
+        public override TData Get<TData>(string name, TData defaultValue, bool machineKeyEncrypted = false)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -20,7 +20,7 @@ namespace Octopus.Shared.Configuration
             if (string.IsNullOrWhiteSpace(valueAsString))
                 return defaultValue;
 
-            if (machineKeyEncrypted != null)
+            if (machineKeyEncrypted)
             {
                 data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
             }
@@ -31,7 +31,7 @@ namespace Octopus.Shared.Configuration
             return JsonConvert.DeserializeObject<TData>((string)data);
         }
 
-        private void SetInternal(string name, string value, bool? machineKeyEncrypted = false)
+        private void SetInternal(string name, string value, bool machineKeyEncrypted = false)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Configuration
                 return;
             }
 
-            if (machineKeyEncrypted != null)
+            if (machineKeyEncrypted)
             {
                 value = MachineKeyEncrypter.Current.Encrypt(value);
             }
@@ -53,7 +53,7 @@ namespace Octopus.Shared.Configuration
                 Save();
         }
 
-        public override void Set<TData>(string name, TData value, bool? machineKeyEncrypted = false)
+        public override void Set<TData>(string name, TData value, bool machineKeyEncrypted = false)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 

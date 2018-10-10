@@ -7,11 +7,9 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
   </PropertyGroup>
-
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS</DefineConstants>
   </PropertyGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\Octopus.Shared\Octopus.Shared.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
@@ -24,14 +22,11 @@
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
   </ItemGroup>
-
-
   <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.IdentityModel" />
   </ItemGroup>
-
   <Target Name="ChangeAliasesOfStrongNameAssemblies" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
     <!--
       the PackageReference doesnt support aliases, so we need to hook in later
@@ -49,7 +44,6 @@
       </ReferencePath>
     </ItemGroup>
   </Target>
-
   <ItemGroup>
     <Content Include="Bcl\IO\*.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
