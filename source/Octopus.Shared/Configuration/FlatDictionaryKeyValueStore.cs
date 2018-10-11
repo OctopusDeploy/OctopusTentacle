@@ -2,6 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
+using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
@@ -11,7 +12,7 @@ namespace Octopus.Shared.Configuration
         {
         }
 
-        public override TData Get<TData>(string name, TData defaultValue, bool machineKeyEncrypted = false)
+        public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -20,7 +21,7 @@ namespace Octopus.Shared.Configuration
             if (string.IsNullOrWhiteSpace(valueAsString))
                 return defaultValue;
 
-            if (machineKeyEncrypted)
+            if (protectionLevel == ProtectionLevel.MachineKey)
             {
                 data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
             }
@@ -31,7 +32,7 @@ namespace Octopus.Shared.Configuration
             return JsonConvert.DeserializeObject<TData>((string)data);
         }
 
-        private void SetInternal(string name, string value, bool machineKeyEncrypted = false)
+        private void SetInternal(string name, string value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -43,7 +44,7 @@ namespace Octopus.Shared.Configuration
                 return;
             }
 
-            if (machineKeyEncrypted)
+            if (protectionLevel == ProtectionLevel.MachineKey)
             {
                 value = MachineKeyEncrypter.Current.Encrypt(value);
             }
@@ -53,14 +54,14 @@ namespace Octopus.Shared.Configuration
                 Save();
         }
 
-        public override void Set<TData>(string name, TData value, bool machineKeyEncrypted = false)
+        public override void Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
             if (typeof(TData) == typeof(string))
-                SetInternal(name, (string)(object)value, machineKeyEncrypted);
+                SetInternal(name, (string)(object)value, protectionLevel);
             else
-                SetInternal(name, JsonConvert.SerializeObject(value), machineKeyEncrypted);
+                SetInternal(name, JsonConvert.SerializeObject(value), protectionLevel);
         }
     }
 }

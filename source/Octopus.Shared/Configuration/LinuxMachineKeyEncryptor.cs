@@ -2,17 +2,19 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using Log = Octopus.Shared.Diagnostics.Log;
 
 namespace Octopus.Shared.Configuration
 {
     public class LinuxMachineKeyEncryptor: IMachineKeyEncryptor
     { 
-        static class LinuxMachineKey
+        internal static class LinuxMachineKey
         {
-            private static string FileName = "/etc/octopus/machinekey";
+            internal static string FileName = "/etc/octopus/machinekey";
      
             static void Generate()
             {
+                Log.Octopus().Verbose("Machine key file does not yet exist. Generating key file that will be used to encrypt data on this machine");
                 var d = new RijndaelManaged();
                 d.GenerateIV();
                 d.GenerateKey();
@@ -28,10 +30,17 @@ namespace Octopus.Shared.Configuration
      
             static (byte[] Key, byte[] IV) LoadFromFile()
             {
-                var content = File.ReadAllText(FileName).Split('.');
-                var key = Convert.FromBase64String(content[0]);
-                var iv = Convert.FromBase64String(content[1]);
-                return (key, iv);
+                try
+                {
+                    var content = File.ReadAllText(FileName).Split('.');
+                    var key = Convert.FromBase64String(content[0]);
+                    var iv = Convert.FromBase64String(content[1]);
+                    return (key, iv);
+                }
+                catch(Exception ex) when (ex is FormatException || ex is IndexOutOfRangeException)
+                {
+                    throw new InvalidOperationException($"Machine key file at `{FileName}` is corrupt and cannot be loaded");
+                }
             }
                  
             public static (byte[] Key, byte[] IV)  Load()

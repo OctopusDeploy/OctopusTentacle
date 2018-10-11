@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using Octopus.Shared.Configuration;
 
 namespace Octopus.Shared.Tests.Configuration

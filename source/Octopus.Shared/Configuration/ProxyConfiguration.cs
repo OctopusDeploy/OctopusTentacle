@@ -26,8 +26,8 @@ namespace Octopus.Shared.Configuration
 
         public string CustomProxyPassword
         {
-            get { return settings.Get<string>("Octopus.Proxy.ProxyPassword", machineKeyEncrypted: true); }
-            set { settings.Set("Octopus.Proxy.ProxyPassword", value, true); }
+            get { return settings.Get<string>("Octopus.Proxy.ProxyPassword", protectionLevel: ProtectionLevel.MachineKey); }
+            set { settings.Set("Octopus.Proxy.ProxyPassword", value, ProtectionLevel.MachineKey); }
         }
 
         public string CustomProxyHost
