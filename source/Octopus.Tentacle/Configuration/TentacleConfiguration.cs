@@ -106,12 +106,12 @@ namespace Octopus.Tentacle.Configuration
             get
             {
                 var thumbprint = settings.Get<string>("Tentacle.CertificateThumbprint");
-                var encoded = settings.Get<string>("Tentacle.Certificate", protectionScope: DataProtectionScope.LocalMachine);
+                var encoded = settings.Get<string>("Tentacle.Certificate", protectionLevel: ProtectionLevel.MachineKey);
                 return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint, encoded);
             }
             set
             {
-                settings.Set("Tentacle.Certificate", CertificateEncoder.ToBase64String(value), DataProtectionScope.LocalMachine);
+                settings.Set("Tentacle.Certificate", CertificateEncoder.ToBase64String(value), ProtectionLevel.MachineKey);
                 settings.Set("Tentacle.CertificateThumbprint", value.Thumbprint);
             }
         }
