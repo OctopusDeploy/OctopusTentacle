@@ -141,7 +141,7 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        [Retry(3)]
+        [Retry(5)]
         public void CancellationToken_ShouldKillTheProcess()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))

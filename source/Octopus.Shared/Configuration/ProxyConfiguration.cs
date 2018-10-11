@@ -1,5 +1,4 @@
 using System;
-using System.Security.Cryptography;
 using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
@@ -15,7 +14,7 @@ namespace Octopus.Shared.Configuration
 
         public bool UseDefaultProxy
         {
-            get { return settings.Get("Octopus.Proxy.UseDefaultProxy", true); }
+            get { return settings.Get<bool>("Octopus.Proxy.UseDefaultProxy", true); }
             set { settings.Set("Octopus.Proxy.UseDefaultProxy", value); }
         }
 
@@ -27,8 +26,8 @@ namespace Octopus.Shared.Configuration
 
         public string CustomProxyPassword
         {
-            get { return settings.Get<string>("Octopus.Proxy.ProxyPassword", protectionScope: DataProtectionScope.LocalMachine); }
-            set { settings.Set("Octopus.Proxy.ProxyPassword", value, DataProtectionScope.LocalMachine); }
+            get { return settings.Get<string>("Octopus.Proxy.ProxyPassword", protectionLevel: ProtectionLevel.MachineKey); }
+            set { settings.Set("Octopus.Proxy.ProxyPassword", value, ProtectionLevel.MachineKey); }
         }
 
         public string CustomProxyHost

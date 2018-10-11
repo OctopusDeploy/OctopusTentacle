@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
+using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
@@ -11,12 +12,12 @@ namespace Octopus.Shared.Configuration
         {
         }
 
-        public override TData Get<TData>(string name, TData defaultValue, DataProtectionScope? protectionScope)
+        public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
             throw new NotImplementedException("This ");
         }
 
-        public override void Set<TData>(string name, TData value, DataProtectionScope? protectionScope = null)
+        public override void Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -30,12 +31,11 @@ namespace Octopus.Shared.Configuration
 
             var valueAsObject = (object) value;
 
-            if (protectionScope != null)
+            if (protectionLevel == ProtectionLevel.MachineKey)
             {
                 if (!(valueAsObject is string))
                     valueAsObject = JsonConvert.SerializeObject(value);
-                var protectedBytes = ProtectedData.Protect(Encoding.UTF8.GetBytes((string)valueAsObject), null, protectionScope.Value);
-                valueAsObject = Convert.ToBase64String(protectedBytes);
+                valueAsObject = MachineKeyEncrypter.Current.Encrypt((string)valueAsObject);
             }
 
             Write(name, valueAsObject);
