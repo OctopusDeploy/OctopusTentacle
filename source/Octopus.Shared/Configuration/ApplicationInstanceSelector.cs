@@ -91,6 +91,10 @@ namespace Octopus.Shared.Configuration
                 if (instances.Count == 1)
                     return instances.First();
 
+                var defaultInstance = instances.FirstOrDefault(s => string.Equals(s.InstanceName, ApplicationInstanceRecord.GetDefaultInstance(applicationName), StringComparison.InvariantCultureIgnoreCase));
+                if (defaultInstance != null)
+                    return defaultInstance;
+
                 throw new ControlledFailureException(
                     $"There is more than one instance of {applicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
             }
@@ -118,11 +122,6 @@ namespace Octopus.Shared.Configuration
 
         public void CreateInstance(string instanceName, string configurationFile, string homeDirectory = null)
         {
-            var instances = instanceStore.ListInstances(applicationName);
-            var existingInstance = instances.FirstOrDefault(s => string.Equals(s.InstanceName, currentInstanceName, StringComparison.InvariantCultureIgnoreCase));
-            if (existingInstance != null)
-                throw new ControlledFailureException($"Instance {existingInstance.InstanceName} of {applicationName} already exists on this machine, using configuration file {existingInstance.ConfigurationFilePath}.");
-
             var parentDirectory = Path.GetDirectoryName(configurationFile);
             fileSystem.EnsureDirectoryExists(parentDirectory);
 

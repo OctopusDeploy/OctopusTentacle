@@ -22,7 +22,7 @@ namespace Octopus.Shared.Tests.Configuration
         }
 
         [Test]
-        public void LoadInstanceThrowsWhenNoInstanceNameIsPassedAndMoreThanOneInstance()
+        public void LoadInstanceThrowsWhenNoInstanceNameIsPassedAndMoreThanOneInstanceWithNoDefaultInstance()
         {
             var instanceRecords = new List<ApplicationInstanceRecord>
             {
@@ -36,8 +36,9 @@ namespace Octopus.Shared.Tests.Configuration
         }
         
         [Test]
-        public void LoadInstanceThrowsWhenNoInstanceNameIsPassedAndThereAreMultipleInstancesEvenThoughOneIsTheDefaultInstance()
+        public void LoadInstanceReturnsDefaultInstanceWhenNoInstanceNameIsPassedAndThereAreMultipleInstancesAndOneIsTheDefaultInstance()
         {
+            var defaultName = ApplicationInstanceRecord.GetDefaultInstance(ApplicationName.OctopusServer);
             var instanceRecords = new List<ApplicationInstanceRecord>
             {
                 new ApplicationInstanceRecord(ApplicationInstanceRecord.GetDefaultInstance(ApplicationName.OctopusServer), ApplicationName.OctopusServer, "c:\\temp\\0.config"),
@@ -45,9 +46,7 @@ namespace Octopus.Shared.Tests.Configuration
                 new ApplicationInstanceRecord("instance 2", ApplicationName.OctopusServer, "c:\\temp\\2.config")
             };
             var selector = GetApplicationInstanceSelector(instanceRecords, string.Empty);
-            ((Action)(() => selector.LoadInstance()))
-                .ShouldThrow<ControlledFailureException>()
-                .WithMessage("There is more than one instance of OctopusServer configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: OctopusServer, My instance, instance 2.");
+            selector.LoadInstance().InstanceName.Should().Be(defaultName);
         }
         
         [Test]
@@ -110,19 +109,6 @@ namespace Octopus.Shared.Tests.Configuration
             ((Action)(() => selector.LoadInstance()))
                 .ShouldThrow<ControlledFailureException>()
                 .WithMessage("Instance instance 2 of OctopusServer could not be matched to one of the existing instances: Instance 2, INSTANCE 2.");
-        }
-
-        [Test]
-        public void CreateInstanceDoesNotAllowMultipleInstancesThatDifferByCase()
-        {
-            var instanceRecords = new List<ApplicationInstanceRecord>
-            {
-                new ApplicationInstanceRecord("Instance 2", ApplicationName.OctopusServer, "c:\\temp\\2a.config"),
-            };
-            var selector = GetApplicationInstanceSelector(instanceRecords, "instance 2");
-            ((Action)(() => selector.CreateInstance("INSTANCE 2", "c:\\temp\\2b.config", "c:\\temp\\2b")))
-                .ShouldThrow<ControlledFailureException>()
-                .WithMessage("Instance Instance 2 of OctopusServer already exists on this machine, using configuration file c:\\temp\\2a.config.");
         }
 
         private static ApplicationInstanceSelector GetApplicationInstanceSelector(List<ApplicationInstanceRecord> instanceRecords, string currentInstanceName)
