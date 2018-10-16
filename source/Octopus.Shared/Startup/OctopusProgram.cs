@@ -218,9 +218,15 @@ namespace Octopus.Shared.Startup
 
         void InitializeLogging()
         {
+            
+            
 #if !NLOG_HAS_EVENT_LOG_TARGET
             if(PlatformDetection.IsRunningOnWindows) {
                 Target.Register<EventLogTarget>("EventLog");
+            } else {
+                // This allows us to leave the 'EventLog' section in the '<Project>.nlog'
+                // but without actually trying to use the windows event logs
+                Target.Register<NullTarget>("EventLog");
             }
 #endif
 #if REQUIRES_EXPLICIT_LOG_CONFIG
