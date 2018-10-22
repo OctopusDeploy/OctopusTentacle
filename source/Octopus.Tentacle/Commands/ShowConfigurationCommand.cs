@@ -155,8 +155,8 @@ namespace Octopus.Tentacle.Commands
         {
             var environments = await repository.Environments.FindAll();
             outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
-            var featuresConfiguration = await repository.FeaturesConfiguration.GetFeaturesConfiguration();
-            if (featuresConfiguration.IsMultiTenancyEnabled)
+            var tenantsStatus = await repository.Tenants.Status();
+            if (tenantsStatus.Enabled)
             {
                 var tenants = await repository.Tenants.FindAll();
                 outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
