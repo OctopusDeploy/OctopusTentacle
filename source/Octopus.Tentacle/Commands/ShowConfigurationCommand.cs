@@ -30,6 +30,7 @@ namespace Octopus.Tentacle.Commands
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly ILog log;
+        string spaceName;
 
         public override bool SuppressConsoleLogging => true;
 
@@ -51,6 +52,7 @@ namespace Octopus.Tentacle.Commands
             this.log = log;
 
             Options.Add("file=", "Exports the server configuration to a file. If not specified output goes to the console", v => file = v);
+            Options.Add("space=", "The space from which the server data configuration will be retrieved for, - e.g. 'Default' where Default is the name of an existing space; the default is the default space", s => spaceName = s);
             apiEndpointOptions = AddOptionSet(new ApiEndpointOptions(Options) { Optional = true });
         }
 
@@ -119,23 +121,29 @@ namespace Octopus.Tentacle.Commands
             {
                 using (var client = await octopusClientInitializer.CreateClient(apiEndpointOptions, proxyOverride))
                 {
-                    var repository = new OctopusAsyncRepository(client);
-                    var matchingMachines = await repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
-
-                    switch (matchingMachines.Count)
+                    var space = await GetSpace(client);
+                    if (space == null)
+                        return;
+                    using (var spaceClient = await client.ForSpace(space.Id))
                     {
-                        case 0:
-                            Log.Error($"No machines were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
-                            break;
+                        var repository = new OctopusAsyncRepository(spaceClient);
+                        var matchingMachines = await repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
 
-                        case 1:
-                            await CollectionServerSideConfigurationFromMachine(outputStore, repository, matchingMachines.First());
-                            break;
+                        switch (matchingMachines.Count)
+                        {
+                            case 0:
+                                Log.Error($"No machines were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
+                                break;
 
-                        default:
-                            if (matchingMachines.Count > 1)
-                                throw new ControlledFailureException("This Tentacle is registered multiple times with the server - unable to display configuration");
-                            break;
+                            case 1:
+                                await CollectionServerSideConfigurationFromMachine(outputStore, repository, matchingMachines.First());
+                                break;
+
+                            default:
+                                if (matchingMachines.Count > 1)
+                                    throw new ControlledFailureException("This Tentacle is registered multiple times with the server - unable to display configuration");
+                                break;
+                        }
                     }
                 }
             }
@@ -148,6 +156,16 @@ namespace Octopus.Tentacle.Commands
             {
                 log.Warn(ex, $"Error authenticationg with server '{apiEndpointOptions.Server}'.");
                 throw new ControlledFailureException(ex.Message, ex);
+            }
+
+            async Task<SpaceResource> GetSpace(IOctopusAsyncClient client)
+            {
+                if (spaceName != null)
+                {
+                    return await client.Repository.Spaces.FindByName(spaceName);
+                }
+
+                return await client.Repository.Spaces.FindOne(s => s.IsDefault == true);
             }
         }
 

@@ -36,6 +36,7 @@ namespace Octopus.Tentacle.Commands
         string comms = "TentaclePassive";
         int serverCommsPort = 10943;
         string proxy;
+        string spaceName;
         string serverWebSocketAddress;
         int? tentacleCommsPort = null;
 
@@ -63,6 +64,7 @@ namespace Octopus.Tentacle.Commands
             Options.Add("f|force", "Allow overwriting of existing machines", s => allowOverwrite = true);
             Options.Add("comms-style=", "The communication style to use - either TentacleActive or TentaclePassive; the default is " + comms, s => comms = s);
             Options.Add("proxy=", "When using passive communication, the name of a proxy that Octopus should connect to the Tentacle through - e.g., 'Proxy ABC' where the proxy name is already configured in Octopus; the default is to connect to the machine directly", s => proxy = s);
+            Options.Add("space=", "The space which this machine will be added to, - e.g. 'Default' where Default is the name of an existing space; the default is the default space", s => spaceName = s);
             Options.Add("server-comms-port=", "When using active communication, the comms port on the Octopus server; the default is " + serverCommsPort, s => serverCommsPort = int.Parse(s));
             Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
             Options.Add("tentacle-comms-port=", "When using passive communication, the comms port that the Octopus server is instructed to call back on to reach this machine; defaults to the configured listening port", s => tentacleCommsPort = int.Parse(s));
@@ -103,17 +105,26 @@ namespace Octopus.Tentacle.Commands
 
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
-                await RegisterMachine(client.Repository, serverAddress, sslThumbprint, communicationStyle);
+                if (spaceName != null)
+                {
+                    var space = await client.Repository.Spaces.FindByName(spaceName);
+                    using (var spaceClient = await client.ForSpace(space.Id))
+                    {
+                        await RegisterMachine(spaceClient.Repository, serverAddress, sslThumbprint, communicationStyle);
+                    }
+                }
+                else
+                {
+                    await RegisterMachine(client.Repository, serverAddress, sslThumbprint, communicationStyle);
+                }
             }
         }
-
-
 
         async Task RegisterMachine(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint, CommunicationStyle communicationStyle)
         {
             ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(repository);
 
-            var machine = new OctopusServerConfiguration(await GetServerThumbprint(repository, serverAddress, sslThumbprint))
+            var server = new OctopusServerConfiguration(await GetServerThumbprint(repository, serverAddress, sslThumbprint))
             {
                 Address = serverAddress,
                 CommunicationStyle = communicationStyle
@@ -122,7 +133,7 @@ namespace Octopus.Tentacle.Commands
             var registerMachineOperation = lazyRegisterMachineOperation.Value;
             registerMachineOperation.MachineName = string.IsNullOrWhiteSpace(name) ? Environment.MachineName : name;
 
-            var existingMachine = configuration.Value.TrustedOctopusServers.FirstOrDefault(x => x.Address == machine.Address && x.CommunicationStyle == communicationStyle);
+            var existingServer = configuration.Value.TrustedOctopusServers.FirstOrDefault(x => x.Address == server.Address && x.CommunicationStyle == communicationStyle);
             if (communicationStyle == CommunicationStyle.TentaclePassive)
             {
                 registerMachineOperation.TentacleHostname = string.IsNullOrWhiteSpace(publicName) ? Environment.MachineName : publicName;
@@ -132,12 +143,12 @@ namespace Octopus.Tentacle.Commands
             else if (communicationStyle == CommunicationStyle.TentacleActive)
             {
                 Uri subscriptionId;
-                if (existingMachine?.SubscriptionId != null)
-                    subscriptionId = new Uri(existingMachine.SubscriptionId);
+                if (existingServer?.SubscriptionId != null)
+                    subscriptionId = new Uri(existingServer.SubscriptionId);
                 else
                     subscriptionId = new Uri("poll://" + RandomStringGenerator.Generate(20).ToLowerInvariant() + "/");
                 registerMachineOperation.SubscriptionId = subscriptionId;
-                machine.SubscriptionId = subscriptionId.ToString();
+                server.SubscriptionId = subscriptionId.ToString();
             }
 
             registerMachineOperation.MachinePolicy = policy;
@@ -149,7 +160,7 @@ namespace Octopus.Tentacle.Commands
 
             await registerMachineOperation.ExecuteAsync(repository);
 
-            configuration.Value.AddOrUpdateTrustedOctopusServer(machine);
+            configuration.Value.AddOrUpdateTrustedOctopusServer(server);
             VoteForRestart();
 
             log.Info("Machine registered successfully");

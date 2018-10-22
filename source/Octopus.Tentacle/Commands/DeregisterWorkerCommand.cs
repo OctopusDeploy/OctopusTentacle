@@ -19,6 +19,7 @@ namespace Octopus.Tentacle.Commands
         bool allowMultiple;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
+        string spaceName;
 
         public const string ThumbprintNotFoundMsg = "The server you supplied did not match the thumbprint stored in the configuration for this tentacle.";
         public const string DeregistrationSuccessMsg = "Machine deregistered successfully";
@@ -38,6 +39,7 @@ namespace Octopus.Tentacle.Commands
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
             Options.Add("m|multiple", "Deregister all workers that use the same thumbprint", s => allowMultiple = true);
+            Options.Add("space=", "The space which this worker will be deregistered from, - e.g. 'Default' where Default is the name of an existing space; the default is the default space", s => spaceName = s);
         }
 
         protected override void Start()
@@ -51,7 +53,18 @@ namespace Octopus.Tentacle.Commands
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
-                await Deregister(new OctopusAsyncRepository(client));
+                if (spaceName != null)
+                {
+                    var space = await client.Repository.Spaces.FindByName(spaceName);
+                    using (var spaceClient = await client.ForSpace(space.Id))
+                    {
+                        await Deregister(new OctopusAsyncRepository(spaceClient));
+                    }
+                }
+                else
+                {
+                    await Deregister(new OctopusAsyncRepository(client));
+                }
             }
         }
 
