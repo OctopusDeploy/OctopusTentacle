@@ -38,7 +38,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string apiKey;
         bool haveCredentialsBeenVerified;
         string selectedMachinePolicy;
-        string selectedWorkerPool;
+        string[] selectedWorkerPools;
         string[] potentialEnvironments;
         string[] potentialRoles;
         string[] potentialMachinePolicies;
@@ -68,6 +68,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             SelectedEnvironments = new ObservableCollection<string>();
             SelectedTenants = new ObservableCollection<string>();
             SelectedTenantTags = new ObservableCollection<string>();
+            SelectedWorkerPools = new ObservableCollection<string>();
 
             this.applicationName = applicationName;
             this.proxyWizardModel = proxyWizardModel;
@@ -346,17 +347,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         public ObservableCollection<string> SelectedEnvironments { get; }
         public ObservableCollection<string> SelectedTenants { get; }
         public ObservableCollection<string> SelectedTenantTags { get; }
-
-        public string SelectedWorkerPool
-        {
-            get => selectedWorkerPool;
-            set
-            {
-                if (value == selectedWorkerPool) return;
-                selectedWorkerPool = value;
-                OnPropertyChanged();
-            }
-        }
+        public ObservableCollection<string> SelectedWorkerPools { get; }
 
         public string SelectedMachinePolicy
         {
@@ -509,7 +500,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                     var workerPools = await repository.WorkerPools.GetAll();
                     PotentialWorkerPools = workerPools.Select(e => e.Name).ToArray();
-                    SelectedWorkerPool = workerPools.FirstOrDefault(wp => wp.IsDefault)?.Name;
+                    //SelectedWorkerPools = workerPools.FirstOrDefault(wp => wp.IsDefault)?.Name;
 
                     var cofiguration = await repository.CertificateConfiguration.GetOctopusCertificate();
                     OctopusThumbprint = cofiguration.Thumbprint;
@@ -588,7 +579,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 validator.RuleFor(m => m.MachineName).NotEmpty().WithMessage("Please enter a machine name");
                 validator.RuleFor(m => m.SelectedRoles).NotEmpty().WithMessage("Please select or enter at least one role").Unless(m => m.MachineType == MachineType.Worker);
                 validator.RuleFor(m => m.SelectedEnvironments).NotEmpty().WithMessage("Please select an environment").Unless(m => m.MachineType == MachineType.Worker);
-                validator.RuleFor(m => m.SelectedWorkerPool).NotEmpty().WithMessage("Please select a worker pool").Unless(m => m.MachineType == MachineType.DeploymentTarget);
+                validator.RuleFor(m => m.SelectedWorkerPools).NotEmpty().WithMessage("Please select a worker pool").Unless(m => m.MachineType == MachineType.DeploymentTarget);
             });
             return validator;
         }
@@ -667,7 +658,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 }
                 else if(MachineType == MachineType.Worker)
                 {
-                    register.Argument("workerpool", SelectedWorkerPool);
+                    foreach (var workerPool in SelectedWorkerPools)
+                        register.Argument("workerpool", workerPool);
                 }
 
                 register.Argument("policy", SelectedMachinePolicy);
