@@ -68,11 +68,12 @@
                     </Expander>
                 </StackPanel>
 
-                <!-- Deployment Target Options -->
+                <!-- Worker Options -->
                 <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=Worker}">
-                    <controls:ControlGroup Header="Worker Pool" Target="{Binding ElementName=WorkerPoolComboBox}">
-                        <ComboBox ItemsSource="{Binding Path=PotentialWorkerPools}" SelectedItem="{Binding Path=SelectedWorkerPool}" Width="200" Name="WorkerPoolComboBox" />
+                    <controls:ControlGroup Header="Worker Pools">
+                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialWorkerPools}" SelectedTags="{Binding SelectedRoles}" TagName="worker pools" Width="350" HorizontalAlignment="Left" CanCreateNewTags="False" />
                         <controls:ErrorMessage ErrorPath="SelectedWorkerPool" />
+                        <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one worker pool for this worker." />
                     </controls:ControlGroup>
                 </StackPanel>
 

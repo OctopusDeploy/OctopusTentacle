@@ -26,7 +26,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             wizard.AddTab(new StorageTab(wizardModel));
             wizard.AddTab(new OctopusServerConnectionTab(wizardModel));
             wizard.AddTab(new CommunicationStyleTab(wizardModel));
-            wizard.AddTab(new MachineTypeTab(wizardModel));
             //wizard.AddTab(new ProxyConfigurationTab(wizardModel.ProxyWizardModel));
             wizard.AddTab(new TentaclePassiveTab(wizardModel));
             wizard.AddTab(new TentacleActiveDetailsTab(wizardModel));

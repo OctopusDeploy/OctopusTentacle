@@ -50,14 +50,14 @@
                     <Border Background="#e7e7e7" CornerRadius="11" Margin="0,0,5,5">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <Border Height="22" Width="22" Background="#42000000" CornerRadius="100">
                                 <ContentPresenter Content="{Binding TagName, ElementName=Root}" ContentTemplateSelector="{StaticResource CustomIconDataTemplateSelector}"/>
                             </Border>
-                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding}" Padding="5,2" Foreground="#333333"></TextBlock>
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding}" Padding="5,2" Foreground="#333333" TextTrimming="CharacterEllipsis"/>
                             <Button Style="{StaticResource RoundCorner}" Grid.Column="2" Width="22" Height="22" Command="{Binding RemoveCommand, ElementName=Root}" CommandParameter="{Binding}" Margin="0,0,2,0"/>
                         </Grid>
                     </Border>
