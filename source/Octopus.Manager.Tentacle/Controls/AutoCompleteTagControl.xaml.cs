@@ -17,7 +17,7 @@ namespace Octopus.Manager.Tentacle.Controls
         static readonly DataTemplate RoleIconDataTemplate = Application.Current.Resources["RoleIconDataTemplate"] as DataTemplate;
         static readonly DataTemplate EnvironmentIconDataTemplate = Application.Current.Resources["EnvironmentIconDataTemplate"] as DataTemplate;
         static readonly DataTemplate TenantIconDataTemplate = Application.Current.Resources["TenantIconDataTemplate"] as DataTemplate;
-
+        static readonly DataTemplate WorkerPoolIconDataTemplate = Application.Current.Resources["WorkerPoolIconDataTemplate"] as DataTemplate;
         #endregion
 
         /// <summary>
@@ -40,6 +40,8 @@ namespace Octopus.Manager.Tentacle.Controls
                     return EnvironmentIconDataTemplate;
                 case "tenants":
                     return TenantIconDataTemplate;
+                case "worker pools":
+                    return WorkerPoolIconDataTemplate;
                 default:
                     return RoleIconDataTemplate;
             }

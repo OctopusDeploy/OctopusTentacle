@@ -46,6 +46,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string[] potentialTenants;
         string[] potentialWorkerPools;
         string machineName;
+        bool overwriteExistingMachine;
         string homeDirectory;
         string applicationInstallDirectory;
         string pathToConfig;
@@ -371,6 +372,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
+        public bool OverwriteExistingMachine
+        {
+            get => overwriteExistingMachine;
+            set
+            {
+                if (value == overwriteExistingMachine) return;
+                overwriteExistingMachine = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string OctopusThumbprint
         {
             get => octopusThumbprint;
@@ -500,7 +512,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                     var workerPools = await repository.WorkerPools.GetAll();
                     PotentialWorkerPools = workerPools.Select(e => e.Name).ToArray();
-                    //SelectedWorkerPools = workerPools.FirstOrDefault(wp => wp.IsDefault)?.Name;
 
                     var cofiguration = await repository.CertificateConfiguration.GetOctopusCertificate();
                     OctopusThumbprint = cofiguration.Thumbprint;
@@ -579,7 +590,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 validator.RuleFor(m => m.MachineName).NotEmpty().WithMessage("Please enter a machine name");
                 validator.RuleFor(m => m.SelectedRoles).NotEmpty().WithMessage("Please select or enter at least one role").Unless(m => m.MachineType == MachineType.Worker);
                 validator.RuleFor(m => m.SelectedEnvironments).NotEmpty().WithMessage("Please select an environment").Unless(m => m.MachineType == MachineType.Worker);
-                validator.RuleFor(m => m.SelectedWorkerPools).NotEmpty().WithMessage("Please select a worker pool").Unless(m => m.MachineType == MachineType.DeploymentTarget);
+                validator.RuleFor(m => m.SelectedWorkerPools).NotEmpty().WithMessage("Please select at least one worker pool").Unless(m => m.MachineType == MachineType.DeploymentTarget);
             });
             return validator;
         }
@@ -619,11 +630,15 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     }
                 }
 
-                var register = Cli(MachineType==MachineType.Worker ? "register-worker" : "register-with")
+                var register = Cli(MachineType == MachineType.Worker ? "register-worker" : "register-with")
                     .Argument("server", OctopusServerUrl)
                     .Argument("name", machineName)
-                    .Argument("comms-style", CommunicationStyle)
-                    .Flag("force");
+                    .Argument("comms-style", CommunicationStyle);
+
+                if (overwriteExistingMachine)
+                {
+                    register = register.Flag("force");
+                }
 
                 if (CommunicationStyle == CommunicationStyle.TentacleActive)
                 {

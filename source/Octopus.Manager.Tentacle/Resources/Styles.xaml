@@ -778,6 +778,14 @@
         </Viewbox>
     </DataTemplate>
 
+    <DataTemplate x:Key="WorkerPoolIconDataTemplate">
+        <Viewbox Width="13" Height="13" Stretch="Uniform">
+            <Canvas Width="200" Height="200">
+                <Canvas.Resources/>
+                <Path Fill="#333333" Data="M30.5 13.5v172h35v-172zm26 163h-17v-17h17zM83.5 90.5v95h35v-95zm26 86h-17v-17h17zM134.5 13.5v172h35v-172zm26 163h-17v-17h17z"/>
+            </Canvas>
+        </Viewbox>
+    </DataTemplate>
 
     <DataTemplate x:Key="TenantIconDataTemplate">
         <Viewbox Width="13" Height="13" Stretch="Uniform">
