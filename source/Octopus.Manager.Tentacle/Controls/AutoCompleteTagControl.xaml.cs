@@ -39,6 +39,7 @@ namespace Octopus.Manager.Tentacle.Controls
                 case "environments":
                     return EnvironmentIconDataTemplate;
                 case "tenants":
+                case "tenant tags":
                     return TenantIconDataTemplate;
                 case "worker pools":
                     return WorkerPoolIconDataTemplate;
