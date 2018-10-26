@@ -182,7 +182,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             if (pollsServers)
             {
                 PollingProxyConfiguration = new PollingProxyConfiguration(keyStore);
-                ProxyStatus += BuildProxyStatus(PollingProxyConfiguration, polling: true) + " to poll the Octopus server";
+                ProxyStatus += BuildProxyStatus(PollingProxyConfiguration, polling: true) + " to poll the Octopus Server";
             }
             ProxyStatus += ".";
         }
