@@ -42,8 +42,8 @@ namespace Octopus.Tentacle.Commands
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
 
-            Options.Add("server-comms-port=", "The comms port on the Octopus server; the default is " + commsPort, s => commsPort = int.Parse(s));
-            Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
+            Options.Add("server-comms-port=", "The comms port on the Octopus Server; the default is " + commsPort, s => commsPort = int.Parse(s));
+            Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus Server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
         }
 
         protected override void Start()

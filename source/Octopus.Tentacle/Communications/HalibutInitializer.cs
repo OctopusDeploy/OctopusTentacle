@@ -70,12 +70,12 @@ namespace Octopus.Tentacle.Communications
             var trust = GetTrustedOctopusThumbprints();
             foreach (var thumbprint in trust)
             {
-                log.Info("Agent will trust Octopus servers with the thumbprint: " + thumbprint);
+                log.Info("Agent will trust Octopus Servers with the thumbprint: " + thumbprint);
                 halibut.Trust(thumbprint);
             }
             if (trust.Count == 0)
             {
-                log.Info("The agent is not configured to trust any Octopus servers.");
+                log.Info("The agent is not configured to trust any Octopus Servers.");
             }
         }
 
@@ -93,7 +93,7 @@ namespace Octopus.Tentacle.Communications
                     pollingEndPoint.SubscriptionId = "poll://" + configuration.TentacleSquid.ToLowerInvariant() + "/";
 #pragma warning restore 618
 
-                log.Info($"Agent will poll Octopus server at {pollingEndPoint.Address} for subscription {pollingEndPoint.SubscriptionId} expecting thumbprint {pollingEndPoint.Thumbprint}");
+                log.Info($"Agent will poll Octopus Server at {pollingEndPoint.Address} for subscription {pollingEndPoint.SubscriptionId} expecting thumbprint {pollingEndPoint.Thumbprint}");
                 var halibutProxy = proxyConfigParser.ParseToHalibutProxy(configuration.PollingProxyConfiguration, pollingEndPoint.Address, log);
                 halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), new ServiceEndPoint(pollingEndPoint.Address, pollingEndPoint.Thumbprint, halibutProxy));
             }
