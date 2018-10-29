@@ -34,6 +34,7 @@ namespace Octopus.Shared.Diagnostics
         public string CorrelationId => correlationId;
 
         [Encrypted]
+        [JsonIgnore]
         public string[] SensitiveValues => sensitiveValues;
 
         public void SafeSanitize(string raw, Action<string> action)
