@@ -193,11 +193,13 @@ namespace Octopus.Tentacle.Configuration
             TrustedOctopusServers = TrustedOctopusServers.Where(t => t.Thumbprint != toRemove);
         }
 
-        public void UpdateTrustedServerThumbprint(string old, string @new)
+        public void UpdateTrustedServerThumbprint(string oldThumbprint, string newThumbprint)
         {
-            var existing = TrustedOctopusServers.SingleOrDefault(m => m.Thumbprint == old);
-            if (existing != null)
-                existing.Thumbprint = @new;
+            TrustedOctopusServers = TrustedOctopusServers.Select(configuration =>
+            {
+                configuration.Thumbprint = configuration.Thumbprint == oldThumbprint ? newThumbprint : configuration.Thumbprint;
+                return configuration;
+            });
         }
 
         public X509Certificate2 GenerateNewCertificate()
