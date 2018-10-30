@@ -113,7 +113,7 @@
       <HintPath>..\packages\Octodiff.1.2.1\lib\net40\Octodiff.exe</HintPath>
     </Reference>
     <Reference Include="Octopus.Client, Version=4.41.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Client.4.41.6-spaces-spaceclien255\lib\net45\Octopus.Client.dll</HintPath>
+      <HintPath>..\packages\Octopus.Client.4.41.6-spaces-spaceclien259\lib\net45\Octopus.Client.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Configuration, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Configuration.2.0.0\lib\net45\Octopus.Configuration.dll</HintPath>
