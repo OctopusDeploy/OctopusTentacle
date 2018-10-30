@@ -30,7 +30,7 @@
             </controls:ControlGroup>
 
             <TextBlock Style="{StaticResource TextBlock.Big}" Margin="0,30,0,0">
-                <Run>The Tentacle will only accept connections from an Octopus server that identifies itself with the thumbprint below. You can get the unique thumbprint of your Octopus server by opening your Octopus Deploy web portal, browsing to the Environments tab, and clicking 'Add deployment target' for the appropriate environment.</Run>
+                <Run>The Tentacle will only accept connections from an Octopus Server that identifies itself with the thumbprint below. You can get the unique thumbprint of your Octopus Server by opening your Octopus Deploy web portal, browsing to the Environments tab, and clicking 'Add deployment target' for the appropriate environment.</Run>
             </TextBlock>
 
             <controls:ControlGroup Header="Octopus thumbprint" Target="{Binding ElementName=OctopusThumbprintTextBox}">

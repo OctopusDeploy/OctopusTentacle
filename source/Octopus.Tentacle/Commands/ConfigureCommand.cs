@@ -83,21 +83,21 @@ namespace Octopus.Tentacle.Commands
             }));
             Options.Add("trust=", "The thumbprint of the Octopus Server to trust", v => octopusToAdd.Add(v));
             Options.Add("remove-trust=", "The thumbprint of the Octopus Server to remove from the trusted list", v => octopusToRemove.Add(v));
-            Options.Add("reset-trust", "Removes all trusted Octopus servers", v => resetTrust = true);
+            Options.Add("reset-trust", "Removes all trusted Octopus Servers", v => resetTrust = true);
         }
 
         protected override void Start()
         {
             if (resetTrust)
             {
-                log.Info("Removing all trusted Octopus servers...");
+                log.Info("Removing all trusted Octopus Servers...");
                 tentacleConfiguration.Value.ResetTrustedOctopusServers();
                 VoteForRestart();
             }
 
             if (octopusToRemove.Count > 0)
             {
-                log.Info($"Removing {octopusToRemove.Count} trusted Octopus servers");
+                log.Info($"Removing {octopusToRemove.Count} trusted Octopus Servers");
                 foreach (var toRemove in octopusToRemove)
                 {
                     tentacleConfiguration.Value.RemoveTrustedOctopusServersWithThumbprint(toRemove);
@@ -107,7 +107,7 @@ namespace Octopus.Tentacle.Commands
 
             if (octopusToAdd.Count > 0)
             {
-                log.Info($"Adding {octopusToAdd.Count} trusted Octopus servers");
+                log.Info($"Adding {octopusToAdd.Count} trusted Octopus Servers");
 
                 foreach (var toAdd in octopusToAdd)
                 {
