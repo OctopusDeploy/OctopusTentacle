@@ -105,24 +105,25 @@ namespace Octopus.Tentacle.Commands
 
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
-                if (spaceName != null)
+                if (!string.IsNullOrEmpty(spaceName))
                 {
                     var space = await client.Repository.Spaces.FindByName(spaceName);
-                    using (var spaceClient = await client.ForSpace(space.Id))
+                    if (space != null)
                     {
-                        await RegisterMachine(spaceClient.Repository, serverAddress, sslThumbprint, communicationStyle);
+                        throw new SpaceNotFoundException(spaceName);
                     }
+                    await RegisterMachine(client.ForSystem(), client.ForSpace(space.Id), serverAddress, sslThumbprint, communicationStyle);
                 }
                 else
                 {
-                    await RegisterMachine(client.Repository, serverAddress, sslThumbprint, communicationStyle);
+                    await RegisterMachine(client.ForSystem(), client.Repository, serverAddress, sslThumbprint, communicationStyle);
                 }
             }
         }
 
-        async Task RegisterMachine(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint, CommunicationStyle communicationStyle)
+        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri serverAddress, string sslThumbprint, CommunicationStyle communicationStyle)
         {
-            ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(repository);
+            await ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(systemRepository);
 
             var server = new OctopusServerConfiguration(await GetServerThumbprint(repository, serverAddress, sslThumbprint))
             {
@@ -167,9 +168,9 @@ namespace Octopus.Tentacle.Commands
         }
 
         protected abstract void CheckArgs();
-        protected abstract void EnhanceOperation(IOctopusAsyncRepository repository, TRegistrationOperationType registerOperation);
+        protected abstract void EnhanceOperation(IOctopusSpaceAsyncRepository repository, TRegistrationOperationType registerOperation);
 
-        async Task<string> GetServerThumbprint(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint)
+        async Task<string> GetServerThumbprint(IOctopusSpaceAsyncRepository repository, Uri serverAddress, string sslThumbprint)
         {
             if (serverAddress != null && ServiceEndPoint.IsWebSocketAddress(serverAddress))
             {
@@ -207,13 +208,14 @@ namespace Octopus.Tentacle.Commands
 
         #region Helpers
 
-        void ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusAsyncRepository repository)
+        async Task ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusSystemAsyncRepository repository)
         {
+            var rootDocument = await repository.LoadRootDocument();
             // Eg. Check they're not trying to register a 3.* Tentacle with a 2.* API Server.
-            if (string.IsNullOrEmpty(repository.Client.RootDocument.Version))
+            if (string.IsNullOrEmpty(rootDocument.Version))
                 throw new ControlledFailureException("Unable to determine the Octopus Server version.");
 
-            var serverVersion = SemanticVersion.Parse(repository.Client.RootDocument.Version);
+            var serverVersion = SemanticVersion.Parse(rootDocument.Version);
             var tentacleVersion = SemanticVersion.Parse(OctopusTentacle.SemanticVersionInfo.MajorMinorPatch);
             if (serverVersion.Version.Major == 0 || tentacleVersion.Version.Major == 0)
                 return;

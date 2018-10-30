@@ -462,7 +462,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     var repository = new OctopusAsyncRepository(client);
                     logger.Info("Connecting to server: " + OctopusServerUrl);
 
-                    var root = repository.Client.RootDocument;
+                    var root = await repository.LoadRootDocument();
                     logger.Info("Connected successfully, Octopus Server version: " + root.Version);
 
                     if (UseUsernamePasswordAuthMode == true)
@@ -478,7 +478,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     logger.Info("Getting available environments...");
                     PotentialEnvironments = (await repository.Environments.GetAll()).Select(e => e.Name).ToArray();
 
-                    AreTenantsSupported = repository.Client.RootDocument.HasLink("Tenants");
+                    AreTenantsSupported = root.HasLink("Tenants");
                     if (AreTenantsSupported)
                     {
                         logger.Info("Getting available tenant tags...");
