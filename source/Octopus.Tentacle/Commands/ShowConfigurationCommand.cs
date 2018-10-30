@@ -124,26 +124,23 @@ namespace Octopus.Tentacle.Commands
                     var space = await GetSpace(client);
                     if (space == null)
                         return;
-                    using (var spaceClient = await client.ForSpace(space.Id))
+                    var repository = client.ForSpace(space.Id);
+                    var matchingMachines = await repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
+
+                    switch (matchingMachines.Count)
                     {
-                        var repository = new OctopusAsyncRepository(spaceClient);
-                        var matchingMachines = await repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
+                        case 0:
+                            Log.Error($"No machines were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
+                            break;
 
-                        switch (matchingMachines.Count)
-                        {
-                            case 0:
-                                Log.Error($"No machines were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
-                                break;
+                        case 1:
+                            await CollectionServerSideConfigurationFromMachine(outputStore, repository, matchingMachines.First());
+                            break;
 
-                            case 1:
-                                await CollectionServerSideConfigurationFromMachine(outputStore, repository, matchingMachines.First());
-                                break;
-
-                            default:
-                                if (matchingMachines.Count > 1)
-                                    throw new ControlledFailureException("This Tentacle is registered multiple times with the server - unable to display configuration");
-                                break;
-                        }
+                        default:
+                            if (matchingMachines.Count > 1)
+                                throw new ControlledFailureException("This Tentacle is registered multiple times with the server - unable to display configuration");
+                            break;
                     }
                 }
             }
@@ -160,7 +157,7 @@ namespace Octopus.Tentacle.Commands
 
             async Task<SpaceResource> GetSpace(IOctopusAsyncClient client)
             {
-                if (spaceName != null)
+                if (!string.IsNullOrEmpty(spaceName))
                 {
                     return await client.Repository.Spaces.FindByName(spaceName);
                 }
@@ -169,7 +166,7 @@ namespace Octopus.Tentacle.Commands
             }
         }
 
-        async Task CollectionServerSideConfigurationFromMachine(IKeyValueStore outputStore, IOctopusAsyncRepository repository, MachineResource machine)
+        async Task CollectionServerSideConfigurationFromMachine(IKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, MachineResource machine)
         {
             var environments = await repository.Environments.FindAll();
             outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));

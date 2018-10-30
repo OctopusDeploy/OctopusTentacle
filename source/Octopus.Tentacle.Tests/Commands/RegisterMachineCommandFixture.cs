@@ -41,10 +41,10 @@ namespace Octopus.Tentacle.Tests.Commands
             log = Substitute.For<ILog>();
             var octopusClientInitializer = Substitute.For<IOctopusClientInitializer>();
             var octopusAsyncClient = Substitute.For<IOctopusAsyncClient>();
-            octopusAsyncClient.RootDocument.Returns(new RootResource { Version = "3.0" });
 
             repository = Substitute.For<IOctopusAsyncRepository>();
             repository.Client.Returns(octopusAsyncClient);
+            repository.LoadRootDocument().Returns(new RootResource { Version = "3.0" });
             octopusAsyncClient.Repository.Returns(repository);
 
             var certificateConfigurationRepository = Substitute.For<ICertificateConfigurationRepository>();

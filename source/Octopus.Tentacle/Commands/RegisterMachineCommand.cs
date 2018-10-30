@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException("Please specify an role name, e.g., --role=web-server");
         }
 
-        protected override void EnhanceOperation(IOctopusAsyncRepository repository, IRegisterMachineOperation registerOperation)
+        protected override void EnhanceOperation(IOctopusSpaceAsyncRepository repository, IRegisterMachineOperation registerOperation)
         {
             registerOperation.Tenants = tenants.ToArray();
             registerOperation.TenantTags = tenantTgs.ToArray();

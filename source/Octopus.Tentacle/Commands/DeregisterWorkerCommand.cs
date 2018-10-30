@@ -53,22 +53,23 @@ namespace Octopus.Tentacle.Commands
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
-                if (spaceName != null)
+                if (!string.IsNullOrEmpty(spaceName))
                 {
                     var space = await client.Repository.Spaces.FindByName(spaceName);
-                    using (var spaceClient = await client.ForSpace(space.Id))
+                    if (space == null)
                     {
-                        await Deregister(new OctopusAsyncRepository(spaceClient));
+                        throw new SpaceNotFoundException(spaceName);
                     }
+                    await Deregister(client.ForSpace(space.Id));
                 }
                 else
                 {
-                    await Deregister(new OctopusAsyncRepository(client));
+                    await Deregister(client.Repository);
                 }
             }
         }
 
-        public async Task Deregister(IOctopusAsyncRepository repository)
+        public async Task Deregister(IOctopusSpaceAsyncRepository repository)
         {
             // 1. check: do the machine count/allowMultiple checks first to prevent partial trust removal
             var matchingMachines = await repository.Workers.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);

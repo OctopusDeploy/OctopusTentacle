@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException("Please specify a worker pool name, e.g., --workerpool=Default");
         }
 
-        protected override void EnhanceOperation(IOctopusAsyncRepository repository, IRegisterWorkerOperation registerOperation)
+        protected override void EnhanceOperation(IOctopusSpaceAsyncRepository repository, IRegisterWorkerOperation registerOperation)
         {
             registerOperation.WorkerPoolNames = workerpoolNames.ToArray();
         }
