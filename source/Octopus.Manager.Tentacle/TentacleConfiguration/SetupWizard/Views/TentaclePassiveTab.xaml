@@ -34,7 +34,7 @@
             </TextBlock>
 
             <controls:ControlGroup Header="Octopus thumbprint" Target="{Binding ElementName=OctopusThumbprintTextBox}">
-                <TextBox Text="{Binding Path=OctopusThumbprint, UpdateSourceTrigger=PropertyChanged}" Name="OctopusThumbprintTextBox" Width="300" />
+                <TextBox Text="{Binding Path=OctopusThumbprint, UpdateSourceTrigger=PropertyChanged}" Name="OctopusThumbprintTextBox" Width="310" />
                 <controls:ErrorMessage ErrorPath="OctopusThumbprint" />
             </controls:ControlGroup>
         </StackPanel>
