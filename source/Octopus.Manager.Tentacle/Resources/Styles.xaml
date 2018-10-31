@@ -717,7 +717,7 @@
                                     <!-- To change the apearance to button stripe 2, edit the margins! -->
                                 </Grid>
                             </Border>
-                            <Border Name="DisabledBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed" Background="#343434" Opacity="0.1"/>
+                            <Border Name="DisabledBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed" Background="#cccccc" Opacity="0.3"/>
                         </Grid>
                     </BulletDecorator>
 
