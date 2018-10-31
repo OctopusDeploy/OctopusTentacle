@@ -25,7 +25,7 @@
 
             <TextBlock Style="{StaticResource TextBlock.Big}">
                 <Run>In this mode, Tentacle will periodically poll your Octopus Deploy server for commands. The machine will be automatically 
-                registered with your Octopus server.</Run>
+                registered with your Octopus Server.</Run>
             </TextBlock>
 
             <controls:ControlGroup Header="Octopus Server URL" Target="{Binding ElementName=OctopusServerUrlTextBox}">
