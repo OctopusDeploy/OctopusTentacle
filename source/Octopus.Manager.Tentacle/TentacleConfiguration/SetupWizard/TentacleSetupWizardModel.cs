@@ -58,6 +58,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         bool skipServerRegistration;
         readonly ProxyWizardModel proxyWizardModel;
         bool areTenantsSupported;
+        bool areTenantsAvailable;
 
         public TentacleSetupWizardModel(string selectedInstance) : this(selectedInstance, ApplicationName.Tentacle, new ProxyWizardModel(selectedInstance, ApplicationName.Tentacle))
         {
@@ -118,6 +119,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 if (value == areTenantsSupported) return;
                 areTenantsSupported = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AreTenantsAvailable
+        {
+            get => areTenantsAvailable;
+            set
+            {
+                if (value == areTenantsAvailable) return;
+                areTenantsAvailable = value;
                 OnPropertyChanged();
             }
         }
@@ -524,6 +536,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                         logger.Info("Getting available tenants...");
                         PotentialTenants = (await repository.Tenants.GetAll()).Select(tt => tt.Name).ToArray();
+
+                        AreTenantsAvailable = PotentialTenants.Any();
                     }
 
                     if (PotentialEnvironments.IsNullOrEmpty())

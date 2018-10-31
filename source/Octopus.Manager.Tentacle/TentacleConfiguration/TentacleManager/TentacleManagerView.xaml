@@ -19,7 +19,7 @@
             <StackPanel>
                 <TextBlock Text="Welcome!" FontSize="13pt" Margin="10" TextAlignment="Center" />
                 <TextBlock Margin="10" TextAlignment="Center" TextWrapping="Wrap" Text="Our getting started wizard will guide you through configuring your Tentacle deployment agent." />
-                <Button Click="SetupTentacle" Margin="20" HorizontalAlignment="Center" FontSize="12pt" Padding="18,8,18,8" Style="{StaticResource Button.Success}">Get started...</Button>
+                <Button Click="SetupTentacle" Margin="20" HorizontalAlignment="Center" Padding="18,8,18,8" Style="{StaticResource Button.Success}">GET STARTED</Button>
             </StackPanel>
         </Border>
 
