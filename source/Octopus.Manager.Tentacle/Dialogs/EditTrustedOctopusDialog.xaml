@@ -10,7 +10,7 @@
     ResizeMode="NoResize"
     Name="_this"
     DataContext="{Binding ElementName=_this}"
-    Background="#f0f0f0"
+    Background="#fff"
     >
     <Grid Margin="14">
         <Grid.RowDefinitions>

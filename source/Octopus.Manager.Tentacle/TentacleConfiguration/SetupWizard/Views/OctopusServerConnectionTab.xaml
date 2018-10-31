@@ -61,7 +61,7 @@
                     </controls:ControlGroup>
                 </StackPanel>
                 <Expander Header="Proxy Settings">
-                    <proxy:ProxyConfigurationControl DataContext="{Binding ProxyWizardModel}"/>
+                    <proxy:ProxyConfigurationControl DataContext="{Binding ProxyWizardModel}" ShowHeader="False" Margin="0,10,0,0"/>
                 </Expander>
             </StackPanel>
             <Grid Name="connectionDialog" Background="Transparent" IsVisibleChanged="ConnectionDialog_OnIsVisibleChanged" Visibility="Hidden">
