@@ -27,7 +27,7 @@
                 <ContentControl Name="extraContent" />
 
                 <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                    <Button Click="StartClicked" Style="{StaticResource Button.Success}" Padding="18,8,18,8" FontSize="12pt" FontWeight="Bold" Width="120" Margin="20" Name="startButton" Content="{Binding ElementName=self, Path=ExecuteButtonText}" />
+                    <Button Click="StartClicked" Style="{StaticResource Button.Success}" Padding="18,8,18,8" Width="120" Margin="20" Name="startButton" Content="{Binding ElementName=self, Path=ExecuteButtonText}" />
                     <TextBlock VerticalAlignment="Center" Margin="10,0,0,0">
                         <Hyperlink Click="GenerateScriptClicked">Show script</Hyperlink>
                     </TextBlock>

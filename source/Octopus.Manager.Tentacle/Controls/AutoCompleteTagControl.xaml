@@ -95,7 +95,7 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <TextBlock Padding="5,2" Name="NoResultsTest" Text="No results found"/>
-                        <ListView Grid.Row="1" LostFocus="SuggestionsList_OnLostFocus" Name="SuggestionsList" ClipToBounds="False" Background="White" ItemsSource="{Binding FilteredSuggestedTags.View, ElementName=Root}" SelectionMode="Single">
+                        <ListView Grid.Row="1" LostFocus="SuggestionsList_OnLostFocus" Name="SuggestionsList" ClipToBounds="False" Background="White" BorderThickness="0" ItemsSource="{Binding FilteredSuggestedTags.View, ElementName=Root}" SelectionMode="Single">
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem">
                                     <Setter Property="ContentTemplateSelector" Value="{StaticResource CustomDataTemplateSelector}"/>

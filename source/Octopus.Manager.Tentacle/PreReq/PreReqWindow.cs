@@ -22,7 +22,7 @@ namespace Octopus.Manager.Tentacle.PreReq
             Loaded += (sender, args) => Start();
             Closing += OnClosing;
 
-            ExitButtonText = "Exit";
+            ExitButtonText = "EXIT";
         }
 
         public string ExitButtonText { get; set; }
@@ -31,7 +31,7 @@ namespace Octopus.Manager.Tentacle.PreReq
         {
             DispatchHelper.Foreground(() =>
             {
-                cancelButton.Content = "Cancel";
+                cancelButton.Content = "CANCEL";
                 reCheckButton.Visibility = Visibility.Collapsed;
                 correctTextBox.Visibility = Visibility.Collapsed;
                 correctLinkBlock.Visibility = Visibility.Collapsed;

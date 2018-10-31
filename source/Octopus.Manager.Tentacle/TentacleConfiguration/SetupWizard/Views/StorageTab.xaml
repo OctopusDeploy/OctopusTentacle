@@ -25,7 +25,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBox Grid.Column="0" Text="{Binding Path=HomeDirectory, UpdateSourceTrigger=PropertyChanged}" />
-                <Button Grid.Column="1" Margin="10,0,0,0" Content="Browse..." Width="100" Click="BrowseHomeDirButtonClicked" />
+                <Button Grid.Column="1" Margin="10,0,0,0" Content="BROWSE" Width="100" Click="BrowseHomeDirButtonClicked" />
             </Grid>
             <controls:ErrorMessage ErrorPath="HomeDirectory" />
 
@@ -38,7 +38,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBox Grid.Column="0" Text="{Binding Path=ApplicationInstallDirectory, UpdateSourceTrigger=PropertyChanged}" />
-                <Button Grid.Column="1" Margin="10,0,0,0" Content="Browse..." Width="100" Click="BrowseAppDirButtonClicked" />
+                <Button Grid.Column="1" Margin="10,0,0,0" Content="BROWSE" Width="100" Click="BrowseAppDirButtonClicked" />
             </Grid>
             <controls:ErrorMessage ErrorPath="ApplicationInstallDirectory" />
         </StackPanel>

@@ -46,7 +46,7 @@
                         <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one role that this deployment target will provide." />
                     </controls:ControlGroup>
 
-                    <Expander Header="Tenants" IsExpanded="{Binding AreTenantsSupported}">
+                    <Expander Header="Tenants" IsExpanded="{Binding AreTenantsAvailable}">
                         <StackPanel>
                             <controls:ControlGroup Header="Tenants" 
                                    Target="{Binding ElementName=TenantsAutoCompleteBox}" 

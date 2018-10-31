@@ -17,8 +17,8 @@
         <TextBox IsReadOnly="True" Name="correctTextBox" FontFamily="Consolas" FontSize="10pt" Margin="7" Height="100" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible" />
         <TextBlock Margin="7" TextWrapping="Wrap" Name="correctLinkBlock" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="reCheckButton" Content="Check again" Width="100" Margin="7" Click="ReCheckClicked" />
-            <Button x:Name="cancelButton" Content="Cancel" Width="100" Margin="7" Click="CancelClicked" />
+            <Button x:Name="reCheckButton" Content="CHECK AGAIN" Width="110" Margin="7" Click="ReCheckClicked" />
+            <Button x:Name="cancelButton" Content="CANCEL" Width="110" Margin="7" Click="CancelClicked" />
         </StackPanel>
     </StackPanel>
 </Window>
