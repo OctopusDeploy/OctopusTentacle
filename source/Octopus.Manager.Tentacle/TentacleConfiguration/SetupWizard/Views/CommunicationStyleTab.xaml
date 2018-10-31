@@ -15,9 +15,12 @@
         <Grid>
             <StackPanel>
                 <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Communication style" />
-
                 <TextBlock Style="{StaticResource TextBlock.Big}">
-                <Run>Octopus and Tentacle can communicate in two ways, and the best choice depends on your network topology.</Run>
+                    <Run FontWeight="Bold">How would you like the Octopus Server and Tentacle to communicate?</Run>
+                </TextBlock>
+                <TextBlock Style="{StaticResource TextBlock.Big}">
+                <Run>There are two ways the Octopus Server and Tentacle can communicate, your choice will depend on your network topology.</Run>
+                <LineBreak/>
                 <Hyperlink NavigateUri="http://g.octopushq.com/ChooseCommunicationStyle" RequestNavigate="Navigate">Learn more about choosing a communication style.</Hyperlink>
                 </TextBlock>
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,20,0,0">

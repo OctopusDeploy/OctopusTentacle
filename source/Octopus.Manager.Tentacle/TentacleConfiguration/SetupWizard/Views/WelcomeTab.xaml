@@ -17,8 +17,10 @@
 
             <TextBlock Style="{StaticResource TextBlock.Big}">
                 <Run>This wizard will help you to configure a new Tentacle service for Octopus Deploy.</Run>
+            </TextBlock>
+            <TextBlock Style="{StaticResource TextBlock.Big}">
+                <Run FontWeight="Bold">Would you like to configure your Tentacle as a Deployment Target or as a Worker.</Run>
                 <LineBreak/>
-                <Run>Would you like to configure your Tentacle as a Deployment Target or as a Worker.</Run>
                 <Hyperlink NavigateUri="https://g.octopushq.com/OnboardingWorkersLearnMore" RequestNavigate="Navigate">Learn more about workers.</Hyperlink>
             </TextBlock>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">

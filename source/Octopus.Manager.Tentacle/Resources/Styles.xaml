@@ -230,7 +230,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="controls:ErrorMessage">
-                    <Border Background="#f8e8e6" Padding="8,4,8,4" CornerRadius="0" BorderBrush="#db4437" BorderThickness="4,0,0,0">
+                    <Border Background="Transparent" Padding="0,4,8,4" CornerRadius="0" BorderBrush="Transparent" BorderThickness="0,0,0,0">
                         <TextBlock TextWrapping="Wrap" Foreground="#db4437" Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Error}" />
                     </Border>
                 </ControlTemplate>
@@ -485,12 +485,7 @@
     </Style>
 
     <Style TargetType="Button" x:Key="Button.Default">
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect Color="Black" Direction="320" ShadowDepth="1" BlurRadius="5" Opacity="0.5" />
-            </Setter.Value>
-        </Setter>
-        <Setter Property="Foreground" Value="#ffffff" />
+        <Setter Property="Foreground" Value="#2e93e0" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Padding" Value="12,7,12,7" />
@@ -498,7 +493,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
 
-                    <Border Background="#053b62" Padding="{TemplateBinding Padding}" CornerRadius="2" Name="bd">
+                    <Border Background="#ffffff" Padding="{TemplateBinding Padding}" CornerRadius="2" Name="bd">
                         <ContentPresenter HorizontalAlignment="Center" />
                     </Border>
 
@@ -508,19 +503,18 @@
                         </Trigger>
 
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Foreground" Value="#ffffff" />
-                            <Setter Property="Background" TargetName="bd" Value="#194a6e" />
+                            <Setter Property="Foreground" Value="#2e93e0" />
+                            <Setter Property="Background" TargetName="bd" Value="#ebebeb" />
                         </Trigger>
 
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Effect" Value="{x:Null}"/>
                             <Setter Property="Foreground" Value="#ffffff" />
                             <Setter Property="Background" TargetName="bd" Value="#c5c5c5" />
                         </Trigger>
 
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Foreground" Value="#ffffff" />
-                            <Setter Property="Background" TargetName="bd" Value="#194a6e" />
+                            <Setter Property="Foreground" Value="#2e93e0" />
+                            <Setter Property="Background" TargetName="bd" Value="#d3d3d3" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -646,7 +640,7 @@
                             </Grid.ColumnDefinitions>
 
                             <Label Target="{TemplateBinding Target}" VerticalAlignment="Top" HorizontalContentAlignment="Right" Margin="0,0,10,0">
-                                <TextBlock Text="{TemplateBinding Header}" TextAlignment="Right" />
+                                <TextBlock Text="{TemplateBinding Header}" FontWeight="Bold" TextAlignment="Right" />
                             </Label>
 
                             <ItemsPresenter Grid.Column="1" HorizontalAlignment="Left" />
@@ -688,41 +682,61 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type RadioButton}">
-                    <BulletDecorator Cursor="Hand">
-                        <!--Text element-->
-                        <Grid Width="280" Height="180">
-                            <Border BorderBrush="Transparent" BorderThickness="1" Name="Border" Background="White">
+                    <!--Text element-->
+                    <Grid Width="280" Height="180">
+                        <Border BorderBrush="Transparent" BorderThickness="1" Name="Border" Background="White">
                             <Border.Effect>
                                 <DropShadowEffect BlurRadius="3" Opacity="0.4" ShadowDepth="0"/>
                             </Border.Effect>
-                                <Grid>
-                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    <!--We don't need any bullet, cause our border is the switching element-->
-                                    <Viewbox Stretch="Uniform" Width="24" Height="24" Name="SelectedTick" Visibility="Collapsed" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10">
-                                        <Canvas Width="128" Height="128">
-                                            <Canvas.Resources/>
-                                            <Canvas>
-                                                <Ellipse Canvas.Left="0" Canvas.Top="0" Width="128" Height="128" Fill="#48B350"/>
-                                            </Canvas>
-                                            <Canvas>
-                                                <Path Fill="#ffffff">
-                                                    <Path.Data>
-                                                        <PathGeometry Figures="M54.3 97.2L24.8 67.7c-0.4-0.4-0.4-1 0-1.4l8.5-8.5c0.4-0.4 1-0.4 1.4 0L55 78.1l38.2-38.2   c0.4-0.4 1-0.4 1.4 0l8.5 8.5c0.4 0.4 0.4 1 0 1.4L55.7 97.2C55.3 97.6 54.7 97.6 54.3 97.2z" FillRule="NonZero"/>
-                                                    </Path.Data>
-                                                </Path>
-                                            </Canvas>
+                            <Grid>
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <!--We don't need any bullet, cause our border is the switching element-->
+                                <Viewbox Stretch="Uniform" Width="24" Height="24" Name="SelectedTick" Visibility="Collapsed" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="10">
+                                    <Canvas Width="128" Height="128">
+                                        <Canvas.Resources/>
+                                        <Canvas>
+                                            <Ellipse Canvas.Left="0" Canvas.Top="0" Width="128" Height="128" Fill="#48B350"/>
                                         </Canvas>
-                                    </Viewbox>
-                                    <!--<Border Margin="5,0,48,0" Background="#FFCDCDCD" CornerRadius="1" Name="RadioMark" />-->
-                                    <!-- To change the apearance to button stripe 2, edit the margins! -->
-                                </Grid>
-                            </Border>
-                            <Border Name="DisabledBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed" Background="#cccccc" Opacity="0.3"/>
-                        </Grid>
-                    </BulletDecorator>
-
+                                        <Canvas>
+                                            <Path Fill="#ffffff">
+                                                <Path.Data>
+                                                    <PathGeometry Figures="M54.3 97.2L24.8 67.7c-0.4-0.4-0.4-1 0-1.4l8.5-8.5c0.4-0.4 1-0.4 1.4 0L55 78.1l38.2-38.2   c0.4-0.4 1-0.4 1.4 0l8.5 8.5c0.4 0.4 0.4 1 0 1.4L55.7 97.2C55.3 97.6 54.7 97.6 54.3 97.2z" FillRule="NonZero"/>
+                                                </Path.Data>
+                                            </Path>
+                                        </Canvas>
+                                    </Canvas>
+                                </Viewbox>
+                                <!--<Border Margin="5,0,48,0" Background="#FFCDCDCD" CornerRadius="1" Name="RadioMark" />-->
+                                <!-- To change the apearance to button stripe 2, edit the margins! -->
+                            </Grid>
+                        </Border>
+                        <Border Name="DisabledBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed" Background="#cccccc" Opacity="0.3"/>
+                        <Border Name="HoverBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed" Background="Transparent">
+                            <Grid Cursor="Hand">
+                                <Border Background="#9e9e9e" Opacity="0.4"/>
+                                <Border Background="#fff" Opacity="0.5"/>
+                                <BulletDecorator Cursor="Hand" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <Button IsHitTestVisible="False" Style="{StaticResource Button.Success}" Content="SELECT" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </BulletDecorator>
+                            </Grid>
+                        </Border>
+                    </Grid>
                     <!--If item is checked, trigger the visibility of the mark-->
                     <ControlTemplate.Triggers>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="true" />
+                                <Condition Property="IsChecked" Value="false" />
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="HoverBorder" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="Border" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect BlurRadius="3" Opacity="0.7" ShadowDepth="1"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
                         <Trigger Property="IsChecked" Value="true">
                             <Setter TargetName="SelectedTick" Property="Visibility" Value="Visible"/>
                             <Setter TargetName="Border" Property="BorderBrush" Value="#48B350"/>

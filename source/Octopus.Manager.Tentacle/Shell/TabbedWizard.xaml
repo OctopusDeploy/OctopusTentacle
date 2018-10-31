@@ -21,9 +21,8 @@
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                <StackPanel Orientation="Horizontal" Visibility="{Binding ElementName=tabs, Path=SelectedItem.IsSkipEnabled, FallbackValue=False, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
-                    <Button Name="skipButton" Click="SkipClicked" Style="{StaticResource LinkButton}" Content="Skip" VerticalAlignment="Center"/>
-                    <TextBlock Text="or" VerticalAlignment="Center" Margin="10,0,10,0"/>
+                <StackPanel Margin="0,0,10,0" Orientation="Horizontal" Visibility="{Binding ElementName=tabs, Path=SelectedItem.IsSkipEnabled, FallbackValue=False, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
+                    <Button Name="skipButton" Click="SkipClicked"  Content="SKIP" VerticalAlignment="Center"/>
                 </StackPanel>
                 <Button Content="NEXT" x:Name="nextButton" Click="NextClicked" Width="100" Margin="0,0,0,0" IsDefault="True" IsEnabled="{Binding ElementName=tabs, Path=SelectedItem.IsNextEnabled, FallbackValue=True}" Style="{StaticResource Button.Success}" />
             </StackPanel>
