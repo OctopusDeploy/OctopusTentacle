@@ -83,7 +83,7 @@ namespace Octopus.Tentacle.Commands
             // 2. contact the server and de-register, this is independant to any tentacle configuration
             foreach (var machineResource in matchingMachines)
             {
-                log.Info($"Deleting worker '{machineResource.Name}' from the Octopus server...");
+                log.Info($"Deleting worker '{machineResource.Name}' from the Octopus Server...");
                 await repository.Workers.Delete(machineResource);
             }
 

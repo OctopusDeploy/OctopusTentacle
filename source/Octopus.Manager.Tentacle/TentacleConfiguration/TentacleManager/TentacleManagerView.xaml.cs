@@ -52,7 +52,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             Dispatcher.BeginInvoke(new Action(delegate
             {
-                var instances = instanceStore.ListInstances(ApplicationName.OctopusServer);
+                var instances = instanceStore.ListInstances(ApplicationName.Tentacle);
                 var defaultInstall = instances.SingleOrDefault(s => s.InstanceName == instanceSelection.SelectedInstance);
                 if (defaultInstall != null && !File.Exists(defaultInstall.ConfigurationFilePath))
                 {
