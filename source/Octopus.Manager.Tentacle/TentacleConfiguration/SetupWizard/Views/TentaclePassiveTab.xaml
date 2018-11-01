@@ -18,7 +18,7 @@
             <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Listening Tentacle" />
 
             <TextBlock Style="{StaticResource TextBlock.Big}">
-                <Run>The Tentacle service will listen on the TCP port that you select below. You will need to ensure that this port is open in both Windows Firewall and any intermediate firewalls. </Run>
+                <Run>The Tentacle service will listen on the TCP port that you select below. You will need to ensure this port is open in both Windows Firewall and any intermediate firewalls. </Run>
             </TextBlock>
 
             <controls:ControlGroup Header="Listen port" Target="{Binding ElementName=ListenPortTextBox}">

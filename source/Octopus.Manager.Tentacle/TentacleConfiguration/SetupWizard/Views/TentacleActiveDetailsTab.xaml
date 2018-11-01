@@ -17,7 +17,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,0,50">
         <Grid>
             <StackPanel>
-                <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Register with your Octopus Server" />
+                <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Registration" />
 
                 <TextBlock Style="{StaticResource TextBlock.Big}">
                 <Run>This machine will be registered with your Octopus Server using the details below.</Run>
