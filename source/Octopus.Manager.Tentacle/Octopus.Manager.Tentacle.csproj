@@ -41,6 +41,7 @@
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup />
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
@@ -55,8 +56,14 @@
     <Reference Include="FluentValidation, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0, processorArchitecture=MSIL">
       <HintPath>..\packages\FluentValidation.7.2.1\lib\net45\FluentValidation.dll</HintPath>
     </Reference>
-    <Reference Include="Halibut, Version=3.0.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.3.0.4\lib\net45\Halibut.dll</HintPath>
+    <Reference Include="Halibut, Version=4.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Halibut.4.0.3\lib\net45\Halibut.dll</HintPath>
+    </Reference>
+    <Reference Include="MaterialDesignColors, Version=1.0.0.14576, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignColors.1.1.1\lib\net45\MaterialDesignColors.dll</HintPath>
+    </Reference>
+    <Reference Include="MaterialDesignThemes.Wpf, Version=2.5.0.1205, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignThemes.2.5.0.1205\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Win32.TaskScheduler, Version=2.7.2.0, Culture=neutral, PublicKeyToken=c416bc1b32d97233, processorArchitecture=MSIL">
       <HintPath>..\packages\TaskScheduler.2.7.2\lib\net40\Microsoft.Win32.TaskScheduler.dll</HintPath>
@@ -113,14 +120,14 @@
       <HintPath>..\packages\Octopus.Client.4.37.0\lib\net45\Octopus.Client.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Configuration, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Configuration.1.0.11\lib\net45\Octopus.Configuration.dll</HintPath>
+    <Reference Include="Octopus.Configuration, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Configuration.2.0.0\lib\net45\Octopus.Configuration.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Diagnostics, Version=1.2.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\Octopus.Diagnostics.1.2.0\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Shared, Version=4.2.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Shared.4.2.3\lib\net45\Octopus.Shared.dll</HintPath>
+    <Reference Include="Octopus.Shared, Version=4.5.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Shared.4.5.1\lib\net45\Octopus.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Time.1.1.2\lib\netstandard1.0\Octopus.Time.dll</HintPath>
@@ -147,6 +154,9 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Security" />
     <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Controls.Input.Toolkit, Version=3.5.40128.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WPFToolkit.3.5.50211.1\lib\System.Windows.Controls.Input.Toolkit.dll</HintPath>
@@ -185,6 +195,9 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Controls\AutoCompleteTagControl.xaml.cs">
+      <DependentUpon>AutoCompleteTagControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ControlGroup.cs" />
     <Compile Include="Controls\ErrorMessage.cs" />
     <Compile Include="Controls\ImageLink.cs" />
@@ -192,6 +205,7 @@
     <Compile Include="Controls\RetinaImage.cs" />
     <Compile Include="Controls\ServiceWatcher.cs" />
     <Compile Include="Controls\TaggingAutoCompleteBox.cs" />
+    <Compile Include="Controls\WatermarkService.cs" />
     <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\BooleanToYesNoConverter.cs" />
     <Compile Include="Converters\EnumBooleanConverter.cs" />
@@ -243,9 +257,6 @@
       <DependentUpon>CommunicationStyleTab.xaml</DependentUpon>
     </Compile>
     <Compile Include="TentacleConfiguration\SetupWizard\Views\InstallTab.cs" />
-    <Compile Include="TentacleConfiguration\SetupWizard\Views\MachineTypeTab.xaml.cs">
-      <DependentUpon>MachineTypeTab.xaml</DependentUpon>
-    </Compile>
     <Compile Include="TentacleConfiguration\SetupWizard\Views\StorageTab.xaml.cs">
       <DependentUpon>StorageTab.xaml</DependentUpon>
     </Compile>
@@ -269,6 +280,11 @@
     <Compile Include="TentacleManager.cs" />
     <Compile Include="Util\BrowserHelper.cs" />
     <Compile Include="Util\CommandLine.cs" />
+    <Compile Include="Util\RelayCommand.cs" />
+    <Page Include="Controls\AutoCompleteTagControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="DeleteWizard\Views\DeleteWelcome.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -334,10 +350,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TentacleConfiguration\SetupWizard\Views\MachineTypeTab.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="TentacleConfiguration\SetupWizard\Views\StorageTab.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -390,6 +402,24 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <Resource Include="Resources\Fonts\Roboto-Black.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-BlackItalic.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-Bold.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-BoldItalic.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-Italic.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-Light.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-LightItalic.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-Medium.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-MediumItalic.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-Regular.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-Thin.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-ThinItalic.ttf" />
+    <Resource Include="Resources\Fonts\RobotoCondensed-Bold.ttf" />
+    <Resource Include="Resources\Fonts\RobotoCondensed-BoldItalic.ttf" />
+    <Resource Include="Resources\Fonts\RobotoCondensed-Italic.ttf" />
+    <Resource Include="Resources\Fonts\RobotoCondensed-Light.ttf" />
+    <Resource Include="Resources\Fonts\RobotoCondensed-LightItalic.ttf" />
+    <Resource Include="Resources\Fonts\RobotoCondensed-Regular.ttf" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -410,67 +440,67 @@
     <Resource Include="Resources\Logo-Small-White-Text.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\Images\alert%402.png" />
-    <Resource Include="Resources\Images\alert%404.png" />
-    <Resource Include="Resources\Images\alert-error%402.png" />
-    <Resource Include="Resources\Images\alert-error%404.png" />
+    <Resource Include="Resources\Images\alert%402x.png" />
+    <Resource Include="Resources\Images\alert%404x.png" />
+    <Resource Include="Resources\Images\alert-error%402x.png" />
+    <Resource Include="Resources\Images\alert-error%404x.png" />
     <Resource Include="Resources\Images\alert.png" />
-    <Resource Include="Resources\Images\balloons.png" />
-    <Resource Include="Resources\Images\button_circle_blue_right%402.png" />
+    <Resource Include="Resources\Images\button_circle_blue_right%402x.png" />
     <Resource Include="Resources\Images\button_circle_blue_right.png" />
-    <Resource Include="Resources\Images\button_rounded_green_delete%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_delete%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_delete.png" />
-    <Resource Include="Resources\Images\button_rounded_green_last%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_last%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_last.png" />
-    <Resource Include="Resources\Images\button_rounded_green_next%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_next%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_next.png" />
-    <Resource Include="Resources\Images\button_rounded_green_right%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_right%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_right.png" />
-    <Resource Include="Resources\Images\button_rounded_orange_next%402.png" />
+    <Resource Include="Resources\Images\button_rounded_orange_next%402x.png" />
     <Resource Include="Resources\Images\button_rounded_orange_next.png" />
-    <Resource Include="Resources\Images\clipboard-export%402.png" />
+    <Resource Include="Resources\Images\clipboard-export%402x.png" />
     <Resource Include="Resources\Images\clipboard-export.png" />
-    <Resource Include="Resources\Images\database-export%402.png" />
+    <Resource Include="Resources\Images\database-export%402x.png" />
     <Resource Include="Resources\Images\database-export.png" />
-    <Resource Include="Resources\Images\database-favorite2%402.png" />
-    <Resource Include="Resources\Images\database-favorite2%404.png" />
+    <Resource Include="Resources\Images\database-favorite2%402x.png" />
+    <Resource Include="Resources\Images\database-favorite2%404x.png" />
     <Resource Include="Resources\Images\database-favorite2.png" />
-    <Resource Include="Resources\Images\database-import%402.png" />
+    <Resource Include="Resources\Images\database-import%402x.png" />
     <Resource Include="Resources\Images\database-import.png" />
-    <Resource Include="Resources\Images\database-up%402.png" />
+    <Resource Include="Resources\Images\database-up%402x.png" />
     <Resource Include="Resources\Images\database-up.png" />
-    <Resource Include="Resources\Images\database_restore%402.png" />
+    <Resource Include="Resources\Images\database_restore%402x.png" />
     <Resource Include="Resources\Images\database_restore.png" />
-    <Resource Include="Resources\Images\delete%402.png" />
+    <Resource Include="Resources\Images\delete%402x.png" />
     <Resource Include="Resources\Images\delete.png" />
-    <Resource Include="Resources\Images\help%402.png" />
+    <Resource Include="Resources\Images\help%402x.png" />
     <Resource Include="Resources\Images\help.png" />
-    <Resource Include="Resources\Images\history%402.png" />
+    <Resource Include="Resources\Images\history%402x.png" />
     <Resource Include="Resources\Images\history.png" />
-    <Resource Include="Resources\Images\internet-edit%402.png" />
+    <Resource Include="Resources\Images\internet-edit%402x.png" />
     <Resource Include="Resources\Images\internet-edit.png" />
-    <Resource Include="Resources\Images\internet_browse%402.png" />
+    <Resource Include="Resources\Images\internet_browse%402x.png" />
     <Resource Include="Resources\Images\internet_browse.png" />
-    <Resource Include="Resources\Images\key%402.png" />
+    <Resource Include="Resources\Images\key%402x.png" />
     <Resource Include="Resources\Images\key.png" />
     <Resource Include="Resources\Images\nav_blue_right.png" />
-    <Resource Include="Resources\Images\ok%402.png" />
+    <Resource Include="Resources\Images\ok%402x.png" />
     <Resource Include="Resources\Images\ok.png" />
-    <Resource Include="Resources\Images\ok_button%402.png" />
-    <Resource Include="Resources\Images\ok_button%404.png" />
+    <Resource Include="Resources\Images\ok_button%402x.png" />
+    <Resource Include="Resources\Images\ok_button%404x.png" />
     <Resource Include="Resources\Images\ok_button.png" />
-    <Resource Include="Resources\Images\server_network-internet%402.png" />
+    <Resource Include="Resources\Images\server_network-internet%402x.png" />
     <Resource Include="Resources\Images\server_network-internet.png" />
     <Resource Include="Resources\Images\TentacleActive.png" />
     <Resource Include="Resources\Images\TentaclePassive.png" />
-    <Resource Include="Resources\Images\visitor_man-internet%402.png" />
+    <Resource Include="Resources\Images\visitor_man-internet%402x.png" />
     <Resource Include="Resources\Images\visitor_man-internet.png" />
-    <Resource Include="Resources\Images\warning%402.png" />
-    <Resource Include="Resources\Images\warning%404.png" />
-    <Resource Include="Resources\Images\Warning-ico-dropshadow%402.png" />
+    <Resource Include="Resources\Images\warning%402x.png" />
+    <Resource Include="Resources\Images\warning%404x.png" />
+    <Resource Include="Resources\Images\Warning-ico-dropshadow%402x.png" />
     <Resource Include="Resources\Images\Warning-ico-dropshadow.png" />
     <Resource Include="Resources\Images\warning.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

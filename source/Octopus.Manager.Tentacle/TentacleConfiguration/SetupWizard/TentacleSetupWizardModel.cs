@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -36,12 +37,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string password;
         string apiKey;
         bool haveCredentialsBeenVerified;
-        string selectedRoles;
-        string selectedEnvironment;
-        string selectedTenantTags;
-        string selectedTenants;
         string selectedMachinePolicy;
-        string selectedWorkerPool;
+        string[] selectedWorkerPools;
         string[] potentialEnvironments;
         string[] potentialRoles;
         string[] potentialMachinePolicies;
@@ -49,6 +46,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string[] potentialTenants;
         string[] potentialWorkerPools;
         string machineName;
+        bool overwriteExistingMachine;
         string homeDirectory;
         string applicationInstallDirectory;
         string pathToConfig;
@@ -59,6 +57,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string serverWebSocket;
         bool skipServerRegistration;
         readonly ProxyWizardModel proxyWizardModel;
+        bool areTenantsSupported;
+        bool areTenantsAvailable;
 
         public TentacleSetupWizardModel(string selectedInstance) : this(selectedInstance, ApplicationName.Tentacle, new ProxyWizardModel(selectedInstance, ApplicationName.Tentacle))
         {
@@ -66,6 +66,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public TentacleSetupWizardModel(string selectedInstance, ApplicationName applicationName, ProxyWizardModel proxyWizardModel)
         {
+            SelectedRoles = new ObservableCollection<string>();
+            SelectedEnvironments = new ObservableCollection<string>();
+            SelectedTenants = new ObservableCollection<string>();
+            SelectedTenantTags = new ObservableCollection<string>();
+            SelectedWorkerPools = new ObservableCollection<string>();
+
             this.applicationName = applicationName;
             this.proxyWizardModel = proxyWizardModel;
 
@@ -97,7 +103,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 Environment.OSVersion.Version.Major > 5;
         }
 
-        public bool AreTenantsSupported { get; private set; } = false;
         public bool ShowMachinePolicySelection { get; private set; } = false;
         public string InstanceName { get; private set; }
         public bool FirewallException { get; set; }
@@ -106,6 +111,28 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string TentacleExe => string.IsNullOrEmpty(PathToTentacleExe) ? CommandLine.PathToTentacleExe() : PathToTentacleExe;
 
         public string PathToTentacleExe { get; set; }
+
+        public bool AreTenantsSupported
+        {
+            get => areTenantsSupported;
+            set
+            {
+                if (value == areTenantsSupported) return;
+                areTenantsSupported = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AreTenantsAvailable
+        {
+            get => areTenantsAvailable;
+            set
+            {
+                if (value == areTenantsAvailable) return;
+                areTenantsAvailable = value;
+                OnPropertyChanged();
+            }
+        }
 
         public string HomeDirectory
         {
@@ -329,60 +356,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
-        public string SelectedEnvironment
-        {
-            get => selectedEnvironment;
-            set
-            {
-                if (value == selectedEnvironment) return;
-                selectedEnvironment = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string SelectedRoles
-        {
-            get => selectedRoles;
-            set
-            {
-                if (value == selectedRoles) return;
-                selectedRoles = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string SelectedTenantTags
-        {
-            get => selectedTenantTags;
-            set
-            {
-                if (value == selectedTenantTags) return;
-                selectedTenantTags = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string SelectedTenants
-        {
-            get => selectedTenants;
-            set
-            {
-                if (value == selectedTenants) return;
-                selectedTenants = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string SelectedWorkerPool
-        {
-            get => selectedWorkerPool;
-            set
-            {
-                if (value == selectedWorkerPool) return;
-                selectedWorkerPool = value;
-                OnPropertyChanged();
-            }
-        }
+        public ObservableCollection<string> SelectedRoles { get; }
+        public ObservableCollection<string> SelectedEnvironments { get; }
+        public ObservableCollection<string> SelectedTenants { get; }
+        public ObservableCollection<string> SelectedTenantTags { get; }
+        public ObservableCollection<string> SelectedWorkerPools { get; }
 
         public string SelectedMachinePolicy
         {
@@ -402,6 +380,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 if (value == machineName) return;
                 machineName = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool OverwriteExistingMachine
+        {
+            get => overwriteExistingMachine;
+            set
+            {
+                if (value == overwriteExistingMachine) return;
+                overwriteExistingMachine = value;
                 OnPropertyChanged();
             }
         }
@@ -535,7 +524,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                     var workerPools = await repository.WorkerPools.GetAll();
                     PotentialWorkerPools = workerPools.Select(e => e.Name).ToArray();
-                    SelectedWorkerPool = workerPools.FirstOrDefault(wp => wp.IsDefault)?.Name;
 
                     var cofiguration = await repository.CertificateConfiguration.GetOctopusCertificate();
                     OctopusThumbprint = cofiguration.Thumbprint;
@@ -548,10 +536,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                         logger.Info("Getting available tenants...");
                         PotentialTenants = (await repository.Tenants.GetAll()).Select(tt => tt.Name).ToArray();
+
+                        AreTenantsAvailable = PotentialTenants.Any();
                     }
 
-                    SelectedEnvironment = PotentialEnvironments.FirstOrDefault();
-                    if (SelectedEnvironment == null)
+                    if (PotentialEnvironments.IsNullOrEmpty())
                     {
                         logger.Error("No environments exist. Please use the Octopus web portal to create an environment, then try again.");
                         return;
@@ -614,9 +603,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 validator.RuleFor(m => m.MachineName).NotEmpty().WithMessage("Please enter a machine name");
                 validator.RuleFor(m => m.SelectedRoles).NotEmpty().WithMessage("Please select or enter at least one role").Unless(m => m.MachineType == MachineType.Worker);
-                validator.RuleFor(m => m.SelectedEnvironment).NotEmpty().WithMessage("Please select an environment").Unless(m => m.MachineType == MachineType.Worker);
-                validator.RuleFor(m => m.SelectedWorkerPool).NotEmpty().WithMessage("Please select a worker pool").Unless(m => m.MachineType == MachineType.DeploymentTarget);
-                //validator.RuleFor(m => m.SelectedMachinePolicy).NotEmpty().WithMessage("Please select a machine policy");
+                validator.RuleFor(m => m.SelectedEnvironments).NotEmpty().WithMessage("Please select an environment").Unless(m => m.MachineType == MachineType.Worker);
+                validator.RuleFor(m => m.SelectedWorkerPools).NotEmpty().WithMessage("Please select at least one worker pool").Unless(m => m.MachineType == MachineType.DeploymentTarget);
             });
             return validator;
         }
@@ -627,20 +615,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             return !string.IsNullOrWhiteSpace(s)
                 && Uri.TryCreate(s, UriKind.Absolute, out uri)
                 && (uri.Scheme == "http" || uri.Scheme == "https");
-        }
-        string[] SelectedRolesArray
-        {
-            get { return (selectedRoles ?? string.Empty).Split(';', ',', ' ').Select(r => r.Trim()).NotNullOrWhiteSpace().ToArray(); }
-        }
-
-        string[] SelectedTenantTagsArray
-        {
-            get { return (selectedTenantTags ?? string.Empty).Split(';', ',').Select(r => r.Trim().Trim('"')).NotNullOrWhiteSpace().ToArray(); }
-        }
-
-        string[] SelectedTenantsArray
-        {
-            get { return (selectedTenants ?? string.Empty).Split(';', ',').Select(r => r.Trim().Trim('"')).NotNullOrWhiteSpace().ToArray(); }
         }
 
 
@@ -670,11 +644,15 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     }
                 }
 
-                var register = Cli(MachineType==MachineType.Worker ? "register-worker" : "register-with")
+                var register = Cli(MachineType == MachineType.Worker ? "register-worker" : "register-with")
                     .Argument("server", OctopusServerUrl)
                     .Argument("name", machineName)
-                    .Argument("comms-style", CommunicationStyle)
-                    .Flag("force");
+                    .Argument("comms-style", CommunicationStyle);
+
+                if (overwriteExistingMachine)
+                {
+                    register = register.Flag("force");
+                }
 
                 if (CommunicationStyle == CommunicationStyle.TentacleActive)
                 {
@@ -692,23 +670,25 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                 if (MachineType == MachineType.DeploymentTarget)
                 {
-                    register.Argument("environment", SelectedEnvironment);
+                    foreach (var environment in SelectedEnvironments)
+                        register.Argument("environment", environment);
 
                     if (AreTenantsSupported)
                     {
-                        foreach (var tag in SelectedTenantTagsArray)
+                        foreach (var tag in SelectedTenantTags)
                             register.Argument("tenanttag", tag);
 
-                        foreach (var tenant in SelectedTenantsArray)
+                        foreach (var tenant in SelectedTenants)
                             register.Argument("tenant", tenant);
                     }
 
-                    foreach (var role in SelectedRolesArray)
+                    foreach (var role in SelectedRoles)
                         register.Argument("role", role);
                 }
                 else if(MachineType == MachineType.Worker)
                 {
-                    register.Argument("workerpool", SelectedWorkerPool);
+                    foreach (var workerPool in SelectedWorkerPools)
+                        register.Argument("workerpool", workerPool);
                 }
 
                 register.Argument("policy", SelectedMachinePolicy);

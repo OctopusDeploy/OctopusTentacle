@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Windows.Navigation;
+using Octopus.Manager.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 {
@@ -12,6 +14,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             InitializeComponent();
 
             DataContext = model;
+        }
+
+        void Navigate(object sender, RequestNavigateEventArgs e)
+        {
+            BrowserHelper.Open(e.Uri);
+            e.Handled = true;
         }
     }
 }

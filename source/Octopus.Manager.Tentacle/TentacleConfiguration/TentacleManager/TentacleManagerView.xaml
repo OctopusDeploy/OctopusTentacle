@@ -19,7 +19,7 @@
             <StackPanel>
                 <TextBlock Text="Welcome!" FontSize="13pt" Margin="10" TextAlignment="Center" />
                 <TextBlock Margin="10" TextAlignment="Center" TextWrapping="Wrap" Text="Our getting started wizard will guide you through configuring your Tentacle deployment agent." />
-                <Button Click="SetupTentacle" Margin="20" HorizontalAlignment="Center" FontSize="12pt" Padding="18,8,18,8" Style="{StaticResource Button.Success}">Get started...</Button>
+                <Button Click="SetupTentacle" Margin="20" HorizontalAlignment="Center" Padding="18,8,18,8" Style="{StaticResource Button.Success}">GET STARTED</Button>
             </StackPanel>
         </Border>
 
@@ -60,7 +60,7 @@
                                         </TextBlock>
 
                                         <TextBlock Margin="0,10,0,0" FontSize="9pt" Foreground="Gray" TextWrapping="Wrap">Home directory: <Hyperlink Click="BrowseHome"><Run Text="{Binding Path=HomeDirectory}" /></Hyperlink></TextBlock>
-                                        <TextBlock Margin="0,2,0,0" FontSize="9pt" Foreground="Gray" TextWrapping="Wrap">Logs directory:<Hyperlink Click="BrowseLogs"><Run Text="{Binding Path=LogsDirectory}" /></Hyperlink></TextBlock>
+                                        <TextBlock Margin="0,2,0,0" FontSize="9pt" Foreground="Gray" TextWrapping="Wrap">Logs directory: <Hyperlink Click="BrowseLogs"><Run Text="{Binding Path=LogsDirectory}" /></Hyperlink></TextBlock>
 
                                         <StackPanel>
                                             <TextBlock Margin="0,10,0,0" TextWrapping="Wrap">The thumbprint of the certificate that securely identifies this Tentacle is shown below. This should match the value shown on the Machine configuration page in the Octopus web portal.</TextBlock>
@@ -71,7 +71,7 @@
 
                                     <StackPanel Margin="0,0,10,0" DataContext="{Binding Path=ServiceWatcher}">
                                         <controls:ImageLink
-                                            BigImage="/Resources/Images/button_rounded_green_next@2.png"
+                                            BigImage="/Resources/Images/button_rounded_green_next@2x.png"
                                             SmallImage="/Resources/Images/button_rounded_green_next.png"
                                             Text="Start"
                                             Margin="0,10,0,0"
@@ -80,7 +80,7 @@
                                             Visibility="{Binding Path=CanStart, Mode=OneWay, Converter={StaticResource Converter.InverseBooleanToVisibilityConverter}}"
                                             />
                                         <controls:ImageLink
-                                            BigImage="/Resources/Images/button_rounded_green_next@2.png"
+                                            BigImage="/Resources/Images/button_rounded_green_next@2x.png"
                                             SmallImage="/Resources/Images/button_rounded_green_next.png"
                                             Text="Start"
                                             Margin="0,10,0,0"
@@ -90,7 +90,7 @@
                                             Visibility="{Binding Path=CanStart, Mode=OneWay, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"
                                             />
                                         <controls:ImageLink
-                                            BigImage="/Resources/Images/button_rounded_green_last@2.png"
+                                            BigImage="/Resources/Images/button_rounded_green_last@2x.png"
                                             SmallImage="/Resources/Images/button_rounded_green_last.png"
                                             Text="Restart"
                                             Click="RestartServiceClicked"
@@ -98,7 +98,7 @@
                                             Margin="0,10,0,0" 
                                             />
                                         <controls:ImageLink
-                                            BigImage="/Resources/Images/button_rounded_green_delete@2.png"
+                                            BigImage="/Resources/Images/button_rounded_green_delete@2x.png"
                                             SmallImage="/Resources/Images/button_rounded_green_delete.png"
                                             Text="Stop"
                                             Click="StopServiceClicked"
@@ -106,7 +106,7 @@
                                             Margin="0,10,0,0" 
                                             />
                                         <controls:ImageLink
-                                            BigImage="/Resources/Images/button_rounded_orange_next@2.png"
+                                            BigImage="/Resources/Images/button_rounded_orange_next@2x.png"
                                             SmallImage="/Resources/Images/button_rounded_orange_next.png"
                                             Text="Reinstall"
                                             Click="RepairServiceClicked"
@@ -135,14 +135,14 @@
 
                                     <StackPanel Margin="0,0,10,0">
                                         <controls:ImageLink
-                                        BigImage="/Resources/Images/server_network-internet@2.png"
+                                        BigImage="/Resources/Images/server_network-internet@2x.png"
                                         SmallImage="/Resources/Images/server_network-internet.png"
                                         Text="Change proxy server settings..."
                                         Margin="0,10,0,0" 
                                         Click="ShowProxy"
                                         />
                                         <controls:ImageLink
-                                        BigImage="/Resources/Images/delete@2.png"
+                                        BigImage="/Resources/Images/delete@2x.png"
                                         SmallImage="/Resources/Images/delete.png"
                                         Text="Delete this Tentacle instance..."
                                         Margin="0,10,0,0" 

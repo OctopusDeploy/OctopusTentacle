@@ -21,6 +21,14 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         string thumbprint;
         string trust;
         bool pollsServers;
+
+        IOctopusFileSystem fileSystem;
+
+        public TentacleManagerModel(IOctopusFileSystem fileSystem)
+        {
+            this.fileSystem = fileSystem;
+        }
+
         public string InstanceName { get; set; }
 
         public string ConfigurationFilePath
@@ -129,7 +137,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             var tencon = new Octopus.Tentacle.Configuration.TentacleConfiguration(
                 keyStore,
                 new HomeConfiguration(applicationInstance.ApplicationName, keyStore),
-                new CertificateGenerator(), 
+                new CertificateGenerator(),
                 new ProxyConfiguration(keyStore),
                 new PollingProxyConfiguration(keyStore),
                 Shared.Diagnostics.Log.Octopus()
@@ -160,7 +168,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                 {
                     pollsServers = true;
                     var addresses = polls.Select(p => $"{p.Thumbprint} at {p.Address}").ReadableJoin();
-                    describeTrust.Add(polls.Count == 1 
+                    describeTrust.Add(polls.Count == 1
                         ? $"The Tentacle polls the Octopus Server with thumbprint {addresses}."
                         : $"The Tentacle polls the Octopus Servers with thumbprints {addresses}.");
                 }
@@ -174,7 +182,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             if (pollsServers)
             {
                 PollingProxyConfiguration = new PollingProxyConfiguration(keyStore);
-                ProxyStatus += BuildProxyStatus(PollingProxyConfiguration, polling: true) + " to poll the Octopus server";
+                ProxyStatus += BuildProxyStatus(PollingProxyConfiguration, polling: true) + " to poll the Octopus Server";
             }
             ProxyStatus += ".";
         }
@@ -192,7 +200,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         IKeyValueStore LoadConfiguration()
         {
-            return new XmlFileKeyValueStore(ConfigurationFilePath);
+            return new XmlFileKeyValueStore(fileSystem, ConfigurationFilePath);
         }
     }
 }

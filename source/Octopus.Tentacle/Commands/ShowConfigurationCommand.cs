@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Commands
             this.log = log;
 
             Options.Add("file=", "Exports the server configuration to a file. If not specified output goes to the console", v => file = v);
-            apiEndpointOptions = AddOptionSet(new ApiEndpointOptions(Options) {Optional = true});
+            apiEndpointOptions = AddOptionSet(new ApiEndpointOptions(Options) { Optional = true });
         }
 
         protected override void Start()
@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Commands
 
         async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
         {
-            var configStore = new XmlFileKeyValueStore(instanceSelector.GetCurrentInstance().ConfigurationPath);
+            var configStore = new XmlFileKeyValueStore(fileSystem, instanceSelector.GetCurrentInstance().ConfigurationPath);
 
             var oldHomeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, configStore);
             var homeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, outputStore)
@@ -100,7 +100,7 @@ namespace Octopus.Tentacle.Commands
             };
 
             //we dont want the actual certificate, as its encrypted, and we get a different output everytime
-            outputStore.Set<string>("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
+            outputStore.Set<string>("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate?.Thumbprint);
 
             var watchdogConfiguration = watchdog.Value.GetConfiguration();
             watchdogConfiguration.WriteTo(outputStore);

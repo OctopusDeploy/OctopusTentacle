@@ -29,7 +29,7 @@
             </Grid.ColumnDefinitions>
             <CheckBox Grid.Column="0" VerticalAlignment="Center" Name="AutoClose" IsChecked="True" Visibility="Collapsed">Automatically close window when finished</CheckBox>
             <TextBlock Grid.Column="0" VerticalAlignment="Center" Name="LogsLink" Visibility="Collapsed"><Hyperlink Click="LogsHyperlink_Click">Open logs directory</Hyperlink></TextBlock>
-            <Button Grid.Column="1" Name="CloseButton" IsCancel="True" Visibility="Collapsed">Close</Button>
+            <Button Grid.Column="1" Name="CloseButton" IsCancel="True" Visibility="Collapsed">CLOSE</Button>
         </Grid>
     </Grid>
 </Window>
