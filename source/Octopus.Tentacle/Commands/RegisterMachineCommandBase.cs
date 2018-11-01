@@ -125,7 +125,7 @@ namespace Octopus.Tentacle.Commands
         {
             await ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(systemRepository);
 
-            var server = new OctopusServerConfiguration(await GetServerThumbprint(repository, serverAddress, sslThumbprint))
+            var server = new OctopusServerConfiguration(await GetServerThumbprint(systemRepository, serverAddress, sslThumbprint))
             {
                 Address = serverAddress,
                 CommunicationStyle = communicationStyle
@@ -170,7 +170,7 @@ namespace Octopus.Tentacle.Commands
         protected abstract void CheckArgs();
         protected abstract void EnhanceOperation(IOctopusSpaceAsyncRepository repository, TRegistrationOperationType registerOperation);
 
-        async Task<string> GetServerThumbprint(IOctopusSpaceAsyncRepository repository, Uri serverAddress, string sslThumbprint)
+        async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri serverAddress, string sslThumbprint)
         {
             if (serverAddress != null && ServiceEndPoint.IsWebSocketAddress(serverAddress))
             {
