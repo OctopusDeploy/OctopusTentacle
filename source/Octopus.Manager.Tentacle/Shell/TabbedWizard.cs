@@ -151,8 +151,8 @@ namespace Octopus.Manager.Tentacle.Shell
 
         void RefreshWizardButtons()
         {
-            nextButton.Content = "Next";
-            backButton.Content = "Back";
+            nextButton.Content = "NEXT";
+            backButton.Content = "BACK";
 
             var visibleTabIndexes = GetVisibleTabIndexes();
 
@@ -173,7 +173,7 @@ namespace Octopus.Manager.Tentacle.Shell
 
             if (tabs.SelectedIndex == visibleTabIndexes.LastOrDefault())
             {
-                nextButton.Content = "Finish";
+                nextButton.Content = "FINISH";
             }
 
             for (var i = 0; i < tabs.Items.Count; i++)

@@ -14,76 +14,77 @@
     IsSkipEnabled="True"
     Style="{StaticResource TabView.Normal}"
     >
-    <Grid>
-        <StackPanel>
-            <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Octopus Credentials" />
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,0,50">
+        <Grid>
+            <StackPanel>
+                <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Octopus Server" />
 
-            <TextBlock Style="{StaticResource TextBlock.Big}">
-                <Run>In this mode, Tentacle will periodically poll your Octopus Deploy server for commands. The machine will be automatically 
-                registered with your Octopus server.</Run>
-            </TextBlock>
-
-            <controls:ControlGroup Header="Octopus Server URL" Target="{Binding ElementName=OctopusServerUrlTextBox}">
-                <TextBox Text="{Binding Path=OctopusServerUrl, UpdateSourceTrigger=PropertyChanged}" Name="OctopusServerUrlTextBox" Width="300" />
-                <controls:ErrorMessage ErrorPath="OctopusServerUrl" />
-            </controls:ControlGroup>
-
-            <controls:ControlGroup Header="Authentication mode" Target="{Binding ElementName=authModeRadio}">
-                <RadioButton Name="authModeRadio" Margin="0,5,0,0" IsChecked="{Binding Path=UseUsernamePasswordAuthMode, Mode=TwoWay}">Username/password</RadioButton>
-                <RadioButton Margin="0,10,0,0" IsChecked="{Binding Path=UseApiKeyAuthMode, Mode=TwoWay}">API key</RadioButton>
-            </controls:ControlGroup>
-
-            <StackPanel Visibility="{Binding Path=UseUsernamePasswordAuthMode, Converter={StaticResource Converter.BooleanToVisibility}}">
-                <TextBlock Style="{StaticResource TextBlock.Small}">
-                    <Run>This account is only used for registering the Tentacle and is never used again (nor stored). Alternatively you may use an API key.</Run>
+                <TextBlock Style="{StaticResource TextBlock.Big}">
+                <Run>Provide the URL and authentication mode to connect your Octopus Server.</Run>
                 </TextBlock>
 
-                <controls:ControlGroup Header="Username" Target="{Binding ElementName=UsernameTextBox}">
-                    <TextBox Text="{Binding Path=Username, UpdateSourceTrigger=PropertyChanged}" Name="UsernameTextBox" Width="300" />
-                    <controls:ErrorMessage ErrorPath="Username" />
+                <controls:ControlGroup Header="Octopus Server URL" Target="{Binding ElementName=OctopusServerUrlTextBox}">
+                    <TextBox Text="{Binding Path=OctopusServerUrl, UpdateSourceTrigger=PropertyChanged}" Name="OctopusServerUrlTextBox" Width="300" />
+                    <controls:ErrorMessage ErrorPath="OctopusServerUrl" />
                 </controls:ControlGroup>
 
-                <controls:ControlGroup Header="Password" Target="{Binding ElementName=PasswordTextBox}">
-                    <PasswordBox PasswordChanged="PasswordBox_OnPasswordChanged" Name="PasswordTextBox" Width="300" />
-                    <controls:ErrorMessage ErrorPath="Password" />
+                <controls:ControlGroup Header="Authentication mode" Target="{Binding ElementName=authModeRadio}">
+                    <RadioButton Name="authModeRadio" Margin="0,5,0,0" IsChecked="{Binding Path=UseUsernamePasswordAuthMode, Mode=TwoWay}">Username/password</RadioButton>
+                    <RadioButton Margin="0,10,0,0" IsChecked="{Binding Path=UseApiKeyAuthMode, Mode=TwoWay}">API key</RadioButton>
                 </controls:ControlGroup>
-            </StackPanel>
 
-            <StackPanel Visibility="{Binding Path=UseApiKeyAuthMode, Converter={StaticResource Converter.BooleanToVisibility}}">
-                <TextBlock Style="{StaticResource TextBlock.Small}">
-                    <Run>This API key is only used for registering the Tentacle and is never used again (nor stored).</Run>
-                    <Hyperlink NavigateUri="http://g.octopushq.com/ApiKey" RequestNavigate="Navigate">Learn about creating an API key here.</Hyperlink>
-                </TextBlock>
+                <StackPanel Visibility="{Binding Path=UseUsernamePasswordAuthMode, Converter={StaticResource Converter.BooleanToVisibility}}">
 
-                <controls:ControlGroup Header="API key" Target="{Binding ElementName=ApiKeyTextBox}">
-                    <TextBox Text="{Binding Path=ApiKey, UpdateSourceTrigger=PropertyChanged}" Name="ApiKeyTextBox" Width="300" />
-                    <controls:ErrorMessage ErrorPath="ApiKey" />
-                </controls:ControlGroup>
+                    <controls:ControlGroup Header="Username" Target="{Binding ElementName=UsernameTextBox}">
+                        <TextBox Text="{Binding Path=Username, UpdateSourceTrigger=PropertyChanged}" Name="UsernameTextBox" Width="300" />
+                        <controls:ErrorMessage ErrorPath="Username" />
+                    </controls:ControlGroup>
+
+                    <controls:ControlGroup Header="Password" Target="{Binding ElementName=PasswordTextBox}">
+                        <PasswordBox PasswordChanged="PasswordBox_OnPasswordChanged" Name="PasswordTextBox" Width="300" />
+                        <controls:ErrorMessage ErrorPath="Password" />
+                    </controls:ControlGroup>
+                     <TextBlock Style="{StaticResource TextBlock.Small}">
+                                        <Run>This account is only used for registering the Tentacle and is never used again (nor stored). Alternatively you may use an API key.</Run>
+                                        </TextBlock>
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding Path=UseApiKeyAuthMode, Converter={StaticResource Converter.BooleanToVisibility}}">
+
+                    <controls:ControlGroup Header="API key" Target="{Binding ElementName=ApiKeyTextBox}">
+                        <TextBox Text="{Binding Path=ApiKey, UpdateSourceTrigger=PropertyChanged}" Name="ApiKeyTextBox" Width="300" />
+                        <controls:ErrorMessage ErrorPath="ApiKey" />
+                    </controls:ControlGroup>
+                     <TextBlock Style="{StaticResource TextBlock.Small}">
+                                        <Run>This API key is only used for registering the Tentacle and is never used again (nor stored).</Run>
+                                        <Hyperlink NavigateUri="http://g.octopushq.com/ApiKey" RequestNavigate="Navigate">Learn about creating an API key here.</Hyperlink>
+                                        </TextBlock>
+                </StackPanel>
+                <Expander Header="Proxy Settings">
+                    <proxy:ProxyConfigurationControl DataContext="{Binding ProxyWizardModel}" ShowHeader="False" Margin="0,10,0,0"/>
+                </Expander>
             </StackPanel>
-            <Expander Header="Proxy Settings">
-                <proxy:ProxyConfigurationControl DataContext="{Binding ProxyWizardModel}"/>
-            </Expander>
-        </StackPanel>
-        <Grid Name="connectionDialog" Background="Transparent" IsVisibleChanged="ConnectionDialog_OnIsVisibleChanged" Visibility="Hidden">
-            <StackPanel Margin="15" Background="White" VerticalAlignment="Center" MinHeight="200">
-                <StackPanel.Effect>
-                    <DropShadowEffect BlurRadius="10" Opacity="0.4" ShadowDepth="0"/>
-                </StackPanel.Effect>
-                <Border>
-                    <Grid Margin="20" Height="200">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Margin="0,0,0,15" Style="{StaticResource TextBlock.Big}">Establishing connection with your Octopus Server...</TextBlock>
-                        <ProgressBar Name="progressBar" Value="100" IsIndeterminate="True" Grid.Row="1" Margin="0,0,0,15" Height="20"/>
-                        <TextBox Grid.Row="2" Name="outputLog" IsReadOnly="True" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Foreground="SteelBlue" TextWrapping="NoWrap" />
-                        <Button Click="ButtonBase_OnClick" Grid.Row="3" Style="{StaticResource LinkButton}" Content="close" HorizontalAlignment="Right"/>
-                    </Grid>
-                </Border>
-            </StackPanel>
+            <Grid Name="connectionDialog" Background="Transparent" IsVisibleChanged="ConnectionDialog_OnIsVisibleChanged" Visibility="Hidden">
+                <StackPanel Margin="15" Background="White" VerticalAlignment="Center" MinHeight="200">
+                    <StackPanel.Effect>
+                        <DropShadowEffect BlurRadius="10" Opacity="0.4" ShadowDepth="0"/>
+                    </StackPanel.Effect>
+                    <Border>
+                        <Grid Margin="20" Height="200">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Margin="0,0,0,15" Style="{StaticResource TextBlock.Big}">Establishing connection with your Octopus Server...</TextBlock>
+                            <ProgressBar Name="progressBar" Value="100" IsIndeterminate="True" Grid.Row="1" Margin="0,0,0,15" Height="20"/>
+                            <TextBox Grid.Row="2" Name="outputLog" IsReadOnly="True" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Foreground="SteelBlue" TextWrapping="NoWrap" />
+                            <Button Click="ButtonBase_OnClick" Grid.Row="3" Style="{StaticResource LinkButton}" Content="close" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Grid>
         </Grid>
-    </Grid>
+    </ScrollViewer>
 </shell:TabView>

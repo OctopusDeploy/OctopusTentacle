@@ -5,10 +5,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
              mc:Ignorable="d" 
+             Name="Root"
+             FontWeight="Normal"
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <StackPanel>
-            <TextBlock Style="{StaticResource TextBlock.Heading}" Text="{Binding Title}" />
+            <TextBlock Style="{StaticResource TextBlock.Heading}" Text="{Binding Title}" Visibility="{Binding ElementName=Root, Path=ShowHeader, Converter={StaticResource Converter.BooleanToVisibility}}"/>
             <TextBlock Style="{StaticResource TextBlock.Subtle}" Text="{Binding Description}" />
 
             <controls:ControlGroup Header="Proxy mode" Target="{Binding ElementName=proxyRadio}">

@@ -10,7 +10,7 @@
     ResizeMode="NoResize"
     Name="_this"
     DataContext="{Binding ElementName=_this}"
-    Background="#f0f0f0"
+    Background="#fff"
     FontSize="10pt"
     TextOptions.TextFormattingMode="Display"
     >
@@ -32,8 +32,8 @@
         </StackPanel>
         
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Create" Width="100" IsDefault="True" Click="SaveClicked" />
-            <Button Content="Cancel" Width="100" Margin="10,0,0,0" IsCancel="True" />
+            <Button Content="CREATE" Width="100" IsDefault="True" Click="SaveClicked" Style="{StaticResource Button.Success}" />
+            <Button Content="CANCEL" Width="100" Margin="10,0,0,0" IsCancel="True" />
         </StackPanel>
     </Grid>
 </Window>

@@ -11,9 +11,8 @@
     Header="Install"
     x:Name="self"
     Style="{StaticResource TabView.Normal}"    
-    RuleSet="Install"
-    >
-    <Grid>
+    RuleSet="Install">
+    <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -28,7 +27,7 @@
                 <ContentControl Name="extraContent" />
 
                 <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                    <Button Click="StartClicked" Style="{StaticResource Button.Success}" Padding="18,8,18,8" FontSize="12pt" FontWeight="Bold" Width="120" Margin="20" Name="startButton" Content="{Binding ElementName=self, Path=ExecuteButtonText}" />
+                    <Button Click="StartClicked" Style="{StaticResource Button.Success}" Padding="18,8,18,8" Width="120" Margin="20" Name="startButton" Content="{Binding ElementName=self, Path=ExecuteButtonText}" />
                     <TextBlock VerticalAlignment="Center" Margin="10,0,0,0">
                         <Hyperlink Click="GenerateScriptClicked">Show script</Hyperlink>
                     </TextBlock>
@@ -37,7 +36,7 @@
 
             <StackPanel Name="successMessage" Visibility="Collapsed">
                 <DockPanel HorizontalAlignment="Center">
-                    <controls:RetinaImage BigImage="/Resources/Images/ok_button@4.png" SmallImage="/Resources/Images/ok_button@2.png" Width="32" Height="32" Margin="10" DockPanel.Dock="Left" />
+                    <controls:RetinaImage BigImage="/Resources/Images/ok_button@4x.png" SmallImage="/Resources/Images/ok_button@2x.png" Width="32" Height="32" Margin="10" DockPanel.Dock="Left" />
 
                     <TextBlock Style="{StaticResource TextBlock.Heading}" Foreground="SeaGreen" VerticalAlignment="Center" Text="{Binding ElementName=self, Path=SuccessMessage}" TextWrapping="NoWrap" />
                 </DockPanel>
@@ -47,6 +46,6 @@
             </StackPanel>
         </StackPanel>
         
-        <TextBox Grid.Row="1" Margin="0,0,0,40" Name="outputLog" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Foreground="#444444" TextWrapping="NoWrap" />
+        <TextBox Grid.Row="1" Margin="0,0,0,40" Name="outputLog" IsReadOnly="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Foreground="#444444" TextWrapping="NoWrap" VerticalAlignment="Stretch"/>
     </Grid>
 </shell:TabView>

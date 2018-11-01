@@ -27,11 +27,11 @@ namespace Octopus.Tentacle.Commands
             this.tentacleConfiguration = tentacleConfiguration;
             this.log = log;
 
-            Options.Add("thumbprint=", "The thumbprint of the Octopus server to configure communication with; if only one Octopus server is configured, this may be omitted", s => serverThumbprint = s);
-            Options.Add("style=", "The communication style to use with the Octopus server - either TentacleActive or TentaclePassive", s => style = s);
-            Options.Add("host=", "When using active communication, the host name of the Octopus server", s => serverHost = s);
-            Options.Add("port=", "When using active communication, the communications port of the Octopus server; the default is " + serverPort, s => serverPort = int.Parse(s));
-            Options.Add("web-socket=", "When using active communication over websockets, the address of the Octopus server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => webSocket = s);
+            Options.Add("thumbprint=", "The thumbprint of the Octopus Server to configure communication with; if only one Octopus Server is configured, this may be omitted", s => serverThumbprint = s);
+            Options.Add("style=", "The communication style to use with the Octopus Server - either TentacleActive or TentaclePassive", s => style = s);
+            Options.Add("host=", "When using active communication, the host name of the Octopus Server", s => serverHost = s);
+            Options.Add("port=", "When using active communication, the communications port of the Octopus Server; the default is " + serverPort, s => serverPort = int.Parse(s));
+            Options.Add("web-socket=", "When using active communication over websockets, the address of the Octopus Server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => webSocket = s);
         }
 
         protected override void Start()
