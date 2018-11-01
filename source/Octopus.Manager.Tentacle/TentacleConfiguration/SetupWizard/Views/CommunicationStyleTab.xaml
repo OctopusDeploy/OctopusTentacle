@@ -51,7 +51,7 @@
 
                     <Border Width="280" Grid.Row="1" Grid.Column="1" Margin="2" Background="#fff3e5" Visibility="{Binding HaveCredentialsBeenVerified, Converter={StaticResource Converter.InverseBooleanToVisibilityConverter}}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Margin="10,0,10,0" Source="../../../Resources/Images/warning@4.png" Width="16" Height="16"/>
+                            <Image Margin="10,0,10,0" Source="../../../Resources/Images/warning@4x.png" Width="16" Height="16"/>
                             <TextBlock Margin="0,5,0,5" Foreground="#fb8c00" FontWeight="Bold" TextWrapping="Wrap" MaxWidth="254">A connection to your Octopus Server is required to setup a Polling Tentacle</TextBlock>
                         </StackPanel>
                     </Border>

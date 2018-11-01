@@ -36,7 +36,7 @@
 
             <StackPanel Name="successMessage" Visibility="Collapsed">
                 <DockPanel HorizontalAlignment="Center">
-                    <controls:RetinaImage BigImage="/Resources/Images/ok_button@4.png" SmallImage="/Resources/Images/ok_button@2.png" Width="32" Height="32" Margin="10" DockPanel.Dock="Left" />
+                    <controls:RetinaImage BigImage="/Resources/Images/ok_button@4x.png" SmallImage="/Resources/Images/ok_button@2x.png" Width="32" Height="32" Margin="10" DockPanel.Dock="Left" />
 
                     <TextBlock Style="{StaticResource TextBlock.Heading}" Foreground="SeaGreen" VerticalAlignment="Center" Text="{Binding ElementName=self, Path=SuccessMessage}" TextWrapping="NoWrap" />
                 </DockPanel>

@@ -41,6 +41,7 @@
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup />
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
@@ -57,6 +58,12 @@
     </Reference>
     <Reference Include="Halibut, Version=4.0.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Halibut.4.0.3\lib\net45\Halibut.dll</HintPath>
+    </Reference>
+    <Reference Include="MaterialDesignColors, Version=1.0.0.14576, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignColors.1.1.1\lib\net45\MaterialDesignColors.dll</HintPath>
+    </Reference>
+    <Reference Include="MaterialDesignThemes.Wpf, Version=2.5.0.1205, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignThemes.2.5.0.1205\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Win32.TaskScheduler, Version=2.7.2.0, Culture=neutral, PublicKeyToken=c416bc1b32d97233, processorArchitecture=MSIL">
       <HintPath>..\packages\TaskScheduler.2.7.2\lib\net40\Microsoft.Win32.TaskScheduler.dll</HintPath>
@@ -433,64 +440,63 @@
     <Resource Include="Resources\Logo-Small-White-Text.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\Images\alert%402.png" />
-    <Resource Include="Resources\Images\alert%404.png" />
-    <Resource Include="Resources\Images\alert-error%402.png" />
-    <Resource Include="Resources\Images\alert-error%404.png" />
+    <Resource Include="Resources\Images\alert%402x.png" />
+    <Resource Include="Resources\Images\alert%404x.png" />
+    <Resource Include="Resources\Images\alert-error%402x.png" />
+    <Resource Include="Resources\Images\alert-error%404x.png" />
     <Resource Include="Resources\Images\alert.png" />
-    <Resource Include="Resources\Images\balloons.png" />
-    <Resource Include="Resources\Images\button_circle_blue_right%402.png" />
+    <Resource Include="Resources\Images\button_circle_blue_right%402x.png" />
     <Resource Include="Resources\Images\button_circle_blue_right.png" />
-    <Resource Include="Resources\Images\button_rounded_green_delete%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_delete%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_delete.png" />
-    <Resource Include="Resources\Images\button_rounded_green_last%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_last%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_last.png" />
-    <Resource Include="Resources\Images\button_rounded_green_next%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_next%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_next.png" />
-    <Resource Include="Resources\Images\button_rounded_green_right%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_right%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_right.png" />
-    <Resource Include="Resources\Images\button_rounded_orange_next%402.png" />
+    <Resource Include="Resources\Images\button_rounded_orange_next%402x.png" />
     <Resource Include="Resources\Images\button_rounded_orange_next.png" />
-    <Resource Include="Resources\Images\clipboard-export%402.png" />
+    <Resource Include="Resources\Images\clipboard-export%402x.png" />
     <Resource Include="Resources\Images\clipboard-export.png" />
-    <Resource Include="Resources\Images\database-export%402.png" />
+    <Resource Include="Resources\Images\database-export%402x.png" />
     <Resource Include="Resources\Images\database-export.png" />
-    <Resource Include="Resources\Images\database-favorite2%402.png" />
-    <Resource Include="Resources\Images\database-favorite2%404.png" />
+    <Resource Include="Resources\Images\database-favorite2%402x.png" />
+    <Resource Include="Resources\Images\database-favorite2%404x.png" />
     <Resource Include="Resources\Images\database-favorite2.png" />
-    <Resource Include="Resources\Images\database-import%402.png" />
+    <Resource Include="Resources\Images\database-import%402x.png" />
     <Resource Include="Resources\Images\database-import.png" />
-    <Resource Include="Resources\Images\database-up%402.png" />
+    <Resource Include="Resources\Images\database-up%402x.png" />
     <Resource Include="Resources\Images\database-up.png" />
-    <Resource Include="Resources\Images\database_restore%402.png" />
+    <Resource Include="Resources\Images\database_restore%402x.png" />
     <Resource Include="Resources\Images\database_restore.png" />
-    <Resource Include="Resources\Images\delete%402.png" />
+    <Resource Include="Resources\Images\delete%402x.png" />
     <Resource Include="Resources\Images\delete.png" />
-    <Resource Include="Resources\Images\help%402.png" />
+    <Resource Include="Resources\Images\help%402x.png" />
     <Resource Include="Resources\Images\help.png" />
-    <Resource Include="Resources\Images\history%402.png" />
+    <Resource Include="Resources\Images\history%402x.png" />
     <Resource Include="Resources\Images\history.png" />
-    <Resource Include="Resources\Images\internet-edit%402.png" />
+    <Resource Include="Resources\Images\internet-edit%402x.png" />
     <Resource Include="Resources\Images\internet-edit.png" />
-    <Resource Include="Resources\Images\internet_browse%402.png" />
+    <Resource Include="Resources\Images\internet_browse%402x.png" />
     <Resource Include="Resources\Images\internet_browse.png" />
-    <Resource Include="Resources\Images\key%402.png" />
+    <Resource Include="Resources\Images\key%402x.png" />
     <Resource Include="Resources\Images\key.png" />
     <Resource Include="Resources\Images\nav_blue_right.png" />
-    <Resource Include="Resources\Images\ok%402.png" />
+    <Resource Include="Resources\Images\ok%402x.png" />
     <Resource Include="Resources\Images\ok.png" />
-    <Resource Include="Resources\Images\ok_button%402.png" />
-    <Resource Include="Resources\Images\ok_button%404.png" />
+    <Resource Include="Resources\Images\ok_button%402x.png" />
+    <Resource Include="Resources\Images\ok_button%404x.png" />
     <Resource Include="Resources\Images\ok_button.png" />
-    <Resource Include="Resources\Images\server_network-internet%402.png" />
+    <Resource Include="Resources\Images\server_network-internet%402x.png" />
     <Resource Include="Resources\Images\server_network-internet.png" />
     <Resource Include="Resources\Images\TentacleActive.png" />
     <Resource Include="Resources\Images\TentaclePassive.png" />
-    <Resource Include="Resources\Images\visitor_man-internet%402.png" />
+    <Resource Include="Resources\Images\visitor_man-internet%402x.png" />
     <Resource Include="Resources\Images\visitor_man-internet.png" />
-    <Resource Include="Resources\Images\warning%402.png" />
-    <Resource Include="Resources\Images\warning%404.png" />
-    <Resource Include="Resources\Images\Warning-ico-dropshadow%402.png" />
+    <Resource Include="Resources\Images\warning%402x.png" />
+    <Resource Include="Resources\Images\warning%404x.png" />
+    <Resource Include="Resources\Images\Warning-ico-dropshadow%402x.png" />
     <Resource Include="Resources\Images\Warning-ico-dropshadow.png" />
     <Resource Include="Resources\Images\warning.png" />
   </ItemGroup>

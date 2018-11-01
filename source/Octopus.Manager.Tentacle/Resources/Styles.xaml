@@ -247,7 +247,7 @@
                     <Border                                 
                         Cursor="Hand"
                         IsHitTestVisible="True"
-                        BorderThickness="2" CornerRadius="4" BorderBrush="White"
+                        BorderThickness="0,0,0,0" CornerRadius="0" BorderBrush="White"
                         Background="Transparent"
                         Name="bd"
                         Focusable="False" />
@@ -266,7 +266,10 @@
         <Setter Property="ItemTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <Border Margin="5,2,5,2"><TextBlock Text="{Binding Path=DisplayName}" />
+                    <Border Margin="5,2,5,2">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock HorizontalAlignment="Left" Text="{Binding Path=DisplayName}" />
+                        </StackPanel>
                     </Border>
                 </DataTemplate>
             </Setter.Value>
@@ -282,7 +285,7 @@
                                 IsChecked="{Binding Path=IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"
                                 ClickMode="Press"
                                 Style="{StaticResource ComboBox.ToggleButtonStyle}" />
-
+                            <Path Margin="5,0,10,0" Fill="#ffffff" Data="M 1 1 L 6 6 L 11 1 Z" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             <ContentControl 
                                 HorizontalContentAlignment="Right"
                                 HorizontalAlignment="Right"
@@ -292,9 +295,12 @@
                                             Content="{TemplateBinding SelectionBoxItem}"
             ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
             ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                Margin="10,5,10,5" />
-                            <Popup Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False">
-                                <Border Background="#E6E9ED" BorderBrush="#AAB2BD" BorderThickness="2" CornerRadius="4" MinWidth="150" Margin="0,0,30,0">
+                                Margin="5,5,20,5" />
+                            <Popup Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" >
+                                <Border Background="#fff" BorderThickness="0" CornerRadius="0" MinWidth="150" Margin="6">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="Black" Direction="320" ShadowDepth="1" BlurRadius="5" Opacity="0.5" />
+                                    </Border.Effect>
                                     <ScrollViewer Margin="4,6,4,6" >
                                         <DockPanel>
                                             <StackPanel KeyboardNavigation.DirectionalNavigation="Contained" >
@@ -346,9 +352,9 @@
 
                                 <ContentPresenter Grid.Column="1" TextBlock.FontSize="9pt"  x:Name="Content" TextBlock.Foreground="#0088CC" ContentSource="Header" TextBlock.TextAlignment="Left" HorizontalAlignment="Left" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
 
-                                <controls:RetinaImage x:Name="PART_IconOk" Visibility="Collapsed" BigImage="/Resources/Images/ok@2.png" SmallImage="/Resources/Images/ok.png" Width="16" Height="16" HorizontalAlignment="Left" Grid.Column="0" />
-                                <controls:RetinaImage x:Name="PART_IconError" Visibility="Collapsed" BigImage="/Resources/Images/delete@2.png" SmallImage="/Resources/Images/delete.png" Width="16" Height="16" HorizontalAlignment="Left" Grid.Column="0" />
-                                <controls:RetinaImage x:Name="PART_IconNavBlueRight" Visibility="Collapsed" BigImage="/Resources/Images/button_circle_blue_right@2.png" SmallImage="/Resources/Images/button_circle_blue_right.png" Width="16" Height="16" HorizontalAlignment="Left" Grid.Column="0" />
+                                <controls:RetinaImage x:Name="PART_IconOk" Visibility="Collapsed" BigImage="/Resources/Images/ok@2x.png" SmallImage="/Resources/Images/ok.png" Width="16" Height="16" HorizontalAlignment="Left" Grid.Column="0" />
+                                <controls:RetinaImage x:Name="PART_IconError" Visibility="Collapsed" BigImage="/Resources/Images/delete@2x.png" SmallImage="/Resources/Images/delete.png" Width="16" Height="16" HorizontalAlignment="Left" Grid.Column="0" />
+                                <controls:RetinaImage x:Name="PART_IconNavBlueRight" Visibility="Collapsed" BigImage="/Resources/Images/button_circle_blue_right@2x.png" SmallImage="/Resources/Images/button_circle_blue_right.png" Width="16" Height="16" HorizontalAlignment="Left" Grid.Column="0" />
                             </Grid>
                         </Border>
                     </Grid>
