@@ -60,16 +60,16 @@ namespace Octopus.Tentacle.Commands
                     {
                         throw new SpaceNotFoundException(spaceName);
                     }
-                    await Deregister(client.ForSpace(space.Id));
+                    await Deregister(client.ForSystem(), client.ForSpace(space.Id));
                 }
                 else
                 {
-                    await Deregister(client.Repository);
+                    await Deregister(client.ForSystem(), client.Repository);
                 }
             }
         }
 
-        public async Task Deregister(IOctopusSpaceAsyncRepository repository)
+        public async Task Deregister(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository)
         {
             // 1. check: do the machine count/allowMultiple checks first to prevent partial trust removal
             var matchingMachines = await repository.Workers.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Commands
             }
 
             // 3. remove the trust from the tentancle cconfiguration
-            var serverThumbprint = (await repository.CertificateConfiguration.GetOctopusCertificate())?.Thumbprint;
+            var serverThumbprint = (await systemRepository.CertificateConfiguration.GetOctopusCertificate())?.Thumbprint;
 
             if (configuration.Value.TrustedOctopusThumbprints.Count(t => t.Equals(serverThumbprint, StringComparison.InvariantCultureIgnoreCase)) == 0)
             {
