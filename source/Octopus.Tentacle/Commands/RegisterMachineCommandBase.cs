@@ -108,7 +108,7 @@ namespace Octopus.Tentacle.Commands
                 if (!string.IsNullOrEmpty(spaceName))
                 {
                     var space = await client.Repository.Spaces.FindByName(spaceName);
-                    if (space != null)
+                    if (space == null)
                     {
                         throw new SpaceNotFoundException(spaceName);
                     }
