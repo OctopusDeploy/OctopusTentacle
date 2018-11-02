@@ -4,7 +4,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Navigation;
+using MaterialDesignThemes.Wpf;
+using Octopus.Manager.Tentacle.Dialogs;
 using Octopus.Manager.Tentacle.Infrastructure;
+using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
@@ -27,11 +30,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             {
                 outputLog.Visibility = outputLog.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
             };
-        }
-
-        void PasswordBox_OnPasswordChanged(object sender, RoutedEventArgs e)
-        {
-            model.Password = PasswordTextBox.Password;
         }
 
         void Navigate(object sender, RequestNavigateEventArgs e)
@@ -87,6 +85,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
         {
             IsNextEnabled = ((Grid) sender).Visibility != Visibility.Visible;
             IsBackEnabled = ((Grid) sender).Visibility != Visibility.Visible;
+        }
+
+        async void ProxyButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            await DialogHost.Show(new ProxyConfigurationControl() {DataContext = model.ProxyWizardModel}, "Tentacle Setup Wizard");
         }
     }
 }

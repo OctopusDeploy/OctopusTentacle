@@ -4,16 +4,19 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     mc:Ignorable="d" 
     x:Class="Octopus.Manager.Tentacle.Shell.ShellView"
     Height="750" Width="1000"
     Title="Octopus Administration Tool" UseLayoutRounding="True"
     FontSize="10pt" TextOptions.TextFormattingMode="Display"
     WindowStartupLocation="CenterScreen"
+    Name="Root"
     d:DataContext="{d:DesignInstance d:Type={x:Type shell:ShellViewModel}}"
     Background="#ffffff"
     >
-    <Grid>
+    <materialDesign:DialogHost Name="DialogHost" >
+        <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -66,4 +69,5 @@
         <ContentControl Name="mainContent" Grid.Row="1" />
 
     </Grid>
+    </materialDesign:DialogHost>
 </Window>

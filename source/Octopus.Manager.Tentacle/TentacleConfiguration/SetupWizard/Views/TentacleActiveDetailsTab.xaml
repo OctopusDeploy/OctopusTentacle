@@ -46,8 +46,8 @@
                         <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one role that this deployment target will provide." />
                     </controls:ControlGroup>
 
-                    <Expander Header="Tenants" IsExpanded="{Binding AreTenantsAvailable}">
-                        <StackPanel>
+                    <Expander Header="Tenants" IsExpanded="{Binding AreTenantsAvailable}" Background="White">
+                        <StackPanel Background="White">
                             <controls:ControlGroup Header="Tenants" 
                                    Target="{Binding ElementName=TenantsAutoCompleteBox}" 
                                    Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">

@@ -1,41 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 using Octopus.Shared.Util;
 
 namespace Octopus.Manager.Tentacle.Dialogs
 {
-    public partial class NewInstanceNameDialog : Window
+    public partial class NewInstanceNameDialog : UserControl
     {
-        readonly HashSet<string> inUse = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
+        public string InstanceName
+        {
+            get => (string)GetValue(InstanceNameProperty);
+            set => SetValue(InstanceNameProperty, value);
+        }
+
+        public static readonly DependencyProperty InstanceNameProperty = DependencyProperty.Register(
+            "InstanceName", typeof(string), typeof(NewInstanceNameDialog), new PropertyMetadata(string.Empty));
+
+        public HashSet<string> ExistingInstanceNames { get; set; }
 
         public NewInstanceNameDialog(IEnumerable<string> existing)
         {
+            ExistingInstanceNames = new HashSet<string>();
+            ExistingInstanceNames.AddRange(existing);
+
             InitializeComponent();
-
-            inUse.AddRange(existing);
-
-            instanceNameBox.Focus();
-        }
-
-        public string InstanceName => instanceNameBox.Text;
-
-        void SaveClicked(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(InstanceName))
-            {
-                MessageBox.Show(this, "Please enter an instance name.", "Instance Name", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(InstanceName))
-            {
-                MessageBox.Show(this, "An instance with this name already exists. Please enter a new instance name.", "Instance Name", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            DialogResult = true;
-            Close();
         }
     }
 }

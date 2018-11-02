@@ -57,13 +57,13 @@ namespace Octopus.Manager.Tentacle.Proxy
 
             if (!proxyConfiguration.UseDefaultProxy && string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyHost))
             {
-                wizardModel.UseNoProxy = true;
+                wizardModel.ProxyConfigType = ProxyConfigType.NoProxy;
             }
             else
             {
                 if (!string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyHost))
                 {
-                    wizardModel.UseCustomProxy = true;
+                    wizardModel.ProxyConfigType = ProxyConfigType.CustomProxy;
                     wizardModel.ProxyPassword = string.Empty;
                     wizardModel.ProxyUsername = proxyConfiguration.CustomProxyUsername;
                     wizardModel.ProxyServerHost = proxyConfiguration.CustomProxyHost;
@@ -71,13 +71,13 @@ namespace Octopus.Manager.Tentacle.Proxy
                 }
                 else if (!string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyUsername))
                 {
-                    wizardModel.UseDefaultProxyCustomCredentials = true;
+                    wizardModel.ProxyConfigType = ProxyConfigType.DefaultProxyCustomCredentials;
                     wizardModel.ProxyPassword = string.Empty;
                     wizardModel.ProxyUsername = proxyConfiguration.CustomProxyUsername;
                 }
                 else
                 {
-                    wizardModel.UseDefaultProxy = true;
+                    wizardModel.ProxyConfigType = ProxyConfigType.DefaultProxy;
                 }
             }
             return wizardModel;

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
              Name="Root"
              FontWeight="Normal"
@@ -13,18 +14,25 @@
             <TextBlock Style="{StaticResource TextBlock.Heading}" Text="{Binding Title}" Visibility="{Binding ElementName=Root, Path=ShowHeader, Converter={StaticResource Converter.BooleanToVisibility}}"/>
             <TextBlock Style="{StaticResource TextBlock.Subtle}" Text="{Binding Description}" />
 
+            <!--
             <controls:ControlGroup Header="Proxy mode" Target="{Binding ElementName=proxyRadio}">
                 <RadioButton Name="proxyRadio" Margin="0,5,0,0" IsChecked="{Binding Path=UseNoProxy, Mode=TwoWay}">Do not use a proxy</RadioButton>
                 <RadioButton Margin="0,10,0,0" IsChecked="{Binding Path=UseDefaultProxy, Mode=TwoWay}">Use the proxy server configured in Internet Explorer</RadioButton>
                 <RadioButton Margin="0,10,0,0" IsChecked="{Binding Path=UseDefaultProxyCustomCredentials, Mode=TwoWay}">Use the proxy server configured in Internet Explorer, with custom credentials</RadioButton>
                 <RadioButton Margin="0,10,0,0" IsChecked="{Binding Path=UseCustomProxy, Mode=TwoWay}">Use a custom proxy server</RadioButton>
-            </controls:ControlGroup>
+            </controls:ControlGroup>-->
 
-            <StackPanel Visibility="{Binding Path=UseDefaultProxyCustomCredentials, Converter={StaticResource Converter.BooleanToVisibility}}">
-                <controls:ControlGroup Header="Proxy username" Target="{Binding ElementName=proxyRadio}">
-                    <TextBox Margin="0,0,0,0" Text="{Binding Path=ProxyUsername}" Width="300" />
-                    <controls:ErrorMessage Margin="0,5,0,0" ErrorPath="ProxyUsername" />
-                </controls:ControlGroup>
+            <ComboBox
+                Margin="0,0,0,20"
+                materialDesign:HintAssist.Hint="Proxy Mode"
+                materialDesign:ComboBoxAssist.ClassicMode="True"
+                Style="{StaticResource MaterialDesignFloatingHintComboBox}" 
+                SelectedValue="{Binding ProxyConfigType, Mode=TwoWay}"
+                ItemsSource="{Binding ProxyConfigTypes, Mode=OneTime}"
+                SelectedValuePath="Key" DisplayMemberPath="Value" Width="150" HorizontalAlignment="Left"/>
+
+            <StackPanel Visibility="{Binding Path=ProxyConfigType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=DefaultProxyCustomCredentials}">
+                <TextBox Margin="0,0,0,0" Text="{Binding Path=ProxyUsername, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="300" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="Proxy username"/>
 
                 <controls:ControlGroup Header="Proxy password" Target="{Binding ElementName=proxyPass}">
                     <controls:PasswordEditor HorizontalAlignment="Left"  x:Name="proxyPass" Password="{Binding Path=ProxyPassword, Mode=TwoWay}" Margin="0,5,0,0" Width="200" />
@@ -32,7 +40,7 @@
                 </controls:ControlGroup>
             </StackPanel>
 
-            <StackPanel Visibility="{Binding Path=UseCustomProxy, Converter={StaticResource Converter.BooleanToVisibility}}">
+            <StackPanel Visibility="{Binding Path=ProxyConfigType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=CustomProxy}">
                 <controls:ControlGroup Header="Proxy Host" Target="{Binding ElementName=ProxyServerHostTextBox}">
                     <TextBox Text="{Binding Path=ProxyServerHost, UpdateSourceTrigger=PropertyChanged}" Name="ProxyServerHostTextBox" Width="300" />
                     <controls:ErrorMessage HorizontalAlignment="Left" Margin="0,5,0,0" ErrorPath="ProxyServerHost" />
