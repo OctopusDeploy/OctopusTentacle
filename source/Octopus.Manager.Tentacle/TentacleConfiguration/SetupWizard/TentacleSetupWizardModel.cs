@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -25,14 +26,19 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         Worker
     }
 
+    public enum AuthMode
+    {
+        UsernamePassword,
+        APIKey
+    }
+
     public class TentacleSetupWizardModel : ViewModel, IScriptableViewModel, IHaveServices
     {
         readonly ApplicationName applicationName;
         CommunicationStyle communicationStyle;
         MachineType machineType;
         string octopusServerUrl;
-        bool useUsernamePasswordAuthMode;
-        bool useApiKeyAuthMode;
+        AuthMode authMode;
         string username;
         string password;
         string apiKey;
@@ -66,6 +72,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public TentacleSetupWizardModel(string selectedInstance, ApplicationName applicationName, ProxyWizardModel proxyWizardModel)
         {
+            AuthModes = new List<KeyValuePair<AuthMode, string>>();
+
+            AuthModes.Add(new KeyValuePair<AuthMode, string>(AuthMode.UsernamePassword, "Username / Password"));
+            AuthModes.Add(new KeyValuePair<AuthMode, string>(AuthMode.APIKey, "API Key"));
+
             SelectedRoles = new ObservableCollection<string>();
             SelectedEnvironments = new ObservableCollection<string>();
             SelectedTenants = new ObservableCollection<string>();
@@ -86,7 +97,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
             OctopusServerUrl = "http://";
             ListenPort = "10933";
-            UseUsernamePasswordAuthMode = true;
             Username = string.Empty;
             ApiKey = string.Empty;
             MachineName = Environment.MachineName;
@@ -102,6 +112,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             FirewallExceptionPossible = Environment.OSVersion.Platform != PlatformID.Win32NT ||
                 Environment.OSVersion.Version.Major > 5;
         }
+
+        public List<KeyValuePair<AuthMode, string>> AuthModes { get; }
 
         public bool ShowMachinePolicySelection { get; private set; } = false;
         public string InstanceName { get; private set; }
@@ -153,6 +165,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 if (value == applicationInstallDirectory) return;
                 applicationInstallDirectory = value;
                 OnPropertyChanged();
+            }
+        }
+
+        public AuthMode AuthMode
+        {
+            get => authMode;
+            set
+            {
+                if (value == authMode) return;
+                authMode = value;
+                OnPropertyChanged("AuthMode");
             }
         }
 
@@ -209,38 +232,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 octopusServerUrl = value;
                 OnPropertyChanged();
                 HaveCredentialsBeenVerified = false;
-            }
-        }
-
-        void ClearAuthModeOption()
-        {
-            useUsernamePasswordAuthMode = false;
-            useApiKeyAuthMode = false;
-        }
-
-        public bool UseUsernamePasswordAuthMode
-        {
-            get => useUsernamePasswordAuthMode;
-            set
-            {
-                if (value.Equals(useUsernamePasswordAuthMode)) return;
-                ClearAuthModeOption();
-                useUsernamePasswordAuthMode = value;
-                HaveCredentialsBeenVerified = false;
-                OnPropertyChanged();
-            }
-        }
-        
-        public bool UseApiKeyAuthMode
-        {
-            get => useApiKeyAuthMode;
-            set
-            {
-                if (value.Equals(useApiKeyAuthMode)) return;
-                ClearAuthModeOption();
-                useApiKeyAuthMode = value;
-                HaveCredentialsBeenVerified = false;
-                OnPropertyChanged();
             }
         }
 
@@ -479,7 +470,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             try
             {
                 OctopusServerEndpoint endpoint = null;
-                if (useApiKeyAuthMode == true)
+                if (authMode == AuthMode.APIKey)
                 {
                     endpoint = new OctopusServerEndpoint(OctopusServerUrl, apiKey, credentials: null);
                 }
@@ -488,7 +479,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     endpoint = new OctopusServerEndpoint(OctopusServerUrl);
                 }
 
-                if (!ProxyWizardModel.UseNoProxy)
+                if (ProxyWizardModel.ProxyConfigType != ProxyConfigType.NoProxy)
                 {
                     var proxy = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyServerHost)
                         ? WebRequest.GetSystemWebProxy()
@@ -509,7 +500,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     var root = repository.Client.RootDocument;
                     logger.Info("Connected successfully, Octopus Server version: " + root.Version);
 
-                    if (UseUsernamePasswordAuthMode == true)
+                    if (AuthMode == AuthMode.UsernamePassword)
                     {
                         logger.Info($"Authenticating as {username}...");
                         await repository.Users.SignIn(new LoginCommand { Username = username, Password = password });
@@ -588,10 +579,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             validator.RuleSet("TentacleActive", delegate
             {
                 validator.RuleFor(m => m.OctopusServerUrl).Must(BeAValidUrl).WithMessage("Please enter a valid Octopus Server URL");
-                validator.RuleFor(m => m.ApiKey).NotEmpty().WithMessage("Please enter your API key").When(t => t.UseApiKeyAuthMode == true);
-                validator.RuleFor(m => m.ApiKey).Must(s => s.StartsWith("API-")).WithMessage("The API key you provided doesn't start with \"API-\" as expected. It's possible you've copied the wrong thing from the Octopus Portal.").When(t => t.UseApiKeyAuthMode == true);
-                validator.RuleFor(m => m.Username).NotEmpty().WithMessage("Please enter your username").When(t => t.UseUsernamePasswordAuthMode == true);
-                validator.RuleFor(m => m.Password).NotEmpty().WithMessage("Please enter your password").When(t => t.UseUsernamePasswordAuthMode == true);
+                validator.RuleFor(m => m.ApiKey).NotEmpty().WithMessage("Please enter your API key").When(t => t.AuthMode == AuthMode.APIKey);
+                validator.RuleFor(m => m.ApiKey).Must(s => s.StartsWith("API-")).WithMessage("The API key you provided doesn't start with \"API-\" as expected. It's possible you've copied the wrong thing from the Octopus Portal.").When(t => t.AuthMode == AuthMode.APIKey);
+                validator.RuleFor(m => m.Username).NotEmpty().WithMessage("Please enter your username").When(t => t.AuthMode == AuthMode.UsernamePassword);
+                validator.RuleFor(m => m.Password).NotEmpty().WithMessage("Please enter your password").When(t => t.AuthMode == AuthMode.UsernamePassword);
             });
             validator.RuleSet("TentaclePassive", delegate
             {
@@ -662,7 +653,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 if (!string.IsNullOrWhiteSpace(serverWebSocket))
                     register = register.Argument("server-web-socket", serverWebSocket);
 
-                if (useApiKeyAuthMode == true)
+                if (authMode == AuthMode.APIKey)
                     register.Argument("apiKey", apiKey);
                 else
                     register.Argument("username", username)
