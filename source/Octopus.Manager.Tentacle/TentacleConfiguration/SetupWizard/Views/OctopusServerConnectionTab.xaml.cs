@@ -89,7 +89,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 
         async void ProxyButton_OnClick(object sender, RoutedEventArgs e)
         {
-            await DialogHost.Show(new ProxyConfigurationControl() {DataContext = model.ProxyWizardModel}, "Tentacle Setup Wizard");
+            await DialogHost.Show(new ProxyConfigurationDialog() {DataContext = model.ProxyWizardModel}, "Tentacle Setup Wizard");
         }
     }
 }
