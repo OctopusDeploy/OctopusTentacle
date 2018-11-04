@@ -5,7 +5,7 @@ using Octopus.Shared.Util;
 namespace Octopus.Tentacle.Configuration
 {
     /// <summary>
-    /// Describes an Octopus server that the Tentacle communicates with.
+    /// Describes an Octopus Server that the Tentacle communicates with.
     /// </summary>
     public class OctopusServerConfiguration
     {

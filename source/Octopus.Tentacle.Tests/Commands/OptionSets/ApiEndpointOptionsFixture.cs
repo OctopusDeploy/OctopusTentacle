@@ -25,12 +25,12 @@ namespace Octopus.Tentacle.Tests.Commands.OptionSets
         [TestCase("server", null  , "password", "apikey", "Please specify a username and password, or an Octopus API key - not both.")]
         [TestCase("server", null  , null      , "apikey", null)]
         [TestCase(null    , "user", null      , null    , "Please specify a password for the specified user account")]
-        [TestCase(null    , "user", "password", null    , "Please specify an Octopus server, e.g., --server=http://your-octopus-server")]
+        [TestCase(null    , "user", "password", null    , "Please specify an Octopus Server, e.g., --server=http://your-octopus-server")]
         [TestCase(null    , null  , "password", null    , "Please specify a username for the specified password")]
         [TestCase(null    , "user", "password", "apikey", "Please specify a username and password, or an Octopus API key - not both.")]
         [TestCase(null    , "user", null      , "apikey", "Please specify a username and password, or an Octopus API key - not both.")]
         [TestCase(null    , null  , "password", "apikey", "Please specify a username and password, or an Octopus API key - not both.")]
-        [TestCase(null    , null  , null      , "apikey", "Please specify an Octopus server, e.g., --server=http://your-octopus-server")]
+        [TestCase(null    , null  , null      , "apikey", "Please specify an Octopus Server, e.g., --server=http://your-octopus-server")]
         public void ValidationIsCorrectWhenOptional(string server, string username, string password, string apiKey, string expectedExceptionMessage)
         {
             var optionSet = new OptionSet();
@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Tests.Commands.OptionSets
         }
 
         [Test]
-        [TestCase(null, null, null, null, "Please specify an Octopus server, e.g., --server=http://your-octopus-server")]
+        [TestCase(null, null, null, null, "Please specify an Octopus Server, e.g., --server=http://your-octopus-server")]
         [TestCase("server", null, null, null, "Please specify a username and password, or an Octopus API key. You can get an API key from the Octopus web portal. E.g., --apiKey=ABC1234")]
         [TestCase("server", "user", null, null, "Please specify a password for the specified user account")]
         [TestCase("server", "user", "password", null, null)]
@@ -80,12 +80,12 @@ namespace Octopus.Tentacle.Tests.Commands.OptionSets
         [TestCase("server", null, "password", "apikey", "Please specify a username and password, or an Octopus API key - not both.")]
         [TestCase("server", null, null, "apikey", null)]
         [TestCase(null, "user", null, null, "Please specify a password for the specified user account")]
-        [TestCase(null, "user", "password", null, "Please specify an Octopus server, e.g., --server=http://your-octopus-server")]
+        [TestCase(null, "user", "password", null, "Please specify an Octopus Server, e.g., --server=http://your-octopus-server")]
         [TestCase(null, null, "password", null, "Please specify a username for the specified password")]
         [TestCase(null, "user", "password", "apikey", "Please specify a username and password, or an Octopus API key - not both.")]
         [TestCase(null, "user", null, "apikey", "Please specify a username and password, or an Octopus API key - not both.")]
         [TestCase(null, null, "password", "apikey", "Please specify a username and password, or an Octopus API key - not both.")]
-        [TestCase(null, null, null, "apikey", "Please specify an Octopus server, e.g., --server=http://your-octopus-server")]
+        [TestCase(null, null, null, "apikey", "Please specify an Octopus Server, e.g., --server=http://your-octopus-server")]
         public void ValidationIsCorrectWhenMandatory(string server, string username, string password, string apiKey, string expectedExceptionMessage)
         {
             var optionSet = new OptionSet();

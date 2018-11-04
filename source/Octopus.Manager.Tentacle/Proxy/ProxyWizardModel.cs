@@ -20,7 +20,7 @@ namespace Octopus.Manager.Tentacle.Proxy
         protected override string Command => "polling-proxy";
         public override string Header => "Polling Proxy";
         public override string Title => "Polling Tentacle Proxy Settings";
-        public override string Description => "Settings for the proxy that this Tentacle will use to connect to the Octopus server.";
+        public override string Description => "Settings for the proxy that this Tentacle will use to connect to the Octopus Server.";
     }
 
     public class ProxyWizardModel : ViewModel, IScriptableViewModel
