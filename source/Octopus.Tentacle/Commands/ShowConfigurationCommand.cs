@@ -174,13 +174,11 @@ namespace Octopus.Tentacle.Commands
         {
             var environments = await repository.Environments.FindAll();
             outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
-            var tenantsStatus = await repository.Tenants.Status();
-            if (tenantsStatus.Enabled)
-            {
-                var tenants = await repository.Tenants.FindAll();
-                outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
-                outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
-            }
+
+            var tenants = await repository.Tenants.FindAll();
+            outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+            outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
+
             outputStore.Set("Tentacle.Roles", machine.Roles);
             var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
             outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
