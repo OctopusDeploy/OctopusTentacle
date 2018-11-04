@@ -30,6 +30,7 @@ namespace Octopus.Tentacle.Commands
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly ILog log;
+        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
         string spaceName;
 
         public override bool SuppressConsoleLogging => true;
@@ -41,7 +42,8 @@ namespace Octopus.Tentacle.Commands
             Lazy<IWatchdog> watchdog,
             IProxyConfigParser proxyConfig,
             IOctopusClientInitializer octopusClientInitializer,
-            ILog log) : base(instanceSelector)
+            ILog log,
+            ISpaceRepositoryFactory spaceRepositoryFactory) : base(instanceSelector)
         {
             this.instanceSelector = instanceSelector;
             this.fileSystem = fileSystem;
@@ -50,6 +52,7 @@ namespace Octopus.Tentacle.Commands
             this.proxyConfig = proxyConfig;
             this.octopusClientInitializer = octopusClientInitializer;
             this.log = log;
+            this.spaceRepositoryFactory = spaceRepositoryFactory;
 
             Options.Add("file=", "Exports the server configuration to a file. If not specified output goes to the console", v => file = v);
             Options.Add("space=", "The space from which the server data configuration will be retrieved for, - e.g. 'Default' where Default is the name of an existing space; the default is the default space", s => spaceName = s);
@@ -121,10 +124,8 @@ namespace Octopus.Tentacle.Commands
             {
                 using (var client = await octopusClientInitializer.CreateClient(apiEndpointOptions, proxyOverride))
                 {
-                    var space = await GetSpace(client);
-                    if (space == null)
-                        return;
-                    var repository = client.ForSpace(space.Id);
+                    var repository = await CreateSpaceRepository(client);
+                    if (repository == null) return;
                     var matchingMachines = await repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
 
                     switch (matchingMachines.Count)
@@ -155,14 +156,17 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException(ex.Message, ex);
             }
 
-            async Task<SpaceResource> GetSpace(IOctopusAsyncClient client)
+            async Task<IOctopusSpaceAsyncRepository> CreateSpaceRepository(IOctopusAsyncClient client)
             {
-                if (!string.IsNullOrEmpty(spaceName))
+                try
                 {
-                    return await client.Repository.Spaces.FindByName(spaceName);
+                    return await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
                 }
-
-                return await client.Repository.Spaces.FindOne(s => s.IsDefault == true);
+                catch (DefaultSpaceDisabledException)
+                {
+                    // If the default space is disabled, we simply want to exclude the space specific values, rather than error out
+                    return null;
+                }
             }
         }
 

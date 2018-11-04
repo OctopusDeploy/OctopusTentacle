@@ -47,7 +47,8 @@ namespace Octopus.Tentacle.Tests.Commands
                                                    log, 
                                                    Substitute.For<IApplicationInstanceSelector>(), 
                                                    proxyConfig,
-                                                   Substitute.For<IOctopusClientInitializer>());
+                                                   Substitute.For<IOctopusClientInitializer>(),
+                                                   new SpaceRepositoryFactory());
 
             var matchingMachines = new List<MachineResource>
             {
@@ -75,7 +76,8 @@ namespace Octopus.Tentacle.Tests.Commands
                                                    log, 
                                                    Substitute.For<IApplicationInstanceSelector>(),
                                                    proxyConfig,
-                                                   Substitute.For<IOctopusClientInitializer>());
+                                                   Substitute.For<IOctopusClientInitializer>(), 
+                                                   new SpaceRepositoryFactory());
 
             const string machineName = "MachineToBeDeleted";
             var matchingMachines = new List<MachineResource>
@@ -105,7 +107,8 @@ namespace Octopus.Tentacle.Tests.Commands
                                                    log,
                                                    Substitute.For<IApplicationInstanceSelector>(),
                                                    proxyConfig,
-                                                   Substitute.For<IOctopusClientInitializer>());
+                                                   Substitute.For<IOctopusClientInitializer>(),
+                                                   new SpaceRepositoryFactory());
 
             asyncRepository.CertificateConfiguration.GetOctopusCertificate()
                 .ReturnsForAnyArgs(new CertificateConfigurationResource { Thumbprint = expectedThumbPrint }.AsTask());

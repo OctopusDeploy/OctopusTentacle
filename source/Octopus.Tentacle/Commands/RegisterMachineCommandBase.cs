@@ -26,6 +26,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IOctopusServerChecker> octopusServerChecker;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
+        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
 
         readonly ILog log;
         readonly ApiEndpointOptions api;
@@ -46,7 +47,8 @@ namespace Octopus.Tentacle.Commands
             IApplicationInstanceSelector selector,
             Lazy<IOctopusServerChecker> octopusServerChecker,
             IProxyConfigParser proxyConfig,
-            IOctopusClientInitializer octopusClientInitializer)
+            IOctopusClientInitializer octopusClientInitializer,
+            ISpaceRepositoryFactory spaceRepositoryFactory)
             : base(selector)
         {
             this.lazyRegisterMachineOperation = lazyRegisterMachineOperation;
@@ -55,6 +57,7 @@ namespace Octopus.Tentacle.Commands
             this.octopusServerChecker = octopusServerChecker;
             this.proxyConfig = proxyConfig;
             this.octopusClientInitializer = octopusClientInitializer;
+            this.spaceRepositoryFactory = spaceRepositoryFactory;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
 
@@ -105,19 +108,8 @@ namespace Octopus.Tentacle.Commands
 
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
-                if (!string.IsNullOrEmpty(spaceName))
-                {
-                    var space = await client.Repository.Spaces.FindByName(spaceName);
-                    if (space == null)
-                    {
-                        throw new SpaceNotFoundException(spaceName);
-                    }
-                    await RegisterMachine(client.ForSystem(), client.ForSpace(space.Id), serverAddress, sslThumbprint, communicationStyle);
-                }
-                else
-                {
-                    await RegisterMachine(client.ForSystem(), client.Repository, serverAddress, sslThumbprint, communicationStyle);
-                }
+                var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
+                await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle);
             }
         }
 

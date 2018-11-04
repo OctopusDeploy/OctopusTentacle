@@ -62,7 +62,8 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IApplicationInstanceSelector>(),
                 new Lazy<IOctopusServerChecker>(() => serverChecker),
                 new ProxyConfigParser(),
-                octopusClientInitializer);
+                octopusClientInitializer,
+                new SpaceRepositoryFactory());
 
             configuration.ServicesPortNumber.Returns(90210);
             certificate = new CertificateGenerator().GenerateNew("CN=Hello", new Shared.Diagnostics.NullLog());
