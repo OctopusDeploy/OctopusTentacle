@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Commands
 
     public class DefaultSpaceDisabledException : Exception
     {
-        public DefaultSpaceDisabledException() : base($"No \"space\" was specified, and the default space is disabled. Please select a space using the \"space\" parameter.")
+        public DefaultSpaceDisabledException() : base($"No \"space\" was specified, and the default space is disabled or inaccessible to this user. Please select a space using the \"space\" parameter.")
         {
         }
     }
