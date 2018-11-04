@@ -22,8 +22,9 @@ namespace Octopus.Tentacle.Commands
             IApplicationInstanceSelector selector,
             Lazy<IOctopusServerChecker> octopusServerChecker,
             IProxyConfigParser proxyConfig,
-            IOctopusClientInitializer octopusClientInitializer)
-            : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer)
+            IOctopusClientInitializer octopusClientInitializer,
+            ISpaceRepositoryFactory spaceRepositoryFactory)
+            : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory)
         {
             Options.Add("workerpool=", "The worker pool name to add the machine to - e.g., 'Windows Pool'; specify this argument multiple times to add to multiple pools", s => workerpoolNames.Add(s));
         }

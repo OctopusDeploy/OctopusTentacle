@@ -19,6 +19,7 @@ namespace Octopus.Tentacle.Commands
         bool allowMultiple;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
+        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
         string spaceName;
 
         public const string ThumbprintNotFoundMsg = "The server you supplied did not match the thumbprint stored in the configuration for this tentacle.";
@@ -29,13 +30,15 @@ namespace Octopus.Tentacle.Commands
             ILog log,
             IApplicationInstanceSelector selector,
             IProxyConfigParser proxyConfig,
-            IOctopusClientInitializer octopusClientInitializer)
+            IOctopusClientInitializer octopusClientInitializer,
+            ISpaceRepositoryFactory spaceRepositoryFactory)
             : base(selector)
         {
             this.configuration = configuration;
             this.log = log;
             this.proxyConfig = proxyConfig;
             this.octopusClientInitializer = octopusClientInitializer;
+            this.spaceRepositoryFactory = spaceRepositoryFactory;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
             Options.Add("m|multiple", "Deregister all workers that use the same thumbprint", s => allowMultiple = true);
@@ -53,19 +56,8 @@ namespace Octopus.Tentacle.Commands
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
-                if (!string.IsNullOrEmpty(spaceName))
-                {
-                    var space = await client.Repository.Spaces.FindByName(spaceName);
-                    if (space == null)
-                    {
-                        throw new SpaceNotFoundException(spaceName);
-                    }
-                    await Deregister(client.ForSystem(), client.ForSpace(space.Id));
-                }
-                else
-                {
-                    await Deregister(client.ForSystem(), client.Repository);
-                }
+                var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
+                await Deregister(client.ForSystem(), spaceRepository);
             }
         }
 
