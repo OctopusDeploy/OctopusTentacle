@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Octopus.Client;
@@ -161,13 +162,20 @@ namespace Octopus.Tentacle.Commands
             var environments = await repository.Environments.FindAll();
             outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
 
-            var tenants = await repository.Tenants.FindAll();
-            outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
-            outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
+            if (await repository.HasLink("Tenants"))
+            {
+                var tenants = await repository.Tenants.FindAll();
+                outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+                outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
+            }
 
             outputStore.Set("Tentacle.Roles", machine.Roles);
-            var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
-            outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
+            if (machine.MachinePolicyId != null)
+            {
+                var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
+                outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
+            }
+            
             outputStore.Set<string>("Tentacle.DisplayName", machine.Name);
             if (machine.Endpoint is ListeningTentacleEndpointResource)
                 outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
