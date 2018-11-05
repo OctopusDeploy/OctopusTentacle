@@ -124,8 +124,7 @@ namespace Octopus.Tentacle.Commands
             {
                 using (var client = await octopusClientInitializer.CreateClient(apiEndpointOptions, proxyOverride))
                 {
-                    var repository = await CreateSpaceRepository(client);
-                    if (repository == null) return;
+                    var repository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
                     var matchingMachines = await repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
 
                     switch (matchingMachines.Count)
@@ -154,19 +153,6 @@ namespace Octopus.Tentacle.Commands
             {
                 log.Warn(ex, $"Error authenticationg with server '{apiEndpointOptions.Server}'.");
                 throw new ControlledFailureException(ex.Message, ex);
-            }
-
-            async Task<IOctopusSpaceAsyncRepository> CreateSpaceRepository(IOctopusAsyncClient client)
-            {
-                try
-                {
-                    return await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
-                }
-                catch (DefaultSpaceDisabledException)
-                {
-                    // If the default space is disabled, we simply want to exclude the space specific values, rather than error out
-                    return null;
-                }
             }
         }
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Client;
 using Octopus.Client.Operations;
 using Octopus.Diagnostics;
 using Octopus.Shared;
@@ -35,7 +34,7 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException("Please specify a worker pool name, e.g., --workerpool=Default");
         }
 
-        protected override void EnhanceOperation(IOctopusSpaceAsyncRepository repository, IRegisterWorkerOperation registerOperation)
+        protected override void EnhanceOperation(IRegisterWorkerOperation registerOperation)
         {
             registerOperation.WorkerPoolNames = workerpoolNames.ToArray();
         }

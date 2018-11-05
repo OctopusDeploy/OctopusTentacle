@@ -149,7 +149,7 @@ namespace Octopus.Tentacle.Commands
             registerMachineOperation.CommunicationStyle = communicationStyle;
             registerMachineOperation.TentacleThumbprint = configuration.Value.TentacleCertificate.Thumbprint;
 
-            EnhanceOperation(repository, registerMachineOperation);
+            EnhanceOperation(registerMachineOperation);
 
             await registerMachineOperation.ExecuteAsync(repository);
 
@@ -160,7 +160,7 @@ namespace Octopus.Tentacle.Commands
         }
 
         protected abstract void CheckArgs();
-        protected abstract void EnhanceOperation(IOctopusSpaceAsyncRepository repository, TRegistrationOperationType registerOperation);
+        protected abstract void EnhanceOperation(TRegistrationOperationType registerOperation);
 
         async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri serverAddress, string sslThumbprint)
         {
