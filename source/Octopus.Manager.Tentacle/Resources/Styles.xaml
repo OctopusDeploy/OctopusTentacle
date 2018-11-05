@@ -5,7 +5,7 @@
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
     xmlns:converters="clr-namespace:Octopus.Manager.Tentacle.Converters">
 
-    <FontFamily x:Key="MaterialDesignFont">pack://application:,,,/Resources/Fonts/#Roboto</FontFamily>
+    <FontFamily x:Key="MaterialDesignFont">pack://application:,,,/MaterialDesignThemes.Wpf;component/Resources/Roboto/#Roboto</FontFamily>
 
     <Style TargetType="{x:Type TextBlock}">
         <Setter Property="FontFamily" Value="{StaticResource MaterialDesignFont}"/>

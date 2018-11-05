@@ -205,7 +205,6 @@
     <Compile Include="Controls\RetinaImage.cs" />
     <Compile Include="Controls\ServiceWatcher.cs" />
     <Compile Include="Controls\TaggingAutoCompleteBox.cs" />
-    <Compile Include="Controls\WatermarkService.cs" />
     <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\BooleanToYesNoConverter.cs" />
     <Compile Include="Converters\EnumBooleanConverter.cs" />
@@ -240,6 +239,7 @@
     <Compile Include="PreReq\PrerequisiteCheckResult.cs" />
     <Compile Include="PreReq\PreReqWindow.cs" />
     <Compile Include="PreReq\TentaclePrerequisiteProfile.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Proxy\ProxyConfigurationControl.xaml.cs">
       <DependentUpon>ProxyConfigurationControl.xaml</DependentUpon>
     </Compile>

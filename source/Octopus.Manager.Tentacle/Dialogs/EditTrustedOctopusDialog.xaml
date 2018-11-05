@@ -30,7 +30,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Thumbprint:" />
-            <TextBox Grid.Row="0" Grid.Column="1" Name="thumbprintText" FontFamily="Consolas" FontSize="11pt" FontWeight="Bold" Margin="0,0,0,10" />
+            <TextBox Grid.Row="0" Grid.Column="1" Name="thumbprintText" FontSize="11pt" FontWeight="Bold" Margin="0,0,0,10" />
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Communication Style:" />
             <ComboBox Grid.Row="1" Grid.Column="1" Name="style" Margin="0,0,0,10" SelectionChanged="Style_OnSelectionChanged">
                 <ComboBoxItem Tag="Listen">Listen</ComboBoxItem>

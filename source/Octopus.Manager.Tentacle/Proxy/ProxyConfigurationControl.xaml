@@ -43,15 +43,15 @@
                         <TextBox Text="{Binding Path=ProxyServerHost, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="Proxy Host" Name="ProxyServerHostTextBox" />
 
                         <TextBlock  Text="DNS hostname of the Proxy server. Examples:" Style="{StaticResource TextBlock.Subtle}"/>
-                        <TextBlock  Style="{StaticResource TextBlock.Subtle}" FontFamily="Courier New" Margin="20,0,0,0">
+                        <TextBlock  Style="{StaticResource TextBlock.Subtle}" Margin="20,0,0,0">
                         <Run Text="•"/>    
                         <Run Text=" 10.0.0.1 " Style="{StaticResource TextBlock.Example}"/>
                         </TextBlock>
-                        <TextBlock  Style="{StaticResource TextBlock.Subtle}" FontFamily="Courier New" Margin="20,0,0,0">
+                        <TextBlock  Style="{StaticResource TextBlock.Subtle}" Margin="20,0,0,0">
                         <Run Text="•"/>    
                         <Run Text=" web01.local " Style="{StaticResource TextBlock.Example}"/>
                         </TextBlock>
-                        <TextBlock  Style="{StaticResource TextBlock.Subtle}" FontFamily="Courier New" Margin="20,0,0,0">
+                        <TextBlock  Style="{StaticResource TextBlock.Subtle}" Margin="20,0,0,0">
                         <Run Text="•"/>    
                         <Run Text=" web01.mynetwork.com " Style="{StaticResource TextBlock.Example}"/>
                         </TextBlock>
