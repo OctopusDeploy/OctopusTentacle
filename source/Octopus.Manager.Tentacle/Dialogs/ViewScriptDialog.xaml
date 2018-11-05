@@ -10,6 +10,6 @@
     Height="300"
     >
     <Grid>
-        <TextBox Name="ScriptTextBox" FontFamily="Consolas" Background="White" Foreground="SteelBlue" TextWrapping="NoWrap" Padding="10" FontSize="11pt" IsReadOnly="True" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" />
+        <TextBox Name="ScriptTextBox" Background="White" Foreground="SteelBlue" TextWrapping="NoWrap" Padding="10" FontSize="11pt" IsReadOnly="True" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" />
     </Grid>
 </Window>

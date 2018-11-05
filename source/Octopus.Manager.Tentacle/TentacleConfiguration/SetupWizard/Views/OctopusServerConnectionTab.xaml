@@ -75,7 +75,7 @@
                             </Grid.RowDefinitions>
                             <TextBlock Margin="0,0,0,15" Style="{StaticResource TextBlock.Big}">Establishing connection with your Octopus Server...</TextBlock>
                             <ProgressBar Name="progressBar" Value="100" IsIndeterminate="True" Grid.Row="1" Margin="0,0,0,15" Height="20"/>
-                            <TextBox Grid.Row="2" Name="outputLog" IsReadOnly="True" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Foreground="SteelBlue" TextWrapping="NoWrap" />
+                            <TextBox Grid.Row="2" Name="outputLog" IsReadOnly="True" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Foreground="SteelBlue" TextWrapping="NoWrap" />
                             <Button Click="ButtonBase_OnClick" Grid.Row="3" Style="{StaticResource LinkButton}" Content="close" HorizontalAlignment="Right"/>
                         </Grid>
                     </Border>

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
              Name="Root"
              Width="350">
@@ -70,18 +71,8 @@
             </ItemsControl.ItemsPanel>
         </ItemsControl>
         <Grid Grid.Row="1" HorizontalAlignment="Stretch">
-            <TextBox Padding="0,1" Name="TextBox" FontSize="12" Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus" TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown" PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center" HorizontalAlignment="Stretch">
-                <TextBox.Resources>
-                    <DiscreteObjectKeyFrame x:Key="Watermark" 
-                                            Value="{Binding Path=Watermark, 
-                                            RelativeSource={RelativeSource FindAncestor,
-                                            AncestorType=controls:AutoCompleteTagControl}}"/>
-                </TextBox.Resources>
-                <controls:WatermarkService.Watermark>
-                    <TextBlock FontSize="12" Margin="3,0,0,0"  Text="{Binding Value, Source={StaticResource Watermark}}"/>
-                </controls:WatermarkService.Watermark>
-            </TextBox>
-            <Popup Name="SuggestionsPopup" AllowsTransparency="True" IsOpen="False" StaysOpen="True">
+            <TextBox Padding="0,1" Name="TextBox" FontSize="12" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="{Binding Watermark, ElementName=Root}" Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus" TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown" PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center" HorizontalAlignment="Stretch"/>
+                <Popup Name="SuggestionsPopup" AllowsTransparency="True" IsOpen="False" StaysOpen="True">
                 <Border BorderThickness="1" Width="{Binding ElementName=TextBox, Path=ActualWidth}" Background="White">
                     <Border.BorderBrush>
                         <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">

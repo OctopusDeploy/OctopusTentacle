@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using Octopus.Manager.Tentacle.Annotations;
 using Octopus.Manager.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.Controls
@@ -76,7 +79,7 @@ namespace Octopus.Manager.Tentacle.Controls
     /// <summary>
     /// Interaction logic for AutoCompleteTagControl.xaml
     /// </summary>
-    public partial class AutoCompleteTagControl : UserControl
+    public partial class AutoCompleteTagControl : UserControl, INotifyPropertyChanged
     {
         public ICommand RemoveCommand { get; }
         public ICommand EnterCommand { get; }
@@ -121,15 +124,33 @@ namespace Octopus.Manager.Tentacle.Controls
         }
 
         public static readonly DependencyProperty TagNameProperty = DependencyProperty.Register(
-            "TagName", typeof(string), typeof(AutoCompleteTagControl), new PropertyMetadata("tag"));
+            "TagName", typeof(string), typeof(AutoCompleteTagControl), new PropertyMetadata("tag", TagPropertyChangedCallback));
 
-        public bool CanCreateNewTags { get; set; }
+        static void TagPropertyChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is AutoCompleteTagControl c)
+            {
+                c.OnAutoCompleteTagControl();
+            }
+        }
 
-        public string Watermark => CanCreateNewTags ? $"{TagName.FirstCharToUpper()} (type to add a new {TagName})" : $"Select {TagName.ToLower()}";
+        public bool CanCreateNewTags
+        {
+            get => canCreateNewTags;
+            set
+            {
+                if (value == canCreateNewTags) return;
+                canCreateNewTags = value;
+                OnPropertyChanged(nameof(Watermark));
+            }
+        }
+
+        public string Watermark => CanCreateNewTags ? $"{TagName.FirstCharToUpper()} (type to add new {TagName})" : $"Select {TagName.ToLower()}";
 
         public CollectionViewSource FilteredSuggestedTags { get; }
 
         List<SuggestedTagContainer> InternalSuggestedTags  = new List<SuggestedTagContainer>();
+        bool canCreateNewTags;
 
         public AutoCompleteTagControl()
         {
@@ -147,6 +168,10 @@ namespace Octopus.Manager.Tentacle.Controls
             InitializeComponent();
         }
 
+        protected virtual void OnAutoCompleteTagControl()
+        {
+            OnPropertyChanged(nameof(Watermark));
+        }
 
         void ViewOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -290,6 +315,14 @@ namespace Octopus.Manager.Tentacle.Controls
         void TextBox_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             SuggestionsPopup.IsOpen = true;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 

@@ -7,8 +7,6 @@ namespace Octopus.Manager.Tentacle.Dialogs
         public SetPasswordDialog()
         {
             InitializeComponent();
-
-            password.Focus();
         }
 
         public string Password => password.Password;
