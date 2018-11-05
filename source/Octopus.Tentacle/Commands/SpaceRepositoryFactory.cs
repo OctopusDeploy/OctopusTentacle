@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Octopus.Client;
+using Octopus.Shared;
 using Octopus.Shared.Properties;
 
 namespace Octopus.Tentacle.Commands
@@ -18,13 +19,13 @@ namespace Octopus.Tentacle.Commands
             {
                 if (!await SupportsSpaces(client))
                 {
-                    throw new SpacesNotSupportedException(spaceName);
+                    throw new ControlledFailureException($"A space with name \"{spaceName}\" was requested, but this version of Octopus Server does not support spaces. Please upgrade Octopus Server to a version which supports spaces, or remove the \"space\" parameter.");
                 }
 
                 var space = await client.Repository.Spaces.FindByName(spaceName);
                 if (space == null)
                 {
-                    throw new SpaceNotFoundException(spaceName);
+                    throw new ControlledFailureException($"A space with name \"{spaceName}\" could not be found. Ensure you have spelled the space name correctly and that the user has access to this space");
                 }
 
                 return client.ForSpace(space.Id);
@@ -35,7 +36,7 @@ namespace Octopus.Tentacle.Commands
                 var defaultSpace = await client.Repository.Spaces.FindOne(s => s.IsDefault);
                 if (defaultSpace == null)
                 {
-                    throw new DefaultSpaceDisabledException();
+                    throw new ControlledFailureException("No \"space\" was specified, and the default space is disabled or inaccessible to this user. Please select a space using the \"space\" parameter.");
                 }
 
                 return client.ForSpace(defaultSpace.Id);
@@ -48,29 +49,6 @@ namespace Octopus.Tentacle.Commands
         Task<bool> SupportsSpaces(IOctopusAsyncClient client)
         {
             return client.Repository.HasLink("Spaces");
-        }
-    }
-
-    public class SpaceNotFoundException : Exception
-    {
-        public SpaceNotFoundException(string spaceName) 
-            : base($"A space with name \"{spaceName}\" could not be found. Ensure you have spelled the space name correctly and that the user has access to this space")
-        {
-        }
-    }
-
-    public class SpacesNotSupportedException : Exception
-    {
-        public SpacesNotSupportedException(string spaceName)
-            : base($"A space with name \"{spaceName}\" was requested, but this version of Octopus Server does not support spaces. Please upgrade Octopus Server to a version which supports spaces, or remove the \"space\" parameter.")
-        {
-        }
-    }
-
-    public class DefaultSpaceDisabledException : Exception
-    {
-        public DefaultSpaceDisabledException() : base($"No \"space\" was specified, and the default space is disabled or inaccessible to this user. Please select a space using the \"space\" parameter.")
-        {
         }
     }
 }

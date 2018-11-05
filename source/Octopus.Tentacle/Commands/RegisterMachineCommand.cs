@@ -10,7 +10,6 @@ using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
-using Octopus.Client;
 using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Tentacle.Configuration;
@@ -59,7 +58,7 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException("Please specify an role name, e.g., --role=web-server");
         }
 
-        protected override void EnhanceOperation(IOctopusSpaceAsyncRepository repository, IRegisterMachineOperation registerOperation)
+        protected override void EnhanceOperation(IRegisterMachineOperation registerOperation)
         {
             registerOperation.Tenants = tenants.ToArray();
             registerOperation.TenantTags = tenantTgs.ToArray();
