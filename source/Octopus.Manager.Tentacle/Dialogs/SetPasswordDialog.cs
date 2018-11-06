@@ -1,8 +1,10 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
+using MaterialDesignThemes.Wpf;
 
 namespace Octopus.Manager.Tentacle.Dialogs
 {
-    public partial class SetPasswordDialog : Window
+    public partial class SetPasswordDialog : UserControl
     {
         public SetPasswordDialog()
         {
@@ -13,8 +15,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
 
         void SaveClicked(object sender, RoutedEventArgs e)
         {
-            DialogResult = true;
-            Close();
+            DialogHost.CloseDialogCommand.Execute(true, null);
         }
     }
 }

@@ -6,7 +6,7 @@
              xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" d:DesignWidth="300"
-             Margin="0,0,0,10"
+             Margin="0,15,0,10"
              Name="Root" HorizontalAlignment="Stretch">
     <UserControl.Resources>
         <controls:CustomIconDataTemplateSelector x:Key="CustomIconDataTemplateSelector"/>
@@ -84,7 +84,7 @@
             </ItemsControl.ItemsPanel>
         </ItemsControl>
         <Grid Grid.Row="1" HorizontalAlignment="Stretch">
-            <TextBox Padding="0,1" Name="TextBox" FontSize="12" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="{Binding Watermark, ElementName=Root}" Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus" TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown" PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center" HorizontalAlignment="Stretch"/>
+            <TextBox Name="TextBox" FontSize="12" Style="{DynamicResource MaterialDesignTextBox}" materialDesign:HintAssist.Hint="{Binding Watermark, ElementName=Root}" Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus" TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown" PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center" HorizontalAlignment="Stretch"/>
                 <Popup Name="SuggestionsPopup" AllowsTransparency="True" IsOpen="False" StaysOpen="True">
                 <Border BorderThickness="1" Width="{Binding ElementName=TextBox, Path=ActualWidth}" Background="White">
                     <Border.BorderBrush>
