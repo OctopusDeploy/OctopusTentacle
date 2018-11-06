@@ -5,9 +5,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             mc:Ignorable="d" 
-             Name="Root"
-             Width="350">
+             mc:Ignorable="d" d:DesignWidth="300"
+             Margin="0,0,0,10"
+             Name="Root" HorizontalAlignment="Stretch">
     <UserControl.Resources>
         <controls:CustomIconDataTemplateSelector x:Key="CustomIconDataTemplateSelector"/>
         <controls:CustomDataTemplateSelector x:Key="CustomDataTemplateSelector"/>
@@ -40,6 +40,19 @@
             </Setter>
         </Style>
     </UserControl.Resources>
+    <Validation.ErrorTemplate>
+        <ControlTemplate>
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Bottom"
+                           Foreground="#FFF44336"
+                           Margin="0,2,0,2"
+                           FontSize="10"
+                           Text="{Binding ElementName=Adorner, Path=AdornedElement.(Validation.Errors)[0].ErrorContent}">
+                </TextBlock>
+                <AdornedElementPlaceholder Name="Adorner" />
+            </DockPanel>
+        </ControlTemplate>
+    </Validation.ErrorTemplate>
     <Grid HorizontalAlignment="Stretch" Width="{Binding ElementName=Root, Path=Width}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -71,7 +84,7 @@
             </ItemsControl.ItemsPanel>
         </ItemsControl>
         <Grid Grid.Row="1" HorizontalAlignment="Stretch">
-            <TextBox Padding="0,1" Name="TextBox" FontSize="12" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="{Binding Watermark, ElementName=Root}" Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus" TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown" PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center" HorizontalAlignment="Stretch"/>
+            <TextBox Padding="0,1" Name="TextBox" FontSize="12" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="{Binding Watermark, ElementName=Root}" Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus" TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown" PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center" HorizontalAlignment="Stretch"/>
                 <Popup Name="SuggestionsPopup" AllowsTransparency="True" IsOpen="False" StaysOpen="True">
                 <Border BorderThickness="1" Width="{Binding ElementName=TextBox, Path=ActualWidth}" Background="White">
                     <Border.BorderBrush>

@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
     xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     mc:Ignorable="d" 
     d:DesignHeight="500" d:DesignWidth="650"
     Header="Registration"
@@ -22,71 +23,39 @@
                 <TextBlock Style="{StaticResource TextBlock.Big}">
                 <Run>This machine will be registered with your Octopus Server using the details below.</Run>
                 </TextBlock>
-
-                <controls:ControlGroup Header="Display name" Target="{Binding ElementName=MachineNameTextBox}">
-                    <TextBox Text="{Binding Path=MachineName, UpdateSourceTrigger=PropertyChanged}" Name="MachineNameTextBox" Width="200" />
-                    <controls:ErrorMessage ErrorPath="MachineName" />
-                    <CheckBox IsChecked="{Binding Path=OverwriteExistingMachine, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,5" VerticalContentAlignment="Center" BorderBrush="#FFABADB3">
+                <StackPanel Width="400" HorizontalAlignment="Left">
+                    <TextBox Text="{Binding Path=MachineName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" Name="MachineNameTextBox" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="Display name" />
+                    <CheckBox IsChecked="{Binding Path=OverwriteExistingMachine, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" VerticalContentAlignment="Center" Style="{StaticResource MaterialDesignCheckBox}">
                         <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Overwrite existing machine with same name" VerticalAlignment="Center" Margin="2,0,0,0"/>
                     </CheckBox>
-                </controls:ControlGroup>
+                    <!-- Deployment Target Options -->
+                    <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=DeploymentTarget}">
+                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialEnvironments}" SelectedTags="{Binding SelectedEnvironments, ValidatesOnDataErrors=True}" TagName="environments" HorizontalAlignment="Stretch" CanCreateNewTags="False"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one environment for the deployment target." Margin="0,5,0,0"/>
 
-                <!-- Deployment Target Options -->
-                <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=DeploymentTarget}">
-                    <controls:ControlGroup Header="Environment" Target="{Binding ElementName=EnvironmentComboBox}">
-                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialEnvironments}" SelectedTags="{Binding SelectedEnvironments}" TagName="environments" Width="350" HorizontalAlignment="Left" CanCreateNewTags="False"/>
-                        <controls:ErrorMessage ErrorPath="SelectedEnvironments" />
-                        <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one environment for the deployment target." />
-                    </controls:ControlGroup>
-
-                    <controls:ControlGroup Header="Roles" Target="{Binding ElementName=RolesTextBox}">
-
-                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles}" TagName="roles" Width="350" HorizontalAlignment="Left" CanCreateNewTags="True"/>
-                        <controls:ErrorMessage ErrorPath="SelectedRoles" />
-                        <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one role that this deployment target will provide." />
-                    </controls:ControlGroup>
-
-                    <Expander Header="Tenants" IsExpanded="{Binding AreTenantsAvailable}" Background="White">
-                        <StackPanel Background="White">
-                            <controls:ControlGroup Header="Tenants" 
-                                   Target="{Binding ElementName=TenantsAutoCompleteBox}" 
-                                   Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
-                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenants}" SelectedTags="{Binding SelectedTenants}" TagName="tenants" Width="350" HorizontalAlignment="Left" CanCreateNewTags="False"/>
+                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles, ValidatesOnDataErrors=True}" TagName="roles" HorizontalAlignment="Stretch" CanCreateNewTags="True"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one role that this deployment target will provide." Margin="0,5,0,0" HorizontalAlignment="Stretch" />
+                        <Expander Header="Tenants" IsExpanded="{Binding AreTenantsAvailable}" Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}" Background="White" Margin="0,20,0,0">
+                            <StackPanel Background="White">
+                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenants}" SelectedTags="{Binding SelectedTenants, ValidatesOnDataErrors=True}" TagName="tenants" CanCreateNewTags="False"/>
                                 <controls:ErrorMessage ErrorPath="SelectedTenants" />
-                                <TextBlock TextWrapping="Wrap" 
-                           Foreground="Gray" 
-                           Text="Choose tenants this deployment target should be associated with." />
-                            </controls:ControlGroup>
+                                <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose tenants this deployment target should be associated with." Margin="0,5,0,0"/>
 
-                            <controls:ControlGroup Header="Tenant Tags" 
-                                   Target="{Binding ElementName=TenantTagsAutoCompleteBox}" 
-                                   Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
-                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenantTags}" SelectedTags="{Binding SelectedTenantTags}" TagName="tenant tags" Width="350" HorizontalAlignment="Left" CanCreateNewTags="False"/>
+                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenantTags}" SelectedTags="{Binding SelectedTenantTags, ValidatesOnDataErrors=True}" TagName="tenant tags" CanCreateNewTags="False"/>
                                 <controls:ErrorMessage ErrorPath="SelectedTenantTags" />
-                                <TextBlock TextWrapping="Wrap" 
-                           Foreground="Gray" 
-                           Text="Choose tenant tags this deployment target should be associated with." />
-                            </controls:ControlGroup>
-                        </StackPanel>
-                    </Expander>
-                </StackPanel>
-
-                <!-- Worker Options -->
-                <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=Worker}">
-                    <controls:ControlGroup Header="Worker Pools">
-                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialWorkerPools}" SelectedTags="{Binding SelectedWorkerPools}" TagName="worker pools" Width="350" HorizontalAlignment="Left" CanCreateNewTags="False" />
+                                <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose tenant tags this deployment target should be associated with." Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                    <!-- Worker Options -->
+                    <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=Worker}">
+                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialWorkerPools}" SelectedTags="{Binding SelectedWorkerPools, ValidatesOnDataErrors=True}" TagName="worker pools" CanCreateNewTags="False" />
                         <controls:ErrorMessage ErrorPath="SelectedWorkerPools" />
-                        <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one worker pool for this worker." />
-                    </controls:ControlGroup>
+                        <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one worker pool for this worker." Margin="0,5,0,0" />
+                    </StackPanel>
+                    <!-- Machine Policy -->
+                    <ComboBox Style="{DynamicResource MaterialDesignComboBox}" materialDesign:HintAssist.Hint="Machine Policy" Margin="0,10,0,0" ItemsSource="{Binding Path=PotentialMachinePolicies}" materialDesign:ValidationAssist.Background="Transparent" SelectedItem="{Binding Path=SelectedMachinePolicy, ValidatesOnDataErrors=True}" Name="MachinePolicyComboBox" Visibility="{Binding Path=ShowMachinePolicySelection, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"/>
                 </StackPanel>
-
-                <controls:ControlGroup Header="Machine Policy" 
-                                   Target="{Binding ElementName=MachinePolicyComboBox}"
-                                   Visibility="{Binding Path=ShowMachinePolicySelection, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
-                    <ComboBox ItemsSource="{Binding Path=PotentialMachinePolicies}" SelectedItem="{Binding Path=SelectedMachinePolicy}" Width="200" Name="MachinePolicyComboBox" />
-                    <controls:ErrorMessage ErrorPath="SelectedMachinePolicy" />
-                </controls:ControlGroup>
-
             </StackPanel>
         </Grid>
     </ScrollViewer>
