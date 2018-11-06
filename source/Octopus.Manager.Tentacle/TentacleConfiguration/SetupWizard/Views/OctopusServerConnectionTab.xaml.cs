@@ -18,18 +18,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     public partial class OctopusServerConnectionTab
     {
         readonly TentacleSetupWizardModel model;
-        readonly TextBoxLogger logger;
 
         public OctopusServerConnectionTab(TentacleSetupWizardModel model)
         {
             InitializeComponent();
-        
             DataContext = this.model = model;
-            logger = new TextBoxLogger(outputLog);
-            Loaded += (a, e) =>
-            {
-                outputLog.Visibility = outputLog.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-            };
         }
 
         void Navigate(object sender, RequestNavigateEventArgs e)
@@ -51,40 +44,16 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
                 return;
             }
 
-            setProgressBarToStatus(false, false);
-            connectionDialog.Visibility = Visibility.Visible;
-            outputLog.Visibility = Visibility.Visible;
-            logger.Clear();
-
-            await model.VerifyCredentials(logger);
-            if (model.HaveCredentialsBeenVerified)
+            await ShowConnectionDialog();
+            if (!model.HaveCredentialsBeenVerified)
             {
-                setProgressBarToStatus(false, true);
-                connectionDialog.Visibility = Visibility.Hidden;
-            }
-            else
-            {
-                setProgressBarToStatus(true, true);
                 e.Cancel = true;
             }
         }
 
-        void setProgressBarToStatus(bool error, bool isComplete)
+        async Task ShowConnectionDialog()
         {
-            progressBar.Value = (error || isComplete) ? 100 : 0;
-            progressBar.IsIndeterminate = (!error && !isComplete);
-            progressBar.Foreground = new SolidColorBrush(error ? Colors.Red : Color.FromRgb(25,118,210));
-        }
-
-        void ButtonBase_OnClick(object sender, RoutedEventArgs e)
-        {
-            connectionDialog.Visibility = Visibility.Hidden;
-        }
-
-        void ConnectionDialog_OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            IsNextEnabled = ((Grid) sender).Visibility != Visibility.Visible;
-            IsBackEnabled = ((Grid) sender).Visibility != Visibility.Visible;
+            await DialogHost.Show(new ServerConnectionDialog(model) { DataContext = model }, "Tentacle Setup Wizard");
         }
 
         async void ProxyButton_OnClick(object sender, RoutedEventArgs e)

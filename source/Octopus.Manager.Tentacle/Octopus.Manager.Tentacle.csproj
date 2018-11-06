@@ -223,6 +223,9 @@
       <DependentUpon>NewInstanceNameDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\RunProcessDialog.cs" />
+    <Compile Include="Dialogs\ServerConnectionDialog.xaml.cs">
+      <DependentUpon>ServerConnectionDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\SetPasswordDialog.cs" />
     <Compile Include="Dialogs\ViewScriptDialog.cs" />
     <Compile Include="Infrastructure\DispatchHelper.cs" />
@@ -318,6 +321,10 @@
     <Page Include="Dialogs\RunProcessDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialogs\ServerConnectionDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\SetPasswordDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
