@@ -73,7 +73,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
         {
             progressBar.Value = (error || isComplete) ? 100 : 0;
             progressBar.IsIndeterminate = (!error && !isComplete);
-            progressBar.Foreground = new SolidColorBrush(error ? Colors.Red : Colors.Green);
+            progressBar.Foreground = new SolidColorBrush(error ? Colors.Red : Color.FromRgb(25,118,210));
         }
 
         void ButtonBase_OnClick(object sender, RoutedEventArgs e)

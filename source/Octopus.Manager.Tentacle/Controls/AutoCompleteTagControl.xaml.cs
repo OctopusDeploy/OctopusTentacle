@@ -168,6 +168,7 @@ namespace Octopus.Manager.Tentacle.Controls
             InitializeComponent();
         }
 
+
         protected virtual void OnAutoCompleteTagControl()
         {
             OnPropertyChanged(nameof(Watermark));
