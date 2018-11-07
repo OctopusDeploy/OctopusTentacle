@@ -90,7 +90,6 @@ namespace Octopus.Tentacle.Tests.Commands
             await Command.Deregister(asyncRepository, asyncRepository);
 
             log.Received().Info($"Deleting machine '{machineName}' from the Octopus Server...");
-            log.Received().Error(DeregisterMachineCommand.ThumbprintNotFoundMsg);
         }
 
         [Test]
