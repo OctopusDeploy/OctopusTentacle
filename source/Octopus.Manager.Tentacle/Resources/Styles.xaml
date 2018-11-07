@@ -106,7 +106,7 @@
     </Style>
     <Style x:Key="Border.Status.Red" TargetType="Border" BasedOn="{StaticResource Border.Status}">
         <Setter Property="BorderBrush" Value="#db4437" />
-        <Setter Property="Background" Value="#db4437" />
+        <Setter Property="Background" Value="#1Adb4437" />
     </Style>
     <Style x:Key="Border.Status.Yellow" TargetType="Border" BasedOn="{StaticResource Border.Status}">
         <Setter Property="BorderThickness" Value="2" />
@@ -487,10 +487,6 @@
     </Style>
 
     <Style TargetType="TextBox" BasedOn="{StaticResource TextBox.Default}" />
-
-    <Style TargetType="ListBox">
-        <Setter Property="BorderBrush" Value="#9e9e9e" />
-    </Style>
 
     <Style TargetType="Button" x:Key="Button.Default">
         <Setter Property="Foreground" Value="#2e93e0" />

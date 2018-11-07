@@ -37,7 +37,7 @@ namespace Octopus.Manager.Tentacle.Shell
 
         async void OnAddNewInstance(object sender, ExecutedRoutedEventArgs e)
         {
-            var result = await DialogHost.Show(new NewInstanceNameDialog(viewModel.InstanceSelectionModel.Instances.Select(q => q.InstanceName)), Title, ClosingEventHandler);
+            var result = await DialogHost.Show(new NewInstanceNameDialog(viewModel.InstanceSelectionModel.Instances.Select(q => q.InstanceName)), Title);
             /*
             var dialog = new NewInstanceNameDialog(viewModel.InstanceSelectionModel.Instances.Select(q => q.InstanceName));
             dialog.Owner = this;
@@ -46,11 +46,6 @@ namespace Octopus.Manager.Tentacle.Shell
             {
                 viewModel.InstanceSelectionModel.New(typedResult);
             }
-        }
-
-        private void ClosingEventHandler(object sender, DialogClosingEventArgs eventArgs)
-        {
-            Console.WriteLine("You can intercept the closing event, and cancel here.");
         }
     }
 }
