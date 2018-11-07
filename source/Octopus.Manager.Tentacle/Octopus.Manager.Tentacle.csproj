@@ -422,24 +422,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-    <Resource Include="Resources\Fonts\Roboto-Black.ttf" />
-    <Resource Include="Resources\Fonts\Roboto-BlackItalic.ttf" />
-    <Resource Include="Resources\Fonts\Roboto-Bold.ttf" />
-    <Resource Include="Resources\Fonts\Roboto-BoldItalic.ttf" />
-    <Resource Include="Resources\Fonts\Roboto-Italic.ttf" />
-    <Resource Include="Resources\Fonts\Roboto-Light.ttf" />
-    <Resource Include="Resources\Fonts\Roboto-LightItalic.ttf" />
-    <Resource Include="Resources\Fonts\Roboto-Medium.ttf" />
-    <Resource Include="Resources\Fonts\Roboto-MediumItalic.ttf" />
-    <Resource Include="Resources\Fonts\Roboto-Regular.ttf" />
-    <Resource Include="Resources\Fonts\Roboto-Thin.ttf" />
-    <Resource Include="Resources\Fonts\Roboto-ThinItalic.ttf" />
-    <Resource Include="Resources\Fonts\RobotoCondensed-Bold.ttf" />
-    <Resource Include="Resources\Fonts\RobotoCondensed-BoldItalic.ttf" />
-    <Resource Include="Resources\Fonts\RobotoCondensed-Italic.ttf" />
-    <Resource Include="Resources\Fonts\RobotoCondensed-Light.ttf" />
-    <Resource Include="Resources\Fonts\RobotoCondensed-LightItalic.ttf" />
-    <Resource Include="Resources\Fonts\RobotoCondensed-Regular.ttf" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
