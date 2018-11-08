@@ -7,7 +7,7 @@
     mc:Ignorable="d" 
     Title="Octopus Prerequisites" 
     UseLayoutRounding="True"
-    FontSize="9pt" TextOptions.TextFormattingMode="Display"
+    FontSize="9pt" TextOptions.TextFormattingMode="Ideal"
     WindowStartupLocation="CenterScreen"
     SizeToContent="WidthAndHeight" MaxWidth="510"
     ResizeMode="NoResize">

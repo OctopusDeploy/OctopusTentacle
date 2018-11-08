@@ -10,14 +10,14 @@
 
     <Style TargetType="{x:Type TextBlock}">
         <Setter Property="FontFamily" Value="{StaticResource MaterialDesignFont}"/>
-        <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
-        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
+        <Setter Property="TextOptions.TextRenderingMode" Value="Auto"/>
     </Style>
 
     <Style TargetType="{x:Type Control}">
         <Setter Property="FontFamily" Value="{StaticResource MaterialDesignFont}"/>
-        <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
-        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
+        <Setter Property="TextOptions.TextRenderingMode" Value="Auto"/>
     </Style>
 
     <Style x:Key="TextBlock.Heading" TargetType="TextBlock">
@@ -224,6 +224,7 @@
     <converters:EnumBooleanConverter x:Key="Converter.EnumBooleanConverter" />
     <converters:EnumToVisibilityConverter x:Key="Converter.EnumToVisibilityConverter" />
     <converters:StringEmptyConverter x:Key="Converter.StringEmptyConverter" />
+    <converters:CapitalizeFirstLetterConverter x:Key="Converter.CapitalizeFirstLetterConverter"/>
 
     <Style TargetType="controls:ErrorMessage" x:Key="ErrorMessage.Default">
         <Setter Property="Visibility" Value="{Binding RelativeSource={RelativeSource Self}, Path=HasError, Converter={StaticResource Converter.BooleanToVisibilityConverter}}" />

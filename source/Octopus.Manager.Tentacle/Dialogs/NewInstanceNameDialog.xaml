@@ -12,7 +12,7 @@
     Name="Root"
     DataContext="{Binding ElementName=Root}"
     Background="#fff"
-    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextFormattingMode="Ideal"
     >
     <Grid Margin="15">
 

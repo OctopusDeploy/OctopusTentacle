@@ -23,7 +23,7 @@
                 <TextBlock Style="{StaticResource TextBlock.Big}">
                 <Run>This machine will be registered with your Octopus Server using the details below.</Run>
                 </TextBlock>
-                <StackPanel Width="400" HorizontalAlignment="Left">
+                <StackPanel Width="400" HorizontalAlignment="Left" Margin="0,10,0,0">
                     <TextBox Text="{Binding Path=MachineName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" Name="MachineNameTextBox" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="Display name" />
                     <CheckBox IsChecked="{Binding Path=OverwriteExistingMachine, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" VerticalContentAlignment="Center" Style="{StaticResource MaterialDesignCheckBox}">
                         <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Overwrite existing machine with same name" VerticalAlignment="Center" Margin="2,0,0,0"/>
