@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
@@ -70,8 +71,6 @@ namespace Octopus.Tentacle.Commands
                 var serverThumbprint = await GetServerThumbprint(repository, serverAddress, sslThumbprint);
 
                 var alreadyConfiguredServerInCluster = GetAlreadyConfiguredServerInCluster(serverThumbprint);
-                if (alreadyConfiguredServerInCluster == null)
-                    return;
 
                 var octopusServerConfiguration = new OctopusServerConfiguration(serverThumbprint)
                 {
@@ -89,9 +88,23 @@ namespace Octopus.Tentacle.Commands
 
         OctopusServerConfiguration GetAlreadyConfiguredServerInCluster(string serverThumbprint)
         {
-            return configuration.Value.TrustedOctopusServers
-                .Where(s => s.SubscriptionId != null)
-                .FirstOrDefault(s => s.Thumbprint == serverThumbprint);
+            var alreadyConfiguredServersInCluster = configuration.Value.TrustedOctopusServers
+                .Where(s => s.Thumbprint == serverThumbprint)
+                .ToArray();
+
+            if (!alreadyConfiguredServersInCluster.Any())
+            {
+                throw new ControlledFailureException("The thumbprint of this server is not trusted. You must first trust this server using the configure command.");
+            }
+
+            OctopusServerConfiguration pollingServerConfiguration = alreadyConfiguredServersInCluster
+                .FirstOrDefault(c => c.CommunicationStyle == CommunicationStyle.TentacleActive && c.SubscriptionId != null);
+            if (pollingServerConfiguration == null)
+            {
+                throw new ControlledFailureException("This server has not been configured as a polling tentacle. Reconfigure the server as a polling tentacle using the server-comms command.");
+            }
+
+            return pollingServerConfiguration;
         }
 
         async Task<string> GetServerThumbprint(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint)
