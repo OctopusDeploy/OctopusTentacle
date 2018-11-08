@@ -44,7 +44,7 @@ namespace Octopus.Shared.Configuration
                 
                 return value;
             }
-            set { settings.Set("Octopus.Cache", value); }
+            set { settings.Set("Octopus.Home.Cache", value); }
         }
     }
 }
