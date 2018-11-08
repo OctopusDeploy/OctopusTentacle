@@ -35,7 +35,7 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var value = settings.Get<string>("Octopus.Home.Cache", null);
+                var value = settings.Get<string>("Octopus.Node.Cache", null);
                 if (value == null)
                     return ApplicationSpecificHomeDirectory;
                 
@@ -44,7 +44,7 @@ namespace Octopus.Shared.Configuration
                 
                 return value;
             }
-            set { settings.Set("Octopus.Home.Cache", value); }
+            set { settings.Set("Octopus.Node.Cache", value); }
         }
     }
 }
