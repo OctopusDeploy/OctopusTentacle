@@ -52,13 +52,17 @@
                                Text="{Binding Path=VersionNumber, StringFormat='EAP Release - {0}'}" Style="{StaticResource TextBlock.Heading}" 
                                Visibility="{Binding Path=ShowEAPVersion, Converter={StaticResource Converter.BooleanToVisibility}}" />
                     
-                    <StackPanel Margin="0,5,30,5" Orientation="Horizontal" Grid.Column="3" Visibility="Collapsed" Name="instanceSelectionContainer">
+                    <StackPanel Margin="0,0,0,0" Orientation="Horizontal" Grid.Column="3" Visibility="Collapsed" Name="instanceSelectionContainer">
                         <ComboBox 
                             Name="instanceCombo" 
                             ItemsSource="{Binding Path=InstanceSelectionModel.Instances}" DisplayMemberPath="DisplayName" SelectedValuePath="InstanceName" 
                             Margin="0,0,10,0"
-                            SelectedValue="{Binding Path=InstanceSelectionModel.SelectedInstance}" VerticalAlignment="Center" 
-                            Style="{StaticResource ComboBox.Transparent}">
+                            VerticalAlignment="Stretch"
+                            VerticalContentAlignment="Center"
+                            Padding="20,0"
+                            materialDesign:ComboBoxAssist.ClassicMode="True"
+                            SelectedValue="{Binding Path=InstanceSelectionModel.SelectedInstance}"
+                            Style="{StaticResource CustomMaterialDesignComboBox}">
                             <ComboBox.CommandBindings>
                                 <CommandBinding Command="New" Executed="OnAddNewInstance" />
                             </ComboBox.CommandBindings>

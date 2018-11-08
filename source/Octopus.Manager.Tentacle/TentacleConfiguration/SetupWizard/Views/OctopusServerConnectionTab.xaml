@@ -24,7 +24,7 @@
                     <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Octopus Server" />
 
                     <TextBlock Style="{StaticResource TextBlock.Big}">
-                <Run>Provide the URL and authentication mode to connect your Octopus Server.</Run>
+                    <Run>Provide the URL and authentication mode to connect to your Octopus Server. This step can be skipped if you wish to register a Listening Tentacle manually.</Run>
                     </TextBlock>
 
                     <StackPanel Width="400" HorizontalAlignment="Left">
@@ -57,7 +57,7 @@
                                         <Hyperlink NavigateUri="http://g.octopushq.com/ApiKey" RequestNavigate="Navigate">Learn about creating an API key here.</Hyperlink>
                             </TextBlock>
                         </StackPanel>
-                        <Button Content="Configure Proxy" HorizontalAlignment="Left" Margin="0,20,0,0" Click="ProxyButton_OnClick"/>
+                        <Button Content="CONFIGURE PROXY" HorizontalAlignment="Left" Margin="0,20,0,0" Click="ProxyButton_OnClick"/>
                     </StackPanel>
                 </StackPanel>
             </Grid>
