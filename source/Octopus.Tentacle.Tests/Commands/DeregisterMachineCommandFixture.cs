@@ -122,7 +122,6 @@ namespace Octopus.Tentacle.Tests.Commands
 
             await Command.Deregister(asyncRepository, asyncRepository);
 
-            log.Received().Info($"Deleting entry '{expectedThumbPrint}' in tentacle.config");
             log.Received().Info($"Deleting machine '{machineName}' from the Octopus Server...");
             log.Received().Info(DeregisterMachineCommand.DeregistrationSuccessMsg);
         }
