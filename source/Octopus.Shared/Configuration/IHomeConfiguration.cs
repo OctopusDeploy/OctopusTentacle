@@ -6,5 +6,6 @@ namespace Octopus.Shared.Configuration
     {
         string ApplicationSpecificHomeDirectory { get; }
         string HomeDirectory { get; set; }
+        string CacheDirectory { get; set; }
     }
 }
