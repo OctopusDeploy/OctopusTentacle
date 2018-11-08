@@ -139,7 +139,7 @@
                             <Grid.Resources>
                             </Grid.Resources>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
@@ -245,16 +245,8 @@
                                 </Viewbox>
                                 <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
                                     <TextBox Style="{x:Null}" Foreground="#333333" FontFamily="{StaticResource MaterialDesignFont}" FontWeight="Bold" Margin="5,2,5,0" Text="{Binding Path=Thumbprint, Mode=OneWay}" BorderThickness="0" IsReadOnly="True" TextWrapping="Wrap" Background="Transparent"/>
-                                    <Button Style="{StaticResource MaterialDesignFlatButton}" Padding="0" Height="18" Width="18" ToolTip="Copy to clipboard" Click="CopyThumbprintToClipboard">
-                                        <Viewbox Stretch="Uniform" Cursor="Hand">
-                                            <Canvas Width="24" Height="24">
-                                                <Path Fill="#333333">
-                                                    <Path.Data>
-                                                        <PathGeometry Figures="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" FillRule="NonZero"/>
-                                                    </Path.Data>
-                                                </Path>
-                                            </Canvas>
-                                        </Viewbox>
+                                    <Button Style="{StaticResource CopyToClipboardButton}" Padding="0" Height="18" Width="18" ToolTip="Copy to clipboard" Click="CopyThumbprintToClipboard">
+
                                     </Button>
                                 </StackPanel>
                                 <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Foreground="Gray" Text="{Binding Path=Trust, Mode=OneWay}"/>

@@ -10,7 +10,7 @@
     Width="600"
     Height="500"
     Title="Unhandled error"
-    Background="#f0f0f0"
+    Background="White"
     WindowStartupLocation="CenterScreen"
     >
     <Grid Margin="20, 10, 20, 10">

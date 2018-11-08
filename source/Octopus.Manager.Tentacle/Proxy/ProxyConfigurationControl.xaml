@@ -23,7 +23,7 @@
             </controls:ControlGroup>-->
             <StackPanel MaxWidth="300" HorizontalAlignment="Left">
                 <ComboBox
-                Margin="0,0,0,20"
+                Margin="0,15,0,20"
                 materialDesign:HintAssist.Hint="Proxy Mode"
                 materialDesign:ComboBoxAssist.ClassicMode="True"
                 Style="{StaticResource MaterialDesignFloatingHintComboBox}" 
