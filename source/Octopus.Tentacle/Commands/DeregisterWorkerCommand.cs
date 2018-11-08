@@ -63,7 +63,7 @@ namespace Octopus.Tentacle.Commands
 
         public async Task Deregister(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository)
         {
-            // 1. check: do the machine count/allowMultiple checks first to prevent partial trust removal
+            // 1. do the machine count/allowMultiple checks
             var matchingMachines = await repository.Workers.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
 
             if (matchingMachines.Count == 0)
@@ -79,20 +79,7 @@ namespace Octopus.Tentacle.Commands
                 await repository.Workers.Delete(machineResource);
             }
 
-            // 3. remove the trust from the tentancle cconfiguration
-            var serverThumbprint = (await systemRepository.CertificateConfiguration.GetOctopusCertificate())?.Thumbprint;
-
-            if (configuration.Value.TrustedOctopusThumbprints.Count(t => t.Equals(serverThumbprint, StringComparison.InvariantCultureIgnoreCase)) == 0)
-            {
-                log.Error(ThumbprintNotFoundMsg);
-                return;
-            }
-
-            log.Info($"Deleting entry '{serverThumbprint}' in tentacle.config");
-            configuration.Value.RemoveTrustedOctopusServersWithThumbprint(serverThumbprint);
-
             log.Info(DeregistrationSuccessMsg);
-            VoteForRestart();
         }
     }
 }
