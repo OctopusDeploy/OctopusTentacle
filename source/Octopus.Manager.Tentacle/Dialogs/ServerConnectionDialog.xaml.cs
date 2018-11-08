@@ -38,6 +38,8 @@ namespace Octopus.Manager.Tentacle.Dialogs
                 if (model.HaveCredentialsBeenVerified)
                 {
                     setProgressBarToStatus(false, true);
+                    CloseButton.Visibility = Visibility.Collapsed;
+                    NextButton.Visibility = Visibility.Visible;
                     //DialogHost.CloseDialogCommand.Execute(null, null);
                 }
                 else

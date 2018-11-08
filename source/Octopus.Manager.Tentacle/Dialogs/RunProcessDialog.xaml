@@ -11,7 +11,7 @@
     Name="_this"
     DataContext="{Binding ElementName=_this}"
     Background="#f0f0f0"
-    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextFormattingMode="Ideal"
     FontSize="10pt"
     >
     <Grid Margin="14">

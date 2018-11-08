@@ -207,6 +207,7 @@
     <Compile Include="Controls\TaggingAutoCompleteBox.cs" />
     <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\BooleanToYesNoConverter.cs" />
+    <Compile Include="Converters\CapitalizeFirstLetterConverter.cs" />
     <Compile Include="Converters\EnumBooleanConverter.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\InverseBooleanConverter.cs" />
@@ -291,6 +292,7 @@
     <Compile Include="Util\CommandLine.cs" />
     <Compile Include="Util\PasswordBoxAssistant.cs" />
     <Compile Include="Util\RelayCommand.cs" />
+    <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Validators\BindingProxy.cs" />
     <Compile Include="Validators\InstanceName.cs" />
     <Page Include="Controls\AutoCompleteTagControl.xaml">
