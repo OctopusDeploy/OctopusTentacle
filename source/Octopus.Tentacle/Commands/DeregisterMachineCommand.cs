@@ -19,6 +19,8 @@ namespace Octopus.Tentacle.Commands
         bool allowMultiple;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
+        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
+        string spaceName;
 
         public const string ThumbprintNotFoundMsg = "The server you supplied did not match the thumbprint stored in the configuration for this tentacle.";
         public const string DeregistrationSuccessMsg = "Machine deregistered successfully";
@@ -28,16 +30,19 @@ namespace Octopus.Tentacle.Commands
                                         ILog log,
                                         IApplicationInstanceSelector selector,
                                         IProxyConfigParser proxyConfig,
-                                        IOctopusClientInitializer octopusClientInitializer)
+                                        IOctopusClientInitializer octopusClientInitializer,
+                                        ISpaceRepositoryFactory spaceRepositoryFactory)
             : base(selector)
         {
             this.configuration = configuration;
             this.log = log;
             this.proxyConfig = proxyConfig;
             this.octopusClientInitializer = octopusClientInitializer;
+            this.spaceRepositoryFactory = spaceRepositoryFactory;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
             Options.Add("m|multiple", "Deregister all machines that use the same thumbprint", s => allowMultiple = true);
+            Options.Add("space=", "The space which this machine will be deregistered from, - e.g. 'Default' where Default is the name of an existing space; the default is the default space", s => spaceName = s);
         }
 
         protected override void Start()
@@ -51,11 +56,12 @@ namespace Octopus.Tentacle.Commands
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
-                await Deregister(new OctopusAsyncRepository(client));
+                var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
+                await Deregister(client.ForSystem(), spaceRepository);
             }
         }
 
-        public async Task Deregister(IOctopusAsyncRepository repository)
+        public async Task Deregister(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository)
         {
             // 1. check: do the machine count/allowMultiple checks first to prevent partial trust removal
             var matchingMachines = await repository.Machines.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
@@ -74,7 +80,7 @@ namespace Octopus.Tentacle.Commands
             }
 
             // 3. remove the trust from the tentancle cconfiguration
-            var serverThumbprint = (await repository.CertificateConfiguration.GetOctopusCertificate())?.Thumbprint;
+            var serverThumbprint = (await systemRepository.CertificateConfiguration.GetOctopusCertificate())?.Thumbprint;
 
             if (configuration.Value.TrustedOctopusThumbprints.Count(t => t.Equals(serverThumbprint, StringComparison.InvariantCultureIgnoreCase)) == 0)
             {

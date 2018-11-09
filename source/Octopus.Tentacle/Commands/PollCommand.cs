@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using Halibut;
@@ -66,11 +67,11 @@ namespace Octopus.Tentacle.Commands
             {
                 var repository = new OctopusAsyncRepository(client);
 
-                var alreadyConfiguredServerInCluster = await GetAlreadyConfiguredServerInCluster(repository);
+                var serverThumbprint = await GetServerThumbprint(repository, serverAddress, sslThumbprint);
+
+                var alreadyConfiguredServerInCluster = GetAlreadyConfiguredServerInCluster(serverThumbprint);
                 if (alreadyConfiguredServerInCluster == null)
                     return;
-
-                var serverThumbprint = await GetServerThumbprint(repository, serverAddress, sslThumbprint);
 
                 var octopusServerConfiguration = new OctopusServerConfiguration(serverThumbprint)
                 {
@@ -86,38 +87,11 @@ namespace Octopus.Tentacle.Commands
             }
         }
 
-        async Task<OctopusServerConfiguration> GetAlreadyConfiguredServerInCluster(IOctopusAsyncRepository repository)
+        OctopusServerConfiguration GetAlreadyConfiguredServerInCluster(string serverThumbprint)
         {
-            if (!configuration.Value.TrustedOctopusServers.Any())
-            {
-                log.Error("No trusted Octopus Servers have been configure.  First register this Tentacle with the Octopus Server by using the register-with command.");
-                return null;
-            }
-            var tentaclesWithMatchingThumbprints = await repository.Machines.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
-            if (!tentaclesWithMatchingThumbprints.Any())
-            {
-                log.Error("This Tentacle has not been registered with the server you are attempting to poll.  First register this Tentacle with the Octopus Server by using the register-with command.");
-                return null;
-            }
-
-            foreach (var octopusServerConfiguration in configuration.Value.TrustedOctopusServers)
-            {
-                if (tentaclesWithMatchingThumbprints.Select(tentacleWithMatchingThumbprint => tentacleWithMatchingThumbprint.Endpoint)
-                    .OfType<PollingTentacleEndpointResource>()
-                    .Any(pollingEndpoint => octopusServerConfiguration.SubscriptionId == pollingEndpoint.Uri))
-                {
-                    if (octopusServerConfiguration.CommunicationStyle != CommunicationStyle.TentacleActive)
-                    {
-                        log.Error("This Tentacle has been registered with an Octopus Server in the same cluster but it is not in polling mode.");
-                        continue;
-                    }
-
-                    return octopusServerConfiguration;
-                }
-            }
-
-            log.Error("This Tentacle does not appear to trust an Octopus Server in the same cluster as the Octopus Server you are attempting to poll.  First register this Tentacle with the Octopus Server by using the register-with command.");
-            return null;
+            return configuration.Value.TrustedOctopusServers
+                .Where(s => s.SubscriptionId != null)
+                .FirstOrDefault(s => s.Thumbprint == serverThumbprint);
         }
 
         async Task<string> GetServerThumbprint(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint)
