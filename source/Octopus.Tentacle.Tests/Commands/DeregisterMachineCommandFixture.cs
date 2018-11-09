@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Commands
             asyncRepository.Machines.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
 
-            Func<Task> exec = () => Command.Deregister(asyncRepository, asyncRepository);
+            Func<Task> exec = () => Command.Deregister(asyncRepository);
             exec.ShouldThrow<ControlledFailureException>().WithMessage(DeregisterMachineCommand.MultipleMatchErrorMsg);
         }
 
@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Tests.Commands
             asyncRepository.Machines.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
 
-            await Command.Deregister(asyncRepository, asyncRepository);
+            await Command.Deregister(asyncRepository);
 
             log.Received().Info($"Deleting machine '{machineName}' from the Octopus Server...");
         }
@@ -120,7 +120,7 @@ namespace Octopus.Tentacle.Tests.Commands
             asyncRepository.Machines.FindByThumbprint(Arg.Any<string>())
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
 
-            await Command.Deregister(asyncRepository, asyncRepository);
+            await Command.Deregister(asyncRepository);
 
             log.Received().Info($"Deleting machine '{machineName}' from the Octopus Server...");
             log.Received().Info(DeregisterMachineCommand.DeregistrationSuccessMsg);
