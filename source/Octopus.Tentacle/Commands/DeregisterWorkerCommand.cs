@@ -56,17 +56,17 @@ namespace Octopus.Tentacle.Commands
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
                 var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
-                await Deregister(client.ForSystem(), spaceRepository);
+                await Deregister(spaceRepository);
             }
         }
 
-        public async Task Deregister(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository)
+        public async Task Deregister(IOctopusSpaceAsyncRepository repository)
         {
             // 1. do the machine count/allowMultiple checks
             var matchingMachines = await repository.Workers.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
 
             if (matchingMachines.Count == 0)
-                throw new ControlledFailureException("No worker was found on the server matching this Tentacle's thumbprint.");
+                throw new ControlledFailureException("No worker was found matching this Tentacle's thumbprint.");
 
             if (matchingMachines.Count > 1 && !allowMultiple)
                 throw new ControlledFailureException(MultipleMatchErrorMsg);
