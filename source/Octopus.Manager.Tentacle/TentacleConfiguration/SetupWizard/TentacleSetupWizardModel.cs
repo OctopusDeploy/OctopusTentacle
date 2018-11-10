@@ -16,6 +16,7 @@ using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Util;
+using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
@@ -43,7 +44,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string password;
         string apiKey;
         bool haveCredentialsBeenVerified;
+        bool isSpaceDataLoaded;
+        bool isLoadingSpaceData;
         string selectedMachinePolicy;
+        string selectedSpace;
         string[] selectedWorkerPools;
         string[] potentialEnvironments;
         string[] potentialRoles;
@@ -51,6 +55,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string[] potentialTenantTags;
         string[] potentialTenants;
         string[] potentialWorkerPools;
+        string[] potentialSpaces;
         string machineName;
         bool overwriteExistingMachine;
         string homeDirectory;
@@ -447,6 +452,51 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public bool AwaitingHandshake => Handshake == null;
 
+        public bool IsSpaceDataLoaded
+        {
+            get => isSpaceDataLoaded;
+            set
+            {
+                if (value == isSpaceDataLoaded) return;
+                isSpaceDataLoaded = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsLoadingSpaceData
+        {
+            get => isLoadingSpaceData;
+            set
+            {
+                if (value == isLoadingSpaceData) return;
+                isLoadingSpaceData = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string[] PotentialSpaces
+        {
+            get => potentialSpaces;
+            set
+            {
+                if (Equals(value, potentialSpaces)) return;
+                potentialSpaces = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string SelectedSpace
+        {
+            get => selectedSpace;
+            set
+            {
+                if (value == selectedSpace) return;
+                selectedSpace = value;
+                OnPropertyChanged();
+                LoadSpaceSpecificData();
+            }
+        }
+
         public bool SkipServerRegistration
         {
             get => skipServerRegistration;
@@ -469,30 +519,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         {
             try
             {
-                OctopusServerEndpoint endpoint = null;
-                if (authMode == AuthMode.APIKey)
-                {
-                    endpoint = new OctopusServerEndpoint(OctopusServerUrl, apiKey, credentials: null);
-                }
-                else
-                {
-                    endpoint = new OctopusServerEndpoint(OctopusServerUrl);
-                }
-
-                if (ProxyWizardModel.ProxyConfigType != ProxyConfigType.NoProxy)
-                {
-                    var proxy = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyServerHost)
-                        ? WebRequest.GetSystemWebProxy()
-                        : new WebProxy(new UriBuilder("http", ProxyWizardModel.ProxyServerHost, ProxyWizardModel.ProxyServerPort).Uri);
-
-                    proxy.Credentials = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyUsername)
-                        ? CredentialCache.DefaultNetworkCredentials
-                        : new NetworkCredential(ProxyWizardModel.ProxyUsername, ProxyWizardModel.ProxyPassword);
-
-                    endpoint.Proxy = proxy;
-                }
-
-                using (var client = await OctopusAsyncClient.Create(endpoint))
+                using (var client = await CreateClient())
                 {
                     var repository = new OctopusAsyncRepository(client);
                     logger.Info("Connecting to server: " + OctopusServerUrl);
@@ -508,56 +535,15 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                     logger.Info("Authenticated successfully");
 
-                    logger.Info("Getting available roles...");
-                    PotentialRoles = (await repository.MachineRoles.GetAllRoleNames()).ToArray();
-                    logger.Info("Getting available environments...");
-                    PotentialEnvironments = (await repository.Environments.GetAll()).Select(e => e.Name).ToArray();
-
-                    var workerPools = await repository.WorkerPools.GetAll();
-                    PotentialWorkerPools = workerPools.Select(e => e.Name).ToArray();
-
                     var cofiguration = await repository.CertificateConfiguration.GetOctopusCertificate();
                     OctopusThumbprint = cofiguration.Thumbprint;
 
-                    AreTenantsSupported = root.HasLink("Tenants");
-                    if (AreTenantsSupported)
-                    {
-                        logger.Info("Getting available tenant tags...");
-                        PotentialTenantTags = (await repository.TagSets.GetAll()).SelectMany(tt => tt.Tags.Select(t => t.CanonicalTagName)).ToArray();
+                    logger.Info("Getting available spaces...");
+                    var currentUser = await repository.Users.GetCurrent();
+                    var spaces = await repository.Users.GetSpaces(currentUser);
+                    PotentialSpaces = spaces.Select(s => s.Name).ToArray();
 
-                        logger.Info("Getting available tenants...");
-                        PotentialTenants = (await repository.Tenants.GetAll()).Select(tt => tt.Name).ToArray();
-
-                        AreTenantsAvailable = PotentialTenants.Any();
-                    }
-
-                    if (PotentialEnvironments.IsNullOrEmpty())
-                    {
-                        logger.Error("No environments exist. Please use the Octopus web portal to create an environment, then try again.");
-                        return;
-                    }
-
-                    try
-                    {
-                        logger.Info("Getting available machine policies...");
-                        var machinePolicies = await repository.MachinePolicies.FindAll();
-                        var defaultMachinePolicy = machinePolicies.First(x => x.IsDefault);
-                        PotentialMachinePolicies = machinePolicies.Select(e => e.Name).ToArray();
-                        ShowMachinePolicySelection = PotentialMachinePolicies.Length > 1; // Only show policy selection if they have more than just the default machine policy.
-
-                        SelectedMachinePolicy = PotentialMachinePolicies.FirstOrDefault(x => x == defaultMachinePolicy.Name); // Name is unique, so this is ok.
-                        if (SelectedMachinePolicy == null)
-                        {
-                            logger.Error("No machine policies exist. Please confirm your Octopus web portal contains at least one machine policy, then try again.");
-                            return;
-                        }
-                    }
-                    catch
-                    {
-                        // Don't throw. Make this backwards compatible with pre-3.4 installations.
-                        ShowMachinePolicySelection = false;
-                        logger.Info("Machine policies do not appear to be available for the given Octopus instance, so we are skipping their selection.");
-                    }
+                    //await LoadDataFromSpace(logger.Info, repository, root);
 
                     logger.Info("Credentials verified");
                     HaveCredentialsBeenVerified = true;
@@ -570,6 +556,108 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             catch (Exception ex)
             {
                 logger.Error(ex);
+            }
+        }
+
+        Task<IOctopusAsyncClient> CreateClient()
+        {
+            OctopusServerEndpoint endpoint = null;
+            if (authMode == AuthMode.APIKey)
+            {
+                endpoint = new OctopusServerEndpoint(OctopusServerUrl, apiKey, credentials: null);
+            }
+            else
+            {
+                endpoint = new OctopusServerEndpoint(OctopusServerUrl);
+            }
+
+            if (ProxyWizardModel.ProxyConfigType != ProxyConfigType.NoProxy)
+            {
+                var proxy = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyServerHost)
+                    ? WebRequest.GetSystemWebProxy()
+                    : new WebProxy(new UriBuilder("http", ProxyWizardModel.ProxyServerHost, ProxyWizardModel.ProxyServerPort).Uri);
+
+                proxy.Credentials = string.IsNullOrWhiteSpace(ProxyWizardModel.ProxyUsername)
+                    ? CredentialCache.DefaultNetworkCredentials
+                    : new NetworkCredential(ProxyWizardModel.ProxyUsername, ProxyWizardModel.ProxyPassword);
+
+                endpoint.Proxy = proxy;
+            }
+
+            return OctopusAsyncClient.Create(endpoint);
+        }
+
+        async void LoadSpaceSpecificData()
+        {
+            try
+            {
+                IsLoadingSpaceData = true;
+
+                using (var client = await CreateClient())
+                {
+                    var spaceRepository = await new SpaceRepositoryFactory().CreateSpaceRepository(client, SelectedSpace);
+                    await LoadDataFromSpace(_ => { /*users aren't actually interested in these progress messages, and we have nowhere to display them*/},
+                        spaceRepository, 
+                        await spaceRepository.LoadSpaceRootDocument());
+                    IsSpaceDataLoaded = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                // todo: Add to error box
+            }
+            finally
+            {
+                IsLoadingSpaceData = false;
+            }
+        }
+
+        async Task LoadDataFromSpace(Action<string> onProgress, IOctopusSpaceAsyncRepository repository, Resource rootResource)
+        {
+            onProgress("Getting available roles...");
+            PotentialRoles = (await repository.MachineRoles.GetAllRoleNames()).ToArray();
+            onProgress("Getting available environments...");
+            PotentialEnvironments = (await repository.Environments.GetAll()).Select(e => e.Name).ToArray();
+
+            var workerPools = await repository.WorkerPools.GetAll();
+            PotentialWorkerPools = workerPools.Select(e => e.Name).ToArray();
+
+            AreTenantsSupported = rootResource.HasLink("Tenants");
+            if (AreTenantsSupported)
+            {
+                onProgress("Getting available tenant tags...");
+                PotentialTenantTags = (await repository.TagSets.GetAll()).SelectMany(tt => tt.Tags.Select(t => t.CanonicalTagName)).ToArray();
+
+                onProgress("Getting available tenants...");
+                PotentialTenants = (await repository.Tenants.GetAll()).Select(tt => tt.Name).ToArray();
+
+                AreTenantsAvailable = PotentialTenants.Any();
+            }
+
+            if (PotentialEnvironments.IsNullOrEmpty())
+            {
+                throw new Exception("No environments exist. Please use the Octopus web portal to create an environment, then try again.");
+            }
+
+            try
+            {
+                onProgress("Getting available machine policies...");
+                var machinePolicies = await repository.MachinePolicies.FindAll();
+                var defaultMachinePolicy = machinePolicies.First(x => x.IsDefault);
+                PotentialMachinePolicies = machinePolicies.Select(e => e.Name).ToArray();
+                ShowMachinePolicySelection = PotentialMachinePolicies.Length > 1; // Only show policy selection if they have more than just the default machine policy.
+
+                SelectedMachinePolicy = PotentialMachinePolicies.FirstOrDefault(x => x == defaultMachinePolicy.Name); // Name is unique, so this is ok.
+                if (SelectedMachinePolicy == null)
+                {
+                    throw new Exception("No machine policies exist. Please confirm your Octopus web portal contains at least one machine policy, then try again.");
+                }
+            }
+            catch
+            {
+                // Don't throw. Make this backwards compatible with pre-3.4 installations.
+                ShowMachinePolicySelection = false;
+                onProgress("Machine policies do not appear to be available for the given Octopus instance, so we are skipping their selection.");
             }
         }
 

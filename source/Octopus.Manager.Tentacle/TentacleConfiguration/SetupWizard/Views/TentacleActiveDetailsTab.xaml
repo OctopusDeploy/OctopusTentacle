@@ -23,38 +23,48 @@
                 <TextBlock Style="{StaticResource TextBlock.Big}">
                 <Run>This machine will be registered with your Octopus Server using the details below.</Run>
                 </TextBlock>
-                <StackPanel Width="400" HorizontalAlignment="Left" Margin="0,10,0,0">
-                    <TextBox Text="{Binding Path=MachineName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" Name="MachineNameTextBox" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="Display name" />
-                    <CheckBox IsChecked="{Binding Path=OverwriteExistingMachine, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" VerticalContentAlignment="Center" Style="{StaticResource MaterialDesignCheckBox}">
-                        <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Overwrite existing machine with same name" VerticalAlignment="Center" Margin="2,0,0,0"/>
-                    </CheckBox>
-                    <!-- Deployment Target Options -->
-                    <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=DeploymentTarget}">
-                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialEnvironments}" SelectedTags="{Binding SelectedEnvironments, ValidatesOnDataErrors=True}" TagName="environments" HorizontalAlignment="Stretch" CanCreateNewTags="False"/>
-                        <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one environment for the deployment target." FontSize="10"/>
-
-                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles, ValidatesOnDataErrors=True}" TagName="roles" HorizontalAlignment="Stretch" CanCreateNewTags="True"/>
-                        <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one role that this deployment target will provide." FontSize="10" HorizontalAlignment="Stretch" />
-                        <Expander Padding="0" Header="Tenants" Style="{StaticResource CustomMaterialDesignExpander}" IsExpanded="{Binding AreTenantsAvailable}" Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}" Background="White" Margin="0,20,0,0">
-                            <StackPanel Background="White">
-                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenants}" SelectedTags="{Binding SelectedTenants, ValidatesOnDataErrors=True}" TagName="tenants" CanCreateNewTags="False"/>
-                                <controls:ErrorMessage ErrorPath="SelectedTenants" />
-                                <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose tenants this deployment target should be associated with." FontSize="10"/>
-
-                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenantTags}" SelectedTags="{Binding SelectedTenantTags, ValidatesOnDataErrors=True}" TagName="tenant tags" CanCreateNewTags="False"/>
-                                <controls:ErrorMessage ErrorPath="SelectedTenantTags" />
-                                <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose tenant tags this deployment target should be associated with." FontSize="10"/>
-                            </StackPanel>
-                        </Expander>
+                <StackPanel HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <ComboBox 
+                            Width="400"
+                            Style="{StaticResource MaterialDesignFloatingHintComboBox}" materialDesign:HintAssist.Hint="Space" ItemsSource="{Binding Path=PotentialSpaces}" materialDesign:ValidationAssist.Background="Transparent" SelectedItem="{Binding Path=SelectedSpace, ValidatesOnDataErrors=True}" Name="SpaceComboBox" />
+                        <ProgressBar Margin="10, 10, 0, 0" Style="{StaticResource MaterialDesignCircularProgressBar}" Name="SpaceProgressBar" Value="0" IsIndeterminate="True" 
+                                     Visibility="{Binding Path=IsLoadingSpaceData, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"
+                                     />
                     </StackPanel>
-                    <!-- Worker Options -->
-                    <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=Worker}">
-                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialWorkerPools}" SelectedTags="{Binding SelectedWorkerPools, ValidatesOnDataErrors=True}" TagName="worker pools" CanCreateNewTags="False" />
-                        <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one worker pool for this worker." FontSize="10" />
+                    <StackPanel HorizontalAlignment="Left" Width="400" Margin="0,10,0,0" Visibility="{Binding Path=IsSpaceDataLoaded, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
+                        <TextBox Text="{Binding Path=MachineName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" Name="MachineNameTextBox" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="Display name" />
+                        <CheckBox IsChecked="{Binding Path=OverwriteExistingMachine, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" VerticalContentAlignment="Center" Style="{StaticResource MaterialDesignCheckBox}">
+                            <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Overwrite existing machine with same name" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                        </CheckBox>
+                        <!-- Deployment Target Options -->
+                        <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=DeploymentTarget}">
+                            <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialEnvironments}" SelectedTags="{Binding SelectedEnvironments, ValidatesOnDataErrors=True}" TagName="environments" HorizontalAlignment="Stretch" CanCreateNewTags="False"/>
+                            <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one environment for the deployment target." FontSize="10"/>
+
+                            <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles, ValidatesOnDataErrors=True}" TagName="roles" HorizontalAlignment="Stretch" CanCreateNewTags="True"/>
+                            <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one role that this deployment target will provide." FontSize="10" HorizontalAlignment="Stretch" />
+                            <Expander Padding="0" Header="Tenants" Style="{StaticResource CustomMaterialDesignExpander}" IsExpanded="{Binding AreTenantsAvailable}" Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}" Background="White" Margin="0,20,0,0">
+                                <StackPanel Background="White">
+                                    <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenants}" SelectedTags="{Binding SelectedTenants, ValidatesOnDataErrors=True}" TagName="tenants" CanCreateNewTags="False"/>
+                                    <controls:ErrorMessage ErrorPath="SelectedTenants" />
+                                    <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose tenants this deployment target should be associated with." FontSize="10"/>
+
+                                    <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenantTags}" SelectedTags="{Binding SelectedTenantTags, ValidatesOnDataErrors=True}" TagName="tenant tags" CanCreateNewTags="False"/>
+                                    <controls:ErrorMessage ErrorPath="SelectedTenantTags" />
+                                    <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose tenant tags this deployment target should be associated with." FontSize="10"/>
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                        <!-- Worker Options -->
+                        <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=Worker}">
+                            <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialWorkerPools}" SelectedTags="{Binding SelectedWorkerPools, ValidatesOnDataErrors=True}" TagName="worker pools" CanCreateNewTags="False" />
+                            <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one worker pool for this worker." FontSize="10" />
+                        </StackPanel>
+                        <!-- Machine Policy -->
+                        <ComboBox Style="{DynamicResource MaterialDesignComboBox}" materialDesign:HintAssist.Hint="Machine Policy" Margin="0,10,0,0" ItemsSource="{Binding Path=PotentialMachinePolicies}" materialDesign:ValidationAssist.Background="Transparent" SelectedItem="{Binding Path=SelectedMachinePolicy, ValidatesOnDataErrors=True}" Name="MachinePolicyComboBox" Visibility="{Binding Path=ShowMachinePolicySelection, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"/>
                     </StackPanel>
-                    <!-- Machine Policy -->
-                    <ComboBox Style="{DynamicResource MaterialDesignComboBox}" materialDesign:HintAssist.Hint="Machine Policy" Margin="0,10,0,0" ItemsSource="{Binding Path=PotentialMachinePolicies}" materialDesign:ValidationAssist.Background="Transparent" SelectedItem="{Binding Path=SelectedMachinePolicy, ValidatesOnDataErrors=True}" Name="MachinePolicyComboBox" Visibility="{Binding Path=ShowMachinePolicySelection, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"/>
-                </StackPanel>
+                </StackPanel> 
             </StackPanel>
         </Grid>
     </ScrollViewer>
