@@ -71,6 +71,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         readonly ProxyWizardModel proxyWizardModel;
         bool areTenantsSupported;
         bool areTenantsAvailable;
+        bool areSpacesSupported;
 
         public TentacleSetupWizardModel(string selectedInstance) : this(selectedInstance, ApplicationName.Tentacle, new ProxyWizardModel(selectedInstance, ApplicationName.Tentacle))
         {
@@ -475,6 +476,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
+        public bool AreSpacesSupported
+        {
+            get => areSpacesSupported;
+            set
+            {
+                if (value == areSpacesSupported) return;
+                areSpacesSupported = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string[] PotentialSpaces
         {
             get => potentialSpaces;
@@ -550,12 +562,22 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     var cofiguration = await repository.CertificateConfiguration.GetOctopusCertificate();
                     OctopusThumbprint = cofiguration.Thumbprint;
 
-                    logger.Info("Getting available spaces...");
-                    var currentUser = await repository.Users.GetCurrent();
-                    var spaces = await repository.Users.GetSpaces(currentUser);
-                    PotentialSpaces = spaces.Select(s => s.Name).ToArray();
+                    var supportsSpaces = root.HasLink("Spaces");
+                    if (supportsSpaces)
+                    {
+                        logger.Info("Getting available spaces...");
+                        var currentUser = await repository.Users.GetCurrent();
+                        var spaces = await repository.Users.GetSpaces(currentUser);
+                        PotentialSpaces = spaces.Select(s => s.Name).ToArray();
+                        AreSpacesSupported = true;
+                    }
+                    else
+                    {
+                        PotentialSpaces = new string[] { };
+                        AreSpacesSupported = false;
 
-                    //await LoadDataFromSpace(logger.Info, repository, root);
+                        await LoadDataFromSpace(logger.Info, repository);
+                    }
 
                     logger.Info("Credentials verified");
                     HaveCredentialsBeenVerified = true;
@@ -609,10 +631,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 using (var client = await CreateClient())
                 {
                     var spaceRepository = await new SpaceRepositoryFactory().CreateSpaceRepository(client, SelectedSpace);
-                    await LoadDataFromSpace(_ => { /*users aren't actually interested in these progress messages, and we have nowhere to display them*/},
-                        spaceRepository, 
-                        await spaceRepository.LoadSpaceRootDocument());
-                    IsSpaceDataLoaded = true;
+                    await LoadDataFromSpace(_ => { /*users aren't actually interested in these progress messages, and we have nowhere to display them*/}, spaceRepository);
                 }
             }
             catch (Exception ex)
@@ -625,10 +644,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
-        async Task LoadDataFromSpace(Action<string> onProgress, IOctopusSpaceAsyncRepository repository, Resource rootResource)
+        async Task LoadDataFromSpace(Action<string> onProgress, IOctopusSpaceAsyncRepository repository)
         {
-            var spaceSpecificData = await SpaceSpecificData.LoadSpaceSpecificData(onProgress, repository, rootResource);
+            var spaceSpecificData = await SpaceSpecificData.LoadSpaceSpecificData(onProgress, repository);
             UpdateStateWithLoadedSpaceData(spaceSpecificData);
+            IsSpaceDataLoaded = true;
         }
 
         // This method should not load any data, and therefore should not be async
@@ -733,7 +753,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             });
             validator.RuleSet("TentacleActiveDetails", delegate
             {
-                validator.RuleFor(m => m.SelectedSpace).NotEmpty().WithMessage("Please select a space");
+                validator.RuleFor(m => m.SelectedSpace).NotEmpty().WithMessage("Please select a space").Unless(m => !m.AreSpacesSupported);
                 validator.RuleFor(m => m.MachineName).NotEmpty().WithMessage("Please enter a machine name");
                 validator.RuleFor(m => m.SelectedRoles).NotEmpty().WithMessage("Please select or enter at least one role").Unless(m => m.MachineType == MachineType.Worker);
                 validator.RuleFor(m => m.SelectedEnvironments).NotEmpty().WithMessage("Please select an environment").Unless(m => m.MachineType == MachineType.Worker);
@@ -801,7 +821,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     register.Argument("username", username)
                         .Argument("password", password);
 
-                register.Argument("space", SelectedSpace);
+                if (AreSpacesSupported)
+                    register.Argument("space", SelectedSpace);
 
                 if (MachineType == MachineType.DeploymentTarget)
                 {
@@ -867,7 +888,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         // Don't update any state while loading data.
         // This prevents the UI from changing multiple times while loading.
         // It should instead update synchronously after all data has been loaded.
-        public static async Task<SpaceSpecificData> LoadSpaceSpecificData(Action<string> onProgress, IOctopusSpaceAsyncRepository repository, Resource rootResource)
+        public static async Task<SpaceSpecificData> LoadSpaceSpecificData(Action<string> onProgress, IOctopusSpaceAsyncRepository repository)
         {
             onProgress("Getting available roles...");
             var machineRoles = await repository.MachineRoles.GetAllRoleNames();
@@ -878,7 +899,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             onProgress("Getting available worker pools...");
             var workerPools = await repository.WorkerPools.GetAll();
 
-            var areTenantsSupported = rootResource.HasLink("Tenants");
+            var areTenantsSupported = await repository.HasLink("Tenants");
             var tenantTagSets = areTenantsSupported ? await LoadTagSets() : new List<TagSetResource>();
             var tenants = areTenantsSupported ? await LoadTenants() : new List<TenantResource>();
 
