@@ -800,6 +800,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     register.Argument("username", username)
                         .Argument("password", password);
 
+                register.Argument("space", SelectedSpace);
+
                 if (MachineType == MachineType.DeploymentTarget)
                 {
                     foreach (var environment in SelectedEnvironments)
