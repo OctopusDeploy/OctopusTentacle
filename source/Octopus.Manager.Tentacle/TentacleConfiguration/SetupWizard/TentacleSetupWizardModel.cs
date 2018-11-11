@@ -733,6 +733,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             });
             validator.RuleSet("TentacleActiveDetails", delegate
             {
+                validator.RuleFor(m => m.SelectedSpace).NotEmpty().WithMessage("Please select a space");
                 validator.RuleFor(m => m.MachineName).NotEmpty().WithMessage("Please enter a machine name");
                 validator.RuleFor(m => m.SelectedRoles).NotEmpty().WithMessage("Please select or enter at least one role").Unless(m => m.MachineType == MachineType.Worker);
                 validator.RuleFor(m => m.SelectedEnvironments).NotEmpty().WithMessage("Please select an environment").Unless(m => m.MachineType == MachineType.Worker);

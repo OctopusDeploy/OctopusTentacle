@@ -13,6 +13,7 @@
     RuleSet="TentacleActiveDetails"
     Style="{StaticResource TabView.Normal}"
     IsSkipEnabled="{Binding Path=IsTentaclePassive}"
+    IsNextEnabled="{Binding Path=IsLoadingSpaceData, Converter={StaticResource Converter.InverseBooleanConverter}}"
     Visibility="{Binding Path=HaveCredentialsBeenVerified, Converter={StaticResource Converter.BooleanToVisibility}}"
     >
     <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,0,50">
