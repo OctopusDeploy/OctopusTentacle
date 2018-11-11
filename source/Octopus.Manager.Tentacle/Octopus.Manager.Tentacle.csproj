@@ -197,6 +197,9 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Controls\ErrorPanelControl.xaml.cs">
+      <DependentUpon>ErrorPanelControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\AutoCompleteTagControl.xaml.cs">
       <DependentUpon>AutoCompleteTagControl.xaml</DependentUpon>
     </Compile>
@@ -297,6 +300,10 @@
     <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Validators\BindingProxy.cs" />
     <Compile Include="Validators\InstanceName.cs" />
+    <Page Include="Controls\ErrorPanelControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Controls\AutoCompleteTagControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
