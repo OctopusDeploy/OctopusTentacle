@@ -12,8 +12,7 @@
     Header="Registration"
     RuleSet="TentacleActiveDetails"
     Style="{StaticResource TabView.Normal}"
-    IsSkipEnabled="{Binding Path=IsTentaclePassive}"
-    Visibility="{Binding Path=HaveCredentialsBeenVerified, Converter={StaticResource Converter.BooleanToVisibility}}"
+    Visibility="{Binding Path=IsTentacleActive, Converter={StaticResource Converter.BooleanToVisibility}}"
     >
     <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,0,50">
         <Grid>
