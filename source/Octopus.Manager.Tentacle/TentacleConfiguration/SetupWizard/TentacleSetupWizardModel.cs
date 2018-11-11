@@ -601,10 +601,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         async void LoadSpaceSpecificData()
         {
+            SpaceDataLoadError = null;
+            IsLoadingSpaceData = true;
+
             try
             {
-                IsLoadingSpaceData = true;
-
                 using (var client = await CreateClient())
                 {
                     var spaceRepository = await new SpaceRepositoryFactory().CreateSpaceRepository(client, SelectedSpace);
@@ -626,50 +627,57 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         async Task LoadDataFromSpace(Action<string> onProgress, IOctopusSpaceAsyncRepository repository, Resource rootResource)
         {
-            onProgress("Getting available roles...");
-            PotentialRoles = (await repository.MachineRoles.GetAllRoleNames()).ToArray();
-            onProgress("Getting available environments...");
-            PotentialEnvironments = (await repository.Environments.GetAll()).Select(e => e.Name).ToArray();
+            var spaceSpecificData = await SpaceSpecificData.LoadSpaceSpecificData(onProgress, repository, rootResource);
+            UpdateStateWithLoadedSpaceData(spaceSpecificData);
+        }
 
-            var workerPools = await repository.WorkerPools.GetAll();
-            PotentialWorkerPools = workerPools.Select(e => e.Name).ToArray();
+        // This method should not load any data, and therefore should not be async
+        // It should update all state synchronously to ensure that the UI receives only one update
+        void UpdateStateWithLoadedSpaceData(SpaceSpecificData spaceSpecificData)
+        {
+            // Perform all pre-condition checks first, to avoid partially updating state to a newly selected space
+            AssertLoadedDataIsValid(spaceSpecificData);
 
-            AreTenantsSupported = rootResource.HasLink("Tenants");
-            if (AreTenantsSupported)
+            PotentialRoles = spaceSpecificData.RoleNames.ToArray();
+            PotentialEnvironments = spaceSpecificData.Environments.Select(e => e.Name).ToArray();
+            PotentialWorkerPools = spaceSpecificData.WorkerPools.Select(e => e.Name).ToArray();
+            AreTenantsSupported = spaceSpecificData.AreTenantsSupported;
+            PotentialTenantTags = spaceSpecificData.TenantTags.SelectMany(tt => tt.Tags.Select(t => t.CanonicalTagName)).ToArray();
+            PotentialTenants = spaceSpecificData.Tenants.Select(tt => tt.Name).ToArray();
+            AreTenantsAvailable = PotentialTenants.Any();
+
+            PotentialMachinePolicies = spaceSpecificData.MachinePolicies.Select(e => e.Name).ToArray();
+            if (spaceSpecificData.MachinePoliciesAreSupported)
             {
-                onProgress("Getting available tenant tags...");
-                PotentialTenantTags = (await repository.TagSets.GetAll()).SelectMany(tt => tt.Tags.Select(t => t.CanonicalTagName)).ToArray();
-
-                onProgress("Getting available tenants...");
-                PotentialTenants = (await repository.Tenants.GetAll()).Select(tt => tt.Name).ToArray();
-
-                AreTenantsAvailable = PotentialTenants.Any();
+                SelectedMachinePolicy = spaceSpecificData.MachinePolicies.First(x => x.IsDefault).Name;
+                ShowMachinePolicySelection = PotentialMachinePolicies.Length > 1;
             }
+            else
+            {
+                SelectedMachinePolicy = null;
+                ShowMachinePolicySelection = false;
+            }
+        }
 
-            if (PotentialEnvironments.IsNullOrEmpty())
+        static void AssertLoadedDataIsValid(SpaceSpecificData spaceSpecificData)
+        {
+            if (!spaceSpecificData.Environments.Any())
             {
                 throw new Exception("No environments exist. Please use the Octopus web portal to create an environment, then try again.");
             }
 
-            try
+            var defaultMachinePolicy = spaceSpecificData.MachinePolicies.FirstOrDefault(x => x.IsDefault);
+            if (spaceSpecificData.MachinePoliciesAreSupported)
             {
-                onProgress("Getting available machine policies...");
-                var machinePolicies = await repository.MachinePolicies.FindAll();
-                var defaultMachinePolicy = machinePolicies.First(x => x.IsDefault);
-                PotentialMachinePolicies = machinePolicies.Select(e => e.Name).ToArray();
-                ShowMachinePolicySelection = PotentialMachinePolicies.Length > 1; // Only show policy selection if they have more than just the default machine policy.
-
-                SelectedMachinePolicy = PotentialMachinePolicies.FirstOrDefault(x => x == defaultMachinePolicy.Name); // Name is unique, so this is ok.
-                if (SelectedMachinePolicy == null)
+                if (!spaceSpecificData.MachinePolicies.Any())
                 {
                     throw new Exception("No machine policies exist. Please confirm your Octopus web portal contains at least one machine policy, then try again.");
                 }
-            }
-            catch
-            {
-                // Don't throw. Make this backwards compatible with pre-3.4 installations.
-                ShowMachinePolicySelection = false;
-                onProgress("Machine policies do not appear to be available for the given Octopus instance, so we are skipping their selection.");
+
+                if (defaultMachinePolicy == null)
+                {
+                    throw new Exception("Could not find a default machine policy. Ensure that the Tentacle user has access to machine policies, then try again.");
+                }
             }
         }
 
@@ -806,6 +814,87 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         CliBuilder Cli(string action)
         {
             return CliBuilder.ForTool(TentacleExe, action, InstanceName);
+        }
+    }
+
+    public class SpaceSpecificData
+    {
+        public List<string> RoleNames { get; }
+        public List<EnvironmentResource> Environments { get; }
+        public List<WorkerPoolResource> WorkerPools { get; }
+        public bool AreTenantsSupported { get; }
+        public List<TagSetResource> TenantTags { get; }
+        public List<TenantResource> Tenants { get; }
+        public bool MachinePoliciesAreSupported { get; }
+        public List<MachinePolicyResource> MachinePolicies { get; }
+
+        // Don't update any state while loading data.
+        // This prevents the UI from changing multiple times while loading.
+        // It should instead update synchronously after all data has been loaded.
+        public static async Task<SpaceSpecificData> LoadSpaceSpecificData(Action<string> onProgress, IOctopusSpaceAsyncRepository repository, Resource rootResource)
+        {
+            onProgress("Getting available roles...");
+            var machineRoles = await repository.MachineRoles.GetAllRoleNames();
+
+            onProgress("Getting available environments...");
+            var environments = await repository.Environments.GetAll();
+
+            onProgress("Getting available worker pools...");
+            var workerPools = await repository.WorkerPools.GetAll();
+
+            var areTenantsSupported = rootResource.HasLink("Tenants");
+            var tenantTagSets = areTenantsSupported ? await LoadTagSets() : new List<TagSetResource>();
+            var tenants = areTenantsSupported ? await LoadTenants() : new List<TenantResource>();
+
+            var (machinePoliciesAreSupported, machinePolicies) = await GetMachinePolicies();
+
+            return new SpaceSpecificData(machineRoles, environments, workerPools, areTenantsSupported, tenantTagSets, tenants, machinePoliciesAreSupported, machinePolicies);
+
+            async Task<List<TagSetResource>> LoadTagSets()
+            {
+                onProgress("Getting available tenant tags...");
+                return await repository.TagSets.GetAll();
+            }
+
+            async Task<List<TenantResource>> LoadTenants()
+            {
+                onProgress("Getting available tenants...");
+                return await repository.Tenants.GetAll();
+            }
+
+            async Task<(bool machinePoliciesAreSupported, List<MachinePolicyResource> machinePolicies)> GetMachinePolicies()
+            {
+                try
+                {
+                    onProgress("Getting available machine policies...");
+                    return (true, await repository.MachinePolicies.FindAll());
+                }
+                catch
+                {
+                    // Don't throw. Make this backwards compatible with pre-3.4 installations.
+                    onProgress("Machine policies do not appear to be available for the given Octopus instance, so we are skipping their selection.");
+                    return (false, new List<MachinePolicyResource>());
+                }
+            }
+        }
+
+        SpaceSpecificData(List<string> roleNames,
+            List<EnvironmentResource> environments,
+            List<WorkerPoolResource> workerPools,
+            bool areTenantsSupported,
+            List<TagSetResource> tenantTags,
+            List<TenantResource> tenants,
+            bool machinePoliciesAreSupported,
+            List<MachinePolicyResource> machinePolicies)
+        {
+            RoleNames = roleNames;
+            Environments = environments;
+            WorkerPools = workerPools;
+            AreTenantsSupported = areTenantsSupported;
+            TenantTags = tenantTags;
+            Tenants = tenants;
+            MachinePoliciesAreSupported = machinePoliciesAreSupported;
+            MachinePolicies = machinePolicies;
         }
     }
 }
