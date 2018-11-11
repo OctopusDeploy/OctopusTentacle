@@ -14,7 +14,7 @@
     d:DesignHeight="500" d:DesignWidth="650"
     Header="Octopus Server"
     RuleSet="TentacleActive"
-    IsSkipEnabled="True"
+    Visibility="{Binding Path=CommunicationStyle, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=TentacleActive}"
     Style="{StaticResource TabView.Normal}"
     >
     <materialDesign:DialogHost Identifier="ServerConnectionRootDialog">

@@ -35,9 +35,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
         {
             await base.OnNext(e);
             model.PushRuleSet("TentacleActive");
-            model.ProxyWizardModel.PushRuleSet("ProxySettings");
             model.Validate();
-            model.ProxyWizardModel.Validate();
             if (!model.IsValid || !model.ProxyWizardModel.IsValid)
             {
                 e.Cancel = true;

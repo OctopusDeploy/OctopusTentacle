@@ -197,6 +197,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 if (value == communicationStyle) return;
                 communicationStyle = value;
+                ProxyWizardModel.ShowProxySettings = (value == CommunicationStyle.TentacleActive);
                 OnPropertyChanged();
                 OnPropertyChanged("IsTentacleActive");
                 OnPropertyChanged("IsTentaclePassive");
