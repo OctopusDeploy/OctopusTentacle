@@ -558,6 +558,7 @@
     <converters:BooleanToYesNoConverter x:Key="Converter.BooleanToYesNoConverter" />
     <converters:EnumBooleanConverter x:Key="Converter.EnumBooleanConverter" />
     <converters:EnumToVisibilityConverter x:Key="Converter.EnumToVisibilityConverter" />
+    <converters:StringToVisibilityConverter x:Key="Converter.StringToVisibilityConverter" />
     <converters:StringEmptyConverter x:Key="Converter.StringEmptyConverter" />
     <converters:CapitalizeFirstLetterConverter x:Key="Converter.CapitalizeFirstLetterConverter"/>
 

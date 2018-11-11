@@ -32,6 +32,10 @@
                                      Visibility="{Binding Path=IsLoadingSpaceData, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"
                                      />
                     </StackPanel>
+                    <controls:ErrorPanelControl 
+                        ErrorMessageHeader="{Binding Path=SelectedSpace, StringFormat='Error loading data for the {0} space'}"
+                        ErrorMessage="{Binding Path=SpaceDataLoadError}"
+                        Visibility="{Binding Path=SpaceDataLoadError, Converter={StaticResource Converter.StringToVisibilityConverter}}" />
                     <StackPanel HorizontalAlignment="Left" Width="400" Margin="0,10,0,0" Visibility="{Binding Path=IsSpaceDataLoaded, Converter={StaticResource Converter.BooleanToVisibilityConverter}}">
                         <TextBox Text="{Binding Path=MachineName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" Name="MachineNameTextBox" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="Display name" />
                         <CheckBox IsChecked="{Binding Path=OverwriteExistingMachine, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" VerticalContentAlignment="Center" Style="{StaticResource MaterialDesignCheckBox}">
