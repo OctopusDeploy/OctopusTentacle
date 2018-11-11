@@ -638,24 +638,57 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             // Perform all pre-condition checks first, to avoid partially updating state to a newly selected space
             AssertLoadedDataIsValid(spaceSpecificData);
 
-            PotentialRoles = spaceSpecificData.RoleNames.ToArray();
-            PotentialEnvironments = spaceSpecificData.Environments.Select(e => e.Name).ToArray();
-            PotentialWorkerPools = spaceSpecificData.WorkerPools.Select(e => e.Name).ToArray();
-            AreTenantsSupported = spaceSpecificData.AreTenantsSupported;
-            PotentialTenantTags = spaceSpecificData.TenantTags.SelectMany(tt => tt.Tags.Select(t => t.CanonicalTagName)).ToArray();
-            PotentialTenants = spaceSpecificData.Tenants.Select(tt => tt.Name).ToArray();
-            AreTenantsAvailable = PotentialTenants.Any();
+            UpdateRoles();
+            UpdateEnvironments();
+            UpdateWorkerPools();
+            UpdateTenants();
+            UpdateMachinePolicies();
 
-            PotentialMachinePolicies = spaceSpecificData.MachinePolicies.Select(e => e.Name).ToArray();
-            if (spaceSpecificData.MachinePoliciesAreSupported)
+            void UpdateRoles() => PotentialRoles = spaceSpecificData.RoleNames.ToArray();
+
+            void UpdateEnvironments()
             {
-                SelectedMachinePolicy = spaceSpecificData.MachinePolicies.First(x => x.IsDefault).Name;
-                ShowMachinePolicySelection = PotentialMachinePolicies.Length > 1;
+                PotentialEnvironments = spaceSpecificData.Environments.Select(e => e.Name).ToArray();
+                UpdateSelection(SelectedEnvironments, PotentialEnvironments);
             }
-            else
+
+            void UpdateWorkerPools()
             {
-                SelectedMachinePolicy = null;
-                ShowMachinePolicySelection = false;
+                PotentialWorkerPools = spaceSpecificData.WorkerPools.Select(e => e.Name).ToArray();
+                UpdateSelection(SelectedWorkerPools, PotentialWorkerPools);
+            }
+
+            void UpdateTenants()
+            {
+                AreTenantsSupported = spaceSpecificData.AreTenantsSupported;
+                PotentialTenantTags = spaceSpecificData.TenantTags.SelectMany(tt => tt.Tags.Select(t => t.CanonicalTagName)).ToArray();
+                UpdateSelection(SelectedTenantTags, PotentialTenantTags);
+                PotentialTenants = spaceSpecificData.Tenants.Select(tt => tt.Name).ToArray();
+                UpdateSelection(SelectedTenants, PotentialTenants);
+                AreTenantsAvailable = PotentialTenants.Any();
+            }
+
+            void UpdateMachinePolicies()
+            {
+                PotentialMachinePolicies = spaceSpecificData.MachinePolicies.Select(e => e.Name).ToArray();
+                if (spaceSpecificData.MachinePoliciesAreSupported)
+                {
+                    SelectedMachinePolicy = PotentialMachinePolicies.Contains(SelectedMachinePolicy) 
+                        ? SelectedMachinePolicy 
+                        : spaceSpecificData.MachinePolicies.First(x => x.IsDefault).Name;
+                    ShowMachinePolicySelection = PotentialMachinePolicies.Length > 1;
+                }
+                else
+                {
+                    SelectedMachinePolicy = null;
+                    ShowMachinePolicySelection = false;
+                }
+            }
+
+            void UpdateSelection(ObservableCollection<string> selectedCollection, IEnumerable<string> potentialValues)
+            {
+                var potentialValuesSet = new HashSet<string>(potentialValues, StringComparer.InvariantCulture);
+                selectedCollection.RemoveWhere(v => !potentialValuesSet.Contains(v));
             }
         }
 
