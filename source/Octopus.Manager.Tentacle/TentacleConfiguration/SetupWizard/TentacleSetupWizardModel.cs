@@ -46,6 +46,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         bool haveCredentialsBeenVerified;
         bool isSpaceDataLoaded;
         bool isLoadingSpaceData;
+        string spaceDataLoadError;
         string selectedMachinePolicy;
         string selectedSpace;
         string[] selectedWorkerPools;
@@ -508,6 +509,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
+        public string SpaceDataLoadError
+        {
+            get => spaceDataLoadError;
+            set
+            {
+                if (value == spaceDataLoadError) return;
+                spaceDataLoadError = value;
+                OnPropertyChanged();
+            }
+        }
+
         public IEnumerable<OctoService> Services
         {
             get { yield return new OctoService(TentacleExe, InstanceName); }
@@ -604,7 +616,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
             catch (Exception ex)
             {
-                // todo: Add to error box
+                SpaceDataLoadError = ex.Message;
             }
             finally
             {
