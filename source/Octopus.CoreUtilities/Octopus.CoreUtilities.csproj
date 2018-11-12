@@ -8,6 +8,8 @@
     <Title>Octopus Utility Classes</Title>
     <Description>Utility classes shared between the Octopus Deploy server, Calamari and other Octopus libraries</Description>
     <RepositoryUrl>https://github.com/OctopusDeploy/CoreUtilities</RepositoryUrl>
+    <PackageLicenseUrl>https://github.com/OctopusDeploy/CoreUtilities/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/OctopusDeploy/CoreUtilities</PackageProjectUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Copyright>Copyright © Octopus Deploy 2017</Copyright>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
