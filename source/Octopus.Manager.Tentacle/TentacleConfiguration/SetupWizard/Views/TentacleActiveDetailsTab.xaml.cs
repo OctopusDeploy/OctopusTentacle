@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 {
@@ -29,6 +30,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
         {
             await base.OnSkip(e);
             model.SkipServerRegistration = true;
+        }
+
+        async void RefreshClicked(object sender, RoutedEventArgs e)
+        {
+            await model.RefreshSpaceData();
         }
     }
 }

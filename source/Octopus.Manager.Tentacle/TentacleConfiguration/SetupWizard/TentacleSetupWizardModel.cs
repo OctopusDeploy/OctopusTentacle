@@ -506,7 +506,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 if (value == selectedSpace) return;
                 selectedSpace = value;
                 OnPropertyChanged();
-                LoadSpaceSpecificData();
+                if (!string.IsNullOrEmpty(selectedSpace))
+                    HandleSpaceLoadExceptions(client => LoadSpaceSpecificData(client));
             }
         }
 
@@ -566,8 +567,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     if (supportsSpaces)
                     {
                         logger.Info("Getting available spaces...");
-                        var currentUser = await repository.Users.GetCurrent();
-                        var spaces = await repository.Users.GetSpaces(currentUser);
+                        var spaces = await LoadAvailableSpaces(repository);
                         PotentialSpaces = spaces.Select(s => s.Name).ToArray();
                         AreSpacesSupported = true;
                     }
@@ -591,6 +591,44 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 logger.Error(ex);
             }
+        }
+
+        static async Task<SpaceResource[]> LoadAvailableSpaces(IOctopusSystemAsyncRepository repository)
+        {
+            var currentUser = await repository.Users.GetCurrent();
+            return await repository.Users.GetSpaces(currentUser);
+        }
+
+        public Task RefreshSpaceData()
+        {
+            return HandleSpaceLoadExceptions(async client =>
+            {
+                var systemRepository = client.ForSystem();
+                var spaces = await LoadAvailableSpaces(systemRepository);
+
+                // Don't set any state yet, do this later once all data has been loaded
+                var loadedPotentialSpaces = spaces.Select(s => s.Name).ToArray();
+
+                if (string.IsNullOrEmpty(SelectedSpace))
+                {
+                    PotentialSpaces = loadedPotentialSpaces;
+                    return;
+                }
+
+                if (!loadedPotentialSpaces.Contains(SelectedSpace))
+                {
+                    var exceptionMessage = $"The previously selected space ({SelectedSpace}) could not be found in the list of spaces. Please select another space";
+                    SelectedSpace = null;
+                    IsSpaceDataLoaded = false;
+                    PotentialSpaces = loadedPotentialSpaces;
+                    throw new Exception(exceptionMessage);
+                }
+
+                await LoadSpaceSpecificData(client);
+
+                // Setting this state after all other data has been loaded so UI updates are synchronous
+                PotentialSpaces = loadedPotentialSpaces;
+            });
         }
 
         Task<IOctopusAsyncClient> CreateClient()
@@ -621,7 +659,16 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             return OctopusAsyncClient.Create(endpoint);
         }
 
-        async void LoadSpaceSpecificData()
+        async Task LoadSpaceSpecificData(IOctopusAsyncClient client)
+        {
+            var spaceRepository = await new SpaceRepositoryFactory().CreateSpaceRepository(client, SelectedSpace);
+            await LoadDataFromSpace(_ =>
+            {
+                /*users aren't actually interested in these progress messages, and we have nowhere to display them*/
+            }, spaceRepository);
+        }
+
+        async Task HandleSpaceLoadExceptions(Func<IOctopusAsyncClient, Task> action)
         {
             SpaceDataLoadError = null;
             IsLoadingSpaceData = true;
@@ -630,8 +677,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 using (var client = await CreateClient())
                 {
-                    var spaceRepository = await new SpaceRepositoryFactory().CreateSpaceRepository(client, SelectedSpace);
-                    await LoadDataFromSpace(_ => { /*users aren't actually interested in these progress messages, and we have nowhere to display them*/}, spaceRepository);
+                    await action(client);
                 }
             }
             catch (Exception ex)
