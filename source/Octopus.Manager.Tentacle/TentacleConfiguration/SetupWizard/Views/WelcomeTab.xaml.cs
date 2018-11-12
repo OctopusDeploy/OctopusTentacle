@@ -15,11 +15,5 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 
             DataContext = model;
         }
-
-        void Navigate(object sender, RequestNavigateEventArgs e)
-        {
-            BrowserHelper.Open(e.Uri);
-            e.Handled = true;
-        }
     }
 }

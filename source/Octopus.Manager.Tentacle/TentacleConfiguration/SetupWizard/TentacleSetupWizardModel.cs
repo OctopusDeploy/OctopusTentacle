@@ -72,6 +72,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         bool areTenantsSupported;
         bool areTenantsAvailable;
         bool areSpacesSupported;
+        bool areWorkersSupported;
 
         public TentacleSetupWizardModel(string selectedInstance) : this(selectedInstance, ApplicationName.Tentacle, new ProxyWizardModel(selectedInstance, ApplicationName.Tentacle))
         {
@@ -204,6 +205,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 if (value == communicationStyle) return;
                 communicationStyle = value;
+                AreWorkersSupported = AreWorkersSupported && value == CommunicationStyle.TentacleActive;
                 ProxyWizardModel.ShowProxySettings = (value == CommunicationStyle.TentacleActive);
                 OnPropertyChanged();
                 OnPropertyChanged("IsTentacleActive");
@@ -477,6 +479,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
+        public bool AreWorkersSupported
+        {
+            get => areWorkersSupported;
+            set
+            {
+                if (value == areWorkersSupported) return;
+                areWorkersSupported = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool AreSpacesSupported
         {
             get => areSpacesSupported;
@@ -562,6 +575,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                     var cofiguration = await repository.CertificateConfiguration.GetOctopusCertificate();
                     OctopusThumbprint = cofiguration.Thumbprint;
+
+                    AreWorkersSupported = root.HasLink("Spaces") || root.HasLink("WorkerPools");
 
                     var supportsSpaces = root.HasLink("Spaces");
                     if (supportsSpaces)
@@ -897,8 +912,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             onProgress("Getting available environments...");
             var environments = await repository.Environments.GetAll();
 
-            onProgress("Getting available worker pools...");
-            var workerPools = await repository.WorkerPools.GetAll();
+            var areWorkersSupported = await repository.HasLink("WorkerPools");
+            var workerPools = areWorkersSupported ? await LoadWorkerPools() : new List<WorkerPoolResource>();
 
             var areTenantsSupported = await repository.HasLink("Tenants");
             var tenantTagSets = areTenantsSupported ? await LoadTagSets() : new List<TagSetResource>();
@@ -907,6 +922,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             var (machinePoliciesAreSupported, machinePolicies) = await GetMachinePolicies();
 
             return new SpaceSpecificData(machineRoles, environments, workerPools, areTenantsSupported, tenantTagSets, tenants, machinePoliciesAreSupported, machinePolicies);
+
+            async Task<List<WorkerPoolResource>> LoadWorkerPools()
+            {
+                onProgress("Getting available worker pools...");
+                return await repository.WorkerPools.GetAll();
+            }
 
             async Task<List<TagSetResource>> LoadTagSets()
             {
