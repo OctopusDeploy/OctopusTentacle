@@ -29,9 +29,14 @@
                         <ComboBox 
                             Width="400"
                             Style="{StaticResource MaterialDesignFloatingHintComboBox}" materialDesign:HintAssist.Hint="Space" ItemsSource="{Binding Path=PotentialSpaces}" materialDesign:ValidationAssist.Background="Transparent" SelectedItem="{Binding Path=SelectedSpace, ValidatesOnDataErrors=True}" Name="SpaceComboBox" />
-                        <ProgressBar Margin="10, 10, 0, 0" Style="{StaticResource MaterialDesignCircularProgressBar}" Name="SpaceProgressBar" Value="0" IsIndeterminate="True" 
-                                     Visibility="{Binding Path=IsLoadingSpaceData, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"
-                                     />
+                        <StackPanel Orientation="Horizontal" Margin="5, 5, 0, 0">
+                            <Button ToolTip="Refresh data from selected space" Click="RefreshClicked">
+                                <materialDesign:PackIcon Kind="Refresh" Height="24" Width="24" />
+                            </Button>
+                            <ProgressBar Margin="10,0,0,0" Style="{StaticResource MaterialDesignCircularProgressBar}" Name="SpaceProgressBar" Value="0" IsIndeterminate="True" 
+                                         Visibility="{Binding Path=IsLoadingSpaceData, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"
+                            />
+                        </StackPanel>
                     </StackPanel>
                     <controls:ErrorPanelControl 
                         ErrorMessageHeader="{Binding Path=SelectedSpace, StringFormat='Error loading data for the {0} space'}"
