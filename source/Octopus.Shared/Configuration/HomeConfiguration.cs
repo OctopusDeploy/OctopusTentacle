@@ -16,7 +16,7 @@ namespace Octopus.Shared.Configuration
             this.application = application;
             this.settings = settings;
         }
-
+        
         public string ApplicationSpecificHomeDirectory => HomeDirectory == null ? null : Path.Combine(HomeDirectory, application.ToString());
 
         public string HomeDirectory
@@ -29,6 +29,22 @@ namespace Octopus.Shared.Configuration
                 return value;
             }
             set { settings.Set("Octopus.Home", value); }
+        }
+        
+        public string CacheDirectory
+        {
+            get
+            {
+                var value = settings.Get<string>("Octopus.Node.Cache", null);
+                if (value == null)
+                    return ApplicationSpecificHomeDirectory;
+                
+                if (!Path.IsPathRooted(value))
+                    value = PathHelper.ResolveRelativeDirectoryPath(value);
+                
+                return value;
+            }
+            set { settings.Set("Octopus.Node.Cache", value); }
         }
     }
 }
