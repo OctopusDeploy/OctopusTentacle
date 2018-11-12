@@ -14,7 +14,7 @@
     d:DesignHeight="500" d:DesignWidth="650"
     Header="Octopus Server"
     RuleSet="TentacleActive"
-    IsSkipEnabled="True"
+    Visibility="{Binding Path=CommunicationStyle, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=TentacleActive}"
     Style="{StaticResource TabView.Normal}"
     >
     <materialDesign:DialogHost Identifier="ServerConnectionRootDialog">
@@ -57,7 +57,6 @@
                                         <Hyperlink NavigateUri="http://g.octopushq.com/ApiKey" RequestNavigate="Navigate">Learn about creating an API key here.</Hyperlink>
                             </TextBlock>
                         </StackPanel>
-                        <Button Content="CONFIGURE PROXY" HorizontalAlignment="Left" Margin="0,20,0,0" Click="ProxyButton_OnClick"/>
                     </StackPanel>
                 </StackPanel>
             </Grid>
