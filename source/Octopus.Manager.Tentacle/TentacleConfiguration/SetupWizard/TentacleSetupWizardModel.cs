@@ -521,7 +521,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 selectedSpace = value;
                 OnPropertyChanged();
                 if (!string.IsNullOrEmpty(selectedSpace))
-                    HandleSpaceLoadExceptions(client => LoadSpaceSpecificData(client));
+                    LoadSpaceData(client => LoadSpaceSpecificData(client));
             }
         }
 
@@ -617,10 +617,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public Task RefreshSpaceData()
         {
-            return HandleSpaceLoadExceptions(async client =>
+            return LoadSpaceData(async client =>
             {
-                var systemRepository = client.ForSystem();
-                var spaces = await LoadAvailableSpaces(systemRepository);
+                var spaces = await LoadAvailableSpaces(client.ForSystem());
 
                 // Don't set any state yet, do this later once all data has been loaded
                 var loadedPotentialSpaces = spaces.Select(s => s.Name).ToArray();
@@ -684,8 +683,14 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }, spaceRepository);
         }
 
-        async Task HandleSpaceLoadExceptions(Func<IOctopusAsyncClient, Task> action)
+        async Task LoadSpaceData(Func<IOctopusAsyncClient, Task> loadAction)
         {
+            if (IsLoadingSpaceData)
+            {
+                // Don't do anything, ignore the action to avoid race conditions
+                // A better alternative might be to cancel the current load, but this way is simpler :)
+                return;
+            }
             SpaceDataLoadError = null;
             IsLoadingSpaceData = true;
 
@@ -693,7 +698,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 using (var client = await CreateClient())
                 {
-                    await action(client);
+                    await loadAction(client);
                 }
             }
             catch (Exception ex)
