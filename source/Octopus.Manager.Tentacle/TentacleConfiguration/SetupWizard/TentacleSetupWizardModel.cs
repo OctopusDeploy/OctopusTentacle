@@ -547,6 +547,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
+        public bool IsNextEnabled => !IsLoadingSpaceData && string.IsNullOrEmpty(SpaceDataLoadError);
+
         public IEnumerable<OctoService> Services
         {
             get { yield return new OctoService(TentacleExe, InstanceName); }
