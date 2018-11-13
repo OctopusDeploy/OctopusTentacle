@@ -10,7 +10,8 @@
     <Description>The library shared by Octopus Server and Octopus Tentacle.</Description>
     <Authors>Octopus Deploy</Authors>
     <PackageIconUrl>http://i.octopusdeploy.com/resources/Avatar3_360.png</PackageIconUrl>
-    <PackageProjectUrl>https://github.com/OctopusDeploy/OctopusShared</PackageProjectUrl>
+    <PackageProjectUrl>https://octopus.com</PackageProjectUrl>
+    <PackageLicenseUrl>https://octopus.com/company/customer-agreement</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/OctopusDeploy/OctopusShared.git</RepositoryUrl>
     <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
