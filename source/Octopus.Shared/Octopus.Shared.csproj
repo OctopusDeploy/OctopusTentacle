@@ -30,7 +30,7 @@
     <None Remove="Startup\PathsToDeleteOnStartup.core.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="4.0.8" />
+    <PackageReference Include="Halibut" Version="4.0.9" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58676" />
@@ -39,9 +39,9 @@
     <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58676" />
     <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58676" />
     <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="Octopus.Configuration" Version="2.0.0" />
-    <PackageReference Include="Octopus.Diagnostics" Version="1.2.0" />
-    <PackageReference Include="Octopus.Time" Version="1.1.2" />
+    <PackageReference Include="Octopus.Configuration" Version="2.0.1" />
+    <PackageReference Include="Octopus.Diagnostics" Version="1.2.2" />
+    <PackageReference Include="Octopus.Time" Version="1.1.5" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
