@@ -108,7 +108,7 @@
                                 </materialDesign:PopupBox>
                             </StackPanel>
                         </Grid>
-                        <controls:ErrorPanelControl ErrorMessageHeader="Tentacle Windows Service Stopped">
+                        <controls:ErrorPanelControl ErrorMessageHeader="Tentacle Windows Service Stopped" Visibility="{Binding Path=ServiceWatcher.IsNotRunning, Converter={StaticResource Converter.BooleanToVisibility}}">>
                             <controls:ErrorPanelControl.ErrorMessage>
                                 <MultiBinding StringFormat="The Tentacle Windows Service ({0}) is {1}.">
                                     <Binding Path="ServiceWatcher.ServiceName" Mode="OneWay" />

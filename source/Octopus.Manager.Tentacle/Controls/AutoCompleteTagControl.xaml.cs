@@ -244,6 +244,9 @@ namespace Octopus.Manager.Tentacle.Controls
         private void ExecuteRemoveCommand(string stringValue)
         {
             SelectedTags.Remove(stringValue);
+            if(SelectedTags.Count == 0)
+                Label.Visibility = Visibility.Hidden;
+
         }
 
         private bool AddTag(string value)
@@ -259,13 +262,17 @@ namespace Octopus.Manager.Tentacle.Controls
 
         private void TextBox_OnGotFocus(object sender, RoutedEventArgs e)
         {
+            Label.Visibility = Visibility.Visible;
             SuggestionsPopup.IsOpen = true;
         }
 
         void TextBox_OnLostFocus(object sender, RoutedEventArgs e)
         {
-            if(!SuggestionsPopup.IsKeyboardFocusWithin && !TextBox.IsKeyboardFocusWithin)
+            if (!SuggestionsPopup.IsKeyboardFocusWithin && !TextBox.IsKeyboardFocusWithin)
+            {
+                Label.Visibility = SelectedTags.Count > 0 ? Visibility.Visible : Visibility.Hidden;
                 SuggestionsPopup.IsOpen = false;
+            }
         }
 
         void SuggestionsList_OnLostFocus(object sender, RoutedEventArgs e)
