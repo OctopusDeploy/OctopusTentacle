@@ -569,8 +569,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="controls:ErrorMessage">
-                    <Border Background="Transparent" Padding="0,4,8,4" CornerRadius="0" BorderBrush="Transparent" BorderThickness="0,0,0,0">
-                        <TextBlock TextWrapping="Wrap" Foreground="#db4437" Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Error}" />
+                    <Border Background="Transparent" Margin="0,0,0,2" CornerRadius="0" BorderBrush="Transparent" BorderThickness="0,0,0,0">
+                        <TextBlock TextWrapping="Wrap" Foreground="#FFF44336" FontSize="10" Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Error}" />
                     </Border>
                 </ControlTemplate>
             </Setter.Value>

@@ -12,7 +12,7 @@
     <Grid>
         <StackPanel>
             <TextBlock Style="{StaticResource TextBlock.Heading}" Text="{Binding Title}" Visibility="{Binding ElementName=Root, Path=ShowHeader, Converter={StaticResource Converter.BooleanToVisibility}}"/>
-            <TextBlock Style="{StaticResource TextBlock.Subtle}" Text="{Binding Description}" />
+            <TextBlock Style="{StaticResource TextBlock.Subtle}" Text="{Binding Description}" FontWeight="Bold" />
 
             <!--
             <controls:ControlGroup Header="Proxy mode" Target="{Binding ElementName=proxyRadio}">
@@ -42,7 +42,7 @@
                     <StackPanel Margin="0,0,0,20">
                         <TextBox Text="{Binding Path=ProxyServerHost, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Host" Name="ProxyServerHostTextBox" />
 
-                        <TextBlock  Text="DNS hostname of the Proxy server. Examples:" Style="{StaticResource TextBlock.Subtle}"/>
+                        <TextBlock  Text="DNS hostname of the Proxy server. Examples:" Style="{StaticResource TextBlock.Subtle}" Margin="0,15,0,0"/>
                         <TextBlock  Style="{StaticResource TextBlock.Subtle}" Margin="20,0,0,0">
                         <Run Text="•"/>    
                         <Run Text=" 10.0.0.1 " Style="{StaticResource TextBlock.Example}"/>
@@ -58,8 +58,8 @@
                     </StackPanel>
 
                     <StackPanel Margin="0,0,0,20">
-                        <TextBox Text="{Binding Path=ProxyServerPort, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Port" Name="ProxyServerPortTextBox" Width="90" HorizontalAlignment="Left"/>
-                        <TextBlock Text="The TCP port of the Proxy server" Style="{StaticResource TextBlock.Subtle}"/>
+                        <TextBox Text="{Binding Path=ProxyServerPort, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Port" Name="ProxyServerPortTextBox" Width="150" HorizontalAlignment="Left"/>
+                        <TextBlock Text="The TCP port of the Proxy server" Style="{StaticResource TextBlock.Subtle}" Margin="0,15,0,0"/>
                     </StackPanel>
 
                     <TextBox Margin="0,0,0,20" Text="{Binding Path=ProxyUsername, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Login" />

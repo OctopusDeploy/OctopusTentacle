@@ -108,7 +108,7 @@
                                 </materialDesign:PopupBox>
                             </StackPanel>
                         </Grid>
-                        <controls:ErrorPanelControl ErrorMessageHeader="Tentacle Windows Service Stopped" Visibility="{Binding Path=ServiceWatcher.IsNotRunning, Converter={StaticResource Converter.BooleanToVisibility}}">>
+                        <controls:ErrorPanelControl ErrorMessageHeader="Tentacle Windows Service Stopped" Visibility="{Binding Path=ServiceWatcher.IsNotRunning, Converter={StaticResource Converter.BooleanToVisibility}}">
                             <controls:ErrorPanelControl.ErrorMessage>
                                 <MultiBinding StringFormat="The Tentacle Windows Service ({0}) is {1}.">
                                     <Binding Path="ServiceWatcher.ServiceName" Mode="OneWay" />
@@ -230,7 +230,11 @@
 
                                     </Button>
                                 </StackPanel>
-                                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Foreground="Gray" Text="{Binding Path=Trust, Mode=OneWay}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Foreground="Gray">
+                                    <Run Text="{Binding Path=Trust, Mode=OneWay}"/>
+                                    <LineBreak/>
+                                    <Run>This should match the value shown on the Machine configuration page in the Octopus web portal.</Run>
+                                </TextBlock>
                             </Grid>
 
                             <TextBlock Grid.Row="5" Grid.Column="0" Text="Proxy Server Settings:" HorizontalAlignment="Right" Margin="0,0,20,23" FontWeight="Bold"/>
