@@ -45,7 +45,7 @@
                 </TextBlock>
             </StackPanel>
         </StackPanel>
-        
-        <TextBox Grid.Row="1" Margin="0,0,0,40" Name="outputLog" IsReadOnly="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Foreground="#444444" TextWrapping="NoWrap" VerticalAlignment="Stretch"/>
+
+        <TextBox Grid.Row="1" Margin="0,0,0,40" Name="outputLog" IsReadOnly="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Foreground="#333333" FontFamily="Consolas" TextWrapping="NoWrap" VerticalAlignment="Stretch"/>
     </Grid>
 </shell:TabView>

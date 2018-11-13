@@ -6,7 +6,7 @@
              xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" d:DesignWidth="300"
-             Margin="0,5,0,10"
+             Margin="0,5,0,5"
              Name="Root" HorizontalAlignment="Stretch">
     <UserControl.Resources>
         <controls:CustomIconDataTemplateSelector x:Key="CustomIconDataTemplateSelector"/>
@@ -40,19 +40,6 @@
             </Setter>
         </Style>
     </UserControl.Resources>
-    <Validation.ErrorTemplate>
-        <ControlTemplate>
-            <DockPanel LastChildFill="True">
-                <TextBlock DockPanel.Dock="Bottom"
-                           Foreground="#FFF44336"
-                           Margin="0,2,0,2"
-                           FontSize="10"
-                           Text="{Binding ElementName=Adorner, Path=AdornedElement.(Validation.Errors)[0].ErrorContent}">
-                </TextBlock>
-                <AdornedElementPlaceholder Name="Adorner" />
-            </DockPanel>
-        </ControlTemplate>
-    </Validation.ErrorTemplate>
     <Grid HorizontalAlignment="Stretch" Width="{Binding ElementName=Root, Path=Width}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
