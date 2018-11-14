@@ -32,7 +32,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
             var shellModel = container.Resolve<ShellViewModel>();
             var shell = new ShellView("Tentacle Manager", shellModel);
             shell.EnableInstanceSelection();
-            shell.Height = 520;
+            shell.Height = 610;
             shell.SetViewContent(new TentacleManagerView(container.Resolve<TentacleManagerModel>(), container.Resolve<InstanceSelectionModel>(), container.Resolve<IApplicationInstanceStore>(), newInstanceLauncher, container.Resolve<ProxyWizardLauncher>(), container.Resolve<DeleteWizardLauncher>()));
             return shell;
         }

@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Commands
             this.spaceRepositoryFactory = spaceRepositoryFactory;
 
             Options.Add("file=", "Exports the server configuration to a file. If not specified output goes to the console", v => file = v);
-            Options.Add("space=", "The space from which the server data configuration will be retrieved for, - e.g. 'Default' where Default is the name of an existing space; the default is the default space", s => spaceName = s);
+            Options.Add("space=", "The space from which the server data configuration will be retrieved for, - e.g. 'Finance Department' where Finance Department is the name of an existing space; the default value is the Default space, if one is designated.", s => spaceName = s);
             apiEndpointOptions = AddOptionSet(new ApiEndpointOptions(Options) { Optional = true });
         }
 
