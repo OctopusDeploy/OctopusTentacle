@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Commands
                 var space = userSpaces.SingleOrDefault(s => string.Equals(s.Name.Trim(), spaceName, StringComparison.OrdinalIgnoreCase));
                 if (space == null)
                 {
-                    throw new ControlledFailureException($"A space with name \"{spaceName}\" could not be found. Ensure you have spelled the space name correctly and that the user has access to this space");
+                    throw new ControlledFailureException($"A space with name \"{spaceName}\" could not be found. Ensure you have spelled the space name correctly and that the user has access to this space.");
                 }
 
                 return client.ForSpace(space.Id);
