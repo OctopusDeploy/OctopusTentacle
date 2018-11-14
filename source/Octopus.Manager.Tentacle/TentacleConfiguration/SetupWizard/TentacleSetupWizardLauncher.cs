@@ -22,11 +22,11 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         {
             var wizardModel = new TentacleSetupWizardModel(selectedInstance, instanceSelection.ApplicationName, new PollingProxyWizardModel(selectedInstance, instanceSelection.ApplicationName));
             var wizard = new TabbedWizard();
-            wizard.AddTab(new WelcomeTab(wizardModel));
-            wizard.AddTab(new StorageTab(wizardModel));
             wizard.AddTab(new CommunicationStyleTab(wizardModel));
+            wizard.AddTab(new StorageTab(wizardModel));
             wizard.AddTab(new ProxyConfigurationTab(wizardModel.ProxyWizardModel));
-            wizard.AddTab(new TentacleActiveTab(wizardModel));
+            wizard.AddTab(new OctopusServerConnectionTab(wizardModel));
+            wizard.AddTab(new Views.MachineType(wizardModel));
             wizard.AddTab(new TentacleActiveDetailsTab(wizardModel));
             wizard.AddTab(new TentaclePassiveTab(wizardModel));
             wizard.AddTab(new InstallTab(wizardModel, container.Resolve<ICommandLineRunner>()) {ReadyMessage = "That's all the information we need. When you click the button below, your new Tentacle service will be configured and started.", SuccessMessage = "Installation complete!"});
@@ -34,7 +34,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             var shellModel = container.Resolve<ShellViewModel>();
             var shell = new ShellView("Tentacle Setup Wizard", shellModel)
             {
-                Height = 610,
+                Height = 650,
                 Width = 890
             };
             shell.SetViewContent(wizard);

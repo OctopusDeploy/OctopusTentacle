@@ -1,0 +1,36 @@
+﻿<UserControl x:Class="Octopus.Manager.Tentacle.Dialogs.ServerConnectionDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:system="clr-namespace:System;assembly=mscorlib"
+             mc:Ignorable="d" 
+             Background="White"
+             Height="300"
+             Width="600">
+    <Grid Margin="20,10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock Margin="0,0,0,15" Style="{StaticResource TextBlock.Big}">Establishing connection with your Octopus Server...</TextBlock>
+        <ProgressBar Name="progressBar" Value="100" IsIndeterminate="True" Grid.Row="1" Margin="0,0,0,15" Height="20"/>
+        <TextBox Grid.Row="2" Name="outputLog" IsReadOnly="True" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Foreground="#333" TextWrapping="NoWrap" FontFamily="Consolas" />
+        <!--<Button Click="ButtonBase_OnClick" Grid.Row="3" Content="close" HorizontalAlignment="Right" Margin="0,10,0,0"/>-->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="CLOSE" Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}" Name="CloseButton">
+                <Button.CommandParameter>
+                    <system:Boolean>False</system:Boolean>
+                </Button.CommandParameter>
+            </Button>
+            <Button Content="NEXT" Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}" Style="{StaticResource Button.Success}" Name="NextButton" Visibility="Collapsed">
+                <Button.CommandParameter>
+                    <system:Boolean>False</system:Boolean>
+                </Button.CommandParameter>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

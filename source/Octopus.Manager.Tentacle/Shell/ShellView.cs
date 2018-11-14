@@ -1,8 +1,10 @@
-﻿using Octopus.Manager.Tentacle.Dialogs;
+﻿using System;
+using Octopus.Manager.Tentacle.Dialogs;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using MaterialDesignThemes.Wpf;
 
 namespace Octopus.Manager.Tentacle.Shell
 {
@@ -13,6 +15,8 @@ namespace Octopus.Manager.Tentacle.Shell
         public ShellView(string title, ShellViewModel viewModel)
         {
             InitializeComponent();
+
+            DialogHost.Identifier = title;
 
             this.viewModel = viewModel;
             DataContext = viewModel;
@@ -31,13 +35,16 @@ namespace Octopus.Manager.Tentacle.Shell
             viewModel.InstanceSelectionModel.Refresh();
         }
 
-        void OnAddNewInstance(object sender, ExecutedRoutedEventArgs e)
+        async void OnAddNewInstance(object sender, ExecutedRoutedEventArgs e)
         {
+            var result = await DialogHost.Show(new NewInstanceNameDialog(viewModel.InstanceSelectionModel.Instances.Select(q => q.InstanceName)), Title);
+            /*
             var dialog = new NewInstanceNameDialog(viewModel.InstanceSelectionModel.Instances.Select(q => q.InstanceName));
             dialog.Owner = this;
-            if (dialog.ShowDialog() ?? false)
+            */
+            if (result is string typedResult)
             {
-                viewModel.InstanceSelectionModel.New(dialog.InstanceName);
+                viewModel.InstanceSelectionModel.New(typedResult);
             }
         }
     }

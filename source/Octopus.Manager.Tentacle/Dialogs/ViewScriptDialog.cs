@@ -22,5 +22,11 @@ namespace Octopus.Manager.Tentacle.Dialogs
 
             window.ShowDialog();
         }
+
+        void CopyToClipboardButton(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(ScriptTextBox.Text);
+
+        }
     }
 }
