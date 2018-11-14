@@ -55,8 +55,8 @@
     <Reference Include="FluentValidation, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0, processorArchitecture=MSIL">
       <HintPath>..\packages\FluentValidation.7.2.1\lib\net45\FluentValidation.dll</HintPath>
     </Reference>
-    <Reference Include="Halibut, Version=4.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Halibut.4.0.3\lib\net45\Halibut.dll</HintPath>
+    <Reference Include="Halibut, Version=4.0.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Halibut.4.0.9\lib\net45\Halibut.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Win32.TaskScheduler, Version=2.7.2.0, Culture=neutral, PublicKeyToken=c416bc1b32d97233, processorArchitecture=MSIL">
       <HintPath>..\packages\TaskScheduler.2.7.2\lib\net40\Microsoft.Win32.TaskScheduler.dll</HintPath>
@@ -115,17 +115,17 @@
     <Reference Include="Octopus.Client, Version=4.42.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Client.4.42.2-spaces288\lib\net45\Octopus.Client.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Configuration, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Configuration.2.0.0\lib\net45\Octopus.Configuration.dll</HintPath>
+    <Reference Include="Octopus.Configuration, Version=2.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Configuration.2.0.1\lib\net45\Octopus.Configuration.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Diagnostics, Version=1.2.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Diagnostics.1.2.0\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
+    <Reference Include="Octopus.Diagnostics, Version=1.2.2.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Octopus.Diagnostics.1.2.2\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Shared, Version=4.5.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Shared.4.5.1\lib\net45\Octopus.Shared.dll</HintPath>
+    <Reference Include="Octopus.Shared, Version=4.6.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Shared.4.6.2\lib\net45\Octopus.Shared.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Time, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Time.1.1.2\lib\netstandard1.0\Octopus.Time.dll</HintPath>
+    <Reference Include="Octopus.Time, Version=1.1.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Time.1.1.5\lib\netstandard1.0\Octopus.Time.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />

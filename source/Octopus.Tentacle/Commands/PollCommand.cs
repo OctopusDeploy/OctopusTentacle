@@ -62,7 +62,7 @@ namespace Octopus.Tentacle.Commands
 
             string sslThumbprint = octopusServerChecker.Value.CheckServerCommunicationsIsOpen(serverAddress, proxyOverride);
 
-            log.Info($"Registering the tentacle with the server at {api.ServerUri}");
+            log.Info($"Configuring Tentacle to poll the server at {api.ServerUri}");
 
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
