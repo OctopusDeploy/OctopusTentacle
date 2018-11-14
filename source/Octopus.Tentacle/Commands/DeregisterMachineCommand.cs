@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Commands
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
             Options.Add("m|multiple", "Deregister all machines that use the same thumbprint", s => allowMultiple = true);
-            Options.Add("space=", "The space which this machine will be deregistered from, - e.g. 'Default' where Default is the name of an existing space; the default is the default space", s => spaceName = s);
+            Options.Add("space=", "The space which this machine will be deregistered from, - e.g. 'Finance Department' where Finance Department is the name of an existing space; the default value is the Default space, if one is designated.", s => spaceName = s);
         }
 
         protected override void Start()
