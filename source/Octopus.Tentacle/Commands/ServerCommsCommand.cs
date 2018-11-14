@@ -36,15 +36,16 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            if (!tentacleConfiguration.Value.TrustedOctopusThumbprints.Any())
+            var distinctTrustedThumbprints = tentacleConfiguration.Value.TrustedOctopusThumbprints.Distinct().ToArray();
+            if (!distinctTrustedThumbprints.Any())
                 throw new ControlledFailureException("Before server communications can be modified, trust must be established with the configure command");
 
             if (string.IsNullOrWhiteSpace(serverThumbprint))
             {
-                if (tentacleConfiguration.Value.TrustedOctopusThumbprints.Count() != 1)
+                if (distinctTrustedThumbprints.Count() != 1)
                     throw new ControlledFailureException("More than one server is trusted; please provide the thumbprint of the server to configure, e.g. --thumbprint=...");
 
-                serverThumbprint = tentacleConfiguration.Value.TrustedOctopusThumbprints.Single();
+                serverThumbprint = distinctTrustedThumbprints.Single();
             }
 
             CommunicationStyle communicationStyle;
@@ -84,9 +85,14 @@ namespace Octopus.Tentacle.Commands
 
             server.Address = address;
             server.CommunicationStyle = CommunicationStyle.TentacleActive;
-            
+
             if (server.SubscriptionId == null)
-                server.SubscriptionId = new Uri($"poll://{RandomStringGenerator.Generate(20).ToLowerInvariant()}/").ToString();
+            {
+                var existingPollingConfiguration = servers.FirstOrDefault(s =>
+                    s.CommunicationStyle == CommunicationStyle.TentacleActive && s.SubscriptionId != null);
+                server.SubscriptionId = existingPollingConfiguration?.SubscriptionId ?? new Uri($"poll://{RandomStringGenerator.Generate(20).ToLowerInvariant()}/").ToString();
+
+            }
 
             tentacleConfiguration.Value.AddOrUpdateTrustedOctopusServer(server);
         }
