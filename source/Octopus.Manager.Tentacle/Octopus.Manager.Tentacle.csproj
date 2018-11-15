@@ -267,6 +267,9 @@
       <DependentUpon>CommunicationStyleTab.xaml</DependentUpon>
     </Compile>
     <Compile Include="TentacleConfiguration\SetupWizard\Views\InstallTab.cs" />
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\MachineType.xaml.cs">
+      <DependentUpon>MachineType.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TentacleConfiguration\SetupWizard\Views\StorageTab.xaml.cs">
       <DependentUpon>StorageTab.xaml</DependentUpon>
     </Compile>
@@ -371,6 +374,10 @@
     <Page Include="TentacleConfiguration\SetupWizard\Views\InstallTab.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="TentacleConfiguration\SetupWizard\Views\MachineType.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="TentacleConfiguration\SetupWizard\Views\StorageTab.xaml">
       <Generator>MSBuild:Compile</Generator>
