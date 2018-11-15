@@ -18,7 +18,9 @@
         <Grid>
             <StackPanel>
                 <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Registration" />
-
+                <TextBlock Style="{StaticResource TextBlock.Big}">
+                    <Run FontWeight="Bold">Enter the machine details to be registered with your Octopus Server.</Run>
+                </TextBlock>
                 <TextBlock Style="{StaticResource TextBlock.Big}">
                 <Run>This machine will be registered with your Octopus Server using the details below.</Run>
                 </TextBlock>

@@ -37,7 +37,7 @@
                         <StackPanel Margin="10">
                             <ContentPresenter Width="120" Height="60" Content="{StaticResource ListeningTentacleIcon}"/>
                             <TextBlock FontSize="14" Margin="8" TextAlignment="Center">Listening Tentacle</TextBlock>
-                            <TextBlock FontSize="12" Foreground="#666666" TextWrapping="Wrap" TextAlignment="Center">A Listening tentacle will passively listen for tasks to perform from the Octopus Server</TextBlock>
+                            <TextBlock FontSize="12" Foreground="#666666" TextWrapping="Wrap" TextAlignment="Center">A Listening tentacle will passively listen for tasks to perform from the Octopus Server.</TextBlock>
                         </StackPanel>
                     </RadioButton>
 
