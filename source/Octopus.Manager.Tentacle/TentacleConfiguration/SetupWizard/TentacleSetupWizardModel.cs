@@ -65,6 +65,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         readonly ProxyWizardModel proxyWizardModel;
         bool areTenantsSupported;
         bool areTenantsAvailable;
+        bool areWorkersSupported;
 
         public TentacleSetupWizardModel(string selectedInstance) : this(selectedInstance, ApplicationName.Tentacle, new ProxyWizardModel(selectedInstance, ApplicationName.Tentacle))
         {
@@ -197,6 +198,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 if (value == communicationStyle) return;
                 communicationStyle = value;
+                AreWorkersSupported = AreWorkersSupported && value == CommunicationStyle.TentacleActive;
                 ProxyWizardModel.ShowProxySettings = (value == CommunicationStyle.TentacleActive);
                 OnPropertyChanged();
                 OnPropertyChanged("IsTentacleActive");
@@ -448,6 +450,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public bool AwaitingHandshake => Handshake == null;
 
+        public bool AreWorkersSupported
+        {
+            get => areWorkersSupported;
+            set
+            {
+                if (value == areWorkersSupported) return;
+                areWorkersSupported = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool SkipServerRegistration
         {
             get => skipServerRegistration;
@@ -514,11 +527,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     logger.Info("Getting available environments...");
                     PotentialEnvironments = (await repository.Environments.GetAll()).Select(e => e.Name).ToArray();
 
-                    var workerPools = await repository.WorkerPools.GetAll();
-                    PotentialWorkerPools = workerPools.Select(e => e.Name).ToArray();
-
                     var cofiguration = await repository.CertificateConfiguration.GetOctopusCertificate();
                     OctopusThumbprint = cofiguration.Thumbprint;
+
+                    AreWorkersSupported = repository.Client.RootDocument.HasLink("WorkerPools");
+
+                    if (AreWorkersSupported)
+                    {
+                        logger.Info("Getting available worker pools...");
+                        var workerPools = await repository.WorkerPools.GetAll();
+                        PotentialWorkerPools = workerPools.Select(e => e.Name).ToArray();
+                    }
 
                     AreTenantsSupported = repository.Client.RootDocument.HasLink("Tenants");
                     if (AreTenantsSupported)
