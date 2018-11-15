@@ -21,28 +21,27 @@
                 <TextBlock Style="{StaticResource TextBlock.Big}">
                     <Run FontWeight="Bold">Enter the machine details to be registered with your Octopus Server.</Run>
                 </TextBlock>
-                <TextBlock Style="{StaticResource TextBlock.Big}">
-                <Run>This machine will be registered with your Octopus Server using the details below.</Run>
-                </TextBlock>
                 <StackPanel Width="400" HorizontalAlignment="Left" Margin="0,10,0,0">
                     <TextBox Text="{Binding Path=MachineName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" Name="MachineNameTextBox" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="Display name" />
-                    <CheckBox IsChecked="{Binding Path=OverwriteExistingMachine, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,5" VerticalContentAlignment="Center" Style="{StaticResource MaterialDesignCheckBox}">
+                    <CheckBox IsChecked="{Binding Path=OverwriteExistingMachine, UpdateSourceTrigger=PropertyChanged}" Margin="0,15,0,5" VerticalContentAlignment="Center" Style="{StaticResource MaterialDesignCheckBox}">
                         <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Overwrite existing machine with same name" VerticalAlignment="Center" Margin="2,0,0,0"/>
                     </CheckBox>
                     <!-- Deployment Target Options -->
                     <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=DeploymentTarget}">
-                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialEnvironments}" SelectedTags="{Binding SelectedEnvironments, ValidatesOnDataErrors=True}" TagName="environments" HorizontalAlignment="Stretch" CanCreateNewTags="False"/>
+                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialEnvironments}" SelectedTags="{Binding SelectedEnvironments}" TagName="environments" HorizontalAlignment="Stretch" CanCreateNewTags="False"/>
+                        <controls:ErrorMessage ErrorPath="SelectedEnvironments" />
                         <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one environment for the deployment target." FontSize="10"/>
 
-                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles, ValidatesOnDataErrors=True}" TagName="roles" HorizontalAlignment="Stretch" CanCreateNewTags="True"/>
+                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialRoles}" SelectedTags="{Binding SelectedRoles}" TagName="roles" HorizontalAlignment="Stretch" CanCreateNewTags="True" Margin="0,10,0,5"/>
+                        <controls:ErrorMessage ErrorPath="SelectedRoles" />
                         <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one role that this deployment target will provide." FontSize="10" HorizontalAlignment="Stretch" />
                         <Expander Padding="0" Header="Tenants" Style="{StaticResource CustomMaterialDesignExpander}" IsExpanded="{Binding AreTenantsAvailable}" Visibility="{Binding Path=AreTenantsSupported, Converter={StaticResource Converter.BooleanToVisibilityConverter}}" Background="White" Margin="0,20,0,0">
                             <StackPanel Background="White">
-                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenants}" SelectedTags="{Binding SelectedTenants, ValidatesOnDataErrors=True}" TagName="tenants" CanCreateNewTags="False"/>
+                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenants}" SelectedTags="{Binding SelectedTenants}" TagName="tenants" CanCreateNewTags="False"/>
                                 <controls:ErrorMessage ErrorPath="SelectedTenants" />
                                 <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose tenants this deployment target should be associated with." FontSize="10"/>
 
-                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenantTags}" SelectedTags="{Binding SelectedTenantTags, ValidatesOnDataErrors=True}" TagName="tenant tags" CanCreateNewTags="False"/>
+                                <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialTenantTags}" SelectedTags="{Binding SelectedTenantTags}" TagName="tenant tags" CanCreateNewTags="False"/>
                                 <controls:ErrorMessage ErrorPath="SelectedTenantTags" />
                                 <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose tenant tags this deployment target should be associated with." FontSize="10"/>
                             </StackPanel>
@@ -50,7 +49,8 @@
                     </StackPanel>
                     <!-- Worker Options -->
                     <StackPanel Visibility="{Binding Path=MachineType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=Worker}">
-                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialWorkerPools}" SelectedTags="{Binding SelectedWorkerPools, ValidatesOnDataErrors=True}" TagName="worker pools" CanCreateNewTags="False" />
+                        <controls:AutoCompleteTagControl SuggestedTags="{Binding Path=PotentialWorkerPools}" SelectedTags="{Binding SelectedWorkerPools}" TagName="worker pools" CanCreateNewTags="False" />
+                        <controls:ErrorMessage ErrorPath="SelectedWorkerPools" />
                         <TextBlock TextWrapping="Wrap" Foreground="Gray" Text="Choose at least one worker pool for this worker." FontSize="10" />
                     </StackPanel>
                     <!-- Machine Policy -->
