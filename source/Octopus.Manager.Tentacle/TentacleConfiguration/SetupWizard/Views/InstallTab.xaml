@@ -22,7 +22,7 @@
             <TextBlock Style="{StaticResource TextBlock.Heading}" Text="{Binding ElementName=self, Path=Title}" />
 
             <StackPanel Name="readyMessage" Visibility="Visible">
-                <TextBlock Style="{StaticResource TextBlock.Big}"  Text="{Binding ElementName=self, Path=ReadyMessage}" />
+                <TextBlock Style="{StaticResource TextBlock.Big}" FontWeight="Bold" Text="{Binding ElementName=self, Path=ReadyMessage}" />
 
                 <ContentControl Name="extraContent" />
 
