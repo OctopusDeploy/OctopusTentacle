@@ -18,7 +18,7 @@
         </Grid.RowDefinitions>
         <TextBlock Margin="0,0,0,15" Style="{StaticResource TextBlock.Big}">Establishing connection with your Octopus Server...</TextBlock>
         <ProgressBar Name="progressBar" Value="100" IsIndeterminate="True" Grid.Row="1" Margin="0,0,0,15" Height="20"/>
-        <TextBox Grid.Row="2" Name="outputLog" IsReadOnly="True" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Foreground="SteelBlue" TextWrapping="NoWrap" />
+        <TextBox Grid.Row="2" Name="outputLog" IsReadOnly="True" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Foreground="#333" TextWrapping="NoWrap" FontFamily="Consolas" />
         <!--<Button Click="ButtonBase_OnClick" Grid.Row="3" Content="close" HorizontalAlignment="Right" Margin="0,10,0,0"/>-->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
             <Button Content="CLOSE" Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}" Name="CloseButton">

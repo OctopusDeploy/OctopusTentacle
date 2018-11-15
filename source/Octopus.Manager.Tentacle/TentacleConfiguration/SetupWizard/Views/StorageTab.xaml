@@ -21,7 +21,7 @@
         <StackPanel>
             <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Storage" />
             <TextBlock Style="{StaticResource TextBlock.Big}">
-                <Run>Tentacle configuration and logs directory:</Run>
+                <Run FontWeight="Bold">Select where you would like Tentacle to store logs and applications</Run>
             </TextBlock>
         </StackPanel>
         <Grid Grid.Row="1" Margin="0,10,0,0">

@@ -22,7 +22,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         {
             var wizardModel = new TentacleSetupWizardModel(selectedInstance, instanceSelection.ApplicationName, new PollingProxyWizardModel(selectedInstance, instanceSelection.ApplicationName));
             var wizard = new TabbedWizard();
-            wizard.AddTab(new WelcomeTab(wizardModel));
             wizard.AddTab(new CommunicationStyleTab(wizardModel));
             wizard.AddTab(new StorageTab(wizardModel));
             wizard.AddTab(new ProxyConfigurationTab(wizardModel.ProxyWizardModel));
