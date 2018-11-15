@@ -6,7 +6,7 @@
              xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" d:DesignWidth="300"
-             Margin="0,15,0,10"
+             Margin="0,5,0,10"
              Name="Root" HorizontalAlignment="Stretch">
     <UserControl.Resources>
         <controls:CustomIconDataTemplateSelector x:Key="CustomIconDataTemplateSelector"/>
@@ -57,8 +57,10 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <ItemsControl Grid.Row="0" ItemsSource="{Binding SelectedTags, ElementName=Root}">
+        <TextBlock Name="Label" Foreground="#2f93e0" FontSize="10" Text="{Binding Watermark, ElementName=Root}" Margin="0,5" Visibility="Hidden"/>
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding SelectedTags, ElementName=Root}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Border Background="#e7e7e7" CornerRadius="11" Margin="0,0,5,5">
@@ -83,16 +85,13 @@
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
         </ItemsControl>
-        <Grid Grid.Row="1" HorizontalAlignment="Stretch">
+        <Grid Grid.Row="2" HorizontalAlignment="Stretch">
             <TextBox Name="TextBox" FontSize="12" Style="{DynamicResource MaterialDesignTextBox}" materialDesign:HintAssist.Hint="{Binding Watermark, ElementName=Root}" Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus" TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown" PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center" HorizontalAlignment="Stretch"/>
-                <Popup Name="SuggestionsPopup" AllowsTransparency="True" IsOpen="False" StaysOpen="True">
-                <Border BorderThickness="1" Width="{Binding ElementName=TextBox, Path=ActualWidth}" Background="White">
-                    <Border.BorderBrush>
-                        <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">
-                            <GradientStop Color="#617585" Offset="0.0" />
-                            <GradientStop Color="#a2adb8" Offset="1" />
-                        </LinearGradientBrush>
-                    </Border.BorderBrush>
+            <Popup Name="SuggestionsPopup" AllowsTransparency="True" IsOpen="False" StaysOpen="True" PopupAnimation="Fade">
+                <Border BorderThickness="2" Width="{Binding ElementName=TextBox, Path=ActualWidth}" Background="White" CornerRadius="2">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="3" Opacity="0.8"  ShadowDepth="1" Color="Black"/>
+                    </Border.Effect>
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
