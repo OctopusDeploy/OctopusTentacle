@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
+using Octopus.Client.Model;
 using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
@@ -195,11 +196,29 @@ namespace Octopus.Tentacle.Configuration
 
         public void UpdateTrustedServerThumbprint(string oldThumbprint, string newThumbprint)
         {
+            log.Info($"Finding existing Octopus Server registrations trusting the thumbprint {oldThumbprint} and updating them to trust the thumbprint {newThumbprint}:");
             TrustedOctopusServers = TrustedOctopusServers.Select(configuration =>
             {
-                configuration.Thumbprint = configuration.Thumbprint == oldThumbprint ? newThumbprint : configuration.Thumbprint;
+                var match = string.Equals(configuration.Thumbprint, oldThumbprint, StringComparison.OrdinalIgnoreCase);
+
+                if (match)
+                    log.Info($"Updating {CommTypeToString(configuration.CommunicationStyle)} {configuration.Address} {configuration.Thumbprint} - changing to trust {newThumbprint}");
+                else
+                    log.Info($"Ignoring {CommTypeToString(configuration.CommunicationStyle)} {configuration.Address} {configuration.Thumbprint} - does not match old thumbprint");
+
+                configuration.Thumbprint = match ? newThumbprint : configuration.Thumbprint;
                 return configuration;
             });
+        }
+
+        static string CommTypeToString(CommunicationStyle communicationStyle)
+        {
+            if (communicationStyle == CommunicationStyle.TentacleActive)
+                return "polling tentacle";
+            if (communicationStyle == CommunicationStyle.TentaclePassive)
+                return "listening tentacle";
+
+            return string.Empty;
         }
 
         public X509Certificate2 GenerateNewCertificate()

@@ -30,17 +30,17 @@ namespace Octopus.Tentacle.Commands
         protected void CheckArgs()
         {
             if (string.IsNullOrWhiteSpace(oldThumbprint))
-                throw new ControlledFailureException("Please specify an thumbprint to replace, e.g., --oldThumbprint=VALUE");
+                throw new ControlledFailureException("Please specify a thumbprint to replace, e.g., --oldThumbprint=VALUE");
 
             if (string.IsNullOrWhiteSpace(newThumbprint))
-                throw new ControlledFailureException("Please specify a new thumbprint, e.g., --newThumbprint=VALUE");
+                throw new ControlledFailureException("Please specify a new thumbprint to trust, e.g., --newThumbprint=VALUE");
         }
 
         protected override void Start()
         {
             CheckArgs();
 
-            log.Info($"Updating Octopus servers thumbprints from {oldThumbprint} to {newThumbprint}");
+            log.Info($"Updating Octopus servers thumbprint from {oldThumbprint} to {newThumbprint}");
             tentacleConfiguration.Value.UpdateTrustedServerThumbprint(oldThumbprint, newThumbprint);
 
             VoteForRestart();
