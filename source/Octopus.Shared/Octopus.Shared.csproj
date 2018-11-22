@@ -10,7 +10,8 @@
     <Description>The library shared by Octopus Server and Octopus Tentacle.</Description>
     <Authors>Octopus Deploy</Authors>
     <PackageIconUrl>http://i.octopusdeploy.com/resources/Avatar3_360.png</PackageIconUrl>
-    <PackageProjectUrl>https://github.com/OctopusDeploy/OctopusShared</PackageProjectUrl>
+    <PackageProjectUrl>https://octopus.com</PackageProjectUrl>
+    <PackageLicenseUrl>https://octopus.com/company/customer-agreement</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/OctopusDeploy/OctopusShared.git</RepositoryUrl>
     <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -30,18 +31,18 @@
     <None Remove="Startup\PathsToDeleteOnStartup.core.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="4.0.4" />
+    <PackageReference Include="Halibut" Version="4.0.9" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Autofac" Version="4.6.2" />
-    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="Octopus.Configuration" Version="2.0.0" />
-    <PackageReference Include="Octopus.Diagnostics" Version="1.2.0" />
-    <PackageReference Include="Octopus.Time" Version="1.1.2" />
+    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="Octopus.Configuration" Version="2.0.1" />
+    <PackageReference Include="Octopus.Diagnostics" Version="1.2.2" />
+    <PackageReference Include="Octopus.Time" Version="1.1.5" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
