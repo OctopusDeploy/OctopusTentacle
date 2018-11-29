@@ -69,6 +69,7 @@ namespace Octopus.Tentacle
                 .WithParameter("applicationName", ApplicationName.Tentacle);
             builder.RegisterCommand<RunAgentCommand>("agent", "Starts the Tentacle Agent in debug mode", "", "run");
             builder.RegisterCommand<ConfigureCommand>("configure", "Sets Tentacle settings such as the port number and thumbprints");
+            builder.RegisterCommand<UpdateTrustCommand>("update-trust", "Replaces the trusted Octopus Server thumbprint of any matching polling or listening registrations with a new thumbprint to trust");
             builder.RegisterCommand<RegisterMachineCommand>("register-with", "Registers this machine as a deployment target with an Octopus Server");
             builder.RegisterCommand<RegisterWorkerCommand>("register-worker", "Registers this machine as a worker with an Octopus Server");
             builder.RegisterCommand<ExtractCommand>("extract", "Extracts a NuGet package");
