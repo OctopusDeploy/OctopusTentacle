@@ -8,7 +8,7 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     mc:Ignorable="d" 
     Foreground="#333333"
-    d:DesignHeight="600" d:DesignWidth="800"
+    d:DesignHeight="450" d:DesignWidth="800"
     >
     <Grid Grid.IsSharedSizeScope="True">
         <Border Name="findingInstallation">
@@ -108,33 +108,6 @@
                                 </materialDesign:PopupBox>
                             </StackPanel>
                         </Grid>
-                        <Border Margin="0,20,0,0" Style="{StaticResource Border.Status.Red}" Visibility="{Binding Path=ServiceWatcher.IsNotRunning, Converter={StaticResource Converter.BooleanToVisibility}}">
-                            <Grid Margin="5">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                </Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0" Margin="0,0,0,10" Orientation="Horizontal">
-                                    <Viewbox Stretch="Uniform" Height="16" Margin="0,0,5,0">
-                                        <Canvas Width="16" Height="16">
-                                            <Canvas>
-                                                <Ellipse Canvas.Left="0" Canvas.Top="0" Width="16" Height="16" Fill="#FFDB4437"/>
-                                                <Path Fill="#FFFFFFFF" StrokeThickness=".5" Stroke="#FFFFFFFF">
-                                                    <Path.Data>
-                                                        <PathGeometry Figures="M11.53 10.037728L9.007273 7.515 11.53 4.992273 10.537728 4 8.015 6.522727 5.492273 4 4.5 4.992273 7.022727 7.515 4.5 10.037728l.992273.992272L8.015 8.507273 10.537728 11.03z" FillRule="EvenOdd"/>
-                                                    </Path.Data>
-                                                </Path>
-                                            </Canvas>
-                                        </Canvas>
-                                    </Viewbox>
-                                    <TextBlock Text="Tentacle Windows Service Stopped" FontWeight="Bold" Foreground="#db4437"/>
-                                </StackPanel>
-                                <TextBlock VerticalAlignment="Center" Grid.Row="1">
-                                    The Tentacle Windows Service (<Run Text="{Binding Path=ServiceWatcher.ServiceName, Mode=OneWay}"/>) is 
-                                    <Run Text="{Binding Path=ServiceWatcher.StatusSummary}" />.
-                                </TextBlock>
-                            </Grid>
-                        </Border>
                         <Grid HorizontalAlignment="Stretch" Margin="0,20,0,0">
                             <Grid.Resources>
                             </Grid.Resources>
@@ -152,64 +125,84 @@
                             </Grid.RowDefinitions>
                             <!-- Status -->
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="Status:" HorizontalAlignment="Right" Margin="0,1,20,10" FontWeight="Bold"/>
-                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
-                                <Viewbox Stretch="Uniform" Height="16">
-                                    <Canvas Width="16" Height="16">
-                                        <Canvas>
-                                            <Ellipse Canvas.Left="0" Canvas.Top="0" Width="16" Height="16">
-                                                <Ellipse.Style>
-                                                    <Style TargetType="{x:Type Ellipse}">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="True">
-                                                                <Setter Property="Fill" Value="#DB4437" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="False">
-                                                                <Setter Property="Fill" Value="#FF53B953" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Ellipse.Style>
-                                            </Ellipse>
-                                            <Path Fill="#FFFFFFFF" StrokeThickness=".5" Stroke="#FFFFFFFF">
-                                                <Path.Style>
-                                                    <Style TargetType="{x:Type Path}">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="False">
-                                                                <Setter Property="Data">
-                                                                    <Setter.Value>
-                                                                        <PathGeometry Figures="M6.88804 11.083024L12.12 5.851064 11.296838 5 6.88804 9.42275 4.823163 7.343916 4 8.16708z" FillRule="EvenOdd"/>
-                                                                    </Setter.Value>
-                                                                </Setter>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="True">
-                                                                <Setter Property="Data">
-                                                                    <Setter.Value>
-                                                                        <PathGeometry Figures="M11.53 10.037728L9.007273 7.515 11.53 4.992273 10.537728 4 8.015 6.522727 5.492273 4 4.5 4.992273 7.022727 7.515 4.5 10.037728l.992273.992272L8.015 8.507273 10.537728 11.03z" FillRule="EvenOdd"/>
-                                                                    </Setter.Value>
-                                                                </Setter>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Path.Style>
-                                            </Path>
+                            <Grid Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
+                                    <Viewbox Stretch="Uniform" Height="16">
+                                        <Canvas Width="16" Height="16">
+                                            <Canvas>
+                                                <Ellipse Canvas.Left="0" Canvas.Top="0" Width="16" Height="16">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="{x:Type Ellipse}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="True">
+                                                                    <Setter Property="Fill" Value="#DB4437" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="False">
+                                                                    <Setter Property="Fill" Value="#FF53B953" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                                <Path Fill="#FFFFFFFF" StrokeThickness=".5" Stroke="#FFFFFFFF">
+                                                    <Path.Style>
+                                                        <Style TargetType="{x:Type Path}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="False">
+                                                                    <Setter Property="Data">
+                                                                        <Setter.Value>
+                                                                            <PathGeometry Figures="M6.88804 11.083024L12.12 5.851064 11.296838 5 6.88804 9.42275 4.823163 7.343916 4 8.16708z" FillRule="EvenOdd"/>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="True">
+                                                                    <Setter Property="Data">
+                                                                        <Setter.Value>
+                                                                            <PathGeometry Figures="M11.53 10.037728L9.007273 7.515 11.53 4.992273 10.537728 4 8.015 6.522727 5.492273 4 4.5 4.992273 7.022727 7.515 4.5 10.037728l.992273.992272L8.015 8.507273 10.537728 11.03z" FillRule="EvenOdd"/>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Path.Style>
+                                                </Path>
+                                            </Canvas>
                                         </Canvas>
-                                    </Canvas>
-                                </Viewbox>
-                                <TextBlock Text="{Binding Path=ServiceWatcher.StatusSummary, Converter={StaticResource Converter.CapitalizeFirstLetterConverter}}" VerticalAlignment="Top">
-                                    <TextBlock.Style>
-                                        <Style TargetType="{x:Type TextBlock}">
-                                            <Setter Property="Foreground" Value="Green"/>
-                                            <Setter Property="Margin" Value="5,-1,0,0"/>
-                                            <Setter Property="FontWeight" Value="Medium"/>
+                                    </Viewbox>
+                                    <TextBlock Text="{Binding Path=ServiceWatcher.StatusSummary, Converter={StaticResource Converter.CapitalizeFirstLetterConverter}}" VerticalAlignment="Top">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}">
+                                                <Setter Property="Foreground" Value="Green"/>
+                                                <Setter Property="Margin" Value="5,-1,0,0"/>
+                                                <Setter Property="FontWeight" Value="Medium"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="True">
+                                                        <Setter Property="Foreground" Value="#db4437" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                                <Rectangle Fill="Transparent">
+                                    <Rectangle.Style>
+                                        <Style TargetType="{x:Type Rectangle}">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="True">
-                                                    <Setter Property="Foreground" Value="#db4437" />
+                                                    <Setter Property="ToolTip">
+                                                        <Setter.Value>
+                                                            <TextBlock>
+                                                                The Tentacle Windows Service (<Run Text="{Binding Path=ServiceWatcher.ServiceName, Mode=OneWay}"/>) is 
+                                                                <Run Text="{Binding Path=ServiceWatcher.StatusSummary}" />.
+                                                            </TextBlock>
+                                                        </Setter.Value>
+                                                    </Setter>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </StackPanel>
+                                    </Rectangle.Style>
+                                </Rectangle>
+                            </Grid>
 
                             <!-- Communication Mode -->
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Communication Mode:" HorizontalAlignment="Right" Margin="0,0,20,25" FontWeight="Bold"/>

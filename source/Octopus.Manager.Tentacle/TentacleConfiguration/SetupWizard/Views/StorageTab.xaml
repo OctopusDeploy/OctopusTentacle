@@ -34,9 +34,9 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <TextBox Grid.Column="0" Grid.Row="0" Text="{Binding Path=HomeDirectory, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="Tentacle configuration and logs directory" />
+            <TextBox Grid.Column="0" Grid.Row="0" Text="{Binding Path=HomeDirectory, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Tentacle configuration and logs directory" />
             <Button Grid.Column="1" Grid.Row="0" Margin="10,0,0,0" Content="BROWSE" Width="100" Height="30" Click="BrowseHomeDirButtonClicked" VerticalAlignment="Bottom" />
-            <TextBox Grid.Column="0" Margin="0,20,0,0" Grid.Row="1" Text="{Binding Path=ApplicationInstallDirectory, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="Tentacle will install applications to (by default)"/>
+            <TextBox Grid.Column="0" Margin="0,20,0,0" Grid.Row="1" Text="{Binding Path=ApplicationInstallDirectory, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Tentacle will install applications to (by default)"/>
             <Button Grid.Column="1" Grid.Row="1" Margin="10,0,0,0" Content="BROWSE" Width="100" Height="30" Click="BrowseAppDirButtonClicked" VerticalAlignment="Bottom" />
         </Grid>
     </Grid>
