@@ -186,6 +186,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Border Grid.Row="0"
                         CornerRadius="2 2 0 0"
@@ -193,10 +194,14 @@
                         Height="{StaticResource PopupTopBottomMargin}"/>
 
                 <ContentPresenter Grid.Row="1"/>
-
-                <Border Grid.Row="2"
+                <Grid Grid.Row="2" Background="White">
+                    <TextBlock Margin="15 10">
+                        <Hyperlink Command="New">New Tentacle...</Hyperlink>
+                    </TextBlock>
+                </Grid>
+                <Border Grid.Row="3"
                         CornerRadius="0 0 2 2"
-                        Height="{StaticResource PopupTopBottomMargin}"
+                        Height="2"
                         Background="#ffffff" />
             </Grid>
         </Grid>
