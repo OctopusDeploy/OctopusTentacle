@@ -28,7 +28,7 @@ namespace Octopus.Shared.Startup
             Options.Add("stop", "Stop the Windows Service if it is running", v => serviceConfigurationState.Stop = true);
             Options.Add("reconfigure", "Reconfigure the Windows Service", v => serviceConfigurationState.Reconfigure = true);
             Options.Add("install", "Install the Windows Service", v => serviceConfigurationState.Install = true);
-            Options.Add("username=", "Username to run the service under (DOMAIN\\Username format). Only used when --install or --reconfigure are used.", v => serviceConfigurationState.Username = v);
+            Options.Add("username=|user=", "Username to run the service under (DOMAIN\\Username format). Only used when --install or --reconfigure are used.", v => serviceConfigurationState.Username = v);
             Options.Add("uninstall", "Uninstall the Windows Service", v => serviceConfigurationState.Uninstall = true);
             Options.Add("password=", "Password for the username specified with --username. Only used when --install or --reconfigure are used.", v =>
             {
