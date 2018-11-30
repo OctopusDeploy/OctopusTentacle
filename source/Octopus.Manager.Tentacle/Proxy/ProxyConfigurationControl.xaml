@@ -26,13 +26,12 @@
                 Margin="0,15,0,20"
                 materialDesign:HintAssist.Hint="Proxy Mode"
                 materialDesign:ComboBoxAssist.ClassicMode="True"
-                Style="{StaticResource MaterialDesignFloatingHintComboBox}" 
                 SelectedValue="{Binding ProxyConfigType, Mode=TwoWay}"
                 ItemsSource="{Binding ProxyConfigTypes, Mode=OneTime}"
                 SelectedValuePath="Key" DisplayMemberPath="Value" MinWidth="150" HorizontalAlignment="Left"/>
 
                 <StackPanel Visibility="{Binding Path=ProxyConfigType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=DefaultProxyCustomCredentials}" Margin="0,0,0,20">
-                    <TextBox Margin="0,0,0,20" Text="{Binding Path=ProxyUsername, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:HintAssist.Hint="Proxy username" materialDesign:ValidationAssist.Background="Transparent"/>
+                    <TextBox Margin="0,0,0,20" Text="{Binding Path=ProxyUsername, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:HintAssist.Hint="Proxy username" materialDesign:ValidationAssist.Background="Transparent"/>
 
                     <controls:PasswordEditor HorizontalAlignment="Left"  x:Name="proxyPass" Password="{Binding Path=ProxyPassword, Mode=TwoWay}" Margin="0,5,0,0" Width="200" />
                     <controls:ErrorMessage HorizontalAlignment="Left" Margin="0,5,0,0" ErrorPath="ProxyPassword" />
@@ -40,7 +39,7 @@
 
                 <StackPanel Visibility="{Binding Path=ProxyConfigType, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=CustomProxy}">
                     <StackPanel Margin="0,0,0,20">
-                        <TextBox Text="{Binding Path=ProxyServerHost, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Host" Name="ProxyServerHostTextBox" />
+                        <TextBox Text="{Binding Path=ProxyServerHost, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Host" Name="ProxyServerHostTextBox" />
 
                         <TextBlock  Text="DNS hostname of the Proxy server. Examples:" Style="{StaticResource TextBlock.Subtle}" Margin="0,15,0,0"/>
                         <TextBlock  Style="{StaticResource TextBlock.Subtle}" Margin="20,0,0,0">
@@ -58,11 +57,11 @@
                     </StackPanel>
 
                     <StackPanel Margin="0,0,0,20">
-                        <TextBox Text="{Binding Path=ProxyServerPort, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Port" Name="ProxyServerPortTextBox" Width="150" HorizontalAlignment="Left"/>
+                        <TextBox Text="{Binding Path=ProxyServerPort, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Port" Name="ProxyServerPortTextBox" Width="150" HorizontalAlignment="Left"/>
                         <TextBlock Text="The TCP port of the Proxy server" Style="{StaticResource TextBlock.Subtle}" Margin="0,15,0,0"/>
                     </StackPanel>
 
-                    <TextBox Margin="0,0,0,20" Text="{Binding Path=ProxyUsername, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Login" />
+                    <TextBox Margin="0,0,0,20" Text="{Binding Path=ProxyUsername, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Login" />
 
                     <controls:PasswordEditor HorizontalAlignment="Left" x:Name="CustomProxyPass" Password="{Binding Path=ProxyPassword, Mode=TwoWay}" Margin="0,5,0,0" Width="200" />
                     <controls:ErrorMessage HorizontalAlignment="Left" Margin="0,5,0,0" ErrorPath="ProxyPassword" />
