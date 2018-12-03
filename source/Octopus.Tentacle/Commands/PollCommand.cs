@@ -94,14 +94,16 @@ namespace Octopus.Tentacle.Commands
 
             if (!alreadyConfiguredServersInCluster.Any())
             {
-                throw new ControlledFailureException("The thumbprint of this server is not trusted. You must first trust this server using the configure command.");
+                throw new ControlledFailureException($"The Octopus Server with the thumbprint '{serverThumbprint}' is not trusted yet. " +
+                    $"Trust this Octopus Server using 'Tentacle.exe configure --trust=\"{serverThumbprint}\"");
             }
 
             OctopusServerConfiguration pollingServerConfiguration = alreadyConfiguredServersInCluster
                 .FirstOrDefault(c => c.CommunicationStyle == CommunicationStyle.TentacleActive && c.SubscriptionId != null);
             if (pollingServerConfiguration == null)
             {
-                throw new ControlledFailureException("This server has not been configured as a polling tentacle. Reconfigure the server as a polling tentacle using the server-comms command.");
+                throw new ControlledFailureException("This Octopus Server has not been configured as a polling Tentacle. " +
+                    $"Reconfigure the server as a polling Tentacle using 'Tentacle.exe server-comms --thumbprint=\"{serverThumbprint}\" --style=TentacleActive'");
             }
 
             return pollingServerConfiguration;
