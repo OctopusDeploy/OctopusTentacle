@@ -78,6 +78,9 @@ namespace Octopus.Tentacle.Commands
                 await repository.Machines.Delete(machineResource);
             }
 
+            log.Info("The Octopus Server is still trusted. " +
+                "If you wish to remove trust for this Octopus Server, use 'Tentacle.exe configure --remove-trust=...'");
+
             log.Info(DeregistrationSuccessMsg);
         }
     }
