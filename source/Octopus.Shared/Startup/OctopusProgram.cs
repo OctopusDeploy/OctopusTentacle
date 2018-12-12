@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading.Tasks;
 using Autofac;
+using Autofac.Core;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -60,17 +61,6 @@ namespace Octopus.Shared.Startup
                 DisableConsoleLogging();
             }, hide: true);
             commonOptions.Add("help", "Show detailed help for this command", v => { helpSwitchProvidedInCommandArguments = true; });
-        }
-
-        public IContainer Container
-        {
-            get
-            {
-                if (container == null)
-                    throw new ApplicationException("The container has not yet been initialized. Please do not attempt to access the container until later in the application startup lifecycle.");
-
-                return container;
-            }
         }
 
         public int Run()
@@ -142,62 +132,25 @@ namespace Octopus.Shared.Startup
                 // If we make it to here we can set the error code as either an UnknownCommand for which you got some help, or Success!
                 exitCode = (int)(commandFromCommandLine == null ? ExitCode.UnknownCommand : ExitCode.Success);
             }
+            catch (DependencyResolutionException ex) when (ex.InnerException is ControlledFailureException)
+            {
+                exitCode = HandleException(ex.InnerException);
+            }
             catch (ControlledFailureException ex)
             {
-                log.Fatal(ex.Message);
-                exitCode = (int)ExitCode.ControlledFailureException;
+                exitCode = HandleException(ex);
             }
             catch (SecurityException ex)
             {
-                log.Fatal(ex, "A security exception was encountered. Please try re-running the command as an Administrator from an elevated command prompt.");
-                log.Fatal(ex);
-                exitCode = (int)ExitCode.SecurityException;
+                exitCode = HandleException(ex);
             }
             catch (ReflectionTypeLoadException ex)
             {
-                log.Fatal(ex);
-
-                foreach (var loaderException in ex.LoaderExceptions)
-                {
-                    log.Error(loaderException);
-
-                    if (!(loaderException is FileNotFoundException))
-                        continue;
-
-                    var exFileNotFound = loaderException as FileNotFoundException;
-                    if (!string.IsNullOrEmpty(exFileNotFound.FusionLog))
-                    {
-                        log.ErrorFormat("Fusion log: {0}", exFileNotFound.FusionLog);
-                    }
-                }
-
-                exitCode = (int)ExitCode.ReflectionTypeLoadException;
+                exitCode = HandleException(ex);
             }
             catch (Exception ex)
             {
-                var unpacked = ex.UnpackFromContainers();
-                log.Error(new string('=', 79));
-                log.Fatal(unpacked.PrettyPrint());
-
-                ExceptionKnowledgeBaseEntry entry;
-                if (ExceptionKnowledgeBase.TryInterpret(unpacked, out entry))
-                {
-                    log.Error(new string('=', 79));
-                    log.Error(entry.Summary);
-                    if (entry.HelpText != null || entry.HelpLink != null)
-                    {
-                        log.Error(new string('-', 79));
-                        if (entry.HelpText != null)
-                        {
-                            log.Error(entry.HelpText);
-                        }
-                        if (entry.HelpLink != null)
-                        {
-                            log.Error($"See: {entry.HelpLink}");
-                        }
-                    }
-                }
-                exitCode = (int)ExitCode.GeneralException;
+                exitCode = HandleException(ex);
             }
 
             host?.OnExit(exitCode);
@@ -207,6 +160,69 @@ namespace Octopus.Shared.Startup
             if (exitCode != (int)ExitCode.Success && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
+        }
+
+        private int HandleException(Exception ex)
+        {
+            var unpacked = ex.UnpackFromContainers();
+            log.Error(new string('=', 79));
+            log.Fatal(unpacked.PrettyPrint());
+
+            ExceptionKnowledgeBaseEntry entry;
+            if (ExceptionKnowledgeBase.TryInterpret(unpacked, out entry))
+            {
+                log.Error(new string('=', 79));
+                log.Error(entry.Summary);
+                if (entry.HelpText != null || entry.HelpLink != null)
+                {
+                    log.Error(new string('-', 79));
+                    if (entry.HelpText != null)
+                    {
+                        log.Error(entry.HelpText);
+                    }
+
+                    if (entry.HelpLink != null)
+                    {
+                        log.Error($"See: {entry.HelpLink}");
+                    }
+                }
+            }
+
+            return (int)ExitCode.GeneralException;
+        }
+
+        private int HandleException(ReflectionTypeLoadException ex)
+        {
+            log.Fatal(ex);
+
+            foreach (var loaderException in ex.LoaderExceptions)
+            {
+                log.Error(loaderException);
+
+                if (!(loaderException is FileNotFoundException))
+                    continue;
+
+                var exFileNotFound = loaderException as FileNotFoundException;
+                if (!string.IsNullOrEmpty(exFileNotFound.FusionLog))
+                {
+                    log.ErrorFormat("Fusion log: {0}", exFileNotFound.FusionLog);
+                }
+            }
+
+            return (int)ExitCode.ReflectionTypeLoadException;
+        }
+
+        private int HandleException(SecurityException ex)
+        {
+            log.Fatal(ex, "A security exception was encountered. Please try re-running the command as an Administrator from an elevated command prompt.");
+            log.Fatal(ex);
+            return (int)ExitCode.SecurityException;
+        }
+
+        private int HandleException(ControlledFailureException ex)
+        {
+            log.Fatal(ex.Message);
+            return (int)ExitCode.ControlledFailureException;
         }
 
         static void CleanFileSystem(ILog log)

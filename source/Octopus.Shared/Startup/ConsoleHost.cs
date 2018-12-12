@@ -20,21 +20,14 @@ namespace Octopus.Shared.Startup
 
         public void Run(Action<ICommandRuntime> start, Action shutdown)
         {
-            try
-            {
-                Console.ResetColor();
-                SafelySetConsoleTitle(displayName);
+            Console.ResetColor();
+            SafelySetConsoleTitle(displayName);
 
-                start(this);
+            start(this);
 
-                Console.ResetColor();
-                shutdown();
-                Console.ResetColor();
-            }
-            catch (DependencyResolutionException rex) when (rex.InnerException is ControlledFailureException)
-            {
-                throw rex.InnerException;
-            }
+            Console.ResetColor();
+            shutdown();
+            Console.ResetColor();
         }
 
         static readonly OctopusProgram.ExitCode[] FriendlyExitCodes =
