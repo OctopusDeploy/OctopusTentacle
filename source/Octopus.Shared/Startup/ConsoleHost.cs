@@ -25,7 +25,7 @@ namespace Octopus.Shared.Startup
             start(this);
             Stop(shutdown);
         }
-        
+
         public void Stop(Action shutdown)
         {
             Console.ResetColor();

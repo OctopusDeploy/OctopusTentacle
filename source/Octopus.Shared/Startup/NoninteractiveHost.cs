@@ -14,6 +14,11 @@ namespace Octopus.Shared.Startup
             shutdown();
         }
 
+        public void Stop(Action shutdown)
+        {
+            shutdown();
+        }
+
         public void OnExit(int exitCode)
         {
             // Only applicable for interactive hosts

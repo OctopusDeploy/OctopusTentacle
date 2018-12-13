@@ -174,19 +174,19 @@ namespace Octopus.Shared.Startup
              */
             var hr = new CtrlSignaling.HandlerRoutine(type =>
             {
-                Stop();
+                host.Stop(Shutdown);
                 return true;
             });
             CtrlSignaling.SetConsoleCtrlHandler(hr, true);
-            host.Run(Start, Stop);
+            host.Run(Start, Shutdown);
             GC.KeepAlive(hr);
         }
         #else
 private void RunHost(ICommandHost host)
         {
-            Console.CancelKeyPress += (s, e) => Stop(); //SIGINT (ControlC) and SIGQUIT (ControlBreak)
-            AppDomain.CurrentDomain.ProcessExit += (s, e) => Stop(); //SIGTERM - i.e. Docker Stop
-            host.Run(Start, Stop);
+            Console.CancelKeyPress += (s, e) => Shutdown(); //SIGINT (ControlC) and SIGQUIT (ControlBreak)
+            AppDomain.CurrentDomain.ProcessExit += (s, e) => Shutdown(); //SIGTERM - i.e. Docker Stop
+            host.Run(Start, Shutdown);
         }
 #endif
 
@@ -538,10 +538,10 @@ private void RunHost(ICommandHost host)
             return first;
         }
 
-        private readonly object singleStopLock = new object();
-        void Stop()
+        private readonly object singleShutdownLock = new object();
+        void Shutdown()
         {
-            if (!Monitor.TryEnter(singleStopLock)) return;
+            if (!Monitor.TryEnter(singleShutdownLock)) return;
             if (responsibleCommand != null)
             {
                 log.TraceFormat("Sending stop signal to current command");
