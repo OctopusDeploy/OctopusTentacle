@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>Octopus.Shared</RootNamespace>
     <AssemblyName>Octopus.Shared</AssemblyName>
@@ -17,7 +17,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX</DefineConstants>
+    <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK</DefineConstants>

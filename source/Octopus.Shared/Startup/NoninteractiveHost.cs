@@ -11,6 +11,7 @@ namespace Octopus.Shared.Startup
         public void Run(Action<ICommandRuntime> start, Action shutdown)
         {
             start(this);
+            shutdown();
         }
 
         public void OnExit(int exitCode)
