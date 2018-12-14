@@ -22,9 +22,12 @@ namespace Octopus.Shared.Startup
         {
             Console.ResetColor();
             SafelySetConsoleTitle(displayName);
-
             start(this);
+            Stop(shutdown);
+        }
 
+        public void Stop(Action shutdown)
+        {
             Console.ResetColor();
             shutdown();
             Console.ResetColor();

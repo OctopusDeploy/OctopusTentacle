@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Core;
@@ -127,8 +128,8 @@ namespace Octopus.Shared.Startup
                     out var forceNoninteractiveHost);
 
                 host = SelectMostAppropriateHost(responsibleCommand, displayName, log, forceConsoleHost, forceNoninteractiveHost);
-                host.Run(Start, Stop);
-
+                
+                RunHost(host);
                 // If we make it to here we can set the error code as either an UnknownCommand for which you got some help, or Success!
                 exitCode = (int)(commandFromCommandLine == null ? ExitCode.UnknownCommand : ExitCode.Success);
             }
@@ -161,6 +162,33 @@ namespace Octopus.Shared.Startup
                 Debugger.Break();
             return exitCode;
         }
+
+        #if FULL_FRAMEWORK
+        private void RunHost(ICommandHost host)
+        {
+            /*
+             * The handler raises under the following conditions:
+             *  - Ctrl+C (CTRL_C_EVENT)
+             *  - Closing Window (CTRL_CLOSE_EVENT)
+             *  - Docker Stop (CTRL_SHUTDOWN_EVENT)
+             */
+            var hr = new CtrlSignaling.HandlerRoutine(type =>
+            {
+                host.Stop(Shutdown);
+                return true;
+            });
+            CtrlSignaling.SetConsoleCtrlHandler(hr, true);
+            host.Run(Start, Shutdown);
+            GC.KeepAlive(hr);
+        }
+        #else
+private void RunHost(ICommandHost host)
+        {
+            Console.CancelKeyPress += (s, e) => Shutdown(); //SIGINT (ControlC) and SIGQUIT (ControlBreak)
+            AppDomain.CurrentDomain.ProcessExit += (s, e) => Shutdown(); //SIGTERM - i.e. Docker Stop
+            host.Run(Start, Shutdown);
+        }
+#endif
 
         private int HandleException(Exception ex)
         {
@@ -510,8 +538,10 @@ namespace Octopus.Shared.Startup
             return first;
         }
 
-        void Stop()
+        private readonly object singleShutdownLock = new object();
+        void Shutdown()
         {
+            if (!Monitor.TryEnter(singleShutdownLock)) return;
             if (responsibleCommand != null)
             {
                 log.TraceFormat("Sending stop signal to current command");
@@ -552,5 +582,24 @@ namespace Octopus.Shared.Startup
             public static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
         }
 #endif
+        
+    #if FULL_FRAMEWORK
+    public static class CtrlSignaling
+    {
+        [DllImport("Kernel32.dll")]
+        public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
+    
+        public delegate bool HandlerRoutine(CtrlTypes CtrlType);
+    
+        public enum CtrlTypes
+        {
+            CTRL_C_EVENT = 0,
+            CTRL_BREAK_EVENT = 1,
+            CTRL_CLOSE_EVENT = 2,
+            CTRL_LOGOFF_EVENT = 5,
+            CTRL_SHUTDOWN_EVENT = 6
+        }
+    }
+    #endif
     }
 }
