@@ -163,9 +163,9 @@ namespace Octopus.Shared.Startup
             return exitCode;
         }
 
-        #if FULL_FRAMEWORK
         private void RunHost(ICommandHost host)
         {
+#if FULL_FRAMEWORK        
             /*
              * The handler raises under the following conditions:
              *  - Ctrl+C (CTRL_C_EVENT)
@@ -179,16 +179,14 @@ namespace Octopus.Shared.Startup
             });
             CtrlSignaling.SetConsoleCtrlHandler(hr, true);
             host.Run(Start, Shutdown);
-            GC.KeepAlive(hr);
-        }
-        #else
-private void RunHost(ICommandHost host)
-        {
+            GC.KeepAlive(hr);        
+#else
             Console.CancelKeyPress += (s, e) => Shutdown(); //SIGINT (ControlC) and SIGQUIT (ControlBreak)
             AppDomain.CurrentDomain.ProcessExit += (s, e) => Shutdown(); //SIGTERM - i.e. Docker Stop
             host.Run(Start, Shutdown);
-        }
+        
 #endif
+        }
 
         private int HandleException(Exception ex)
         {
