@@ -20,17 +20,17 @@ namespace Octopus.Shared.Startup
                 log.Info("The Windows Service has started");
             });
 
-            var stopService = new Action(delegate
-            {
-                log.Info("Stopping the Windows Service");
-                shutdown();
-                log.Info("The Windows Service has stopped");
-            });
-
-            var adapter = new WindowsServiceAdapter(startService, stopService);
+            var adapter = new WindowsServiceAdapter(startService, () => Stop(shutdown));
 
             log.Trace("Running the service host adapter");
             ServiceBase.Run(adapter);
+        }
+
+        public void Stop(Action shutdown)
+        {
+            log.Info("Stopping the Windows Service");
+            shutdown();
+            log.Info("The Windows Service has stopped");
         }
 
         public void OnExit(int exitCode)
