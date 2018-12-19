@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Commands.OptionSets
         {
             options.Add("server=", "The Octopus Server - e.g., 'http://octopus'", s => Server = s);
             options.Add("apiKey=", "Your API key; you can get this from the Octopus web portal", s => ApiKey = s, sensitive: true);
-            options.Add("u|username=", "If not using API keys, your username", s => Username = s);
+            options.Add("u|username=|user=", "If not using API keys, your username", s => Username = s);
             options.Add("p|password=", "If not using API keys, your password", s => Password = s, sensitive: true);
         }
 
