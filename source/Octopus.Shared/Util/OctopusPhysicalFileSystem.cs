@@ -416,16 +416,14 @@ namespace Octopus.Shared.Util
 
         public void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
-            var success = GetDiskFreeSpaceEx(directoryPath, out _, out _, out var totalNumberOfFreeBytes);
-            if (!success)
-                return;
+            var driveInfo = new DriveInfo(Directory.GetDirectoryRoot(directoryPath));
 
             var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;
             // Make sure there is 10% (and a bit extra) more than we need
             required += required / 10 + 1024 * 1024;
-            if (totalNumberOfFreeBytes < required)
+            if ((ulong)driveInfo.AvailableFreeSpace < required)
             {
-                throw new IOException($"The drive containing the directory '{directoryPath}' on machine '{Environment.MachineName}' does not have enough free disk space available for this operation to proceed. The disk only has {totalNumberOfFreeBytes.ToFileSizeString()} available; please free up at least {required.ToFileSizeString()}.");
+                throw new IOException($"The drive containing the directory '{directoryPath}' on machine '{Environment.MachineName}' does not have enough free disk space available for this operation to proceed. The disk only has {driveInfo.AvailableFreeSpace.ToFileSizeString()} available; please free up at least {required.ToFileSizeString()}.");
             }
         }
 
@@ -548,12 +546,5 @@ namespace Octopus.Shared.Util
                 return true;
             }
         }
-
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool GetDiskFreeSpaceEx(string lpDirectoryName,
-            out ulong lpFreeBytesAvailable,
-            out ulong lpTotalNumberOfBytes,
-            out ulong lpTotalNumberOfFreeBytes);
     }
 }

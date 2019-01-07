@@ -3,7 +3,7 @@
     <RootNamespace>Octopus.Shared</RootNamespace>
     <AssemblyName>Octopus.Shared</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
     <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
@@ -47,6 +47,7 @@
     <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
     <PackageReference Include="Octopus.Diagnostics" Version="1.2.0" />
     <PackageReference Include="Octopus.Time" Version="1.1.2" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.4" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
@@ -82,7 +83,6 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
     <EmbeddedResource Include="Internals\Options\_Readme.txt" />
-    <EmbeddedResource Include="Internals\CertificateGeneration\_Readme.txt" />
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
     <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
     <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />

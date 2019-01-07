@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using Octopus.Configuration;
 using Octopus.Shared.Util;
 
@@ -16,11 +17,7 @@ namespace Octopus.Shared.Configuration
             this.application = application;
             this.settings = settings;
 
-            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            if (string.IsNullOrWhiteSpace(programFiles)) // 32 bit
-                programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-
-            defaultHome = Path.Combine(Directory.GetDirectoryRoot(programFiles), "Octopus");
+            defaultHome = Path.Combine(Directory.GetDirectoryRoot(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)), "Octopus");
         }
 
         public string ApplicationSpecificHomeDirectory => HomeDirectory == null ? null : Path.Combine(HomeDirectory, application.ToString());
@@ -34,7 +31,7 @@ namespace Octopus.Shared.Configuration
                     value = PathHelper.ResolveRelativeDirectoryPath(value);
                 return value;
             }
-            set { settings.Set("Octopus.Home", value); }
+            set => settings.Set("Octopus.Home", value);
         }
     }
 }

@@ -38,7 +38,7 @@ namespace Octopus.Shared.Threading
             cancellationToken.ThrowIfCancellationRequested();
 
             // Create a new named Semaphore - note this is cross-process
-            var semaphore = new Semaphore(1, 1, Normalize(name));
+            var semaphore = new Semaphore(1, 1);
 
             // Try to acquire the semaphore for a few seconds before reporting we are going to start waiting
             if (AcquireSemaphore(semaphore, cancellationToken, InitialAcquisitionAttemptTimeout))
