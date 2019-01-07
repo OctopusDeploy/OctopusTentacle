@@ -2,7 +2,7 @@
   <PropertyGroup>
     <RootNamespace>Octopus.Tentacle.Tests</RootNamespace>
     <AssemblyName>Octopus.Tentacle.Tests</AssemblyName>
-    <TargetFrameworks>net452;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
