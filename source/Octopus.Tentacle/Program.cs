@@ -29,9 +29,6 @@ namespace Octopus.Tentacle
             commandLineArguments)
         {
             ServicePointManager.SecurityProtocol =
-#if !NETCOREAPP2_0
-                SecurityProtocolType.Ssl3 |
-#endif
                 SecurityProtocolType.Tls
                 | SecurityProtocolType.Tls11
                 | SecurityProtocolType.Tls12;
