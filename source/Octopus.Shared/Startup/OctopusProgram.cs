@@ -174,6 +174,7 @@ namespace Octopus.Shared.Startup
              */
             var hr = new CtrlSignaling.HandlerRoutine(type =>
             {
+                log.Trace("Shutdown signal received: "+ type);
                 host.Stop(Shutdown);
                 return true;
             });
@@ -181,8 +182,18 @@ namespace Octopus.Shared.Startup
             host.Run(Start, Shutdown);
             GC.KeepAlive(hr);        
 #else
-            Console.CancelKeyPress += (s, e) => Shutdown(); //SIGINT (ControlC) and SIGQUIT (ControlBreak)
-            AppDomain.CurrentDomain.ProcessExit += (s, e) => Shutdown(); //SIGTERM - i.e. Docker Stop
+            Console.CancelKeyPress += (s, e) =>
+            {
+                //SIGINT (ControlC) and SIGQUIT (ControlBreak)
+                log.Trace("CancelKeyPress signal received: "+ e.SpecialKey);
+                Shutdown();
+            }; 
+            AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+            {
+                //SIGTERM - i.e. Docker Stop
+                log.Trace("AppDomain process exiting");
+                Shutdown();
+            }; 
             host.Run(Start, Shutdown);
         
 #endif
