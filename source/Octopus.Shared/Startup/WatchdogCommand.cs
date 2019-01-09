@@ -27,13 +27,19 @@ namespace Octopus.Shared.Startup
 
             Options.Add("create", "Create the watchdog task for the given instances", v =>
             {
-                createTask = true;
-                log.Info("Creating watchdog task");
+                if (this.watchdog.Value.IsAvailable)
+                {
+                    createTask = true;
+                    log.Info("Creating watchdog task");
+                }
             });
             Options.Add("delete", "Delete the watchdog task for the given instances", v =>
             {
-                deleteTask = true;
-                log.Info("Removing watchdog task");
+                if (this.watchdog.Value.IsAvailable)
+                {
+                    deleteTask = true;
+                    log.Info("Removing watchdog task"); 
+                }
             });
             Options.Add("interval=", "The interval, in minutes, at which that the service(s) should be checked (default: 5)", v =>
             {
@@ -48,6 +54,12 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
+            if (!this.watchdog.Value.IsAvailable)
+            {
+                log.Info("Command not available");
+                return;
+            }
+
             log.Info("ApplicationName: " + applicationName);
             var instanceNames = string.Join(",", instances);
             log.Info("Instances: " + instanceNames);

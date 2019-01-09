@@ -30,5 +30,7 @@ namespace Octopus.Shared.Services
             // nothing to see here
             return EmptyWatchdogConfiguration;
         }
+
+        public bool IsAvailable => false;
     }
 }
