@@ -55,7 +55,7 @@ namespace Octopus.Shared.Configuration
                 builder.RegisterType<Watchdog>().As<IWatchdog>()
                     .WithParameter("applicationName", applicationName);
             }
-            else if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
+            else
             {
                 builder.RegisterType<NullWatchdog>().As<IWatchdog>()
                     .WithParameter("applicationName", applicationName);
