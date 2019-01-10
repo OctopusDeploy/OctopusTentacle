@@ -47,8 +47,6 @@ namespace Octopus.Shared.Services
             return new WatchdogConfiguration(enabled, interval, instances);
         }
 
-        public bool IsAvailable => true;
-
         public void Delete()
         {
             using (var taskService = new TaskService())

@@ -8,7 +8,5 @@ namespace Octopus.Shared.Services
         void Delete();
         void Create(string instanceNames, int interval);
         WatchdogConfiguration GetConfiguration();
-
-        bool IsAvailable { get; }
     }
 }

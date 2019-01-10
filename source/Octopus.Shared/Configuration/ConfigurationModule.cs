@@ -57,8 +57,7 @@ namespace Octopus.Shared.Configuration
             }
             else
             {
-                builder.RegisterType<NullWatchdog>().As<IWatchdog>()
-                    .WithParameter("applicationName", applicationName);
+                builder.RegisterType<NullWatchdog>().As<IWatchdog>();
             }
         }
     }
