@@ -33,7 +33,7 @@ namespace Octopus.Shared.Startup
             Options.Add("delete", "Delete the watchdog task for the given instances", v =>
             {
                 deleteTask = true;
-                log.Info("Removing watchdog task");
+                log.Info("Removing watchdog task"); 
             });
             Options.Add("interval=", "The interval, in minutes, at which that the service(s) should be checked (default: 5)", v =>
             {
