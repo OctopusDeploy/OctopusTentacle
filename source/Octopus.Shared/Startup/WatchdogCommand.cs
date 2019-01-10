@@ -56,8 +56,7 @@ namespace Octopus.Shared.Startup
         {
             if (!this.watchdog.Value.IsAvailable)
             {
-                log.Info("Command not available");
-                return;
+                throw new ControlledFailureException("Watchdog is not supported on this operating system.");
             }
 
             log.Info("ApplicationName: " + applicationName);
