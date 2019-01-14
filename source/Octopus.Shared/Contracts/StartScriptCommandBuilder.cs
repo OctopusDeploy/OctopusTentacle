@@ -15,6 +15,8 @@ namespace Octopus.Shared.Contracts
 
         readonly List<string> arguments = new List<string>();
 
+        readonly Dictionary<ScriptType, string> additionalScripts = new Dictionary<ScriptType, string>();
+
         TimeSpan scriptIsolationMutexTimeout = ScriptIsolationMutex.NoTimeout;
         string taskId;
 
@@ -27,6 +29,12 @@ namespace Octopus.Shared.Contracts
         public StartScriptCommandBuilder WithReplacementInScriptBody(string oldValue, string newValue)
         {
             scriptBody.Replace(oldValue, newValue);
+            return this;
+        }
+
+        public StartScriptCommandBuilder WithAdditionalScriptTypes(ScriptType scriptType, string scriptBody)
+        {
+            additionalScripts.Add(scriptType, scriptBody);
             return this;
         }
 
