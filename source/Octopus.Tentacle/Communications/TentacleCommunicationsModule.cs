@@ -68,7 +68,8 @@ namespace Octopus.Tentacle.Communications
             new KeyValuePair<string, string>("Referrer-Policy", "no-referrer"),
             new KeyValuePair<string, string>("X-Content-Type-Options", "nosniff"),
             new KeyValuePair<string, string>("X-Frame-Options", "DENY"),
-            new KeyValuePair<string, string>("X-XSS-Protection",  "1; mode=block")
+            new KeyValuePair<string, string>("X-XSS-Protection",  "1; mode=block"),
+            new KeyValuePair<string, string>("Strict-Transport-Security",  "max-age=31536000")
         };
     }
 }
