@@ -2,6 +2,7 @@ using System;
 using Autofac;
 using Octopus.Configuration;
 using Octopus.Shared.Services;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
@@ -46,8 +47,20 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<PollingProxyConfiguration>().As<IPollingProxyConfiguration>();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
             builder.RegisterType<ProxyInitializer>().As<IProxyInitializer>().SingleInstance();
-            builder.RegisterType<Watchdog>().As<IWatchdog>()
-                .WithParameter("applicationName", applicationName);
+            RegisterWatchdog(builder);
+        }
+
+        private void RegisterWatchdog(ContainerBuilder builder)
+        {
+            if (PlatformDetection.IsRunningOnWindows)
+            {
+                builder.RegisterType<Watchdog>().As<IWatchdog>()
+                    .WithParameter("applicationName", applicationName);
+            }
+            else
+            {
+                builder.RegisterType<NullWatchdog>().As<IWatchdog>();
+            }
         }
     }
 }

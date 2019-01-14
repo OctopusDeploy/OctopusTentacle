@@ -27,6 +27,7 @@ namespace Octopus.Shared.Tests.Integration
         }
 
         [Test]
+        [Retry(3)]
         public void RejectsInvalidCertificate()
         {
             var expected = generator.GenerateNew("CN=expected", new NullLog());

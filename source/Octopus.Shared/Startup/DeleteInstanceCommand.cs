@@ -5,37 +5,29 @@ using Octopus.Shared.Configuration;
 
 namespace Octopus.Shared.Startup
 {
-    public class DeleteInstanceCommand : AbstractCommand
+    public class DeleteInstanceCommand : AbstractStandardCommand
     {
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ILog log;
-        string instanceName;
 
-        public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector, ILog log)
+        public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector, ILog log): base(instanceSelector)
         {
             this.instanceSelector = instanceSelector;
             this.log = log;
-            Options.Add("instance=", "Name of the instance to delete", v => instanceName = v);
         }
 
         protected override void Start()
         {
-            RemoveNodeFromDatabase();
+            var currentInstance = instanceSelector.GetCurrentInstance();
+            RemoveNodeFromDatabase(currentInstance);
 
-            if (string.IsNullOrWhiteSpace(instanceName))
-            {
-                instanceSelector.DeleteDefaultInstance();
-            }
-            else
-            {
-                instanceSelector.DeleteInstance(instanceName);
-            }
+            instanceSelector.DeleteInstance();
         }
 
-        private void RemoveNodeFromDatabase()
+        private void RemoveNodeFromDatabase(LoadedApplicationInstance instance)
         {
-            var connectionString = instanceSelector.GetCurrentInstance().Configuration.Get<string>("Octopus.Storage.ExternalDatabaseConnectionString");
-            var serverName = instanceSelector.GetCurrentInstance().Configuration.Get<string>("Octopus.Server.NodeName");
+            var connectionString = instance.Configuration.Get<string>("Octopus.Storage.ExternalDatabaseConnectionString");
+            var serverName = instance.Configuration.Get<string>("Octopus.Server.NodeName");
 
             if (string.IsNullOrWhiteSpace(connectionString) || string.IsNullOrWhiteSpace(serverName))
                 return;
@@ -51,7 +43,7 @@ namespace Octopus.Shared.Startup
                         cmd.Parameters.AddWithValue("serverName", serverName);
                         cmd.ExecuteNonQuery();
                     }
-                    log.Info($"Deregistered {instanceName} from the database");
+                    log.Info($"Deregistered {instance.InstanceName} from the database");
                 }
                 catch (Exception)
                 {                    
