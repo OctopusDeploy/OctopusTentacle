@@ -12,7 +12,7 @@ namespace Octopus.Shared.Diagnostics
     public class OctopusLogsDirectoryRenderer : LayoutRenderer
     {
         public static readonly string DefaultLogsDirectory =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Octopus\\Logs");
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Path.Combine("Octopus","Logs"));
 
         static OctopusLogsDirectoryRenderer()
         {
