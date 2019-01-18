@@ -1368,8 +1368,11 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             var html = new StringBuilder();
             foreach (var aDiff in diffs)
             {
-                var text = aDiff.text.Replace("&", "&amp;").Replace("<", "&lt;")
-                    .Replace(">", "&gt;").Replace("\n", "&para;<br>");
+                var text = aDiff.text.Replace("&", "&amp;")
+                    .Replace("<", "&lt;")
+                    .Replace(">", "&gt;")
+                    .Replace("\r\n", "&para;<br>")
+                    .Replace("\n", "&para;<br>");
                 switch (aDiff.operation)
                 {
                     case Operation.INSERT:
