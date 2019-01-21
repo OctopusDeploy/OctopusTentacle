@@ -10,6 +10,11 @@
     Height="300"
     >
     <Grid>
-        <TextBox Name="ScriptTextBox" FontFamily="Consolas" Background="White" Foreground="SteelBlue" TextWrapping="NoWrap" Padding="10" FontSize="11pt" IsReadOnly="True" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBox Name="ScriptTextBox" Style="{x:Null}" Background="White" Foreground="#333" FontFamily="Consolas" TextWrapping="NoWrap" Padding="10" FontSize="11pt" IsReadOnly="True" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" VerticalAlignment="Stretch" />
+        <Button Grid.Row="1" Style="{DynamicResource CopyToClipboardButton}" HorizontalAlignment="Right" Margin="2" Click="CopyToClipboardButton"/>
     </Grid>
 </Window>
