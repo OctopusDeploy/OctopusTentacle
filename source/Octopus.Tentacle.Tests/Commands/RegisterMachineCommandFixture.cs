@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Commands
             repository.LoadRootDocument().Returns(Task.FromResult(new RootResource { Version = "3.0" }));
             octopusAsyncClient.Repository.Returns(repository);
             octopusAsyncClient.ForSystem().Returns(repository);
-            octopusAsyncClient.ForSpace(Arg.Any<string>()).Returns(repository);
+            octopusAsyncClient.ForSpace(Arg.Any<SpaceResource>()).Returns(repository);
 
             var certificateConfigurationRepository = Substitute.For<ICertificateConfigurationRepository>();
             var certificateConfigurationResource = new CertificateConfigurationResource { Thumbprint = serverThumbprint };
