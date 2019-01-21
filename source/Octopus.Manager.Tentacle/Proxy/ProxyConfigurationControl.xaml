@@ -57,7 +57,7 @@
                     </StackPanel>
 
                     <StackPanel Margin="0,0,0,20">
-                        <TextBox Text="{Binding Path=ProxyServerPort, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Port" Name="ProxyServerPortTextBox" Width="150" HorizontalAlignment="Left"/>
+                        <TextBox Text="{Binding Path=ProxyServerPort, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Proxy Port" Name="ProxyServerPortTextBox" Width="150" HorizontalAlignment="Left"/>
                         <TextBlock Text="The TCP port of the Proxy server" Style="{StaticResource TextBlock.Subtle}" Margin="0,15,0,0"/>
                     </StackPanel>
 

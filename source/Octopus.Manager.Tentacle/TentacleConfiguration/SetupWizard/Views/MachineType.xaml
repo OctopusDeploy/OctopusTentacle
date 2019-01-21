@@ -17,7 +17,7 @@
             <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Machine Type" />
 
             <TextBlock Style="{StaticResource TextBlock.Big}">
-                <Run FontWeight="Bold">Would you like to configure your Tentacle as a Deployment Target or a Worker?</Run>
+                <Run FontWeight="Bold">Would you like to configure your Tentacle as a Deployment Target or a Worker.</Run>
                 <LineBreak/>
                 <Hyperlink NavigateUri="https://g.octopushq.com/OnboardingWorkersLearnMore" RequestNavigate="Navigate">Learn more about workers.</Hyperlink>
             </TextBlock>

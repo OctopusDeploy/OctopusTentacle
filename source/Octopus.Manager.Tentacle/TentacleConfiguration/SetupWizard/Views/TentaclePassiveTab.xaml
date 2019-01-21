@@ -29,7 +29,7 @@
                 <CheckBox Style="{StaticResource MaterialDesignCheckBox}" IsChecked="{Binding Path=FirewallException}" Visibility="{Binding Path=FirewallExceptionPossible, Converter={StaticResource Converter.BooleanToVisibilityConverter}}" Margin="20,0,0,0" VerticalAlignment="Bottom">Add Windows Firewall exception</CheckBox>
             </StackPanel>
             <StackPanel MaxWidth="400" HorizontalAlignment="Left" Margin="0,20,0,0">
-                <TextBox Text="{Binding Path=OctopusThumbprint, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Octopus thumbprint" Name="OctopusThumbprintTextBox"  />
+                <TextBox Text="{Binding Path=OctopusThumbprint, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Octopus thumbprint" Name="OctopusThumbprintTextBox"  />
                 <TextBlock Style="{StaticResource TextBlock.Big}" Margin="0,15,0,0" FontSize="10" Foreground="Gray">
                     <Run>The Tentacle will only accept connections from an Octopus Server that identifies with the thumbprint above. The thumbprint can be found in the Listening Tentacle set up within your Octopus Instance.</Run>
                 </TextBlock>

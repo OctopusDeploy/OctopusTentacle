@@ -73,7 +73,7 @@
             </ItemsControl.ItemsPanel>
         </ItemsControl>
         <Grid Grid.Row="2" HorizontalAlignment="Stretch">
-            <TextBox Name="TextBox" FontSize="12" materialDesign:HintAssist.Hint="{Binding Watermark, ElementName=Root}" Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus" TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown" PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center" HorizontalAlignment="Stretch"/>
+            <TextBox Name="TextBox" FontSize="12" Style="{DynamicResource MaterialDesignTextBox}" materialDesign:HintAssist.Hint="{Binding Watermark, ElementName=Root}" Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus" TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown" PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center" HorizontalAlignment="Stretch"/>
             <Popup Name="SuggestionsPopup" AllowsTransparency="True" IsOpen="False" StaysOpen="True" PopupAnimation="Fade">
                 <Border BorderThickness="2" Width="{Binding ElementName=TextBox, Path=ActualWidth}" Background="White" CornerRadius="2">
                     <Border.Effect>

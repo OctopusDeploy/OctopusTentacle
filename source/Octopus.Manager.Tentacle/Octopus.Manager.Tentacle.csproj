@@ -116,8 +116,15 @@
     <Reference Include="NuGet.Versioning, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NuGet.Versioning.3.6.0-octopus-58692\lib\net45\NuGet.Versioning.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Client, Version=4.37.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Client.4.37.0\lib\net45\Octopus.Client.dll</HintPath>
+    <Reference Include="Octodiff, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octodiff.1.2.1\lib\net40\Octodiff.exe</HintPath>
+    </Reference>
+    <Reference Include="Octodiff, Version=1.2.1.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Octodiff.1.2.1\lib\net40\Octodiff.exe</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Octopus.Client, Version=5.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Octopus.Client.5.0.0-spaces339\lib\net45\Octopus.Client.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Configuration, Version=2.0.1.0, Culture=neutral, processorArchitecture=MSIL">
@@ -195,6 +202,9 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Controls\ErrorPanelControl.xaml.cs">
+      <DependentUpon>ErrorPanelControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\AutoCompleteTagControl.xaml.cs">
       <DependentUpon>AutoCompleteTagControl.xaml</DependentUpon>
     </Compile>
@@ -213,6 +223,7 @@
     <Compile Include="Converters\InverseBooleanConverter.cs" />
     <Compile Include="Converters\InverseBooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\StringEmptyConverter.cs" />
+    <Compile Include="Converters\StringToVisibilityConverter.cs" />
     <Compile Include="DeleteWizard\DeleteWizardLauncher.cs" />
     <Compile Include="DeleteWizard\DeleteWizardModel.cs" />
     <Compile Include="DeleteWizard\Views\DeleteWelcome.cs" />
@@ -298,6 +309,10 @@
     <Compile Include="Util\StringExtensions.cs" />
     <Compile Include="Validators\BindingProxy.cs" />
     <Compile Include="Validators\InstanceName.cs" />
+    <Page Include="Controls\ErrorPanelControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Controls\AutoCompleteTagControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
