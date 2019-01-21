@@ -10,6 +10,7 @@ using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
+using Octopus.Client;
 using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Tentacle.Configuration;
@@ -32,9 +33,8 @@ namespace Octopus.Tentacle.Commands
                                       IApplicationInstanceSelector selector,
                                       Lazy<IOctopusServerChecker> octopusServerChecker,
                                       IProxyConfigParser proxyConfig,
-                                      IOctopusClientInitializer octopusClientInitializer,
-                                      ISpaceRepositoryFactory spaceRepositoryFactory)
-            : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory)
+                                      IOctopusClientInitializer octopusClientInitializer)
+            : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer)
         {
             Options.Add("env|environment=", "The environment name to add the machine to - e.g., 'Production'; specify this argument multiple times to add multiple environments", s => environmentNames.Add(s));
             Options.Add("r|role=", "The machine role that the machine will assume - e.g., 'web-server'; specify this argument multiple times to add multiple roles", s => roles.Add(s));
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException("Please specify an role name, e.g., --role=web-server");
         }
 
-        protected override void EnhanceOperation(IRegisterMachineOperation registerOperation)
+        protected override void EnhanceOperation(IOctopusAsyncRepository repository, IRegisterMachineOperation registerOperation)
         {
             registerOperation.Tenants = tenants.ToArray();
             registerOperation.TenantTags = tenantTgs.ToArray();

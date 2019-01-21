@@ -69,40 +69,13 @@ namespace Octopus.Manager.Tentacle.Shell
             tabs.Items.Add(tabItem);
         }
 
-        async void SkipClicked(object sender, RoutedEventArgs e)
+        void NextClicked(object sender, EventArgs e)
         {
             var current = tabs.SelectedItem as ITab;
             if (current != null)
             {
                 var args = new CancelEventArgs();
-                await current.OnSkip(args);
-                if (args.Cancel)
-                    return;
-            }
-
-            var visibleTabIndexes = GetVisibleTabIndexes();
-
-            if (tabs.SelectedIndex == visibleTabIndexes.LastOrDefault())
-            {
-                Window.GetWindow(this)?.Close();
-                return;
-            }
-
-            do
-            {
-                tabs.SelectedIndex++;
-            } while (((TabView)tabs.SelectedItem).Visibility != Visibility.Visible && tabs.SelectedIndex < tabs.Items.Count - 1);
-
-            RefreshWizardButtons();
-        }
-
-        async void NextClicked(object sender, EventArgs e)
-        {
-            var current = tabs.SelectedItem as ITab;
-            if (current != null)
-            {
-                var args = new CancelEventArgs();
-                await current.OnNext(args);
+                current.OnNext(args);
                 if (args.Cancel)
                     return;
             }
@@ -151,8 +124,8 @@ namespace Octopus.Manager.Tentacle.Shell
 
         void RefreshWizardButtons()
         {
-            nextButton.Content = "NEXT";
-            backButton.Content = "BACK";
+            nextButton.Content = "Next »";
+            backButton.Content = "« Back";
 
             var visibleTabIndexes = GetVisibleTabIndexes();
 
@@ -173,7 +146,7 @@ namespace Octopus.Manager.Tentacle.Shell
 
             if (tabs.SelectedIndex == visibleTabIndexes.LastOrDefault())
             {
-                nextButton.Content = "FINISH";
+                nextButton.Content = "Finish";
             }
 
             for (var i = 0; i < tabs.Items.Count; i++)

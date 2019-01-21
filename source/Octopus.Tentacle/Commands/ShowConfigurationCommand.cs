@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Octopus.Client;
@@ -31,8 +30,6 @@ namespace Octopus.Tentacle.Commands
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly ILog log;
-        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
-        string spaceName;
 
         public override bool SuppressConsoleLogging => true;
 
@@ -43,8 +40,7 @@ namespace Octopus.Tentacle.Commands
             Lazy<IWatchdog> watchdog,
             IProxyConfigParser proxyConfig,
             IOctopusClientInitializer octopusClientInitializer,
-            ILog log,
-            ISpaceRepositoryFactory spaceRepositoryFactory) : base(instanceSelector)
+            ILog log) : base(instanceSelector)
         {
             this.instanceSelector = instanceSelector;
             this.fileSystem = fileSystem;
@@ -53,10 +49,8 @@ namespace Octopus.Tentacle.Commands
             this.proxyConfig = proxyConfig;
             this.octopusClientInitializer = octopusClientInitializer;
             this.log = log;
-            this.spaceRepositoryFactory = spaceRepositoryFactory;
 
             Options.Add("file=", "Exports the server configuration to a file. If not specified output goes to the console", v => file = v);
-            Options.Add("space=", "The space from which the server data configuration will be retrieved for, - e.g. 'Finance Department' where Finance Department is the name of an existing space; the default value is the Default space, if one is designated.", s => spaceName = s);
             apiEndpointOptions = AddOptionSet(new ApiEndpointOptions(Options) { Optional = true });
         }
 
@@ -125,7 +119,7 @@ namespace Octopus.Tentacle.Commands
             {
                 using (var client = await octopusClientInitializer.CreateClient(apiEndpointOptions, proxyOverride))
                 {
-                    var repository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
+                    var repository = new OctopusAsyncRepository(client);
                     var matchingMachines = await repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
 
                     switch (matchingMachines.Count)
@@ -157,25 +151,20 @@ namespace Octopus.Tentacle.Commands
             }
         }
 
-        async Task CollectionServerSideConfigurationFromMachine(IKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, MachineResource machine)
+        async Task CollectionServerSideConfigurationFromMachine(IKeyValueStore outputStore, IOctopusAsyncRepository repository, MachineResource machine)
         {
             var environments = await repository.Environments.FindAll();
             outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
-
-            if (await repository.HasLink("Tenants"))
+            var featuresConfiguration = await repository.FeaturesConfiguration.GetFeaturesConfiguration();
+            if (featuresConfiguration.IsMultiTenancyEnabled)
             {
                 var tenants = await repository.Tenants.FindAll();
                 outputStore.Set("Tentacle.Tenants", tenants.Where(x => machine.TenantIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
                 outputStore.Set("Tentacle.TenantTags", machine.TenantTags);
             }
-
             outputStore.Set("Tentacle.Roles", machine.Roles);
-            if (machine.MachinePolicyId != null)
-            {
-                var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
-                outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
-            }
-            
+            var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
+            outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
             outputStore.Set<string>("Tentacle.DisplayName", machine.Name);
             if (machine.Endpoint is ListeningTentacleEndpointResource)
                 outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);

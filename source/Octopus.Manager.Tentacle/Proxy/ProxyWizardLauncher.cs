@@ -31,7 +31,7 @@ namespace Octopus.Manager.Tentacle.Proxy
                 wrapper.AddPollingModel(pollingWizardModel);
             }
 
-            wizard.AddTab(new InstallTab(wrapper, container.Resolve<ICommandLineRunner>()) {ReadyMessage = "That's all the information we need. When you click the button below, your proxy settings will be saved and the service will be restarted.", SuccessMessage = "Happy deployments!", ExecuteButtonText = "APPLY", Title = "Apply", Header = "Apply"});
+            wizard.AddTab(new InstallTab(wrapper, container.Resolve<ICommandLineRunner>()) {ReadyMessage = "That's all the information we need. When you click the button below, your proxy settings will be saved and the service will be restarted.", SuccessMessage = "Happy deployments!", ExecuteButtonText = "Apply", Title = "Apply", Header = "Apply"});
 
             return BuildShell(owner, wizard).ShowDialog();
         }
@@ -57,13 +57,13 @@ namespace Octopus.Manager.Tentacle.Proxy
 
             if (!proxyConfiguration.UseDefaultProxy && string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyHost))
             {
-                wizardModel.ProxyConfigType = ProxyConfigType.NoProxy;
+                wizardModel.UseNoProxy = true;
             }
             else
             {
                 if (!string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyHost))
                 {
-                    wizardModel.ProxyConfigType = ProxyConfigType.CustomProxy;
+                    wizardModel.UseCustomProxy = true;
                     wizardModel.ProxyPassword = string.Empty;
                     wizardModel.ProxyUsername = proxyConfiguration.CustomProxyUsername;
                     wizardModel.ProxyServerHost = proxyConfiguration.CustomProxyHost;
@@ -71,13 +71,13 @@ namespace Octopus.Manager.Tentacle.Proxy
                 }
                 else if (!string.IsNullOrWhiteSpace(proxyConfiguration.CustomProxyUsername))
                 {
-                    wizardModel.ProxyConfigType = ProxyConfigType.DefaultProxyCustomCredentials;
+                    wizardModel.UseDefaultProxyCustomCredentials = true;
                     wizardModel.ProxyPassword = string.Empty;
                     wizardModel.ProxyUsername = proxyConfiguration.CustomProxyUsername;
                 }
                 else
                 {
-                    wizardModel.ProxyConfigType = ProxyConfigType.DefaultProxy;
+                    wizardModel.UseDefaultProxy = true;
                 }
             }
             return wizardModel;

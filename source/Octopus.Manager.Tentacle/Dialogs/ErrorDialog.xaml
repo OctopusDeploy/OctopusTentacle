@@ -6,11 +6,11 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     mc:Ignorable="d" 
     d:DesignHeight="300" d:DesignWidth="300"
-    TextOptions.TextFormattingMode="Ideal"
+    TextOptions.TextFormattingMode="Display"
     Width="600"
     Height="500"
     Title="Unhandled error"
-    Background="White"
+    Background="#f0f0f0"
     WindowStartupLocation="CenterScreen"
     >
     <Grid Margin="20, 10, 20, 10">
@@ -23,6 +23,6 @@
         <TextBlock Grid.Row="0" Text="Unhandled error" Name="title" Style="{StaticResource TextBlock.Heading}" Margin="0,10,0,0" />
         <TextBlock Grid.Row="1" Name="errorSummary" Style="{StaticResource TextBlock.Big}" Margin="0,10,0,0" />
 
-        <TextBox Grid.Row="2" Name="ErrorTextBox" Background="White" Foreground="Red" TextWrapping="NoWrap" Margin="10" FontSize="9pt" IsReadOnly="True" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" />
+        <TextBox Grid.Row="2" Name="ErrorTextBox" FontFamily="Consolas" Background="White" Foreground="Red" TextWrapping="NoWrap" Margin="10" FontSize="9pt" IsReadOnly="True" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" />
     </Grid>
 </Window>

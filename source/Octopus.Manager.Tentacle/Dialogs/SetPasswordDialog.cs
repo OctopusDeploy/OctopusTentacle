@@ -1,21 +1,22 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
-using MaterialDesignThemes.Wpf;
 
 namespace Octopus.Manager.Tentacle.Dialogs
 {
-    public partial class SetPasswordDialog : UserControl
+    public partial class SetPasswordDialog : Window
     {
         public SetPasswordDialog()
         {
             InitializeComponent();
+
+            password.Focus();
         }
 
         public string Password => password.Password;
 
         void SaveClicked(object sender, RoutedEventArgs e)
         {
-            DialogHost.CloseDialogCommand.Execute(true, null);
+            DialogResult = true;
+            Close();
         }
     }
 }
