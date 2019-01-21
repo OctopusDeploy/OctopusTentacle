@@ -16,6 +16,19 @@
         <Setter Property="TextOptions.TextRenderingMode" Value="Auto"/>
     </Style>
 
+    <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource MaterialDesignFloatingHintTextBox}">
+        <Setter Property="materialDesign:ValidationAssist.Background" Value="Transparent"/>
+        <Setter Property="materialDesign:HintAssist.FloatingScale" Value="0.85"/>
+    </Style>
+
+    <Style TargetType="{x:Type PasswordBox}" BasedOn="{StaticResource MaterialDesignFloatingHintPasswordBox}">
+        <Setter Property="materialDesign:HintAssist.FloatingScale" Value="0.85"/>
+    </Style>
+
+    <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource MaterialDesignFloatingHintComboBox}">
+        <Setter Property="materialDesign:HintAssist.FloatingScale" Value="0.85"/>
+    </Style>
+
     <Style TargetType="{x:Type Control}">
         <Setter Property="FontFamily" Value="{StaticResource MaterialDesignFont}"/>
         <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
@@ -173,6 +186,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Border Grid.Row="0"
                         CornerRadius="2 2 0 0"
@@ -180,10 +194,14 @@
                         Height="{StaticResource PopupTopBottomMargin}"/>
 
                 <ContentPresenter Grid.Row="1"/>
-
-                <Border Grid.Row="2"
+                <Grid Grid.Row="2" Background="White">
+                    <TextBlock Margin="15 10">
+                        <Hyperlink Command="New">New Tentacle...</Hyperlink>
+                    </TextBlock>
+                </Grid>
+                <Border Grid.Row="3"
                         CornerRadius="0 0 2 2"
-                        Height="{StaticResource PopupTopBottomMargin}"
+                        Height="2"
                         Background="#ffffff" />
             </Grid>
         </Grid>
@@ -822,8 +840,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
-    <Style TargetType="TextBox" BasedOn="{StaticResource TextBox.Default}" />
 
     <Style TargetType="Button" x:Key="Button.Default">
         <Setter Property="Foreground" Value="#2e93e0" />
