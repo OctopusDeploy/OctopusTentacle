@@ -43,6 +43,7 @@ namespace Octopus.Manager.Tentacle.Shell
 
         public void Refresh()
         {
+            var currentlySelectedInstance = selectedInstance;
             var existing = store.ListInstances(ApplicationName);
 
             Instances.Clear();
@@ -64,13 +65,19 @@ namespace Octopus.Manager.Tentacle.Shell
                 Instances.Add(new Instance {InstanceName = ApplicationInstanceRecord.GetDefaultInstance(ApplicationName), DisplayName = "(Default)"});
             }
 
-            if (string.IsNullOrWhiteSpace(selectedInstance) && Instances.Count > 0)
+            if (Instances.Count <= 0) return;
+
+            if (string.IsNullOrWhiteSpace(currentlySelectedInstance))
             {
                 SelectedInstance = Instances.First().InstanceName;
             }
-            if (Instances.All(a => a.InstanceName != selectedInstance) && Instances.Count > 0)
+            else if (Instances.All(a => a.InstanceName != currentlySelectedInstance))
             {
                 SelectedInstance = Instances.First().InstanceName;
+            }
+            else
+            {
+                SelectedInstance = currentlySelectedInstance;
             }
         }
 

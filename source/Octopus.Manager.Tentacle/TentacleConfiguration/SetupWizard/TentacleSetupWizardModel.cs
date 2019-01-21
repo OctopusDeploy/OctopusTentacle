@@ -809,8 +809,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             validator.RuleSet("TentacleActive", delegate
             {
                 validator.RuleFor(m => m.OctopusServerUrl).Must(BeAValidUrl).WithMessage("Please enter a valid Octopus Server URL");
-                validator.RuleFor(m => m.ApiKey).NotEmpty().WithMessage("Please enter your API key").When(t => t.AuthMode == AuthMode.APIKey);
-                validator.RuleFor(m => m.ApiKey).Must(s => s.StartsWith("API-")).WithMessage("The API key you provided doesn't start with \"API-\" as expected. It's possible you've copied the wrong thing from the Octopus Portal.").When(t => t.AuthMode == AuthMode.APIKey);
+                validator.RuleFor(m => m.ApiKey).Cascade(CascadeMode.StopOnFirstFailure).NotEmpty().WithMessage("Please enter your API key").When(t => t.AuthMode == AuthMode.APIKey)
+                    .Must(s => s.StartsWith("API-")).WithMessage("The API key you provided doesn't start with \"API-\" as expected. It's possible you've copied the wrong thing from the Octopus Portal.").When(t => t.AuthMode == AuthMode.APIKey);
                 validator.RuleFor(m => m.Username).NotEmpty().WithMessage("Please enter your username").When(t => t.AuthMode == AuthMode.UsernamePassword);
                 validator.RuleFor(m => m.Password).NotEmpty().WithMessage("Please enter your password").When(t => t.AuthMode == AuthMode.UsernamePassword);
             });
