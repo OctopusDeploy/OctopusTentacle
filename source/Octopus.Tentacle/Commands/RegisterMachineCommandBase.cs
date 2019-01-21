@@ -26,7 +26,6 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IOctopusServerChecker> octopusServerChecker;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
-        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
 
         readonly ILog log;
         readonly ApiEndpointOptions api;
@@ -37,7 +36,6 @@ namespace Octopus.Tentacle.Commands
         string comms = "TentaclePassive";
         int serverCommsPort = 10943;
         string proxy;
-        string spaceName;
         string serverWebSocketAddress;
         int? tentacleCommsPort = null;
 
@@ -47,8 +45,7 @@ namespace Octopus.Tentacle.Commands
             IApplicationInstanceSelector selector,
             Lazy<IOctopusServerChecker> octopusServerChecker,
             IProxyConfigParser proxyConfig,
-            IOctopusClientInitializer octopusClientInitializer,
-            ISpaceRepositoryFactory spaceRepositoryFactory)
+            IOctopusClientInitializer octopusClientInitializer)
             : base(selector)
         {
             this.lazyRegisterMachineOperation = lazyRegisterMachineOperation;
@@ -57,7 +54,6 @@ namespace Octopus.Tentacle.Commands
             this.octopusServerChecker = octopusServerChecker;
             this.proxyConfig = proxyConfig;
             this.octopusClientInitializer = octopusClientInitializer;
-            this.spaceRepositoryFactory = spaceRepositoryFactory;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
 
@@ -67,7 +63,6 @@ namespace Octopus.Tentacle.Commands
             Options.Add("f|force", "Allow overwriting of existing machines", s => allowOverwrite = true);
             Options.Add("comms-style=", "The communication style to use - either TentacleActive or TentaclePassive; the default is " + comms, s => comms = s);
             Options.Add("proxy=", "When using passive communication, the name of a proxy that Octopus should connect to the Tentacle through - e.g., 'Proxy ABC' where the proxy name is already configured in Octopus; the default is to connect to the machine directly", s => proxy = s);
-            Options.Add("space=", "The space which this machine will be added to, - e.g. 'Finance Department' where Finance Department is the name of an existing space; the default value is the Default space, if one is designated.", s => spaceName = s);
             Options.Add("server-comms-port=", "When using active communication, the comms port on the Octopus Server; the default is " + serverCommsPort, s => serverCommsPort = int.Parse(s));
             Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus Server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
             Options.Add("tentacle-comms-port=", "When using passive communication, the comms port that the Octopus Server is instructed to call back on to reach this machine; defaults to the configured listening port", s => tentacleCommsPort = int.Parse(s));
@@ -108,16 +103,17 @@ namespace Octopus.Tentacle.Commands
 
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
-                var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
-                await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle);
+                await RegisterMachine(client.Repository, serverAddress, sslThumbprint, communicationStyle);
             }
         }
 
-        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri serverAddress, string sslThumbprint, CommunicationStyle communicationStyle)
-        {
-            await ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(systemRepository);
 
-            var server = new OctopusServerConfiguration(await GetServerThumbprint(systemRepository, serverAddress, sslThumbprint))
+
+        async Task RegisterMachine(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint, CommunicationStyle communicationStyle)
+        {
+            ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(repository);
+
+            var machine = new OctopusServerConfiguration(await GetServerThumbprint(repository, serverAddress, sslThumbprint))
             {
                 Address = serverAddress,
                 CommunicationStyle = communicationStyle
@@ -126,7 +122,7 @@ namespace Octopus.Tentacle.Commands
             var registerMachineOperation = lazyRegisterMachineOperation.Value;
             registerMachineOperation.MachineName = string.IsNullOrWhiteSpace(name) ? Environment.MachineName : name;
 
-            var existingServer = configuration.Value.TrustedOctopusServers.FirstOrDefault(x => x.Address == server.Address && x.CommunicationStyle == communicationStyle);
+            var existingMachine = configuration.Value.TrustedOctopusServers.FirstOrDefault(x => x.Address == machine.Address && x.CommunicationStyle == communicationStyle);
             if (communicationStyle == CommunicationStyle.TentaclePassive)
             {
                 registerMachineOperation.TentacleHostname = string.IsNullOrWhiteSpace(publicName) ? Environment.MachineName : publicName;
@@ -136,12 +132,12 @@ namespace Octopus.Tentacle.Commands
             else if (communicationStyle == CommunicationStyle.TentacleActive)
             {
                 Uri subscriptionId;
-                if (existingServer?.SubscriptionId != null)
-                    subscriptionId = new Uri(existingServer.SubscriptionId);
+                if (existingMachine?.SubscriptionId != null)
+                    subscriptionId = new Uri(existingMachine.SubscriptionId);
                 else
                     subscriptionId = new Uri("poll://" + RandomStringGenerator.Generate(20).ToLowerInvariant() + "/");
                 registerMachineOperation.SubscriptionId = subscriptionId;
-                server.SubscriptionId = subscriptionId.ToString();
+                machine.SubscriptionId = subscriptionId.ToString();
             }
 
             registerMachineOperation.MachinePolicy = policy;
@@ -149,20 +145,20 @@ namespace Octopus.Tentacle.Commands
             registerMachineOperation.CommunicationStyle = communicationStyle;
             registerMachineOperation.TentacleThumbprint = configuration.Value.TentacleCertificate.Thumbprint;
 
-            EnhanceOperation(registerMachineOperation);
+            EnhanceOperation(repository, registerMachineOperation);
 
             await registerMachineOperation.ExecuteAsync(repository);
 
-            configuration.Value.AddOrUpdateTrustedOctopusServer(server);
+            configuration.Value.AddOrUpdateTrustedOctopusServer(machine);
             VoteForRestart();
 
             log.Info("Machine registered successfully");
         }
 
         protected abstract void CheckArgs();
-        protected abstract void EnhanceOperation(TRegistrationOperationType registerOperation);
+        protected abstract void EnhanceOperation(IOctopusAsyncRepository repository, TRegistrationOperationType registerOperation);
 
-        async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri serverAddress, string sslThumbprint)
+        async Task<string> GetServerThumbprint(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint)
         {
             if (serverAddress != null && ServiceEndPoint.IsWebSocketAddress(serverAddress))
             {
@@ -200,14 +196,13 @@ namespace Octopus.Tentacle.Commands
 
         #region Helpers
 
-        async Task ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusSystemAsyncRepository repository)
+        void ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusAsyncRepository repository)
         {
-            var rootDocument = await repository.LoadRootDocument();
             // Eg. Check they're not trying to register a 3.* Tentacle with a 2.* API Server.
-            if (string.IsNullOrEmpty(rootDocument.Version))
+            if (string.IsNullOrEmpty(repository.Client.RootDocument.Version))
                 throw new ControlledFailureException("Unable to determine the Octopus Server version.");
 
-            var serverVersion = SemanticVersion.Parse(rootDocument.Version);
+            var serverVersion = SemanticVersion.Parse(repository.Client.RootDocument.Version);
             var tentacleVersion = SemanticVersion.Parse(OctopusTentacle.SemanticVersionInfo.MajorMinorPatch);
             if (serverVersion.Version.Major == 0 || tentacleVersion.Version.Major == 0)
                 return;

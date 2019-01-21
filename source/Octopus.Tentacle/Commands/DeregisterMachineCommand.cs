@@ -19,9 +19,8 @@ namespace Octopus.Tentacle.Commands
         bool allowMultiple;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
-        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
-        string spaceName;
 
+        public const string ThumbprintNotFoundMsg = "The server you supplied did not match the thumbprint stored in the configuration for this tentacle.";
         public const string DeregistrationSuccessMsg = "Machine deregistered successfully";
         public const string MultipleMatchErrorMsg = "The Tentacle matches more than one machine on the server. To deregister all of these machines specify the --multiple flag.";
         
@@ -29,19 +28,16 @@ namespace Octopus.Tentacle.Commands
                                         ILog log,
                                         IApplicationInstanceSelector selector,
                                         IProxyConfigParser proxyConfig,
-                                        IOctopusClientInitializer octopusClientInitializer,
-                                        ISpaceRepositoryFactory spaceRepositoryFactory)
+                                        IOctopusClientInitializer octopusClientInitializer)
             : base(selector)
         {
             this.configuration = configuration;
             this.log = log;
             this.proxyConfig = proxyConfig;
             this.octopusClientInitializer = octopusClientInitializer;
-            this.spaceRepositoryFactory = spaceRepositoryFactory;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
             Options.Add("m|multiple", "Deregister all machines that use the same thumbprint", s => allowMultiple = true);
-            Options.Add("space=", "The space which this machine will be deregistered from, - e.g. 'Finance Department' where Finance Department is the name of an existing space; the default value is the Default space, if one is designated.", s => spaceName = s);
         }
 
         protected override void Start()
@@ -55,18 +51,17 @@ namespace Octopus.Tentacle.Commands
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
-                var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
-                await Deregister(spaceRepository);
+                await Deregister(new OctopusAsyncRepository(client));
             }
         }
 
-        public async Task Deregister(IOctopusSpaceAsyncRepository repository)
+        public async Task Deregister(IOctopusAsyncRepository repository)
         {
-            // 1. do the machine count/allowMultiple checks
+            // 1. check: do the machine count/allowMultiple checks first to prevent partial trust removal
             var matchingMachines = await repository.Machines.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
 
             if (matchingMachines.Count == 0)
-                throw new ControlledFailureException("No machine was found matching this Tentacle's thumbprint.");
+                throw new ControlledFailureException("No machine was found on the server matching this Tentacle's thumbprint.");
 
             if (matchingMachines.Count > 1 && !allowMultiple)
                 throw new ControlledFailureException(MultipleMatchErrorMsg);
@@ -78,10 +73,20 @@ namespace Octopus.Tentacle.Commands
                 await repository.Machines.Delete(machineResource);
             }
 
-            log.Info("The Octopus Server is still trusted. " +
-                "If you wish to remove trust for this Octopus Server, use 'Tentacle.exe configure --remove-trust=...'");
+            // 3. remove the trust from the tentancle cconfiguration
+            var serverThumbprint = (await repository.CertificateConfiguration.GetOctopusCertificate())?.Thumbprint;
+
+            if (configuration.Value.TrustedOctopusThumbprints.Count(t => t.Equals(serverThumbprint, StringComparison.InvariantCultureIgnoreCase)) == 0)
+            {
+                log.Error(ThumbprintNotFoundMsg);
+                return;
+            }
+
+            log.Info($"Deleting entry '{serverThumbprint}' in tentacle.config");
+            configuration.Value.RemoveTrustedOctopusServersWithThumbprint(serverThumbprint);
 
             log.Info(DeregistrationSuccessMsg);
+            VoteForRestart();
         }
     }
 }

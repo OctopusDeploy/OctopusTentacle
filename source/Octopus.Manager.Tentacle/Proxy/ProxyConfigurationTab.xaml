@@ -5,6 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
+    xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
     xmlns:model="clr-namespace:Octopus.Manager.Tentacle.Proxy"
     mc:Ignorable="d" 
     d:DesignHeight="500" d:DesignWidth="650"
@@ -12,6 +13,67 @@
     RuleSet="ProxySettings"
     Visibility="{Binding Path=ShowProxySettings, Converter={StaticResource Converter.BooleanToVisibility}}"
     Style="{StaticResource TabView.Normal}" d:DataContext="{d:DesignInstance model:ProxyWizardModel}">
-    <model:ProxyConfigurationControl />
+    <Grid>
+        <StackPanel>
+            <TextBlock Style="{StaticResource TextBlock.Heading}" Text="{Binding Title}" />
+            <TextBlock Style="{StaticResource TextBlock.Subtle}" Text="{Binding Description}" />
+
+            <controls:ControlGroup Header="Proxy mode" Target="{Binding ElementName=proxyRadio}">
+                <RadioButton Name="proxyRadio" Margin="0,5,0,0" IsChecked="{Binding Path=UseNoProxy, Mode=TwoWay}">Do not use a proxy</RadioButton>
+                <RadioButton Margin="0,10,0,0" IsChecked="{Binding Path=UseDefaultProxy, Mode=TwoWay}">Use the proxy server configured in Internet Explorer</RadioButton>
+                <RadioButton Margin="0,10,0,0" IsChecked="{Binding Path=UseDefaultProxyCustomCredentials, Mode=TwoWay}">Use the proxy server configured in Internet Explorer, with custom credentials</RadioButton>
+                <RadioButton Margin="0,10,0,0" IsChecked="{Binding Path=UseCustomProxy, Mode=TwoWay}">Use a custom proxy server</RadioButton>
+            </controls:ControlGroup>
+
+            <StackPanel Visibility="{Binding Path=UseDefaultProxyCustomCredentials, Converter={StaticResource Converter.BooleanToVisibility}}">
+                <controls:ControlGroup Header="Proxy username" Target="{Binding ElementName=proxyRadio}">
+                    <TextBox Margin="0,0,0,0" Text="{Binding Path=ProxyUsername}" Width="300" />
+                    <controls:ErrorMessage Margin="0,5,0,0" ErrorPath="ProxyUsername" />
+                </controls:ControlGroup>
+
+                <controls:ControlGroup Header="Proxy password" Target="{Binding ElementName=proxyPass}">
+                    <controls:PasswordEditor HorizontalAlignment="Left"  x:Name="proxyPass" Password="{Binding Path=ProxyPassword, Mode=TwoWay}" Margin="0,5,0,0" Width="200" />
+                    <controls:ErrorMessage HorizontalAlignment="Left" Margin="0,5,0,0" ErrorPath="ProxyPassword" />
+                </controls:ControlGroup>
+            </StackPanel>
+
+            <StackPanel Visibility="{Binding Path=UseCustomProxy, Converter={StaticResource Converter.BooleanToVisibility}}">
+                <controls:ControlGroup Header="Proxy Host" Target="{Binding ElementName=ProxyServerHostTextBox}">
+                    <TextBox Text="{Binding Path=ProxyServerHost, UpdateSourceTrigger=PropertyChanged}" Name="ProxyServerHostTextBox" Width="300" />
+                    <controls:ErrorMessage HorizontalAlignment="Left" Margin="0,5,0,0" ErrorPath="ProxyServerHost" />
+                    <TextBlock  Text="DNS hostname of the Proxy server. Examples:" Style="{StaticResource TextBlock.Subtle}"/>
+                    <TextBlock  Style="{StaticResource TextBlock.Subtle}" FontFamily="Courier New" Margin="20,0,0,0">
+                        <Run Text="•"/>    
+                        <Run Text=" 10.0.0.1 " Style="{StaticResource TextBlock.Example}"/>
+                    </TextBlock>
+                    <TextBlock  Style="{StaticResource TextBlock.Subtle}" FontFamily="Courier New" Margin="20,0,0,0">
+                        <Run Text="•"/>    
+                        <Run Text=" web01.local " Style="{StaticResource TextBlock.Example}"/>
+                    </TextBlock>
+                    <TextBlock  Style="{StaticResource TextBlock.Subtle}" FontFamily="Courier New" Margin="20,0,0,0">
+                        <Run Text="•"/>    
+                        <Run Text=" web01.mynetwork.com " Style="{StaticResource TextBlock.Example}"/>
+                    </TextBlock>
+                </controls:ControlGroup>
+
+                <controls:ControlGroup Header="Proxy Port" Target="{Binding ElementName=ProxyServerPortTextBox}">
+                    <TextBox Text="{Binding Path=ProxyServerPort, UpdateSourceTrigger=PropertyChanged}" Name="ProxyServerPortTextBox" Width="300" />
+                    <controls:ErrorMessage HorizontalAlignment="Left" Margin="0,5,0,0" ErrorPath="ProxyServerPort" />
+                    <TextBlock Text="The TCP port of the Proxy server" Style="{StaticResource TextBlock.Subtle}"/>
+                </controls:ControlGroup>
+
+                <controls:ControlGroup Header="Proxy Login" Target="{Binding ElementName=proxyRadio}">
+                    <TextBox Margin="0,0,0,0" Text="{Binding Path=ProxyUsername}" Width="300" />
+                    <controls:ErrorMessage Margin="0,5,0,0" ErrorPath="ProxyUsername" />
+                </controls:ControlGroup>
+
+                <controls:ControlGroup Header="Proxy Password" Target="{Binding ElementName=CustomProxyPass}">
+                    <controls:PasswordEditor HorizontalAlignment="Left" x:Name="CustomProxyPass" Password="{Binding Path=ProxyPassword, Mode=TwoWay}" Margin="0,5,0,0" Width="200" />
+                    <controls:ErrorMessage HorizontalAlignment="Left" Margin="0,5,0,0" ErrorPath="ProxyPassword" />
+                </controls:ControlGroup>
+            </StackPanel>
+
+        </StackPanel>
+    </Grid>
 </shell:TabView>
 

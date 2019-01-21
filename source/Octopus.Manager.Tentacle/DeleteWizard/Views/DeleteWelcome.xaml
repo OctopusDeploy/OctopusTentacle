@@ -20,8 +20,8 @@
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left">
                     <controls:RetinaImage 
-                        BigImage="/Resources/Images/warning@4x.png" 
-                        SmallImage="/Resources/Images/warning@2x.png" 
+                        BigImage="/Resources/Images/warning@4.png" 
+                        SmallImage="/Resources/Images/warning@2.png" 
                         Width="32"
                         Height="32"
                         />

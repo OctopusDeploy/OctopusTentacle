@@ -41,13 +41,11 @@ namespace Octopus.Tentacle.Tests.Commands
             log = Substitute.For<ILog>();
             var octopusClientInitializer = Substitute.For<IOctopusClientInitializer>();
             var octopusAsyncClient = Substitute.For<IOctopusAsyncClient>();
+            octopusAsyncClient.RootDocument.Returns(new RootResource { Version = "2018.4" });
 
             repository = Substitute.For<IOctopusAsyncRepository>();
             repository.Client.Returns(octopusAsyncClient);
-            repository.LoadRootDocument().Returns(new RootResource { Version = "2018.4" });
             octopusAsyncClient.Repository.Returns(repository);
-            octopusAsyncClient.ForSystem().Returns(repository);
-            octopusAsyncClient.ForSpace(Arg.Any<SpaceResource>()).Returns(repository);
 
             var certificateConfigurationRepository = Substitute.For<ICertificateConfigurationRepository>();
             var certificateConfigurationResource = new CertificateConfigurationResource { Thumbprint = serverThumbprint };
@@ -62,8 +60,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IApplicationInstanceSelector>(),
                 new Lazy<IOctopusServerChecker>(() => serverChecker),
                 new ProxyConfigParser(),
-                octopusClientInitializer,
-                new SpaceRepositoryFactory());
+                octopusClientInitializer);
 
             configuration.ServicesPortNumber.Returns(90210);
             certificate = new CertificateGenerator().GenerateNew("CN=Hello", new Shared.Diagnostics.NullLog());
