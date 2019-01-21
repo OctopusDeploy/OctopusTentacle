@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Commands
                     throw new ControlledFailureException($"A space with name \"{spaceName}\" could not be found. Ensure you have spelled the space name correctly and that the user has access to this space.");
                 }
 
-                return client.ForSpace(space.Id);
+                return client.ForSpace(space);
             }
 
             if (await SupportsSpaces(client))
@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Commands
                     throw new ControlledFailureException("No \"space\" was specified, and the default space is disabled or inaccessible to this user. Please select a space using the \"space\" parameter.");
                 }
 
-                return client.ForSpace(defaultSpace.Id);
+                return client.ForSpace(defaultSpace);
             }
 
             // This works in a backwards compatible way for the endpoints that tentacle cares about
