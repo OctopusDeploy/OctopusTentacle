@@ -124,7 +124,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Client, Version=5.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Client.5.0.0-spaces339\lib\net45\Octopus.Client.dll</HintPath>
+      <HintPath>..\packages\Octopus.Client.5.0.0\lib\net45\Octopus.Client.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Configuration, Version=2.0.1.0, Culture=neutral, processorArchitecture=MSIL">
