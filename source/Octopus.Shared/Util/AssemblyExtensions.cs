@@ -10,7 +10,8 @@ namespace Octopus.Shared.Util
             var codeBase = assembly.CodeBase;
             var uri = new UriBuilder(codeBase);
             var root = Uri.UnescapeDataString(uri.Path);
-            root = root.Replace("/", "\\");
+            if(PlatformDetection.IsRunningOnWindows)
+                root = root.Replace("/", "\\");
             return root;
         }
     }

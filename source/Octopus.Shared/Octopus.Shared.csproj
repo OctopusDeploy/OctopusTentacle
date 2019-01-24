@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>Octopus.Shared</RootNamespace>
     <AssemblyName>Octopus.Shared</AssemblyName>
@@ -10,47 +10,42 @@
     <Description>The library shared by Octopus Server and Octopus Tentacle.</Description>
     <Authors>Octopus Deploy</Authors>
     <PackageIconUrl>http://i.octopusdeploy.com/resources/Avatar3_360.png</PackageIconUrl>
-    <PackageProjectUrl>https://github.com/OctopusDeploy/OctopusDeploy</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/OctopusDeploy/OctopusDeploy.git</RepositoryUrl>
+    <PackageProjectUrl>https://octopus.com</PackageProjectUrl>
+    <PackageLicenseUrl>https://octopus.com/company/customer-agreement</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/OctopusDeploy/OctopusShared.git</RepositoryUrl>
     <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX</DefineConstants>
+    <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
   </PropertyGroup>
-
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK</DefineConstants>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Remove="Web\**" />
     <EmbeddedResource Remove="Web\**" />
     <None Remove="Web\**" />
   </ItemGroup>
-
   <ItemGroup>
     <None Remove="Startup\PathsToDeleteOnStartup.core.txt" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="3.0.0" />
+    <PackageReference Include="Halibut" Version="4.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Autofac" Version="4.6.2" />
-    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58676" />
-    <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
-    <PackageReference Include="Octopus.Diagnostics" Version="1.2.0" />
-    <PackageReference Include="Octopus.Time" Version="1.1.2" />
+    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="Octopus.Configuration" Version="2.0.1" />
+    <PackageReference Include="Octopus.Diagnostics" Version="1.2.2" />
+    <PackageReference Include="Octopus.Time" Version="1.1.5" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
-
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETStandard' ">
     <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.4.0" />
@@ -62,18 +57,18 @@
     <PackageReference Include="System.Diagnostics.EventLog" Version="4.5.0-preview1-25914-04" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0" />
     <PackageReference Include="System.DirectoryServices.AccountManagement" Version="4.5.0-preview1-25914-04" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
   </ItemGroup>
-
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
     <PackageReference Include="NLog" Version="4.0.1" />
     <PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
+    <Reference Include="System.Security" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.Management" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>

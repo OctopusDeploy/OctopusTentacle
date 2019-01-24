@@ -16,20 +16,20 @@ namespace Octopus.Shared.Configuration
         }
 
         [Obsolete("Please use the generic overload instead")]
-        public string Get(string name, DataProtectionScope? protectionScope = null)
+        public string Get(string name, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
-            return Get(name, default(string), protectionScope);
+            return Get(name, default(string), protectionLevel);
         }
 
-        public abstract TData Get<TData>(string name, TData defaultValue, DataProtectionScope? protectionScope);
+        public abstract TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel  = ProtectionLevel.None);
 
         [Obsolete("Please use the generic overload instead")]
-        public void Set(string name, string value, DataProtectionScope? protectionScope = null)
+        public void Set(string name, string value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
-            Set<string>(name, value, protectionScope);
+            Set<string>(name, value, protectionLevel);
         }
 
-        public abstract void Set<TData>(string name, TData value, DataProtectionScope? protectionScope = null);
+        public abstract void Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None);
        
         public void Remove(string name)
         {

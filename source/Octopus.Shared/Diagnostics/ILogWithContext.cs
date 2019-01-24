@@ -56,9 +56,9 @@ namespace Octopus.Shared.Diagnostics
 
         /// <summary>
         /// Switches to a new logging context on the current thread, allowing you to begin logging within a block previously
-        /// begun using <see cref="OpenBlock" /> or <see cref="PlanFutureBlock" />.
+        /// begun using <see cref="o:OpenBlock" /> or <see cref="o:PlanFutureBlock" />.
         /// </summary>
-        /// <param name="logContext">The <see cref="LogContext" /> to switch to.</param>
+        /// <param name="logContext">The <see cref="LogContext" /> to swIKeyValueStoreitch to.</param>
         /// <returns>An <see cref="IDisposable" /> that will automatically revert the current block when disposed.</returns>
         IDisposable WithinBlock(LogContext logContext);
 
