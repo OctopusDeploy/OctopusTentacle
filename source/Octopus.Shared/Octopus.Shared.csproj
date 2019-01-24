@@ -43,6 +43,7 @@
     <PackageReference Include="Octopus.Configuration" Version="2.0.1" />
     <PackageReference Include="Octopus.Diagnostics" Version="1.2.2" />
     <PackageReference Include="Octopus.Time" Version="1.1.5" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.4" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
