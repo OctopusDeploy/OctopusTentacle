@@ -326,6 +326,11 @@ namespace Octopus.Shared.Util
             File.Move(sourceFile, destinationFile);
         }
 
+        public void MoveDirectory(string sourceDirectory, string destinationDirectory)
+        {
+            new DirectoryInfo(sourceDirectory).MoveTo(destinationDirectory);
+        }
+
         public void EnsureDirectoryExists(string directoryPath)
         {
             if (!DirectoryExists(directoryPath))

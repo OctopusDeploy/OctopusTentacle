@@ -43,6 +43,7 @@ namespace Octopus.Shared.Util
         void WriteAllBytes(string filePath, byte[] data);
         string RemoveInvalidFileNameChars(string path);
         void MoveFile(string sourceFile, string destinationFile);
+        void MoveDirectory(string sourceDirectory, string destinationDirectory);
         ReplaceStatus Replace(string path, Stream stream, int overwriteRetryAttempts = 3);
         bool EqualHash(Stream first, Stream second);
         string ReadAllText(string scriptFile);
