@@ -41,6 +41,7 @@
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup />
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
@@ -57,6 +58,12 @@
     </Reference>
     <Reference Include="Halibut, Version=4.0.9.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Halibut.4.0.9\lib\net45\Halibut.dll</HintPath>
+    </Reference>
+    <Reference Include="MaterialDesignColors, Version=1.0.0.14576, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignColors.1.1.1\lib\net45\MaterialDesignColors.dll</HintPath>
+    </Reference>
+    <Reference Include="MaterialDesignThemes.Wpf, Version=2.5.0.1205, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignThemes.2.5.0.1205\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Win32.TaskScheduler, Version=2.7.2.0, Culture=neutral, PublicKeyToken=c416bc1b32d97233, processorArchitecture=MSIL">
       <HintPath>..\packages\TaskScheduler.2.7.2\lib\net40\Microsoft.Win32.TaskScheduler.dll</HintPath>
@@ -109,8 +116,15 @@
     <Reference Include="NuGet.Versioning, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NuGet.Versioning.3.6.0-octopus-58692\lib\net45\NuGet.Versioning.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Client, Version=4.37.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Client.4.37.0\lib\net45\Octopus.Client.dll</HintPath>
+    <Reference Include="Octodiff, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octodiff.1.2.1\lib\net40\Octodiff.exe</HintPath>
+    </Reference>
+    <Reference Include="Octodiff, Version=1.2.1.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Octodiff.1.2.1\lib\net40\Octodiff.exe</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Octopus.Client, Version=5.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Octopus.Client.5.0.0\lib\net45\Octopus.Client.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Configuration, Version=2.0.1.0, Culture=neutral, processorArchitecture=MSIL">
@@ -188,6 +202,12 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Controls\ErrorPanelControl.xaml.cs">
+      <DependentUpon>ErrorPanelControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\AutoCompleteTagControl.xaml.cs">
+      <DependentUpon>AutoCompleteTagControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ControlGroup.cs" />
     <Compile Include="Controls\ErrorMessage.cs" />
     <Compile Include="Controls\ImageLink.cs" />
@@ -197,8 +217,13 @@
     <Compile Include="Controls\TaggingAutoCompleteBox.cs" />
     <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\BooleanToYesNoConverter.cs" />
+    <Compile Include="Converters\CapitalizeFirstLetterConverter.cs" />
+    <Compile Include="Converters\EnumBooleanConverter.cs" />
+    <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\InverseBooleanConverter.cs" />
     <Compile Include="Converters\InverseBooleanToVisibilityConverter.cs" />
+    <Compile Include="Converters\StringEmptyConverter.cs" />
+    <Compile Include="Converters\StringToVisibilityConverter.cs" />
     <Compile Include="DeleteWizard\DeleteWizardLauncher.cs" />
     <Compile Include="DeleteWizard\DeleteWizardModel.cs" />
     <Compile Include="DeleteWizard\Views\DeleteWelcome.cs" />
@@ -206,8 +231,13 @@
       <DependentUpon>EditTrustedOctopusDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\ErrorDialog.cs" />
-    <Compile Include="Dialogs\NewInstanceNameDialog.cs" />
+    <Compile Include="Dialogs\NewInstanceNameDialog.cs">
+      <DependentUpon>NewInstanceNameDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\RunProcessDialog.cs" />
+    <Compile Include="Dialogs\ServerConnectionDialog.xaml.cs">
+      <DependentUpon>ServerConnectionDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\SetPasswordDialog.cs" />
     <Compile Include="Dialogs\ViewScriptDialog.cs" />
     <Compile Include="Infrastructure\DispatchHelper.cs" />
@@ -224,6 +254,13 @@
     <Compile Include="PreReq\PrerequisiteCheckResult.cs" />
     <Compile Include="PreReq\PreReqWindow.cs" />
     <Compile Include="PreReq\TentaclePrerequisiteProfile.cs" />
+    <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="Proxy\ProxyConfigurationControl.xaml.cs">
+      <DependentUpon>ProxyConfigurationControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Proxy\ProxyConfigurationDialog.xaml.cs">
+      <DependentUpon>ProxyConfigurationDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Proxy\ProxyConfigurationTab.cs" />
     <Compile Include="Proxy\ProxyWizardLauncher.cs" />
     <Compile Include="Proxy\ProxyWizardModel.cs" />
@@ -241,14 +278,17 @@
       <DependentUpon>CommunicationStyleTab.xaml</DependentUpon>
     </Compile>
     <Compile Include="TentacleConfiguration\SetupWizard\Views\InstallTab.cs" />
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\MachineType.xaml.cs">
+      <DependentUpon>MachineType.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TentacleConfiguration\SetupWizard\Views\StorageTab.xaml.cs">
       <DependentUpon>StorageTab.xaml</DependentUpon>
     </Compile>
     <Compile Include="TentacleConfiguration\SetupWizard\Views\TentacleActiveDetailsTab.xaml.cs">
       <DependentUpon>TentacleActiveDetailsTab.xaml</DependentUpon>
     </Compile>
-    <Compile Include="TentacleConfiguration\SetupWizard\Views\TentacleActiveTab.xaml.cs">
-      <DependentUpon>TentacleActiveTab.xaml</DependentUpon>
+    <Compile Include="TentacleConfiguration\SetupWizard\Views\OctopusServerConnectionTab.xaml.cs">
+      <DependentUpon>OctopusServerConnectionTab.xaml</DependentUpon>
     </Compile>
     <Compile Include="TentacleConfiguration\SetupWizard\Views\TentaclePassiveTab.xaml.cs">
       <DependentUpon>TentaclePassiveTab.xaml</DependentUpon>
@@ -264,6 +304,19 @@
     <Compile Include="TentacleManager.cs" />
     <Compile Include="Util\BrowserHelper.cs" />
     <Compile Include="Util\CommandLine.cs" />
+    <Compile Include="Util\PasswordBoxAssistant.cs" />
+    <Compile Include="Util\RelayCommand.cs" />
+    <Compile Include="Util\StringExtensions.cs" />
+    <Compile Include="Validators\BindingProxy.cs" />
+    <Compile Include="Validators\InstanceName.cs" />
+    <Page Include="Controls\ErrorPanelControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\AutoCompleteTagControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="DeleteWizard\Views\DeleteWelcome.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -289,6 +342,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Dialogs\ServerConnectionDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\SetPasswordDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -300,6 +357,14 @@
     <Page Include="PreReq\PreReqWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Proxy\ProxyConfigurationControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Proxy\ProxyConfigurationDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Proxy\ProxyConfigurationTab.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -325,6 +390,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="TentacleConfiguration\SetupWizard\Views\MachineType.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="TentacleConfiguration\SetupWizard\Views\StorageTab.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -333,7 +402,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TentacleConfiguration\SetupWizard\Views\TentacleActiveTab.xaml">
+    <Page Include="TentacleConfiguration\SetupWizard\Views\OctopusServerConnectionTab.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -397,67 +466,67 @@
     <Resource Include="Resources\Logo-Small-White-Text.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\Images\alert%402.png" />
-    <Resource Include="Resources\Images\alert%404.png" />
-    <Resource Include="Resources\Images\alert-error%402.png" />
-    <Resource Include="Resources\Images\alert-error%404.png" />
+    <Resource Include="Resources\Images\alert%402x.png" />
+    <Resource Include="Resources\Images\alert%404x.png" />
+    <Resource Include="Resources\Images\alert-error%402x.png" />
+    <Resource Include="Resources\Images\alert-error%404x.png" />
     <Resource Include="Resources\Images\alert.png" />
-    <Resource Include="Resources\Images\balloons.png" />
-    <Resource Include="Resources\Images\button_circle_blue_right%402.png" />
+    <Resource Include="Resources\Images\button_circle_blue_right%402x.png" />
     <Resource Include="Resources\Images\button_circle_blue_right.png" />
-    <Resource Include="Resources\Images\button_rounded_green_delete%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_delete%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_delete.png" />
-    <Resource Include="Resources\Images\button_rounded_green_last%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_last%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_last.png" />
-    <Resource Include="Resources\Images\button_rounded_green_next%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_next%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_next.png" />
-    <Resource Include="Resources\Images\button_rounded_green_right%402.png" />
+    <Resource Include="Resources\Images\button_rounded_green_right%402x.png" />
     <Resource Include="Resources\Images\button_rounded_green_right.png" />
-    <Resource Include="Resources\Images\button_rounded_orange_next%402.png" />
+    <Resource Include="Resources\Images\button_rounded_orange_next%402x.png" />
     <Resource Include="Resources\Images\button_rounded_orange_next.png" />
-    <Resource Include="Resources\Images\clipboard-export%402.png" />
+    <Resource Include="Resources\Images\clipboard-export%402x.png" />
     <Resource Include="Resources\Images\clipboard-export.png" />
-    <Resource Include="Resources\Images\database-export%402.png" />
+    <Resource Include="Resources\Images\database-export%402x.png" />
     <Resource Include="Resources\Images\database-export.png" />
-    <Resource Include="Resources\Images\database-favorite2%402.png" />
-    <Resource Include="Resources\Images\database-favorite2%404.png" />
+    <Resource Include="Resources\Images\database-favorite2%402x.png" />
+    <Resource Include="Resources\Images\database-favorite2%404x.png" />
     <Resource Include="Resources\Images\database-favorite2.png" />
-    <Resource Include="Resources\Images\database-import%402.png" />
+    <Resource Include="Resources\Images\database-import%402x.png" />
     <Resource Include="Resources\Images\database-import.png" />
-    <Resource Include="Resources\Images\database-up%402.png" />
+    <Resource Include="Resources\Images\database-up%402x.png" />
     <Resource Include="Resources\Images\database-up.png" />
-    <Resource Include="Resources\Images\database_restore%402.png" />
+    <Resource Include="Resources\Images\database_restore%402x.png" />
     <Resource Include="Resources\Images\database_restore.png" />
-    <Resource Include="Resources\Images\delete%402.png" />
+    <Resource Include="Resources\Images\delete%402x.png" />
     <Resource Include="Resources\Images\delete.png" />
-    <Resource Include="Resources\Images\help%402.png" />
+    <Resource Include="Resources\Images\help%402x.png" />
     <Resource Include="Resources\Images\help.png" />
-    <Resource Include="Resources\Images\history%402.png" />
+    <Resource Include="Resources\Images\history%402x.png" />
     <Resource Include="Resources\Images\history.png" />
-    <Resource Include="Resources\Images\internet-edit%402.png" />
+    <Resource Include="Resources\Images\internet-edit%402x.png" />
     <Resource Include="Resources\Images\internet-edit.png" />
-    <Resource Include="Resources\Images\internet_browse%402.png" />
+    <Resource Include="Resources\Images\internet_browse%402x.png" />
     <Resource Include="Resources\Images\internet_browse.png" />
-    <Resource Include="Resources\Images\key%402.png" />
+    <Resource Include="Resources\Images\key%402x.png" />
     <Resource Include="Resources\Images\key.png" />
     <Resource Include="Resources\Images\nav_blue_right.png" />
-    <Resource Include="Resources\Images\ok%402.png" />
+    <Resource Include="Resources\Images\ok%402x.png" />
     <Resource Include="Resources\Images\ok.png" />
-    <Resource Include="Resources\Images\ok_button%402.png" />
-    <Resource Include="Resources\Images\ok_button%404.png" />
+    <Resource Include="Resources\Images\ok_button%402x.png" />
+    <Resource Include="Resources\Images\ok_button%404x.png" />
     <Resource Include="Resources\Images\ok_button.png" />
-    <Resource Include="Resources\Images\server_network-internet%402.png" />
+    <Resource Include="Resources\Images\server_network-internet%402x.png" />
     <Resource Include="Resources\Images\server_network-internet.png" />
     <Resource Include="Resources\Images\TentacleActive.png" />
     <Resource Include="Resources\Images\TentaclePassive.png" />
-    <Resource Include="Resources\Images\visitor_man-internet%402.png" />
+    <Resource Include="Resources\Images\visitor_man-internet%402x.png" />
     <Resource Include="Resources\Images\visitor_man-internet.png" />
-    <Resource Include="Resources\Images\warning%402.png" />
-    <Resource Include="Resources\Images\warning%404.png" />
-    <Resource Include="Resources\Images\Warning-ico-dropshadow%402.png" />
+    <Resource Include="Resources\Images\warning%402x.png" />
+    <Resource Include="Resources\Images\warning%404x.png" />
+    <Resource Include="Resources\Images\Warning-ico-dropshadow%402x.png" />
     <Resource Include="Resources\Images\Warning-ico-dropshadow.png" />
     <Resource Include="Resources\Images\warning.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
