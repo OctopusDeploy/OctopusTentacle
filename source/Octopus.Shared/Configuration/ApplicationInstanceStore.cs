@@ -55,7 +55,7 @@ namespace Octopus.Shared.Configuration
                     .ToList();
             }
 
-            var combinedInstanceList = listFromFileSystem.Union(listFromRegistry);
+            var combinedInstanceList = listFromFileSystem.Union(listFromRegistry).OrderBy(i => i.InstanceName);
             return combinedInstanceList.ToList();
         }
 
@@ -123,22 +123,19 @@ namespace Octopus.Shared.Configuration
             var instancesFolder = InstancesFolder(instanceRecord.ApplicationName);
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
-                if (!fileSystem.DirectoryExists(instancesFolder))
+                var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(applicationName, instanceName);
+                if (registryInstance != null)
                 {
-                    var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(applicationName, instanceName);
-                    if (registryInstance != null)
+                    log.Info($"Migrating {applicationName} instance from registry - {instanceName}");
+                    try
                     {
-                        log.Info($"Migrating {applicationName} instance - {instanceName}");
-                        try
-                        {
-                            SaveInstance(instanceRecord);
-                            registryApplicationInstanceStore.DeleteFromRegistry(applicationName, instanceName);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error(ex, "Error migrating instance data");
-                            throw;
-                        }
+                        SaveInstance(instanceRecord);
+                        registryApplicationInstanceStore.DeleteFromRegistry(applicationName, instanceName);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex, "Error migrating instance data");
+                        throw;
                     }
                 }
             }
