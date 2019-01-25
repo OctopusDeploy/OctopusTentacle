@@ -46,10 +46,15 @@ namespace Octopus.Shared.Configuration
             var instancesFolder = InstancesFolder(name);
             
             var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
-            var listFromFileSystem = fileSystem.EnumerateFiles(instancesFolder)
-                .Select(LoadInstanceConfiguration)
-                .Select(instance => new ApplicationInstanceRecord(instance.Name, name, instance.ConfigurationFilePath))
-                .ToList();
+            var listFromFileSystem = Enumerable.Empty<ApplicationInstanceRecord>();
+            if (fileSystem.DirectoryExists(instancesFolder))
+            {
+                listFromFileSystem = fileSystem.EnumerateFiles(instancesFolder)
+                    .Select(LoadInstanceConfiguration)
+                    .Select(instance => new ApplicationInstanceRecord(instance.Name, name, instance.ConfigurationFilePath))
+                    .ToList();
+            }
+
             var combinedInstanceList = listFromFileSystem.Union(listFromRegistry);
             return combinedInstanceList.ToList();
         }
