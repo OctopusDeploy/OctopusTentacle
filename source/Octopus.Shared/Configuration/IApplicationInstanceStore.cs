@@ -8,5 +8,7 @@ namespace Octopus.Shared.Configuration
         IList<ApplicationInstanceRecord> ListInstances(ApplicationName name);
         void SaveInstance(ApplicationInstanceRecord instanceRecord);
         void DeleteInstance(ApplicationInstanceRecord instanceRecord);
+
+        void MigrateInstance(ApplicationInstanceRecord instanceRecord);
     }
 }

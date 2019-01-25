@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Win32;
 
 namespace Octopus.Shared.Configuration
@@ -10,7 +11,13 @@ namespace Octopus.Shared.Configuration
         const RegistryView View = RegistryView.Registry64;
         const string KeyName = "Software\\Octopus";
 
-        public List<ApplicationInstanceRecord> GetListFromRegistry(ApplicationName name)
+        public ApplicationInstanceRecord GetInstanceFromRegistry(ApplicationName name, string instanceName)
+        {
+            var allInstances = GetListFromRegistry(name);
+            return allInstances.SingleOrDefault(i => i.InstanceName.Equals(instanceName, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        public IEnumerable<ApplicationInstanceRecord> GetListFromRegistry(ApplicationName name)
         {
             var results = new List<ApplicationInstanceRecord>();
 
@@ -43,6 +50,8 @@ namespace Octopus.Shared.Configuration
 
             return results;
         }
+
+
 
         public void DeleteFromRegistry(ApplicationName name, string instanceName)
         {
