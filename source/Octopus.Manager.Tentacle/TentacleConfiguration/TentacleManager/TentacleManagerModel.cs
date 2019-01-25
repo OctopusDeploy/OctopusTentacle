@@ -18,6 +18,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         string logsDirectory;
         ServiceWatcher serviceWatcher;
         string proxyStatus;
+        string communicationMode;
         string thumbprint;
         string trust;
         bool pollsServers;
@@ -108,6 +109,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             }
         }
 
+        public string CommunicationMode
+        {
+            get => communicationMode;
+            set
+            {
+                if (value == communicationMode) return;
+                communicationMode = value;
+                OnPropertyChanged();
+            }
+        }
+
         public IProxyConfiguration ProxyConfiguration { get; set; }
 
         public IPollingProxyConfiguration PollingProxyConfiguration { get; set; }
@@ -178,7 +190,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             ProxyConfiguration = new ProxyConfiguration(keyStore);
             PollingProxyConfiguration = null;
             ProxyStatus = BuildProxyStatus(ProxyConfiguration) + " for web requests";
-
+            CommunicationMode = pollsServers ? "Polling" : "Listening";
             if (pollsServers)
             {
                 PollingProxyConfiguration = new PollingProxyConfiguration(keyStore);

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Windows.Navigation;
+using Octopus.Manager.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 {
