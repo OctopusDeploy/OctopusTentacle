@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Versioning
 
         public static string GetInformationalVersion(this Assembly assembly)
         {
-            var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.FullLocalPath());
+            var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
             return fileVersionInfo.ProductVersion;
         }
 
