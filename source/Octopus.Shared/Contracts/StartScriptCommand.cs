@@ -17,16 +17,21 @@ namespace Octopus.Shared.Contracts
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
         }
 
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string taskId, Dictionary<ScriptType, string> additionalScripts, params ScriptFile[] additionalFiles)
+        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string taskId, params ScriptFile[] additionalFiles)
             : this(scriptBody, isolation, scriptIsolationMutexTimeout, arguments, taskId)
+        {
+            if (additionalFiles != null)
+            {
+                Files.AddRange(additionalFiles);
+            }
+        }
+
+        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string taskId, Dictionary<ScriptType, string> additionalScripts, params ScriptFile[] additionalFiles)
+            : this(scriptBody, isolation, scriptIsolationMutexTimeout, arguments, taskId, additionalFiles)
         {
             if (!additionalScripts.IsNullOrEmpty())
             {
                 Scripts.AddRange(additionalScripts);
-            }
-            if (additionalFiles != null)
-            {
-                Files.AddRange(additionalFiles);
             }
         }
 
