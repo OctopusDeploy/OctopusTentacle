@@ -78,7 +78,7 @@ namespace Octopus.Shared.Contracts
 
         public StartScriptCommand Build()
         {
-            return new StartScriptCommand(scriptBody.ToString(), isolation, scriptIsolationMutexTimeout, arguments.ToArray(), taskId, files.ToArray());
+            return new StartScriptCommand(scriptBody.ToString(), isolation, scriptIsolationMutexTimeout, arguments.ToArray(), taskId, additionalScripts, files.ToArray());
         }
     }
 }

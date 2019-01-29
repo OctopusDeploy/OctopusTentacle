@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Contracts
 {
@@ -16,9 +17,13 @@ namespace Octopus.Shared.Contracts
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
         }
 
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string taskId, params ScriptFile[] additionalFiles)
+        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string taskId, Dictionary<ScriptType, string> additionalScripts, params ScriptFile[] additionalFiles)
             : this(scriptBody, isolation, scriptIsolationMutexTimeout, arguments, taskId)
         {
+            if (!additionalScripts.IsNullOrEmpty())
+            {
+                Scripts.AddRange(additionalScripts);
+            }
             if (additionalFiles != null)
             {
                 Files.AddRange(additionalFiles);
