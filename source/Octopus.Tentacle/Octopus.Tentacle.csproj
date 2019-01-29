@@ -28,7 +28,7 @@
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
-    <None Include="tentacle.exe.nlog">
+    <None Include="Tentacle.exe.nlog">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="Tentacle.exe.manifest">

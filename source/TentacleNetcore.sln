@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle", "Octopus.Tentacle\Octopus.Tentacle.csproj", "{B0B059FE-55E0-4D1A-A61D-AD998C887C9F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Shared", "..\..\OctopusShared\source\Octopus.Shared\Octopus.Shared.csproj", "{0CE2E2B6-FFA3-4E8E-893F-6E9EBA9D47C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Halibut", "..\..\Halibut\source\Halibut\Halibut.csproj", "{66641523-93A1-4B9D-94EE-5FE5A8AC081D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B0B059FE-55E0-4D1A-A61D-AD998C887C9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0B059FE-55E0-4D1A-A61D-AD998C887C9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0B059FE-55E0-4D1A-A61D-AD998C887C9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0B059FE-55E0-4D1A-A61D-AD998C887C9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CE2E2B6-FFA3-4E8E-893F-6E9EBA9D47C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CE2E2B6-FFA3-4E8E-893F-6E9EBA9D47C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CE2E2B6-FFA3-4E8E-893F-6E9EBA9D47C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CE2E2B6-FFA3-4E8E-893F-6E9EBA9D47C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66641523-93A1-4B9D-94EE-5FE5A8AC081D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66641523-93A1-4B9D-94EE-5FE5A8AC081D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66641523-93A1-4B9D-94EE-5FE5A8AC081D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66641523-93A1-4B9D-94EE-5FE5A8AC081D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
