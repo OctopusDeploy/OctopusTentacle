@@ -3,7 +3,7 @@
     <RootNamespace>Octopus.Tentacle</RootNamespace>
     <AssemblyName>Tentacle</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net452;netcoreapp2.1</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputType>Exe</OutputType>
     <NoWin32Manifest>true</NoWin32Manifest>
@@ -17,8 +17,8 @@
 
   <ItemGroup>
     <PackageReference Include="Octopus.Client" Version="4.37.0" />
-    <PackageReference Include="Octopus.Configuration" Version="1.0.11" />
-    <PackageReference Include="Octopus.Shared" Version="4.3.6-enh-reg-be-gone12" />
+    <PackageReference Include="Octopus.Configuration" Version="2.0.1" />
+    <PackageReference Include="Octopus.Shared" Version="4.8.1-enh-netstandard22" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,9 +34,5 @@
     <Content Include="Tentacle.exe.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\OctopusShared\source\Octopus.Shared\Octopus.Shared.csproj" />
   </ItemGroup>
 </Project>
