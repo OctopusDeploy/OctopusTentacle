@@ -139,7 +139,7 @@ namespace Octopus.Shared.Configuration
                         log.Error(ex, "Error migrating instance data");
                         if (fileInstanceSuccessful)
                         {
-                            log.Error($"Removing {applicationName} {instanceName} from filesystem");
+                            log.Error($"Rolling back {applicationName} instance from filesystem due to error - {instanceName}");
                             DeleteInstance(instanceRecord);
                         }
                         throw;
