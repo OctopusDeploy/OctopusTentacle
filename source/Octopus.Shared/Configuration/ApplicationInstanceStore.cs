@@ -126,15 +126,22 @@ namespace Octopus.Shared.Configuration
                 var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(applicationName, instanceName);
                 if (registryInstance != null)
                 {
+                    bool fileInstanceSuccessful = false;
                     log.Info($"Migrating {applicationName} instance from registry - {instanceName}");
                     try
                     {
                         SaveInstance(instanceRecord);
+                        fileInstanceSuccessful = true;
                         registryApplicationInstanceStore.DeleteFromRegistry(applicationName, instanceName);
                     }
                     catch (Exception ex)
                     {
                         log.Error(ex, "Error migrating instance data");
+                        if (fileInstanceSuccessful)
+                        {
+                            log.Error($"Removing {applicationName} {instanceName} from filesystem");
+                            DeleteInstance(instanceRecord);
+                        }
                         throw;
                     }
                 }
