@@ -46,7 +46,7 @@ namespace Octopus.Shared.Configuration
             var instancesFolder = InstancesFolder(name);
             
             var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
-            var listFromFileSystem = Enumerable.Empty<ApplicationInstanceRecord>();
+            var listFromFileSystem = new List<ApplicationInstanceRecord>();
             if (fileSystem.DirectoryExists(instancesFolder))
             {
                 listFromFileSystem = fileSystem.EnumerateFiles(instancesFolder)
@@ -55,7 +55,9 @@ namespace Octopus.Shared.Configuration
                     .ToList();
             }
 
-            var combinedInstanceList = listFromFileSystem.Union(listFromRegistry).OrderBy(i => i.InstanceName);
+            var combinedInstanceList = listFromFileSystem
+                .Concat(listFromRegistry.Where(x => listFromFileSystem.All(y => y.InstanceName != x.InstanceName)))
+                .OrderBy(i => i.InstanceName);
             return combinedInstanceList.ToList();
         }
 
@@ -126,22 +128,14 @@ namespace Octopus.Shared.Configuration
                 var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(applicationName, instanceName);
                 if (registryInstance != null)
                 {
-                    bool fileInstanceSuccessful = false;
                     log.Info($"Migrating {applicationName} instance from registry - {instanceName}");
                     try
                     {
                         SaveInstance(instanceRecord);
-                        fileInstanceSuccessful = true;
-                        registryApplicationInstanceStore.DeleteFromRegistry(applicationName, instanceName);
                     }
                     catch (Exception ex)
                     {
                         log.Error(ex, "Error migrating instance data");
-                        if (fileInstanceSuccessful)
-                        {
-                            log.Error($"Rolling back {applicationName} instance from filesystem due to error - {instanceName}");
-                            DeleteInstance(instanceRecord);
-                        }
                         throw;
                     }
                 }
