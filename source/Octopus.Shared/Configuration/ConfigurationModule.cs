@@ -1,3 +1,4 @@
+using System;
 using Autofac;
 using Octopus.Configuration;
 using Octopus.Shared.Services;
@@ -19,6 +20,15 @@ namespace Octopus.Shared.Configuration
         protected override void Load(ContainerBuilder builder)
         {
             base.Load(builder);
+
+            if (PlatformDetection.IsRunningOnWindows)
+            {
+                builder.RegisterType<RegistryApplicationInstanceStore>().As<IRegistryApplicationInstanceStore>();
+            }
+            else
+            {
+                builder.RegisterType<NullRegistryApplicationInstanceStore>().As<IRegistryApplicationInstanceStore>();
+            }
             
             builder.RegisterType<ApplicationInstanceStore>().As<IApplicationInstanceStore>();
             builder.RegisterType<ApplicationInstanceSelector>()

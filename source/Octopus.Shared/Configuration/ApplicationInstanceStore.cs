@@ -1,83 +1,145 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using Newtonsoft.Json;
+using Octopus.Diagnostics;
+using Octopus.Shared.Threading;
+using Octopus.Shared.Util;
 using Microsoft.Win32;
 
 namespace Octopus.Shared.Configuration
 {
     public class ApplicationInstanceStore : IApplicationInstanceStore
     {
-        const RegistryHive Hive = RegistryHive.LocalMachine;
-        const RegistryView View = RegistryView.Registry64;
-        const string KeyName = "Software\\Octopus";
+        private readonly ILog log;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly IRegistryApplicationInstanceStore registryApplicationInstanceStore;
+        private readonly string machineConfigurationHomeDirectory;
+
+        public ApplicationInstanceStore(
+            ILog log,
+            IOctopusFileSystem fileSystem, 
+            IRegistryApplicationInstanceStore registryApplicationInstanceStore)
+        {
+            this.log = log;
+            this.fileSystem = fileSystem;
+            this.registryApplicationInstanceStore = registryApplicationInstanceStore;
+
+            machineConfigurationHomeDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus");
+        }
+
+        public class Instance
+        {
+            public string Name { get; set; }
+            public string ConfigurationFilePath { get; set; }
+        }
+
+        private string InstancesFolder(ApplicationName name)
+        {
+            return Path.Combine(machineConfigurationHomeDirectory, name.ToString(), "Instances");
+        }
 
         public IList<ApplicationInstanceRecord> ListInstances(ApplicationName name)
         {
-            var results = new List<ApplicationInstanceRecord>();
-
-            using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
-            using (var subKey = rootKey.OpenSubKey(KeyName, false))
+            var instancesFolder = InstancesFolder(name);
+            
+            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
+            var listFromFileSystem = new List<ApplicationInstanceRecord>();
+            if (fileSystem.DirectoryExists(instancesFolder))
             {
-                if (subKey == null)
-                    return results;
-
-                using (var applicationNameKey = subKey.OpenSubKey(name.ToString(), false))
-                {
-                    if (applicationNameKey == null)
-                        return results;
-
-                    var instanceNames = applicationNameKey.GetSubKeyNames();
-
-                    foreach (var instanceName in instanceNames)
-                    {
-                        using (var instanceKey = applicationNameKey.OpenSubKey(instanceName, false))
-                        {
-                            if (instanceKey == null)
-                                continue;
-
-                            var path = instanceKey.GetValue("ConfigurationFilePath");
-                            results.Add(new ApplicationInstanceRecord(instanceName, name, (string)path));
-                        }
-                    }
-                }
+                listFromFileSystem = fileSystem.EnumerateFiles(instancesFolder)
+                    .Select(LoadInstanceConfiguration)
+                    .Select(instance => new ApplicationInstanceRecord(instance.Name, name, instance.ConfigurationFilePath))
+                    .ToList();
             }
 
-            return results;
+            var combinedInstanceList = listFromFileSystem
+                .Concat(listFromRegistry.Where(x => listFromFileSystem.All(y => y.InstanceName != x.InstanceName)))
+                .OrderBy(i => i.InstanceName);
+            return combinedInstanceList.ToList();
+        }
+
+        Instance LoadInstanceConfiguration(string path)
+        {
+            if (!fileSystem.FileExists(path))
+                return null;
+
+            var data = fileSystem.ReadFile(path);
+            var instance = JsonConvert.DeserializeObject<Instance>(data);
+            return instance;
+        }
+
+        void WriteInstanceConfiguration(Instance instance, string path)
+        {
+            var data = JsonConvert.SerializeObject(instance, Formatting.Indented);
+            fileSystem.OverwriteFile(path, data);
+        }
+
+        public ApplicationInstanceRecord GetInstance(ApplicationName name, string instanceName)
+        {
+            return ListInstances(name).SingleOrDefault(s => s.InstanceName == instanceName);
+        }
+
+        public ApplicationInstanceRecord GetDefaultInstance(ApplicationName name)
+        {
+            return GetInstance(name, ApplicationInstanceRecord.GetDefaultInstance(name));
+        }
+
+        string InstanceFileName(string instanceName)
+        {
+            return instanceName.Replace(' ', '-').ToLower();
         }
 
         public void SaveInstance(ApplicationInstanceRecord instanceRecord)
         {
-            using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
-            using (var subKey = CreateOrOpenKeyForWrite(rootKey, KeyName))
-            using (var applicationNameKey = CreateOrOpenKeyForWrite(subKey, instanceRecord.ApplicationName.ToString()))
-            using (var instanceKey = CreateOrOpenKeyForWrite(applicationNameKey, instanceRecord.InstanceName))
+            var instancesFolder = InstancesFolder(instanceRecord.ApplicationName);
+            if (!fileSystem.DirectoryExists(instancesFolder))
             {
-                instanceKey.SetValue("ConfigurationFilePath", instanceRecord.ConfigurationFilePath);
-                instanceKey.Flush();
+                fileSystem.CreateDirectory(instancesFolder);
             }
+            var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceRecord.InstanceName) + ".config");
+            var instance = LoadInstanceConfiguration(instanceConfiguration) ?? new Instance
+            {
+                Name = instanceRecord.InstanceName
+            };
+
+            instance.ConfigurationFilePath = instanceRecord.ConfigurationFilePath;
+
+            WriteInstanceConfiguration(instance, instanceConfiguration);
         }
 
         public void DeleteInstance(ApplicationInstanceRecord instanceRecord)
         {
-            using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
-            using (var subKey = CreateOrOpenKeyForWrite(rootKey, KeyName))
-            using (var applicationNameKey = CreateOrOpenKeyForWrite(subKey, instanceRecord.ApplicationName.ToString()))
-            {
-                applicationNameKey.DeleteSubKey(instanceRecord.InstanceName);
-                applicationNameKey.Flush();
-            }
+            var instancesFolder = InstancesFolder(instanceRecord.ApplicationName);
+            var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceRecord.InstanceName) + ".config");
+
+            fileSystem.DeleteFile(instanceConfiguration);
         }
 
-        static RegistryKey CreateOrOpenKeyForWrite(RegistryKey parent, string keyName)
+        public void MigrateInstance(ApplicationInstanceRecord instanceRecord)
         {
-            using (var subKey = parent.OpenSubKey(keyName, true))
+            var applicationName = instanceRecord.ApplicationName;
+            var instanceName = instanceRecord.InstanceName;
+            var instancesFolder = InstancesFolder(instanceRecord.ApplicationName);
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
-                if (subKey == null)
+                var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(applicationName, instanceName);
+                if (registryInstance != null)
                 {
-                    parent.CreateSubKey(keyName);
-                    parent.Flush();
+                    log.Info($"Migrating {applicationName} instance from registry - {instanceName}");
+                    try
+                    {
+                        SaveInstance(instanceRecord);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex, "Error migrating instance data");
+                        throw;
+                    }
                 }
             }
-
-            return parent.OpenSubKey(keyName, true);
         }
     }
 }

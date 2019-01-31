@@ -48,9 +48,9 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        public static OptionSet AddInstanceOption(OptionSet options, Action<string> action = null)
+        public static OptionSet AddInstanceOption(OptionSet options, Action<string> instanceAction = null)
         {
-            return options.Add("instance=", "Name of the instance to use", action ?? (v => {}));
+            return options.Add("instance=", "Name of the instance to use", instanceAction ?? (v => {}));
         }
     }
 }
