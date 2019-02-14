@@ -39,7 +39,7 @@ namespace Octopus.Shared.Contracts
 
         public ScriptIsolationLevel Isolation { get; }
 
-        private Dictionary<ScriptType, string> Scripts { get; } = new Dictionary<ScriptType, string>();
+        public Dictionary<ScriptType, string> Scripts { get; } = new Dictionary<ScriptType, string>();
 
         public List<ScriptFile> Files { get; } = new List<ScriptFile>();
 
