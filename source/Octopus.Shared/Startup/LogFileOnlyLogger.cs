@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NLog;
+using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
@@ -33,7 +34,7 @@ namespace Octopus.Shared.Startup
                 throw new Exception($"The {LoggerName} rule should write to a file target. {HelpMessage}");
         }
 
-        public static LogContext Context { get; set; } = new LogContext();
+        public static ILogContext Context { get; set; } = new LogContext();
 
         public static void Info(string message) => Context.SafeSanitize(message, s => Log.Info(s));
         public static void Warn(string message) => Context.SafeSanitize(message, s => Log.Warn(s));

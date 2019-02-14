@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Diagnostics
 {
@@ -8,7 +9,7 @@ namespace Octopus.Shared.Diagnostics
     {
         static readonly Log Instance = new Log();
         static readonly List<ILogAppender> appenders = new List<ILogAppender>();
-        readonly ThreadLocal<LogContext> threadLocalLogContext;
+        readonly ThreadLocal<ILogContext> threadLocalLogContext;
 
         static Log()
         {
@@ -16,7 +17,7 @@ namespace Octopus.Shared.Diagnostics
 
         public Log()
         {
-            threadLocalLogContext = new ThreadLocal<LogContext>(() => new LogContext("system/" + Environment.MachineName));
+            threadLocalLogContext = new ThreadLocal<ILogContext>(() => new LogContext("system/" + Environment.MachineName));
         }
 
         public static List<ILogAppender> Appenders
@@ -24,7 +25,7 @@ namespace Octopus.Shared.Diagnostics
             get { return appenders; }
         }
 
-        public override LogContext CurrentContext
+        public override ILogContext CurrentContext
         {
             get { return threadLocalLogContext.Value; }
         }
@@ -55,7 +56,7 @@ namespace Octopus.Shared.Diagnostics
             }
         }
 
-        public override IDisposable WithinBlock(LogContext logContext)
+        public override IDisposable WithinBlock(ILogContext logContext)
         {
             var oldValue = threadLocalLogContext.Value;
             threadLocalLogContext.Value = logContext;
@@ -73,9 +74,9 @@ namespace Octopus.Shared.Diagnostics
         class RevertLogContext : IDisposable
         {
             readonly ILogWithContext activityLog;
-            readonly LogContext previous;
+            readonly ILogContext previous;
 
-            public RevertLogContext(ILogWithContext activityLog, LogContext previous)
+            public RevertLogContext(ILogWithContext activityLog, ILogContext previous)
             {
                 this.activityLog = activityLog;
                 this.previous = previous;
