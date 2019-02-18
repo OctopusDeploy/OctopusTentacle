@@ -29,6 +29,10 @@ namespace Octopus.Shared.Contracts
         public StartScriptCommandBuilder WithReplacementInScriptBody(string oldValue, string newValue)
         {
             scriptBody.Replace(oldValue, newValue);
+            foreach (var additionalScript in additionalScripts)
+            {
+                additionalScripts[additionalScript.Key] = additionalScript.Value.Replace(oldValue, newValue);
+            }
             return this;
         }
 
