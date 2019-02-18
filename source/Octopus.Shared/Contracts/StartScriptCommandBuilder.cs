@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Octopus.Shared.Scripts;
 
@@ -29,7 +30,7 @@ namespace Octopus.Shared.Contracts
         public StartScriptCommandBuilder WithReplacementInScriptBody(string oldValue, string newValue)
         {
             scriptBody.Replace(oldValue, newValue);
-            foreach (var additionalScriptKey in additionalScripts.Keys)
+            foreach (var additionalScriptKey in additionalScripts.Keys.ToList())
             {
                 additionalScripts[additionalScriptKey] = additionalScripts[additionalScriptKey].Replace(oldValue, newValue);
             }
