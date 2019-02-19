@@ -46,6 +46,7 @@ namespace Octopus.Tentacle
             var builder = new ContainerBuilder();
             const ApplicationName applicationName = ApplicationName.Tentacle;
 
+            builder.RegisterModule(new ShellModule());
             builder.RegisterModule(new ConfigurationModule(applicationName, instanceName));
             builder.RegisterModule(new TentacleConfigurationModule());
             builder.RegisterModule(new OctopusClientInitializerModule());

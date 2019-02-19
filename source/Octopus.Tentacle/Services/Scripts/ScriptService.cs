@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Scripts;
@@ -12,13 +13,15 @@ namespace Octopus.Tentacle.Services.Scripts
     [Service]
     public class ScriptService : IScriptService
     {
+        readonly IShell shell;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IOctopusFileSystem fileSystem;
         readonly ConcurrentDictionary<string, RunningScript> running = new ConcurrentDictionary<string, RunningScript>(StringComparer.OrdinalIgnoreCase);
         readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
 
-        public ScriptService(IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem)
+        public ScriptService(IShell shell, IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem)
         {
+            this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.fileSystem = fileSystem;
         }
@@ -28,7 +31,7 @@ namespace Octopus.Tentacle.Services.Scripts
             var ticket = ScriptTicket.Create(command.TaskId);
             var workspace = PrepareWorkspace(command, ticket);
             var cancel = new CancellationTokenSource();
-            var process = LaunchPowerShell(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
+            var process = LaunchShell(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
             running.TryAdd(ticket.TaskId, process);
             cancellationTokens.TryAdd(ticket.TaskId, cancel);
             return ticket;
@@ -40,7 +43,18 @@ namespace Octopus.Tentacle.Services.Scripts
             workspace.IsolationLevel = command.Isolation;
             workspace.ScriptMutexAcquireTimeout = command.ScriptIsolationMutexTimeout;
             workspace.ScriptArguments = command.Arguments;
-            workspace.BootstrapScript(command.ScriptBody);
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                //TODO: This could be better
+                workspace.BootstrapScript(command.Scripts.ContainsKey(ScriptType.Bash)
+                    ? command.Scripts[ScriptType.Bash]
+                    : command.ScriptBody);
+            }
+            else
+            {
+                workspace.BootstrapScript(command.ScriptBody);   
+            }
 
             command.Files.ForEach(file => SaveFileToDisk(workspace, file));
 
@@ -70,11 +84,10 @@ namespace Octopus.Tentacle.Services.Scripts
             return new ScriptLog(workspace.ResolvePath("Output.log"), fileSystem);
         }
 
-        RunningScript LaunchPowerShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
+        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
         {
-            var runningScript = new RunningScript(workspace, CreateLog(workspace), serverTaskId, cancel.Token);
-            var thread = new Thread(runningScript.Execute);
-            thread.Name = "Executing PowerShell script for " + ticket.TaskId;
+            var runningScript = new RunningScript(shell, workspace, CreateLog(workspace), serverTaskId, cancel.Token);
+            var thread = new Thread(runningScript.Execute) {Name = "Executing PowerShell script for " + ticket.TaskId};
             thread.Start();
             return runningScript;
         }
@@ -107,7 +120,7 @@ namespace Octopus.Tentacle.Services.Scripts
             cancellationTokens.TryRemove(command.Ticket.TaskId, out cancellation);
             var response = GetResponse(command.Ticket, script, command.LastLogSequence);
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
-            workspace.Delete();
+            //workspace.Delete();
             return response;
         }
 
