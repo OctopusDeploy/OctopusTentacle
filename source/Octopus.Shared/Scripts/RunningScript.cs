@@ -13,11 +13,13 @@ namespace Octopus.Shared.Scripts
         public const int TimeoutExitCode = -44;
 
         readonly IScriptWorkspace workspace;
+        readonly IShell shell;
         readonly string taskId;
         readonly CancellationToken token;
 
-        public RunningScript(IScriptWorkspace workspace, IScriptLog log, string taskId, CancellationToken token)
+        public RunningScript(IShell shell, IScriptWorkspace workspace, IScriptLog log, string taskId, CancellationToken token)
         {
+            this.shell = shell;
             this.workspace = workspace;
             this.taskId = taskId;
             this.token = token;
@@ -34,14 +36,14 @@ namespace Octopus.Shared.Scripts
         {
             try
             {
-                var powerShellPath = PowerShell.GetFullPath();
+                var shellPath = shell.GetFullPath();
 
                 using (var writer = Log.CreateWriter())
                 {
                     try
                     {
                         using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, workspace.ScriptMutexAcquireTimeout, GetType().Name, message => writer.WriteOutput(ProcessOutputSource.StdOut, message), taskId, token))
-                            RunScript(powerShellPath, writer);
+                            RunScript(shellPath, writer);
                     }
                     catch (OperationCanceledException)
                     {
@@ -73,7 +75,7 @@ namespace Octopus.Shared.Scripts
 
                 var exitCode = SilentProcessRunner.ExecuteCommand(
                     powerShellPath,
-                    PowerShell.FormatCommandArguments(workspace.BootstrapScriptFilePath, workspace.ScriptArguments, false),
+                    shell.FormatCommandArguments(workspace.BootstrapScriptFilePath, workspace.ScriptArguments, false),
                     workspace.WorkingDirectory,
                     output => writer.WriteOutput(ProcessOutputSource.Debug, output),
                     output => writer.WriteOutput(ProcessOutputSource.StdOut, output),

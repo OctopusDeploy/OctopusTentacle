@@ -5,12 +5,12 @@ using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Scripts
 {
-    public class PowerShell
+    public class PowerShell : IShell
     {
         const string EnvPowerShellPath = "PowerShell.exe";
         static string powerShellPath;
 
-        public static string GetFullPath()
+        public string GetFullPath()
         {
             if (powerShellPath != null)
             {
@@ -35,7 +35,7 @@ namespace Octopus.Shared.Scripts
             return powerShellPath;
         }
 
-        public static string FormatCommandArguments(string bootstrapFile, string[] scriptArguments, bool allowInteractive)
+        public string FormatCommandArguments(string bootstrapFile, string[] scriptArguments, bool allowInteractive)
         {
             var commandArguments = new StringBuilder();
 

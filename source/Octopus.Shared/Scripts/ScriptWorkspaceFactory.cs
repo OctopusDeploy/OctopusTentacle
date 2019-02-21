@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Util;
@@ -22,6 +23,11 @@ namespace Octopus.Shared.Scripts
 
         public IScriptWorkspace GetWorkspace(ScriptTicket ticket)
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return new BashScriptWorkspace(FindWorkingDirectory(ticket), fileSystem);
+            }
+
             return new ScriptWorkspace(FindWorkingDirectory(ticket), fileSystem);
         }
 

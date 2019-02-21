@@ -10,8 +10,9 @@ namespace Octopus.Shared.Scripts
 {
     public class ScriptWorkspace : IScriptWorkspace
     {
-        const string BootstrapScriptName = "Bootstrap.ps1";
-        readonly IOctopusFileSystem fileSystem;
+        protected virtual string BootstrapScriptName => "Bootstrap.ps1";
+        
+        protected readonly IOctopusFileSystem fileSystem;
 
         public ScriptWorkspace(string workingDirectory, IOctopusFileSystem fileSystem)
         {
@@ -48,7 +49,7 @@ namespace Octopus.Shared.Scripts
 
         public string BootstrapScriptFilePath { get; }
 
-        public void BootstrapScript(string scriptBody)
+        public virtual void BootstrapScript(string scriptBody)
         {
             // default is UTF8noBOM but powershell doesn't interpret that correctly
             fileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.UTF8);
