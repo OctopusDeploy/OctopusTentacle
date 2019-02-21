@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Octopus.Diagnostics;
@@ -80,41 +81,26 @@ namespace Octopus.Shared.Configuration
 
         internal ApplicationInstanceRecord LoadInstance()
         {
+            ApplicationInstanceRecord instance = null;
             var instances = instanceStore.ListInstances(applicationName);
 
             if (instances.Count == 0)
                 throw new ControlledFailureException(
                     $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
 
-            if (string.IsNullOrEmpty(currentInstanceName))
+            instance = string.IsNullOrEmpty(currentInstanceName) ? TryLoadDefaultInstance(instances) : TryLoadInstanceByName(instances);
+
+            if (instance == null)
             {
-                if (instances.Count == 1)
-                    return instances.First();
-
-                var defaultInstance = instances.FirstOrDefault(s => string.Equals(s.InstanceName, ApplicationInstanceRecord.GetDefaultInstance(applicationName), StringComparison.InvariantCultureIgnoreCase));
-                if (defaultInstance != null)
-                    return defaultInstance;
-
                 throw new ControlledFailureException(
-                    $"There is more than one instance of {applicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
+                    $"Instance {currentInstanceName} of {applicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
             }
 
-            var instance = instances.SingleOrDefault(s => s.InstanceName == currentInstanceName);
-            if (instance != null)
-                return instance;
-
-            var caseInsensitiveMatches = instances.Where(s => string.Equals(s.InstanceName, currentInstanceName, StringComparison.InvariantCultureIgnoreCase)).ToArray();
-            if (caseInsensitiveMatches.Length == 1)
-                return caseInsensitiveMatches.First();
-
-            if (caseInsensitiveMatches.Length > 1)
-                throw new ControlledFailureException(
-                    $"Instance {currentInstanceName} of {applicationName} could not be matched to one of the existing instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
-
-            throw new ControlledFailureException(
-                $"Instance {currentInstanceName} of {applicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
+            instanceStore.MigrateInstance(instance);
+            return instance;
         }
 
+        
         public void CreateDefaultInstance(string configurationFile, string homeDirectory = null)
         {
             CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(applicationName), configurationFile, homeDirectory);
@@ -152,6 +138,48 @@ namespace Octopus.Shared.Configuration
                 record.InstanceName,
                 record.ConfigurationFilePath,
                 new XmlFileKeyValueStore(fileSystem, record.ConfigurationFilePath));
+        }
+
+        private ApplicationInstanceRecord TryLoadInstanceByName(IList<ApplicationInstanceRecord> instances)
+        {
+            var instance = instances.SingleOrDefault(s => s.InstanceName == currentInstanceName);
+            if (instance == null)
+            {
+                var caseInsensitiveMatches = instances.Where(s => string.Equals(s.InstanceName, currentInstanceName, StringComparison.InvariantCultureIgnoreCase)).ToArray();
+                if (caseInsensitiveMatches.Length > 1)
+                    throw new ControlledFailureException(
+                        $"Instance {currentInstanceName} of {applicationName} could not be matched to one of the existing instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
+                if (caseInsensitiveMatches.Length == 1)
+                {
+                    instance = caseInsensitiveMatches.First();
+                }
+            }
+
+            return instance;
+        }
+
+        private ApplicationInstanceRecord TryLoadDefaultInstance(IList<ApplicationInstanceRecord> instances)
+        {
+            ApplicationInstanceRecord instance;
+            if (instances.Count == 1)
+            {
+                instance = instances.First();
+            }
+            else
+            {
+                var defaultInstance = instances.FirstOrDefault(s => string.Equals(s.InstanceName, ApplicationInstanceRecord.GetDefaultInstance(applicationName), StringComparison.InvariantCultureIgnoreCase));
+                if (defaultInstance != null)
+                {
+                    instance = defaultInstance;
+                }
+                else
+                {
+                    throw new ControlledFailureException(
+                        $"There is more than one instance of {applicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
+                }
+            }
+
+            return instance;
         }
     }
 }

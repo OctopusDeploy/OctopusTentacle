@@ -5,7 +5,9 @@ namespace Octopus.Shared.Configuration
 {
     public interface IRegistryApplicationInstanceStore
     {
-        List<ApplicationInstanceRecord> GetListFromRegistry(ApplicationName name);
+        ApplicationInstanceRecord GetInstanceFromRegistry(ApplicationName name, string instanceName);
+
+        IEnumerable<ApplicationInstanceRecord> GetListFromRegistry(ApplicationName name);
         void DeleteFromRegistry(ApplicationName name, string instanceName);
     }
 }

@@ -31,7 +31,7 @@
     <None Remove="Startup\PathsToDeleteOnStartup.core.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="4.1.0" />
+    <PackageReference Include="Halibut" Version="4.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
@@ -48,7 +48,7 @@
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETStandard' ">
-    <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.4.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0-preview1-25914-04" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.5.0-preview1-25914-04" />
@@ -56,7 +56,7 @@
     <PackageReference Include="NLog" Version="4.5.0-rc04" />
     <PackageReference Include="Nito.AsyncEx" Version="5.0.0-pre-05" />
     <PackageReference Include="System.Diagnostics.EventLog" Version="4.5.0-preview1-25914-04" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.0" />
     <PackageReference Include="System.DirectoryServices.AccountManagement" Version="4.5.0-preview1-25914-04" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
   </ItemGroup>

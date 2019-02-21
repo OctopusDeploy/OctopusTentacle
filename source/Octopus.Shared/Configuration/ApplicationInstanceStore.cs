@@ -43,38 +43,21 @@ namespace Octopus.Shared.Configuration
         public IList<ApplicationInstanceRecord> ListInstances(ApplicationName name)
         {
             var instancesFolder = InstancesFolder(name);
-
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
-            using (var mutex = new MachineWideMutex().Acquire($"{name}InstanceStore", "migrating from registry", cts.Token))
+            
+            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
+            var listFromFileSystem = new List<ApplicationInstanceRecord>();
+            if (fileSystem.DirectoryExists(instancesFolder))
             {
-                if (!fileSystem.DirectoryExists(instancesFolder))
-                {
-                    log.InfoFormat("Migrating {0} instance data from the registry", name.ToString());
-                    // migrate the list of instances from the registry to the folder.
-                    var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
-                    foreach (var instanceRecord in listFromRegistry)
-                    {
-                        log.InfoFormat("Migrating instance - {0}", instanceRecord.InstanceName);
-                        try
-                        {
-                            SaveInstance(instanceRecord);
-                            registryApplicationInstanceStore.DeleteFromRegistry(name, instanceRecord.InstanceName);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error(ex, "Error migrating instance data");
-                            throw;
-                        }
-                    }
-                }
+                listFromFileSystem = fileSystem.EnumerateFiles(instancesFolder)
+                    .Select(LoadInstanceConfiguration)
+                    .Select(instance => new ApplicationInstanceRecord(instance.Name, name, instance.ConfigurationFilePath))
+                    .ToList();
             }
 
-            var results = fileSystem.EnumerateFiles(instancesFolder)
-                .Select(LoadInstanceConfiguration)
-                .Select(instance => new ApplicationInstanceRecord(instance.Name, name, instance.ConfigurationFilePath))
-                .ToList();
-
-            return results;
+            var combinedInstanceList = listFromFileSystem
+                .Concat(listFromRegistry.Where(x => listFromFileSystem.All(y => y.InstanceName != x.InstanceName)))
+                .OrderBy(i => i.InstanceName);
+            return combinedInstanceList.ToList();
         }
 
         Instance LoadInstanceConfiguration(string path)
@@ -132,6 +115,30 @@ namespace Octopus.Shared.Configuration
             var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceRecord.InstanceName) + ".config");
 
             fileSystem.DeleteFile(instanceConfiguration);
+        }
+
+        public void MigrateInstance(ApplicationInstanceRecord instanceRecord)
+        {
+            var applicationName = instanceRecord.ApplicationName;
+            var instanceName = instanceRecord.InstanceName;
+            var instancesFolder = InstancesFolder(instanceRecord.ApplicationName);
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            {
+                var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(applicationName, instanceName);
+                if (registryInstance != null)
+                {
+                    log.Info($"Migrating {applicationName} instance from registry - {instanceName}");
+                    try
+                    {
+                        SaveInstance(instanceRecord);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex, "Error migrating instance data");
+                        throw;
+                    }
+                }
+            }
         }
     }
 }
