@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Shared", "..\..\Oct
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Halibut", "..\..\Halibut\source\Halibut\Halibut.csproj", "{A66F5D8D-61F0-4BAA-A121-DA8AAB2D31CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Tests", "Octopus.Tentacle.Tests\Octopus.Tentacle.Tests.csproj", "{6C2142D0-4FBC-4530-BB10-72031BA88634}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{A66F5D8D-61F0-4BAA-A121-DA8AAB2D31CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A66F5D8D-61F0-4BAA-A121-DA8AAB2D31CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A66F5D8D-61F0-4BAA-A121-DA8AAB2D31CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C2142D0-4FBC-4530-BB10-72031BA88634}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C2142D0-4FBC-4530-BB10-72031BA88634}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C2142D0-4FBC-4530-BB10-72031BA88634}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C2142D0-4FBC-4530-BB10-72031BA88634}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
