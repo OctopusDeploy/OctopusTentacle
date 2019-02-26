@@ -26,8 +26,12 @@ namespace Octopus.Shared.Configuration
             this.log = log;
             this.fileSystem = fileSystem;
             this.registryApplicationInstanceStore = registryApplicationInstanceStore;
-
             machineConfigurationHomeDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus");
+
+            if (!PlatformDetection.IsRunningOnWindows) 
+            {
+                machineConfigurationHomeDirectory = "/etc/octopus";
+            }
         }
 
         public class Instance
