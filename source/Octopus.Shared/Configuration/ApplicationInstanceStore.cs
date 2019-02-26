@@ -133,7 +133,7 @@ namespace Octopus.Shared.Configuration
                 var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(applicationName, instanceName);
                 if (registryInstance != null )
                 {
-                    log.Verbose($"Migrating {applicationName} instance from registry - {instanceName}");
+                    log.Info($"Migrating {applicationName} instance from registry - {instanceName}");
                     try
                     {
                         SaveInstance(instanceRecord);
