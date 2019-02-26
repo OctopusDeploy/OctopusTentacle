@@ -123,12 +123,17 @@ namespace Octopus.Shared.Configuration
             var applicationName = instanceRecord.ApplicationName;
             var instanceName = instanceRecord.InstanceName;
             var instancesFolder = InstancesFolder(instanceRecord.ApplicationName);
+            if (File.Exists(Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config")))
+            {
+                return;
+            }
+
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
                 var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(applicationName, instanceName);
-                if (registryInstance != null)
+                if (registryInstance != null )
                 {
-                    log.Info($"Migrating {applicationName} instance from registry - {instanceName}");
+                    log.Verbose($"Migrating {applicationName} instance from registry - {instanceName}");
                     try
                     {
                         SaveInstance(instanceRecord);
