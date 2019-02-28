@@ -700,6 +700,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 using (var client = await CreateClient())
                 {
+                    if (AuthMode == AuthMode.UsernamePassword)
+                    {
+                        await client.SignIn(new LoginCommand { Username = username, Password = password });
+                    }
                     await loadAction(client);
                 }
             }
