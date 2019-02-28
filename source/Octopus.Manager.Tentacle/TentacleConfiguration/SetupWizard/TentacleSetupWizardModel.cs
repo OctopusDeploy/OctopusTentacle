@@ -700,6 +700,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 using (var client = await CreateClient())
                 {
+                    var repository = new OctopusAsyncRepository(client);
+
+                    if (AuthMode == AuthMode.UsernamePassword)
+                    {
+                        await repository.Users.SignIn(new LoginCommand { Username = username, Password = password });
+                    }
                     await loadAction(client);
                 }
             }
