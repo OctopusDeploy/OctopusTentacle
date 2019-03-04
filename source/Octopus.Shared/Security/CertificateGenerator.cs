@@ -58,12 +58,12 @@ namespace Octopus.Shared.Security
 
             var store = new Pkcs12StoreBuilder().Build();
             store.SetKeyEntry(string.Empty, new AsymmetricKeyEntry(subjectKeyPair.Private), new[] { new X509CertificateEntry(bouncyCert) });
-            var exportpw = Guid.NewGuid().ToString("x");
+            var exportpw = Guid.NewGuid().ToString();
 
             using (var ms = new System.IO.MemoryStream())
             {
                 store.Save(ms, exportpw.ToCharArray(), random);
-                certificate = exportable ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable) : new X509Certificate2(ms.ToArray());
+                certificate = exportable ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable) : new X509Certificate2(ms.ToArray(), exportpw);
             }
 
             return certificate;

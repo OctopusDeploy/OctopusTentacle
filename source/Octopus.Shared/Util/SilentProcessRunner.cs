@@ -96,7 +96,12 @@ namespace Octopus.Shared.Util
                 var runAsSameUser = runAs == default(NetworkCredential);
                 if(!runAsSameUser && !PlatformDetection.IsRunningOnWindows)
                     throw new NotSupportedException("Running process as another user is currently not supported on Linux or MacOS");
-                var runningAs = runAsSameUser ? $@"{Environment.UserName}" : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
+                var currentUserName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+#pragma warning disable PC001 // API not supported on all platforms
+                    ? WindowsIdentity.GetCurrent().Name
+#pragma warning restore PC001 // API not supported on all platforms
+                    : Environment.UserName;
+                var runningAs = runAsSameUser ? $@"{currentUserName}" : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
                 var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
                 var customEnvironmentVars =
                     hasCustomEnvironmentVariables
@@ -345,10 +350,8 @@ namespace Octopus.Shared.Util
         private static void InvalidateEnvironmentVariablesForUserCacheIfMachineEnvironmentVariablesHaveChanged()
         {
             var currentMachineEnvironmentVariables = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
-            var machineEnvironmentVariablesHaveChanged =
-                !currentMachineEnvironmentVariables.Cast<KeyValuePair<string, string>>().OrderBy(e => e.Key)
-                    .SequenceEqual(mostRecentMachineEnvironmentVariables.Cast<KeyValuePair<string, string>>().OrderBy(e => e.Key));
-            if (machineEnvironmentVariablesHaveChanged)
+
+            if (!currentMachineEnvironmentVariables.Equals(mostRecentMachineEnvironmentVariables))
             {
                 mostRecentMachineEnvironmentVariables = currentMachineEnvironmentVariables;
                 EnvironmentVariablesForUserCache.Clear();
