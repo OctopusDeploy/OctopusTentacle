@@ -47,7 +47,8 @@ namespace Octopus.Tentacle.Tests.Commands
                                                    log, 
                                                    Substitute.For<IApplicationInstanceSelector>(), 
                                                    proxyConfig,
-                                                   Substitute.For<IOctopusClientInitializer>());
+                                                   Substitute.For<IOctopusClientInitializer>(),
+                                                   new SpaceRepositoryFactory());
 
             var matchingMachines = new List<MachineResource>
             {
@@ -75,7 +76,8 @@ namespace Octopus.Tentacle.Tests.Commands
                                                    log, 
                                                    Substitute.For<IApplicationInstanceSelector>(),
                                                    proxyConfig,
-                                                   Substitute.For<IOctopusClientInitializer>());
+                                                   Substitute.For<IOctopusClientInitializer>(), 
+                                                   new SpaceRepositoryFactory());
 
             const string machineName = "MachineToBeDeleted";
             var matchingMachines = new List<MachineResource>
@@ -87,8 +89,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             await Command.Deregister(asyncRepository);
 
-            log.Received().Info($"Deleting machine '{machineName}' from the Octopus server...");
-            log.Received().Error(DeregisterMachineCommand.ThumbprintNotFoundMsg);
+            log.Received().Info($"Deleting machine '{machineName}' from the Octopus Server...");
         }
 
         [Test]
@@ -105,7 +106,8 @@ namespace Octopus.Tentacle.Tests.Commands
                                                    log,
                                                    Substitute.For<IApplicationInstanceSelector>(),
                                                    proxyConfig,
-                                                   Substitute.For<IOctopusClientInitializer>());
+                                                   Substitute.For<IOctopusClientInitializer>(),
+                                                   new SpaceRepositoryFactory());
 
             asyncRepository.CertificateConfiguration.GetOctopusCertificate()
                 .ReturnsForAnyArgs(new CertificateConfigurationResource { Thumbprint = expectedThumbPrint }.AsTask());
@@ -120,8 +122,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             await Command.Deregister(asyncRepository);
 
-            log.Received().Info($"Deleting entry '{expectedThumbPrint}' in tentacle.config");
-            log.Received().Info($"Deleting machine '{machineName}' from the Octopus server...");
+            log.Received().Info($"Deleting machine '{machineName}' from the Octopus Server...");
             log.Received().Info(DeregisterMachineCommand.DeregistrationSuccessMsg);
         }
     }

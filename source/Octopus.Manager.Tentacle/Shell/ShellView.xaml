@@ -4,16 +4,21 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     mc:Ignorable="d" 
     x:Class="Octopus.Manager.Tentacle.Shell.ShellView"
     Height="750" Width="1000"
     Title="Octopus Administration Tool" UseLayoutRounding="True"
-    FontSize="10pt" TextOptions.TextFormattingMode="Display"
+    FontSize="10pt"
+    TextOptions.TextFormattingMode="Ideal" 
+    TextOptions.TextRenderingMode="Auto"
     WindowStartupLocation="CenterScreen"
+    Name="Root"
     d:DataContext="{d:DesignInstance d:Type={x:Type shell:ShellViewModel}}"
     Background="#ffffff"
     >
-    <Grid>
+    <materialDesign:DialogHost Name="DialogHost" >
+        <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -24,7 +29,7 @@
 
         <!-- Top header -->
         <Border>
-            <Border Height="55" Margin="-10, 0, -10, 0" Background="#2f93e0" BorderThickness="0,0,0,8" BorderBrush="#74c0fb">
+            <Border Height="55" Margin="-10, 0, -10, 0" Background="#2f93e0">
                 <Grid Margin="30,0,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="170" />
@@ -47,13 +52,17 @@
                                Text="{Binding Path=VersionNumber, StringFormat='EAP Release - {0}'}" Style="{StaticResource TextBlock.Heading}" 
                                Visibility="{Binding Path=ShowEAPVersion, Converter={StaticResource Converter.BooleanToVisibility}}" />
                     
-                    <StackPanel Margin="0,5,30,5" Orientation="Horizontal" Grid.Column="3" Visibility="Collapsed" Name="instanceSelectionContainer">
+                    <StackPanel Margin="0,0,0,0" Orientation="Horizontal" Grid.Column="3" Visibility="Collapsed" Name="instanceSelectionContainer">
                         <ComboBox 
                             Name="instanceCombo" 
                             ItemsSource="{Binding Path=InstanceSelectionModel.Instances}" DisplayMemberPath="DisplayName" SelectedValuePath="InstanceName" 
                             Margin="0,0,10,0"
-                            SelectedValue="{Binding Path=InstanceSelectionModel.SelectedInstance}" VerticalAlignment="Center" 
-                            Style="{StaticResource ComboBox.Transparent}">
+                            VerticalAlignment="Stretch"
+                            VerticalContentAlignment="Center"
+                            Padding="20,0"
+                            materialDesign:ComboBoxAssist.ClassicMode="True"
+                            SelectedValue="{Binding Path=InstanceSelectionModel.SelectedInstance}"
+                            Style="{StaticResource CustomMaterialDesignComboBox}">
                             <ComboBox.CommandBindings>
                                 <CommandBinding Command="New" Executed="OnAddNewInstance" />
                             </ComboBox.CommandBindings>
@@ -66,4 +75,5 @@
         <ContentControl Name="mainContent" Grid.Row="1" />
 
     </Grid>
+    </materialDesign:DialogHost>
 </Window>

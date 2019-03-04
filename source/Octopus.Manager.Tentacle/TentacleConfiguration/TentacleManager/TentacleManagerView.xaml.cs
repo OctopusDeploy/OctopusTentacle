@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Windows;
+using System.Windows.Data;
+using System.Windows.Input;
+using MaterialDesignThemes.Wpf;
 using Octopus.Manager.Tentacle.DeleteWizard;
 using Octopus.Manager.Tentacle.Dialogs;
 using Octopus.Manager.Tentacle.Proxy;
@@ -51,7 +56,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             Dispatcher.BeginInvoke(new Action(delegate
             {
-                var defaultInstall = instanceStore.GetInstance(instanceSelection.ApplicationName, instanceSelection.SelectedInstance);
+                var instances = instanceStore.ListInstances(ApplicationName.Tentacle);
+                var defaultInstall = instances.SingleOrDefault(s => s.InstanceName == instanceSelection.SelectedInstance);
                 if (defaultInstall != null && !File.Exists(defaultInstall.ConfigurationFilePath))
                 {
                     Log.Octopus().WarnFormat("An instance of {0} named {1} was configured, but the associated configuration file {2} does not exist. Deleting the instance.", defaultInstall.ApplicationName, defaultInstall.InstanceName, defaultInstall.ConfigurationFilePath);
@@ -124,6 +130,34 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         void BrowseHome(object sender, RoutedEventArgs e)
         {
             Process.Start("explorer.exe", model.HomeDirectory);
+        }
+
+        async void CreateNewInstance(object sender, RoutedEventArgs e)
+        {
+            var result = await DialogHost.Show(new NewInstanceNameDialog(instanceSelection.Instances.Select(q => q.InstanceName)), Window.GetWindow(this)?.Title);
+
+            if (result is string typedResult)
+            {
+                instanceSelection.New(typedResult);
+            }
+        }
+
+        void CopyThumbprintToClipboard(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(model.Thumbprint);
+        }
+    }
+
+    public class MultiStatusToColorValueConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return String.Format("{0} {1}", values[0], values[1]);
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
     }
 }

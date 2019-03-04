@@ -13,6 +13,7 @@ namespace Octopus.Tentacle.Commands
             builder.RegisterType<OctopusClientFactory>().AsSelf().AsImplementedInterfaces();
             builder.RegisterType<RegisterMachineOperation>().AsSelf().AsImplementedInterfaces();
             builder.RegisterType<RegisterWorkerOperation>().AsSelf().AsImplementedInterfaces();
+            builder.RegisterType<SpaceRepositoryFactory>().As<ISpaceRepositoryFactory>();
         }
     }
 }
