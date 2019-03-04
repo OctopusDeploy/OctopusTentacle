@@ -133,8 +133,6 @@
     <Reference Include="Octopus.Diagnostics, Version=1.2.2.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\Octopus.Diagnostics.1.2.2\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
     </Reference>
-    <Reference Include="Octopus.Shared, Version=4.3.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octopus.Shared.4.3.6-enh-reg-be-gone12\lib\net45\Octopus.Shared.dll</HintPath>
     <Reference Include="Octopus.Shared, Version=4.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Shared.4.7.0\lib\net45\Octopus.Shared.dll</HintPath>
     </Reference>
