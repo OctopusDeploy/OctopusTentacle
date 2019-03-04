@@ -10,12 +10,12 @@ namespace Octopus.Shared.Scripts
         const string EnvPowerShellPath = "PowerShell.exe";
         static string powerShellPath;
 
-        string IShell.GetFullPath()
+        public string GetFullPath()
         {
-            return GetFullPath();
+            return GetFullPowerShellPath();
         }
 
-        public static string GetFullPath()
+        public static string GetFullPowerShellPath()
         {
             if (powerShellPath != null)
             {
