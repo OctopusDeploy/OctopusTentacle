@@ -4,7 +4,12 @@ namespace Octopus.Shared.Scripts
 {
     public class Bash : IShell
     {
-        public string GetFullPath()
+        string IShell.GetFullPath()
+        {
+            return GetFullPath();
+        }
+
+        public static string GetFullPath()
         {
             return "/bin/bash";
         }
