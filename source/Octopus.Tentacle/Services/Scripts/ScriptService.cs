@@ -120,7 +120,7 @@ namespace Octopus.Tentacle.Services.Scripts
             cancellationTokens.TryRemove(command.Ticket.TaskId, out cancellation);
             var response = GetResponse(command.Ticket, script, command.LastLogSequence);
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
-            //workspace.Delete();
+            workspace.Delete();
             return response;
         }
 
