@@ -3,7 +3,7 @@
     <RootNamespace>Octopus.Tentacle</RootNamespace>
     <AssemblyName>Tentacle</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <TargetFrameworks>net452;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net452;netcoreapp2.2</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputType>Exe</OutputType>
     <NoWin32Manifest>true</NoWin32Manifest>
