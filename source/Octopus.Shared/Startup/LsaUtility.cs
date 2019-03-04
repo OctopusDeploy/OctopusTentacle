@@ -4,6 +4,8 @@ using System.Text;
 
 namespace Octopus.Shared.Startup
 {
+    //This class is used to grant log on as a service right to an account, disabled all warnings for this class and assume it will only be called from Windows code paths
+#pragma warning disable PC003 // Native API not available in UWP
     // Source: http://www.codeproject.com/Articles/4863/LSA-Functions-Privileges-and-Impersonation
     // Under the Code Project Open License
     public class LsaUtility
@@ -189,4 +191,5 @@ namespace Octopus.Shared.Startup
             POLICY_NOTIFICATION = 0x00001000L
         }
     }
+#pragma warning restore PC003 // Native API not available in UWP
 }

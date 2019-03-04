@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.Serialization;
-using System.Security.Permissions;
 
 namespace Octopus.Shared.Internals.Options
 {
@@ -36,7 +35,6 @@ namespace Octopus.Shared.Internals.Options
             get { return option; }
         }
 
-        [SecurityPermission(SecurityAction.LinkDemand, SerializationFormatter = true)]
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);

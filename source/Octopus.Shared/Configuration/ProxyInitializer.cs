@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.Http;
 using Autofac.Core;
 using Octopus.Shared.Diagnostics;
 

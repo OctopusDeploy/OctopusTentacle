@@ -94,7 +94,9 @@ namespace Octopus.Shared.Util
                 var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
                 var runAsSameUser = runAs == default(NetworkCredential);
-                var runningAs = runAsSameUser ? $@"{WindowsIdentity.GetCurrent().Name}" : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
+                if(!runAsSameUser && !PlatformDetection.IsRunningOnWindows)
+                    throw new NotSupportedException("Running process as another user is currently not supported on Linux or MacOS");
+                var runningAs = runAsSameUser ? $@"{Environment.UserName}" : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
                 var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
                 var customEnvironmentVars =
                     hasCustomEnvironmentVariables
@@ -255,12 +257,16 @@ namespace Octopus.Shared.Util
             }
         }
 
+
         private static void RunAsDifferentUser(ProcessStartInfo startInfo, NetworkCredential runAs, IDictionary<string, string> customEnvironmentVariables)
         {
+            //This code is currently only being run on Windows, disabling PC001 errors for now
+#pragma warning disable PC001 // API not supported on all platforms
             startInfo.Domain = runAs.Domain;
             startInfo.UserName = runAs.UserName;
             startInfo.Password = runAs.SecurePassword;
             startInfo.LoadUserProfile = true;
+#pragma warning restore PC001 // API not supported on all platforms
 
             WindowStationAndDesktopAccess.GrantAccessToWindowStationAndDesktop(runAs.UserName, runAs.Domain);
 
@@ -340,8 +346,8 @@ namespace Octopus.Shared.Util
         {
             var currentMachineEnvironmentVariables = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
             var machineEnvironmentVariablesHaveChanged =
-                !currentMachineEnvironmentVariables.Cast<DictionaryEntry>().OrderBy(e => e.Key)
-                    .SequenceEqual(mostRecentMachineEnvironmentVariables.Cast<DictionaryEntry>().OrderBy(e => e.Key));
+                !currentMachineEnvironmentVariables.Cast<KeyValuePair<string, string>>().OrderBy(e => e.Key)
+                    .SequenceEqual(mostRecentMachineEnvironmentVariables.Cast<KeyValuePair<string, string>>().OrderBy(e => e.Key));
             if (machineEnvironmentVariablesHaveChanged)
             {
                 mostRecentMachineEnvironmentVariables = currentMachineEnvironmentVariables;
@@ -396,8 +402,10 @@ namespace Octopus.Shared.Util
                 }
             }
 
+#pragma warning disable PC003 // Native API not available in UWP. UWP is not supported
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool GetCPInfoEx([MarshalAs(UnmanagedType.U4)] int codePage, [MarshalAs(UnmanagedType.U4)] int dwFlags, out CPINFOEX lpCPInfoEx);
+#pragma warning restore PC003 // Native API not available in UWP
 
             const int MAX_DEFAULTCHAR = 2;
             const int MAX_LEADBYTES = 12;
@@ -473,9 +481,11 @@ namespace Octopus.Shared.Util
                     new GenericSecurity(
                         false, ResourceType.WindowObject, safeHandle, AccessControlSections.Access);
 
+#pragma warning disable PC001 // API not supported on all platforms. This code will only be run on Windows
                 var account = string.IsNullOrEmpty(domainName)
                     ? new NTAccount(username)
                     : new NTAccount(domainName, username);
+#pragma warning restore PC001 // API not supported on all platforms
 
                 security.AddAccessRule(
                     new GenericAccessRule(
@@ -483,11 +493,13 @@ namespace Octopus.Shared.Util
                 security.Persist(safeHandle, AccessControlSections.Access);
             }
 
+#pragma warning disable PC003 // Native API not available in UWP. This code will only be run on Windows
             [DllImport("user32.dll", SetLastError = true)]
             private static extern IntPtr GetProcessWindowStation();
 
             [DllImport("user32.dll", SetLastError = true)]
             private static extern IntPtr GetThreadDesktop(int dwThreadId);
+#pragma warning restore PC003 // Native API not available in UWP
 
             [DllImport("kernel32.dll", SetLastError = true)]
             private static extern int GetCurrentThreadId();
@@ -520,6 +532,7 @@ namespace Octopus.Shared.Util
                 {
                 }
 
+#pragma warning disable PC001 // API not supported on all platforms, this code should only be run when attempting to run a process as another user on Windows/
                 public new void Persist(SafeHandle handle, AccessControlSections includeSections)
                 {
                     base.Persist(handle, includeSections);
@@ -529,6 +542,7 @@ namespace Octopus.Shared.Util
                 {
                     base.AddAccessRule(rule);
                 }
+#pragma warning restore PC001 // API not supported on all platforms
 
                 public override Type AccessRightType => throw new NotImplementedException();
 
@@ -610,8 +624,10 @@ namespace Octopus.Shared.Util
                 WinNT50 = 3,
             }
 
+#pragma warning disable PC003 // Native API not available in UWP, We dont support UWP and this code path will only be hit when run on Windows
             [DllImport("advapi32.dll", SetLastError = true)]
             private static extern bool LogonUser(string username, string domain, string password, LogonType logonType, LogonProvider logonProvider, out IntPtr hToken);
+#pragma warning restore PC003 // Native API not available in UWP
         }
 
         internal class UserProfile : IDisposable
@@ -666,11 +682,13 @@ namespace Octopus.Shared.Util
                 }
             }
 
+#pragma warning disable PC003 // Native API not available in UWP, We dont support UWP and this code path will only be hit when run on Windows
             [DllImport("userenv.dll", SetLastError = true)]
             static extern bool LoadUserProfile(SafeAccessTokenHandle hToken, ref PROFILEINFO lpProfileInfo);
 
             [DllImport("userenv.dll", SetLastError = true)]
             static extern bool UnloadUserProfile(SafeAccessTokenHandle hToken, SafeRegistryHandle hProfile);
+#pragma warning restore PC003 // Native API not available in UWP
 
             [StructLayout(LayoutKind.Sequential)]
             struct PROFILEINFO
@@ -791,11 +809,13 @@ namespace Octopus.Shared.Util
                 return userEnvironment;
             }
 
+#pragma warning disable PC003 // Native API not available in UWP, We dont support UWP and this code path will only be hit when run on Windows
             [DllImport("userenv.dll", SetLastError = true)]
             private static extern bool CreateEnvironmentBlock(out IntPtr lpEnvironment, SafeAccessTokenHandle hToken, bool inheritFromCurrentProcess);
 
             [DllImport("userenv.dll", SetLastError = true)]
             private static extern bool DestroyEnvironmentBlock(IntPtr lpEnvironment);
+#pragma warning restore PC003 // Native API not available in UWP
         }
 
         internal sealed class SafeAccessTokenHandle : SafeHandle

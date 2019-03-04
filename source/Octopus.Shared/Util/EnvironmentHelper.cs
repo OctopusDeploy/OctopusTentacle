@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
 
 namespace Octopus.Shared.Util
 {
@@ -28,12 +30,16 @@ namespace Octopus.Shared.Util
             }
         }
 
+#pragma warning disable PC001 // API not supported on all platforms
+        static string CurrentUserName => PlatformDetection.IsRunningOnWindows ? WindowsIdentity.GetCurrent().Name : Environment.UserName;
+#pragma warning restore PC001 // API not supported on all platforms
+
         static IEnumerable<string> GetEnvironmentVars()
         {
-            yield return SafelyGet(() => $"OperatingSystem: {Environment.OSVersion}");
+            yield return SafelyGet(() => $"OperatingSystem: {RuntimeInformation.OSDescription}");
             yield return SafelyGet(() => $"OsBitVersion: {(Environment.Is64BitOperatingSystem ? "x64" : "x86")}");
             yield return SafelyGet(() => $"Is64BitProcess: {Environment.Is64BitProcess}");
-            yield return SafelyGet(() => $"CurrentUser: {System.Security.Principal.WindowsIdentity.GetCurrent().Name}");
+            yield return SafelyGet(() => $"CurrentUser: {CurrentUserName}");
             yield return SafelyGet(() => $"MachineName: {Environment.MachineName}");
             yield return SafelyGet(() => $"ProcessorCount: {Environment.ProcessorCount}");
         }

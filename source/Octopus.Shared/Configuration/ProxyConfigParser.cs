@@ -3,6 +3,7 @@ using System.Net;
 using Halibut;
 using Halibut.Transport.Proxy;
 using Octopus.Diagnostics;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
@@ -14,7 +15,7 @@ namespace Octopus.Shared.Configuration
 
     public class ProxyConfigParser : IProxyConfigParser
     {
-        public Func<IWebProxy> GetSystemWebProxy = WebRequest.GetSystemWebProxy; //allow us to swap this for tests without having to inject
+        public Func<IWebProxy> GetSystemWebProxy = () => PlatformDetection.IsRunningOnWindows ? WebRequest.GetSystemWebProxy() : null; //allow us to swap this for tests without having to inject
 
         public ProxyDetails ParseToHalibutProxy(IProxyConfiguration config, Uri destination, ILog log)
         {

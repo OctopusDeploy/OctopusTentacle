@@ -63,7 +63,7 @@ namespace Octopus.Shared.Security
             using (var ms = new System.IO.MemoryStream())
             {
                 store.Save(ms, exportpw.ToCharArray(), random);
-                certificate = exportable ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable) : new X509Certificate2(ms.ToArray(), exportpw);
+                certificate = exportable ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable) : new X509Certificate2(ms.ToArray());
             }
 
             return certificate;
