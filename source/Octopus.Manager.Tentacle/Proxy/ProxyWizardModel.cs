@@ -10,36 +10,46 @@ using IScriptableViewModel = Octopus.Manager.Tentacle.Infrastructure.IScriptable
 
 namespace Octopus.Manager.Tentacle.Proxy
 {
+    public enum ProxyConfigType
+    {
+        NoProxy,
+        DefaultProxy,
+        DefaultProxyCustomCredentials,
+        CustomProxy,
+    }
     public class PollingProxyWizardModel : ProxyWizardModel
     {
         public PollingProxyWizardModel(string selectedInstance, ApplicationName application) : base(selectedInstance, application)
         {
-            UseNoProxy = true;
+            ProxyConfigType = ProxyConfigType.NoProxy;
         }
 
         protected override string Command => "polling-proxy";
         public override string Header => "Polling Proxy";
         public override string Title => "Polling Tentacle Proxy Settings";
-        public override string Description => "Settings for the proxy that this Tentacle will use to connect to the Octopus server.";
+        public override string Description => "Select the proxy mode for the Tentacle to use to connect to the Octopus Server.";
     }
 
     public class ProxyWizardModel : ViewModel, IScriptableViewModel
     {
+        ProxyConfigType proxyConfigType;
         string proxyUsername;
         string proxyPassword;
-        bool useNoProxy;
-        bool useDefaultProxy;
-        bool useDefaultProxyCustomCredentials;
-        bool useCustomProxy;
         bool showProxySettings;
         string proxyServerHost;
         int proxyServerPort;
 
         public ProxyWizardModel(string selectedInstance, ApplicationName application)
         {
+            ProxyConfigTypes = new List<KeyValuePair<ProxyConfigType, string>>();
+            ProxyConfigTypes.Add(new KeyValuePair<ProxyConfigType, string>(ProxyConfigType.NoProxy, "No Proxy"));
+            ProxyConfigTypes.Add(new KeyValuePair<ProxyConfigType, string>(ProxyConfigType.DefaultProxy, "Default Proxy"));
+            ProxyConfigTypes.Add(new KeyValuePair<ProxyConfigType, string>(ProxyConfigType.DefaultProxyCustomCredentials, "Default Proxy With Custom Credentials"));
+            ProxyConfigTypes.Add(new KeyValuePair<ProxyConfigType, string>(ProxyConfigType.CustomProxy, "Custom Proxy"));
+
             var commandLinePath = CommandLine.PathToTentacleExe();
             var serviceWatcher = new ServiceWatcher(application, selectedInstance, commandLinePath);
-            UseDefaultProxy = true;
+            ProxyConfigType = ProxyConfigType.DefaultProxy;
             ToggleService = serviceWatcher.IsRunning;
             ProxyServerPort = 80;
 
@@ -57,6 +67,19 @@ namespace Octopus.Manager.Tentacle.Proxy
         public string InstanceName { get; set; }
 
         public bool ToggleService { get; set; }
+
+        public List<KeyValuePair<ProxyConfigType, string>> ProxyConfigTypes { get; }
+
+        public ProxyConfigType ProxyConfigType
+        {
+            get => proxyConfigType;
+            set
+            {
+                if (value.Equals(proxyConfigType)) return;
+                proxyConfigType = value;
+                OnPropertyChanged();
+            }
+        }
 
         public string ProxyUsername
         {
@@ -76,54 +99,6 @@ namespace Octopus.Manager.Tentacle.Proxy
             {
                 if (value == proxyPassword) return;
                 proxyPassword = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool UseNoProxy
-        {
-            get => useNoProxy;
-            set
-            {
-                if (value.Equals(useNoProxy)) return;
-                ClearOption();
-                useNoProxy = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool UseDefaultProxy
-        {
-            get => useDefaultProxy;
-            set
-            {
-                if (value.Equals(useDefaultProxy)) return;
-                ClearOption();
-                useDefaultProxy = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool UseDefaultProxyCustomCredentials
-        {
-            get => useDefaultProxyCustomCredentials;
-            set
-            {
-                if (value.Equals(useDefaultProxyCustomCredentials)) return;
-                ClearOption();
-                useDefaultProxyCustomCredentials = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool UseCustomProxy
-        {
-            get => useCustomProxy;
-            set
-            {
-                if (value.Equals(useCustomProxy)) return;
-                ClearOption();
-                useCustomProxy = value;
                 OnPropertyChanged();
             }
         }
@@ -161,14 +136,6 @@ namespace Octopus.Manager.Tentacle.Proxy
             }
         }
 
-        void ClearOption()
-        {
-            useNoProxy = false;
-            useDefaultProxy = false;
-            useDefaultProxyCustomCredentials = false;
-            useCustomProxy = false;
-        }
-
         public string Executable { get; set; }
 
         CliBuilder Cli(string action)
@@ -183,7 +150,7 @@ namespace Octopus.Manager.Tentacle.Proxy
                 yield return Cli("service").Flag("stop").Build();
             }
 
-            if (useNoProxy)
+            if (ProxyConfigType == ProxyConfigType.NoProxy)
             {
                 yield return Cli(Command)
                     .Argument("proxyEnable", false)
@@ -193,7 +160,7 @@ namespace Octopus.Manager.Tentacle.Proxy
                     .Argument("proxyPort", string.Empty)
                     .Build();
             }
-            else if (UseDefaultProxy)
+            else if (ProxyConfigType == ProxyConfigType.DefaultProxy)
             {
                 // Explicitly clear the credentials
                 yield return Cli(Command)
@@ -204,7 +171,7 @@ namespace Octopus.Manager.Tentacle.Proxy
                     .Argument("proxyPort", string.Empty)
                     .Build();
             }
-            else if (UseDefaultProxyCustomCredentials)
+            else if (ProxyConfigType == ProxyConfigType.DefaultProxyCustomCredentials)
             {
                 yield return Cli(Command)
                     .Argument("proxyEnable", true)
@@ -214,7 +181,7 @@ namespace Octopus.Manager.Tentacle.Proxy
                     .Argument("proxyPort", string.Empty)
                     .Build();
             }
-            else if (UseCustomProxy)
+            else if (ProxyConfigType == ProxyConfigType.CustomProxy)
             {
                 var host = new UriBuilder(ProxyServerHost).Host;
 
@@ -244,12 +211,12 @@ namespace Octopus.Manager.Tentacle.Proxy
 
             validator.RuleSet("ProxySettings", delegate
             {
-                validator.When(r => r.UseDefaultProxyCustomCredentials, delegate
+                validator.When(r => r.ProxyConfigType == ProxyConfigType.DefaultProxyCustomCredentials, delegate
                 {
                     validator.RuleFor(m => m.ProxyUsername).NotEmpty().WithMessage("Please enter a username for the proxy server");
                     validator.RuleFor(m => m.ProxyPassword).NotEmpty().WithMessage("Please enter a password for the proxy server");
                 });
-                validator.When(r => r.UseCustomProxy, delegate
+                validator.When(r => r.ProxyConfigType == ProxyConfigType.CustomProxy, delegate
                 {
                     validator.RuleFor(m => m.ProxyServerHost).NotEmpty().WithMessage("Please enter a host name for the proxy server");
                     validator.RuleFor(m => m.ProxyServerPort).InclusiveBetween(1, 65535).WithMessage("Please enter valid port number for the proxy server");

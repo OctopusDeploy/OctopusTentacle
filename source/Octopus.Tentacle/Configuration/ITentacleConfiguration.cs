@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Configuration
         string TentacleSquid { get; }
 
         /// <summary>
-        /// Gets the list of Octopus servers that this Tentacle communicates with.
+        /// Gets the list of Octopus Servers that this Tentacle communicates with.
         /// </summary>
         IEnumerable<OctopusServerConfiguration> TrustedOctopusServers { get; }
 
@@ -69,13 +69,13 @@ namespace Octopus.Tentacle.Configuration
         OctopusServerConfiguration LastReceivedHandshake { get; set; }
 
         /// <summary>
-        /// Adds a trusted Octopus server.
+        /// Adds a trusted Octopus Server.
         /// </summary>
         /// <param name="machine">Configuration for the server.</param>
         bool AddOrUpdateTrustedOctopusServer(OctopusServerConfiguration machine);
 
         /// <summary>
-        /// Remove all trusted Octopus servers.
+        /// Remove all trusted Octopus Servers.
         /// </summary>
         void ResetTrustedOctopusServers();
 

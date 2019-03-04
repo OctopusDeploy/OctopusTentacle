@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Communications
                         var wr = (HttpWebResponse)resp;
                         var content = reader.ReadToEnd();
                         if (wr.StatusCode != HttpStatusCode.OK)
-                            throw new Exception("The service listening on " + serverAddress + " does not appear to be an Octopus server. The response code was: " + wr.StatusCode + ". The response was: " + content);
+                            throw new Exception("The service listening on " + serverAddress + " does not appear to be an Octopus Server. The response code was: " + wr.StatusCode + ". The response was: " + content);
 
                         log.Verbose("Connectivity with the server communications port successfully verified.");
                     }

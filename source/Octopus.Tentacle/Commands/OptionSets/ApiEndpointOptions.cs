@@ -16,9 +16,9 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
         public ApiEndpointOptions(OptionSet options)
         {
-            options.Add("server=", "The Octopus server - e.g., 'http://octopus'", s => Server = s);
+            options.Add("server=", "The Octopus Server - e.g., 'http://octopus'", s => Server = s);
             options.Add("apiKey=", "Your API key; you can get this from the Octopus web portal", s => ApiKey = s, sensitive: true);
-            options.Add("u|username=", "If not using API keys, your username", s => Username = s);
+            options.Add("u|username=|user=", "If not using API keys, your username", s => Username = s);
             options.Add("p|password=", "If not using API keys, your password", s => Password = s, sensitive: true);
         }
 
@@ -43,12 +43,12 @@ namespace Octopus.Tentacle.Commands.OptionSets
                     throw new ControlledFailureException("Please specify a username and password, or an Octopus API key. You can get an API key from the Octopus web portal. E.g., --apiKey=ABC1234");
 
                 if (string.IsNullOrEmpty(Server) && (!string.IsNullOrEmpty(Username) || !string.IsNullOrEmpty(ApiKey)))
-                    throw new ControlledFailureException("Please specify an Octopus server, e.g., --server=http://your-octopus-server");
+                    throw new ControlledFailureException("Please specify an Octopus Server, e.g., --server=http://your-octopus-server");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(Server))
-                throw new ControlledFailureException("Please specify an Octopus server, e.g., --server=http://your-octopus-server");
+                throw new ControlledFailureException("Please specify an Octopus Server, e.g., --server=http://your-octopus-server");
 
             if (string.IsNullOrEmpty(Username) && string.IsNullOrEmpty(ApiKey))
                 throw new ControlledFailureException("Please specify a username and password, or an Octopus API key. You can get an API key from the Octopus web portal. E.g., --apiKey=ABC1234");

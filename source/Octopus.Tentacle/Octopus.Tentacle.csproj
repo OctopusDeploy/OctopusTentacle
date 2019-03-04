@@ -19,6 +19,9 @@
     <PackageReference Include="Octopus.Client" Version="4.37.0" />
     <PackageReference Include="Octopus.Configuration" Version="2.0.1" />
     <PackageReference Include="Octopus.Shared" Version="4.8.1-enh-netstandard22" />
+    <PackageReference Include="Octopus.Client" Version="5.0.0" />
+    <PackageReference Include="Octopus.Configuration" Version="2.0.1" />
+    <PackageReference Include="Octopus.Shared" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
