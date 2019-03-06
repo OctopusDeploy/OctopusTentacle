@@ -86,6 +86,7 @@ namespace Octopus.Tentacle.Commands
             const RegistryView View = RegistryView.Registry64;
             const string KeyName = "Software\\Octopus";
 
+#pragma warning disable PC001 //API not supported on all platforms, this code should only be run on Windows
             using (var key = RegistryKey.OpenBaseKey(Hive, View))
             using (var subkey = key.OpenSubKey(KeyName, false))
             {
@@ -96,6 +97,7 @@ namespace Octopus.Tentacle.Commands
 
                 return null;
             }
+#pragma warning restore PC001
         }
     }
 }
