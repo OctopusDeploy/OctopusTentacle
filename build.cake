@@ -164,20 +164,34 @@ Task("__DotnetPublish")
 Task("__SignBuiltFiles")
     .Does(() =>
 {
-    var filesToSign = new string[] {
-        "./source/Octopus.Tentacle/bin/net45/Octopus*.dll",
-        "./source/Octopus.Tentacle/bin/net45/Octopus*.exe",
-        "./source/Octopus.Tentacle/bin/net45/Tentacle.exe",
-        "./source/Octopus.Manager.Tentacle/bin/Octopus*.dll",
-        "./source/Octopus.Manager.Tentacle/bin/Octopus*.exe",
-        $"{coreWinPublishDir}/Octopus*.dll",
-        $"{coreWinPublishDir}/Octopus*.exe",
-        $"{coreWinPublishDir}/Tentacle.exe"
-    };
+    // check that any unsigned libraries get signed, to play nice with security scanning tools
+    // refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
+    // note: "we are signing dll's we have written (& some we don't own),
+    // but we are asserting that they are distributed by us, and are not altered after this step
+    var filesToSign = 
+        GetFiles($"{coreWinPublishDir}/*.dll")
+        .Union(GetFiles($"{coreWinPublishDir}/*.exe"))
+        .Where(f => !HasAuthenticodeSignature(f))
+        .Select(f => f.FullPath)
+        .ToArray();
 
     SignAndTimeStamp(filesToSign);
 });
 
+// note: Doesn't check if existing signatures are valid, only that one exists 
+// source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
+private bool HasAuthenticodeSignature(FilePath fileInfo)
+{
+    try
+    {
+        X509Certificate.CreateFromSignedFile(fileInfo.FullPath);
+        return true;
+    }
+    catch
+    {
+        return false;
+    }
+}
 
 Task("__CreateTentacleInstaller")
     .IsDependentOn("__UpdateWixVersion")
