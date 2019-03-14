@@ -48,7 +48,7 @@ namespace Octopus.Shared.Configuration
         protected abstract void WriteSerializedData(string serializedData);
     }
 
-    public class ObjectHierarchy : Dictionary<string, object>
+    public class ObjectHierarchy : SortedDictionary<string, object>
     {
     }
 }
