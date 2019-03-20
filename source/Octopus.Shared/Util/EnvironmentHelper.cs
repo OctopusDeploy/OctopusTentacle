@@ -33,7 +33,7 @@ namespace Octopus.Shared.Util
             yield return SafelyGet(() => $"OperatingSystem: {Environment.OSVersion}");
             yield return SafelyGet(() => $"OsBitVersion: {(Environment.Is64BitOperatingSystem ? "x64" : "x86")}");
             yield return SafelyGet(() => $"Is64BitProcess: {Environment.Is64BitProcess}");
-            yield return SafelyGet(() => $"CurrentUser: {System.Security.Principal.WindowsIdentity.GetCurrent().Name}");
+            yield return SafelyGet(() => $"CurrentUser: {ProcessIdentity.CurrentUserName}");
             yield return SafelyGet(() => $"MachineName: {Environment.MachineName}");
             yield return SafelyGet(() => $"ProcessorCount: {Environment.ProcessorCount}");
         }

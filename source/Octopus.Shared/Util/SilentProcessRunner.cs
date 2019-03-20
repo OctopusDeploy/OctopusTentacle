@@ -94,7 +94,7 @@ namespace Octopus.Shared.Util
                 var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
                 var runAsSameUser = runAs == default(NetworkCredential);
-                var runningAs = runAsSameUser ? $@"{WindowsIdentity.GetCurrent().Name}" : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
+                var runningAs = runAsSameUser ? $@"{ProcessIdentity.CurrentUserName}" : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
                 var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
                 var customEnvironmentVars =
                     hasCustomEnvironmentVariables
@@ -109,13 +109,13 @@ namespace Octopus.Shared.Util
                     process.StartInfo.WorkingDirectory = workingDirectory;
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
-                    if (runAs != default(NetworkCredential))
+                    if (runAsSameUser)
                     {
-                        RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
+                        RunAsSameUser(process.StartInfo, customEnvironmentVariables);
                     }
                     else
                     {
-                        RunAsSameUser(process.StartInfo, customEnvironmentVariables);
+                        RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
                     }
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
