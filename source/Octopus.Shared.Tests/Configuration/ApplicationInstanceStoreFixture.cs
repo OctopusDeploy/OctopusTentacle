@@ -88,6 +88,54 @@ namespace Octopus.Shared.Tests.Configuration
         }
 
         [Test]
+        public void GetInstance_ShouldPreferFileSystemEntries()
+        {
+            registryStore.GetListFromRegistry(Arg.Any<ApplicationName>()).Returns(new List<ApplicationInstanceRecord>
+            {
+                new ApplicationInstanceRecord("instance1", ApplicationName.OctopusServer, "registryFilePath1"),
+            });
+            fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
+            fileSystem.EnumerateFiles(Arg.Any<string>()).Returns(new List<string> { "file1" });
+            fileSystem.FileExists(Arg.Any<string>()).Returns(true);
+            fileSystem.ReadFile(Arg.Is("file1")).Returns("{\"Name\": \"instance1\",\"ConfigurationFilePath\": \"fileConfigFilePath2\"}");
+
+            var instance = instanceStore.GetInstance(ApplicationName.OctopusServer, "instance1");
+            instance.InstanceName.Should().Be("instance1");
+            instance.ConfigurationFilePath.Should().Be("fileConfigFilePath2");
+        }
+
+        [Test]
+        public void GetInstance_ShouldFilterCorrectInstance()
+        {
+            registryStore.GetListFromRegistry(ApplicationName.Tentacle).Returns(new List<ApplicationInstanceRecord>
+            {
+                new ApplicationInstanceRecord("instance1", ApplicationName.Tentacle, "TentaclePath"),
+            });
+            registryStore.GetListFromRegistry(ApplicationName.OctopusServer).Returns(new List<ApplicationInstanceRecord>
+            {
+                new ApplicationInstanceRecord("instance1", ApplicationName.OctopusServer, "ServerPath1"),
+                new ApplicationInstanceRecord("instance2", ApplicationName.OctopusServer, "ServerPath2")
+            });
+
+            var instance = instanceStore.GetInstance(ApplicationName.OctopusServer, "instance1");
+            instance.InstanceName.Should().Be("instance1");
+            instance.ApplicationName.Should().Be(ApplicationName.OctopusServer);
+        }
+        
+        [Test]
+        public void GetInstance_ShouldReturnNullIfNoneFound()
+        {
+            registryStore.GetListFromRegistry(ApplicationName.OctopusServer).Returns(new List<ApplicationInstanceRecord>
+            {
+                new ApplicationInstanceRecord("instance1", ApplicationName.OctopusServer, "ServerPath1"),
+                new ApplicationInstanceRecord("instance2", ApplicationName.OctopusServer, "ServerPath2")
+            });
+
+            var instance = instanceStore.GetInstance(ApplicationName.OctopusServer, "I AM FAKE");
+            Assert.IsNull(instance);
+        }
+
+        [Test]
         public void MigrateInstance()
         {
             var sourceInstance = new ApplicationInstanceRecord("instance1", ApplicationName.OctopusServer, "configFilePath");

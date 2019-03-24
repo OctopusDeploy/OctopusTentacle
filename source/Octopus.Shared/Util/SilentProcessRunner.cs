@@ -94,14 +94,7 @@ namespace Octopus.Shared.Util
                 var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
                 var runAsSameUser = runAs == default(NetworkCredential);
-                if(!runAsSameUser && !PlatformDetection.IsRunningOnWindows)
-                    throw new NotSupportedException("Running process as another user is currently not supported on Linux or MacOS");
-                var currentUserName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-#pragma warning disable PC001 // API not supported on all platforms
-                    ? WindowsIdentity.GetCurrent().Name
-#pragma warning restore PC001 // API not supported on all platforms
-                    : Environment.UserName;
-                var runningAs = runAsSameUser ? $@"{currentUserName}" : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
+                var runningAs = runAsSameUser ? $@"{ProcessIdentity.CurrentUserName}" : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
                 var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
                 var customEnvironmentVars =
                     hasCustomEnvironmentVariables
@@ -116,13 +109,13 @@ namespace Octopus.Shared.Util
                     process.StartInfo.WorkingDirectory = workingDirectory;
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
-                    if (runAs != default(NetworkCredential))
+                    if (runAsSameUser)
                     {
-                        RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
+                        RunAsSameUser(process.StartInfo, customEnvironmentVariables);
                     }
                     else
                     {
-                        RunAsSameUser(process.StartInfo, customEnvironmentVariables);
+                        RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
                     }
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;

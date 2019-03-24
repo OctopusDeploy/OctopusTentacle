@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using FluentAssertions;
@@ -35,7 +34,7 @@ namespace Octopus.Shared.Tests.Util
                 var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
                 exitCode.Should().Be(9999, "our custom exit code should be reflected");
-                debugMessages.ToString().Should().ContainEquivalentOf($"Starting {command} in working directory '' using '{SilentProcessRunner.EncodingDetector.GetOEMEncoding().EncodingName}' encoding running as '{WindowsIdentity.GetCurrent().Name}'");
+                debugMessages.ToString().Should().ContainEquivalentOf($"Starting {command} in working directory '' using '{SilentProcessRunner.EncodingDetector.GetOEMEncoding().EncodingName}' encoding running as '{ProcessIdentity.CurrentUserName}'");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
                 infoMessages.ToString().Should().BeEmpty("no messages should be written to stdout");
             }
@@ -56,7 +55,7 @@ namespace Octopus.Shared.Tests.Util
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 debugMessages.ToString().Should().ContainEquivalentOf(command, "the command should be logged")
-                    .And.ContainEquivalentOf(WindowsIdentity.GetCurrent().Name, "the current user details should be logged");
+                    .And.ContainEquivalentOf(ProcessIdentity.CurrentUserName, "the current user details should be logged");
                 infoMessages.ToString().Should().ContainEquivalentOf("hello");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
