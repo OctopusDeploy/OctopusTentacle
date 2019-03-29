@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Time;
 
 namespace Octopus.Shared.Threading
 {
@@ -15,6 +16,7 @@ namespace Octopus.Shared.Threading
 
         readonly ILog log = Log.Octopus();
         readonly ILog systemLog = Log.System();
+        readonly Sleep sleeper = new Sleep();
 
         public MachineWideMutex(
             TimeSpan? initialAcquisitionAttemptTimeout = null,
@@ -37,27 +39,29 @@ namespace Octopus.Shared.Threading
             systemLog.Trace($"Acquiring machine-wide mutex {name}");
             cancellationToken.ThrowIfCancellationRequested();
 
+            var waitHandle = new CrossPlatformNamedSemaphore(Normalize(name), sleeper);
+            var lockReleaser = new MachineWideMutexReleaser(waitHandle, name);
             // Create a new named Semaphore - note this is cross-process
             var semaphore = new Semaphore(1, 1);
 
-            // Try to acquire the semaphore for a few seconds before reporting we are going to start waiting
-            if (AcquireSemaphore(semaphore, cancellationToken, InitialAcquisitionAttemptTimeout))
+            // Try to acquire the lock for a few seconds before reporting we are going to start waiting
+            if (waitHandle.TryAcquire(InitialAcquisitionAttemptTimeout, cancellationToken))
             {
-                systemLog.Trace($"Acquired machine-wide mutex {name}");
-                return new MachineWideMutexReleaser(semaphore, name);
+                systemLog.Trace($"Acquired process-wide mutex {name}");
+                return lockReleaser;
             }
 
+
             // Go into an acquisition loop supporting cooperative cancellation
-            cancellationToken.ThrowIfCancellationRequested();
             LogWaiting(name, waitMessage);
+
             while (!AcquireSemaphore(semaphore, cancellationToken, WaitBetweenAcquisitionAttempts))
             {
-                cancellationToken.ThrowIfCancellationRequested();
                 LogWaiting(name, waitMessage);
             }
 
             systemLog.Trace($"Acquired machine-wide mutex {name}");
-            return new MachineWideMutexReleaser(semaphore, name);
+            return lockReleaser;
         }
 
         static bool AcquireSemaphore(Semaphore semaphore, CancellationToken cancellationToken, TimeSpan attemptTimeout)
@@ -84,10 +88,10 @@ namespace Octopus.Shared.Threading
 
         class MachineWideMutexReleaser : IDisposable
         {
-            readonly Semaphore semaphore;
+            readonly CrossPlatformNamedSemaphore semaphore;
             readonly string name;
 
-            public MachineWideMutexReleaser(Semaphore semaphore, string name)
+            public MachineWideMutexReleaser(CrossPlatformNamedSemaphore semaphore, string name)
             {
                 this.semaphore = semaphore;
                 this.name = name;
@@ -97,7 +101,7 @@ namespace Octopus.Shared.Threading
             {
                 try
                 {
-                    semaphore.Release();
+                    semaphore.ReleaseLock();
                 }
                 catch (Exception ex)
                 {
