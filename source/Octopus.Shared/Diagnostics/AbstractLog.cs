@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Octopus.Diagnostics;
+using Octopus.Shared.Diagnostics.Formatters;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Diagnostics
@@ -9,35 +10,17 @@ namespace Octopus.Shared.Diagnostics
     {
         public abstract ILogContext CurrentContext { get; }
 
-        public bool IsVerboseEnabled
-        {
-            get { return IsEnabled(LogCategory.Verbose); }
-        }
+        public bool IsVerboseEnabled => IsEnabled(LogCategory.Verbose);
 
-        public bool IsErrorEnabled
-        {
-            get { return IsEnabled(LogCategory.Error); }
-        }
+        public bool IsErrorEnabled => IsEnabled(LogCategory.Error);
 
-        public bool IsFatalEnabled
-        {
-            get { return IsEnabled(LogCategory.Fatal); }
-        }
+        public bool IsFatalEnabled => IsEnabled(LogCategory.Fatal);
 
-        public bool IsInfoEnabled
-        {
-            get { return IsEnabled(LogCategory.Info); }
-        }
+        public bool IsInfoEnabled => IsEnabled(LogCategory.Info);
 
-        public bool IsTraceEnabled
-        {
-            get { return IsEnabled(LogCategory.Trace); }
-        }
+        public bool IsTraceEnabled => IsEnabled(LogCategory.Trace);
 
-        public bool IsWarnEnabled
-        {
-            get { return IsEnabled(LogCategory.Warning); }
-        }
+        public bool IsWarnEnabled => IsEnabled(LogCategory.Warning);
 
         protected abstract void WriteEvent(LogEvent logEvent);
         protected abstract void WriteEvents(IList<LogEvent> logEvents);
@@ -153,7 +136,7 @@ namespace Octopus.Shared.Diagnostics
         {
             try
             {
-                return string.Format(messageFormat, args);
+                return string.Format(new PluralStringFormatter(), messageFormat, args);
             }
             catch (Exception ex)
             {
