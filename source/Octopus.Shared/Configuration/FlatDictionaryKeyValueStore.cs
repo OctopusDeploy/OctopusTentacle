@@ -31,12 +31,11 @@ namespace Octopus.Shared.Configuration
 
             return JsonConvert.DeserializeObject<TData>((string)data);
         }
-
-        private void SetInternal(string name, string value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
+        public override void Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
-            if (string.IsNullOrWhiteSpace(value))
+            if (IsEmptyString(value))
             {
                 Write(name, null);
                 if (AutoSaveOnSet)
@@ -44,24 +43,23 @@ namespace Octopus.Shared.Configuration
                 return;
             }
 
+            var valueAsObject = (object) value;
+
             if (protectionLevel == ProtectionLevel.MachineKey)
             {
-                value = MachineKeyEncrypter.Current.Encrypt(value);
+                if (!(valueAsObject is string))
+                    valueAsObject = JsonConvert.SerializeObject(value);
+                valueAsObject = MachineKeyEncrypter.Current.Encrypt((string)valueAsObject);
             }
 
-            Write(name, value);
+            Write(name, valueAsObject);
             if (AutoSaveOnSet)
                 Save();
         }
 
-        public override void Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
+        private bool IsEmptyString(object value)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-
-            if (typeof(TData) == typeof(string))
-                SetInternal(name, (string)(object)value, protectionLevel);
-            else
-                SetInternal(name, JsonConvert.SerializeObject(value), protectionLevel);
+            return value is string s && string.IsNullOrWhiteSpace(s);
         }
     }
 }

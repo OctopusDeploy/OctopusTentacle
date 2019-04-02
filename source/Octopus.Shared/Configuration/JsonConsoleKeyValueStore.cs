@@ -4,13 +4,22 @@ namespace Octopus.Shared.Configuration
 {
     public class JsonConsoleKeyValueStore : JsonFlatKeyValueStore
     {
-        public JsonConsoleKeyValueStore() : base(autoSaveOnSet: false, isWriteOnly: true)
+        private Action<string> writer;
+
+        public JsonConsoleKeyValueStore() 
+            : this(Console.WriteLine)
         {
+        }
+
+        public JsonConsoleKeyValueStore(Action<string> writer)
+            : base(false, true)
+        {
+            this.writer = writer;
         }
 
         protected override void WriteSerializedData(string serializedData)
         {
-            Console.WriteLine(serializedData);
+            writer(serializedData);
         }
     }
 }
