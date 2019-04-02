@@ -176,6 +176,8 @@ Task("__SignBuiltFiles")
         .Union(GetFiles($"{coreWinPublishDir}/*.exe"))
         .Union(GetFiles($"./source/Octopus.Tentacle/bin/**/*.dll"))
         .Union(GetFiles($"./source/Octopus.Tentacle/bin/**/*.exe"))
+        .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.dll"))
+        .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.exe"))
             .Where(f => !HasAuthenticodeSignature(f))
             .Select(f => f.FullPath)
             .ToArray();
