@@ -8,7 +8,7 @@ namespace Octopus.Shared.Tests.Support
 {
     public class TestConsoleLog : AbstractLog
     {
-        public override LogContext CurrentContext => new LogContext();
+        public override ILogContext CurrentContext => new LogContext();
 
         protected override void WriteEvent(LogEvent logEvent)
         {
@@ -21,7 +21,7 @@ namespace Octopus.Shared.Tests.Support
             throw new NotImplementedException();
         }
 
-        public override IDisposable WithinBlock(LogContext logContext)
+        public override IDisposable WithinBlock(ILogContext logContext)
         {
             return null;
         }

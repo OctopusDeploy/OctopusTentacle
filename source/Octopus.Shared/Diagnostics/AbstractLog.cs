@@ -7,7 +7,7 @@ namespace Octopus.Shared.Diagnostics
 {
     public abstract class AbstractLog : ILogWithContext
     {
-        public abstract LogContext CurrentContext { get; }
+        public abstract ILogContext CurrentContext { get; }
 
         public bool IsVerboseEnabled
         {
@@ -41,7 +41,7 @@ namespace Octopus.Shared.Diagnostics
 
         protected abstract void WriteEvent(LogEvent logEvent);
         protected abstract void WriteEvents(IList<LogEvent> logEvents);
-        public abstract IDisposable WithinBlock(LogContext logContext);
+        public abstract IDisposable WithinBlock(ILogContext logContext);
 
         public IDisposable OpenBlock(string messageText)
         {
@@ -57,7 +57,7 @@ namespace Octopus.Shared.Diagnostics
             return OpenBlock(string.Format(messageFormat, args));
         }
 
-        public LogContext PlanGroupedBlock(string messageText)
+        public ILogContext PlanGroupedBlock(string messageText)
         {
             var child = CurrentContext.CreateChild();
             using (WithinBlock(child))
@@ -68,7 +68,7 @@ namespace Octopus.Shared.Diagnostics
             return child;
         }
 
-        public LogContext PlanFutureBlock(string messageText)
+        public ILogContext PlanFutureBlock(string messageText)
         {
             var child = CurrentContext.CreateChild();
             using (WithinBlock(child))
@@ -79,7 +79,7 @@ namespace Octopus.Shared.Diagnostics
             return child;
         }
 
-        public LogContext PlanFutureBlock(string messageFormat, params object[] args)
+        public ILogContext PlanFutureBlock(string messageFormat, params object[] args)
         {
             return PlanFutureBlock(string.Format(messageFormat, args));
         }

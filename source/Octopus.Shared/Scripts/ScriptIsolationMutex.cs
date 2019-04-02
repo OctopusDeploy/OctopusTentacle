@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using Nito.AsyncEx;
+using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
