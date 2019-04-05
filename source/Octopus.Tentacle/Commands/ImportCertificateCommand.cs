@@ -56,11 +56,19 @@ namespace Octopus.Tentacle.Commands
             {
                 var fileExtension = Path.GetExtension(importFile);
 
+                //We assume if the file does not end in .pfx that it is the legacy base64 encoded certificate, however if this fails we should still attempt to read as the PFX format.
                 if (fileExtension.ToLower() != ".pfx")
                 {
-                    log.Info($"Importing the certificate stored in {importFile}...");
-                    string encoded = File.ReadAllText(importFile, Encoding.UTF8);
-                    x509Certificate = CertificateEncoder.FromBase64String(encoded);
+                    try
+                    {
+                        log.Info($"Importing the certificate stored in {importFile}...");
+                        var encoded = File.ReadAllText(importFile, Encoding.UTF8);
+                        x509Certificate = CertificateEncoder.FromBase64String(encoded);
+                    }
+                    catch (FormatException)
+                    {
+                        x509Certificate = CertificateEncoder.FromPfxFile(importFile, importPfxPassword);
+                    }
                 }
                 else
                 {
