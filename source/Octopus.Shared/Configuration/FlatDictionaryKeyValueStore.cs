@@ -28,6 +28,8 @@ namespace Octopus.Shared.Configuration
 
             if (typeof(TData) == typeof(string))
                 return (TData)data;
+            if (typeof(TData) == typeof(bool))
+                return (TData)(object)bool.Parse((string)data);
 
             return JsonConvert.DeserializeObject<TData>((string)data);
         }
@@ -45,10 +47,11 @@ namespace Octopus.Shared.Configuration
 
             var valueAsObject = (object) value;
 
+            if (valueAsObject.GetType().ToString() == valueAsObject.ToString())
+                valueAsObject = JsonConvert.SerializeObject(value);
+
             if (protectionLevel == ProtectionLevel.MachineKey)
             {
-                if (!(valueAsObject is string))
-                    valueAsObject = JsonConvert.SerializeObject(value);
                 valueAsObject = MachineKeyEncrypter.Current.Encrypt((string)valueAsObject);
             }
 
