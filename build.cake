@@ -29,11 +29,10 @@ var signingTimestampUrls = new string[] {
 
 var installerPackageDir = "./build/package/installer";
 var binariesPackageDir = "./build/package/binaries";
-var winCorePackageDir = "./build/package/win-x64";
 var installerDir = "./build/installer";
 var artifactsDir = "./build/artifacts";
 var localPackagesDir = "../LocalPackages";
-var coreWinPublishDir = "./build/publish/win-x64";
+var corePublishDir = "./build/publish";
 
 GitVersion gitVersion;
 
@@ -68,11 +67,11 @@ Task("__Default")
     .IsDependentOn("__Test")
     .IsDependentOn("__DotnetPublish")
     .IsDependentOn("__SignBuiltFiles")
-    .IsDependentOn("__CreateTentacleInstaller")
-    .IsDependentOn("__CreateChocolateyPackage")
-    .IsDependentOn("__CreateInstallerNuGet")
-    .IsDependentOn("__CreateBinariesNuGet")
-    .IsDependentOn("__CopyToLocalPackages");
+    //.IsDependentOn("__CreateTentacleInstaller")
+    //.IsDependentOn("__CreateChocolateyPackage")
+    //.IsDependentOn("__CreateInstallerNuGet")
+    .IsDependentOn("__CreateBinariesNuGet");
+    //.IsDependentOn("__CopyToLocalPackages");
 
 Task("__Version")
     .IsDependentOn("__GitVersionAssemblies")
@@ -148,13 +147,12 @@ Task("__DotnetPublish")
     .Does(() =>  {
 
         DotNetCorePublish(
-            "./source/Octopus.Tentacle/Octopus.Tentacle.csproj", 
+            "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
             new DotNetCorePublishSettings
             {
-                Framework = "netcoreapp2.0",
+                Framework = "netcoreapp2.2",
                 Configuration = configuration,
-                Runtime = "win7-x64",
-                OutputDirectory = coreWinPublishDir,
+                OutputDirectory = corePublishDir,
                 ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
             }
         );
@@ -165,14 +163,14 @@ Task("__SignBuiltFiles")
     .Does(() =>
 {
     var filesToSign = new string[] {
-        "./source/Octopus.Tentacle/bin/net45/Octopus*.dll",
-        "./source/Octopus.Tentacle/bin/net45/Octopus*.exe",
-        "./source/Octopus.Tentacle/bin/net45/Tentacle.exe",
+        "./source/Octopus.Tentacle/bin/net452/Octopus*.dll",
+        "./source/Octopus.Tentacle/bin/net452/Octopus*.exe",
+        "./source/Octopus.Tentacle/bin/net452/Tentacle.exe",
         "./source/Octopus.Manager.Tentacle/bin/Octopus*.dll",
         "./source/Octopus.Manager.Tentacle/bin/Octopus*.exe",
-        $"{coreWinPublishDir}/Octopus*.dll",
-        $"{coreWinPublishDir}/Octopus*.exe",
-        $"{coreWinPublishDir}/Tentacle.exe"
+        $"{corePublishDir}/Octopus*.dll",
+        $"{corePublishDir}/Octopus*.exe",
+        $"{corePublishDir}/Tentacle.exe"
     };
 
     SignAndTimeStamp(filesToSign);
@@ -184,7 +182,7 @@ Task("__CreateTentacleInstaller")
     .Does(() =>
 {
     CopyFiles("./source/Octopus.Manager.Tentacle/bin/*", installerDir);
-    CopyFiles("./source/Octopus.Tentacle/bin/net45/*", installerDir);
+    CopyFiles("./source/Octopus.Tentacle/bin/net452/*", installerDir);
 
     CleanBinariesDirectory(installerDir);
 
@@ -262,41 +260,24 @@ Task("__CreateBinariesNuGet")
     .IsDependentOn("__SignBuiltFiles")
     .Does(() =>
 {
+    CreateDirectory($"{binariesPackageDir}/lib/net452");
+    CopyFileToDirectory($"./source/Octopus.Manager.Tentacle/bin/Octopus.Manager.Tentacle.exe", $"{binariesPackageDir}/lib/net452");
+    CleanBinariesDirectory($"{binariesPackageDir}/lib/net452");
 
-    // netfx version
-
-    CreateDirectory($"{binariesPackageDir}/lib");
-    CopyFileToDirectory($"./source/Octopus.Manager.Tentacle/bin/Octopus.Manager.Tentacle.exe", $"{binariesPackageDir}/lib");
-    CleanBinariesDirectory($"{binariesPackageDir}/lib");
-
-    CreateDirectory($"{binariesPackageDir}/build/Tentacle");
-    CopyFiles($"./source/Octopus.Tentacle/bin/net45/*", $"{binariesPackageDir}/build/Tentacle");
-    CleanBinariesDirectory($"{binariesPackageDir}/build/Tentacle");
+    CreateDirectory($"{binariesPackageDir}/build/net452/Tentacle");
+    CreateDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+    CopyFiles($"./source/Octopus.Tentacle/bin/net452/*", $"{binariesPackageDir}/build/net452/Tentacle");
+    CopyFiles($"{corePublishDir}/*", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+    MoveFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.manifest", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.dll.manifest");
+    MoveFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.nlog", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.dll.nlog");
+    CleanBinariesDirectory($"{binariesPackageDir}/build/net452/Tentacle");
+    CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
 
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build");
+    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/net452");
+    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp2.2");
 
     NuGetPack(Path.Combine(binariesPackageDir, "Tentacle.Binaries.nuspec"), new NuGetPackSettings {
-        Version = gitVersion.NuGetVersion,
-        OutputDirectory = artifactsDir
-    });
-
-    // netcoreapp version
-
-    CreateDirectory($"{winCorePackageDir}/lib");
-    // This is still the NetFX build, but it is just used in the E2E tests.
-    CopyFileToDirectory($"./source/Octopus.Manager.Tentacle/bin/Octopus.Manager.Tentacle.exe", $"{winCorePackageDir}/lib");
-    CleanBinariesDirectory($"{winCorePackageDir}/lib");
-
-    CreateDirectory($"{winCorePackageDir}/build/Tentacle");
-
-    CopyFiles($"{coreWinPublishDir}/*", $"{winCorePackageDir}/build/Tentacle");
-
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", winCorePackageDir);
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{winCorePackageDir}/build");
-
-    NuGetPack(Path.Combine(winCorePackageDir, "Tentacle.Binaries.nuspec"), new NuGetPackSettings {
-        Id = "Tentacle.Binaries.Core.win-x64",
         Version = gitVersion.NuGetVersion,
         OutputDirectory = artifactsDir
     });
