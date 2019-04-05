@@ -15,14 +15,14 @@ namespace Octopus.Shared.Tests.Configuration
     {
         public int Id { get; set; }
     }
-        
+
     class MyObject
     {
         public bool BooleanField { get; set; }
         public int IntField { get; set; }
         public MyNestedObject[] ArrayField { get; set; }
     }
-    
+
     [TestFixture]
     class XmlConsoleKeyValueStoreFixture
     {
@@ -47,6 +47,8 @@ namespace Octopus.Shared.Tests.Configuration
                     new MyNestedObject {Id = 3}
                 }
             });
+            settings.Set<string>("group4.setting5", null);
+            settings.Set<MyObject>("group4.setting6", null);
             settings.Save();
 
             var expected = XDocument.Parse(
@@ -56,6 +58,8 @@ namespace Octopus.Shared.Tests.Configuration
   <set key=""group1.setting2"">123</set>
   <set key=""group2.setting3"">a string</set>
   <set key=""group3.setting4"">{""BooleanField"":true,""IntField"":10,""ArrayField"":[{""Id"":1},{""Id"":2},{""Id"":3}]}</set>
+  <set key=""group4.setting5""/>
+  <set key=""group4.setting6""/>
 </octopus-settings>");
             result.Should().BeEquivalentTo(expected);
         }

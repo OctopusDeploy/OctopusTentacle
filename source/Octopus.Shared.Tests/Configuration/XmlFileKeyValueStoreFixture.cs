@@ -31,9 +31,11 @@ namespace Octopus.Shared.Tests.Configuration
                     new MyNestedObject {Id = 3}
                 }
             });
+            settings.Set<string>("group4.setting5", null);
+            settings.Set<MyObject>("group4.setting6", null);
             settings.Save();
         }
-        
+
         [Test]
         public void WritesSortedXmlUsingCorrectTypes()
         {
@@ -46,6 +48,8 @@ namespace Octopus.Shared.Tests.Configuration
   <set key=""group1.setting2"">123</set>
   <set key=""group2.setting3"">a string</set>
   <set key=""group3.setting4"">{""BooleanField"":true,""IntField"":10,""ArrayField"":[{""Id"":1},{""Id"":2},{""Id"":3}]}</set>
+  <set key=""group4.setting5""/>
+  <set key=""group4.setting6""/>
 </octopus-settings>");
             fileContents.Should().BeEquivalentTo(expected);
         }
@@ -65,6 +69,8 @@ namespace Octopus.Shared.Tests.Configuration
             nestedObject.ArrayField[0].Id.Should().Be(1);
             nestedObject.ArrayField[1].Id.Should().Be(2);
             nestedObject.ArrayField[2].Id.Should().Be(3);
+            settings.Get<string>("group4.setting5", null).Should().Be(null);
+            settings.Get<MyObject>("group4.setting6", null).Should().Be(null);
         }
     }
 }

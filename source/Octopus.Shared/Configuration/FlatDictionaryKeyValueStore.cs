@@ -47,7 +47,7 @@ namespace Octopus.Shared.Configuration
 
             var valueAsObject = (object) value;
 
-            if (valueAsObject.GetType().ToString() == valueAsObject.ToString())
+            if (valueAsObject != null && valueAsObject.GetType().ToString() == valueAsObject.ToString())
                 valueAsObject = JsonConvert.SerializeObject(value);
 
             if (protectionLevel == ProtectionLevel.MachineKey)

@@ -27,10 +27,12 @@ namespace Octopus.Shared.Tests.Configuration
                     new MyNestedObject {Id = 2},
                     new MyNestedObject {Id = 3}
                 }
-            });            
+            });
+            settings.Set<string>("group4.setting5", null);
+            settings.Set<MyObject>("group4.setting6", null);
             settings.Save();
 
-            Assert.That(result.Replace("\r\n", "\n"), Is.EqualTo("{\n  \"group1.setting1\": true,\n  \"group1.setting2\": 123,\n  \"group2.setting3\": \"a string\",\n  \"group3.setting4\": \"{\\\"BooleanField\\\":true,\\\"IntField\\\":10,\\\"ArrayField\\\":[{\\\"Id\\\":1},{\\\"Id\\\":2},{\\\"Id\\\":3}]}\"\n}"));
+            Assert.That(result.Replace("\r\n", "\n"), Is.EqualTo("{\n  \"group1.setting1\": true,\n  \"group1.setting2\": 123,\n  \"group2.setting3\": \"a string\",\n  \"group3.setting4\": \"{\\\"BooleanField\\\":true,\\\"IntField\\\":10,\\\"ArrayField\\\":[{\\\"Id\\\":1},{\\\"Id\\\":2},{\\\"Id\\\":3}]}\",\n  \"group4.setting5\": null,\n  \"group4.setting6\": null\n}"));
         }
     }
 }
