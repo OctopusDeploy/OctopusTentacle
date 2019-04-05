@@ -170,12 +170,10 @@ Task("__SignBuiltFiles")
     //       claiming we own them, but rather asserting that they are distributed by us, and
     //       have not been subsequently altered
     var filesToSign =
-        GetFiles($"{coreWinPublishDir}/*.dll")
-        .Union(GetFiles($"{coreWinPublishDir}/*.exe"))
+        GetFiles($"{corePublishDir}/*.dll")
+        .Union(GetFiles($"{corePublishDir}/*.exe"))
         .Union(GetFiles($"./source/Octopus.Tentacle/bin/net452/**/*.dll"))
         .Union(GetFiles($"./source/Octopus.Tentacle/bin/net452/**/*.exe"))
-        .Union(GetFiles($"{corePublishDir}/**/*.dll"))
-        .Union(GetFiles($"{corePublishDir}/**/*.exe"))
         .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.dll"))
         .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.exe"))
             .Where(f => !HasAuthenticodeSignature(f))
