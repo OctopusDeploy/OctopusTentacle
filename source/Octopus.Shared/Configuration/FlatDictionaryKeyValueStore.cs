@@ -24,6 +24,8 @@ namespace Octopus.Shared.Configuration
             if (protectionLevel == ProtectionLevel.MachineKey)
             {
                 data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
+                if (typeof(TData) == typeof(string))
+                    data = JsonConvert.DeserializeObject<TData>((string)data);
             }
 
             if (typeof(TData) == typeof(string))
@@ -33,6 +35,7 @@ namespace Octopus.Shared.Configuration
 
             return JsonConvert.DeserializeObject<TData>((string)data);
         }
+        
         public override void Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
@@ -47,7 +50,7 @@ namespace Octopus.Shared.Configuration
 
             var valueAsObject = (object) value;
 
-            if (valueAsObject != null && valueAsObject.GetType().ToString() == valueAsObject.ToString())
+            if (ValueNeedsToBeSerialized(protectionLevel, valueAsObject))
                 valueAsObject = JsonConvert.SerializeObject(value);
 
             if (protectionLevel == ProtectionLevel.MachineKey)
@@ -58,6 +61,24 @@ namespace Octopus.Shared.Configuration
             Write(name, valueAsObject);
             if (AutoSaveOnSet)
                 Save();
+        }
+
+        private static bool ValueNeedsToBeSerialized(ProtectionLevel protectionLevel, object valueAsObject)
+        {
+            //we can only encrypt string data
+            if (protectionLevel == ProtectionLevel.MachineKey) 
+                return true;
+            
+            //null would end up as "null" rather than empty
+            if (valueAsObject == null)
+                return false;
+            
+            //bool/int/string etc will work fine directly when used as ToString()
+            //custom types will end up as the object type instead of anything useful
+            if (valueAsObject.GetType().ToString() == valueAsObject.ToString())
+                return true;
+
+            return false;
         }
 
         private bool IsEmptyString(object value)
