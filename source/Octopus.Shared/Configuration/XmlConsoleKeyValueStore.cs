@@ -10,8 +10,17 @@ namespace Octopus.Shared.Configuration
 {
     public class XmlConsoleKeyValueStore : FlatDictionaryKeyValueStore
     {
-        public XmlConsoleKeyValueStore() : base(autoSaveOnSet:false, isWriteOnly:true)
+        private readonly Action<string> writer;
+
+        public XmlConsoleKeyValueStore() 
+            : this(Console.WriteLine)
         {
+        }
+
+        public XmlConsoleKeyValueStore(Action<string> writer)
+            : base(autoSaveOnSet:false, isWriteOnly:true)
+        {
+            this.writer = writer;
         }
 
         protected override void SaveSettings(IDictionary<string, object> settingsToSave)
@@ -37,7 +46,7 @@ namespace Octopus.Shared.Configuration
                     using (var reader = new StreamReader(stream))
                     {
                         var text = reader.ReadToEnd();
-                        Console.WriteLine(text);
+                        writer(text);
                     }
                 }
             }

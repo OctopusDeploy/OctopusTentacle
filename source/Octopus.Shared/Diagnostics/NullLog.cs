@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Diagnostics
 {
@@ -12,7 +13,7 @@ namespace Octopus.Shared.Diagnostics
             currentContext = new LogContext("Null");
         }
 
-        public override LogContext CurrentContext
+        public override ILogContext CurrentContext
         {
             get { return currentContext; }
         }
@@ -25,7 +26,7 @@ namespace Octopus.Shared.Diagnostics
         {
         }
 
-        public override IDisposable WithinBlock(LogContext logContext)
+        public override IDisposable WithinBlock(ILogContext logContext)
         {
             return new NullDisposable();
         }

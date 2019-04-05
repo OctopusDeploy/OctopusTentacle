@@ -2,13 +2,14 @@
 using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json;
+using Octopus.Diagnostics;
 using Octopus.Shared.Model;
 using Octopus.Shared.Security.Masking;
 
 namespace Octopus.Shared.Diagnostics
 {
     [DebuggerDisplay("{CorrelationId}")]
-    public class LogContext
+    public class LogContext : ILogContext
     {
         readonly string correlationId;
         readonly object sensitiveDataMaskLock = new object();
@@ -62,7 +63,7 @@ namespace Octopus.Shared.Diagnostics
             }
         }
 
-        public LogContext CreateChild(string[] sensitiveValues = null)
+        public ILogContext CreateChild(string[] sensitiveValues = null)
         {
             var id = correlationId + '/' + GenerateId();
 
@@ -79,7 +80,7 @@ namespace Octopus.Shared.Diagnostics
         /// Adds additional sensitive-variables to the LogContext. 
         /// </summary>
         /// <returns>The existing LogContext</returns>
-        public LogContext WithSensitiveValues(string[] sensitiveValues)
+        public ILogContext WithSensitiveValues(string[] sensitiveValues)
         {
             if (sensitiveValues == null || sensitiveValues.Length == 0)
                 return this;
@@ -101,7 +102,7 @@ namespace Octopus.Shared.Diagnostics
         /// Adds an additional sensitive-variable to the LogContext. 
         /// </summary>
         /// <returns>The existing LogContext</returns>
-        public LogContext WithSensitiveValue(string sensitiveValue)
+        public ILogContext WithSensitiveValue(string sensitiveValue)
         {
             return WithSensitiveValues(new[] {sensitiveValue});
         }

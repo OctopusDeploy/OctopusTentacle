@@ -4,13 +4,22 @@ namespace Octopus.Shared.Configuration
 {
     public class JsonHierarchicalConsoleKeyValueStore : JsonHierarchicalKeyValueStore
     {
-        public JsonHierarchicalConsoleKeyValueStore() : base((bool) false, (bool) true)
+        private readonly Action<string> writer;
+
+        public JsonHierarchicalConsoleKeyValueStore() 
+            : this(Console.WriteLine)
         {
+        }
+
+        public JsonHierarchicalConsoleKeyValueStore(Action<string> writer)
+            : base(false, true)
+        {
+            this.writer = writer;
         }
 
         protected override void WriteSerializedData(string serializedData)
         {
-            Console.WriteLine(serializedData);
+            writer(serializedData);
         }
     }
 }
