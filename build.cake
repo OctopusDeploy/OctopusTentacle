@@ -67,11 +67,11 @@ Task("__Default")
     .IsDependentOn("__Test")
     .IsDependentOn("__DotnetPublish")
     .IsDependentOn("__SignBuiltFiles")
-    //.IsDependentOn("__CreateTentacleInstaller")
-    //.IsDependentOn("__CreateChocolateyPackage")
-    //.IsDependentOn("__CreateInstallerNuGet")
-    .IsDependentOn("__CreateBinariesNuGet");
-    //.IsDependentOn("__CopyToLocalPackages");
+    .IsDependentOn("__CreateTentacleInstaller")
+    .IsDependentOn("__CreateChocolateyPackage")
+    .IsDependentOn("__CreateInstallerNuGet")
+    .IsDependentOn("__CreateBinariesNuGet")
+    .IsDependentOn("__CopyToLocalPackages");
 
 Task("__Version")
     .IsDependentOn("__GitVersionAssemblies")
