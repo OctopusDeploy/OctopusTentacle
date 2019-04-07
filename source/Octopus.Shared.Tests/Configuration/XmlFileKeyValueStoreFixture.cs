@@ -26,10 +26,12 @@ namespace Octopus.Shared.Tests.Configuration
             
             var fileContents = XDocument.Parse(fileSystem.ReadAllText(configurationFile));
 
+            //we want to write bools to the file as lowercase, so its backwards compatible
+            
             var expected = XDocument.Parse(
                 @"<?xml version=""1.0"" encoding=""utf-8""?>
 <octopus-settings xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
-  <set key=""group1.setting1"">True</set>
+  <set key=""group1.setting1"">true</set>
   <set key=""group1.setting2"">123</set>
   <set key=""group2.setting3"">a string</set>
 </octopus-settings>");

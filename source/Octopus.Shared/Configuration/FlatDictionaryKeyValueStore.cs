@@ -63,7 +63,7 @@ namespace Octopus.Shared.Configuration
                 Save();
         }
 
-        private static bool ValueNeedsToBeSerialized(ProtectionLevel protectionLevel, object valueAsObject)
+        protected virtual bool ValueNeedsToBeSerialized(ProtectionLevel protectionLevel, object valueAsObject)
         {
             //we can only encrypt string data
             if (protectionLevel == ProtectionLevel.MachineKey) 
