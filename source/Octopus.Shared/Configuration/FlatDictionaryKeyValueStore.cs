@@ -1,6 +1,4 @@
 using System;
-using System.Security.Cryptography;
-using System.Text;
 using Newtonsoft.Json;
 using Octopus.Configuration;
 
@@ -27,8 +25,6 @@ namespace Octopus.Shared.Configuration
                 if (protectionLevel == ProtectionLevel.MachineKey)
                 {
                     data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
-                    if (typeof(TData) == typeof(string))
-                        data = JsonConvert.DeserializeObject<TData>((string) data);
                 }
 
                 if (typeof(TData) == typeof(string))
@@ -63,7 +59,7 @@ namespace Octopus.Shared.Configuration
             if (ValueNeedsToBeSerialized(protectionLevel, valueAsObject))
                 valueAsObject = JsonConvert.SerializeObject(value);
 
-            if (protectionLevel == ProtectionLevel.MachineKey)
+            if (protectionLevel == ProtectionLevel.MachineKey && valueAsObject != null)
             {
                 valueAsObject = MachineKeyEncrypter.Current.Encrypt((string)valueAsObject);
             }
@@ -75,10 +71,6 @@ namespace Octopus.Shared.Configuration
 
         protected virtual bool ValueNeedsToBeSerialized(ProtectionLevel protectionLevel, object valueAsObject)
         {
-            //we can only encrypt string data
-            if (protectionLevel == ProtectionLevel.MachineKey) 
-                return true;
-            
             //null would end up as "null" rather than empty
             if (valueAsObject == null)
                 return false;
@@ -86,6 +78,14 @@ namespace Octopus.Shared.Configuration
             //bool/int/string etc will work fine directly when used as ToString()
             //custom types will end up as the object type instead of anything useful
             if (valueAsObject.GetType().ToString() == valueAsObject.ToString())
+                return true;
+
+            //dont stick extra quotes around a string
+            if (valueAsObject is string)
+                return false;
+
+            //need to convert bool/int/etc to a string for it to be encrypted
+            if (protectionLevel == ProtectionLevel.MachineKey)
                 return true;
 
             return false;
