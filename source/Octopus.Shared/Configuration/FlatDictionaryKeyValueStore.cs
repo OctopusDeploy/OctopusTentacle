@@ -16,24 +16,34 @@ namespace Octopus.Shared.Configuration
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
-            var data = Read(name);
-            var valueAsString = data as string;
-            if (string.IsNullOrWhiteSpace(valueAsString))
-                return defaultValue;
-
-            if (protectionLevel == ProtectionLevel.MachineKey)
+            string valueAsString = null;
+            try
             {
-                data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
+                var data = Read(name);
+                valueAsString = data as string;
+                if (string.IsNullOrWhiteSpace(valueAsString))
+                    return defaultValue;
+
+                if (protectionLevel == ProtectionLevel.MachineKey)
+                {
+                    data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
+                    if (typeof(TData) == typeof(string))
+                        data = JsonConvert.DeserializeObject<TData>((string) data);
+                }
+
                 if (typeof(TData) == typeof(string))
-                    data = JsonConvert.DeserializeObject<TData>((string)data);
+                    return (TData) data;
+                if (typeof(TData) == typeof(bool))
+                    return (TData) (object) bool.Parse((string) data);
+
+                return JsonConvert.DeserializeObject<TData>((string) data);
             }
-
-            if (typeof(TData) == typeof(string))
-                return (TData)data;
-            if (typeof(TData) == typeof(bool))
-                return (TData)(object)bool.Parse((string)data);
-
-            return JsonConvert.DeserializeObject<TData>((string)data);
+            catch (Exception e)
+            {
+                if (protectionLevel == ProtectionLevel.None)
+                    throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
+                throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
+            }
         }
         
         public override void Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)

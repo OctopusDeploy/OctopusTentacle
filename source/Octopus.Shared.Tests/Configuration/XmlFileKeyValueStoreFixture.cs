@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System;
+using System.Xml.Linq;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Configuration;
@@ -36,6 +37,37 @@ namespace Octopus.Shared.Tests.Configuration
   <set key=""group2.setting3"">a string</set>
 </octopus-settings>");
             fileContents.Should().BeEquivalentTo(expected);
+        }
+        
+        [Test]
+        public void ReturnsNiceExceptionOnInvalidData()
+        {
+            var configurationFile = System.IO.Path.GetTempFileName();
+            var fileSystem = new OctopusPhysicalFileSystem();
+            fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
+            
+            var settings = new XmlFileKeyValueStore(fileSystem, configurationFile);
+            settings.Set<string>("Int.Setting", "NotAnInt");
+            settings.Set<string>("Bool.Setting", "NotABool");
+            settings.Set<string>("Encrypted.Int.Setting", "NotAnInt", ProtectionLevel.MachineKey);
+            settings.Set<string>("Encrypted.Bool.Setting", "NotABool", ProtectionLevel.MachineKey);
+
+            settings.Save();
+            
+            var reloadedSettings = new XmlFileKeyValueStore(fileSystem, configurationFile);
+
+            reloadedSettings.Invoking(x => x.Get("Int.Setting", 1))
+                .ShouldThrow<FormatException>()
+                .WithMessage("Unable to parse configuration key 'Int.Setting' as a 'Int32'. Value was 'NotAnInt'.");
+            reloadedSettings.Invoking(x => x.Get("Bool.Setting", true))
+                .ShouldThrow<FormatException>()
+                .WithMessage("Unable to parse configuration key 'Bool.Setting' as a 'Boolean'. Value was 'NotABool'.");
+            reloadedSettings.Invoking(x => x.Get("Encrypted.Int.Setting", 1, ProtectionLevel.MachineKey))
+                .ShouldThrow<FormatException>()
+                .WithMessage("Unable to parse configuration key 'Encrypted.Int.Setting' as a 'Int32'.");
+            reloadedSettings.Invoking(x => x.Get("Encrypted.Bool.Setting", true, ProtectionLevel.MachineKey))
+                .ShouldThrow<FormatException>()
+                .WithMessage("Unable to parse configuration key 'Encrypted.Bool.Setting' as a 'Boolean'.");
         }
 
         class RoundTripTests
