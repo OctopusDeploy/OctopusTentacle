@@ -1,7 +1,6 @@
 using System;
 using Autofac;
 using Octopus.Shared.Scripts;
-using System.Runtime.InteropServices;
 
 namespace Octopus.Shared.Util
 {
@@ -11,10 +10,10 @@ namespace Octopus.Shared.Util
         {
             base.Load(builder);
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                builder.RegisterType<Bash>().As<IShell>();
-            else
+            if (PlatformDetection.IsRunningOnWindows)
                 builder.RegisterType<PowerShell>().As<IShell>();
+            else
+                builder.RegisterType<Bash>().As<IShell>();
         }
     }
 }

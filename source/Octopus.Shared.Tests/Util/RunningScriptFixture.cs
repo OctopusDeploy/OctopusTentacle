@@ -30,7 +30,7 @@ namespace Octopus.Shared.Tests.Util
         [SetUp]
         public void SetUp()
         {
-            var shell = PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash() as IShell;
+            var shell = PlatformDetection.IsRunningOnWindows ? (IShell) new PowerShell() : new Bash();
             temporaryDirectory = new TemporaryDirectory(testRootPath);
             var homeConfiguration = Substitute.For<IHomeConfiguration>();
             homeConfiguration.HomeDirectory.Returns(temporaryDirectory.DirectoryPath);

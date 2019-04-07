@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Reflection;
 using Octopus.Configuration;
 using Octopus.Shared.Util;
 
@@ -45,7 +44,7 @@ namespace Octopus.Shared.Configuration
                 
                 return value;
             }
-            set { settings.Set("Octopus.Node.Cache", value); }
+            set => settings.Set("Octopus.Node.Cache", value);
         }
     }
 }
