@@ -4,6 +4,7 @@
 #tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
 #tool "nuget:?package=WiX&version=3.10.3"
 #addin "Cake.FileHelpers"
+#addin "Cake.Docker"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
@@ -75,6 +76,42 @@ Task("__Default")
     .IsDependentOn("__CreateBinariesNuGet")
     .IsDependentOn("__CopyToLocalPackages");
 
+Task("__DebianPackage")
+    .IsDependentOn("__Version")
+    .IsDependentOn("__Clean")
+    .IsDependentOn("__Restore")
+    .IsDependentOn("__Build")
+    .IsDependentOn("__DebianPublish")
+    .Does(() => 
+{
+    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "tentacle-packager" } }, @"tools\fpm");
+
+    DockerRunWithoutResult(new DockerContainerRunSettings { 
+        Rm = true, 
+        Tty = true, 
+        Volume = new string[] { $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/ubuntu.18.04-x64")}:/app" } 
+    }, "tentacle-packager", "/build/package.sh");
+
+    CopyFileToDirectory("./source/Octopus.Tentacle/bin/netcoreapp2.2/ubuntu.18.04-x64/tentacle_1.0_amd64.deb", artifactsDir);
+});
+
+Task("__DebianPublish")
+    .IsDependentOn("__Build")
+    .Does(() => {
+
+        DotNetCorePublish(
+            "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
+            new DotNetCorePublishSettings
+            {
+                Framework = "netcoreapp2.2",
+                Configuration = configuration,
+                SelfContained = true,
+                Runtime = "ubuntu.18.04-x64"
+            }
+        );
+
+    });
+
 Task("__Version")
     .IsDependentOn("__GitVersionAssemblies")
     .Does(() =>
@@ -82,7 +119,7 @@ Task("__Version")
     if(BuildSystem.IsRunningOnTeamCity)
         BuildSystem.TeamCity.SetBuildNumber(gitVersion.NuGetVersion);
 
-    Information("Building OctopusClients v{0}", gitVersion.NuGetVersion);
+    Information("Building OctopusTentacle v{0}", gitVersion.NuGetVersion);
 });
 
 Task("__GitVersionAssemblies")
@@ -441,6 +478,9 @@ private void SignAndTimeStamp(params FilePath[] assemblies)
 //////////////////////////////////////////////////////////////////////
 Task("Default")
     .IsDependentOn("__Default");
+
+Task("Debian")
+    .IsDependentOn("__DebianPackage");
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION
