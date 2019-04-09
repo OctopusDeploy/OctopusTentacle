@@ -4,10 +4,13 @@
 #tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
 #tool "nuget:?package=WiX&version=3.10.3"
 #addin "Cake.FileHelpers"
+#addin "Cake.Docker"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
 using System.Xml;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -29,11 +32,10 @@ var signingTimestampUrls = new string[] {
 
 var installerPackageDir = "./build/package/installer";
 var binariesPackageDir = "./build/package/binaries";
-var winCorePackageDir = "./build/package/win-x64";
 var installerDir = "./build/installer";
 var artifactsDir = "./build/artifacts";
 var localPackagesDir = "../LocalPackages";
-var coreWinPublishDir = "./build/publish/win-x64";
+var corePublishDir = "./build/publish";
 
 GitVersion gitVersion;
 
@@ -74,6 +76,45 @@ Task("__Default")
     .IsDependentOn("__CreateBinariesNuGet")
     .IsDependentOn("__CopyToLocalPackages");
 
+Task("__UbuntuPublish")
+    .IsDependentOn("__Build")
+    .Does(() =>
+{
+
+    DotNetCorePublish(
+        "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
+        new DotNetCorePublishSettings
+        {
+            Framework = "netcoreapp2.2",
+            Configuration = configuration,
+            SelfContained = true,
+            Runtime = "ubuntu.18.04-x64"
+        }
+    );
+
+});
+
+Task("__OsPackage")
+    .IsDependentOn("__Version")
+    .IsDependentOn("__Clean")
+    .IsDependentOn("__Restore")
+    .IsDependentOn("__Build")
+    .IsDependentOn("__UbuntuPublish")
+    .Does(() => 
+{
+    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "tentacle-packager" } }, @"tools\fpm");
+
+    DockerRunWithoutResult(new DockerContainerRunSettings { 
+        Rm = true, 
+        Tty = true, 
+        Env = new string[] { $"VERSION={gitVersion.SemVer}" },
+        Volume = new string[] { $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/ubuntu.18.04-x64")}:/app" } 
+    }, "tentacle-packager", "/build/package.sh");
+
+    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/ubuntu.18.04-x64/*.deb", artifactsDir);
+});
+
+
 Task("__Version")
     .IsDependentOn("__GitVersionAssemblies")
     .Does(() =>
@@ -81,7 +122,7 @@ Task("__Version")
     if(BuildSystem.IsRunningOnTeamCity)
         BuildSystem.TeamCity.SetBuildNumber(gitVersion.NuGetVersion);
 
-    Information("Building OctopusClients v{0}", gitVersion.NuGetVersion);
+    Information("Building OctopusTentacle v{0}", gitVersion.NuGetVersion);
 });
 
 Task("__GitVersionAssemblies")
@@ -148,13 +189,12 @@ Task("__DotnetPublish")
     .Does(() =>  {
 
         DotNetCorePublish(
-            "./source/Octopus.Tentacle/Octopus.Tentacle.csproj", 
+            "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
             new DotNetCorePublishSettings
             {
-                Framework = "netcoreapp2.0",
+                Framework = "netcoreapp2.2",
                 Configuration = configuration,
-                Runtime = "win7-x64",
-                OutputDirectory = coreWinPublishDir,
+                OutputDirectory = corePublishDir,
                 ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
             }
         );
@@ -164,27 +204,46 @@ Task("__DotnetPublish")
 Task("__SignBuiltFiles")
     .Does(() =>
 {
-    var filesToSign = new string[] {
-        "./source/Octopus.Tentacle/bin/net45/Octopus*.dll",
-        "./source/Octopus.Tentacle/bin/net45/Octopus*.exe",
-        "./source/Octopus.Tentacle/bin/net45/Tentacle.exe",
-        "./source/Octopus.Manager.Tentacle/bin/Octopus*.dll",
-        "./source/Octopus.Manager.Tentacle/bin/Octopus*.exe",
-        $"{coreWinPublishDir}/Octopus*.dll",
-        $"{coreWinPublishDir}/Octopus*.exe",
-        $"{coreWinPublishDir}/Tentacle.exe"
-    };
+    // check that any unsigned libraries get signed, to play nice with security scanning tools
+    // refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
+    // note: we are signing both dll's we have written & some we haven't, not because we are
+    //       claiming we own them, but rather asserting that they are distributed by us, and
+    //       have not been subsequently altered
+    var filesToSign =
+        GetFiles($"{corePublishDir}/*.dll")
+        .Union(GetFiles($"{corePublishDir}/*.exe"))
+        .Union(GetFiles($"./source/Octopus.Tentacle/bin/net452/**/*.dll"))
+        .Union(GetFiles($"./source/Octopus.Tentacle/bin/net452/**/*.exe"))
+        .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.dll"))
+        .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.exe"))
+            .Where(f => !HasAuthenticodeSignature(f))
+            .Select(f => f.FullPath)
+            .ToArray();
 
     SignAndTimeStamp(filesToSign);
 });
 
+// note: Doesn't check if existing signatures are valid, only that one exists
+// source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
+private bool HasAuthenticodeSignature(FilePath fileInfo)
+{
+    try
+    {
+        X509Certificate.CreateFromSignedFile(fileInfo.FullPath);
+        return true;
+    }
+    catch
+    {
+        return false;
+    }
+}
 
 Task("__CreateTentacleInstaller")
     .IsDependentOn("__UpdateWixVersion")
     .Does(() =>
 {
     CopyFiles("./source/Octopus.Manager.Tentacle/bin/*", installerDir);
-    CopyFiles("./source/Octopus.Tentacle/bin/net45/*", installerDir);
+    CopyFiles("./source/Octopus.Tentacle/bin/net452/*", installerDir);
 
     CleanBinariesDirectory(installerDir);
 
@@ -262,41 +321,24 @@ Task("__CreateBinariesNuGet")
     .IsDependentOn("__SignBuiltFiles")
     .Does(() =>
 {
+    CreateDirectory($"{binariesPackageDir}/lib/net452");
+    CopyFileToDirectory($"./source/Octopus.Manager.Tentacle/bin/Octopus.Manager.Tentacle.exe", $"{binariesPackageDir}/lib/net452");
+    CleanBinariesDirectory($"{binariesPackageDir}/lib/net452");
 
-    // netfx version
-
-    CreateDirectory($"{binariesPackageDir}/lib");
-    CopyFileToDirectory($"./source/Octopus.Manager.Tentacle/bin/Octopus.Manager.Tentacle.exe", $"{binariesPackageDir}/lib");
-    CleanBinariesDirectory($"{binariesPackageDir}/lib");
-
-    CreateDirectory($"{binariesPackageDir}/build/Tentacle");
-    CopyFiles($"./source/Octopus.Tentacle/bin/net45/*", $"{binariesPackageDir}/build/Tentacle");
-    CleanBinariesDirectory($"{binariesPackageDir}/build/Tentacle");
+    CreateDirectory($"{binariesPackageDir}/build/net452/Tentacle");
+    CreateDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+    CopyFiles($"./source/Octopus.Tentacle/bin/net452/*", $"{binariesPackageDir}/build/net452/Tentacle");
+    CopyFiles($"{corePublishDir}/*", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+    MoveFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.manifest", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.dll.manifest");
+    MoveFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.nlog", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.dll.nlog");
+    CleanBinariesDirectory($"{binariesPackageDir}/build/net452/Tentacle");
+    CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
 
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build");
+    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/net452");
+    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp2.2");
 
     NuGetPack(Path.Combine(binariesPackageDir, "Tentacle.Binaries.nuspec"), new NuGetPackSettings {
-        Version = gitVersion.NuGetVersion,
-        OutputDirectory = artifactsDir
-    });
-
-    // netcoreapp version
-
-    CreateDirectory($"{winCorePackageDir}/lib");
-    // This is still the NetFX build, but it is just used in the E2E tests.
-    CopyFileToDirectory($"./source/Octopus.Manager.Tentacle/bin/Octopus.Manager.Tentacle.exe", $"{winCorePackageDir}/lib");
-    CleanBinariesDirectory($"{winCorePackageDir}/lib");
-
-    CreateDirectory($"{winCorePackageDir}/build/Tentacle");
-
-    CopyFiles($"{coreWinPublishDir}/*", $"{winCorePackageDir}/build/Tentacle");
-
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", winCorePackageDir);
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{winCorePackageDir}/build");
-
-    NuGetPack(Path.Combine(winCorePackageDir, "Tentacle.Binaries.nuspec"), new NuGetPackSettings {
-        Id = "Tentacle.Binaries.Core.win-x64",
         Version = gitVersion.NuGetVersion,
         OutputDirectory = artifactsDir
     });
@@ -439,6 +481,9 @@ private void SignAndTimeStamp(params FilePath[] assemblies)
 //////////////////////////////////////////////////////////////////////
 Task("Default")
     .IsDependentOn("__Default");
+
+Task("OsPackage")
+    .IsDependentOn("__OsPackage");
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION
