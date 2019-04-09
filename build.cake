@@ -76,12 +76,30 @@ Task("__Default")
     .IsDependentOn("__CreateBinariesNuGet")
     .IsDependentOn("__CopyToLocalPackages");
 
-Task("__DebianPackage")
+Task("__UbuntuPublish")
+    .IsDependentOn("__Build")
+    .Does(() =>
+{
+
+    DotNetCorePublish(
+        "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
+        new DotNetCorePublishSettings
+        {
+            Framework = "netcoreapp2.2",
+            Configuration = configuration,
+            SelfContained = true,
+            Runtime = "ubuntu.18.04-x64"
+        }
+    );
+
+});
+
+Task("__OsPackage")
     .IsDependentOn("__Version")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
-    .IsDependentOn("__DebianPublish")
+    .IsDependentOn("__UbuntuPublish")
     .Does(() => 
 {
     DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "tentacle-packager" } }, @"tools\fpm");
@@ -89,28 +107,13 @@ Task("__DebianPackage")
     DockerRunWithoutResult(new DockerContainerRunSettings { 
         Rm = true, 
         Tty = true, 
+        Env = new string[] { $"VERSION={gitVersion.SemVer}" },
         Volume = new string[] { $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/ubuntu.18.04-x64")}:/app" } 
     }, "tentacle-packager", "/build/package.sh");
 
-    CopyFileToDirectory("./source/Octopus.Tentacle/bin/netcoreapp2.2/ubuntu.18.04-x64/tentacle_1.0_amd64.deb", artifactsDir);
+    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/ubuntu.18.04-x64/*.deb", artifactsDir);
 });
 
-Task("__DebianPublish")
-    .IsDependentOn("__Build")
-    .Does(() => {
-
-        DotNetCorePublish(
-            "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
-            new DotNetCorePublishSettings
-            {
-                Framework = "netcoreapp2.2",
-                Configuration = configuration,
-                SelfContained = true,
-                Runtime = "ubuntu.18.04-x64"
-            }
-        );
-
-    });
 
 Task("__Version")
     .IsDependentOn("__GitVersionAssemblies")
@@ -479,8 +482,8 @@ private void SignAndTimeStamp(params FilePath[] assemblies)
 Task("Default")
     .IsDependentOn("__Default");
 
-Task("Debian")
-    .IsDependentOn("__DebianPackage");
+Task("OsPackage")
+    .IsDependentOn("__OsPackage");
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION
