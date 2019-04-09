@@ -60,6 +60,10 @@ namespace Octopus.Shared.Configuration
             {
                 var proxy = GetSystemWebProxy();
 
+                //proxy will be null when not on Windows
+                if (proxy == null)
+                    return null;
+
                 proxy.Credentials = config.UsingDefaultCredentials()
                     ? CredentialCache.DefaultNetworkCredentials
                     : new NetworkCredential(config.CustomProxyUsername, config.CustomProxyPassword);
