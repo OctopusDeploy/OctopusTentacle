@@ -14,14 +14,12 @@ using System.Text;
 using System.Threading;
 using Microsoft.Win32.SafeHandles;
 using Octopus.Diagnostics;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Util
 {
     public static class SilentProcessRunner
     {
-
         public static int ExecuteCommand(this CommandLineInvocation invocation, ILog log)
         {
             return ExecuteCommand(invocation, Environment.CurrentDirectory, log);
@@ -88,20 +86,58 @@ namespace Octopus.Shared.Util
             IDictionary<string, string> customEnvironmentVariables = null,
             CancellationToken cancel = default(CancellationToken))
         {
+            void WriteData(Action<string> action, ManualResetEventSlim resetEvent, DataReceivedEventArgs e)
+            {
+                try
+                {
+                    if (e.Data == null)
+                    {
+                        resetEvent.Set();
+                        return;
+                    }
+
+                    action(e.Data);
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        error($"Error occured handling message: {ex.PrettyPrint()}");
+                    }
+                    catch
+                    {
+                        // Ignore
+                    }
+                }
+            }
+
             try
             {
                 // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
-                var exeInSamePathAsWorkingDirectory = string.Equals(Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
+                var exeInSamePathAsWorkingDirectory = string.Equals(
+                    Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'),
+                    StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
                 var runAsSameUser = runAs == default(NetworkCredential);
-                var runningAs = runAsSameUser ? $@"{ProcessIdentity.CurrentUserName}" : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
-                var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
+                var runningAs = runAsSameUser
+                    ? $@"{ProcessIdentity.CurrentUserName}"
+                    : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
+                var hasCustomEnvironmentVariables =
+                    customEnvironmentVariables != null && customEnvironmentVariables.Any();
                 var customEnvironmentVars =
                     hasCustomEnvironmentVariables
-                    ? (runAsSameUser ? $"the same environment variables as the launching process plus {customEnvironmentVariables.Count} custom variable(s)" : $"that user's environment variables plus {customEnvironmentVariables.Count} custom variable(s)")
-                    : (runAsSameUser ? "the same environment variables as the launching process" : "that user's default environment variables");
+                        ? (runAsSameUser
+                            ? $"the same environment variables as the launching process plus {customEnvironmentVariables.Count} custom variable(s)"
+                            : $"that user's environment variables plus {customEnvironmentVariables.Count} custom variable(s)"
+                        )
+                        : (runAsSameUser
+                            ? "the same environment variables as the launching process"
+                            : "that user's default environment variables");
                 var encoding = EncodingDetector.GetOEMEncoding();
-                debug($"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVars}");
+                debug(
+                    $"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVars}");
+                using (var outputResetEvent = new ManualResetEventSlim(false))
+                using (var errorResetEvent = new ManualResetEventSlim(false))
                 using (var process = new Process())
                 {
                     process.StartInfo.FileName = executable;
@@ -117,88 +153,55 @@ namespace Octopus.Shared.Util
                     {
                         RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
                     }
+
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
                     process.StartInfo.StandardOutputEncoding = encoding;
                     process.StartInfo.StandardErrorEncoding = encoding;
 
-                    using (var outputWaitHandle = new AutoResetEvent(false))
-                    using (var errorWaitHandle = new AutoResetEvent(false))
+                    process.OutputDataReceived += (sender, e) =>
                     {
-                        process.OutputDataReceived += (sender, e) =>
+                        WriteData(info, outputResetEvent, e);
+                    };
+
+                    process.ErrorDataReceived += (sender, e) =>
+                    {
+                        WriteData(error, errorResetEvent, e);
+                    };
+
+                    process.Start();
+
+                    var running = true;
+
+                    cancel.Register(() =>
+                    {
+                        if (!running)
                         {
-                            try
-                            {
-                                if (e.Data == null)
-                                    outputWaitHandle.Set();
-                                else
-                                    info(e.Data);
-                            }
-                            catch (Exception ex)
-                            {
-                                try
-                                {
-                                    error($"Error occured handling message: {ex.PrettyPrint()}");
-                                }
-                                catch
-                                {
-                                    // Ignore
-                                }
-                            }
-                        };
-
-                        process.ErrorDataReceived += (sender, e) =>
-                        {
-                            try
-                            {
-                                if (e.Data == null)
-                                    errorWaitHandle.Set();
-                                else
-                                    error(e.Data);
-                            }
-                            catch (Exception ex)
-                            {
-                                try
-                                {
-                                    error($"Error occured handling message: {ex.PrettyPrint()}");
-                                }
-                                catch
-                                {
-                                    // Ignore
-                                }
-                            }
-                        };
-
-                        process.Start();
-
-                        var running = true;
-
-                        cancel.Register(() =>
-                        {
-                            if (!running)
-                                return;
-                            DoOurBestToCleanUp(process, error);
-                        });
-
-                        if (cancel.IsCancellationRequested)
-                        {
-                            DoOurBestToCleanUp(process, error);
+                            return;
                         }
+                        DoOurBestToCleanUp(process, error);
+                    });
 
-                        process.BeginOutputReadLine();
-                        process.BeginErrorReadLine();
-
-                        process.WaitForExit();
-
-                        debug($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {process.ExitCode}");
-
-                        running = false;
-
-                        outputWaitHandle.WaitOne();
-                        errorWaitHandle.WaitOne();
-
-                        return process.ExitCode;
+                    if (cancel.IsCancellationRequested)
+                    {
+                        DoOurBestToCleanUp(process, error);
                     }
+
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
+
+                    process.WaitForExit();
+                    process.CancelErrorRead();
+                    process.CancelOutputRead();
+
+                    outputResetEvent.Wait(CancellationToken.None);
+                    errorResetEvent.Wait(CancellationToken.None);
+
+                    debug($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {process.ExitCode}");
+
+                    running = false;
+
+                    return process.ExitCode;
                 }
             }
             catch (Exception ex)
