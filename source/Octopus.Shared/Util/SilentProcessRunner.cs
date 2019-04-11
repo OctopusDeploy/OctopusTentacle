@@ -348,8 +348,8 @@ namespace Octopus.Shared.Util
             var currentMachineEnvironmentVariables = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
             var machineEnvironmentVariablesHaveChanged =
 #pragma warning disable DE0006 // API is deprecated
-                !currentMachineEnvironmentVariables.Cast<KeyValuePair<string, string>>().OrderBy(e => e.Key)
-                    .SequenceEqual(mostRecentMachineEnvironmentVariables.Cast<KeyValuePair<string, string>>().OrderBy(e => e.Key));
+                !currentMachineEnvironmentVariables.Cast<DictionaryEntry>().OrderBy(e => e.Key)
+                    .SequenceEqual(mostRecentMachineEnvironmentVariables.Cast<DictionaryEntry>().OrderBy(e => e.Key));
 #pragma warning restore DE0006 // API is deprecated
             if (machineEnvironmentVariablesHaveChanged)
             {
