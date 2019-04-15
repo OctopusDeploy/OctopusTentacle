@@ -52,6 +52,7 @@ Task("__Default")
     .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
     .IsDependentOn("__Test")
+    .IsDependentOn("__Publish")
     .IsDependentOn("__CreateNuGet")
     .IsDependentOn("Publish")
     .IsDependentOn("__CopyToLocalPackages");
@@ -125,6 +126,19 @@ Task("__Test")
     {
         Configuration = configuration,
         NoBuild = true
+    });
+});
+
+Task("__Publish")
+    .IsDependentOn("__Test")
+    .Does(() =>
+{
+    DotNetCorePublish("./source/Octopus.Shared.Tests/Octopus.Shared.Tests.csproj", new DotNetCorePublishSettings
+    {
+        Configuration = "Release",
+        Framework = "netcoreapp2.0",
+        Runtime = "linux-x64",
+        OutputDirectory = new DirectoryPath($"{artifactsDir}/publish/linux-x64")
     });
 });
 
