@@ -5,9 +5,7 @@ using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
-using Octopus.Shared.Threading;
 using Octopus.Shared.Util;
-using Microsoft.Win32;
 
 namespace Octopus.Shared.Configuration
 {

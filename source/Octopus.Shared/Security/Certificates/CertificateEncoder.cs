@@ -343,6 +343,7 @@ namespace Octopus.Shared.Security.Certificates
                 return result;
             }
 
+#pragma warning disable PC003 // Native API not available in UWP
             [DllImport("crypt32", CharSet = CharSet.Unicode, SetLastError = true)]
             internal static extern bool CryptAcquireCertificatePrivateKey(IntPtr pCert, uint dwFlags, IntPtr pvReserved, ref IntPtr phCryptProv, ref int pdwKeySpec, ref bool pfCallerFreeProv);
 
@@ -351,6 +352,7 @@ namespace Octopus.Shared.Security.Certificates
 
             [DllImport("advapi32", SetLastError = true)]
             internal static extern bool CryptReleaseContext(IntPtr hProv, uint dwFlags);
+#pragma warning restore PC003 // Native API not available in UWP
 
             #region Nested type: CryptGetProvParamType
 

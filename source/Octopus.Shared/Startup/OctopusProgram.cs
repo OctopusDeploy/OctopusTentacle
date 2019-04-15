@@ -438,6 +438,9 @@ namespace Octopus.Shared.Startup
 
         private static bool IsRunningAsAWindowsService(ILog log)
         {
+            if (PlatformDetection.IsRunningOnMac || PlatformDetection.IsRunningOnNix)
+                return false;
+
 #if USER_INTERACTIVE_DOES_NOT_WORK
             try
             {
@@ -561,6 +564,7 @@ namespace Octopus.Shared.Startup
             container.Dispose();
         }
 
+#pragma warning disable PC003 // Native API not available in UWP
 #if USER_INTERACTIVE_DOES_NOT_WORK
         static class Kernel32
         {
@@ -591,8 +595,9 @@ namespace Octopus.Shared.Startup
             public static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
         }
 #endif
-        
-    #if FULL_FRAMEWORK
+#pragma warning restore PC003 // Native API not available in UWP
+
+#if FULL_FRAMEWORK
     public static class CtrlSignaling
     {
         [DllImport("Kernel32.dll")]
@@ -609,6 +614,6 @@ namespace Octopus.Shared.Startup
             CTRL_SHUTDOWN_EVENT = 6
         }
     }
-    #endif
+#endif
     }
 }

@@ -30,6 +30,7 @@ namespace Octopus.Shared.Tests.Util
         [SetUp]
         public void SetUp()
         {
+            var shell = PlatformDetection.IsRunningOnWindows ? (IShell) new PowerShell() : new Bash();
             temporaryDirectory = new TemporaryDirectory(testRootPath);
             var homeConfiguration = Substitute.For<IHomeConfiguration>();
             homeConfiguration.HomeDirectory.Returns(temporaryDirectory.DirectoryPath);
@@ -40,7 +41,7 @@ namespace Octopus.Shared.Tests.Util
             Console.WriteLine($"Working directory: {workspace.WorkingDirectory}");
             scriptLog = new TestScriptLog();
             cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            runningScript = new RunningScript(workspace, scriptLog, taskId, cancellationTokenSource.Token);
+            runningScript = new RunningScript(shell, workspace, scriptLog, taskId, cancellationTokenSource.Token);
             user = new TestUserPrincipal("test-runningscript");
         }
 
@@ -146,7 +147,8 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
-                var script = new RunningScript(workspace, scriptLog, taskId, cts.Token);
+                var shell = PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash() as IShell;
+                var script = new RunningScript(shell, workspace, scriptLog, taskId, cts.Token);
                 workspace.BootstrapScript("Write-Host Starting\nStart-Sleep -seconds 10\nWrite-Host Finito");
                 script.Execute();
                 runningScript.ExitCode.Should().Be(0, "the script should have been canceled");
