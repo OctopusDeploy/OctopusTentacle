@@ -1,20 +1,20 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
-using System.Net;
 using System.Runtime.InteropServices;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using System.Text;
 using System.Threading;
-using Microsoft.Win32.SafeHandles;
 using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using System.Net;
+using System.ComponentModel;
+using Microsoft.Win32.SafeHandles;
+using System.Collections;
 
 namespace Octopus.Shared.Util
 {
@@ -27,7 +27,7 @@ namespace Octopus.Shared.Util
 
         public static int ExecuteCommand(this CommandLineInvocation invocation, string workingDirectory, ILog log)
         {
-            var arguments = (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? "");
+            var arguments = $"{(invocation.Arguments ?? String.Empty)} {(invocation.SystemArguments ?? String.Empty)}";
 
             var exitCode = ExecuteCommand(
                 invocation.Executable,
@@ -47,7 +47,7 @@ namespace Octopus.Shared.Util
 
         public static CmdResult ExecuteCommand(this CommandLineInvocation invocation, string workingDirectory)
         {
-            var arguments = (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? "");
+            var arguments = $"{(invocation.Arguments ?? String.Empty)} {(invocation.SystemArguments ?? String.Empty)}";
             var infos = new List<string>();
             var errors = new List<string>();
 
@@ -118,14 +118,14 @@ namespace Octopus.Shared.Util
                     Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'),
                     StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
+                var encoding = EncodingDetector.GetOEMEncoding();;
+                var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
                 var runAsSameUser = runAs == default(NetworkCredential);
                 var runningAs = runAsSameUser
                     ? $@"{ProcessIdentity.CurrentUserName}"
                     : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
-                var hasCustomEnvironmentVariables =
-                    customEnvironmentVariables != null && customEnvironmentVariables.Any();
-                var customEnvironmentVars =
-                    hasCustomEnvironmentVariables
+                
+                var customEnvironmentVars = hasCustomEnvironmentVariables
                         ? (runAsSameUser
                             ? $"the same environment variables as the launching process plus {customEnvironmentVariables.Count} custom variable(s)"
                             : $"that user's environment variables plus {customEnvironmentVariables.Count} custom variable(s)"
@@ -133,9 +133,10 @@ namespace Octopus.Shared.Util
                         : (runAsSameUser
                             ? "the same environment variables as the launching process"
                             : "that user's default environment variables");
-                var encoding = EncodingDetector.GetOEMEncoding();
+                
                 debug(
                     $"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVars}");
+                
                 using (var outputResetEvent = new ManualResetEventSlim(false))
                 using (var errorResetEvent = new ManualResetEventSlim(false))
                 using (var process = new Process())
@@ -145,19 +146,27 @@ namespace Octopus.Shared.Util
                     process.StartInfo.WorkingDirectory = workingDirectory;
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
+
                     if (runAsSameUser)
                     {
                         RunAsSameUser(process.StartInfo, customEnvironmentVariables);
                     }
-                    else
+                    else if(PlatformDetection.IsRunningOnWindows)
                     {
                         RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
+                    }
+                    else
+                    {
+                        throw new PlatformNotSupportedException("NetCore on linux or Mac does not support running a process as a different user.");
                     }
 
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
-                    process.StartInfo.StandardOutputEncoding = encoding;
-                    process.StartInfo.StandardErrorEncoding = encoding;
+                    if (PlatformDetection.IsRunningOnWindows)
+                    {
+                        process.StartInfo.StandardOutputEncoding = encoding;
+                        process.StartInfo.StandardErrorEncoding = encoding;
+                    }
 
                     process.OutputDataReceived += (sender, e) =>
                     {
@@ -227,13 +236,17 @@ namespace Octopus.Shared.Util
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
 
-                    if (runAs != default(NetworkCredential))
+                    if (runAs == default(NetworkCredential))
+                    {
+                        RunAsSameUser(process.StartInfo, customEnvironmentVariables);
+                    }
+                    else if (PlatformDetection.IsRunningOnWindows)
                     {
                         RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
                     }
                     else
                     {
-                        RunAsSameUser(process.StartInfo, customEnvironmentVariables);
+                        throw new PlatformNotSupportedException("NetCore on linux or Mac does not support running a process as a different user.");
                     }
 
                     process.Start();
@@ -258,13 +271,11 @@ namespace Octopus.Shared.Util
             }
         }
 
-
         private static void RunAsDifferentUser(ProcessStartInfo startInfo, NetworkCredential runAs, IDictionary<string, string> customEnvironmentVariables)
         {
-            //This code is currently only being run on Windows, disabling PC001 errors for now
 #pragma warning disable PC001 // API not supported on all platforms
-            startInfo.Domain = runAs.Domain;
             startInfo.UserName = runAs.UserName;
+            startInfo.Domain = runAs.Domain;
             startInfo.Password = runAs.SecurePassword;
             startInfo.LoadUserProfile = true;
 #pragma warning restore PC001 // API not supported on all platforms
@@ -309,6 +320,8 @@ namespace Octopus.Shared.Util
             }
         }
 
+        
+
         private static readonly object EnvironmentVariablesCacheLock = new object();
         private static IDictionary mostRecentMachineEnvironmentVariables = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
         private static readonly Dictionary<string, Dictionary<string, string>> EnvironmentVariablesForUserCache = new Dictionary<string, Dictionary<string, string>>();
@@ -351,6 +364,7 @@ namespace Octopus.Shared.Util
                 !currentMachineEnvironmentVariables.Cast<DictionaryEntry>().OrderBy(e => e.Key)
                     .SequenceEqual(mostRecentMachineEnvironmentVariables.Cast<DictionaryEntry>().OrderBy(e => e.Key));
 #pragma warning restore DE0006 // API is deprecated
+
             if (machineEnvironmentVariablesHaveChanged)
             {
                 mostRecentMachineEnvironmentVariables = currentMachineEnvironmentVariables;
@@ -378,65 +392,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        internal class EncodingDetector
-        {
-            public static Encoding GetOEMEncoding()
-            {
-                try
-                {
-                    // Get the OEM CodePage for the installation, otherwise fall back to code page 850 (DOS Western Europe)
-                    // https://en.wikipedia.org/wiki/Code_page_850
-                    const int CP_OEMCP = 1;
-                    const int dwFlags = 0;
-                    const int CodePage850 = 850;
-
-                    var codepage = GetCPInfoEx(CP_OEMCP, dwFlags, out var info) ? info.CodePage : CodePage850;
-
-#if REQUIRES_CODE_PAGE_PROVIDER
-                    return CodePagesEncodingProvider.Instance.GetEncoding(codepage);
-#else
-                    return Encoding.GetEncoding(codepage);
-#endif
-                }
-                catch
-                {
-                    // Fall back to UTF8 if everything goes wrong
-                    return Encoding.UTF8;
-                }
-            }
-
-#pragma warning disable PC003 // Native API not available in UWP. UWP is not supported
-            [DllImport("kernel32.dll", SetLastError = true)]
-            static extern bool GetCPInfoEx([MarshalAs(UnmanagedType.U4)] int codePage, [MarshalAs(UnmanagedType.U4)] int dwFlags, out CPINFOEX lpCPInfoEx);
-#pragma warning restore PC003 // Native API not available in UWP
-
-            const int MAX_DEFAULTCHAR = 2;
-            const int MAX_LEADBYTES = 12;
-            const int MAX_PATH = 260;
-
-            [StructLayout(LayoutKind.Sequential)]
-            public struct CPINFOEX
-            {
-                [MarshalAs(UnmanagedType.U4)]
-                public readonly int MaxCharSize;
-
-                [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_DEFAULTCHAR)]
-                public readonly byte[] DefaultChar;
-
-                [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_LEADBYTES)]
-                public readonly byte[] LeadBytes;
-
-                public readonly char UnicodeDefaultChar;
-
-                [MarshalAs(UnmanagedType.U4)]
-                public readonly int CodePage;
-
-                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MAX_PATH)]
-                public readonly string CodePageName;
-            }
-        }
-
-        internal class Hitman
+        class Hitman
         {
             public static void TryKillProcessAndChildrenRecursively(int pid)
             {
@@ -463,6 +419,72 @@ namespace Octopus.Shared.Util
             }
         }
 
+        internal class EncodingDetector
+        {
+            public static Encoding GetOEMEncoding()
+            {
+                if(PlatformDetection.IsRunningOnWindows){
+                    try
+                    {
+                        // Get the OEM CodePage for the installation, otherwise fall back to code page 850 (DOS Western Europe)
+                        // https://en.wikipedia.org/wiki/Code_page_850
+                        const int CP_OEMCP = 1;
+                        const int dwFlags = 0;
+                        const int CodePage850 = 850;
+
+                        var codepage = GetCPInfoEx(CP_OEMCP, dwFlags, out var info) ? info.CodePage : CodePage850;
+
+#if REQUIRES_CODE_PAGE_PROVIDER
+                        return CodePagesEncodingProvider.Instance.GetEncoding(codepage);
+#else
+                        return Encoding.GetEncoding(codepage);
+#endif
+                    }
+                    catch
+                    {
+                        // Fall back to UTF8 if everything goes wrong
+                        return Encoding.UTF8;
+                    }
+                }
+                else
+                {
+                    return Encoding.UTF8;
+                }
+            }
+        }
+
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+#pragma warning disable PC003 // Native API not available in UWP
+        static extern bool GetCPInfoEx([MarshalAs(UnmanagedType.U4)] int codePage, [MarshalAs(UnmanagedType.U4)] int dwFlags, out CPINFOEX lpCPInfoEx);
+#pragma warning restore PC003 // Native API not available in UWP
+
+        const int MAX_DEFAULTCHAR = 2;
+        const int MAX_LEADBYTES = 12;
+        const int MAX_PATH = 260;
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct CPINFOEX
+        {
+            [MarshalAs(UnmanagedType.U4)]
+            public readonly int MaxCharSize;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_DEFAULTCHAR)]
+            public readonly byte[] DefaultChar;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_LEADBYTES)]
+            public readonly byte[] LeadBytes;
+
+            public readonly char UnicodeDefaultChar;
+
+            [MarshalAs(UnmanagedType.U4)]
+            public readonly int CodePage;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MAX_PATH)]
+            public readonly string CodePageName;
+        }
+
+
         // Required to allow a service to run a process as another user
         // See http://stackoverflow.com/questions/677874/starting-a-process-with-credentials-from-a-windows-service/30687230#30687230
         internal class WindowStationAndDesktopAccess
@@ -484,8 +506,8 @@ namespace Octopus.Shared.Util
                     new GenericSecurity(
                         false, ResourceType.WindowObject, safeHandle, AccessControlSections.Access);
 
-#pragma warning disable PC001 // API not supported on all platforms. This code will only be run on Windows
                 var account = string.IsNullOrEmpty(domainName)
+#pragma warning disable PC001 // API not supported on all platforms
                     ? new NTAccount(username)
                     : new NTAccount(domainName, username);
 #pragma warning restore PC001 // API not supported on all platforms
@@ -496,17 +518,18 @@ namespace Octopus.Shared.Util
                 security.Persist(safeHandle, AccessControlSections.Access);
             }
 
-#pragma warning disable PC003 // Native API not available in UWP. This code will only be run on Windows
+#pragma warning disable PC003 // Native API not available in UWP
             [DllImport("user32.dll", SetLastError = true)]
             private static extern IntPtr GetProcessWindowStation();
 
             [DllImport("user32.dll", SetLastError = true)]
             private static extern IntPtr GetThreadDesktop(int dwThreadId);
-#pragma warning restore PC003 // Native API not available in UWP
 
             [DllImport("kernel32.dll", SetLastError = true)]
             private static extern int GetCurrentThreadId();
-
+#pragma warning restore PC003 
+            
+            // Native API not available in UWP
             // All the code to manipulate a security object is available in .NET framework,
             // but its API tries to be type-safe and handle-safe, enforcing a special implementation
             // (to an otherwise generic WinAPI) for each handle type. This is to make sure
@@ -535,17 +558,19 @@ namespace Octopus.Shared.Util
                 {
                 }
 
-#pragma warning disable PC001 // API not supported on all platforms, this code should only be run when attempting to run a process as another user on Windows/
                 public new void Persist(SafeHandle handle, AccessControlSections includeSections)
                 {
+#pragma warning disable PC001 // API not supported on all platforms
                     base.Persist(handle, includeSections);
+#pragma warning restore PC001 // API not supported on all platforms
                 }
 
                 public new void AddAccessRule(AccessRule rule)
                 {
+#pragma warning disable PC001 // API not supported on all platforms
                     base.AddAccessRule(rule);
-                }
 #pragma warning restore PC001 // API not supported on all platforms
+                }
 
                 public override Type AccessRightType => throw new NotImplementedException();
 
@@ -627,8 +652,8 @@ namespace Octopus.Shared.Util
                 WinNT50 = 3,
             }
 
-#pragma warning disable PC003 // Native API not available in UWP, We dont support UWP and this code path will only be hit when run on Windows
             [DllImport("advapi32.dll", SetLastError = true)]
+#pragma warning disable PC003 // Native API not available in UWP
             private static extern bool LogonUser(string username, string domain, string password, LogonType logonType, LogonProvider logonProvider, out IntPtr hToken);
 #pragma warning restore PC003 // Native API not available in UWP
         }
@@ -685,7 +710,7 @@ namespace Octopus.Shared.Util
                 }
             }
 
-#pragma warning disable PC003 // Native API not available in UWP, We dont support UWP and this code path will only be hit when run on Windows
+#pragma warning disable PC003 // Native API not available in UWP
             [DllImport("userenv.dll", SetLastError = true)]
             static extern bool LoadUserProfile(SafeAccessTokenHandle hToken, ref PROFILEINFO lpProfileInfo);
 
@@ -707,7 +732,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        private class Win32Helper
+        class Win32Helper
         {
             public static bool Invoke(Func<bool> nativeMethod, string failureDescription)
             {
@@ -812,7 +837,7 @@ namespace Octopus.Shared.Util
                 return userEnvironment;
             }
 
-#pragma warning disable PC003 // Native API not available in UWP, We dont support UWP and this code path will only be hit when run on Windows
+#pragma warning disable PC003 // Native API not available in UWP
             [DllImport("userenv.dll", SetLastError = true)]
             private static extern bool CreateEnvironmentBlock(out IntPtr lpEnvironment, SafeAccessTokenHandle hToken, bool inheritFromCurrentProcess);
 

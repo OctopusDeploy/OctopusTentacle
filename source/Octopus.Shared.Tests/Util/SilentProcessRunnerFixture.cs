@@ -62,29 +62,6 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        public void DebugLogging_ShouldContainDiagnosticsInfo_DifferentUser()
-        {
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
-            {
-                var command = "cmd.exe";
-                var arguments = @"/c echo %userdomain%\%username%";
-                // Target the CommonApplicationData folder since this is a place the particular user can get to
-                var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-                var networkCredential = user.GetCredential();
-                var customEnvironmentVariables = new Dictionary<string, string>();
-
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
-
-                exitCode.Should().Be(0, "the process should have run to completion");
-                debugMessages.ToString().Should().ContainEquivalentOf(command, "the command should be logged")
-                    .And.ContainEquivalentOf($@"{user.DomainName}\{user.UserName}", "the custom user details should be logged")
-                    .And.ContainEquivalentOf(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "the working directory should be logged");
-                infoMessages.ToString().Should().ContainEquivalentOf($@"{user.DomainName}\{user.UserName}");
-                errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
-            }
-        }
-
-        [Test]
         public void RunningAsSameUser_ShouldCopySpecialEnvironmentVariables()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
@@ -107,8 +84,41 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        public void DebugLogging_ShouldContainDiagnosticsInfo_DifferentUser()
+        {
+            if (!PlatformDetection.IsRunningOnWindows)
+            {
+                Assert.Ignore("Platform not supported");
+            }
+
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+            {
+                var command = "cmd.exe";
+                var arguments = @"/c echo %userdomain%\%username%";
+                // Target the CommonApplicationData folder since this is a place the particular user can get to
+                var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+                var networkCredential = user.GetCredential();
+                var customEnvironmentVariables = new Dictionary<string, string>();
+
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+
+                exitCode.Should().Be(0, "the process should have run to completion");
+                debugMessages.ToString().Should().ContainEquivalentOf(command, "the command should be logged")
+                    .And.ContainEquivalentOf($@"{user.DomainName}\{user.UserName}", "the custom user details should be logged")
+                    .And.ContainEquivalentOf(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "the working directory should be logged");
+                infoMessages.ToString().Should().ContainEquivalentOf($@"{user.DomainName}\{user.UserName}");
+                errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
+            }
+        }
+
+        [Test]
         public void RunningAsDifferentUser_ShouldCopySpecialEnvironmentVariables()
         {
+            if (!PlatformDetection.IsRunningOnWindows)
+            {
+                Assert.Ignore("Platform not supported");
+            }
+
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
                 var command = "cmd.exe";
@@ -132,6 +142,11 @@ namespace Octopus.Shared.Tests.Util
         [Test]
         public void RunningAsDifferentUser_ShouldWorkLotsOfTimes()
         {
+            if (!PlatformDetection.IsRunningOnWindows)
+            {
+                Assert.Ignore("Platform not supported");
+            }
+
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120)))
             for (int i = 0; i < 20; i++)
             {
@@ -156,6 +171,11 @@ namespace Octopus.Shared.Tests.Util
         [Test]
         public void RunningAsDifferentUser_CanWriteToItsOwnTempPath()
         {
+            if (!PlatformDetection.IsRunningOnWindows)
+            {
+                Assert.Ignore("Platform not supported");
+            }
+
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
                 var command = "cmd.exe";
@@ -256,6 +276,11 @@ namespace Octopus.Shared.Tests.Util
         [TestCase("powershell.exe", "-command \"Write-Host $env:userdomain\\$env:username\"")]
         public void RunAsDifferentUser_ShouldWork(string command, string arguments)
         {
+            if (!PlatformDetection.IsRunningOnWindows)
+            {
+                Assert.Ignore("Platform not supported");
+            }
+
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
