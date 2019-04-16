@@ -39,7 +39,7 @@ namespace Octopus.Shared.Tests.Configuration
             fileSystem.ReadFile(Arg.Is("file2")).Returns("{\"Name\": \"instance2\",\"ConfigurationFilePath\": \"configFilePath2\"}");
 
             var instances = instanceStore.ListInstances(ApplicationName.OctopusServer);
-            instances.ShouldBeEquivalentTo(new List<ApplicationInstanceRecord>
+            instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
             {
                 new ApplicationInstanceRecord("instance1", ApplicationName.OctopusServer, "configFilePath1"),
                 new ApplicationInstanceRecord("instance2", ApplicationName.OctopusServer, "configFilePath2")
@@ -57,7 +57,7 @@ namespace Octopus.Shared.Tests.Configuration
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(false);
 
             var instances = instanceStore.ListInstances(ApplicationName.OctopusServer);
-            instances.ShouldBeEquivalentTo(new List<ApplicationInstanceRecord>
+            instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
             {
                 new ApplicationInstanceRecord("instance1", ApplicationName.OctopusServer, "configFilePath1"),
                 new ApplicationInstanceRecord("instance2", ApplicationName.OctopusServer, "configFilePath2")
@@ -79,7 +79,7 @@ namespace Octopus.Shared.Tests.Configuration
             fileSystem.ReadFile(Arg.Is("file2")).Returns("{\"Name\": \"instance3\",\"ConfigurationFilePath\": \"fileConfigFilePath3\"}");
 
             var instances = instanceStore.ListInstances(ApplicationName.OctopusServer);
-            instances.ShouldBeEquivalentTo(new List<ApplicationInstanceRecord>
+            instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
             {
                 new ApplicationInstanceRecord("instance1", ApplicationName.OctopusServer, "registryFilePath1"),
                 new ApplicationInstanceRecord("instance2", ApplicationName.OctopusServer, "fileConfigFilePath2"),

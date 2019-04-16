@@ -10,7 +10,7 @@ namespace Octopus.Shared.Tests.Diagnostics.Formatters
         public void ShouldPluralize()
         {
             var actual = string.Format(new PluralStringFormatter(), "{0:n0} {0:p:car}", 2);
-            actual.ShouldBeEquivalentTo("2 cars");
+            actual.Should().BeEquivalentTo("2 cars");
         }
     }
 }

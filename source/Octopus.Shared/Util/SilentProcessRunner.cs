@@ -374,6 +374,20 @@ namespace Octopus.Shared.Util
 
         static void DoOurBestToCleanUp(Process process, Action<string> error)
         {
+            if (!PlatformDetection.IsRunningOnWindows)
+            {
+                try
+                {
+                    process.Kill();
+                }
+                catch (Exception killProcessException)
+                {
+                    error($"Failed to kill the launched process: {killProcessException}");
+                }
+
+                return;
+            }
+
             try
             {
                 Hitman.TryKillProcessAndChildrenRecursively(process.Id);

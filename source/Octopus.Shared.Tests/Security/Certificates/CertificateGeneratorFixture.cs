@@ -36,12 +36,13 @@ namespace Octopus.Shared.Tests.Security.Certificates
         }
 
         [Test]
+        [WindowsTest]
         public void CanGenerateNonExportableCertificates()
         {
             var cert = generator.GenerateNewNonExportable("CN=test", new NullLog());
             Action act = () => cert.Export(X509ContentType.Pkcs12);
             // Pkcs12 exports include the private key - since the cert is non-exportable, this isn't allowed
-            act.ShouldThrow<CryptographicException>().WithMessage("Key not valid for use in specified state*");
+            act.Should().Throw<CryptographicException>().WithMessage("Key not valid for use in specified state*");
         }
     }
 }

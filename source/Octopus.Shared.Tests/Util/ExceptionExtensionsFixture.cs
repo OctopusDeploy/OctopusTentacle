@@ -13,9 +13,11 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Util
 {
+    [TestFixture]
+    [WindowsTest]
     public class ExceptionExtensionsFixture
     {
-        static readonly Assent.Configuration configuration = new Assent.Configuration()
+        private static readonly Assent.Configuration configuration = new Assent.Configuration()
             .UsingSanitiser(new Sanitiser())
             .UsingNamer(new SubdirectoryNamer("Approved"));
 
@@ -178,7 +180,7 @@ namespace Octopus.Shared.Tests.Util
         void RaiseAggregateException(int i)
         {
             var tasks = Enumerable.Range(0, i)
-                .Select(_ => Task.Run(() => { throw new Exception("Inner"); }))
+                .Select(_ => Task.Run(() => throw new Exception("Inner")))
                 .ToArray();
             Task.WaitAll(tasks);
         }
@@ -204,7 +206,7 @@ namespace Octopus.Shared.Tests.Util
         async Task GenerateException1()
         {
             await Task.Yield();
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }
