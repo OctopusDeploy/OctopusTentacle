@@ -13,11 +13,23 @@ namespace Octopus.Shared.Tests.Util
     public class SilentProcessRunnerFixture
     {
         private TestUserPrincipal user;
+        private string command;
+        private string commandParam;
 
         [SetUp]
         public void SetUp()
         {
-            user = new TestUserPrincipal("test-silentprocess");
+            if (PlatformDetection.IsRunningOnWindows)
+            {
+                user = new TestUserPrincipal("test-silentprocess");
+                command = "cmd.exe";
+                commandParam = "/c";
+            }
+            else
+            {
+                command = "bash";
+                commandParam = "-c";
+            }
         }
 
         [Test]
@@ -25,15 +37,14 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
-                var command = "cmd.exe";
-                var arguments = @"/c exit 9999";
+                var arguments = $"{commandParam} \"exit 99\"";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
                 IDictionary<string, string> customEnvironmentVariables = null;
 
                 var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
-                exitCode.Should().Be(9999, "our custom exit code should be reflected");
+                exitCode.Should().Be(99, "our custom exit code should be reflected");
                 debugMessages.ToString().Should().ContainEquivalentOf($"Starting {command} in working directory '' using '{SilentProcessRunner.EncodingDetector.GetOEMEncoding().EncodingName}' encoding running as '{ProcessIdentity.CurrentUserName}'");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
                 infoMessages.ToString().Should().BeEmpty("no messages should be written to stdout");
@@ -45,8 +56,7 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
-                var command = "cmd.exe";
-                var arguments = @"/c echo hello";
+                var arguments = $"{commandParam} \"echo hello\"";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>();
@@ -66,8 +76,7 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
-                var command = "cmd.exe";
-                var arguments = @"/c echo %customenvironmentvariable%";
+                var arguments = $"{commandParam} \"echo {EchoEnvironmentVariable("customenvironmentvariable")}\"";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>
@@ -84,17 +93,12 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [WindowsTest]
         public void DebugLogging_ShouldContainDiagnosticsInfo_DifferentUser()
         {
-            if (!PlatformDetection.IsRunningOnWindows)
-            {
-                Assert.Ignore("Platform not supported");
-            }
-
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
-                var command = "cmd.exe";
-                var arguments = @"/c echo %userdomain%\%username%";
+                var arguments = $"{commandParam} \"echo %userdomain%\\%username%\"";
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                 var networkCredential = user.GetCredential();
@@ -112,17 +116,12 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [WindowsTest]
         public void RunningAsDifferentUser_ShouldCopySpecialEnvironmentVariables()
         {
-            if (!PlatformDetection.IsRunningOnWindows)
-            {
-                Assert.Ignore("Platform not supported");
-            }
-
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
-                var command = "cmd.exe";
-                var arguments = @"/c echo %customenvironmentvariable%";
+                var arguments = $"{commandParam} \"echo {EchoEnvironmentVariable("customenvironmentvariable")}\"";
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                 var networkCredential = user.GetCredential();
@@ -140,18 +139,13 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
+        [WindowsTest]
         public void RunningAsDifferentUser_ShouldWorkLotsOfTimes()
         {
-            if (!PlatformDetection.IsRunningOnWindows)
-            {
-                Assert.Ignore("Platform not supported");
-            }
-
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120)))
             for (int i = 0; i < 20; i++)
             {
-                var command = "cmd.exe";
-                var arguments = @"/c echo %customenvironmentvariable%";
+                var arguments = $"{commandParam} \"echo {EchoEnvironmentVariable("customenvironmentvariable")}%\"";
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                 var networkCredential = user.GetCredential();
@@ -169,17 +163,12 @@ namespace Octopus.Shared.Tests.Util
         }
         
         [Test]
+        [WindowsTest]
         public void RunningAsDifferentUser_CanWriteToItsOwnTempPath()
         {
-            if (!PlatformDetection.IsRunningOnWindows)
-            {
-                Assert.Ignore("Platform not supported");
-            }
-
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
-                var command = "cmd.exe";
-                var arguments = @"/c echo hello > %temp%hello.txt";
+                var arguments = $"{commandParam} \"echo hello > %temp%hello.txt\"";
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
                 var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                 var networkCredential = user.GetCredential();
@@ -200,7 +189,6 @@ namespace Octopus.Shared.Tests.Util
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
             {
                 // Starting a new instance of cmd.exe will run indefinitely waiting for user input
-                var command = "cmd.exe";
                 var arguments = "";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
@@ -208,8 +196,15 @@ namespace Octopus.Shared.Tests.Util
 
                 var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
 
-                exitCode.Should().BeLessOrEqualTo(0, "the process should have been terminated");
-                infoMessages.ToString().Should().ContainEquivalentOf("Microsoft Windows", "the default command-line header would be written to stdout");
+                if (PlatformDetection.IsRunningOnWindows)
+                {
+                    exitCode.Should().BeLessOrEqualTo(0, "the process should have been terminated");
+                    infoMessages.ToString().Should().ContainEquivalentOf("Microsoft Windows", "the default command-line header would be written to stdout");
+                }
+                else
+                {
+                    exitCode.Should().BeOneOf(137, 0);
+                }
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
         }
@@ -219,8 +214,7 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
-                var command = "cmd.exe";
-                var arguments = @"/c echo hello";
+                var arguments = $"{commandParam} \"echo hello\"";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>();
@@ -238,8 +232,7 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
-                var command = "cmd.exe";
-                var arguments = @"/c echo Something went wrong! 1>&2";
+                var arguments = $"{commandParam} \"echo Something went wrong! 1>&2\"";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>();
@@ -253,9 +246,30 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        [TestCase("cmd.exe", @"/c echo %userdomain%\%username%")]
+        public void RunAsCurrentUser_ShouldWork()
+        {
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+            {
+
+                var arguments = PlatformDetection.IsRunningOnWindows 
+                    ? $"{commandParam} \"echo {EchoEnvironmentVariable("username")}\""
+                    : $"{commandParam} \"whoami\"";
+                var workingDirectory = "";
+                var networkCredential = default(NetworkCredential);
+                var customEnvironmentVariables = new Dictionary<string, string>();
+
+                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+
+                exitCode.Should().Be(0, "the process should have run to completion");
+                errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
+                infoMessages.ToString().Should().ContainEquivalentOf($@"{Environment.UserName}");
+            }
+        }
+
+        [Test]
+        [WindowsTest]
         [TestCase("powershell.exe", "-command \"Write-Host $env:userdomain\\$env:username\"")]
-        public void RunAsCurrentUser_ShouldWork(string command, string arguments)
+        public void RunAsCurrentUser_PowerShell_ShouldWork(string command, string arguments)
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
@@ -272,15 +286,11 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        [TestCase("cmd.exe", @"/c echo %userdomain%\%username%")]
+        [WindowsTest]
+        [TestCase("cmd.exe", "/c \"echo %userdomain%\\%username%\"")]
         [TestCase("powershell.exe", "-command \"Write-Host $env:userdomain\\$env:username\"")]
         public void RunAsDifferentUser_ShouldWork(string command, string arguments)
         {
-            if (!PlatformDetection.IsRunningOnWindows)
-            {
-                Assert.Ignore("Platform not supported");
-            }
-
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
                 // Target the CommonApplicationData folder since this is a place the particular user can get to
@@ -294,6 +304,16 @@ namespace Octopus.Shared.Tests.Util
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
                 infoMessages.ToString().Should().ContainEquivalentOf($@"{user.DomainName}\{user.UserName}");
             }
+        }
+
+        private static string EchoEnvironmentVariable(string varName)
+        {
+            if (PlatformDetection.IsRunningOnWindows)
+            {
+                return $"%{varName}%";
+            }
+
+            return $"${varName}";
         }
 
         private static int Execute(

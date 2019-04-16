@@ -7,6 +7,7 @@ using Octopus.Shared.Configuration;
 namespace Octopus.Shared.Tests.Configuration
 {
     [TestFixture]
+    [WindowsTest]
     public class ProxyInitializerTests
     {
         [Test]

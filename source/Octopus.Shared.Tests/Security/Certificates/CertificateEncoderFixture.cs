@@ -33,6 +33,7 @@ namespace Octopus.Shared.Tests.Security.Certificates
         }
 
         [Test]
+        [WindowsTest]
         public void GivenPfxWithPasswordButDontUseItThenThrows()
         {
             // Given
@@ -41,7 +42,7 @@ namespace Octopus.Shared.Tests.Security.Certificates
 
             try
             { 
-                action.ShouldThrow<CryptographicException>().WithMessage("The specified network password is not correct*");
+                action.Should().Throw<CryptographicException>().WithMessage("The specified network password is not correct*");
             }
             finally
             {
@@ -79,7 +80,7 @@ namespace Octopus.Shared.Tests.Security.Certificates
 
             try
             {
-                action.ShouldThrow<CryptographicException>()
+                action.Should().Throw<CryptographicException>()
                     .WithMessage("Unable to load X509 Certificate file. The X509 certificate file you provided does not include the private key. Please make sure the private key is included in your X509 certificate file and try again.");
             }
             finally

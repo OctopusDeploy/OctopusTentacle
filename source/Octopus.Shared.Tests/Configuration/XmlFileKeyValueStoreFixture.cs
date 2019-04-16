@@ -64,16 +64,16 @@ namespace Octopus.Shared.Tests.Configuration
             var reloadedSettings = new XmlFileKeyValueStore(fileSystem, configurationFile);
 
             reloadedSettings.Invoking(x => x.Get("Int.Setting", 1))
-                .ShouldThrow<FormatException>()
+                .Should().Throw<FormatException>()
                 .WithMessage("Unable to parse configuration key 'Int.Setting' as a 'Int32'. Value was 'NotAnInt'.");
             reloadedSettings.Invoking(x => x.Get("Bool.Setting", true))
-                .ShouldThrow<FormatException>()
+                .Should().Throw<FormatException>()
                 .WithMessage("Unable to parse configuration key 'Bool.Setting' as a 'Boolean'. Value was 'NotABool'.");
             reloadedSettings.Invoking(x => x.Get("Encrypted.Int.Setting", 1, ProtectionLevel.MachineKey))
-                .ShouldThrow<FormatException>()
+                .Should().Throw<FormatException>()
                 .WithMessage("Unable to parse configuration key 'Encrypted.Int.Setting' as a 'Int32'.");
             reloadedSettings.Invoking(x => x.Get("Encrypted.Bool.Setting", true, ProtectionLevel.MachineKey))
-                .ShouldThrow<FormatException>()
+                .Should().Throw<FormatException>()
                 .WithMessage("Unable to parse configuration key 'Encrypted.Bool.Setting' as a 'Boolean'.");
         }
 
