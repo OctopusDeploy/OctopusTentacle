@@ -85,16 +85,6 @@ namespace Octopus.Shared.Tests.Util
             scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Hello", "the message should have been written to stdout");
         }
 
-        private string EchoCommand()
-        {
-            if (PlatformDetection.IsRunningOnWindows)
-            {
-                return "Write-Host";
-            }
-
-            return "echo";
-        }
-
         [Test]
         [Retry(3)]
         [WindowsTest]
@@ -144,7 +134,10 @@ namespace Octopus.Shared.Tests.Util
         [Retry(3)]
         public void RunAsCurrentUser_ShouldWork()
         {
-            workspace.BootstrapScript($"{EchoCommand()} {EchoEnvironmentVariable(PlatformDetection.IsRunningOnWindows ? "username" : "USER")}");
+            var scriptBody = PlatformDetection.IsRunningOnWindows
+                ? $"{EchoCommand()} {EchoEnvironmentVariable("username")}"
+                : "whoami";
+            workspace.BootstrapScript(scriptBody);
             runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
@@ -235,6 +228,16 @@ namespace Octopus.Shared.Tests.Util
             }
 
             return $"${varName}";
+        }
+
+        private static string EchoCommand()
+        {
+            if (PlatformDetection.IsRunningOnWindows)
+            {
+                return "Write-Host";
+            }
+
+            return "echo";
         }
     }
 }

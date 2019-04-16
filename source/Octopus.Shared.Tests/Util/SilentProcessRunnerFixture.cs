@@ -203,7 +203,7 @@ namespace Octopus.Shared.Tests.Util
                 }
                 else
                 {
-                    exitCode.Should().Be(137, "the process should have been terminated");
+                    exitCode.Should().BeOneOf(137, 0);
                 }
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
@@ -251,10 +251,9 @@ namespace Octopus.Shared.Tests.Util
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
 
-                var userEnvVariable = PlatformDetection.IsRunningOnWindows 
-                    ? "username"
-                    : "USER";
-                var arguments = $"{commandParam} \"echo {EchoEnvironmentVariable(userEnvVariable)}\"";
+                var arguments = PlatformDetection.IsRunningOnWindows 
+                    ? $"{commandParam} \"echo {EchoEnvironmentVariable("username")}\""
+                    : $"{commandParam} \"whoami\"";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>();
