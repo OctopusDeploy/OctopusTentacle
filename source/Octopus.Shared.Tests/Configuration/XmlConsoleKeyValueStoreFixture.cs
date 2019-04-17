@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using FluentAssertions;
 using NUnit.Framework;
-using Octopus.Configuration;
 using Octopus.Shared.Configuration;
 
 namespace Octopus.Shared.Tests.Configuration

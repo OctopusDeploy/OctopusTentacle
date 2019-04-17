@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
@@ -23,6 +24,11 @@ namespace Octopus.Shared.Configuration
             this.writer = writer;
         }
 
+        public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        {
+            throw new NotSupportedException($"This store is a write-only store, because it is only intended for displaying formatted content to the console. Please use {nameof(XmlFileKeyValueStore)} if you need a readable store.");
+        }
+        
         protected override void SaveSettings(IDictionary<string, object> settingsToSave)
         {
             var settings = new XmlSettingsRoot();

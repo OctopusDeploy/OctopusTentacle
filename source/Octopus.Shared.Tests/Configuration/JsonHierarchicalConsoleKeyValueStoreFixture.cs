@@ -5,7 +5,7 @@ using Octopus.Shared.Configuration;
 namespace Octopus.Shared.Tests.Configuration
 {
     [TestFixture]
-    class JsonHierarchicalKeyValueStoreFixture
+    class JsonHierarchicalConsoleKeyValueStoreFixture
     {
         [Test]
         public void WritesSortedJsonUsingCorrectTypes()

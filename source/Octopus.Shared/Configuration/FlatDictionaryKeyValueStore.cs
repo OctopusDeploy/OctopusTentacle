@@ -29,7 +29,7 @@ namespace Octopus.Shared.Configuration
 
                 if (typeof(TData) == typeof(string))
                     return (TData) data;
-                if (typeof(TData) == typeof(bool))
+                if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
                     return (TData) (object) bool.Parse((string) data);
 
                 return JsonConvert.DeserializeObject<TData>((string) data);
