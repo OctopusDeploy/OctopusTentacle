@@ -15,7 +15,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             this.textBox = textBox;
         }
 
-        public override LogContext CurrentContext => new LogContext();
+        public override ILogContext CurrentContext => new LogContext();
 
         public void Clear()
         {
@@ -50,7 +50,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             foreach (var log in logEvents) WriteEvent(log);
         }
 
-        public override IDisposable WithinBlock(LogContext logContext)
+        public override IDisposable WithinBlock(ILogContext logContext)
         {
             return null;
         }
