@@ -461,6 +461,12 @@ private void SignAndTimeStamp(params FilePath[] assemblies)
 Task("Default")
     .IsDependentOn("__Default");
 
+Task("OsPackage")
+    .Does(() =>
+{
+    Debug("Placeholder task for packaging linux tentacle");
+});
+
 //////////////////////////////////////////////////////////////////////
 // EXECUTION
 //////////////////////////////////////////////////////////////////////
