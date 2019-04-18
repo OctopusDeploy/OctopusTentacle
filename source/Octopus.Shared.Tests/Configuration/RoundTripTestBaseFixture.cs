@@ -6,14 +6,14 @@ namespace Octopus.Shared.Tests.Configuration
 {
     internal abstract class RoundTripTestBaseFixture
     {
-        protected abstract IKeyValueStore SetupKeyValueStore();
+        protected abstract IKeyValueStore SetupDataAndReloadKeyValueStore();
 
         private IKeyValueStore reloadedSettings;
 
         [OneTimeSetUp]
         public void Setup()
         {
-            reloadedSettings = SetupKeyValueStore();
+            reloadedSettings = SetupDataAndReloadKeyValueStore();
         }
 
         [Test]

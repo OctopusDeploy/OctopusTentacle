@@ -84,7 +84,7 @@ namespace Octopus.Shared.Tests.Configuration
         [TestFixture]
         class BackwardsCompatFixture : RoundTripTestBaseFixture
         {
-            protected override IKeyValueStore SetupKeyValueStore()
+            protected override IKeyValueStore SetupDataAndReloadKeyValueStore()
             {
                 var configurationFile = Path.GetTempFileName();
                 var fileSystem = new OctopusPhysicalFileSystem();
@@ -195,21 +195,15 @@ namespace Octopus.Shared.Tests.Configuration
         /// <summary>
         /// Tests to make sure we can read & write all the types correctly
         /// </summary>
-        abstract class RoundTripTestBase : RoundTripTestBaseFixture
+        [TestFixture]
+        class RoundTripTests : RoundTripTestBaseFixture
         {
-            protected readonly string ConfigurationFile;
-            protected readonly OctopusPhysicalFileSystem FileSystem;
 
-            public RoundTripTestBase()
+            protected override IKeyValueStore SetupDataAndReloadKeyValueStore()
             {
-                ConfigurationFile = System.IO.Path.GetTempFileName();
-                FileSystem = new OctopusPhysicalFileSystem();
-            }
-
-            protected IKeyValueStore SetupData()
-            {
-                
-                FileSystem.OverwriteFile(ConfigurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
+                var configurationFile = System.IO.Path.GetTempFileName();
+                var fileSystem = new OctopusPhysicalFileSystem();
+                fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
                 var configurationObject = new MyObject
                 {
                     IntField = 10, BooleanField = true, ArrayField = new[]
@@ -220,7 +214,7 @@ namespace Octopus.Shared.Tests.Configuration
                     }
                 };
             
-                var settings = new XmlFileKeyValueStore(FileSystem, ConfigurationFile);
+                var settings = new XmlFileKeyValueStore(fileSystem, configurationFile);
                 settings.Set("group1.setting2", 123);
                 settings.Set("group1.setting1", true);
                 settings.Set<string>("group2.setting3", "a string");
@@ -234,27 +228,8 @@ namespace Octopus.Shared.Tests.Configuration
                 settings.Set<string>("group5.setting5", null, ProtectionLevel.MachineKey);
                 settings.Set<MyObject>("group5.setting6", null, ProtectionLevel.MachineKey);
                 settings.Save();
-
-                return settings;
-            }
-        }
-
-        [TestFixture]
-        class RoundTripTestsWithoutReReadFromFile : RoundTripTestBase
-        {
-            protected override IKeyValueStore SetupKeyValueStore()
-            {
-                return SetupData();
-            }
-        }
-        
-        [TestFixture]       
-        class RoundTripTestsWithReReadFromFile : RoundTripTestBase
-        {
-            protected override IKeyValueStore SetupKeyValueStore()
-            {
-                SetupData();
-                return new XmlFileKeyValueStore(FileSystem, ConfigurationFile);
+                
+                return new XmlFileKeyValueStore(fileSystem, configurationFile);
             }
         }
     }
