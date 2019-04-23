@@ -12,13 +12,15 @@ namespace Octopus.Tentacle.Services.Scripts
     [Service]
     public class ScriptService : IScriptService
     {
+        readonly IShell shell;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IOctopusFileSystem fileSystem;
         readonly ConcurrentDictionary<string, RunningScript> running = new ConcurrentDictionary<string, RunningScript>(StringComparer.OrdinalIgnoreCase);
         readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
 
-        public ScriptService(IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem)
+        public ScriptService(IShell shell, IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem)
         {
+            this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.fileSystem = fileSystem;
         }
@@ -72,7 +74,6 @@ namespace Octopus.Tentacle.Services.Scripts
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
         {
-            var shell = PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash() as IShell;
             var runningScript = new RunningScript(shell, workspace, CreateLog(workspace), serverTaskId, cancel.Token);
             var thread = new Thread(runningScript.Execute);
             thread.Name = "Executing PowerShell script for " + ticket.TaskId;
