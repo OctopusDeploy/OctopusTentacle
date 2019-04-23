@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Services.Scripts
             var ticket = ScriptTicket.Create(command.TaskId);
             var workspace = PrepareWorkspace(command, ticket);
             var cancel = new CancellationTokenSource();
-            var process = LaunchPowerShell(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
+            var process = LaunchShell(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
             running.TryAdd(ticket.TaskId, process);
             cancellationTokens.TryAdd(ticket.TaskId, cancel);
             return ticket;
@@ -70,9 +70,10 @@ namespace Octopus.Tentacle.Services.Scripts
             return new ScriptLog(workspace.ResolvePath("Output.log"), fileSystem);
         }
 
-        RunningScript LaunchPowerShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
+        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
         {
-            var runningScript = new RunningScript(workspace, CreateLog(workspace), serverTaskId, cancel.Token);
+            var shell = PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash() as IShell;
+            var runningScript = new RunningScript(shell, workspace, CreateLog(workspace), serverTaskId, cancel.Token);
             var thread = new Thread(runningScript.Execute);
             thread.Name = "Executing PowerShell script for " + ticket.TaskId;
             thread.Start();
