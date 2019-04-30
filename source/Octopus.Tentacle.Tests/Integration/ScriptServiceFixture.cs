@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using FluentAssertions;
 using NSubstitute;
@@ -18,26 +17,16 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         IScriptService service;
 
-        private bool isWindows;
-
-        private IShell GetShell()
-        {
-            if (isWindows)
-            {
-                return new PowerShell();
-            }
-            return new Bash();
-
-        }
-
         [SetUp]
         public void SetUp()
         {
-            isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             var homeConfiguration = Substitute.For<IHomeConfiguration>();
             homeConfiguration.HomeDirectory.Returns(Environment.CurrentDirectory);
 
-            service = new ScriptService(GetShell(), new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration), new OctopusPhysicalFileSystem());
+            service = new ScriptService(PlatformDetection.IsRunningOnWindows 
+                ? (IShell) new PowerShell() 
+                : new Bash()
+                , new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration), new OctopusPhysicalFileSystem());
         }
 
         [Test]
