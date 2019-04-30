@@ -117,13 +117,6 @@
     <Reference Include="NuGet.Versioning, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NuGet.Versioning.3.6.0-octopus-58692\lib\net45\NuGet.Versioning.dll</HintPath>
     </Reference>
-    <Reference Include="Octodiff, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octodiff.1.2.1\lib\net40\Octodiff.exe</HintPath>
-    </Reference>
-    <Reference Include="Octodiff, Version=1.2.1.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octodiff.1.2.1\lib\net40\Octodiff.exe</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Octopus.Client, Version=5.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\Octopus.Client.5.0.0\lib\net45\Octopus.Client.dll</HintPath>
       <Private>True</Private>
