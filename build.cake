@@ -4,6 +4,7 @@
 #tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
 #tool "nuget:?package=WiX&version=3.10.3"
 #addin "Cake.FileHelpers"
+#addin "nuget:?package=Cake.Incubator&version=5.0.1"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
@@ -172,12 +173,19 @@ Task("__SignBuiltFiles")
     //       claiming we own them, but rather asserting that they are distributed by us, and
     //       have not been subsequently altered
     var filesToSign = 
-        GetFiles($"{coreWinPublishDir}/*.dll")
-        .Union(GetFiles($"{coreWinPublishDir}/*.exe"))
-        .Union(GetFiles($"./source/Octopus.Tentacle/bin/**/*.dll"))
-        .Union(GetFiles($"./source/Octopus.Tentacle/bin/**/*.exe"))
-        .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.dll"))
-        .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.exe"))
+        GetFiles($"{coreWinPublishDir}/**/Octo*.exe",
+            $"{coreWinPublishDir}/**/Octo*.dll",
+            $"{coreWinPublishDir}/**/Tentacle.exe",
+            $"{coreWinPublishDir}/**/Tentacle.dll",
+            $"{coreWinPublishDir}/**/Halibut.dll",
+            $"./source/Octopus.Tentacle/bin/**/Octo*.exe",
+            $"./source/Octopus.Tentacle/bin/**/Octo*.dll",
+            $"./source/Octopus.Tentacle/bin/**/Tentacle.exe",
+            $"./source/Octopus.Tentacle/bin/**/Halibut.dll",
+            $"./source/Octopus.Manager.Tentacle/bin/Octo*.exe",
+            $"./source/Octopus.Manager.Tentacle/bin/Octo*.dll",
+            $"./source/Octopus.Manager.Tentacle/bin/Tentacle.exe",
+            $"./source/Octopus.Manager.Tentacle/bin/Halibut.dll")
             .Where(f => !HasAuthenticodeSignature(f))
             .Select(f => f.FullPath)
             .ToArray();
