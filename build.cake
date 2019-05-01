@@ -37,6 +37,8 @@ var installerDir = "./build/installer";
 var artifactsDir = "./build/artifacts";
 var localPackagesDir = "../LocalPackages";
 var coreWinPublishDir = "./build/publish/win-x64";
+var tentacleSourceBinDir = "./source/Octopus.Tentacle/bin";
+var managerSourceBinDir = "./source/Octopus.Manager.Tentacle/bin";
 
 GitVersion gitVersion;
 
@@ -178,14 +180,14 @@ Task("__SignBuiltFiles")
             $"{coreWinPublishDir}/**/Tentacle.exe",
             $"{coreWinPublishDir}/**/Tentacle.dll",
             $"{coreWinPublishDir}/**/Halibut.dll",
-            $"./source/Octopus.Tentacle/bin/**/Octo*.exe",
-            $"./source/Octopus.Tentacle/bin/**/Octo*.dll",
-            $"./source/Octopus.Tentacle/bin/**/Tentacle.exe",
-            $"./source/Octopus.Tentacle/bin/**/Halibut.dll",
-            $"./source/Octopus.Manager.Tentacle/bin/Octo*.exe",
-            $"./source/Octopus.Manager.Tentacle/bin/Octo*.dll",
-            $"./source/Octopus.Manager.Tentacle/bin/Tentacle.exe",
-            $"./source/Octopus.Manager.Tentacle/bin/Halibut.dll")
+            $"{tentacleSourceBinDir}/**/Octo*.exe",
+            $"{tentacleSourceBinDir}/**/Octo*.dll",
+            $"{tentacleSourceBinDir}/**/Tentacle.exe",
+            $"{tentacleSourceBinDir}/**/Halibut.dll",
+            $"{managerSourceBinDir}/Octo*.exe",
+            $"{managerSourceBinDir}/Octo*.dll",
+            $"{managerSourceBinDir}/Tentacle.exe",
+            $"{managerSourceBinDir}/Halibut.dll")
             .Where(f => !HasAuthenticodeSignature(f))
             .Select(f => f.FullPath)
             .ToArray();
