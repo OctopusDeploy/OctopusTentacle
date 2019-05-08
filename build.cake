@@ -22,6 +22,9 @@ var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
 var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
 var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
 
+var awsAccessKeyId = Argument("aws_access_key_id", "XXXX");
+var awsSecretAccessKey = Argument("aws_secret_access_key", "YYYY");
+
 // Keep this list in order by most likely to succeed
 var signingTimestampUrls = new string[] {
     "http://timestamp.globalsign.com/scripts/timestamp.dll",
@@ -76,11 +79,19 @@ Task("__Default")
     .IsDependentOn("__CreateBinariesNuGet")
     .IsDependentOn("__CopyToLocalPackages");
 
-Task("__UbuntuPublish")
+Task("__OsPackage")
+    .IsDependentOn("__Version")
+    .IsDependentOn("__Clean")
+    .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
+    .IsDependentOn("__PublishLinux")
+    .IsDependentOn("__BuildToolsContainer")
+    .IsDependentOn("__CreateDebianPackage")
+    .IsDependentOn("__CreateAptRepoInS3");
+
+Task("__PublishLinux")
     .Does(() =>
 {
-
     DotNetCorePublish(
         "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
         new DotNetCorePublishSettings
@@ -88,32 +99,43 @@ Task("__UbuntuPublish")
             Framework = "netcoreapp2.2",
             Configuration = configuration,
             SelfContained = true,
-            Runtime = "ubuntu.18.04-x64"
+            Runtime = "linux-x64"
         }
     );
-
 });
 
-Task("__OsPackage")
-    .IsDependentOn("__Version")
-    .IsDependentOn("__Clean")
-    .IsDependentOn("__Restore")
-    .IsDependentOn("__Build")
-    .IsDependentOn("__UbuntuPublish")
+Task("__BuildToolsContainer")
     .Does(() => 
 {
-    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "tentacle-packager" } }, @"tools\fpm");
-
-    DockerRunWithoutResult(new DockerContainerRunSettings { 
-        Rm = true, 
-        Tty = true, 
-        Env = new string[] { $"VERSION={gitVersion.SemVer}" },
-        Volume = new string[] { $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/ubuntu.18.04-x64")}:/app" } 
-    }, "tentacle-packager", "/build/package.sh");
-
-    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/ubuntu.18.04-x64/*.deb", artifactsDir);
+    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "tentacle-tools" } }, @"tools\debian-tools");
 });
 
+Task("__CreateDebianPackage")
+    .Does(() => 
+{
+    DockerRunWithoutResult(new DockerContainerRunSettings { 
+        Rm = true,
+        Tty = true,
+        Env = new string[] { $"VERSION={gitVersion.SemVer}" },
+        Volume = new string[] { $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64")}:/app" } 
+    }, "tentacle-tools", "/build/package.sh");
+
+    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.deb", artifactsDir);
+});
+
+Task("__CreateAptRepoInS3")
+    .Does(() => 
+{
+    DockerRunWithoutResult(new DockerContainerRunSettings { 
+        Rm = true,
+        Tty = true,
+        Env = new string[] { $"VERSION={gitVersion.SemVer}", $"AWS_ACCESS_KEY_ID={awsAccessKeyId}", $"AWS_SECRET_ACCESS_KEY={awsSecretAccessKey}" },
+        Volume = new string[] {
+            $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64")}:/app",
+            $"{Path.Combine(Environment.CurrentDirectory, "certificates")}:/certs",
+        }
+    }, "tentacle-tools", "/build/publish.sh");
+});
 
 Task("__Version")
     .IsDependentOn("__GitVersionAssemblies")
