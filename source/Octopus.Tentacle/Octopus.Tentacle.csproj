@@ -4,6 +4,7 @@
     <AssemblyName>Tentacle</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <TargetFrameworks>net452;netcoreapp2.2</TargetFrameworks>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <OutputType>Exe</OutputType>
