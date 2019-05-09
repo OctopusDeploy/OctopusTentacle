@@ -1,10 +1,10 @@
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
-#tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
-#tool "nuget:?package=WiX&version=3.10.3"
-#addin "Cake.FileHelpers"
-#addin "Cake.Docker"
+#tool "nuget:?package=GitVersion.CommandLine&version=4.0.0"
+#tool "nuget:?package=WiX&version=3.11.1"
+#addin "Cake.FileHelpers&version=3.2.0"
+#addin "Cake.Docker&version=0.10.0"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
@@ -108,35 +108,35 @@ Task("__PublishLinux")
 });
 
 Task("__BuildToolsContainer")
-    .Does(() => 
+    .Does(() =>
 {
     DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "tentacle-tools" } }, @"tools\debian-tools");
 });
 
 Task("__CreateDebianPackage")
-    .Does(() => 
+    .Does(() =>
 {
-    DockerRunWithoutResult(new DockerContainerRunSettings { 
+    DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
         Env = new string[] { $"VERSION={gitVersion.SemVer}" },
-        Volume = new string[] { $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64")}:/app" } 
+        Volume = new string[] { $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64")}:/app" }
     }, "tentacle-tools", "/build/package.sh");
 
     CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.deb", artifactsDir);
 });
 
 Task("__CreateAptRepoInS3")
-    .Does(() => 
+    .Does(() =>
 {
     CreateDirectory("./certificates/temp");
 
     CopyFileToDirectory(gpgSigningCertificatePath, "./certificates/temp");
 
-    DockerRunWithoutResult(new DockerContainerRunSettings { 
+    DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
-        Env = new string[] { 
+        Env = new string[] {
             $"VERSION={gitVersion.SemVer}",
             $"AWS_ACCESS_KEY_ID={awsAccessKeyId}",
             $"AWS_SECRET_ACCESS_KEY={awsSecretAccessKey}",
@@ -225,18 +225,29 @@ Task("__DotnetPublish")
     .IsDependentOn("__Build")
     .Does(() =>  {
 
-        DotNetCorePublish(
-            "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
-            new DotNetCorePublishSettings
-            {
-                Framework = "netcoreapp2.2",
-                Configuration = configuration,
-                OutputDirectory = corePublishDir,
-                ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
-            }
-        );
-
+        foreach(var rid in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))
+        {
+            DotNetCorePublish(
+                "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
+                new DotNetCorePublishSettings
+                {
+                    Framework = "netcoreapp2.2",
+                    Configuration = configuration,
+                    OutputDirectory = $"{corePublishDir}/{rid}",
+                    Runtime = rid,
+                    ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
+                }
+            );
+        }
     });
+
+private IEnumerable<string> GetProjectRuntimeIds(string projectFile)
+{
+    var doc = new XmlDocument();
+    doc.Load(projectFile);
+    var rids = doc.SelectSingleNode("Project/PropertyGroup/RuntimeIdentifiers").InnerText;
+    return rids.Split(';');
+}
 
 Task("__SignBuiltFiles")
     .Does(() =>
@@ -247,8 +258,8 @@ Task("__SignBuiltFiles")
     //       claiming we own them, but rather asserting that they are distributed by us, and
     //       have not been subsequently altered
     var filesToSign =
-        GetFiles($"{corePublishDir}/*.dll")
-        .Union(GetFiles($"{corePublishDir}/*.exe"))
+        GetFiles($"{corePublishDir}/**/*.exe")
+        //.Union(GetFiles($"{corePublishDir}/**/*.exe"))
         .Union(GetFiles($"./source/Octopus.Tentacle/bin/net452/**/*.dll"))
         .Union(GetFiles($"./source/Octopus.Tentacle/bin/net452/**/*.exe"))
         .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.dll"))
@@ -363,22 +374,31 @@ Task("__CreateBinariesNuGet")
     CleanBinariesDirectory($"{binariesPackageDir}/lib/net452");
 
     CreateDirectory($"{binariesPackageDir}/build/net452/Tentacle");
-    CreateDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
     CopyFiles($"./source/Octopus.Tentacle/bin/net452/*", $"{binariesPackageDir}/build/net452/Tentacle");
-    CopyFiles($"{corePublishDir}/*", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
-    MoveFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.manifest", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.dll.manifest");
-    MoveFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.nlog", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.dll.nlog");
     CleanBinariesDirectory($"{binariesPackageDir}/build/net452/Tentacle");
-    CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
-
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/net452");
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp2.2");
-
     NuGetPack(Path.Combine(binariesPackageDir, "Tentacle.Binaries.nuspec"), new NuGetPackSettings {
         Version = gitVersion.NuGetVersion,
         OutputDirectory = artifactsDir
     });
+
+    foreach(var rid in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))
+    {
+        CleanDirectory(binariesPackageDir);
+        CreateDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+        CopyFiles($"{corePublishDir}/{rid}/*", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+        DeleteFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.manifest");
+        CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+        CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
+        CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp2.2");
+
+        NuGetPack(Path.Combine(binariesPackageDir, $"Tentacle.Binaries.nuspec"), new NuGetPackSettings {
+            Version = gitVersion.NuGetVersion,
+            OutputDirectory = artifactsDir,
+            Id = $"Tentacle.Binaries.{rid}"
+        });
+    }
 });
 
 Task("__CopyToLocalPackages")
