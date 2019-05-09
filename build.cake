@@ -22,6 +22,9 @@ var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
 var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
 var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
 
+var gpgSigningCertificatePath = Argument("gpg_signing_certificate_path", "./certificates/octopus-privkey.asc");
+var gpgSigningCertificatePassword = Argument("gpg_signing_certificate_password", "Password01!");
+
 var awsAccessKeyId = Argument("aws_access_key_id", "XXXX");
 var awsSecretAccessKey = Argument("aws_secret_access_key", "YYYY");
 
@@ -126,15 +129,27 @@ Task("__CreateDebianPackage")
 Task("__CreateAptRepoInS3")
     .Does(() => 
 {
+    CreateDirectory("./certificates/temp");
+
+    CopyFileToDirectory(gpgSigningCertificatePath, "./certificates/temp");
+
     DockerRunWithoutResult(new DockerContainerRunSettings { 
         Rm = true,
         Tty = true,
-        Env = new string[] { $"VERSION={gitVersion.SemVer}", $"AWS_ACCESS_KEY_ID={awsAccessKeyId}", $"AWS_SECRET_ACCESS_KEY={awsSecretAccessKey}" },
+        Env = new string[] { 
+            $"VERSION={gitVersion.SemVer}",
+            $"AWS_ACCESS_KEY_ID={awsAccessKeyId}",
+            $"AWS_SECRET_ACCESS_KEY={awsSecretAccessKey}",
+            $"GPG_PASSPHRASE={gpgSigningCertificatePassword}",
+            $"GPG_PRIVATEKEYFILE={Path.GetFileName(gpgSigningCertificatePath)}"
+        },
         Volume = new string[] {
             $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64")}:/app",
-            $"{Path.Combine(Environment.CurrentDirectory, "certificates")}:/certs",
+            $"{Path.Combine(Environment.CurrentDirectory, "certificates", "temp")}:/certs",
         }
     }, "tentacle-tools", "/build/publish.sh");
+
+    DeleteDirectory("./certificates/temp", true);
 });
 
 Task("__Version")
