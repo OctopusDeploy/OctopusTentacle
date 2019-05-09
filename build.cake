@@ -391,7 +391,7 @@ Task("__CreateBinariesNuGet")
         DeleteFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.manifest");
         CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
         CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
-        CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp2.2");
+        CopyFile("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.Binaries.{rid}.targets");
 
         NuGetPack(Path.Combine(binariesPackageDir, $"Tentacle.Binaries.nuspec"), new NuGetPackSettings {
             Version = gitVersion.NuGetVersion,
