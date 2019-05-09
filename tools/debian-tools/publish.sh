@@ -10,4 +10,8 @@ aptly repo import octopus-apt-mirror tentacle-release tentacle
 
 aptly repo add tentacle-release /app
 
-# aptly publish repo tentacle-release s3:octopus-apt-repo:
+aptly repo show -with-packages tentacle-release
+
+echo $GPG_PASSPHRASE | gpg1 --batch --import /certs/$GPG_PRIVATEKEYFILE
+
+aptly publish repo -passphrase="$GPG_PASSPHRASE" tentacle-release s3:octopus-apt-repo:
