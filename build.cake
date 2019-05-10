@@ -82,46 +82,45 @@ Task("__Default")
     .IsDependentOn("__CreateBinariesNuGet")
     .IsDependentOn("__CopyToLocalPackages");
 
-Task("__OsPackage")
+Task("__LinuxPackage")
     .IsDependentOn("__Version")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
-    .IsDependentOn("__PublishLinux")
+    .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__BuildToolsContainer")
+    .IsDependentOn("__CreateDebianPackage");
+
+Task("__LinuxPublish")
+    .IsDependentOn("__Version")
+    .IsDependentOn("__Clean")
+    .IsDependentOn("__Restore")
+    .IsDependentOn("__Build")
+    .IsDependentOn("__DotnetPublish")
     .IsDependentOn("__BuildToolsContainer")
     .IsDependentOn("__CreateDebianPackage")
     .IsDependentOn("__CreateAptRepoInS3");
 
-Task("__PublishLinux")
-    .Does(() =>
-{
-    DotNetCorePublish(
-        "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
-        new DotNetCorePublishSettings
-        {
-            Framework = "netcoreapp2.2",
-            Configuration = configuration,
-            SelfContained = true,
-            Runtime = "linux-x64"
-        }
-    );
-});
-
 Task("__BuildToolsContainer")
     .Does(() =>
 {
-    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "tentacle-tools" } }, @"tools\debian-tools");
+    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "debian-tools" } }, @"docker\debian-tools");
 });
 
 Task("__CreateDebianPackage")
+    .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__BuildToolsContainer")
     .Does(() =>
 {
     DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
         Env = new string[] { $"VERSION={gitVersion.SemVer}" },
-        Volume = new string[] { $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64")}:/app" }
-    }, "tentacle-tools", "/build/package.sh");
+        Volume = new string[] { 
+            $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
+            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/out"
+        }
+    }, "debian-tools", "/build/package.sh");
 
     CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.deb", artifactsDir);
 });
@@ -144,10 +143,10 @@ Task("__CreateAptRepoInS3")
             $"GPG_PRIVATEKEYFILE={Path.GetFileName(gpgSigningCertificatePath)}"
         },
         Volume = new string[] {
-            $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64")}:/app",
+            $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
             $"{Path.Combine(Environment.CurrentDirectory, "certificates", "temp")}:/certs",
         }
-    }, "tentacle-tools", "/build/publish.sh");
+    }, "debian-tools", "/build/publish.sh");
 
     DeleteDirectory("./certificates/temp", true);
 });
@@ -200,6 +199,9 @@ Task("__Restore")
     });
 
 Task("__Build")
+    .IsDependentOn("__Version")
+    .IsDependentOn("__Clean")
+    .IsDependentOn("__Restore")
     .Does(() =>
 {
     MSBuild("./source/Tentacle.sln", settings =>
@@ -235,6 +237,7 @@ Task("__DotnetPublish")
                     Configuration = configuration,
                     OutputDirectory = $"{corePublishDir}/{rid}",
                     Runtime = rid,
+                    SelfContained = true,
                     ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
                 }
             );
@@ -539,8 +542,11 @@ private void SignAndTimeStamp(params FilePath[] assemblies)
 Task("Default")
     .IsDependentOn("__Default");
 
-Task("OsPackage")
-    .IsDependentOn("__OsPackage");
+Task("LinuxPackage")
+    .IsDependentOn("__LinuxPackage");
+
+Task("LinuxPublish")
+    .IsDependentOn("__LinuxPublish");
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION

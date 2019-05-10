@@ -23,7 +23,7 @@ COPY settings/aptly.conf /root/.aptly.conf
 COPY *.sh /build/
 WORKDIR /build
 
-VOLUME [ "/app", "/certs" ]
+VOLUME [ "/app", "/certs", "/out" ]
 
 ENV VERSION "0.0.0"
 ENV AWS_ACCESS_KEY_ID="XXXXXXXXXXXXXXXXXXX"
