@@ -88,6 +88,7 @@ Task("__LinuxPackage")
     .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
     .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__SignBuiltFiles")
     .IsDependentOn("__BuildToolsContainer")
     .IsDependentOn("__CreateDebianPackage");
 
@@ -97,6 +98,7 @@ Task("__LinuxPublish")
     .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
     .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__SignBuiltFiles")
     .IsDependentOn("__BuildToolsContainer")
     .IsDependentOn("__CreateDebianPackage")
     .IsDependentOn("__CreateAptRepoInS3");
@@ -126,6 +128,7 @@ Task("__CreateDebianPackage")
 });
 
 Task("__CreateAptRepoInS3")
+    .IsDependentOn("__DotnetPublish")
     .Does(() =>
 {
     CreateDirectory("./certificates/temp");
@@ -143,7 +146,7 @@ Task("__CreateAptRepoInS3")
             $"GPG_PRIVATEKEYFILE={Path.GetFileName(gpgSigningCertificatePath)}"
         },
         Volume = new string[] {
-            $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
+            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/app",
             $"{Path.Combine(Environment.CurrentDirectory, "certificates", "temp")}:/certs",
         }
     }, "debian-tools", "/build/publish.sh");
