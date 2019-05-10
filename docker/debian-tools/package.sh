@@ -26,9 +26,9 @@ fpm -v $VERSION \
   --deb-no-default-config-files \
   --after-install setup.sh \
   --before-remove uninstall.sh \
-  /app/publish/=/opt/octopus/tentacle \
+  /app/=/opt/octopus/tentacle \
   ./tentacle-service.dir/usr/share/pleaserun/=/usr/share/pleaserun
 
 rm -rf tentacle-service.dir
 
-cp *.deb /app
+cp *.deb /out
