@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Scripts;
@@ -44,7 +43,7 @@ namespace Octopus.Tentacle.Services.Scripts
             workspace.ScriptMutexAcquireTimeout = command.ScriptIsolationMutexTimeout;
             workspace.ScriptArguments = command.Arguments;
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnNix)
             {
                 //TODO: This could be better
                 workspace.BootstrapScript(command.Scripts.ContainsKey(ScriptType.Bash)
