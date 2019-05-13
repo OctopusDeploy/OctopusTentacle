@@ -1,10 +1,10 @@
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
-#tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
-#tool "nuget:?package=WiX&version=3.10.3"
-#addin "Cake.FileHelpers"
-#addin "Cake.Docker"
+#tool "nuget:?package=GitVersion.CommandLine&version=4.0.0"
+#tool "nuget:?package=WiX&version=3.11.1"
+#addin "Cake.FileHelpers&version=3.2.0"
+#addin "Cake.Docker&version=0.10.0"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
@@ -21,6 +21,12 @@ var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
 
 var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
 var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
+
+var gpgSigningCertificatePath = Argument("gpg_signing_certificate_path", "./certificates/octopus-privkey.asc");
+var gpgSigningCertificatePassword = Argument("gpg_signing_certificate_password", "Password01!");
+
+var awsAccessKeyId = Argument("aws_access_key_id", "XXXX");
+var awsSecretAccessKey = Argument("aws_secret_access_key", "YYYY");
 
 // Keep this list in order by most likely to succeed
 var signingTimestampUrls = new string[] {
@@ -76,44 +82,74 @@ Task("__Default")
     .IsDependentOn("__CreateBinariesNuGet")
     .IsDependentOn("__CopyToLocalPackages");
 
-Task("__UbuntuPublish")
-    .IsDependentOn("__Build")
-    .Does(() =>
-{
-
-    DotNetCorePublish(
-        "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
-        new DotNetCorePublishSettings
-        {
-            Framework = "netcoreapp2.2",
-            Configuration = configuration,
-            SelfContained = true,
-            Runtime = "ubuntu.18.04-x64"
-        }
-    );
-
-});
-
-Task("__OsPackage")
+Task("__LinuxPackage")
     .IsDependentOn("__Version")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
-    .IsDependentOn("__UbuntuPublish")
-    .Does(() => 
+    .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__BuildToolsContainer")
+    .IsDependentOn("__CreateDebianPackage");
+
+Task("__LinuxPublish")
+    .IsDependentOn("__Version")
+    .IsDependentOn("__Clean")
+    .IsDependentOn("__Restore")
+    .IsDependentOn("__Build")
+    .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__BuildToolsContainer")
+    .IsDependentOn("__CreateDebianPackage")
+    .IsDependentOn("__CreateAptRepoInS3");
+
+Task("__BuildToolsContainer")
+    .Does(() =>
 {
-    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "tentacle-packager" } }, @"tools\fpm");
-
-    DockerRunWithoutResult(new DockerContainerRunSettings { 
-        Rm = true, 
-        Tty = true, 
-        Env = new string[] { $"VERSION={gitVersion.SemVer}" },
-        Volume = new string[] { $"{Path.Combine(Environment.CurrentDirectory, "source/Octopus.Tentacle/bin/netcoreapp2.2/ubuntu.18.04-x64")}:/app" } 
-    }, "tentacle-packager", "/build/package.sh");
-
-    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/ubuntu.18.04-x64/*.deb", artifactsDir);
+    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "debian-tools" } }, @"docker\debian-tools");
 });
 
+Task("__CreateDebianPackage")
+    .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__BuildToolsContainer")
+    .Does(() =>
+{
+    DockerRunWithoutResult(new DockerContainerRunSettings {
+        Rm = true,
+        Tty = true,
+        Env = new string[] { $"VERSION={gitVersion.SemVer}" },
+        Volume = new string[] { 
+            $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
+            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/out"
+        }
+    }, "debian-tools", "/build/package.sh");
+
+    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.deb", artifactsDir);
+});
+
+Task("__CreateAptRepoInS3")
+    .Does(() =>
+{
+    CreateDirectory("./certificates/temp");
+
+    CopyFileToDirectory(gpgSigningCertificatePath, "./certificates/temp");
+
+    DockerRunWithoutResult(new DockerContainerRunSettings {
+        Rm = true,
+        Tty = true,
+        Env = new string[] {
+            $"VERSION={gitVersion.SemVer}",
+            $"AWS_ACCESS_KEY_ID={awsAccessKeyId}",
+            $"AWS_SECRET_ACCESS_KEY={awsSecretAccessKey}",
+            $"GPG_PASSPHRASE={gpgSigningCertificatePassword}",
+            $"GPG_PRIVATEKEYFILE={Path.GetFileName(gpgSigningCertificatePath)}"
+        },
+        Volume = new string[] {
+            $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
+            $"{Path.Combine(Environment.CurrentDirectory, "certificates", "temp")}:/certs",
+        }
+    }, "debian-tools", "/build/publish.sh");
+
+    DeleteDirectory("./certificates/temp", true);
+});
 
 Task("__Version")
     .IsDependentOn("__GitVersionAssemblies")
@@ -163,6 +199,9 @@ Task("__Restore")
     });
 
 Task("__Build")
+    .IsDependentOn("__Version")
+    .IsDependentOn("__Clean")
+    .IsDependentOn("__Restore")
     .Does(() =>
 {
     MSBuild("./source/Tentacle.sln", settings =>
@@ -188,18 +227,30 @@ Task("__DotnetPublish")
     .IsDependentOn("__Build")
     .Does(() =>  {
 
-        DotNetCorePublish(
-            "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
-            new DotNetCorePublishSettings
-            {
-                Framework = "netcoreapp2.2",
-                Configuration = configuration,
-                OutputDirectory = corePublishDir,
-                ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
-            }
-        );
-
+        foreach(var rid in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))
+        {
+            DotNetCorePublish(
+                "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
+                new DotNetCorePublishSettings
+                {
+                    Framework = "netcoreapp2.2",
+                    Configuration = configuration,
+                    OutputDirectory = $"{corePublishDir}/{rid}",
+                    Runtime = rid,
+                    SelfContained = true,
+                    ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
+                }
+            );
+        }
     });
+
+private IEnumerable<string> GetProjectRuntimeIds(string projectFile)
+{
+    var doc = new XmlDocument();
+    doc.Load(projectFile);
+    var rids = doc.SelectSingleNode("Project/PropertyGroup/RuntimeIdentifiers").InnerText;
+    return rids.Split(';');
+}
 
 Task("__SignBuiltFiles")
     .Does(() =>
@@ -210,8 +261,8 @@ Task("__SignBuiltFiles")
     //       claiming we own them, but rather asserting that they are distributed by us, and
     //       have not been subsequently altered
     var filesToSign =
-        GetFiles($"{corePublishDir}/*.dll")
-        .Union(GetFiles($"{corePublishDir}/*.exe"))
+        GetFiles($"{corePublishDir}/**/*.exe")
+        //.Union(GetFiles($"{corePublishDir}/**/*.exe"))
         .Union(GetFiles($"./source/Octopus.Tentacle/bin/net452/**/*.dll"))
         .Union(GetFiles($"./source/Octopus.Tentacle/bin/net452/**/*.exe"))
         .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.dll"))
@@ -326,22 +377,31 @@ Task("__CreateBinariesNuGet")
     CleanBinariesDirectory($"{binariesPackageDir}/lib/net452");
 
     CreateDirectory($"{binariesPackageDir}/build/net452/Tentacle");
-    CreateDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
     CopyFiles($"./source/Octopus.Tentacle/bin/net452/*", $"{binariesPackageDir}/build/net452/Tentacle");
-    CopyFiles($"{corePublishDir}/*", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
-    MoveFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.manifest", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.dll.manifest");
-    MoveFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.nlog", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.dll.nlog");
     CleanBinariesDirectory($"{binariesPackageDir}/build/net452/Tentacle");
-    CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
-
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/net452");
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp2.2");
-
     NuGetPack(Path.Combine(binariesPackageDir, "Tentacle.Binaries.nuspec"), new NuGetPackSettings {
         Version = gitVersion.NuGetVersion,
         OutputDirectory = artifactsDir
     });
+
+    foreach(var rid in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))
+    {
+        CleanDirectory(binariesPackageDir);
+        CreateDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+        CopyFiles($"{corePublishDir}/{rid}/*", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+        DeleteFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.manifest");
+        CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+        CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
+        CopyFile("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.Binaries.{rid}.targets");
+
+        NuGetPack(Path.Combine(binariesPackageDir, $"Tentacle.Binaries.nuspec"), new NuGetPackSettings {
+            Version = gitVersion.NuGetVersion,
+            OutputDirectory = artifactsDir,
+            Id = $"Tentacle.Binaries.{rid}"
+        });
+    }
 });
 
 Task("__CopyToLocalPackages")
@@ -482,8 +542,11 @@ private void SignAndTimeStamp(params FilePath[] assemblies)
 Task("Default")
     .IsDependentOn("__Default");
 
-Task("OsPackage")
-    .IsDependentOn("__OsPackage");
+Task("LinuxPackage")
+    .IsDependentOn("__LinuxPackage");
+
+Task("LinuxPublish")
+    .IsDependentOn("__LinuxPublish");
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION

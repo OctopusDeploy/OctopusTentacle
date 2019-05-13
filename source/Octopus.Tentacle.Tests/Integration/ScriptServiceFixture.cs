@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using FluentAssertions;
 using NSubstitute;
@@ -18,26 +17,16 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         IScriptService service;
 
-        private bool isWindows;
-        
-        private IShell GetShell()
-        {
-            if (isWindows)
-            {
-                return new PowerShell();
-            }
-            return new Bash();
-
-        }
-        
         [SetUp]
         public void SetUp()
         {
-            isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             var homeConfiguration = Substitute.For<IHomeConfiguration>();
             homeConfiguration.HomeDirectory.Returns(Environment.CurrentDirectory);
 
-            service = new ScriptService(GetShell(), new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration), new OctopusPhysicalFileSystem());
+            service = new ScriptService(PlatformDetection.IsRunningOnWindows 
+                ? (IShell) new PowerShell() 
+                : new Bash()
+                , new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration), new OctopusPhysicalFileSystem());
         }
 
         [Test]
@@ -47,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var cmdPing = "& ping.exe localhost -n 1";
             
             var startScriptCommand = new StartScriptCommandBuilder()
-                .WithScriptBody(isWindows ? cmdPing : bashPing)
+                .WithScriptBody(PlatformDetection.IsRunningOnWindows ? cmdPing : bashPing)
                 .Build();
 
             var ticket = service.StartScript(startScriptCommand);
@@ -73,7 +62,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var cmdPing = $"& ping.exe {guid} -n 1";
             
             var startScriptCommand = new StartScriptCommandBuilder()
-                .WithScriptBody(isWindows ? cmdPing : bashPing)
+                .WithScriptBody(PlatformDetection.IsRunningOnWindows ? cmdPing : bashPing)
                 .Build();
 
             var ticket = service.StartScript(startScriptCommand);
@@ -90,7 +79,7 @@ namespace Octopus.Tentacle.Tests.Integration
             DumpLog(finalStatus);
             Assert.That(finalStatus.State, Is.EqualTo(ProcessState.Complete));
             Assert.That(finalStatus.ExitCode, Is.Not.EqualTo(0));
-            finalStatus.Logs.Select(l => l.Text).Should().Contain(isWindows ? cmdExpectedResult : bashExpectedResult);
+            finalStatus.Logs.Select(l => l.Text).Should().Contain(PlatformDetection.IsRunningOnWindows ? cmdExpectedResult : bashExpectedResult);
         }
 
         [Test]
@@ -107,7 +96,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 var cmdPing = "& ping.exe 127.0.0.1 -n 100";
 
                 var startScriptCommand = new StartScriptCommandBuilder()
-                    .WithScriptBody(isWindows ? cmdPing : bashPing)
+                    .WithScriptBody(PlatformDetection.IsRunningOnWindows ? cmdPing : bashPing)
                     .Build();
 
                 ticket = service.StartScript(startScriptCommand);
