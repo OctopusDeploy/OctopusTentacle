@@ -18,7 +18,7 @@ namespace Octopus.Shared.Scripts
         {
             var commandArguments = new StringBuilder();
 
-            var escapedBootstrapFile = bootstrapFile.Replace("'", "''");
+            var escapedBootstrapFile = $"\"{bootstrapFile.Replace("'", "''")}\"";
             commandArguments.AppendFormat("{0} {1}", escapedBootstrapFile, string.Join(" ", scriptArguments ?? new string[0]));
             
             return commandArguments.ToString();

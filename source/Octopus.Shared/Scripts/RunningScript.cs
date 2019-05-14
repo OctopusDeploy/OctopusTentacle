@@ -67,14 +67,14 @@ namespace Octopus.Shared.Scripts
             }
         }
 
-        private void RunScript(string powerShellPath, IScriptLogWriter writer)
+        private void RunScript(string shellPath, IScriptLogWriter writer)
         {
             try
             {
                 State = ProcessState.Running;
 
                 var exitCode = SilentProcessRunner.ExecuteCommand(
-                    powerShellPath,
+                    shellPath,
                     shell.FormatCommandArguments(workspace.BootstrapScriptFilePath, workspace.ScriptArguments, false),
                     workspace.WorkingDirectory,
                     output => writer.WriteOutput(ProcessOutputSource.Debug, output),
@@ -89,7 +89,7 @@ namespace Octopus.Shared.Scripts
             }
             catch (Exception ex)
             {
-                writer.WriteOutput(ProcessOutputSource.StdErr, "An exception was thrown when invoking " + powerShellPath + ": " + ex.Message);
+                writer.WriteOutput(ProcessOutputSource.StdErr, "An exception was thrown when invoking " + shellPath + ": " + ex.Message);
                 ExitCode = PowershellInvocationErrorExitCode;
                 State = ProcessState.Complete;
             }
