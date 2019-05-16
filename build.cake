@@ -4,6 +4,7 @@
 #tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
 #tool "nuget:?package=WiX&version=3.10.3"
 #addin "Cake.FileHelpers"
+#addin "nuget:?package=Cake.Incubator&version=5.0.1"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
@@ -36,6 +37,8 @@ var installerDir = "./build/installer";
 var artifactsDir = "./build/artifacts";
 var localPackagesDir = "../LocalPackages";
 var coreWinPublishDir = "./build/publish/win-x64";
+var tentacleSourceBinDir = "./source/Octopus.Tentacle/bin";
+var managerSourceBinDir = "./source/Octopus.Manager.Tentacle/bin";
 
 GitVersion gitVersion;
 
@@ -166,18 +169,26 @@ Task("__DotnetPublish")
 Task("__SignBuiltFiles")
     .Does(() =>
 {
-    // check that any unsigned libraries get signed, to play nice with security scanning tools
+    // check that any unsigned libraries, that Octopus Deploy authors, get signed to play nice with security scanning tools
     // refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
-    // note: we are signing both dll's we have written & some we haven't, not because we are
-    //       claiming we own them, but rather asserting that they are distributed by us, and
-    //       have not been subsequently altered
+    // decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
     var filesToSign = 
-        GetFiles($"{coreWinPublishDir}/*.dll")
-        .Union(GetFiles($"{coreWinPublishDir}/*.exe"))
-        .Union(GetFiles($"./source/Octopus.Tentacle/bin/**/*.dll"))
-        .Union(GetFiles($"./source/Octopus.Tentacle/bin/**/*.exe"))
-        .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.dll"))
-        .Union(GetFiles($"./source/Octopus.Manager.Tentacle/bin/*.exe"))
+        GetFiles($"{coreWinPublishDir}/**/Octo*.exe",
+            $"{coreWinPublishDir}/**/Octo*.dll",
+            $"{coreWinPublishDir}/**/Tentacle.exe",
+            $"{coreWinPublishDir}/**/Tentacle.dll",
+            $"{coreWinPublishDir}/**/Halibut.dll",
+            $"{coreWinPublishDir}/**/Nuget.*.dll",
+            $"{tentacleSourceBinDir}/**/Octo*.exe",
+            $"{tentacleSourceBinDir}/**/Octo*.dll",
+            $"{tentacleSourceBinDir}/**/Tentacle.exe",
+            $"{tentacleSourceBinDir}/**/Halibut.dll",
+            $"{tentacleSourceBinDir}/**/Nuget.*.dll",
+            $"{managerSourceBinDir}/Octo*.exe",
+            $"{managerSourceBinDir}/Octo*.dll",
+            $"{managerSourceBinDir}/Tentacle.exe",
+            $"{managerSourceBinDir}/Halibut.dll",
+            $"{managerSourceBinDir}/Nuget.*.dll")
             .Where(f => !HasAuthenticodeSignature(f))
             .Select(f => f.FullPath)
             .ToArray();
