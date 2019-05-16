@@ -177,14 +177,17 @@ Task("__SignBuiltFiles")
             $"{coreWinPublishDir}/**/Tentacle.exe",
             $"{coreWinPublishDir}/**/Tentacle.dll",
             $"{coreWinPublishDir}/**/Halibut.dll",
+            $"{coreWinPublishDir}/**/Nuget.*.dll",
             $"{tentacleSourceBinDir}/**/Octo*.exe",
             $"{tentacleSourceBinDir}/**/Octo*.dll",
             $"{tentacleSourceBinDir}/**/Tentacle.exe",
             $"{tentacleSourceBinDir}/**/Halibut.dll",
+            $"{tentacleSourceBinDir}/**/Nuget.*.dll",
             $"{managerSourceBinDir}/Octo*.exe",
             $"{managerSourceBinDir}/Octo*.dll",
             $"{managerSourceBinDir}/Tentacle.exe",
-            $"{managerSourceBinDir}/Halibut.dll")
+            $"{managerSourceBinDir}/Halibut.dll",
+            $"{managerSourceBinDir}/Nuget.*.dll")
             .Where(f => !HasAuthenticodeSignature(f))
             .Select(f => f.FullPath)
             .ToArray();
