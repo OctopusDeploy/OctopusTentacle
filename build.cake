@@ -169,11 +169,8 @@ Task("__DotnetPublish")
 Task("__SignBuiltFiles")
     .Does(() =>
 {
-    // check that any unsigned libraries get signed, to play nice with security scanning tools
+    // check that any unsigned libraries, that Octopus Deploy authors, get signed to play nice with security scanning tools
     // refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
-    // note: we are signing both dll's we have written & some we haven't, not because we are
-    //       claiming we own them, but rather asserting that they are distributed by us, and
-    //       have not been subsequently altered
     var filesToSign = 
         GetFiles($"{coreWinPublishDir}/**/Octo*.exe",
             $"{coreWinPublishDir}/**/Octo*.dll",
