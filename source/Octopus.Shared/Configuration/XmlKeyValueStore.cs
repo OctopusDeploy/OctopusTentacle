@@ -9,7 +9,7 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class XmlKeyValueStore : FlatDictionaryKeyValueStore
     {
-        protected XmlKeyValueStore(bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        protected XmlKeyValueStore(bool autoSaveOnSet, bool isWriteOnly = false) : base(JsonSerialization.GetDefaultSerializerSettings(), autoSaveOnSet, isWriteOnly)
         {
         }
 

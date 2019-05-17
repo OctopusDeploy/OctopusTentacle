@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using Octopus.Shared.Util;
@@ -11,7 +10,7 @@ namespace Octopus.Shared.Configuration
         readonly string configurationFile;
         readonly IOctopusFileSystem fileSystem;
 
-        public JsonFileKeyValueStore(string configurationFile, IOctopusFileSystem fileSystem, bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        public JsonFileKeyValueStore(string configurationFile, IOctopusFileSystem fileSystem, bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, JsonSerialization.GetDefaultSerializerSettings(), isWriteOnly)
         {
             this.configurationFile = configurationFile;
             this.fileSystem = fileSystem;
@@ -28,7 +27,7 @@ namespace Octopus.Shared.Configuration
             using (var reader = new StreamReader(fileSystem.OpenFile(configurationFile, FileMode.Open)))
             {
                 var serializedData = reader.ReadToEnd();
-                deserializedData = JsonConvert.DeserializeObject<Dictionary<string, string>>(serializedData);
+                deserializedData = JsonConvert.DeserializeObject<Dictionary<string, string>>(serializedData, JsonSerializerSettings);
             }
             foreach (var kvp in deserializedData)
             {

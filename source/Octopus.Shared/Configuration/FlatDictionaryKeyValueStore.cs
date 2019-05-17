@@ -6,8 +6,11 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class FlatDictionaryKeyValueStore : DictionaryKeyValueStore
     {
-        protected FlatDictionaryKeyValueStore(bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        protected readonly JsonSerializerSettings JsonSerializerSettings;
+
+        protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
+            this.JsonSerializerSettings = jsonSerializerSettings;
         }
 
         public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel  = ProtectionLevel.None)
@@ -31,8 +34,10 @@ namespace Octopus.Shared.Configuration
                     return (TData) data;
                 if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
                     return (TData) (object) bool.Parse((string) data);
+                if (typeof(TData).IsEnum)
+                    return (TData) Enum.Parse(typeof(TData), ((string) data).Trim('"'));
 
-                return JsonConvert.DeserializeObject<TData>((string) data);
+                return JsonConvert.DeserializeObject<TData>((string) data, JsonSerializerSettings);
             }
             catch (Exception e)
             {
@@ -57,7 +62,9 @@ namespace Octopus.Shared.Configuration
             var valueAsObject = (object) value;
 
             if (ValueNeedsToBeSerialized(protectionLevel, valueAsObject))
-                valueAsObject = JsonConvert.SerializeObject(value);
+            {
+                valueAsObject = JsonConvert.SerializeObject(value, JsonSerializerSettings);
+            }
 
             if (protectionLevel == ProtectionLevel.MachineKey && valueAsObject != null)
             {

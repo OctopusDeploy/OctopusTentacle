@@ -91,7 +91,10 @@ namespace Octopus.Shared.Tests.Configuration
                 fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
                 var configurationObject = new MyObject
                 {
-                    IntField = 10, BooleanField = true, ArrayField = new[]
+                    IntField = 10,
+                    BooleanField = true,
+                    EnumField = SomeEnum.SomeOtherEnumValue,
+                    ArrayField = new[]
                     {
                         new MyNestedObject {Id = 1},
                         new MyNestedObject {Id = 2},
@@ -106,6 +109,7 @@ namespace Octopus.Shared.Tests.Configuration
                 settings.Set("group3.setting4", configurationObject);
                 settings.Set<string>("group4.setting5", null);
                 settings.Set<MyObject>("group4.setting6", null);
+                settings.Set("group4.setting7", SomeEnum.SomeOtherEnumValue);
                 settings.Set("group5.setting2", 123, ProtectionLevel.MachineKey);
                 settings.Set("group5.setting1", true, ProtectionLevel.MachineKey);
                 settings.Set<string>("group5.setting3", "a string", ProtectionLevel.MachineKey);
@@ -195,23 +199,17 @@ namespace Octopus.Shared.Tests.Configuration
         /// <summary>
         /// Tests to make sure we can read & write all the types correctly
         /// </summary>
-        abstract class RoundTripTestBase : RoundTripTestBaseFixture
+        abstract class XmlRoundTripTestBase : CurrentRoundTripTestBase
         {
-            protected readonly string ConfigurationFile;
-            protected readonly OctopusPhysicalFileSystem FileSystem;
-
-            public RoundTripTestBase()
-            {
-                ConfigurationFile = System.IO.Path.GetTempFileName();
-                FileSystem = new OctopusPhysicalFileSystem();
-            }
-
             protected IKeyValueStore SetupData()
             {
                 FileSystem.OverwriteFile(ConfigurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
                 var configurationObject = new MyObject
                 {
-                    IntField = 10, BooleanField = true, ArrayField = new[]
+                    IntField = 10,
+                    BooleanField = true,
+                    EnumField = SomeEnum.SomeOtherEnumValue,
+                    ArrayField = new[]
                     {
                         new MyNestedObject {Id = 1},
                         new MyNestedObject {Id = 2},
@@ -226,12 +224,16 @@ namespace Octopus.Shared.Tests.Configuration
                 settings.Set("group3.setting4", configurationObject);
                 settings.Set<string>("group4.setting5", null);
                 settings.Set<MyObject>("group4.setting6", null);
+                settings.Set("group4.setting7", SomeEnum.SomeOtherEnumValue);
+                settings.Set<SomeEnum?>("group4.setting8", null);
                 settings.Set("group5.setting2", 123, ProtectionLevel.MachineKey);
                 settings.Set("group5.setting1", true, ProtectionLevel.MachineKey);
                 settings.Set<string>("group5.setting3", "a string", ProtectionLevel.MachineKey);
                 settings.Set("group5.setting4", configurationObject, ProtectionLevel.MachineKey);
                 settings.Set<string>("group5.setting5", null, ProtectionLevel.MachineKey);
                 settings.Set<MyObject>("group5.setting6", null, ProtectionLevel.MachineKey);
+                settings.Set("group5.setting7", SomeEnum.SomeOtherEnumValue, ProtectionLevel.MachineKey);
+                settings.Set<SomeEnum?>("group5.setting8", null, ProtectionLevel.MachineKey);
                 settings.Save();
 
                 return settings;
@@ -239,16 +241,16 @@ namespace Octopus.Shared.Tests.Configuration
         }
 
         [TestFixture]
-        class RoundTripTestsWithoutReReadFromFile : RoundTripTestBase
+        class XmlRoundTripTestsWithoutReReadFromFile : XmlRoundTripTestBase
         {
             protected override IKeyValueStore SetupKeyValueStore()
             {
                 return SetupData();
             }
         }
-        
-        [TestFixture]       
-        class RoundTripTestsWithReReadFromFile : RoundTripTestBase
+
+        [TestFixture]
+        class XmlRoundTripTestsWithReReadFromFile : XmlRoundTripTestBase
         {
             protected override IKeyValueStore SetupKeyValueStore()
             {

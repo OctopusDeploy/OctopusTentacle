@@ -14,7 +14,7 @@ namespace Octopus.Shared.Configuration
         }
 
         public JsonHierarchicalConsoleKeyValueStore(Action<string> writer)
-            : base(false, true)
+            : base(false, JsonSerialization.GetDefaultSerializerSettings(), true)
         {
             this.writer = writer;
         }

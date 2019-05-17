@@ -11,10 +11,17 @@ namespace Octopus.Shared.Tests.Configuration
         public int Id { get; set; }
     }
 
+    enum SomeEnum
+    {
+        SomeEnumValue,
+        SomeOtherEnumValue
+    }
+
     class MyObject
     {
         public bool BooleanField { get; set; }
         public int IntField { get; set; }
+        public SomeEnum EnumField { get; set; }
         public MyNestedObject[] ArrayField { get; set; }
     }
 
@@ -35,7 +42,10 @@ namespace Octopus.Shared.Tests.Configuration
             settings.Set<string>("group2.setting3", "a string");
             settings.Set("group3.setting4", new MyObject
             {
-                IntField = 10, BooleanField = true, ArrayField = new[]
+                IntField = 10,
+                BooleanField = true,
+                EnumField = SomeEnum.SomeOtherEnumValue,
+                ArrayField = new[]
                 {
                     new MyNestedObject {Id = 1},
                     new MyNestedObject {Id = 2},
@@ -44,6 +54,8 @@ namespace Octopus.Shared.Tests.Configuration
             });
             settings.Set<string>("group4.setting5", null);
             settings.Set<MyObject>("group4.setting6", null);
+            settings.Set("group4.setting7", SomeEnum.SomeOtherEnumValue);
+            settings.Set<SomeEnum?>("group4.setting8", null);
             settings.Save();
 
             var expected = XDocument.Parse(
@@ -52,9 +64,11 @@ namespace Octopus.Shared.Tests.Configuration
   <set key=""group1.setting1"">True</set>
   <set key=""group1.setting2"">123</set>
   <set key=""group2.setting3"">a string</set>
-  <set key=""group3.setting4"">{""BooleanField"":true,""IntField"":10,""ArrayField"":[{""Id"":1},{""Id"":2},{""Id"":3}]}</set>
+  <set key=""group3.setting4"">{""BooleanField"":true,""IntField"":10,""EnumField"":""SomeOtherEnumValue"",""ArrayField"":[{""Id"":1},{""Id"":2},{""Id"":3}]}</set>
   <set key=""group4.setting5""/>
   <set key=""group4.setting6""/>
+  <set key=""group4.setting7"">SomeOtherEnumValue</set>
+  <set key=""group4.setting8""/>
 </octopus-settings>");
             result.Should().BeEquivalentTo(expected);
         }

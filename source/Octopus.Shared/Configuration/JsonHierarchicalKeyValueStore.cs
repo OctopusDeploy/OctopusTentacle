@@ -5,8 +5,11 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class JsonHierarchicalKeyValueStore : HierarchicalDictionaryKeyValueStore
     {
-        protected JsonHierarchicalKeyValueStore(bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        protected readonly JsonSerializerSettings JsonSerializerSettings;
+
+        protected JsonHierarchicalKeyValueStore(bool autoSaveOnSet, JsonSerializerSettings settings, bool isWriteOnly = false) : base(settings, autoSaveOnSet, isWriteOnly)
         {
+            JsonSerializerSettings = settings;
         }
 
         protected override void SaveSettings(IDictionary<string, object> settingsToSave)
@@ -41,7 +44,7 @@ namespace Octopus.Shared.Configuration
                 }
             }
 
-            var serializedData = JsonConvert.SerializeObject(data, Formatting.Indented);
+            var serializedData = JsonConvert.SerializeObject(data, Formatting.Indented, JsonSerializerSettings);
             WriteSerializedData(serializedData);
         }
 

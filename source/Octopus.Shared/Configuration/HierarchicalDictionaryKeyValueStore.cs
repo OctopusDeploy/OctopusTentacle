@@ -8,8 +8,11 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class HierarchicalDictionaryKeyValueStore : DictionaryKeyValueStore
     {
-        protected HierarchicalDictionaryKeyValueStore(bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
+        private readonly JsonSerializerSettings jsonSerializerSettings;
+
+        protected HierarchicalDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
+            this.jsonSerializerSettings = jsonSerializerSettings;
         }
 
         public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel  = ProtectionLevel.None)
@@ -34,7 +37,7 @@ namespace Octopus.Shared.Configuration
             if (protectionLevel == ProtectionLevel.MachineKey)
             {
                 if (!(valueAsObject is string))
-                    valueAsObject = JsonConvert.SerializeObject(value);
+                    valueAsObject = JsonConvert.SerializeObject(value, jsonSerializerSettings);
                 valueAsObject = MachineKeyEncrypter.Current.Encrypt((string)valueAsObject);
             }
 

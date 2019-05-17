@@ -19,7 +19,7 @@ namespace Octopus.Shared.Configuration
         }
 
         public XmlConsoleKeyValueStore(Action<string> writer)
-            : base(autoSaveOnSet:false, isWriteOnly:true)
+            : base(JsonSerialization.GetDefaultSerializerSettings(), autoSaveOnSet:false, isWriteOnly:true)
         {
             this.writer = writer;
         }
