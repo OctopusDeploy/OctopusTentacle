@@ -11,6 +11,9 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+    <DefineConstants>$(DefineConstants);DEFAULT_PROXY_IS_NOT_AVAILABLE</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Octopus.Shared\Octopus.Shared.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />

@@ -17,6 +17,8 @@ namespace Octopus.Shared.Configuration
     {
         public Func<IWebProxy> GetSystemWebProxy = () => PlatformDetection.IsRunningOnWindows ? WebRequest.GetSystemWebProxy() : null; //allow us to swap this for tests without having to inject
 
+        public const string ProxyNotConfiguredForDestination = "Agent configured to use the system proxy, but no system proxy is configured for {0}";
+
         public ProxyDetails ParseToHalibutProxy(IProxyConfiguration config, Uri destination, ILog log)
         {
             if (config == null)
@@ -24,11 +26,17 @@ namespace Octopus.Shared.Configuration
 
             if (config.UseDefaultProxy)
             {
+#if DEFAULT_PROXY_IS_NOT_AVAILABLE
+                return null;
+#else
                 var proxy = GetSystemWebProxy();
+
+                if (proxy == null)
+                    return null;
 
                 if (proxy.IsBypassed(destination))
                 {
-                    log.Info($"Agent configured to use the system proxy, but no system proxy is configured for {destination}");
+                    log.InfoFormat(ProxyNotConfiguredForDestination, destination);
                     return null;
                 }
 
@@ -37,6 +45,7 @@ namespace Octopus.Shared.Configuration
                 return config.UsingDefaultCredentials()
                     ? new ProxyDetails(address.Host, address.Port, ProxyType.HTTP, CredentialCache.DefaultNetworkCredentials.UserName, CredentialCache.DefaultNetworkCredentials.Password)
                     : new ProxyDetails(address.Host, address.Port, ProxyType.HTTP, config.CustomProxyUsername, config.CustomProxyPassword);
+#endif
             }
 
             if(config.UsingCustomProxy())
