@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 namespace Octopus.Shared.Variables
 {
@@ -9,6 +8,7 @@ namespace Octopus.Shared.Variables
         public const string TentacleProxyPassword = "TentacleProxyPassword";
         public const string TentacleProxyHost = "TentacleProxyHost";
         public const string TentacleProxyPort = "TentacleProxyPort";
+        public const string TentacleUseDefaultProxy = "TentacleUseDefaultProxy";
         public const string TentacleVersion = "TentacleVersion";
         public const string TentacleCertificateSignatureAlgorithm = "TentacleCertificateSignatureAlgorithm";
         public const string TentacleHome = "TentacleHome";
