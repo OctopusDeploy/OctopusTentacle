@@ -125,9 +125,10 @@ namespace Octopus.Shared.Startup
                 commandLineArguments = ParseCommandHostArgumentsFromCommandLineArguments(
                     commandLineArguments, 
                     out var forceConsoleHost,
-                    out var forceNoninteractiveHost);
+                    out var forceNoninteractiveHost,
+                    out var monitorMutexHost);
 
-                host = SelectMostAppropriateHost(responsibleCommand, displayName, log, forceConsoleHost, forceNoninteractiveHost);
+                host = SelectMostAppropriateHost(responsibleCommand, displayName, log, forceConsoleHost, forceNoninteractiveHost, monitorMutexHost);
                 
                 RunHost(host);
                 // If we make it to here we can set the error code as either an UnknownCommand for which you got some help, or Success!
@@ -341,18 +342,21 @@ namespace Octopus.Shared.Startup
         public static string[] ParseCommandHostArgumentsFromCommandLineArguments(
             string[] commandLineArguments, 
             out bool forceConsoleHost,
-            out bool forceNoninteractiveHost)
+            out bool forceNoninteractiveHost,
+            out string monitorMutexHost)
         {
             // Sorry for the mess, we can't set the out param in a lambda
             var forceConsole = false;
             var optionSet = ConsoleHost.AddConsoleSwitch(new OptionSet(), v => forceConsole = true);
-
+            string monitorMutex = null;
             var forceNoninteractive = false;
             optionSet.Add("noninteractive", v => forceNoninteractive = true);
+            optionSet.Add("monitorMutex=", v => monitorMutex = v);
 
             // We actually want to remove the --console switch if it was provided since we've parsed it here
             var remainingCommandLineArguments = optionSet.Parse(commandLineArguments).ToArray();
             forceConsoleHost = forceConsole;
+            monitorMutexHost = monitorMutex;
             forceNoninteractiveHost = forceNoninteractive;
             return remainingCommandLineArguments;
         }
@@ -397,17 +401,23 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        static ICommandHost SelectMostAppropriateHost(
-            ICommand command, 
-            string displayName, 
+        static ICommandHost SelectMostAppropriateHost(ICommand command,
+            string displayName,
             ILog log,
             bool forceConsoleHost,
-            bool forceNoninteractiveHost)
+            bool forceNoninteractiveHost,
+            string monitorMutexHost)
         {
             log.Trace("Selecting the most appropriate host");
 
             var commandSupportsConsoleSwitch = ConsoleHost.HasConsoleSwitch(command.Options);
 
+            if (!string.IsNullOrEmpty(monitorMutexHost))
+            {
+                log.Trace("The --monitorMutex switch was provided for a supported command");
+                return new MutexHost(monitorMutexHost);
+            }
+        
             if (forceNoninteractiveHost && commandSupportsConsoleSwitch)
             {
                 log.Trace($"The --noninteractive switch was provided for a supported command");

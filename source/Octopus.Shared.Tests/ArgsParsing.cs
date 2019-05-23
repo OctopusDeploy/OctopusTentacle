@@ -19,7 +19,8 @@ namespace Octopus.Shared.Tests
             var options = OctopusProgram.ParseCommandHostArgumentsFromCommandLineArguments(
                 new[] {"--noninteractive"},
                 out var console,
-                out var noninteractive);
+                out var noninteractive, 
+                out _);
             noninteractive.Should().BeTrue();
             options.Should().BeEmpty();
         }
