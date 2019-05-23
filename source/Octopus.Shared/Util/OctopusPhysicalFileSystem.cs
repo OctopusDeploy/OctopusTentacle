@@ -17,6 +17,52 @@ namespace Octopus.Shared.Util
         // This even applies to long file names https://stackoverflow.com/a/265782/10784
         public const int MaxComponentLength = 255;
         
+        private static readonly char[] InvalidFileNameChars = new char[41]
+        {
+            // From Path.InvalidPathChars which covers Windows and Linux
+            '"',
+            '<',
+            '>',
+            '|',
+            char.MinValue,
+            '\x0001',
+            '\x0002',
+            '\x0003',
+            '\x0004',
+            '\x0005',
+            '\x0006',
+            '\a',
+            '\b',
+            '\t',
+            '\n',
+            '\v',
+            '\f',
+            '\r',
+            '\x000E',
+            '\x000F',
+            '\x0010',
+            '\x0011',
+            '\x0012',
+            '\x0013',
+            '\x0014',
+            '\x0015',
+            '\x0016',
+            '\x0017',
+            '\x0018',
+            '\x0019',
+            '\x001A',
+            '\x001B',
+            '\x001C',
+            '\x001D',
+            '\x001E',
+            '\x001F',
+            ':',
+            '*',
+            '?',
+            '\\',
+            '/'
+        };
+        
         public bool FileExists(string path)
         {
             return File.Exists(path);
@@ -323,8 +369,7 @@ namespace Octopus.Shared.Util
 
         public string RemoveInvalidFileNameChars(string path)
         {
-            var invalidChars = Path.GetInvalidFileNameChars();
-            path = new string(path.Where(c => !invalidChars.Contains(c)).ToArray());
+            path = new string(path.Where(c => !InvalidFileNameChars.Contains(c)).ToArray());
             return path;
         }
 
