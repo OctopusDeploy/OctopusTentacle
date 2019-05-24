@@ -39,8 +39,6 @@ namespace Octopus.Tentacle
             return new Program(args).Run();
         }
 
-
-
         protected override IContainer BuildContainer(string instanceName)
         {
             var builder = new ContainerBuilder();
