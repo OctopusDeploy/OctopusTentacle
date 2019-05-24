@@ -187,13 +187,13 @@ namespace Octopus.Shared.Startup
             {
                 //SIGINT (ControlC) and SIGQUIT (ControlBreak)
                 log.Trace("CancelKeyPress signal received: "+ e.SpecialKey);
-                Shutdown();
+                host.Stop(Shutdown);
             }; 
             AppDomain.CurrentDomain.ProcessExit += (s, e) =>
             {
                 //SIGTERM - i.e. Docker Stop
                 log.Trace("AppDomain process exiting");
-                Shutdown();
+                host.Stop(Shutdown);
             }; 
             host.Run(Start, Shutdown);
         
