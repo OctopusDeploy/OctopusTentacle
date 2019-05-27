@@ -61,7 +61,8 @@ Teardown(context =>
     foreach(var cleanup in cleanups)
         cleanup();
 
-    Information("Finished running tasks for build v{0}", gitVersion.NuGetVersion);
+    if (gitVersion != null)
+        Information("Finished running tasks for build v{0}", gitVersion.NuGetVersion);
 });
 
 
@@ -515,7 +516,7 @@ private void SignAndTimeStamp(params FilePath[] assemblies)
     var lastException = default(Exception);
     var signSettings = new SignToolSignSettings
     {
-        CertPath = File(signingCertificatePath),
+        CertPath = signingCertificatePath,
         Password = signingCertificatPassword,
         DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
         Description = "Octopus Tentacle Agent",
