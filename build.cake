@@ -516,7 +516,7 @@ private void SignAndTimeStamp(params FilePath[] assemblies)
     var lastException = default(Exception);
     var signSettings = new SignToolSignSettings
     {
-        CertPath = signingCertificatePath,
+        CertPath = File(signingCertificatePath),
         Password = signingCertificatPassword,
         DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
         Description = "Octopus Tentacle Agent",
