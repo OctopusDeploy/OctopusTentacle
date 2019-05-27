@@ -58,7 +58,8 @@ Teardown(context =>
     foreach(var cleanup in cleanups)
         cleanup();
 
-    Information("Finished running tasks for build v{0}", gitVersion.NuGetVersion);
+    if (gitVersion != null)
+        Information("Finished running tasks for build v{0}", gitVersion.NuGetVersion);
 });
 
 
