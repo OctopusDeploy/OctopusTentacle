@@ -260,19 +260,17 @@ namespace Octopus.Shared.Util
         {
             path = Path.Combine(GetTempBasePath(), filename);
             var dir = Path.GetDirectoryName(path);
-
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
+            EnsureDirectoryExists(dir);
 
             DeleteFile(path);
             return OpenFile(path, FileAccess.ReadWrite, FileShare.Read);
         }
 
-        static string GetTempBasePath()
+        string GetTempBasePath()
         {
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
+            EnsureDirectoryExists(path);
+            
             path = Path.Combine(path, Assembly.GetEntryAssembly() != null ? Assembly.GetEntryAssembly().GetName().Name : "Octopus");
             return Path.Combine(path, "Temp");
         }
