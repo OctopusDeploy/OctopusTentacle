@@ -62,6 +62,8 @@
     <Reference Include="Halibut, Version=4.3.6.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\Halibut.4.3.6\lib\net45\Halibut.dll</HintPath>
       <Private>True</Private>
+    <Reference Include="Halibut, Version=4.3.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Halibut.4.3.4\lib\net45\Halibut.dll</HintPath>
     </Reference>
     <Reference Include="MaterialDesignColors, Version=1.0.0.14576, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MaterialDesignColors.1.1.1\lib\net45\MaterialDesignColors.dll</HintPath>
@@ -133,6 +135,8 @@
     <Reference Include="Octopus.Shared, Version=4.9.23.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\Octopus.Shared.4.9.23\lib\net45\Octopus.Shared.dll</HintPath>
       <Private>True</Private>
+    <Reference Include="Octopus.Shared, Version=4.9.19.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Shared.4.9.19\lib\net45\Octopus.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.1.5.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Time.1.1.5\lib\netstandard1.0\Octopus.Time.dll</HintPath>

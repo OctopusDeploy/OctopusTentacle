@@ -26,6 +26,7 @@ namespace Octopus.Tentacle.Tests.Communications
             proxy.Port.Should().Be(defaultProxyPort);
             //we use default network creds from credential cache though.
         }
+#endif
 
         [Test]
         public void DoNotUseDefaultProxyAndNoCustomHostShouldSetNoProxy()
@@ -35,6 +36,7 @@ namespace Octopus.Tentacle.Tests.Communications
             proxy.Should().BeNull();
         }
 
+#if DEFAULT_PROXY_IS_AVAILABLE
         [Test]
         public void SettingUsernameAndPasswordShouldSetProxyCredentials()
         {
@@ -69,7 +71,7 @@ namespace Octopus.Tentacle.Tests.Communications
         ProxyDetails BuildHalibutProxy(bool useDefaultProxy, string username, string password, string host, int port)
         {
             var config = new StubProxyConfiguration(useDefaultProxy, username, password, host, port);
-            var parser = new ProxyConfigParser {GetSystemWebProxy = BuildDefaultProxy};
+            var parser = new ProxyConfigParser { GetSystemWebProxy = BuildDefaultProxy };
             return parser.ParseToHalibutProxy(config, new Uri("http://octopus.com"), Substitute.For<ILog>());
         }
 
