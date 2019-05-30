@@ -76,7 +76,6 @@ Remotion.Linq.dll
 Remotion.Linq.xml
 Spatial4n.Core.NTS.dll
 Spatial4n.Core.NTS.pdb
-System.IO.dll
 System.IO.xml
 System.Reactive.Core.dll
 System.Reactive.Core.xml
@@ -86,9 +85,7 @@ System.Reactive.Linq.dll
 System.Reactive.Linq.xml
 System.Reactive.PlatformServices.dll
 System.Reactive.PlatformServices.xml
-System.Runtime.dll
 System.Runtime.xml
-System.Threading.Tasks.dll
 System.Threading.Tasks.xml
 Tools.exe
 Tools.exe.config
