@@ -23,9 +23,9 @@ namespace Octopus.Shared.Startup
 {
     public abstract class OctopusProgram
     {
-        public enum ExitCode
+        public enum ExitCode : byte
         {
-            UnknownCommand = -1,
+            UnknownCommand = 2,
             Success = 0,
             ControlledFailureException = 1,
             SecurityException = 42,
