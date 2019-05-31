@@ -37,11 +37,10 @@ https://cakebuild.net
 [CmdletBinding()]
 Param(
     [string]$Script = "build.cake",
-    [string]$Target = "Default",
-    [ValidateSet("Release", "Debug")]
+    [string]$Target,
     [string]$Configuration,
     [ValidateSet("Quiet", "Minimal", "Normal", "Verbose", "Diagnostic")]
-    [string]$Verbosity = "Verbose",
+    [string]$Verbosity,
     [switch]$ShowDescription,
     [Alias("WhatIf", "Noop")]
     [switch]$DryRun,
@@ -228,6 +227,5 @@ $cakeArguments += $ScriptArgs
 
 # Start Cake
 Write-Host "Running build script..."
-#&$CAKE_EXE $cakeArguments
-Invoke-Expression "& `"$CAKE_EXE`" `"$Script`" -target=`"$Target`" -configuration=`"$Configuration`" -verbosity=`"$Verbosity`" $UseMono $UseDryRun $UseExperimental $ScriptArgs"
+&$CAKE_EXE $cakeArguments
 exit $LASTEXITCODE
