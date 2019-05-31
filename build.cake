@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 #tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
 #tool "nuget:?package=WiX&version=3.10.3"
-#addin "Cake.FileHelpers"
+#addin "Cake.FileHelpers&version=3.2.0"
 #addin "nuget:?package=Cake.Incubator&version=5.0.1"
 #addin "Cake.Docker&version=0.10.0"
 
@@ -42,6 +42,7 @@ var binariesPackageDir = "./build/package/binaries";
 var installerDir = "./build/installer";
 var artifactsDir = "./build/artifacts";
 var localPackagesDir = "../LocalPackages";
+var corePublishDir = "./build/publish";
 var coreWinPublishDir = "./build/publish/win-x64";
 var tentacleSourceBinDir = "./source/Octopus.Tentacle/bin";
 var managerSourceBinDir = "./source/Octopus.Manager.Tentacle/bin";
