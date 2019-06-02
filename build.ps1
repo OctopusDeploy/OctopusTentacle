@@ -183,7 +183,18 @@ if (!(Test-Path $CAKE_EXE)) {
     Throw "Could not find Cake.exe at $CAKE_EXE"
 }
 
-# Start Cake
+# Build Cake arguments
+$cakeArguments = @("$Script");
+if ($Target) { $cakeArguments += "-target=`"$Target`"" }
+if ($Configuration) { $cakeArguments += "-configuration=`"$Configuration`"" }
+if ($Verbosity) { $cakeArguments += "-verbosity=`"$Verbosity`"" }
+if ($ShowDescription) { $cakeArguments += "-showdescription" }
+if ($DryRun) { $cakeArguments += "-dryrun" }
+if ($Experimental) { $cakeArguments += "-experimental" }
+if ($Mono) { $cakeArguments += "-mono" }
+$cakeArguments += $ScriptArgs
+
+
 Write-Host "Running build script..."
-Invoke-Expression "& `"$CAKE_EXE`" `"$Script`" -target=`"$Target`" -configuration=`"$Configuration`" -verbosity=`"$Verbosity`" $UseMono $UseDryRun $UseExperimental $ScriptArgs"
+&$CAKE_EXE $cakeArguments
 exit $LASTEXITCODE
