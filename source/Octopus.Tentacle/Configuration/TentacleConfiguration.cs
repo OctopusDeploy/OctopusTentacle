@@ -108,7 +108,7 @@ namespace Octopus.Tentacle.Configuration
             {
                 var thumbprint = settings.Get<string>("Tentacle.CertificateThumbprint");
                 var encoded = settings.Get<string>("Tentacle.Certificate", protectionLevel: ProtectionLevel.MachineKey);
-                return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint, encoded, StoreName.My);
+                return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint, encoded);
             }
             set
             {
