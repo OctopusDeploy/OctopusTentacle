@@ -8,13 +8,14 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
 using Octopus.Diagnostics;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Security.Certificates
 {
     public static class CertificateEncoder
     {
         static readonly ILog Log = Diagnostics.Log.System();
-
+        
         public static X509Certificate2 FromPfxFile(string pfxFilePath, string password)
         {
             X509Certificate2Collection certificates = new X509Certificate2Collection();
@@ -45,37 +46,48 @@ namespace Octopus.Shared.Security.Certificates
             return x509Certificate;
         }
 
+        public static X509Certificate2 FromBase64StringPublicKeyOnly(string certificateString)
+        {
+            var raw = Convert.FromBase64String(certificateString);
+            var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
+            try
+            {
+                File.WriteAllBytes(file, raw);
+                return new X509Certificate2(file);
+            }
+            finally
+            {
+                File.Delete(file);
+            }
+        }
+
+        public static byte[] Export(X509Certificate2 certificate)
+        {
+            return certificate.Export(X509ContentType.Pfx);
+        }
+
+        public static string ToBase64String(X509Certificate2 certificate)
+        {
+            var exported = Export(certificate);
+            var encoded = Convert.ToBase64String(exported);
+            return encoded;
+        }
+        
+        public static X509Certificate2 FromBase64String(string certificateString)
+        {
+            return FromBase64String(null, certificateString, null);
+        }
         public static X509Certificate2 FromBase64String(string thumbprint, string certificateString)
         {
-            if (certificateString == null) throw new ArgumentNullException("certificateString");
-            return DoFromBase64String(thumbprint, certificateString, new X509Store("Octopus", StoreLocation.CurrentUser));
+            return FromBase64String(thumbprint, certificateString, null);
         }
 
         public static X509Certificate2 FromBase64String(string thumbprint, string certificateString, string password)
         {
             if (certificateString == null) throw new ArgumentNullException(nameof(certificateString));
-            return DoFromBase64String(thumbprint, certificateString, password, new X509Store("Octopus", StoreLocation.CurrentUser));
-        }
-
-        public static X509Certificate2 FromBase64String(string thumbprint, string certificateString, StoreName storeName)
-        {
-            if (certificateString == null) throw new ArgumentNullException("certificateString");
-            return DoFromBase64String(thumbprint, certificateString, new X509Store(storeName, StoreLocation.CurrentUser));
-        }
-
-        public static X509Certificate2 FromBase64String(string certificateString)
-        {
-            return FromBase64String(null, certificateString);
-        }
-
-        static X509Certificate2 DoFromBase64String(string thumbprint, string certificateString, X509Store store)
-        {
-            return DoFromBase64String(thumbprint, certificateString, null, store);
-        }
-
-        static X509Certificate2 DoFromBase64String(string thumbprint, string certificateString, string password, X509Store store)
-        {
+            var store = new X509Store(PlatformDetection.IsRunningOnWindows ? "Octopus" : "My", StoreLocation.CurrentUser);
             store.Open(OpenFlags.ReadWrite);
+            
             try
             {
                 if (thumbprint != null)
@@ -227,33 +239,6 @@ namespace Octopus.Shared.Security.Certificates
             var security = directory.GetAccessControl();
             security.AddAccessRule(new FileSystemAccessRule(current.User, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
             directory.SetAccessControl(security);
-        }
-
-        public static X509Certificate2 FromBase64StringPublicKeyOnly(string certificateString)
-        {
-            var raw = Convert.FromBase64String(certificateString);
-            var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
-            try
-            {
-                File.WriteAllBytes(file, raw);
-                return new X509Certificate2(file);
-            }
-            finally
-            {
-                File.Delete(file);
-            }
-        }
-
-        public static byte[] Export(X509Certificate2 certificate)
-        {
-            return certificate.Export(X509ContentType.Pfx);
-        }
-
-        public static string ToBase64String(X509Certificate2 certificate)
-        {
-            var exported = Export(certificate);
-            var encoded = Convert.ToBase64String(exported);
-            return encoded;
         }
 
         #region Nested type: CryptUtils
