@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Text;
-using Autofac.Core;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
@@ -33,16 +32,16 @@ namespace Octopus.Shared.Startup
             Console.ResetColor();
         }
 
-        static readonly OctopusProgram.ExitCode[] FriendlyExitCodes =
+        static readonly int[] FriendlyExitCodes =
         {
-            OctopusProgram.ExitCode.Success,
-            OctopusProgram.ExitCode.UnknownCommand,
-            OctopusProgram.ExitCode.ControlledFailureException
+            (int)OctopusProgram.ExitCode.Success,
+            (int)OctopusProgram.ExitCode.UnknownCommand,
+            (int)OctopusProgram.ExitCode.ControlledFailureException
         };
 
         public void OnExit(int exitCode)
-        {
-            if (FriendlyExitCodes.Cast<int>().Contains(exitCode)) return;
+        {    
+            if (FriendlyExitCodes.Contains(exitCode)) return;
 
             var sb = new StringBuilder()
                 .AppendLine(new string('-', 79))

@@ -10,11 +10,11 @@ namespace Octopus.Shared.Startup
 {
     class MutexHost : ICommandHost, ICommandRuntime
     {
-        static readonly OctopusProgram.ExitCode[] FriendlyExitCodes =
+        static readonly int[] FriendlyExitCodes =
         {
-            OctopusProgram.ExitCode.Success,
-            OctopusProgram.ExitCode.UnknownCommand,
-            OctopusProgram.ExitCode.ControlledFailureException
+            (int)OctopusProgram.ExitCode.Success,
+            (int)OctopusProgram.ExitCode.UnknownCommand,
+            (int)OctopusProgram.ExitCode.ControlledFailureException
         };
         readonly ILog log = Log.Octopus();
 
@@ -65,7 +65,7 @@ namespace Octopus.Shared.Startup
 
         public void OnExit(int exitCode)
         {
-            if (FriendlyExitCodes.Cast<int>().Contains(exitCode)) return;
+            if (FriendlyExitCodes.Contains(exitCode)) return;
 
             var sb = new StringBuilder()
                 .AppendLine(new string('-', 79))
