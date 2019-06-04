@@ -464,6 +464,9 @@ namespace Octopus.Shared.Util
 
         public void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
+            if (directoryPath.StartsWith(@"\\"))
+                return;
+            
             var driveInfo = new DriveInfo(Directory.GetDirectoryRoot(directoryPath));
 
             var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;
