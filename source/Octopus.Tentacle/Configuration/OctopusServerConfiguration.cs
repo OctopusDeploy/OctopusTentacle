@@ -1,4 +1,7 @@
 using System;
+using System.ComponentModel;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Octopus.Client.Model;
 using Octopus.Shared.Util;
 
@@ -38,6 +41,7 @@ namespace Octopus.Tentacle.Configuration
         /// <summary>
         /// The communication style used with this server.
         /// </summary>
+        [JsonConverter(typeof(CommunicationStyleConverter))]
         public CommunicationStyle CommunicationStyle { get; set; }
 
         /// <summary>
@@ -58,6 +62,18 @@ namespace Octopus.Tentacle.Configuration
         public override string ToString()
         {
             return ObjectFormatter.Format(this);
+        }
+
+        class CommunicationStyleConverter : JsonConverter
+        {
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+                =>  writer.WriteValue((int) value);
+
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+                => existingValue == null ? default(CommunicationStyle) : (CommunicationStyle) (int) existingValue;
+
+            public override bool CanConvert(Type objectType)
+                => objectType == typeof(CommunicationStyle);
         }
     }
 }
