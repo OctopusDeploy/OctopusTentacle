@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         {
             const string comStyleProperty = "\"CommunicationStyle\": ";
 
-            var settings = Octopus.Shared.Configuration.JsonSerialization.GetDefaultSerializerSettings();
+            var settings = GetSettings();
             settings.Formatting = Formatting.Indented;
 
             var config = new OctopusServerConfiguration("ABC") {CommunicationStyle = style};
@@ -27,8 +27,21 @@ namespace Octopus.Tentacle.Tests.Configuration
                 .Substring(comStyleProperty.Length + 1)
                 .Trim()
                 .Trim(',');
-            
+
             result.Should().Be(expected.ToString());
+        }
+
+        static JsonSerializerSettings GetSettings()
+            => Octopus.Shared.Configuration.JsonSerialization.GetDefaultSerializerSettings();
+
+        [Test]
+        public void CommunicationStyleRoundtripsCorrectly()
+        {
+            var settings = GetSettings();
+            var config = new OctopusServerConfiguration("ABC") {CommunicationStyle = CommunicationStyle.TentacleActive};
+            var json = JsonConvert.SerializeObject(config, settings);
+            var result = JsonConvert.DeserializeObject<OctopusServerConfiguration>(json, settings);
+            result.CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
         }
     }
 }

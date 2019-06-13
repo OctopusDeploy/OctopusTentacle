@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Configuration
                 =>  writer.WriteValue((int) value);
 
             public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-                => existingValue == null ? default(CommunicationStyle) : (CommunicationStyle) (int) existingValue;
+                => reader.Value == null ? CommunicationStyle.None : (CommunicationStyle) Convert.ToInt32(reader.Value);
 
             public override bool CanConvert(Type objectType)
                 => objectType == typeof(CommunicationStyle);
