@@ -4,7 +4,7 @@ fpm -v $VERSION \
   -n tentacle-service \
   -s pleaserun \
   -t dir \
-  /opt/octopus/tentacle/Tentacle agent
+  /opt/octopus/tentacle/Tentacle agent --noninteractive
 
 # Dependencies based on https://github.com/dotnet/dotnet-docker/blob/master/2.1/runtime-deps/bionic/amd64/Dockerfile
 fpm -v $VERSION \
@@ -26,7 +26,7 @@ fpm -v $VERSION \
   --deb-no-default-config-files \
   --after-install setup.sh \
   --before-remove uninstall.sh \
-  /app/=/opt/octopus/tentacle \
+  $TENTACLE_BINARIES=/opt/octopus/tentacle \
   ./tentacle-service.dir/usr/share/pleaserun/=/usr/share/pleaserun
 
 rm -rf tentacle-service.dir
