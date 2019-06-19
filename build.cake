@@ -122,7 +122,10 @@ Task("__CreateDebianPackage")
     DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
-        Env = new string[] { $"VERSION={gitVersion.SemVer}" },
+        Env = new string[] { 
+            $"VERSION={gitVersion.SemVer}",
+            $"TENTACLE_BINARIES=/app/"
+        },
         Volume = new string[] { 
             $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
             $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/out"
