@@ -124,7 +124,8 @@ Task("__CreateDebianPackage")
         Tty = true,
         Env = new string[] { 
             $"VERSION={gitVersion.SemVer}",
-            $"TENTACLE_BINARIES=/app/"
+            "TENTACLE_BINARIES=/app/",
+            "ARTIFACTS=/out"
         },
         Volume = new string[] { 
             $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
@@ -133,6 +134,7 @@ Task("__CreateDebianPackage")
     }, "debian-tools", "/build/package.sh");
 
     CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.deb", artifactsDir);
+    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.rpm", artifactsDir);
 });
 
 Task("__CreateAptRepoInS3")

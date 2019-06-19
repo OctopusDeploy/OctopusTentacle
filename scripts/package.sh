@@ -29,6 +29,25 @@ fpm -v $VERSION \
   $TENTACLE_BINARIES=/opt/octopus/tentacle \
   ./tentacle-service.dir/usr/share/pleaserun/=/usr/share/pleaserun
 
+fpm -v $VERSION \
+  -n tentacle \
+  -s dir \
+  -t rpm \
+  -m '<support@octopus.com>' \
+  --vendor 'Octopus Deploy' \
+  --url 'https://octopus.com/' \
+  --description 'Octopus Tentacle package' \
+  -d 'lttng-ust' \
+  -d 'libcurl' \
+  -d 'openssl-libs' \
+  -d 'krb5-libs' \
+  -d 'libicu' \
+  -d 'zlib' \
+  --after-install setup.sh \
+  --before-remove uninstall.sh \
+  $TENTACLE_BINARIES=/opt/octopus/tentacle \
+  ./tentacle-service.dir/usr/share/pleaserun/=/usr/share/pleaserun
+
 rm -rf tentacle-service.dir
 
-cp *.deb /out
+cp *.{deb,rpm} $ARTIFACTS
