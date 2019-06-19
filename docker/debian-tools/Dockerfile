@@ -20,7 +20,7 @@ RUN gem install pleaserun
 
 COPY settings/aptly.conf /root/.aptly.conf
 
-COPY *.sh /build/
+COPY ../../scripts/*.sh /build/
 WORKDIR /build
 
 VOLUME [ "/app", "/certs", "/out" ]
