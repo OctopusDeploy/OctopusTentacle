@@ -50,4 +50,6 @@ fpm -v $VERSION \
 
 rm -rf tentacle-service.dir
 
+mkdir -p $ARTIFACTS
+
 cp -f *.{deb,rpm} $ARTIFACTS
