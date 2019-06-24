@@ -117,7 +117,7 @@ Task("__CreateDebianPackage")
             "ARTIFACTS=/out"
         },
         Volume = new string[] { 
-            $"{Path.Combine(Environment.CurrentDirectory), "scripts"}:/build",
+            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/build",
             $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
             $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/out"
         }
@@ -146,7 +146,7 @@ Task("__CreateAptRepoInS3")
             $"GPG_PRIVATEKEYFILE={Path.GetFileName(gpgSigningCertificatePath)}"
         },
         Volume = new string[] {
-            $"{Path.Combine(Environment.CurrentDirectory), "scripts"}:/build",
+            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/build",
             $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/app",
             $"{Path.Combine(Environment.CurrentDirectory, "certificates", "temp")}:/certs",
         }
