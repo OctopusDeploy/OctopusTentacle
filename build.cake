@@ -26,6 +26,8 @@ var signingCertificatPassword = Argument("signing_certificate_password", "Passwo
 var gpgSigningCertificatePath = Argument("gpg_signing_certificate_path", "./certificates/octopus-privkey.asc");
 var gpgSigningCertificatePassword = Argument("gpg_signing_certificate_password", "Password01!");
 
+var gitVersionParm = Argument("git_version", EnvironmentVariable("VERSION") ?? "0.0.0");
+
 var awsAccessKeyId = Argument("aws_access_key_id", EnvironmentVariable("AWS_ACCESS_KEY") ?? "XXXX");
 var awsSecretAccessKey = Argument("aws_secret_access_key", EnvironmentVariable("AWS_SECRET_KEY") ?? "YYYY");
 
@@ -88,24 +90,11 @@ Task("__Default")
     .IsDependentOn("__CopyToLocalPackages");
 
 Task("__LinuxPackage")
-    .IsDependentOn("__Version")
-    .IsDependentOn("__Clean")
-    .IsDependentOn("__Restore")
-    .IsDependentOn("__Build")
-    .IsDependentOn("__DotnetPublish")
-    .IsDependentOn("__SignBuiltFiles")
     .IsDependentOn("__BuildToolsContainer")
     .IsDependentOn("__CreateDebianPackage");
 
 Task("__LinuxPublish")
-    .IsDependentOn("__Version")
-    .IsDependentOn("__Clean")
-    .IsDependentOn("__Restore")
-    .IsDependentOn("__Build")
-    .IsDependentOn("__DotnetPublish")
-    .IsDependentOn("__SignBuiltFiles")
     .IsDependentOn("__BuildToolsContainer")
-    .IsDependentOn("__CreateDebianPackage")
     .IsDependentOn("__CreateAptRepoInS3");
 
 Task("__BuildToolsContainer")
@@ -123,7 +112,7 @@ Task("__CreateDebianPackage")
         Rm = true,
         Tty = true,
         Env = new string[] { 
-            $"VERSION={gitVersion.SemVer}",
+            $"VERSION={gitVersionParm}",
             "TENTACLE_BINARIES=/app/",
             "ARTIFACTS=/out"
         },
@@ -149,7 +138,7 @@ Task("__CreateAptRepoInS3")
         Rm = true,
         Tty = true,
         Env = new string[] {
-            $"VERSION={gitVersion.SemVer}",
+            $"VERSION={gitVersionParm}",
             $"AWS_ACCESS_KEY_ID={awsAccessKeyId}",
             $"AWS_SECRET_ACCESS_KEY={awsSecretAccessKey}",
             $"GPG_PASSPHRASE={gpgSigningCertificatePassword}",
