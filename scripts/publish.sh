@@ -9,7 +9,7 @@ aptly mirror create octopus-apt-mirror https://s3.amazonaws.com/octopus-apt-repo
 aptly mirror update octopus-apt-mirror
 
 aptly repo import octopus-apt-mirror octopus-tentacle tentacle
-aptly repo add octopus-tentacle artifacts
+aptly repo add octopus-tentacle /app
 
 aptly repo show -with-packages octopus-tentacle
 
