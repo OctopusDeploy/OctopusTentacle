@@ -20,10 +20,9 @@ RUN gem install pleaserun
 
 COPY settings/aptly.conf /root/.aptly.conf
 
-COPY ../../scripts/*.sh /build/
 WORKDIR /build
 
-VOLUME [ "/app", "/certs", "/out" ]
+VOLUME [ "/app", "/build", "/certs", "/out" ]
 
 ENV VERSION "0.0.0"
 ENV AWS_ACCESS_KEY_ID="XXXXXXXXXXXXXXXXXXX"
