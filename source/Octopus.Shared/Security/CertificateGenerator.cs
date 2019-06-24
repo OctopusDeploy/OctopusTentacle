@@ -59,8 +59,8 @@ namespace Octopus.Shared.Security
             certificateGenerator.SetSerialNumber(serialNumber);
             certificateGenerator.SetIssuerDN(new X509Name(fullName));
             certificateGenerator.SetSubjectDN(new X509Name(fullName));
-            certificateGenerator.SetNotBefore(DateTime.UtcNow.Date);
-            certificateGenerator.SetNotAfter(DateTime.UtcNow.Date.AddYears(1));
+            certificateGenerator.SetNotBefore(DateTime.UtcNow.Date.AddDays(-1));
+            certificateGenerator.SetNotAfter(DateTime.UtcNow.Date.AddYears(100));
 
             var keyGenerationParameters = new KeyGenerationParameters(random, RecommendedKeyBitLength);
             var keyPairGenerator = new RsaKeyPairGenerator();
