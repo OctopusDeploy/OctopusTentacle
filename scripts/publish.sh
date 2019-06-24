@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "importing private key: $GPG_PRIVATEKEYFILE"
+echo "with passphrase: $GPG_PASSPHRASE"
+
 echo $GPG_PASSPHRASE | gpg1 --batch --import /certs/$GPG_PRIVATEKEYFILE
 wget -O - https://s3.amazonaws.com/octopus-apt-repo/public.key | gpg1 --no-default-keyring --keyring trustedkeys.gpg --import
 
