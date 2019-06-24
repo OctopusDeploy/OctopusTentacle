@@ -128,7 +128,7 @@ Task("__CreateDebianPackage")
 });
 
 Task("__CreateAptRepoInS3")
-    .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__BuildToolsContainer")
     .Does(() =>
 {
     CreateDirectory("./certificates/temp");
