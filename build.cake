@@ -100,7 +100,7 @@ Task("__LinuxPublish")
 Task("__BuildToolsContainer")
     .Does(() =>
 {
-    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "debian-tools" } }, @"docker\debian-tools");
+    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "debian-tools" } }, Path.Combine(Environment.CurrentDirectory, @"docker/debian-tools"));
 });
 
 Task("__CreateDebianPackage")
