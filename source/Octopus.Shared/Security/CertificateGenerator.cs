@@ -1,6 +1,9 @@
 using System;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Diagnostics;
+#if NETFRAMEWORK
+using Octopus.Shared.Internals.CertificateGeneration;
+#else
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
@@ -10,6 +13,7 @@ using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
+#endif
 
 namespace Octopus.Shared.Security
 {
@@ -27,6 +31,25 @@ namespace Octopus.Shared.Security
             return Generate(fullName, false, log);
         }
 
+#if NETFRAMEWORK
+        static X509Certificate2 Generate(string fullName, bool exportable, ILog log)
+        {
+            using (var cryptography = new CryptContext(log))
+            {
+                cryptography.Open();
+
+                return cryptography.CreateSelfSignedCertificate(
+                    new SelfSignedCertProperties
+                    {
+                        IsPrivateKeyExportable = exportable,
+                        KeyBitLength = RecommendedKeyBitLength,
+                        Name = new X500DistinguishedName(fullName),
+                        ValidFrom = DateTime.Today.AddDays(-1),
+                        ValidTo = DateTime.Today.AddYears(100)
+                    });
+            }
+        }
+#else
         static X509Certificate2 Generate(string fullName, bool exportable, ILog log)
         {
             var random = new SecureRandom();
@@ -34,14 +57,12 @@ namespace Octopus.Shared.Security
 
             var serialNumber = BigIntegers.CreateRandomInRange(BigInteger.One, BigInteger.ValueOf(long.MaxValue), random);
             certificateGenerator.SetSerialNumber(serialNumber);
-
             certificateGenerator.SetIssuerDN(new X509Name(fullName));
             certificateGenerator.SetSubjectDN(new X509Name(fullName));
-            certificateGenerator.SetNotBefore(DateTime.UtcNow.Date);
-            certificateGenerator.SetNotAfter(DateTime.UtcNow.Date.AddYears(1));
+            certificateGenerator.SetNotBefore(DateTime.UtcNow.Date.AddDays(-1));
+            certificateGenerator.SetNotAfter(DateTime.UtcNow.Date.AddYears(100));
 
-            const int strength = 2048;
-            var keyGenerationParameters = new KeyGenerationParameters(random, strength);
+            var keyGenerationParameters = new KeyGenerationParameters(random, RecommendedKeyBitLength);
             var keyPairGenerator = new RsaKeyPairGenerator();
             keyPairGenerator.Init(keyGenerationParameters);
 
@@ -63,10 +84,13 @@ namespace Octopus.Shared.Security
             using (var ms = new System.IO.MemoryStream())
             {
                 store.Save(ms, exportpw.ToCharArray(), random);
-                certificate = exportable ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable) : new X509Certificate2(ms.ToArray(), exportpw);
+                certificate = exportable 
+                    ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable | (X509KeyStorageFlags)32) 
+                    : new X509Certificate2(ms.ToArray(), exportpw, (X509KeyStorageFlags)32);
             }
 
             return certificate;
         }
+#endif
     }
 }
