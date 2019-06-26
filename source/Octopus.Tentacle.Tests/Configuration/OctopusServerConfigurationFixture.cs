@@ -43,5 +43,22 @@ namespace Octopus.Tentacle.Tests.Configuration
             var result = JsonConvert.DeserializeObject<OctopusServerConfiguration>(json, settings);
             result.CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
         }
+        
+        
+        [Test]
+        public void CommunicationStyleAsStringCanBeRead()
+        {
+            var settings = GetSettings();
+            var result = JsonConvert.DeserializeObject<OctopusServerConfiguration>(@"{""CommunicationStyle"": ""TentacleActive"", ""Thumbprint"": ""A""}", settings);
+            result.CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
+        }
+        
+        [Test]
+        public void CommunicationStyleAsIntCanBeRead()
+        {
+            var settings = GetSettings();
+            var result = JsonConvert.DeserializeObject<OctopusServerConfiguration>(@"{""CommunicationStyle"": 2, ""Thumbprint"": ""A"" }", settings);
+            result.CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
+        }
     }
 }
