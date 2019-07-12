@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
-#tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
+#tool "nuget:?package=GitVersion.CommandLine&version=5.0.0-beta5.9"
 #tool "nuget:?package=WiX&version=3.10.3"
 #addin "Cake.FileHelpers&version=3.2.0"
 #addin "nuget:?package=Cake.Incubator&version=5.0.1"
