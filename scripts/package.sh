@@ -18,14 +18,6 @@ fpm -v $VERSION \
   --vendor 'Octopus Deploy' \
   --url 'https://octopus.com/' \
   --description 'Octopus Tentacle package' \
-  -d 'libc6' \
-  -d 'libgcc1' \
-  -d 'libgssapi-krb5-2' \
-  -d 'libicu60' \
-  -d 'liblttng-ust0' \
-  -d 'libssl1.0.0' \
-  -d 'libstdc++6' \
-  -d 'zlib1g' \
   --deb-no-default-config-files \
   --after-install setup.sh \
   --before-remove uninstall.sh \
@@ -40,12 +32,6 @@ fpm -v $VERSION \
   --vendor 'Octopus Deploy' \
   --url 'https://octopus.com/' \
   --description 'Octopus Tentacle package' \
-  -d 'lttng-ust' \
-  -d 'libcurl' \
-  -d 'openssl-libs' \
-  -d 'krb5-libs' \
-  -d 'libicu' \
-  -d 'zlib' \
   --after-install setup.sh \
   --before-remove uninstall.sh \
   $TENTACLE_BINARIES=/opt/octopus/tentacle \
