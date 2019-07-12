@@ -132,9 +132,13 @@ fi
 #Update the version of libgit2 that is used by GitVersion.CommandLine in LibGit2Sharp.dll.config
 xmlstarlet edit -O --inplace --update "//dllmap[@os='linux']/@target" --value "$ldconfigoutput" tools/GitVersion.CommandLine.4.0.0-beta0007/tools/LibGit2Sharp.dll.config
 
-echo 
-
 ldconfig -p | grep "ibgit2"
+
+ls -la tools
+
+ls -la tools/GitVersion.CommandLine.4.0.0-beta0007
+
+ls -la tools/GitVersion.CommandLine.4.0.0-beta0007/tools
 
 cat tools/GitVersion.CommandLine.4.0.0-beta0007/tools/LibGit2Sharp.dll.config
 
