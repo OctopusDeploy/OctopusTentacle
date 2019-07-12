@@ -132,6 +132,12 @@ fi
 #Update the version of libgit2 that is used by GitVersion.CommandLine in LibGit2Sharp.dll.config
 xmlstarlet edit -O --inplace --update "//dllmap[@os='linux']/@target" --value "$ldconfigoutput" tools/GitVersion.CommandLine.4.0.0-beta0007/tools/LibGit2Sharp.dll.config
 
+echo 
+
+ldconfig -p | grep "ibgit2"
+
+cat tools/GitVersion.CommandLine.4.0.0-beta0007/tools/LibGit2Sharp.dll.config
+
 echo mono "$CAKE_EXE" $SCRIPT "${CAKE_ARGUMENTS[@]}"
 # Start Cake
 exec mono "$CAKE_EXE" $SCRIPT "${CAKE_ARGUMENTS[@]}"
