@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
-#tool "nuget:?package=GitVersion.CommandLine&version=5.0.0-beta5.9"
+#tool "nuget:?package=GitVersion.CommandLine&version=4.0.0-beta0007"
 #tool "nuget:?package=WiX&version=3.10.3"
 #addin "Cake.FileHelpers&version=3.2.0"
 #addin "nuget:?package=Cake.Incubator&version=5.0.1"
@@ -112,7 +112,7 @@ Task("__CreateDebianPackage")
         Rm = true,
         Tty = true,
         Env = new string[] { 
-            $"VERSION={gitVersionParm}",
+            $"VERSION={gitVersion.NuGetVersion}",
             "TENTACLE_BINARIES=/app/",
             "ARTIFACTS=/out"
         },
@@ -228,8 +228,8 @@ Task("__Test")
 });
 
 Task("__DotnetPublish")
-    .IsDependentOn("__Build")
-    .Does(() =>  {
+	.IsDependentOn("__Version")
+	.Does(() =>  {
 
         foreach(var rid in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))
         {

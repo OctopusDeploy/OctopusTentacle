@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Remove existing packages, fpm doesnt like to overwrite
+rm *.{deb,rpm}
+
 fpm -v $VERSION \
   -n tentacle-service \
   -s pleaserun \
