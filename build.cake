@@ -90,6 +90,7 @@ Task("__Default")
     .IsDependentOn("__CopyToLocalPackages");
 
 Task("__LinuxPackage")
+    .IsDependentOn("__UpdateGitVersionCommandLineConfig")
     .IsDependentOn("__BuildToolsContainer")
     .IsDependentOn("__CreateDebianPackage");
 
@@ -101,6 +102,12 @@ Task("__BuildToolsContainer")
     .Does(() =>
 {
     DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "debian-tools" } }, Path.Combine(Environment.CurrentDirectory, @"docker/debian-tools"));
+});
+
+Task("__UpdateGitVersionCommandLineConfig")
+    .Does(() =>
+{
+    StartProcess("xmlstarlet edit -O --inplace --update \"//dllmap[@os='linux']/@target\" --value \"/lib64/libgit2.so.26\" tools/GitVersion.CommandLine.4.0.0-beta0007/tools/LibGit2Sharp.dll.config");
 });
 
 Task("__CreateDebianPackage")
