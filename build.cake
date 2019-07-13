@@ -107,7 +107,12 @@ Task("__BuildToolsContainer")
 Task("__UpdateGitVersionCommandLineConfig")
     .Does(() =>
 {
-    StartProcess("xmlstarlet edit -O --inplace --update \"//dllmap[@os='linux']/@target\" --value \"/lib64/libgit2.so.26\" tools/GitVersion.CommandLine.4.0.0-beta0007/tools/LibGit2Sharp.dll.config");
+    using(var process = StartAndReturnProcess("xmlstarlet", new ProcessSettings{ Arguments = "edit -O --inplace --update \"//dllmap[@os='linux']/@target\" --value \"/lib64/libgit2.so.26\" tools/GitVersion.CommandLine.4.0.0-beta0007/tools/LibGit2Sharp.dll.config"" }))
+    {
+        process.WaitForExit();
+        // This should output 0 as valid arguments supplied
+        Information("Exit code: {0}", process.GetExitCode());
+    }
 });
 
 Task("__CreateDebianPackage")
