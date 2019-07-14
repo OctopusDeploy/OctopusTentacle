@@ -16,10 +16,10 @@ namespace Octopus.Shared.Startup
         {
             if (!PlatformDetection.IsRunningOnWindows)
             {
-                return new WindowsServiceConfigurator(log, thisServiceName, exePath, instance, serviceDescription, serviceConfigurationState);
+                return new LinuxServiceConfigurator(log, thisServiceName, exePath, instance, serviceDescription, serviceConfigurationState);
             }
 
-            return new LinuxServiceConfigurator(log, thisServiceName, exePath, instance, serviceDescription, serviceConfigurationState);
+            return new WindowsServiceConfigurator(log, thisServiceName, exePath, instance, serviceDescription, serviceConfigurationState);
         }
     }
 }
