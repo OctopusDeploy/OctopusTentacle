@@ -2,6 +2,7 @@ using System;
 using Autofac;
 using Octopus.Configuration;
 using Octopus.Shared.Services;
+using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
@@ -31,6 +32,7 @@ namespace Octopus.Shared.Configuration
             }
             
             builder.RegisterType<ApplicationInstanceStore>().As<IApplicationInstanceStore>();
+            builder.RegisterType<ServiceConfiguratorFactory>();
             builder.RegisterType<ApplicationInstanceSelector>()
                 .WithParameter("applicationName", applicationName)
                 .WithParameter("currentInstanceName", instanceName)

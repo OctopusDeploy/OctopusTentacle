@@ -9,18 +9,18 @@ namespace Octopus.Shared.Startup
 {
     public class ServiceCommand : AbstractStandardCommand
     {
-        readonly ILog log;
         readonly string serviceDescription;
         readonly Assembly assemblyContainingService;
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
+        private readonly ServiceConfiguratorFactory serviceConfiguratorFactory;
 
-        public ServiceCommand(IApplicationInstanceSelector instanceSelector, string serviceDescription, Assembly assemblyContainingService, ILog log) : base(instanceSelector)
+        public ServiceCommand(IApplicationInstanceSelector instanceSelector, string serviceDescription, Assembly assemblyContainingService, ServiceConfiguratorFactory serviceConfiguratorFactory) : base(instanceSelector)
         {
             this.instanceSelector = instanceSelector;
             this.serviceDescription = serviceDescription;
             this.assemblyContainingService = assemblyContainingService;
-            this.log = log;
+            this.serviceConfiguratorFactory = serviceConfiguratorFactory;
 
             serviceConfigurationState = new ServiceConfigurationState();
 
@@ -45,9 +45,10 @@ namespace Octopus.Shared.Startup
             var instance = instanceSelector.GetCurrentInstance().InstanceName;
             var exePath = Path.ChangeExtension(assemblyContainingService.FullLocalPath(), "exe");
 
-            var serverInstaller = new ConfigureServiceHelper(log, thisServiceName, exePath, instance, serviceDescription, serviceConfigurationState);
+            var serviceConfigurator = serviceConfiguratorFactory.GetServiceConfigurator(thisServiceName, exePath,
+                instance, serviceDescription, serviceConfigurationState);
 
-            serverInstaller.ConfigureService();
+            serviceConfigurator.ConfigureService();
         }
     }
 }
