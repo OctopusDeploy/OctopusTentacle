@@ -9,7 +9,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {
-    public class ConfigureServiceHelper
+    public class WindowsServiceConfigurator
     {
         readonly ILog log;
         readonly string thisServiceName;
@@ -18,7 +18,7 @@ namespace Octopus.Shared.Startup
         readonly string serviceDescription;
         readonly ServiceConfigurationState serviceConfigurationState;
 
-        public ConfigureServiceHelper(ILog log, string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
+        public WindowsServiceConfigurator(ILog log, string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
         {
             this.log = log;
             this.thisServiceName = thisServiceName;
