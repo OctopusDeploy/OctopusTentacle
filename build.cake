@@ -120,6 +120,7 @@ Task("__CreateDebianPackage")
     .IsDependentOn("__BuildToolsContainer")
     .Does(() =>
 {
+    CopyFiles(Path.Combine(Environment.CurrentDirectory, "scripts/configure-tentacle.sh"),Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64/configure-tentacle.sh"));
     DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
