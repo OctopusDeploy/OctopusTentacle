@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Commands
             outputFile.Save();
         }
 
-        async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
+        internal async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
         {
             var configStore = new XmlFileKeyValueStore(fileSystem, instanceSelector.GetCurrentInstance().ConfigurationPath);
 
