@@ -39,6 +39,14 @@ fpm -v $VERSION \
 
 rm -rf tentacle-service.dir
 
+mkdir tentacle
+
+cp -a $TENTACLE_BINARIES/. tentacle/
+
+tar -czvf tentacle-$VERSION-linux_x64.tar.gz tentacle
+
 mkdir -p $ARTIFACTS
+
+cp -f *.tar.gz $ARTIFACTS
 
 cp -f *.{deb,rpm} $ARTIFACTS
