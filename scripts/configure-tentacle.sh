@@ -33,7 +33,7 @@ function showRunCommand {
     echo -e "${YELLOW}sudo /opt/octopus/tentacle/Tentacle run --instance \"$1\" --noninteractive${NC}"
     echo
     echo "To run Tentacle as a service, please refer to the docs on our website."
-    echo "${GREEN}https://octopus.com/docs/infrastructure/deployment-targets/linux/tentacle${NC}"
+    echo -e "${GREEN}https://octopus.com/docs/infrastructure/deployment-targets/linux/tentacle${NC}"
     echo
 }
 
@@ -172,13 +172,14 @@ function setupPollingTentacle {
 
 command -v dotnet >/dev/null 2>&1 || 
 { 
-    echo "Please install dotnet core 2.2 to run Tentacle." >&2; 
-    exit 1;     
+        echo "Please install .Net Core 2.2 to run Tentacle."
+        echo -e "${GREEN}https://dotnet.microsoft.com/download/linux-package-manager/rhel/runtime-current${NC}"
+        exit 1 
 }
 
 if ! dotnet --list-sdks | grep -q "^2\.2" && ! dotnet --list-runtimes | grep -q "2\.2"; then
         echo "Please install .Net Core 2.2 to run Tentacle."
-        echo "${GREEN}https://dotnet.microsoft.com/download/linux-package-manager/rhel/runtime-current${NC}"
+        echo -e "${GREEN}https://dotnet.microsoft.com/download/linux-package-manager/rhel/runtime-current${NC}"
         exit 1
 fi
 
