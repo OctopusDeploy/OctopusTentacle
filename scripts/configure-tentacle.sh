@@ -19,6 +19,15 @@ function splitAndGetArgs {
     echo $finalstring
 }
 
+function showRunCommand {
+    GREEN='\033[1;32m'
+    YELLOW='\033[1;33m'
+    NC='\033[0m' # No Color
+
+    echo -e "${GREEN}Run the following command to start Tentacle${NC}"
+    echo -e "${YELLOW}sudo /opt/octopus/tentacle/Tentacle run --instance \"$1\" --noninteractive${NC}"
+}
+
 function setupListeningTentacle {
     instancename=$1
     logpath="/etc/octopus"
@@ -56,6 +65,8 @@ function setupListeningTentacle {
     sudo /opt/octopus/tentacle/Tentacle new-certificate --instance "$instancename" --if-blank
     sudo /opt/octopus/tentacle/Tentacle configure --instance "$instancename" --app "$applicationpath" --port $port --noListen False --reset-trust
     sudo /opt/octopus/tentacle/Tentacle configure --instance "$instancename" --trust $thumbprint
+
+    showRunCommand $instancename
 }
 
 function setupPollingTentacle {
@@ -149,6 +160,8 @@ function setupPollingTentacle {
     else
         sudo /opt/octopus/tentacle/Tentacle register-worker --instance "$instancename" --server "$octopusserverurl" --name "$displayname" --comms-style "TentacleActive" --server-comms-port "10943" $auth --space "$space" $workerpoolsstring --policy "Default Machine Policy"
     fi
+
+    showRunCommand $instancename
 }
 
 #Check to ensure dotnet core is installed
@@ -159,9 +172,9 @@ command -v dotnet >/dev/null 2>&1 ||
     exit 1;     
 }
 
-if ! dotnet --list-sdks | grep -q "^2\.2"; then
-    echo "Please install dotnet core 2.2 to run Tentacle."
-    exit 1
+if ! dotnet --list-sdks | grep -q "^2\.2" && ! dotnet --list-runtimes | grep -q "2\.2"; then
+        echo "Please install dotnet core 2.2 to run Tentacle."
+        exit 1
 fi
 
 
