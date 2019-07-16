@@ -1,5 +1,9 @@
 #!/bin/bash
 
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
 function assignNonEmptyValue {
     if [ ! -z "$1" ]
     then
@@ -24,8 +28,13 @@ function showRunCommand {
     YELLOW='\033[1;33m'
     NC='\033[0m' # No Color
 
+    echo
     echo -e "${GREEN}Run the following command to start Tentacle${NC}"
     echo -e "${YELLOW}sudo /opt/octopus/tentacle/Tentacle run --instance \"$1\" --noninteractive${NC}"
+    echo
+    echo "To run Tentacle as a service, please refer to the docs on our website."
+    echo "${GREEN}https://octopus.com/docs/infrastructure/deployment-targets/linux/tentacle${NC}"
+    echo
 }
 
 function setupListeningTentacle {
@@ -48,10 +57,6 @@ function setupListeningTentacle {
         read -p 'Enter the thumbprint of the Octopus Server: ' thumbprint
     done 
 
-    GREEN='\033[1;32m'
-    YELLOW='\033[1;33m'
-    NC='\033[0m' # No Color
-
     echo -e "${GREEN}The following configuration commands will be run to configure Tentacle:"
 
     echo -e "${YELLOW}sudo /opt/octopus/tentacle/Tentacle create-instance --instance \"$instancename\" --config \"$logpath/$instancename/tentacle-$instancename.config\""
@@ -71,7 +76,7 @@ function setupListeningTentacle {
 
 function setupPollingTentacle {
     instancename=$1
-    displayname=$instancename
+    displayname=$hostname
     logpath="/etc/octopus"
     applicationpath="/home/Octopus/Applications"
     space="Default"
@@ -85,7 +90,10 @@ function setupPollingTentacle {
     read -p "Where would you like Tentacle to install appications to? ($applicationpath):" inputapplicationpath
     applicationpath=$(assignNonEmptyValue $inputapplicationpath $applicationpath)
 
-    read -p "Octopus Server URL (eg. https://octopus-server):" octopusserverurl
+    while [ -z "$octopusserverurl" ] 
+    do
+        read -p 'Octopus Server URL (eg. https://octopus-server): ' octopusserverurl
+    done 
 
     read -p 'Select auth method: 1) API-Key or 2) Username and Password (default 1): ' authmethod
 
@@ -114,7 +122,7 @@ function setupPollingTentacle {
             #Get worker pools
             while [ -z "$workerpoolsinput" ] 
             do
-                read -p 'Enter the environments for this Tenteacle (comma seperated): ' workerpoolsinput
+                read -p 'Enter the environments for this Tentacle (comma seperated): ' workerpoolsinput
             done 
             workerpoolsstring=$(splitAndGetArgs "workerpool" "$workerpoolsinput")
             ;; 
@@ -122,22 +130,18 @@ function setupPollingTentacle {
             #Get environments
             while [ -z "$environmentsinput" ] 
             do
-                read -p 'Enter the environments for this Tenteacle (comma seperated): ' environmentsinput
+                read -p 'Enter the environments for this Tentacle (comma seperated): ' environmentsinput
             done 
             envstring=$(splitAndGetArgs "environment" "$environmentsinput")
 
             #Get roles
             while [ -z "$rolesinput" ] 
             do
-                read -p 'Enter the roles for this Tenteacle (comma seperated): ' rolesinput
+                read -p 'Enter the roles for this Tentacle (comma seperated): ' rolesinput
             done
             rolesstring=$(splitAndGetArgs "role" "$rolesinput")
             ;;
     esac
-
-    GREEN='\033[1;32m'
-    YELLOW='\033[1;33m'
-    NC='\033[0m' # No Color
 
     echo -e "${GREEN}The following configuration commands will be run to configure Tentacle:"
     echo -e "${YELLOW}sudo /opt/octopus/tentacle/Tentacle create-instance --instance \"$instancename\" --config \"$logpath/$instancename/tentacle-$instancename.config\""
@@ -145,9 +149,9 @@ function setupPollingTentacle {
     echo -e "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --noListen \"True\" --reset-trust"
 
     if [ $machinetype = 1 ]; then
-        echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $envstring $rolesstring --policy \"Default Machine Policy\"${NC}"
+        echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $envstring $rolesstring ${NC}"
     else
-        echo -e "sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $workerpoolsstring --policy \"Default Machine Policy\"${NC}"
+        echo -e "sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $workerpoolsstring ${NC}"
     fi
 
     read -p "Press enter to continue..."
@@ -156,9 +160,9 @@ function setupPollingTentacle {
     sudo /opt/octopus/tentacle/Tentacle new-certificate --instance "$instancename" --if-blank
     sudo /opt/octopus/tentacle/Tentacle configure --instance "$instancename" --app "$applicationpath" --noListen "True" --reset-trust
     if [ $machinetype = 1 ]; then
-        sudo /opt/octopus/tentacle/Tentacle register-with --instance "$instancename" --server "$octopusserverurl" --name "$displayname" --comms-style "TentacleActive" --server-comms-port "10943" $auth --space "$space" $envstring $rolesstring --policy "Default Machine Policy"
+        sudo /opt/octopus/tentacle/Tentacle register-with --instance "$instancename" --server "$octopusserverurl" --name "$displayname" --comms-style "TentacleActive" --server-comms-port "10943" $auth --space "$space" $envstring $rolesstring
     else
-        sudo /opt/octopus/tentacle/Tentacle register-worker --instance "$instancename" --server "$octopusserverurl" --name "$displayname" --comms-style "TentacleActive" --server-comms-port "10943" $auth --space "$space" $workerpoolsstring --policy "Default Machine Policy"
+        sudo /opt/octopus/tentacle/Tentacle register-worker --instance "$instancename" --server "$octopusserverurl" --name "$displayname" --comms-style "TentacleActive" --server-comms-port "10943" $auth --space "$space" $workerpoolsstring
     fi
 
     showRunCommand $instancename
@@ -174,14 +178,14 @@ command -v dotnet >/dev/null 2>&1 ||
 
 if ! dotnet --list-sdks | grep -q "^2\.2" && ! dotnet --list-runtimes | grep -q "2\.2"; then
         echo "Please install .Net Core 2.2 to run Tentacle."
+        echo "${GREEN}https://dotnet.microsoft.com/download/linux-package-manager/rhel/runtime-current${NC}"
         exit 1
 fi
 
+instance="Tentacle"
 
-while [ -z "$instance" ] 
-do
-    read -p 'Name of Tentacle instance: ' instance
-done 
+read -p "Name of Tentacle instance (default $instance):" inputinstance
+instance=$(assignNonEmptyValue $inputinstance $instance)
 
 read -p 'What kind of Tentacle would you like to configure: 1) Listening or 2) Polling (default 1): ' commsstlye
 
