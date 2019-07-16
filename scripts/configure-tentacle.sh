@@ -173,7 +173,7 @@ command -v dotnet >/dev/null 2>&1 ||
 }
 
 if ! dotnet --list-sdks | grep -q "^2\.2" && ! dotnet --list-runtimes | grep -q "2\.2"; then
-        echo "Please install dotnet core 2.2 to run Tentacle."
+        echo "Please install .Net Core 2.2 to run Tentacle."
         exit 1
 fi
 
