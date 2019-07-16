@@ -4,5 +4,3 @@ echo ""
 echo "To set up a Tentacle instance, run the following script:"
 echo "    /opt/octopus/tentacle/configure-tentacle.sh"
 echo ""
-
-sh /usr/share/pleaserun/Tentacle/install.sh
