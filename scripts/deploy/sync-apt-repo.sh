@@ -7,7 +7,7 @@ S3_PUBLISH_ENDPOINT=$(get_octopusvariable "S3PublishEndpoint")
 GPG_PRIVATEKEY=$(get_octopusvariable "GPG_PRIVATEKEY")
 echo "$GPG_PRIVATEKEY" > $GPG_PRIVATEKEYFILE
 
-cp Tentacle.deploy.linux/.aptly.conf ~/.aptly.conf
+cp .aptly.conf ~/.aptly.conf
 
 echo "importing private key: $GPG_PRIVATEKEYFILE"
 echo "with passphrase: $GPG_PASSPHRASE"
