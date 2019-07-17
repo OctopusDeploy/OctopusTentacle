@@ -4,6 +4,9 @@
 #artifacts: this is the directory containing the rpm file(s)
 
 # Publishes built RPMs to an s3-backed RPM repo.
+export AWS_ACCESS_KEY_ID=$(get_octopusvariable "S3:ACCESS_KEY_ID")
+export AWS_SECRET_ACCESS_KEY=$(get_octopusvariable "S3:SECRET_ACCESS_KEY")
+
 set -e
 if [ ! -z "${DEBUG}" ]; then
   set -x
