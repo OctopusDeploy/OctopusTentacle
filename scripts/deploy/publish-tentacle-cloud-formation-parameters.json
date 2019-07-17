@@ -1,0 +1,18 @@
+[
+    {
+        "ParameterKey": "InstanceKeyPairName",
+        "ParameterValue": "#{EC2:KeyPairName}"
+    },
+    {
+        "ParameterKey": "InstanceAmi",
+        "ParameterValue": "#{EC2:Ami}"
+    },
+    {
+        "ParameterKey": "InstanceSecurityGroupId",
+        "ParameterValue": "#{EC2:SecurityGroupId}"
+    },
+    {
+        "ParameterKey": "InstanceSubnetId",
+        "ParameterValue": "#{EC2:SubnetId}"
+    }
+]
