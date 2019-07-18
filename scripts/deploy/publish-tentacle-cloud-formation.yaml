@@ -123,6 +123,8 @@ Resources:
           sudo apt-get update && apt-get install -y \
             gpgv1 \
             aptly \
+            awscli \
+            createrepo \
             && rm -rf /var/lib/apt/lists/*
 
           # Install and configure Tentacle
