@@ -57,7 +57,7 @@ aws --region "${REGION}" s3 sync "s3://${TARGET_BUCKET}" $TARGET_DIR
 
 # copy the RPM in and update the repo
 mkdir -pv $TARGET_DIR/x86_64/
-cp -rv $SOURCE_DIR/RPMS/* $TARGET_DIR
+cp -rv $SOURCE_DIR/*.rpm $TARGET_DIR
 UPDATE=""
 if [ -e "$TARGET_DIR/x86_64/repodata/repomd.xml" ]; then
   UPDATE="--update "
