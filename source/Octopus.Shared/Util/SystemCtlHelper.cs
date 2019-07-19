@@ -1,3 +1,4 @@
+using System;
 using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Util
@@ -11,30 +12,48 @@ namespace Octopus.Shared.Util
             this.log = log;
         }
 
-        public bool StartService(string serviceName)
+        public bool StartService(string serviceName, bool logFailureAsError = false)
         {
-            return RunServiceCommand("start", serviceName);
+            return RunServiceCommand("start", serviceName, logFailureAsError);
         }
         
-        public bool StopService(string serviceName)
+        public bool StopService(string serviceName, bool logFailureAsError = false)
         {
-            return RunServiceCommand("stop", serviceName);
+            return RunServiceCommand("stop", serviceName, logFailureAsError);
         }
         
-        public bool EnableService(string serviceName)
+        public bool EnableService(string serviceName, bool logFailureAsError = false)
         {
-            return RunServiceCommand("enable", serviceName);
+            return RunServiceCommand("enable", serviceName, logFailureAsError);
         }
         
-        public bool DisableService(string serviceName)
+        public bool DisableService(string serviceName, bool logFailureAsError = false)
         {
-            return RunServiceCommand("disable", serviceName);
+            return RunServiceCommand("disable", serviceName, logFailureAsError);
         }
 
-        private bool RunServiceCommand(string command, string serviceName)
+        private bool RunServiceCommand(string command, string serviceName, bool logFailureAsError)
         {
-            var runner = new CommandLineRunner();
-            return runner.Execute(new CommandLineInvocation("/bin/bash", $"-c \"sudo systemctl {command} {serviceName}\""), log);
+            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo -n systemctl {command} {serviceName}\"");
+            var result = commandLineInvocation.ExecuteCommand();
+            
+            if (result.ExitCode == 0) return true;
+
+            void LogErrorOrWarning(string error)
+            {
+                if (logFailureAsError)
+                    log.Error(error);
+                else
+                    log.Warn(error);
+            }
+
+            LogErrorOrWarning($"The command 'systemctl {command} {serviceName}' failed with exit code: {result.ExitCode}");
+            foreach (var error in result.Errors)
+            {
+                LogErrorOrWarning(error);
+            }
+
+            return false;
         }
     }
 }

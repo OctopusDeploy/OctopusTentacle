@@ -36,13 +36,13 @@ namespace Octopus.Shared.Startup
             
             if (serviceConfigurationState.Stop)
             {
-                systemCtlHelper.StopService(thisServiceName);
+                systemCtlHelper.StopService(instance);
             }
 
             if (serviceConfigurationState.Uninstall)
             {
-                systemCtlHelper.StopService(thisServiceName);
-                systemCtlHelper.DisableService(thisServiceName);
+                systemCtlHelper.StopService(instance);
+                systemCtlHelper.DisableService(instance);
                 File.Delete(SystemdUnitFilePath);
             }
             
@@ -57,24 +57,24 @@ namespace Octopus.Shared.Startup
             if (serviceConfigurationState.Install)
             {
                 WriteUnitFile(SystemdUnitFilePath, GenerateSystemdUnitFile(serviceDependencies));
-                systemCtlHelper.EnableService(thisServiceName);
+                systemCtlHelper.EnableService(instance);
             }
             
             if (serviceConfigurationState.Reconfigure)
             {
                 //remove service
-                systemCtlHelper.StopService(thisServiceName);
-                systemCtlHelper.DisableService(thisServiceName);
+                systemCtlHelper.StopService(instance);
+                systemCtlHelper.DisableService(instance);
                 File.Delete(SystemdUnitFilePath);
                 
                 //re-add service
                 WriteUnitFile(SystemdUnitFilePath, GenerateSystemdUnitFile(serviceDependencies));
-                systemCtlHelper.EnableService(thisServiceName);
+                systemCtlHelper.EnableService(instance);
             }
             
             if (serviceConfigurationState.Start)
             {
-                systemCtlHelper.StartService(thisServiceName);
+                systemCtlHelper.StartService(instance);
             }
         }
 
@@ -82,8 +82,9 @@ namespace Octopus.Shared.Startup
         {
             File.WriteAllText(path, contents);
 
-            var runner = new CommandLineRunner();
-            runner.Execute(new CommandLineInvocation("/bin/bash", $"-c \"sudo chmod 666 {path}\""), log);
+            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo -n chmod 666 {path}\"");
+            var result = commandLineInvocation.ExecuteCommand();
+            result.Validate();
         }
 
         private string GenerateSystemdUnitFile(IEnumerable<string> serviceDependencies)

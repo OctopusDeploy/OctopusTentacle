@@ -43,7 +43,8 @@ namespace Octopus.Shared.Startup
 
             var thisServiceName = ServiceName.GetWindowsServiceName(instanceSelector.GetCurrentInstance().ApplicationName, instanceSelector.GetCurrentInstance().InstanceName);
             var instance = instanceSelector.GetCurrentInstance().InstanceName;
-            var exePath = Path.ChangeExtension(assemblyContainingService.FullLocalPath(), "exe");
+            var fullPath = assemblyContainingService.FullLocalPath();
+            var exePath = PlatformDetection.IsRunningOnWindows ? Path.ChangeExtension(fullPath, "exe") : PathHelper.GetPathWithoutExtension(fullPath);
 
             var serviceConfigurator = serviceConfiguratorFactory.GetServiceConfigurator(thisServiceName, exePath,
                 instance, serviceDescription, serviceConfigurationState);
