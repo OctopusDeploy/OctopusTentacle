@@ -139,10 +139,11 @@ Resources:
           configFilePath="/etc/octopus/default/tentacle-default.config"
           applicationPath="/home/Octopus/Applications/"
 
-          add-apt-repository "deb https://s3.amazonaws.com/octopus-apt-repo/ stretch main"
-          apt-key adv --fetch-keys https://s3.amazonaws.com/octopus-apt-repo/public.key
-          apt-get update
-          apt-get install tentacle -y
+          tentacleArchiveName=tentacle-#{Octopus.Action.Package.PackageVersion}-linux_x64.tar.gz
+          curl https://download.octopusdeploy.com/#{S3:LinuxTentacleDownloadPath}$tentacleArchiveName --output $tentacleArchiveName
+
+          mkdir /opt/octopus
+          tar xvzf $tentacleArchiveName -C /opt/octopus
 
           sudo chmod +x /opt/octopus/tentacle/Tentacle
           sudo cat > /etc/systemd/system/tentacle.service << EOM
