@@ -94,10 +94,6 @@ Task("__LinuxPackage")
     .IsDependentOn("__BuildToolsContainer")
     .IsDependentOn("__CreateDebianPackage");
 
-Task("__LinuxPublish")
-    .IsDependentOn("__BuildToolsContainer")
-    .IsDependentOn("__CreateAptRepoInS3");
-
 Task("__BuildToolsContainer")
     .Does(() =>
 {
@@ -138,34 +134,6 @@ Task("__CreateDebianPackage")
 
     CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.deb", artifactsDir);
     CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.rpm", artifactsDir);
-});
-
-Task("__CreateAptRepoInS3")
-    .IsDependentOn("__BuildToolsContainer")
-    .Does(() =>
-{
-    CreateDirectory("./certificates/temp");
-
-    CopyFileToDirectory(gpgSigningCertificatePath, "./certificates/temp");
-
-    DockerRunWithoutResult(new DockerContainerRunSettings {
-        Rm = true,
-        Tty = true,
-        Env = new string[] {
-            $"VERSION={gitVersionParm}",
-            $"AWS_ACCESS_KEY_ID={awsAccessKeyId}",
-            $"AWS_SECRET_ACCESS_KEY={awsSecretAccessKey}",
-            $"GPG_PASSPHRASE={gpgSigningCertificatePassword}",
-            $"GPG_PRIVATEKEYFILE={Path.GetFileName(gpgSigningCertificatePath)}"
-        },
-        Volume = new string[] {
-            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/build",
-            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/app",
-            $"{Path.Combine(Environment.CurrentDirectory, "certificates", "temp")}:/certs",
-        }
-    }, "debian-tools", "/build/publish.sh");
-
-    DeleteDirectory("./certificates/temp", true);
 });
 
 Task("__Version")
@@ -569,9 +537,6 @@ Task("Default")
 
 Task("LinuxPackage")
     .IsDependentOn("__LinuxPackage");
-
-Task("LinuxPublish")
-    .IsDependentOn("__LinuxPublish");
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION
