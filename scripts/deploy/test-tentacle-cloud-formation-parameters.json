@@ -1,0 +1,18 @@
+[
+    {
+        "ParameterKey": "AptInstanceKeyPairName",
+        "ParameterValue": "#{Test.APT.Instance.KeyPairName}"
+    },
+    {
+        "ParameterKey": "AptInstanceAmi",
+        "ParameterValue": "#{Test.APT.Instance.Ami}"
+    },
+    {
+        "ParameterKey": "AptInstanceSecurityGroupId",
+        "ParameterValue": "#{Test.APT.Instance.SecurityGroupId}"
+    },
+    {
+        "ParameterKey": "AptInstanceSubnetId",
+        "ParameterValue": "#{Test.APT.Instance.SubnetId}"
+    }
+]
