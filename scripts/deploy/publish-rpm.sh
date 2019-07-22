@@ -48,6 +48,10 @@ if [ -z "${TARGET_BUCKET}" ]; then
   exit 1
 fi
 
+aws s3 mb "s3://${TARGET_BUCKET}"
+aws s3api wait bucket-exists --bucket ${TARGET_BUCKET}
+aws s3 sync ./rpm-content "s3://${TARGET_BUCKET}"
+
 TARGET_DIR="/tmp/${TARGET_BUCKET}"
 
 # make sure we're operating on the latest data in the target bucket

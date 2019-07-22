@@ -1,0 +1,6 @@
+[tentacle]
+name=Octopus Tentacle
+baseurl=https://octopus-rpm-repo.s3.amazonaws.com/
+enabled=1
+gpgkey=https://octopus-rpm-repo.s3.amazonaws.com/public.key
+gpgcheck=0
