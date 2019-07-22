@@ -128,14 +128,14 @@ Resources:
             && rm -rf /var/lib/apt/lists/*
 
           # Install and configure Tentacle
-          serverUrl="#{Octopus.Web.ServerUri}"   # The url of your Octous server
-          thumbprint="#{Octopus:Thumbprint}"       # The thumbprint of your Octopus server
-          apiKey="#{Octopus:ApiKey}"           # An Octopus Server api key with permission to add machines
-          name="Linux Tentacle Publisher"      # The name of the Tentacle at is will appear in the Octopus portal
-          environment="#{Octopus.Environment.Name}"  # The environment to register the Tentacle in
-          role="linux-tentacle-publisher"   # The role to assign to the Tentacle
-          space="#{Octopus.Space.Name}"     # The space to register the Tentacle in
-          machinePolicy="#{Octopus:MachinePolicy}"
+          serverUrl="#{Octopus.Web.ServerUri}"
+          thumbprint="#{Publisher.Tentacle.OctopusThumbprint}"
+          apiKey="#{Publisher.Tentacle.OctopusApiKey}"
+          name="#{Publisher.Tentacle.Name}"
+          environment="#{Octopus.Environment.Name}"
+          role="#{Publisher.Tentacle.Role}"
+          space="#{Octopus.Space.Name}"
+          machinePolicy="#{Publisher.Tentacle.MachinePolicy}"
           configFilePath="/etc/octopus/default/tentacle-default.config"
           applicationPath="/home/Octopus/Applications/"
 
