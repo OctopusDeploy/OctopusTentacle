@@ -11,6 +11,17 @@ Parameters:
   AptInstanceTypeParameter:
     Type: String
     Default: t2.medium
+  RpmInstanceKeyPairName:
+    Type: String
+  RpmInstanceAmi:
+    Type: String
+  RpmInstanceSecurityGroupId:
+    Type: String
+  RpmInstanceSubnetId:
+    Type: String
+  RpmInstanceTypeParameter:
+    Type: String
+    Default: t2.medium
 Resources:
   AptTestAgent:
     Type: 'AWS::EC2::Instance'
@@ -104,7 +115,100 @@ Resources:
           echo "Registering the Tentacle $name with server $serverUrl in environment $environment with role $role"
           sudo /opt/octopus/tentacle/Tentacle register-with --server "$serverUrl" --apiKey "$apiKey" --name "$name" --env "$environment" --role "$role" --space "$space" --policy "$machinePolicy"
           sudo systemctl start tentacle
+  RpmTestAgent:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      SubnetId: !Ref RpmInstanceSubnetId
+      ImageId: !Ref RpmInstanceAmi
+      InstanceType:
+        Ref: RpmInstanceTypeParameter
+      KeyName: !Ref RpmInstanceKeyPairName
+      SecurityGroupIds:
+      - Ref: RpmInstanceSecurityGroupId
+      BlockDeviceMappings:
+      - DeviceName: /dev/xvda
+        Ebs:
+          VolumeSize: 50
+      Tags:
+        -
+          Key: Appplication
+          Value: Linux Tentacle
+        -
+          Key: Domain
+          Value: None
+        -
+          Key: Environment
+          Value: Production
+        -
+          Key: LifeTime
+          Value: Transient
+        -
+          Key: Name
+          Value: Linux Tentacle RPM test agent
+        -
+          Key: OS
+          Value: Linux
+        -
+          Key: OwnerContact
+          Value: "#{Deployer Contact}"
+        -
+          Key: Source
+          Value: CloudForation Script in Octopus Deploy
+        -
+          Key: scheduler:ec2-startstop
+          Value: false
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+          sudo apt-get update && apt-get install -y gnupg1 wget
+
+          # Install and configure Tentacle
+          serverUrl="#{Octopus.Web.ServerUri}"
+          thumbprint="#{Test.RPM.Tentacle.OctopusThumbprint}"
+          apiKey="#{Test.RPM.Tentacle.OctopusApiKey}"
+          name="#{Test.RPM.Tentacle.Name}"
+          environment="#{Octopus.Environment.Name}"
+          role="#{Test.RPM.Tentacle.Role}"
+          space="#{Octopus.Space.Name}"
+          machinePolicy="#{Test.RPM.Tentacle.MachinePolicy}"
+          targetBucket=#{Publish.RPM.S3.TargetBucket}
+          configFilePath="/etc/octopus/default/tentacle-default.config"
+          applicationPath="/home/Octopus/Applications/"
+
+          sudo wget https://s3.amazonaws.com/$targetBucket/tentacle.repo -O /etc/yum.repos.d/tentacle.repo
+          sudo yum install tentacle
+
+          sudo cat > /etc/systemd/system/tentacle.service << EOM
+          [Unit]
+          Description=Octopus Tentacle Server
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=root
+          WorkingDirectory=/etc/octopus/default/
+          ExecStart=/opt/octopus/tentacle/Tentacle run --noninteractive
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+          EOM
+
+          sudo chmod 644 /etc/systemd/system/tentacle.service
+
+          sudo /opt/octopus/tentacle/Tentacle create-instance --config "$configFilePath"
+          sudo /opt/octopus/tentacle/Tentacle new-certificate --if-blank
+          sudo /opt/octopus/tentacle/Tentacle configure --reset-trust --app "$applicationPath"
+          sudo /opt/octopus/tentacle/Tentacle configure --port 10933 --noListen False
+          sudo /opt/octopus/tentacle/Tentacle configure --trust $thumbprint
+          echo "Registering the Tentacle $name with server $serverUrl in environment $environment with role $role"
+          sudo /opt/octopus/tentacle/Tentacle register-with --server "$serverUrl" --apiKey "$apiKey" --name "$name" --env "$environment" --role "$role" --space "$space" --policy "$machinePolicy"
+          sudo systemctl start tentacle
 Outputs:
   AptInstanceID:
-    Description: The Apt Instance ID
+    Description: The APT Instance ID
     Value: !Ref AptTestAgent
+  RpmInstanceID:
+    Description: The RPM Instance ID
+    Value: !Ref RpmTestAgent
