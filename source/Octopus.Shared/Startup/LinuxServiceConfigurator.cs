@@ -32,6 +32,13 @@ namespace Octopus.Shared.Startup
 
         public void ConfigureService()
         {
+            //Check if systemd is being used, if not bail out.
+            if (!IsSystemdInstalled())
+            {
+                log.Error("Could not detect systemd.");
+                return;
+            }
+            
             var systemCtlHelper = new SystemCtlHelper(log);
             
             if (serviceConfigurationState.Stop)
@@ -127,6 +134,13 @@ namespace Octopus.Shared.Startup
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo -n chmod 666 {path}\"");
             var result = commandLineInvocation.ExecuteCommand();
             result.Validate();
+        }
+
+        private bool IsSystemdInstalled()
+        {
+            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"command -v systemctl >/dev/null\"");
+            var result = commandLineInvocation.ExecuteCommand();
+            return result.ExitCode == 0;
         }
 
         private string GenerateSystemdUnitFile(IEnumerable<string> serviceDependencies)
