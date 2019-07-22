@@ -12,25 +12,13 @@ namespace Octopus.Shared.Startup
     public class LinuxServiceConfigurator : IServiceConfigurator
     {
         readonly ILog log;
-        readonly string thisServiceName;
-        readonly string exePath;
-        readonly string instance;
-        readonly string serviceDescription;
-        readonly ServiceConfigurationState serviceConfigurationState;
-
-        private string SystemdUnitFilePath => $"/etc/systemd/system/{instance}.service";
         
-        public LinuxServiceConfigurator(ILog log, string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
+        public LinuxServiceConfigurator(ILog log)
         {
             this.log = log;
-            this.thisServiceName = thisServiceName;
-            this.exePath = exePath;
-            this.instance = instance;
-            this.serviceDescription = serviceDescription;
-            this.serviceConfigurationState = serviceConfigurationState;
         }
 
-        public void ConfigureService()
+        public void ConfigureService(string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
         {
             //Check if systemd is being used, if not bail out.
             if (!IsSystemdInstalled())
@@ -38,6 +26,8 @@ namespace Octopus.Shared.Startup
                 log.Error("Could not detect systemd.");
                 return;
             }
+            
+            string systemdUnitFilePath = $"/etc/systemd/system/{instance}.service";
             
             var systemCtlHelper = new SystemCtlHelper(log);
             
@@ -62,7 +52,7 @@ namespace Octopus.Shared.Startup
                 {
                     systemCtlHelper.StopService(instance);
                     systemCtlHelper.DisableService(instance);
-                    File.Delete(SystemdUnitFilePath);
+                    File.Delete(systemdUnitFilePath);
                     log.Info("Service uninstalled");
                 }
                 catch (Exception e)
@@ -83,7 +73,7 @@ namespace Octopus.Shared.Startup
             {
                 try
                 {
-                    WriteUnitFile(SystemdUnitFilePath, GenerateSystemdUnitFile(serviceDependencies));
+                    WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, serviceDependencies));
                     systemCtlHelper.EnableService(instance, true);
                     log.Info("Service installed");
                 }
@@ -101,10 +91,10 @@ namespace Octopus.Shared.Startup
                     //remove service
                     systemCtlHelper.StopService(instance);
                     systemCtlHelper.DisableService(instance);
-                    File.Delete(SystemdUnitFilePath);
+                    File.Delete(systemdUnitFilePath);
                     
                     //re-add service
-                    WriteUnitFile(SystemdUnitFilePath, GenerateSystemdUnitFile(serviceDependencies));
+                    WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, serviceDependencies));
                     systemCtlHelper.EnableService(instance, true);
                     log.Info("Service installed");
                 }
@@ -143,7 +133,7 @@ namespace Octopus.Shared.Startup
             return result.ExitCode == 0;
         }
 
-        private string GenerateSystemdUnitFile(IEnumerable<string> serviceDependencies)
+        private string GenerateSystemdUnitFile(string instance, string serviceDescription, string exePath, IEnumerable<string> serviceDependencies)
         {
             var stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("[Unit]");

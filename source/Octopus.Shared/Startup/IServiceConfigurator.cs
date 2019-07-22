@@ -2,6 +2,6 @@
 {
     public interface IServiceConfigurator
     {
-        void ConfigureService();
+        void ConfigureService(string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState);
     }
 }

@@ -13,14 +13,14 @@ namespace Octopus.Shared.Startup
         readonly Assembly assemblyContainingService;
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
-        private readonly ServiceConfiguratorFactory serviceConfiguratorFactory;
+        private readonly IServiceConfigurator serviceConfigurator;
 
-        public ServiceCommand(IApplicationInstanceSelector instanceSelector, string serviceDescription, Assembly assemblyContainingService, ServiceConfiguratorFactory serviceConfiguratorFactory) : base(instanceSelector)
+        public ServiceCommand(IApplicationInstanceSelector instanceSelector, string serviceDescription, Assembly assemblyContainingService, IServiceConfigurator serviceConfigurator) : base(instanceSelector)
         {
             this.instanceSelector = instanceSelector;
             this.serviceDescription = serviceDescription;
             this.assemblyContainingService = assemblyContainingService;
-            this.serviceConfiguratorFactory = serviceConfiguratorFactory;
+            this.serviceConfigurator = serviceConfigurator;
 
             serviceConfigurationState = new ServiceConfigurationState();
 
@@ -46,10 +46,7 @@ namespace Octopus.Shared.Startup
             var fullPath = assemblyContainingService.FullLocalPath();
             var exePath = PlatformDetection.IsRunningOnWindows ? Path.ChangeExtension(fullPath, "exe") : PathHelper.GetPathWithoutExtension(fullPath);
 
-            var serviceConfigurator = serviceConfiguratorFactory.GetServiceConfigurator(thisServiceName, exePath,
-                instance, serviceDescription, serviceConfigurationState);
-
-            serviceConfigurator.ConfigureService();
+            serviceConfigurator.ConfigureService(thisServiceName, exePath, instance, serviceDescription, serviceConfigurationState);
         }
     }
 }

@@ -12,23 +12,13 @@ namespace Octopus.Shared.Startup
     public class WindowsServiceConfigurator : IServiceConfigurator
     {
         readonly ILog log;
-        readonly string thisServiceName;
-        readonly string exePath;
-        readonly string instance;
-        readonly string serviceDescription;
-        readonly ServiceConfigurationState serviceConfigurationState;
 
-        public WindowsServiceConfigurator(ILog log, string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
+        public WindowsServiceConfigurator(ILog log)
         {
             this.log = log;
-            this.thisServiceName = thisServiceName;
-            this.exePath = exePath;
-            this.instance = instance;
-            this.serviceDescription = serviceDescription;
-            this.serviceConfigurationState = serviceConfigurationState;
         }
 
-        public void ConfigureService()
+        public void ConfigureService(string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
         {
             var controller = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == thisServiceName);
 
