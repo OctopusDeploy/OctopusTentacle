@@ -83,11 +83,7 @@ namespace Octopus.Shared.Startup
                 }
                 else
                 {
-                    Sc(
-                        string.Format(
-                            "delete \"{0}\"",
-                            thisServiceName
-                            ));
+                    Sc($"delete \"{thisServiceName}\"");
 
                     log.Info("Service uninstalled");
                 }
@@ -119,12 +115,7 @@ namespace Octopus.Shared.Startup
                             string.Join("/", serviceDependencies)
                             ));
 
-                    Sc(
-                        string.Format(
-                            "description \"{0}\" \"{1}\"",
-                            thisServiceName,
-                            serviceDescription
-                            ));
+                    Sc($"description \"{thisServiceName}\" \"{serviceDescription}\"");
                 }
 
                 log.Info("Service installed");
@@ -135,21 +126,9 @@ namespace Octopus.Shared.Startup
 
             if (serviceConfigurationState.Reconfigure)
             {
-                Sc(
-                    string.Format(
-                        "config \"{0}\" binpath= \"\\\"{1}\\\" run --instance=\\\"{2}\\\"\" DisplayName= \"{0}\" depend= {3} start= auto",
-                        thisServiceName,
-                        exePath,
-                        instance,
-                        string.Join("/", serviceDependencies)
-                        ));
+                Sc($"config \"{thisServiceName}\" binpath= \"\\\"{exePath}\\\" run --instance=\\\"{instance}\\\"\" DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto");
 
-                Sc(
-                    string.Format(
-                        "description \"{0}\" \"{1}\"",
-                        thisServiceName,
-                        serviceDescription
-                        ));
+                Sc($"description \"{thisServiceName}\" \"{serviceDescription}\"");
 
                 log.Info("Service reconfigured");
             }
@@ -175,11 +154,7 @@ namespace Octopus.Shared.Startup
                 }
                 else
                 {
-                    Sc(
-                        string.Format(
-                            "config \"{0}\" obj= \"{1}\"",
-                            thisServiceName, serviceConfigurationState.Username
-                            ));
+                    Sc($"config \"{thisServiceName}\" obj= \"{serviceConfigurationState.Username}\"");
                 }
 
                 log.Info("Service credentials set");
