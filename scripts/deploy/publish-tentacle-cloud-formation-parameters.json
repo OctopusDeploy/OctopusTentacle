@@ -1,18 +1,18 @@
 [
     {
         "ParameterKey": "InstanceKeyPairName",
-        "ParameterValue": "#{Publisher.Instance.KeyPairName}"
+        "ParameterValue": "#{Publisher.EC2.KeyPairName}"
     },
     {
         "ParameterKey": "InstanceAmi",
-        "ParameterValue": "#{Publisher.Instance.Ami}"
+        "ParameterValue": "#{Publisher.EC2.Ami}"
     },
     {
         "ParameterKey": "InstanceSecurityGroupId",
-        "ParameterValue": "#{Publisher.Instance.SecurityGroupId}"
+        "ParameterValue": "#{Publisher.EC2.SecurityGroupId}"
     },
     {
         "ParameterKey": "InstanceSubnetId",
-        "ParameterValue": "#{Publisher.Instance.SubnetId}"
+        "ParameterValue": "#{Publisher.EC2.SubnetId}"
     }
 ]
