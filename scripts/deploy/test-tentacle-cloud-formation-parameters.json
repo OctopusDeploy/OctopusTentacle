@@ -1,18 +1,18 @@
 [
     {
         "ParameterKey": "AptInstanceKeyPairName",
-        "ParameterValue": "#{Test.APT.Instance.KeyPairName}"
+        "ParameterValue": "#{Test.APT.EC2.KeyPairName}"
     },
     {
         "ParameterKey": "AptInstanceAmi",
-        "ParameterValue": "#{Test.APT.Instance.Ami}"
+        "ParameterValue": "#{Test.APT.EC2.Ami}"
     },
     {
         "ParameterKey": "AptInstanceSecurityGroupId",
-        "ParameterValue": "#{Test.APT.Instance.SecurityGroupId}"
+        "ParameterValue": "#{Test.APT.EC2.SecurityGroupId}"
     },
     {
         "ParameterKey": "AptInstanceSubnetId",
-        "ParameterValue": "#{Test.APT.Instance.SubnetId}"
+        "ParameterValue": "#{Test.APT.EC2.SubnetId}"
     }
 ]
