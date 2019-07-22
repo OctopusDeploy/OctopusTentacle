@@ -9,12 +9,17 @@ echo "$GPG_PRIVATEKEY" > $GPG_PRIVATEKEYFILE
 
 cp .aptly.conf ~/.aptly.conf
 
-echo "importing private key: $GPG_PRIVATEKEYFILE"
-echo "with passphrase: $GPG_PASSPHRASE"
+echo "Importing private key: $GPG_PRIVATEKEYFILE with passphrase: $GPG_PASSPHRASE"
 
 echo $GPG_PASSPHRASE | gpg1 --batch --import $GPG_PRIVATEKEYFILE
 wget -O - https://s3.amazonaws.com/$S3_PUBLISH_ENDPOINT/public.key | gpg1 --no-default-keyring --keyring trustedkeys.gpg --import
 
+echo "Configuring S3 bucket"
+aws s3 mb "s3://$S3_PUBLISH_ENDPOINT"
+aws s3api wait bucket-exists --bucket $S3_PUBLISH_ENDPOINT
+aws s3 sync ./apt-content "s3://$S3_PUBLISH_ENDPOINT"
+
+echo "Updating APT repo"
 aptly repo create -distribution=stretch -component=main octopus-tentacle
 
 aptly mirror create octopus-apt-mirror https://s3.amazonaws.com/$S3_PUBLISH_ENDPOINT/ stretch
