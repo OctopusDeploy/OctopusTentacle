@@ -54,8 +54,14 @@
     <Content Include="Bcl\IO\*.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Startup\Packages\**\*.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="Resources\TestCertificateNoPassword.pfx" />
     <EmbeddedResource Include="Resources\TestCertificateNoPrivateKey.pfx" />
     <EmbeddedResource Include="Resources\TestCertificateWithPassword.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.ServiceProcess" />
   </ItemGroup>
 </Project>

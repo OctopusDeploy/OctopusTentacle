@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
@@ -160,11 +161,17 @@ namespace Octopus.Shared.Startup
                     log.Info("Granting log on as a service right to " + serviceConfigurationState.Username);
                     LsaUtility.SetRight(serviceConfigurationState.Username, "SeServiceLogonRight");
 
-                    Sc(
-                        string.Format(
-                            "config \"{0}\" obj= \"{1}\" password= \"{2}\"",
-                            thisServiceName, serviceConfigurationState.Username, serviceConfigurationState.Password
-                            ));
+                    var query = new ManagementPath($"Win32_Service.Name='{thisServiceName.Replace("'", "\\'")}'");
+                    using (var service = new ManagementObject(query))
+                    {
+                        var wmiParams = new object[10];
+                        wmiParams[5] = false; //interact with desktop
+                        wmiParams[6] = serviceConfigurationState.Username;
+                        wmiParams[7] = serviceConfigurationState.Password;
+                        var result = service.InvokeMethod("Change", wmiParams);
+                        if ((uint)result != 0)
+                            log.Error($"Unable to set username/password on service '{thisServiceName}'. WMI returned {result}.");
+                    }
                 }
                 else
                 {
