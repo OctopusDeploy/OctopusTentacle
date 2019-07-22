@@ -1,10 +1,10 @@
 export VERSION=$(get_octopusvariable "Octopus.Action.Package[Tentacle.Packages.linux].PackageVersion")
-export AWS_ACCESS_KEY_ID=$(get_octopusvariable "S3:ACCESS_KEY_ID")
-export AWS_SECRET_ACCESS_KEY=$(get_octopusvariable "S3:SECRET_ACCESS_KEY")
-export GPG_PASSPHRASE=$(get_octopusvariable "GPG_PASSPHRASE")
+export AWS_ACCESS_KEY_ID=$(get_octopusvariable "Publish.APT.S3.AccessKeyId")
+export AWS_SECRET_ACCESS_KEY=$(get_octopusvariable "Publish.APT.S3.SecretAccessKey")
+export GPG_PASSPHRASE=$(get_octopusvariable "Publish.APT.GPG.PassPhrase")
 export GPG_PRIVATEKEYFILE="octopus-privatekey.asc"
-S3_PUBLISH_ENDPOINT=$(get_octopusvariable "S3PublishEndpoint")
-GPG_PRIVATEKEY=$(get_octopusvariable "GPG_PRIVATEKEY")
+S3_PUBLISH_ENDPOINT=$(get_octopusvariable "Publish.APT.S3.TargetBucket")
+GPG_PRIVATEKEY=$(get_octopusvariable "Publish.APT.GPG.PrivateKey")
 echo "$GPG_PRIVATEKEY" > $GPG_PRIVATEKEYFILE
 
 cp .aptly.conf ~/.aptly.conf
