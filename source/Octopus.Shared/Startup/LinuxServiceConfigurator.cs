@@ -36,14 +36,32 @@ namespace Octopus.Shared.Startup
             
             if (serviceConfigurationState.Stop)
             {
-                systemCtlHelper.StopService(instance);
+                log.Info("Stopping service...");
+                if (systemCtlHelper.StopService(instance))
+                {
+                    log.Error("The service could not be stopped");
+                }
+                else
+                {
+                    log.Info("Service stopped");
+                }
+                
             }
 
             if (serviceConfigurationState.Uninstall)
             {
-                systemCtlHelper.StopService(instance);
-                systemCtlHelper.DisableService(instance);
-                File.Delete(SystemdUnitFilePath);
+                log.Info("Removing systemd service...");
+                try
+                {
+                    systemCtlHelper.StopService(instance);
+                    systemCtlHelper.DisableService(instance);
+                    File.Delete(SystemdUnitFilePath);
+                    log.Info("Service uninstalled");
+                }
+                catch (Exception e)
+                {
+                    log.Error(e, $"Could not remove the systemd service: {instance}");
+                }
             }
             
             var serviceDependencies = new List<string>();
@@ -56,25 +74,49 @@ namespace Octopus.Shared.Startup
             
             if (serviceConfigurationState.Install)
             {
-                WriteUnitFile(SystemdUnitFilePath, GenerateSystemdUnitFile(serviceDependencies));
-                systemCtlHelper.EnableService(instance);
+                try
+                {
+                    WriteUnitFile(SystemdUnitFilePath, GenerateSystemdUnitFile(serviceDependencies));
+                    systemCtlHelper.EnableService(instance, true);
+                    log.Info("Service installed");
+                }
+                catch (Exception e)
+                {
+                    log.Error(e, $"Could not install the systemd service: {instance}");
+                }
             }
             
             if (serviceConfigurationState.Reconfigure)
             {
-                //remove service
-                systemCtlHelper.StopService(instance);
-                systemCtlHelper.DisableService(instance);
-                File.Delete(SystemdUnitFilePath);
-                
-                //re-add service
-                WriteUnitFile(SystemdUnitFilePath, GenerateSystemdUnitFile(serviceDependencies));
-                systemCtlHelper.EnableService(instance);
+                try
+                {
+                    log.Info("Attempting to remove old service");
+                    //remove service
+                    systemCtlHelper.StopService(instance);
+                    systemCtlHelper.DisableService(instance);
+                    File.Delete(SystemdUnitFilePath);
+                    
+                    //re-add service
+                    WriteUnitFile(SystemdUnitFilePath, GenerateSystemdUnitFile(serviceDependencies));
+                    systemCtlHelper.EnableService(instance, true);
+                    log.Info("Service installed");
+                }
+                catch (Exception e)
+                {
+                    log.Error(e, $"Could not reconfigure the systemd service: {instance}");
+                }
             }
             
             if (serviceConfigurationState.Start)
             {
-                systemCtlHelper.StartService(instance);
+                if (systemCtlHelper.StartService(instance, true))
+                {
+                    log.Info("Service started");
+                }
+                else
+                {
+                    log.Error($"Could not start the systemd service: {instance}");
+                }
             }
         }
 
