@@ -69,7 +69,6 @@ Resources:
         Fn::Base64: |
           #!/bin/bash
           exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-          sudo apt-get update && apt-get install -y gnupg1 wget
 
           # Install and configure Tentacle
           serverUrl="#{Octopus.Web.ServerUri}"
@@ -161,7 +160,6 @@ Resources:
         Fn::Base64: |
           #!/bin/bash
           exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-          sudo apt-get update && apt-get install -y gnupg1 wget
 
           # Install and configure Tentacle
           serverUrl="#{Octopus.Web.ServerUri}"
@@ -176,7 +174,7 @@ Resources:
           configFilePath="/etc/octopus/default/tentacle-default.config"
           applicationPath="/home/Octopus/Applications/"
 
-          sudo wget https://s3.amazonaws.com/$targetBucket/tentacle.repo -O /etc/yum.repos.d/tentacle.repo
+          sudo curl https://s3.amazonaws.com/$targetBucket/tentacle.repo -o /etc/yum.repos.d/tentacle.repo
           sudo yum install tentacle
 
           sudo cat > /etc/systemd/system/tentacle.service << EOM
