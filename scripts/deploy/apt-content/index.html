@@ -6,13 +6,13 @@
 <p>To install add new repository to <code>/etc/apt/sources.list</code>:</p>
 
 <pre>
-deb https://s3.amazonaws.com/octopus-apt-repo/ stretch main
+deb https://s3.amazonaws.com/#{Publish.APT.S3.TargetBucket}/ stretch main
 </pre>
 
 <p>And import key that is used to sign the release:</p>
 
 <pre>
-$ apt-key adv --fetch-keys https://s3.amazonaws.com/octopus-apt-repo/public.key
+$ apt-key adv --fetch-keys https://s3.amazonaws.com/#{Publish.APT.S3.TargetBucket}/public.key
 </pre>
 
 <p>After that you can install tentacle as any other software package:</p>
