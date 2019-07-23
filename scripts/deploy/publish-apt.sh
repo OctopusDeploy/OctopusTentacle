@@ -17,7 +17,7 @@ wget -O - https://s3.amazonaws.com/$S3_PUBLISH_ENDPOINT/public.key | gpg1 --no-d
 echo "Configuring S3 bucket"
 aws s3 mb "s3://$S3_PUBLISH_ENDPOINT"
 aws s3api wait bucket-exists --bucket $S3_PUBLISH_ENDPOINT
-aws s3 sync ./apt-content "s3://$S3_PUBLISH_ENDPOINT"
+aws s3 sync ./apt-content "s3://$S3_PUBLISH_ENDPOINT" --acl public-read
 
 echo "Updating APT repo"
 aptly repo create -distribution=stretch -component=main octopus-tentacle

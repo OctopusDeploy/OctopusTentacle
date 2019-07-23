@@ -50,7 +50,7 @@ fi
 
 aws s3 mb "s3://${TARGET_BUCKET}"
 aws s3api wait bucket-exists --bucket ${TARGET_BUCKET}
-aws s3 sync ./rpm-content "s3://${TARGET_BUCKET}"
+aws s3 sync ./rpm-content "s3://${TARGET_BUCKET}" --acl public-read
 
 TARGET_DIR="/tmp/${TARGET_BUCKET}"
 
