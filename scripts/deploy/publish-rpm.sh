@@ -68,4 +68,4 @@ fi
 for a in $TARGET_DIR/x86_64 ; do createrepo -v $UPDATE --deltas $a/ ; done
 
 # sync the repo state back to s3
-aws s3 sync $TARGET_DIR s3://$TARGET_BUCKET
+aws s3 sync $TARGET_DIR s3://$TARGET_BUCKET --acl public-read
