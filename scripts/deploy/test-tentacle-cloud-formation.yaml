@@ -114,6 +114,7 @@ Resources:
           echo "Registering the Tentacle $name with server $serverUrl in environment $environment with role $role"
           sudo /opt/octopus/tentacle/Tentacle register-with --server "$serverUrl" --apiKey "$apiKey" --name "$name" --env "$environment" --role "$role" --space "$space" --policy "$machinePolicy"
           sudo systemctl start tentacle
+          sudo systemctl enable tentacle
   RpmTestAgent:
     Type: 'AWS::EC2::Instance'
     Properties:
