@@ -166,8 +166,7 @@ Resources:
           echo "===== Setting up Tentacle ======"
 
           sudo rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
-          sudo yum update
-          sudo yum install dotnet-runtime-2.2
+          sudo yum update && sudo yum -y install dotnet-runtime-2.2
 
           # Install and configure Tentacle
           serverUrl="#{Octopus.Web.ServerUri}"
