@@ -1,6 +1,6 @@
 [tentacle]
 name=Octopus Tentacle
-baseurl=https://#{Publish.RPM.S3.TargetBucket}.s3.amazonaws.com/
+baseurl=https://#{Publish.RPM.S3.TargetBucket}.s3.amazonaws.com/$basearch/
 enabled=1
 gpgkey=https://#{Publish.RPM.S3.TargetBucket}.s3.amazonaws.com/public.key
 gpgcheck=0
