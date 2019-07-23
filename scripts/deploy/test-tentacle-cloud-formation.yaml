@@ -179,7 +179,7 @@ Resources:
           applicationPath="/home/Octopus/Applications/"
 
           sudo curl https://s3.amazonaws.com/$targetBucket/tentacle.repo -o /etc/yum.repos.d/tentacle.repo
-          sudo yum install tentacle
+          sudo yum -y install tentacle
 
           sudo cat > /etc/systemd/system/tentacle.service << EOM
           [Unit]
