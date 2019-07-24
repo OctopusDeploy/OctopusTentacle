@@ -170,21 +170,6 @@ function setupPollingTentacle {
     showRunCommand $instancename
 }
 
-#Check to ensure dotnet core is installed
-
-command -v dotnet >/dev/null 2>&1 || 
-{ 
-        echo "Please install .Net Core 2.2 to run Tentacle."
-        echo -e "${GREEN}https://dotnet.microsoft.com/download/linux-package-manager/rhel/runtime-current${NC}"
-        exit 1 
-}
-
-if ! dotnet --list-sdks | grep -q "^2\.2" && ! dotnet --list-runtimes | grep -q "2\.2"; then
-        echo "Please install .Net Core 2.2 to run Tentacle."
-        echo -e "${GREEN}https://dotnet.microsoft.com/download/linux-package-manager/rhel/runtime-current${NC}"
-        exit 1
-fi
-
 instance="Tentacle"
 
 read -p "Name of Tentacle instance (default $instance):" inputinstance
