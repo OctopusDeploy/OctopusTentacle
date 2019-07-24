@@ -100,12 +100,21 @@ function setupPollingTentacle {
 
     case $authmethod in
         2)
-            read -p 'Username: ' username
-            read -p 'Password: ' password
+            while [ -z "$username" ] 
+            do
+                read -p 'Username: ' username
+            done
+            while [ -z "$password" ] 
+            do
+                read -p 'Password: ' password
+            done 
             auth="--username \"$username\" --password \"$password\""
             ;; 
         *)
-            read -p 'API-Key: ' apikey
+            while [ -z "$apikey" ] 
+            do
+                read -p 'API-Key: ' apikey
+            done 
             auth="--apiKey \"$apikey\""
             ;;
     esac
