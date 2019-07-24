@@ -15,10 +15,11 @@ function assignNonEmptyValue {
 
 function splitAndGetArgs {
     finalstring=""
-    readarray -d , -t strarr <<< "$2"
-    for (( n=0; n < ${#strarr[*]}; n++))
-    do
-        finalstring=$finalstring"--$1 \"$(echo ${strarr[n]} | xargs)\" "
+    IFS=','
+    #Convert string to array
+    read -ra strarr <<< "$2"
+    for i in "${strarr[@]}"; do
+        finalstring=$finalstring"--$1 \"$(echo $i | xargs)\" "
     done
     echo $finalstring
 }
