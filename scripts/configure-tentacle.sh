@@ -76,7 +76,7 @@ function setupListeningTentacle {
 
 function setupPollingTentacle {
     instancename=$1
-    displayname=$hostname
+    displayname=$(hostname)
     logpath="/etc/octopus"
     applicationpath="/home/Octopus/Applications"
     space="Default"
