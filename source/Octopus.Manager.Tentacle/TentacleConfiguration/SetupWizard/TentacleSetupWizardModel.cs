@@ -103,7 +103,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 HomeDirectory = Path.Combine(HomeDirectory, InstanceName);
                 ApplicationInstallDirectory = Path.Combine(ApplicationInstallDirectory, InstanceName);
             }
-            OctopusServerUrl = "http://";
+            OctopusServerUrl = "https://";
             ListenPort = "10933";
             Username = string.Empty;
             ApiKey = string.Empty;
