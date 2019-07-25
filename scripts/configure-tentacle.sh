@@ -132,7 +132,7 @@ function setupPollingTentacle {
                 read -p 'API-Key: ' apikey
             done 
             auth="--apiKey \"$apikey\""
-            displayauth="--apiKey \"$apikey\""
+            displayauth="--apiKey \"API-XXXXXXXXXXXXXXXXXXXXXXXXXX\""
             ;;
     esac
 
