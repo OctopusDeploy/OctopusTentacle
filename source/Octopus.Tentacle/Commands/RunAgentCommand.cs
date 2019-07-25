@@ -58,6 +58,8 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
+            base.Start();
+
             if (wait >= 20)
             {
                 log.Info("Sleeping for " + wait + "ms...");
