@@ -4,6 +4,12 @@ GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+function exitIfCommandFailed {
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
+}
+
 function assignNonEmptyValue {
     if [ ! -z "$1" ]
     then
@@ -19,7 +25,7 @@ function splitAndGetArgs {
     #Convert string to array
     read -ra strarr <<< "$2"
     for i in "${strarr[@]}"; do
-        finalstring=$finalstring"--$1 \"$(echo $i | xargs)\" "
+        finalstring+="--$1 \"$(echo $i | xargs)\" "
     done
     echo $finalstring
 }
@@ -67,10 +73,17 @@ function setupListeningTentacle {
 
     read -p "Press enter to continue..."
     
-    sudo /opt/octopus/tentacle/Tentacle create-instance --instance "$instancename" --config "$logpath/$instancename/tentacle-$instancename.config"
-    sudo /opt/octopus/tentacle/Tentacle new-certificate --instance "$instancename" --if-blank
-    sudo /opt/octopus/tentacle/Tentacle configure --instance "$instancename" --app "$applicationpath" --port $port --noListen False --reset-trust
-    sudo /opt/octopus/tentacle/Tentacle configure --instance "$instancename" --trust $thumbprint
+    eval sudo /opt/octopus/tentacle/Tentacle create-instance --instance \"$instancename\" --config \"$logpath/$instancename/tentacle-$instancename.config\"
+    exitIfCommandFailed
+
+    eval sudo /opt/octopus/tentacle/Tentacle new-certificate --instance \"$instancename\" --if-blank
+    exitIfCommandFailed
+
+    eval sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --port $port --noListen False --reset-trust
+    exitIfCommandFailed
+
+    eval sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --trust $thumbprint
+    exitIfCommandFailed
 
     showRunCommand $instancename
 }
@@ -107,9 +120,11 @@ function setupPollingTentacle {
             done
             while [ -z "$password" ] 
             do
-                read -p 'Password: ' password
+                read -s -p 'Password: ' password
+                echo
             done 
             auth="--username \"$username\" --password \"$password\""
+            displayauth="--username \"$username\" --password \"**********\""
             ;; 
         *)
             while [ -z "$apikey" ] 
@@ -117,6 +132,7 @@ function setupPollingTentacle {
                 read -p 'API-Key: ' apikey
             done 
             auth="--apiKey \"$apikey\""
+            displayauth="--apiKey \"API-XXXXXXXXXXXXXXXXXXXXXXXXXX\""
             ;;
     esac
 
@@ -161,21 +177,29 @@ function setupPollingTentacle {
     echo -e "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --noListen \"True\" --reset-trust"
 
     if [ $machinetype = 2 ]; then
-        echo -e "sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $workerpoolsstring ${NC}"
+        echo -e "sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $displayauth --space \"$space\" $workerpoolsstring ${NC}"
     else
-        echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $envstring $rolesstring ${NC}"
+        echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $displayauth --space \"$space\" $envstring $rolesstring ${NC}"
     fi
 
     read -p "Press enter to continue..."
     
-    sudo /opt/octopus/tentacle/Tentacle create-instance --instance "$instancename" --config "$logpath/$instancename/tentacle-$instancename.config"
-    sudo /opt/octopus/tentacle/Tentacle new-certificate --instance "$instancename" --if-blank
-    sudo /opt/octopus/tentacle/Tentacle configure --instance "$instancename" --app "$applicationpath" --noListen "True" --reset-trust
+    eval sudo /opt/octopus/tentacle/Tentacle create-instance --instance \"$instancename\" --config \"$logpath/$instancename/tentacle-$instancename.config\"
+    exitIfCommandFailed
+
+    eval sudo /opt/octopus/tentacle/Tentacle new-certificate --instance \"$instancename\" --if-blank
+    exitIfCommandFailed 
+
+    eval sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --noListen \"True\" --reset-trust
+    exitIfCommandFailed 
+
     if [ $machinetype = 2 ]; then
-        sudo /opt/octopus/tentacle/Tentacle register-worker --instance "$instancename" --server "$octopusserverurl" --name "$displayname" --comms-style "TentacleActive" --server-comms-port "10943" $auth --space "$space" $workerpoolsstring
+        eval sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $workerpoolsstring
     else
-        sudo /opt/octopus/tentacle/Tentacle register-with --instance "$instancename" --server "$octopusserverurl" --name "$displayname" --comms-style "TentacleActive" --server-comms-port "10943" $auth --space "$space" $envstring $rolesstring
+        eval sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $envstring $rolesstring
     fi
+
+    exitIfCommandFailed  
 
     showRunCommand $instancename
 }
