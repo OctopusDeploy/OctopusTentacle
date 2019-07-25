@@ -42,7 +42,18 @@ namespace Octopus.Tentacle.Services.Scripts
             workspace.IsolationLevel = command.Isolation;
             workspace.ScriptMutexAcquireTimeout = command.ScriptIsolationMutexTimeout;
             workspace.ScriptArguments = command.Arguments;
-            workspace.BootstrapScript(command.ScriptBody);
+
+            if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnNix)
+            {
+                //TODO: This could be better
+                workspace.BootstrapScript(command.Scripts.ContainsKey(ScriptType.Bash)
+                    ? command.Scripts[ScriptType.Bash]
+                    : command.ScriptBody);
+            }
+            else
+            {
+                workspace.BootstrapScript(command.ScriptBody);   
+            }
 
             command.Files.ForEach(file => SaveFileToDisk(workspace, file));
 
@@ -75,8 +86,7 @@ namespace Octopus.Tentacle.Services.Scripts
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
         {
             var runningScript = new RunningScript(shell, workspace, CreateLog(workspace), serverTaskId, cancel.Token);
-            var thread = new Thread(runningScript.Execute);
-            thread.Name = "Executing PowerShell script for " + ticket.TaskId;
+            var thread = new Thread(runningScript.Execute) {Name = "Executing PowerShell script for " + ticket.TaskId};
             thread.Start();
             return runningScript;
         }

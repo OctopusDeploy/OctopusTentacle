@@ -13,6 +13,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 {
     public class TentacleManagerModel : ViewModel
     {
+        static readonly OctopusPhysicalFileSystem FileSystem = new OctopusPhysicalFileSystem();
         string configurationFilePath;
         string homeDirectory;
         string logsDirectory;

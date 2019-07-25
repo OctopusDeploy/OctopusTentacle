@@ -1,0 +1,34 @@
+[
+    {
+        "ParameterKey": "AptInstanceKeyPairName",
+        "ParameterValue": "#{Test.APT.EC2.KeyPairName}"
+    },
+    {
+        "ParameterKey": "AptInstanceAmi",
+        "ParameterValue": "#{Test.APT.EC2.Ami}"
+    },
+    {
+        "ParameterKey": "AptInstanceSecurityGroupId",
+        "ParameterValue": "#{Test.APT.EC2.SecurityGroupId}"
+    },
+    {
+        "ParameterKey": "AptInstanceSubnetId",
+        "ParameterValue": "#{Test.APT.EC2.SubnetId}"
+    },
+    {
+        "ParameterKey": "RpmInstanceKeyPairName",
+        "ParameterValue": "#{Test.RPM.EC2.KeyPairName}"
+    },
+    {
+        "ParameterKey": "RpmInstanceAmi",
+        "ParameterValue": "#{Test.RPM.EC2.Ami}"
+    },
+    {
+        "ParameterKey": "RpmInstanceSecurityGroupId",
+        "ParameterValue": "#{Test.RPM.EC2.SecurityGroupId}"
+    },
+    {
+        "ParameterKey": "RpmInstanceSubnetId",
+        "ParameterValue": "#{Test.RPM.EC2.SubnetId}"
+    }
+]

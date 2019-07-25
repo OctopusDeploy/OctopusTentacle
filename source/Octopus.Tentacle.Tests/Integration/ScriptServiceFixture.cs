@@ -32,8 +32,11 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public void ShouldPingLocalhostSuccessfully()
         {
+            var bashPing = "ping localhost -c 1";
+            var cmdPing = "& ping.exe localhost -n 1";
+            
             var startScriptCommand = new StartScriptCommandBuilder()
-                .WithScriptBody("& ping.exe localhost -n 1")
+                .WithScriptBody(PlatformDetection.IsRunningOnWindows ? cmdPing : bashPing)
                 .Build();
 
             var ticket = service.StartScript(startScriptCommand);
@@ -54,8 +57,12 @@ namespace Octopus.Tentacle.Tests.Integration
         public void ShouldPingRandomUnsuccessfully()
         {
             var guid = Guid.NewGuid();
+            
+            var bashPing = $"ping {guid} -c 1";
+            var cmdPing = $"& ping.exe {guid} -n 1";
+            
             var startScriptCommand = new StartScriptCommandBuilder()
-                .WithScriptBody($"& ping.exe {guid} -n 1")
+                .WithScriptBody(PlatformDetection.IsRunningOnWindows ? cmdPing : bashPing)
                 .Build();
 
             var ticket = service.StartScript(startScriptCommand);
@@ -65,11 +72,14 @@ namespace Octopus.Tentacle.Tests.Integration
                 Thread.Sleep(100);
             }
 
+            var bashExpectedResult = $"ping: {guid}: Name or service not known";
+            var cmdExpectedResult = $"Ping request could not find host {guid}. Please check the name and try again.";
+            
             var finalStatus = service.CompleteScript(new CompleteScriptCommand(ticket, 0));
             DumpLog(finalStatus);
             Assert.That(finalStatus.State, Is.EqualTo(ProcessState.Complete));
             Assert.That(finalStatus.ExitCode, Is.Not.EqualTo(0));
-            finalStatus.Logs.Select(l => l.Text).Should().Contain($"Ping request could not find host {guid}. Please check the name and try again.");
+            finalStatus.Logs.Select(l => l.Text).Should().Contain(PlatformDetection.IsRunningOnWindows ? cmdExpectedResult : bashExpectedResult);
         }
 
         [Test]
@@ -81,9 +91,12 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 var pollInterval = 100;
                 var safetyLimit = (20 * 1000) / pollInterval;
+                
+                var bashPing = "ping 127.0.0.1 -c 100";
+                var cmdPing = "& ping.exe 127.0.0.1 -n 100";
 
                 var startScriptCommand = new StartScriptCommandBuilder()
-                    .WithScriptBody("& ping.exe 127.0.0.1 -n 100")
+                    .WithScriptBody(PlatformDetection.IsRunningOnWindows ? cmdPing : bashPing)
                     .Build();
 
                 ticket = service.StartScript(startScriptCommand);
