@@ -19,7 +19,7 @@ RUN gem install fpm --no-ri --no-rdoc
 
 RUN gem install pleaserun
 
-COPY settings/aptly.conf /root/.aptly.conf
+COPY ../../scripts/deploy/.aptly.conf /root/.aptly.conf
 
 WORKDIR /build
 
