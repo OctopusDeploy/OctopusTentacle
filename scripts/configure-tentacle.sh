@@ -31,7 +31,7 @@ function showRunCommand {
 
     echo
     echo -e "${GREEN}Run the following command to start Tentacle${NC}"
-    echo -e "${YELLOW}sudo /opt/octopus/tentacle/Tentacle run --instance \"$1\" --noninteractive${NC}"
+    echo -e "${YELLOW}sudo /opt/octopus/tentacle/Tentacle run --instance '$1' --noninteractive${NC}"
     echo
     echo "To run Tentacle as a service, please refer to the docs on our website."
     echo -e "${GREEN}https://octopus.com/docs/infrastructure/deployment-targets/linux/tentacle${NC}"
