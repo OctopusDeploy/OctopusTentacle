@@ -7,7 +7,7 @@ fpm -v $VERSION \
   -n tentacle-service \
   -s pleaserun \
   -t dir \
-  /opt/octopus/tentacle/Tentacle agent --noninteractive
+  /opt/octopus/tentacle/Tentacle run --noninteractive
 
 # Dependencies based on https://github.com/dotnet/dotnet-docker/blob/master/2.1/runtime-deps/bionic/amd64/Dockerfile
 fpm -v $VERSION \
