@@ -34,8 +34,6 @@ source/packages
 /.idea/
 *.ncrunchproject
 *.ncrunchsolution
-*.ncrunchsolution
-*.ncrunchsolution
 source/Octopus.v2.ncrunchsolution
 source/_ReSharper**
 source/_ReSharper*
@@ -50,5 +48,8 @@ source/_ReSharper*
 source/.idea
 source/Octopus.sln.iml
 
-/tools/
 source/Octopus.Tentacle/Properties/launchSettings.json
+
+!tools/
+tools/*
+!tools/debian-tools/

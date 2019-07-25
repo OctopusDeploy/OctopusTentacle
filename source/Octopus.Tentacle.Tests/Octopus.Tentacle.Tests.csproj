@@ -2,7 +2,7 @@
   <PropertyGroup>
     <RootNamespace>Octopus.Tentacle.Tests</RootNamespace>
     <AssemblyName>Octopus.Tentacle.Tests</AssemblyName>
-    <TargetFrameworks>net452;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net452;netcoreapp2.2</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
@@ -13,10 +13,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
-    <PackageReference Include="NUnit" Version="3.9.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
-    <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.6" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
+    <PackageReference Include="NUnit" Version="3.11.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
+    <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.15" />
     <PackageReference Include="FluentAssertions" Version="4.19.4" />
     <PackageReference Include="NSubstitute" Version="3.1.0" />
   </ItemGroup>
