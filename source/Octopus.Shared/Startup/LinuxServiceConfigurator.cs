@@ -98,10 +98,6 @@ namespace Octopus.Shared.Startup
                 File.Delete(systemdUnitFilePath);
                 log.Info("Service uninstalled");
             }
-            catch (ControlledFailureException)
-            {
-                throw;
-            }
             catch (Exception e)
             {
                 log.Error(e, $"Could not remove the systemd service: {instance}");
@@ -115,10 +111,6 @@ namespace Octopus.Shared.Startup
                 WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, serviceDependencies));
                 systemCtlHelper.EnableService(instance, true);
                 log.Info($"Service installed: {instance}");
-            }
-            catch (ControlledFailureException)
-            {
-                throw;
             }
             catch (Exception e)
             {
@@ -140,10 +132,6 @@ namespace Octopus.Shared.Startup
                 WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, serviceDependencies));
                 systemCtlHelper.EnableService(instance, true);
                 log.Info($"Service installed: {instance}");
-            }
-            catch (ControlledFailureException)
-            {
-                throw;
             }
             catch (Exception e)
             {
