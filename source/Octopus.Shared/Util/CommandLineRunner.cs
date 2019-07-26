@@ -57,5 +57,4 @@ namespace Octopus.Shared.Util
             return true;
         }
     }
-
 }
