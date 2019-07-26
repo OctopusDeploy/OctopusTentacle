@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Shared.Util;
@@ -12,10 +13,12 @@ namespace Octopus.Shared.Startup
     public class LinuxServiceConfigurator : IServiceConfigurator
     {
         readonly ILog log;
+        readonly SystemCtlHelper systemCtlHelper;
         
         public LinuxServiceConfigurator(ILog log)
         {
             this.log = log;
+            systemCtlHelper = new SystemCtlHelper(log);
         }
 
         public void ConfigureService(string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
@@ -26,39 +29,18 @@ namespace Octopus.Shared.Startup
                 log.Error("Could not detect systemd.");
                 return;
             }
-            
-            string systemdUnitFilePath = $"/etc/systemd/system/{instance}.service";
-            
-            var systemCtlHelper = new SystemCtlHelper(log);
+
+            var cleanedInstanceName = SanitizeString(instance);
+            var systemdUnitFilePath = $"/etc/systemd/system/{cleanedInstanceName}.service";
             
             if (serviceConfigurationState.Stop)
             {
-                log.Info("Stopping service...");
-                if (systemCtlHelper.StopService(instance))
-                {
-                    log.Error("The service could not be stopped");
-                }
-                else
-                {
-                    log.Info("Service stopped");
-                }
-                
+                StopService(cleanedInstanceName);
             }
 
             if (serviceConfigurationState.Uninstall)
             {
-                log.Info("Removing systemd service...");
-                try
-                {
-                    systemCtlHelper.StopService(instance);
-                    systemCtlHelper.DisableService(instance);
-                    File.Delete(systemdUnitFilePath);
-                    log.Info("Service uninstalled");
-                }
-                catch (Exception e)
-                {
-                    log.Error(e, $"Could not remove the systemd service: {instance}");
-                }
+                UninstallService(cleanedInstanceName, systemdUnitFilePath);
             }
             
             var serviceDependencies = new List<string>();
@@ -71,49 +53,105 @@ namespace Octopus.Shared.Startup
             
             if (serviceConfigurationState.Install)
             {
-                try
-                {
-                    WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, serviceDependencies));
-                    systemCtlHelper.EnableService(instance, true);
-                    log.Info("Service installed");
-                }
-                catch (Exception e)
-                {
-                    log.Error(e, $"Could not install the systemd service: {instance}");
-                }
+                InstallService(cleanedInstanceName, exePath, serviceDescription, systemdUnitFilePath, serviceDependencies);
             }
             
             if (serviceConfigurationState.Reconfigure)
             {
-                try
-                {
-                    log.Info("Attempting to remove old service");
-                    //remove service
-                    systemCtlHelper.StopService(instance);
-                    systemCtlHelper.DisableService(instance);
-                    File.Delete(systemdUnitFilePath);
-                    
-                    //re-add service
-                    WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, serviceDependencies));
-                    systemCtlHelper.EnableService(instance, true);
-                    log.Info("Service installed");
-                }
-                catch (Exception e)
-                {
-                    log.Error(e, $"Could not reconfigure the systemd service: {instance}");
-                }
+                ReconfigureService(cleanedInstanceName, exePath, serviceDescription, systemdUnitFilePath, serviceDependencies);
             }
             
             if (serviceConfigurationState.Start)
             {
-                if (systemCtlHelper.StartService(instance, true))
-                {
-                    log.Info("Service started");
-                }
-                else
-                {
-                    log.Error($"Could not start the systemd service: {instance}");
-                }
+                StartService(cleanedInstanceName);
+            }
+        }
+        
+        private void StopService(string instance)
+        {
+            log.Info($"Stopping service: {instance}");
+            if (systemCtlHelper.StopService(instance))
+            {
+                log.Error("The service could not be stopped");
+            }
+            else
+            {
+                log.Info("Service stopped");
+            }
+        }
+
+        private void StartService(string instance)
+        {
+            if (systemCtlHelper.StartService(instance, true))
+            {
+                log.Info($"Service started: {instance}");
+            }
+            else
+            {
+                log.Error($"Could not start the systemd service: {instance}");
+            }
+        }
+
+        private void UninstallService(string instance, string systemdUnitFilePath)
+        {
+            log.Info($"Removing systemd service: {instance}");
+            try
+            {
+                systemCtlHelper.StopService(instance);
+                systemCtlHelper.DisableService(instance);
+                File.Delete(systemdUnitFilePath);
+                log.Info("Service uninstalled");
+            }
+            catch (ControlledFailureException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                log.Error(e, $"Could not remove the systemd service: {instance}");
+            }
+        }
+
+        private void InstallService(string instance, string exePath, string serviceDescription, string systemdUnitFilePath, IEnumerable<string> serviceDependencies)
+        {
+            try
+            {
+                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, serviceDependencies));
+                systemCtlHelper.EnableService(instance, true);
+                log.Info($"Service installed: {instance}");
+            }
+            catch (ControlledFailureException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                log.Error(e, $"Could not install the systemd service: {instance}");
+            }
+        }
+        
+        private void ReconfigureService(string instance, string exePath, string serviceDescription, string systemdUnitFilePath, IEnumerable<string> serviceDependencies)
+        {
+            try
+            {
+                log.Info($"Attempting to remove old service: {instance}");
+                //remove service
+                systemCtlHelper.StopService(instance);
+                systemCtlHelper.DisableService(instance);
+                File.Delete(systemdUnitFilePath);
+                    
+                //re-add service
+                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, serviceDependencies));
+                systemCtlHelper.EnableService(instance, true);
+                log.Info($"Service installed: {instance}");
+            }
+            catch (ControlledFailureException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                log.Error(e, $"Could not reconfigure the systemd service: {instance}");
             }
         }
 
@@ -123,6 +161,15 @@ namespace Octopus.Shared.Startup
 
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo -n chmod 666 {path}\"");
             var result = commandLineInvocation.ExecuteCommand();
+            
+            if (result.ExitCode == 0) return;
+
+            if (result.Errors.Any(s => s.Contains("sudo: a password is required")))
+            {
+                throw new ControlledFailureException(
+                    $"Requires elevated privileges, please run command as sudo.");
+            }
+
             result.Validate();
         }
 
@@ -150,6 +197,11 @@ namespace Octopus.Shared.Startup
             stringBuilder.AppendLine("WantedBy=multi-user.target");
             
             return stringBuilder.ToString();
+        }
+        
+        private static string SanitizeString(string str)
+        {
+            return Regex.Replace(str.Replace("/",""), @"\s+", "-").ToLower();
         }
     }
 }

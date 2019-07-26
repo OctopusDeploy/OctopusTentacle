@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Util
@@ -38,6 +39,12 @@ namespace Octopus.Shared.Util
             var result = commandLineInvocation.ExecuteCommand();
             
             if (result.ExitCode == 0) return true;
+
+            if (result.Errors.Any(s => s.Contains("sudo: a password is required")))
+            {
+                throw new ControlledFailureException(
+                    $"Requires elevated privileges, please run command as sudo.");
+            }
 
             void LogErrorOrWarning(string error)
             {
