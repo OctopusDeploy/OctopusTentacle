@@ -40,12 +40,6 @@ namespace Octopus.Shared.Util
             
             if (result.ExitCode == 0) return true;
 
-            if (result.Errors.Any(s => s.Contains("sudo: a password is required")))
-            {
-                throw new ControlledFailureException(
-                    $"Requires elevated privileges, please run command as sudo.");
-            }
-
             void LogErrorOrWarning(string error)
             {
                 if (logFailureAsError)

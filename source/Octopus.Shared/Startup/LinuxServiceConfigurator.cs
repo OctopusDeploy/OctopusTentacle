@@ -160,12 +160,6 @@ namespace Octopus.Shared.Startup
             
             if (result.ExitCode == 0) return;
 
-            if (result.Errors.Any(s => s.Contains("sudo: a password is required")))
-            {
-                throw new ControlledFailureException(
-                    $"Requires elevated privileges, please run command as sudo.");
-            }
-
             result.Validate();
         }
 
@@ -175,6 +169,12 @@ namespace Octopus.Shared.Startup
             {
                 throw new ControlledFailureException(
                     $"Could not detect bash, bash is required to run tentacle.");
+            }
+
+            if (!HaveSudoPrivileges())
+            {
+                throw new ControlledFailureException(
+                    $"Requires elevated privileges, please run command as sudo.");
             }
             
             if (!IsSystemdInstalled())
@@ -187,6 +187,13 @@ namespace Octopus.Shared.Startup
         private bool IsSystemdInstalled()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"command -v systemctl >/dev/null\"");
+            var result = commandLineInvocation.ExecuteCommand();
+            return result.ExitCode == 0;
+        }
+
+        private bool HaveSudoPrivileges()
+        {
+            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo -vn 2> /dev/null\"");
             var result = commandLineInvocation.ExecuteCommand();
             return result.ExitCode == 0;
         }
