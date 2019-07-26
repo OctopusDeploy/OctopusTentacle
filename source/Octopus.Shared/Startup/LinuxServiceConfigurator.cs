@@ -146,7 +146,7 @@ namespace Octopus.Shared.Startup
         {
             File.WriteAllText(path, contents);
 
-            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo -n chmod 666 {path}\"");
+            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"chmod 666 {path}\"");
             var result = commandLineInvocation.ExecuteCommand();
             
             if (result.ExitCode == 0) return;
