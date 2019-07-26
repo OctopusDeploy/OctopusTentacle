@@ -70,6 +70,30 @@ namespace Octopus.Shared.Tests.Util
 
             return this;
         }
+        
+        public void Delete()
+        {
+            using (var principalContext = new PrincipalContext(ContextType.Machine))
+            {
+                UserPrincipal principal = null;
+
+                try
+                {
+                    principal = UserPrincipal.FindByIdentity(principalContext, IdentityType.Name, UserName);
+                    if (principal == null)
+                    {
+                        Console.WriteLine($"The Windows User Account named {UserName} doesn't exist, nothing to do...");
+                        return;
+                    }
+                    Console.WriteLine($"The Windows User Account named {UserName} exists, deleting...");
+                    principal.Delete();
+                }
+                finally
+                {
+                    principal?.Dispose();
+                }
+            }
+        }
 
         public SecurityIdentifier Sid { get; }
         public string NTAccountName => Sid.Translate(typeof(NTAccount)).ToString();

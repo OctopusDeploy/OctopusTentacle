@@ -14,6 +14,8 @@ namespace Octopus.Shared.Startup
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         private readonly IServiceConfigurator serviceConfigurator;
+        readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
+        readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
 
         public ServiceCommand(IApplicationInstanceSelector instanceSelector, string serviceDescription, Assembly assemblyContainingService, IServiceConfigurator serviceConfigurator) : base(instanceSelector)
         {
@@ -22,15 +24,19 @@ namespace Octopus.Shared.Startup
             this.assemblyContainingService = assemblyContainingService;
             this.serviceConfigurator = serviceConfigurator;
 
-            serviceConfigurationState = new ServiceConfigurationState();
+            serviceConfigurationState = new ServiceConfigurationState
+            {
+                Username = Environment.GetEnvironmentVariable(ServiceUsernameEnvVar),
+                Password = Environment.GetEnvironmentVariable(ServicePasswordEnvVar),
+            };
 
             Options.Add("start", "Start the Windows Service if it is not already running", v => serviceConfigurationState.Start = true);
             Options.Add("stop", "Stop the Windows Service if it is running", v => serviceConfigurationState.Stop = true);
             Options.Add("reconfigure", "Reconfigure the Windows Service", v => serviceConfigurationState.Reconfigure = true);
             Options.Add("install", "Install the Windows Service", v => serviceConfigurationState.Install = true);
-            Options.Add("username=|user=", "Username to run the service under (DOMAIN\\Username format). Only used when --install or --reconfigure are used.", v => serviceConfigurationState.Username = v);
+            Options.Add("username=|user=", $"Username to run the service under (DOMAIN\\Username format). Only used when --install or --reconfigure are used.  Can also be passed via an environment variable {ServiceUsernameEnvVar}.", v => serviceConfigurationState.Username = v);
             Options.Add("uninstall", "Uninstall the Windows Service", v => serviceConfigurationState.Uninstall = true);
-            Options.Add("password=", "Password for the username specified with --username. Only used when --install or --reconfigure are used.", v =>
+            Options.Add("password=", $"Password for the username specified with --username. Only used when --install or --reconfigure are used. Can also be passed via an environment variable {ServicePasswordEnvVar}.", v =>
             {
                 serviceConfigurationState.Password = v;
             }, sensitive: true);
