@@ -23,12 +23,8 @@ namespace Octopus.Shared.Startup
 
         public void ConfigureService(string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
         {
-            //Check if systemd is being used, if not bail out.
-            if (!IsSystemdInstalled())
-            {
-                log.Error("Could not detect systemd.");
-                return;
-            }
+            //Check if system has bash and systemd
+            CheckSystemPrerequisites();
 
             var cleanedInstanceName = SanitizeString(instance);
             var systemdUnitFilePath = $"/etc/systemd/system/{cleanedInstanceName}.service";
@@ -173,6 +169,21 @@ namespace Octopus.Shared.Startup
             result.Validate();
         }
 
+        private void CheckSystemPrerequisites()
+        {
+            if (!File.Exists("/bin/bash"))
+            {
+                throw new ControlledFailureException(
+                    $"Could not detect bash, bash is required to run tentacle.");
+            }
+            
+            if (!IsSystemdInstalled())
+            {
+                throw new ControlledFailureException(
+                    $"Could not detect systemd, systemd is required to run Tentacle as a service");
+            }
+        }
+        
         private bool IsSystemdInstalled()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"command -v systemctl >/dev/null\"");
