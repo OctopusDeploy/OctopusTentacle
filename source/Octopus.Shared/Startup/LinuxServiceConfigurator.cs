@@ -101,6 +101,7 @@ namespace Octopus.Shared.Startup
             catch (Exception e)
             {
                 log.Error(e, $"Could not remove the systemd service: {instance}");
+                throw;
             }
         }
 
@@ -115,6 +116,7 @@ namespace Octopus.Shared.Startup
             catch (Exception e)
             {
                 log.Error(e, $"Could not install the systemd service: {instance}");
+                throw;
             }
         }
         
@@ -136,6 +138,7 @@ namespace Octopus.Shared.Startup
             catch (Exception e)
             {
                 log.Error(e, $"Could not reconfigure the systemd service: {instance}");
+                throw;
             }
         }
 
