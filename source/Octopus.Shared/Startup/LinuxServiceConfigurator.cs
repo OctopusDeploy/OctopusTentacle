@@ -68,11 +68,11 @@ namespace Octopus.Shared.Startup
             log.Info($"Stopping service: {instance}");
             if (systemCtlHelper.StopService(instance))
             {
-                log.Error("The service could not be stopped");
+                log.Info("Service stopped");
             }
             else
             {
-                log.Info("Service stopped");
+                log.Error("The service could not be stopped");
             }
         }
 
