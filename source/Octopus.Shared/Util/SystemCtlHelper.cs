@@ -35,7 +35,7 @@ namespace Octopus.Shared.Util
 
         private bool RunServiceCommand(string command, string serviceName, bool logFailureAsError)
         {
-            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo -n systemctl {command} {serviceName}\"");
+            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"systemctl {command} {serviceName}\"");
             var result = commandLineInvocation.ExecuteCommand();
             
             if (result.ExitCode == 0) return true;
