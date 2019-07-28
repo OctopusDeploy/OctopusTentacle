@@ -210,7 +210,7 @@ namespace Octopus.Shared.Startup
         
         private static string SanitizeString(string str)
         {
-            return Regex.Replace(str.Replace("/",""), @"\s+", "-").ToLower();
+            return Regex.Replace(str.Replace("/",""), @"\s+", "-");
         }
     }
 }
