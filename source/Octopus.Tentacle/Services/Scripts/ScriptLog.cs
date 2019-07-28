@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Newtonsoft.Json;
+using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Scripts;
 using Octopus.Shared.Util;
@@ -13,17 +14,19 @@ namespace Octopus.Tentacle.Services.Scripts
     {
         readonly string logFile;
         readonly IOctopusFileSystem fileSystem;
+        readonly ILogContext logContext;
         readonly object sync = new object();
 
-        public ScriptLog(string logFile, IOctopusFileSystem fileSystem)
+        public ScriptLog(string logFile, IOctopusFileSystem fileSystem, ILogContext logContext)
         {
             this.logFile = logFile;
             this.fileSystem = fileSystem;
+            this.logContext = logContext;
         }
 
         public IScriptLogWriter CreateWriter()
         {
-            return new Writer(logFile, fileSystem, sync);
+            return new Writer(logFile, fileSystem, sync, logContext);
         }
 
         public List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber)
@@ -100,13 +103,15 @@ namespace Octopus.Tentacle.Services.Scripts
         class Writer : IScriptLogWriter
         {
             readonly object sync;
+            readonly ILogContext context;
             readonly JsonTextWriter json;
             readonly StreamWriter writer;
             readonly Stream writeStream;
 
-            public Writer(string logFile, IOctopusFileSystem fileSystem, object sync)
+            public Writer(string logFile, IOctopusFileSystem fileSystem, object sync, ILogContext context)
             {
                 this.sync = sync;
+                this.context = context;
                 writeStream = fileSystem.OpenFile(logFile, FileMode.Append, FileAccess.Write);
                 writer = new StreamWriter(writeStream, Encoding.UTF8);
                 json = new JsonTextWriter(writer);
@@ -118,7 +123,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 {
                     json.WriteStartArray();
                     json.WriteValue(SourceToString(source));
-                    json.WriteValue(message);
+                    context.SafeSanitize(message, json.WriteValue);
                     json.WriteValue(DateTimeOffset.UtcNow);
                     json.WriteEndArray();
                     json.Flush();

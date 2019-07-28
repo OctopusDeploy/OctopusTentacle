@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
+using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Scripts;
 using Octopus.Shared.Security;
 using Octopus.Shared.Util;
@@ -15,14 +17,16 @@ namespace Octopus.Tentacle.Services.Scripts
         readonly IShell shell;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IOctopusFileSystem fileSystem;
+        readonly ILogContext logContext;
         readonly ConcurrentDictionary<string, RunningScript> running = new ConcurrentDictionary<string, RunningScript>(StringComparer.OrdinalIgnoreCase);
         readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
 
-        public ScriptService(IShell shell, IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem)
+        public ScriptService(IShell shell, IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem, ILogContext logContext)
         {
             this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.fileSystem = fileSystem;
+            this.logContext = logContext;
         }
 
         public ScriptTicket StartScript(StartScriptCommand command)
@@ -80,7 +84,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         IScriptLog CreateLog(IScriptWorkspace workspace)
         {
-            return new ScriptLog(workspace.ResolvePath("Output.log"), fileSystem);
+            return new ScriptLog(workspace.ResolvePath("Output.log"), fileSystem, logContext);
         }
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
