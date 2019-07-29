@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>Octopus.Shared.Tests</RootNamespace>
     <AssemblyName>Octopus.Shared.Tests</AssemblyName>
@@ -54,7 +54,7 @@
     <Content Include="Bcl\IO\*.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Startup\Packages\**\*.exe">
+    <Content Include="Startup\Packages\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="Resources\TestCertificateNoPassword.pfx" />
