@@ -7,6 +7,7 @@ using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Scripts;
 using Octopus.Shared.Util;
+using Octopus.Tentacle.Configuration.Proxy;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
@@ -14,19 +15,19 @@ namespace Octopus.Tentacle.Services.Scripts
     {
         readonly string logFile;
         readonly IOctopusFileSystem fileSystem;
-        readonly ILogContext logContext;
+        readonly ISensitiveValueMask sensitiveValueMask;
         readonly object sync = new object();
 
-        public ScriptLog(string logFile, IOctopusFileSystem fileSystem, ILogContext logContext)
+        public ScriptLog(string logFile, IOctopusFileSystem fileSystem, ISensitiveValueMask sensitiveValueMask)
         {
             this.logFile = logFile;
             this.fileSystem = fileSystem;
-            this.logContext = logContext;
+            this.sensitiveValueMask = sensitiveValueMask;
         }
 
         public IScriptLogWriter CreateWriter()
         {
-            return new Writer(logFile, fileSystem, sync, logContext);
+            return new Writer(logFile, fileSystem, sync, sensitiveValueMask);
         }
 
         public List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber)
@@ -103,15 +104,15 @@ namespace Octopus.Tentacle.Services.Scripts
         class Writer : IScriptLogWriter
         {
             readonly object sync;
-            readonly ILogContext context;
+            readonly ISensitiveValueMask sensitiveValueMask;
             readonly JsonTextWriter json;
             readonly StreamWriter writer;
             readonly Stream writeStream;
 
-            public Writer(string logFile, IOctopusFileSystem fileSystem, object sync, ILogContext context)
+            public Writer(string logFile, IOctopusFileSystem fileSystem, object sync, ISensitiveValueMask sensitiveValueMask)
             {
                 this.sync = sync;
-                this.context = context;
+                this.sensitiveValueMask = sensitiveValueMask;
                 writeStream = fileSystem.OpenFile(logFile, FileMode.Append, FileAccess.Write);
                 writer = new StreamWriter(writeStream, Encoding.UTF8);
                 json = new JsonTextWriter(writer);
@@ -123,7 +124,8 @@ namespace Octopus.Tentacle.Services.Scripts
                 {
                     json.WriteStartArray();
                     json.WriteValue(SourceToString(source));
-                    context.SafeSanitize(message, json.WriteValue);
+                    //This won't mask if the sensitive value is split between 2 messages 
+                    sensitiveValueMask.SafeSanitizeAndFlush(message, json.WriteValue);
                     json.WriteValue(DateTimeOffset.UtcNow);
                     json.WriteEndArray();
                     json.Flush();

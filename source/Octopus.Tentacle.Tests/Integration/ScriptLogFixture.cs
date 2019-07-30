@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
+using Octopus.Tentacle.Configuration.Proxy;
 using Octopus.Tentacle.Services.Scripts;
 
 namespace Octopus.Tentacle.Tests.Integration
@@ -13,6 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         string logFile;
         ScriptLog sut;
+        ISensitiveValueMask sensitiveValueMask;
         LogContext logContext;
 
         [SetUp]
@@ -20,7 +22,8 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             logFile = Path.GetTempFileName();
             logContext = new LogContext();
-            sut = new ScriptLog(logFile, new OctopusPhysicalFileSystem(), logContext);
+            sensitiveValueMask = new SensitiveValueMask(logContext);
+            sut = new ScriptLog(logFile, new OctopusPhysicalFileSystem(), sensitiveValueMask);
         }
 
         [TearDown]

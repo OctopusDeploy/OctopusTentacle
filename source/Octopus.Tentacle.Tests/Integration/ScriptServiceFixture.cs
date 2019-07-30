@@ -9,6 +9,7 @@ using Octopus.Shared.Contracts;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Scripts;
 using Octopus.Shared.Util;
+using Octopus.Tentacle.Configuration.Proxy;
 using Octopus.Tentacle.Services.Scripts;
 
 namespace Octopus.Tentacle.Tests.Integration
@@ -27,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
             service = new ScriptService(PlatformDetection.IsRunningOnWindows 
                 ? (IShell) new PowerShell() 
                 : new Bash()
-                , new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration), new OctopusPhysicalFileSystem(), new LogContext());
+                , new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration), new OctopusPhysicalFileSystem(), new SensitiveValueMask(new LogContext()));
         }
 
         [Test]

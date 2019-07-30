@@ -1,0 +1,34 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+
+namespace Octopus.Tentacle.Configuration.Proxy
+{
+    
+    public interface IProxyPasswordMaskValues
+    {
+        IEnumerable<string> GetProxyPasswordMaskValues(string proxyPassword);
+    }
+    
+    public class ProxyPasswordMaskValues : IProxyPasswordMaskValues
+    {
+        public IEnumerable<string> GetProxyPasswordMaskValues(string proxyPassword)
+        {
+            if (string.IsNullOrEmpty(proxyPassword)) 
+                return Enumerable.Empty<string>();
+
+            //$Env:HTTP_PROXY will contain the URL encoded version of the password
+            //We also need to handle cases where the encoded hex is in upper or lower case (Calamari)
+            string upperCaseUrlEncodedProxyPassword = WebUtility.UrlEncode(proxyPassword);
+            string lowerCaseUrlEncodedProxyPassword = System.Web.HttpUtility.UrlEncode(proxyPassword);
+            
+            return new[]
+            {
+                proxyPassword,
+                upperCaseUrlEncodedProxyPassword,
+                lowerCaseUrlEncodedProxyPassword
+            }.Distinct();
+        }
+    }
+}

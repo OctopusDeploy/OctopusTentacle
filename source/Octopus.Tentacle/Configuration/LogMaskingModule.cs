@@ -4,6 +4,7 @@ using System.Net;
 using Autofac;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
+using Octopus.Tentacle.Configuration.Proxy;
 
 namespace Octopus.Tentacle.Configuration
 {
@@ -11,26 +12,15 @@ namespace Octopus.Tentacle.Configuration
     {
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterType<ProxyPasswordMaskValues>().As<IProxyPasswordMaskValues>();
             builder.Register(b =>
             {
-                var sensitiveValues = GetProxyPasswordVariants(b.Resolve<ITentacleConfiguration>().ProxyConfiguration.CustomProxyPassword);
-                return new LogContext(null, sensitiveValues);
-            }).As<ILogContext>().SingleInstance();
-        }
-        
-        static string[] GetProxyPasswordVariants(string proxyPassword)
-        {
-            if (string.IsNullOrEmpty(proxyPassword))
-                return new string[] { };
-
-            //Env:HTTP_PROXY will contain the URL encoded version of the password
-            string urlEncodedProxyPassword = WebUtility.UrlEncode(proxyPassword);
-
-            return new[]
-            {
-                proxyPassword, 
-                urlEncodedProxyPassword
-            }.Distinct().ToArray();
+                var proxyPassword = b.Resolve<ITentacleConfiguration>().ProxyConfiguration.CustomProxyPassword;
+                var sensitiveValues = b.Resolve<IProxyPasswordMaskValues>().GetProxyPasswordMaskValues(proxyPassword).ToArray();
+                
+                //Wrap the log context in another class so we don't register it on the container (ILogContext isn't usually global)
+                return new SensitiveValueMask(new LogContext(null, sensitiveValues));
+            }).As<ISensitiveValueMask>().SingleInstance();
         }
     }
 }
