@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace Octopus.Tentacle.Configuration.Proxy
 {
@@ -13,6 +14,7 @@ namespace Octopus.Tentacle.Configuration.Proxy
     
     public class ProxyPasswordMaskValues : IProxyPasswordMaskValues
     {
+        static readonly Regex UrlEncodedCharactersRegex = new Regex(@"%[A-F0-9]{2}", RegexOptions.Compiled);
         public IEnumerable<string> GetProxyPasswordMaskValues(string proxyPassword)
         {
             if (string.IsNullOrEmpty(proxyPassword)) 
@@ -21,7 +23,7 @@ namespace Octopus.Tentacle.Configuration.Proxy
             //$Env:HTTP_PROXY will contain the URL encoded version of the password
             //We also need to handle cases where the encoded hex is in upper or lower case (Calamari)
             string upperCaseUrlEncodedProxyPassword = WebUtility.UrlEncode(proxyPassword);
-            string lowerCaseUrlEncodedProxyPassword = System.Web.HttpUtility.UrlEncode(proxyPassword);
+            string lowerCaseUrlEncodedProxyPassword = UrlEncodedCharactersRegex.Replace(upperCaseUrlEncodedProxyPassword, m => m.Value.ToLowerInvariant());
             
             return new[]
             {
