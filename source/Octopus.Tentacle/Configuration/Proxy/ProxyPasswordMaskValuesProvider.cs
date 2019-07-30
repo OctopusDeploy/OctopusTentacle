@@ -7,12 +7,12 @@ using System.Text.RegularExpressions;
 namespace Octopus.Tentacle.Configuration.Proxy
 {
     
-    public interface IProxyPasswordMaskValues
+    public interface IProxyPasswordMaskValuesProvider
     {
         IEnumerable<string> GetProxyPasswordMaskValues(string proxyPassword);
     }
     
-    public class ProxyPasswordMaskValues : IProxyPasswordMaskValues
+    public class ProxyPasswordMaskValuesProviderProvider : IProxyPasswordMaskValuesProvider
     {
         static readonly Regex UrlEncodedCharactersRegex = new Regex(@"%[A-F0-9]{2}", RegexOptions.Compiled);
         public IEnumerable<string> GetProxyPasswordMaskValues(string proxyPassword)

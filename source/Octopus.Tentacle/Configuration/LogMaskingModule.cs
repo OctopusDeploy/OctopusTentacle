@@ -12,11 +12,11 @@ namespace Octopus.Tentacle.Configuration
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<ProxyPasswordMaskValues>().As<IProxyPasswordMaskValues>();
+            builder.RegisterType<ProxyPasswordMaskValuesProviderProvider>().As<IProxyPasswordMaskValuesProvider>();
             builder.Register(b =>
             {
                 var proxyPassword = b.Resolve<ITentacleConfiguration>().ProxyConfiguration.CustomProxyPassword;
-                var sensitiveValues = b.Resolve<IProxyPasswordMaskValues>().GetProxyPasswordMaskValues(proxyPassword).ToArray();
+                var sensitiveValues = b.Resolve<IProxyPasswordMaskValuesProvider>().GetProxyPasswordMaskValues(proxyPassword).ToArray();
                 
                 //Wrap the log context in another class so we don't register it on the container (ILogContext isn't usually global)
                 return new SensitiveValueMask(new LogContext(null, sensitiveValues));
