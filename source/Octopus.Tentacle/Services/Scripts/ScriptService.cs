@@ -18,16 +18,16 @@ namespace Octopus.Tentacle.Services.Scripts
         readonly IShell shell;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IOctopusFileSystem fileSystem;
-        readonly ISensitiveValueMask sensitiveValueMask;
+        readonly ISensitiveValueMasker sensitiveValueMasker;
         readonly ConcurrentDictionary<string, RunningScript> running = new ConcurrentDictionary<string, RunningScript>(StringComparer.OrdinalIgnoreCase);
         readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
 
-        public ScriptService(IShell shell, IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem, ISensitiveValueMask sensitiveValueMask)
+        public ScriptService(IShell shell, IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem, ISensitiveValueMasker sensitiveValueMasker)
         {
             this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.fileSystem = fileSystem;
-            this.sensitiveValueMask = sensitiveValueMask;
+            this.sensitiveValueMasker = sensitiveValueMasker;
         }
 
         public ScriptTicket StartScript(StartScriptCommand command)
@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         IScriptLog CreateLog(IScriptWorkspace workspace)
         {
-            return new ScriptLog(workspace.ResolvePath("Output.log"), fileSystem, sensitiveValueMask);
+            return new ScriptLog(workspace.ResolvePath("Output.log"), fileSystem, sensitiveValueMasker);
         }
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)

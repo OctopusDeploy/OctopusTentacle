@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
             service = new ScriptService(PlatformDetection.IsRunningOnWindows 
                 ? (IShell) new PowerShell() 
                 : new Bash()
-                , new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration), new OctopusPhysicalFileSystem(), new SensitiveValueMask(new LogContext()));
+                , new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration), new OctopusPhysicalFileSystem(), new SensitiveValueMasker(new LogContext()));
         }
 
         [Test]

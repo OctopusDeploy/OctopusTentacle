@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         string logFile;
         ScriptLog sut;
-        ISensitiveValueMask sensitiveValueMask;
+        ISensitiveValueMasker sensitiveValueMasker;
         LogContext logContext;
 
         [SetUp]
@@ -22,8 +22,8 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             logFile = Path.GetTempFileName();
             logContext = new LogContext();
-            sensitiveValueMask = new SensitiveValueMask(logContext);
-            sut = new ScriptLog(logFile, new OctopusPhysicalFileSystem(), sensitiveValueMask);
+            sensitiveValueMasker = new SensitiveValueMasker(logContext);
+            sut = new ScriptLog(logFile, new OctopusPhysicalFileSystem(), sensitiveValueMasker);
         }
 
         [TearDown]

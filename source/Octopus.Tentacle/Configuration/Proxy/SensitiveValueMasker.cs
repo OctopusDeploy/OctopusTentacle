@@ -3,17 +3,17 @@ using Octopus.Diagnostics;
 
 namespace Octopus.Tentacle.Configuration.Proxy
 {
-    public interface ISensitiveValueMask
+    public interface ISensitiveValueMasker
     {
         void SafeSanitizeAndFlush(string raw, Action<string> action);
     }
 
     //Wrap the log context in this until we extract the the masking from it
-    public class SensitiveValueMask : ISensitiveValueMask
+    public class SensitiveValueMasker : ISensitiveValueMasker
     {
         readonly ILogContext logContext;
 
-        public SensitiveValueMask(ILogContext logContext)
+        public SensitiveValueMasker(ILogContext logContext)
         {
             this.logContext = logContext;
         }

@@ -19,8 +19,8 @@ namespace Octopus.Tentacle.Configuration
                 var sensitiveValues = b.Resolve<IProxyPasswordMaskValuesProvider>().GetProxyPasswordMaskValues(proxyPassword).ToArray();
                 
                 //Wrap the log context in another class so we don't register it on the container (ILogContext isn't usually global)
-                return new SensitiveValueMask(new LogContext(null, sensitiveValues));
-            }).As<ISensitiveValueMask>().SingleInstance();
+                return new SensitiveValueMasker(new LogContext(null, sensitiveValues));
+            }).As<ISensitiveValueMasker>().SingleInstance();
         }
     }
 }
