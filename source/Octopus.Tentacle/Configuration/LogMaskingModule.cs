@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Configuration
                 
                 //Wrap the log context in another class so we don't register it on the container (ILogContext isn't usually global)
                 return new SensitiveValueMasker(new LogContext(null, sensitiveValues));
-            }).As<ISensitiveValueMasker>().SingleInstance();
+            }).As<ISensitiveValueMasker>();
         }
     }
 }
