@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Shared.Contracts;
@@ -67,7 +68,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public void MaskSensitiveValues()
+        public void MaskSensitiveValues_SingleLine_Masked()
         {
             logContext.WithSensitiveValues(new[] {"abcde"});
             using (var writer = sut.CreateWriter())
@@ -77,6 +78,22 @@ namespace Octopus.Tentacle.Tests.Integration
                 var logs = sut.GetOutput(0, out long next);
 
                 logs.Should().ContainSingle().Subject.Text.Should().Be("hello ********123");
+            }
+        }
+        
+        //This is the easiest thing to do, it's too much effort to try get the first part sanitized 
+        [Test]
+        public void MaskSensitiveValues_MultiLine_2ndLineMasked()
+        {
+            logContext.WithSensitiveValues(new[] {"abcde12345"});
+            using (var writer = sut.CreateWriter())
+            {
+                writer.WriteOutput(ProcessOutputSource.Debug, "hello abcde");
+                writer.WriteOutput(ProcessOutputSource.Debug, "12345 bye");
+
+                var logs = sut.GetOutput(0, out long next);
+
+                logs.Select(l => l.Text).Should().ContainInOrder("hello abcde", "******** bye");
             }
         }
     }
