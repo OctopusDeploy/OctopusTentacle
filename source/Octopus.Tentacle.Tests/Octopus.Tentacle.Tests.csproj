@@ -29,8 +29,4 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Configuration\Proxy" />
-  </ItemGroup>
 </Project>
