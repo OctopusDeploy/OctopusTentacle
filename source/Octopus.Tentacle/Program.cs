@@ -47,6 +47,7 @@ namespace Octopus.Tentacle
             builder.RegisterModule(new ShellModule());
             builder.RegisterModule(new ConfigurationModule(applicationName, instanceName));
             builder.RegisterModule(new TentacleConfigurationModule());
+            builder.RegisterModule(new LogMaskingModule());
             builder.RegisterModule(new OctopusClientInitializerModule());
             builder.RegisterModule(new LoggingModule());
             builder.RegisterModule(new OctopusFileSystemModule());
