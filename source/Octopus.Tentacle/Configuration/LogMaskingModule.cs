@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Configuration
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<ProxyPasswordMaskValuesProviderProvider>().As<IProxyPasswordMaskValuesProvider>();
+            builder.RegisterType<ProxyPasswordMaskValuesProvider>().As<IProxyPasswordMaskValuesProvider>();
             builder.Register(b =>
             {
                 var proxyPassword = b.Resolve<ITentacleConfiguration>().ProxyConfiguration.CustomProxyPassword;

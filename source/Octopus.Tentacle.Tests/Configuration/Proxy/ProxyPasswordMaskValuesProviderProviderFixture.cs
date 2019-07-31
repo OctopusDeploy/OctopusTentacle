@@ -7,12 +7,12 @@ namespace Octopus.Tentacle.Tests.Configuration.Proxy
 {
     public class ProxyPasswordMaskValuesProviderProviderFixture
     {
-        ProxyPasswordMaskValuesProviderProvider sut;
+        ProxyPasswordMaskValuesProvider sut;
 
         [SetUp]
         public void SetUp()
         {
-            sut = new ProxyPasswordMaskValuesProviderProvider();
+            sut = new ProxyPasswordMaskValuesProvider();
         }
 
         [TestCase("")]

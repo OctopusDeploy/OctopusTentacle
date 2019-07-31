@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Configuration.Proxy
         IEnumerable<string> GetProxyPasswordMaskValues(string proxyPassword);
     }
     
-    public class ProxyPasswordMaskValuesProviderProvider : IProxyPasswordMaskValuesProvider
+    public class ProxyPasswordMaskValuesProvider : IProxyPasswordMaskValuesProvider
     {
         static readonly Regex UrlEncodedCharactersRegex = new Regex(@"%[A-F0-9]{2}", RegexOptions.Compiled);
         public IEnumerable<string> GetProxyPasswordMaskValues(string proxyPassword)
