@@ -5,7 +5,7 @@ using Octopus.Tentacle.Configuration.Proxy;
 
 namespace Octopus.Tentacle.Tests.Configuration.Proxy
 {
-    public class ProxyPasswordMaskValuesProviderProviderFixture
+    public class ProxyPasswordMaskValuesProviderFixture
     {
         ProxyPasswordMaskValuesProvider sut;
 

@@ -20,14 +20,11 @@ namespace Octopus.Tentacle.Configuration.Proxy
 
         public string MaskSensitiveValues(string rawMessage)
         {
-            if (rawMessage == null)
-                return rawMessage;
-            
             string maskedMessage = null;
             logContext.SafeSanitize(rawMessage, s => maskedMessage = s);
             logContext.Flush();
 
-            return maskedMessage ?? throw new InvalidOperationException("The sanitization callback wasn't called");
+            return maskedMessage;
         }
     }
 }
