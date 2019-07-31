@@ -124,8 +124,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 {
                     json.WriteStartArray();
                     json.WriteValue(SourceToString(source));
-                    //This won't mask if the sensitive value is split between 2 messages 
-                    sensitiveValueMasker.MaskSensitiveValues(message, json.WriteValue);
+                    json.WriteValue(sensitiveValueMasker.MaskSensitiveValues(message));
                     json.WriteValue(DateTimeOffset.UtcNow);
                     json.WriteEndArray();
                     json.Flush();

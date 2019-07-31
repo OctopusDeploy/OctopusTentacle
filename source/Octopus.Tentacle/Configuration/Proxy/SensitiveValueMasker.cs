@@ -5,7 +5,7 @@ namespace Octopus.Tentacle.Configuration.Proxy
 {
     public interface ISensitiveValueMasker
     {
-        void MaskSensitiveValues(string raw, Action<string> action);
+        string MaskSensitiveValues(string rawMessage);
     }
 
     //Wrap the log context in this until we extract the the masking from it
@@ -18,10 +18,16 @@ namespace Octopus.Tentacle.Configuration.Proxy
             this.logContext = logContext;
         }
 
-        public void MaskSensitiveValues(string raw, Action<string> action)
+        public string MaskSensitiveValues(string rawMessage)
         {
-            logContext.SafeSanitize(raw, action);
+            if (rawMessage == null)
+                return rawMessage;
+            
+            string maskedMessage = null;
+            logContext.SafeSanitize(rawMessage, s => maskedMessage = s);
             logContext.Flush();
+
+            return maskedMessage ?? throw new InvalidOperationException("The sanitization callback wasn't called");
         }
     }
 }
