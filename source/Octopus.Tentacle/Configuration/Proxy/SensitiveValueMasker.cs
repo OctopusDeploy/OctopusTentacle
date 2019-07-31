@@ -5,7 +5,7 @@ namespace Octopus.Tentacle.Configuration.Proxy
 {
     public interface ISensitiveValueMasker
     {
-        void SafeSanitizeAndFlush(string raw, Action<string> action);
+        void MaskSensitiveValues(string raw, Action<string> action);
     }
 
     //Wrap the log context in this until we extract the the masking from it
@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Configuration.Proxy
             this.logContext = logContext;
         }
 
-        public void SafeSanitizeAndFlush(string raw, Action<string> action)
+        public void MaskSensitiveValues(string raw, Action<string> action)
         {
             logContext.SafeSanitize(raw, action);
             logContext.Flush();
