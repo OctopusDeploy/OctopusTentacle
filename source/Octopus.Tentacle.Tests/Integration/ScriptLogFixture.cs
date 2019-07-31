@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public void MaskSensitiveValues_SingleLine_Masked()
+        public void MaskSensitiveValues_SingleMessage_Masked()
         {
             logContext.WithSensitiveValues(new[] {"abcde"});
             using (var writer = sut.CreateWriter())
@@ -81,9 +81,20 @@ namespace Octopus.Tentacle.Tests.Integration
             }
         }
         
-        //This is the easiest thing to do, it's too much effort to try get the first part sanitized 
+        //We currently don't mask the first message if a secret spans 2 messages. 
+        //This shouldn't happen in practice since even when Calamari logs a really long line (10K chars), it won't get split
+        //
+        //Sample PowerShell script step:
+        //        Write-Host "hello start"
+        //
+        //        for ($i=1; $i -le 10000; $i++) {
+        //            $prefix = " " * ($i*2)
+        //            Write-Host $prefix $env:HTTP_PROXY
+        //        }
+        //
+        //        Write-Host "hello end"
         [Test]
-        public void MaskSensitiveValues_MultiLine_2ndLineMasked()
+        public void MaskSensitiveValues_MultiMessage_2ndMessageMasked()
         {
             logContext.WithSensitiveValues(new[] {"abcde12345"});
             using (var writer = sut.CreateWriter())

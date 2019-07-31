@@ -39,20 +39,20 @@ namespace Octopus.Tentacle.Tests.Configuration.Proxy
             sut.GetProxyPasswordMaskValues(password).Should().BeEquivalentTo(new []
             {
                 "Some@sT:r/",
-                "Some%40sT%3Ar%2F",
-                "Some%40sT%3ar%2f"
+                "Some%40sT%3Ar%2F", //WebUtility.UrlEncode generates uppercase hex characters
+                "Some%40sT%3ar%2f"  //HttpUtility.UrlEncode generates lowercase hex characters
             });
         }
         
         [Test]
-        public void GetProxyPasswordMaskValues_HasSpecialCharactersWithHexCharactersFollowing_EncodedWithBothCases()
+        public void GetProxyPasswordMaskValues_HasSpecialCharactersWithHexCharactersFollowing_HexCharacterCasingPreserved()
         {
             string password = "Some@sT:Ar/";
             sut.GetProxyPasswordMaskValues(password).Should().BeEquivalentTo(new []
             {
                 "Some@sT:Ar/",
-                "Some%40sT%3AAr%2F",
-                "Some%40sT%3aAr%2f"
+                "Some%40sT%3AAr%2F", //WebUtility.UrlEncode generates uppercase hex characters
+                "Some%40sT%3aAr%2f"  //HttpUtility.UrlEncode generates lowercase hex characters
             });
         }
     }

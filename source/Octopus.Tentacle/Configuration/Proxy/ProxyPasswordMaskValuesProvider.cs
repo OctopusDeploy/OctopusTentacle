@@ -21,7 +21,8 @@ namespace Octopus.Tentacle.Configuration.Proxy
                 return Enumerable.Empty<string>();
 
             //$Env:HTTP_PROXY will contain the URL encoded version of the password
-            //We also need to handle cases where the encoded hex is in upper or lower case (Calamari)
+            //We also need to handle cases where the encoded hex is in upper or lower case
+            //Calamari calls both WebUtility.UrlEncode (uppercase hex) and HttpUtility.UrlEncode (lowercase hex)
             string upperCaseUrlEncodedProxyPassword = WebUtility.UrlEncode(proxyPassword);
             string lowerCaseUrlEncodedProxyPassword = UrlEncodedCharactersRegex.Replace(upperCaseUrlEncodedProxyPassword, m => m.Value.ToLowerInvariant());
             
