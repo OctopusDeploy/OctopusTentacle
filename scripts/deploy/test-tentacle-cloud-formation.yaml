@@ -223,12 +223,12 @@ Resources:
     Type: 'AWS::EC2::Instance'
     Properties:
       SubnetId: !Ref ArchiveInstanceSubnetId
-      ImageId: !Ref ArhiveInstanceAmi
+      ImageId: !Ref ArchiveInstanceAmi
       InstanceType:
-        Ref: ArhiveInstanceTypeParameter
-      KeyName: !Ref ArhiveInstanceKeyPairName
+        Ref: ArchiveInstanceTypeParameter
+      KeyName: !Ref ArchiveInstanceKeyPairName
       SecurityGroupIds:
-      - Ref: ArhiveInstanceSecurityGroupId
+      - Ref: ArchiveInstanceSecurityGroupId
       BlockDeviceMappings:
       - DeviceName: /dev/xvda
         Ebs:
