@@ -284,6 +284,9 @@ Resources:
           tentacleArchiveName=tentacle-#{Octopus.Action.Package.PackageVersion}-linux_x64.tar.gz
           curl https://download.octopusdeploy.com/#{Publish.S3.DownloadPath}$tentacleArchiveName --output $tentacleArchiveName
 
+          mkdir /opt/octopus
+          tar xvzf $tentacleArchiveName -C /opt/octopus
+
           sudo cat > /etc/systemd/system/tentacle.service << EOM
           [Unit]
           Description=Octopus Tentacle Server
