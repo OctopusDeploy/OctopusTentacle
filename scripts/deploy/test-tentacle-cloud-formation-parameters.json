@@ -30,5 +30,22 @@
     {
         "ParameterKey": "RpmInstanceSubnetId",
         "ParameterValue": "#{Test.RPM.EC2.SubnetId}"
+    },
+    {
+        "ParameterKey": "ArchiveInstanceKeyPairName",
+        "ParameterValue": "#{Test.Archive.EC2.KeyPairName}"
+    },
+    {
+        "ParameterKey": "ArchiveInstanceAmi",
+        "ParameterValue": "#{Test.Archive.EC2.Ami}"
+    },
+    {
+        "ParameterKey": "ArchiveInstanceSecurityGroupId",
+        "ParameterValue": "#{Test.Archive.EC2.SecurityGroupId}"
+    },
+    {
+        "ParameterKey": "ArchiveInstanceSubnetId",
+        "ParameterValue": "#{Test.Archive.EC2.SubnetId}"
     }
+
 ]
