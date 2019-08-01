@@ -22,6 +22,17 @@ Parameters:
   RpmInstanceTypeParameter:
     Type: String
     Default: t2.medium
+  ArchiveInstanceKeyPairName:
+    Type: String
+  ArchiveInstanceAmi:
+    Type: String
+  ArchiveInstanceSecurityGroupId:
+    Type: String
+  ArchiveInstanceSubnetId:
+    Type: String
+  ArchiveInstanceTypeParameter:
+    Type: String
+    Default: t2.medium
 Resources:
   AptTestAgent:
     Type: 'AWS::EC2::Instance'
