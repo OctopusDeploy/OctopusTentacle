@@ -25,8 +25,7 @@ namespace Octopus.Shared.Tests.Startup
             const string serviceDescription = "Test service for OctopusShared tests";
             var log = new InMemoryLog();
             var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullLocalPath());
-            var assemblyPath = Path.Combine(root, "Startup/Packages/Acme.SampleConsole", "Acme.SampleConsole.dll");
-            var targetPath = $"dotnet {assemblyPath}";
+            var scriptPath = Path.Combine(root, "Startup/Packages/SampleScript", "SampleScript.sh");
 
             var configureServiceHelper = new LinuxServiceConfigurator(log);
             
@@ -36,7 +35,7 @@ namespace Octopus.Shared.Tests.Startup
                 Start = true
             };
             
-            configureServiceHelper.ConfigureService(serviceName, targetPath, instance, serviceDescription, serviceConfigurationState);
+            configureServiceHelper.ConfigureService(serviceName, scriptPath, instance, serviceDescription, serviceConfigurationState);
             
             //Check that the systemd unit service file has been written
             Assert.IsTrue(DoesServiceUnitFileExist(instance), "The service unit file has not been created");
@@ -53,7 +52,7 @@ namespace Octopus.Shared.Tests.Startup
                 Uninstall = true
             };
             
-            configureServiceHelper.ConfigureService(serviceName, targetPath, instance, serviceDescription, stopServiceConfigurationState);
+            configureServiceHelper.ConfigureService(serviceName, scriptPath, instance, serviceDescription, stopServiceConfigurationState);
             
             //Check that the Service has stopped
             Assert.IsFalse(IsServiceRunning(instance), "The service has not been stopped");
