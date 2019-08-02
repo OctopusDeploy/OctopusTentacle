@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using NUnit.Framework;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Tests.Support;
@@ -23,7 +24,8 @@ namespace Octopus.Shared.Tests.Startup
             const string serviceDescription = "Test service for OctopusShared tests";
             var log = new InMemoryLog();
             var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullLocalPath());
-            var scriptPath = Path.Combine(root, "Startup/Packages/SampleScript", "SampleScript.sh");
+            var scriptPath = Path.Combine(root, "SampleScript.sh");
+            WriteUnixFile(scriptPath);
             
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"chmod 777 {scriptPath}\"");
             commandLineInvocation.ExecuteCommand();
@@ -63,6 +65,18 @@ namespace Octopus.Shared.Tests.Startup
             
             //Check that the service is disabled
             Assert.IsFalse(DoesServiceUnitFileExist(instance), "The service unit file still exists");
+        }
+        
+        private void WriteUnixFile(string path)
+        {
+            using (TextWriter writer = new StreamWriter(path, false, Encoding.ASCII))
+            {
+                writer.NewLine = "\n";
+                writer.WriteLine("#!/bin/bash");
+                writer.WriteLine("");
+                writer.WriteLine("while true; do now=$(date +\"%T\");echo \"Current time : $now\";sleep 1; done\n");
+                writer.Close();
+            }
         }
 
         private bool IsServiceRunning(string serviceName)
