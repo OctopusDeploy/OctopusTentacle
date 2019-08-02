@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
-using Octopus.Shared.Model;
 using Octopus.Shared.Security.Masking;
 
 namespace Octopus.Shared.Diagnostics
@@ -34,8 +33,6 @@ namespace Octopus.Shared.Diagnostics
 
         public string CorrelationId => correlationId;
 
-        [Encrypted]
-        [JsonIgnore]
         public string[] SensitiveValues => sensitiveValues;
 
         public void SafeSanitize(string raw, Action<string> action)
