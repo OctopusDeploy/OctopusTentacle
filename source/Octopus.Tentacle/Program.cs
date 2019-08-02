@@ -1,9 +1,6 @@
 using System;
-using System.IO;
 using System.Net;
-using System.Threading;
 using Autofac;
-using NLog.Targets;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
