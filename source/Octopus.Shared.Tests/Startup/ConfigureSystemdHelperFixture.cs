@@ -12,20 +12,21 @@ using Octopus.Shared.Util;
 namespace Octopus.Shared.Tests.Startup
 {
     [TestFixture]
+    [LinuxTest]
     public class ConfigureSystemdHelperFixture
     {
         [Test]
         public void CanInstallService()
-        {
-            if(PlatformDetection.IsRunningOnWindows)
-                Assert.Inconclusive("This test is only supported on Linux.");
-        
+        {        
             const string serviceName = "OctopusShared.ServiceHelperTest";
             const string instance = "TestInstance";
             const string serviceDescription = "Test service for OctopusShared tests";
             var log = new InMemoryLog();
             var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullLocalPath());
             var scriptPath = Path.Combine(root, "Startup/Packages/SampleScript", "SampleScript.sh");
+            
+            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"chmod 777 {scriptPath}\"");
+            commandLineInvocation.ExecuteCommand();
 
             var configureServiceHelper = new LinuxServiceConfigurator(log);
             
