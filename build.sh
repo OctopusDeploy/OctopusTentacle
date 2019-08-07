@@ -116,7 +116,7 @@ fi
 # Make sure that xmlstartlet is insatlled, its needed to update the version of libgit2 in a config below
 if ! [ -x "$(command -v xmlstarlet)" ] 
 then         
-	echo "Error: xmlstarlet is not installed"         
+	echo "Error: xmlstarlet is not installed."         
 	exit 1 
 fi
 
