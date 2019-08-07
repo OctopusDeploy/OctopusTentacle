@@ -91,7 +91,6 @@ Task("__Default")
     .IsDependentOn("__CopyToLocalPackages");
 
 Task("__LinuxPackage")
-    .IsDependentOn("__Version")
     .IsDependentOn("__UpdateGitVersionCommandLineConfig")
     .IsDependentOn("__BuildToolsContainer")
     .IsDependentOn("__CreateDebianPackage")
