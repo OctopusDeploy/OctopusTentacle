@@ -2,6 +2,7 @@ using System;
 using Autofac;
 using Octopus.Configuration;
 using Octopus.Shared.Services;
+using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
@@ -24,10 +25,12 @@ namespace Octopus.Shared.Configuration
             if (PlatformDetection.IsRunningOnWindows)
             {
                 builder.RegisterType<RegistryApplicationInstanceStore>().As<IRegistryApplicationInstanceStore>();
+                builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
             }
             else
             {
                 builder.RegisterType<NullRegistryApplicationInstanceStore>().As<IRegistryApplicationInstanceStore>();
+                builder.RegisterType<LinuxServiceConfigurator>().As<IServiceConfigurator>();
             }
             
             builder.RegisterType<ApplicationInstanceStore>().As<IApplicationInstanceStore>();

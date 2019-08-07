@@ -9,20 +9,20 @@ namespace Octopus.Shared.Startup
 {
     public class ServiceCommand : AbstractStandardCommand
     {
-        readonly ILog log;
         readonly string serviceDescription;
         readonly Assembly assemblyContainingService;
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
+        private readonly IServiceConfigurator serviceConfigurator;
         readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
         readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
 
-        public ServiceCommand(IApplicationInstanceSelector instanceSelector, string serviceDescription, Assembly assemblyContainingService, ILog log) : base(instanceSelector)
+        public ServiceCommand(IApplicationInstanceSelector instanceSelector, string serviceDescription, Assembly assemblyContainingService, IServiceConfigurator serviceConfigurator) : base(instanceSelector)
         {
             this.instanceSelector = instanceSelector;
             this.serviceDescription = serviceDescription;
             this.assemblyContainingService = assemblyContainingService;
-            this.log = log;
+            this.serviceConfigurator = serviceConfigurator;
 
             serviceConfigurationState = new ServiceConfigurationState
             {
@@ -49,11 +49,10 @@ namespace Octopus.Shared.Startup
 
             var thisServiceName = ServiceName.GetWindowsServiceName(instanceSelector.GetCurrentInstance().ApplicationName, instanceSelector.GetCurrentInstance().InstanceName);
             var instance = instanceSelector.GetCurrentInstance().InstanceName;
-            var exePath = Path.ChangeExtension(assemblyContainingService.FullLocalPath(), "exe");
+            var fullPath = assemblyContainingService.FullLocalPath();
+            var exePath = PlatformDetection.IsRunningOnWindows ? Path.ChangeExtension(fullPath, "exe") : PathHelper.GetPathWithoutExtension(fullPath);
 
-            var serverInstaller = new ConfigureServiceHelper(log, thisServiceName, exePath, instance, serviceDescription, serviceConfigurationState);
-
-            serverInstaller.ConfigureService();
+            serviceConfigurator.ConfigureService(thisServiceName, exePath, instance, serviceDescription, serviceConfigurationState);
         }
     }
 }

@@ -42,5 +42,13 @@ namespace Octopus.Shared.Util
 
             return path;
         }
+        
+        public static string GetPathWithoutExtension(string path)
+        {
+            var containingFolder = Path.GetDirectoryName(path);
+            var fileWithoutExtension = Path.GetFileNameWithoutExtension(path);
+
+            return !string.IsNullOrEmpty(containingFolder) ? Path.Combine(containingFolder, fileWithoutExtension) : fileWithoutExtension;
+        }
     }
 }

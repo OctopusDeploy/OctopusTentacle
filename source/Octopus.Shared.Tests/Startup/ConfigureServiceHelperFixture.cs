@@ -18,14 +18,12 @@ using Octopus.Shared.Util;
 namespace Octopus.Shared.Tests
 {
     [TestFixture]
+    [WindowsTest]
     public class ConfigureServiceHelperFixture
     {
         [Test]
         public void CanInstallService()
-        {
-            if(!PlatformDetection.IsRunningOnWindows)
-                Assert.Inconclusive("This test is only supported on windows.");
-        
+        {        
             const string serviceName = "OctopusShared.ServiceHelperTest";
             const string instance = "TestInstance";
             const string serviceDescription = "Test service for OctopusShared tests";
@@ -43,11 +41,11 @@ namespace Octopus.Shared.Tests
                 Username = user.NTAccountName,
                 Start = true
             };
-            var configureServiceHelper = new ConfigureServiceHelper(log, serviceName, exePath, instance, serviceDescription, serviceConfigurationState);
+            var configureServiceHelper = new WindowsServiceConfigurator(log);
             
             try
             {
-                configureServiceHelper.ConfigureService();
+                configureServiceHelper.ConfigureService(serviceName, exePath, instance, serviceDescription, serviceConfigurationState);
                 
                 using (var installedService = GetInstalledService(serviceName))
                 {
