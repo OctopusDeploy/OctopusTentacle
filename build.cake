@@ -41,6 +41,7 @@ var signingTimestampUrls = new string[] {
 
 var installerPackageDir = "./build/package/installer";
 var binariesPackageDir = "./build/package/binaries";
+var packagesPackageDir = "./build/package/packages";
 var installerDir = "./build/installer";
 var artifactsDir = "./build/artifacts";
 var localPackagesDir = "../LocalPackages";
@@ -90,9 +91,11 @@ Task("__Default")
     .IsDependentOn("__CopyToLocalPackages");
 
 Task("__LinuxPackage")
+    .IsDependentOn("__Version")
     .IsDependentOn("__UpdateGitVersionCommandLineConfig")
     .IsDependentOn("__BuildToolsContainer")
-    .IsDependentOn("__CreateDebianPackage");
+    .IsDependentOn("__CreateDebianPackage")
+    .IsDependentOn("__CreatePackagesNuGet");
 
 Task("__BuildToolsContainer")
     .Does(() =>
@@ -103,11 +106,14 @@ Task("__BuildToolsContainer")
 Task("__UpdateGitVersionCommandLineConfig")
     .Does(() =>
 {
-    using(var process = StartAndReturnProcess("xmlstarlet", new ProcessSettings{ Arguments = "edit -O --inplace --update \"//dllmap[@os='linux']/@target\" --value \"/lib64/libgit2.so.26\" tools/GitVersion.CommandLine.4.0.0/tools/LibGit2Sharp.dll.config" }))
+    if (IsRunningOnUnix())
     {
-        process.WaitForExit();
-        // This should output 0 as valid arguments supplied
-        Information("Exit code: {0}", process.GetExitCode());
+        using(var process = StartAndReturnProcess("xmlstarlet", new ProcessSettings{ Arguments = "edit -O --inplace --update \"//dllmap[@os='linux']/@target\" --value \"/lib64/libgit2.so.26\" tools/GitVersion.CommandLine.4.0.0/tools/LibGit2Sharp.dll.config" }))
+        {
+            process.WaitForExit();
+            // This should output 0 as valid arguments supplied
+            Information("Exit code: {0}", process.GetExitCode());
+        }
     }
 });
 
@@ -356,6 +362,23 @@ Task("__CreateInstallerNuGet")
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Installers.nuspec", installerPackageDir);
 
     NuGetPack(Path.Combine(installerPackageDir, "Tentacle.Installers.nuspec"), new NuGetPackSettings {
+        Version = gitVersion.NuGetVersion,
+        OutputDirectory = artifactsDir
+    });
+});
+
+Task("__CreatePackagesNuGet")
+    .Does(() =>
+{
+    CreateDirectory(packagesPackageDir);
+    CreateDirectory($"{packagesPackageDir}/build/Packages");
+
+    CopyFiles($"{artifactsDir}/*.deb", $"{packagesPackageDir}/build/Packages");
+    CopyFiles($"{artifactsDir}/*.rpm", $"{packagesPackageDir}/build/Packages");
+    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Packages.nuspec", packagesPackageDir);
+    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Packages.targets", $"{packagesPackageDir}/build");
+
+    NuGetPack(Path.Combine(packagesPackageDir, "Tentacle.Packages.nuspec"), new NuGetPackSettings {
         Version = gitVersion.NuGetVersion,
         OutputDirectory = artifactsDir
     });
