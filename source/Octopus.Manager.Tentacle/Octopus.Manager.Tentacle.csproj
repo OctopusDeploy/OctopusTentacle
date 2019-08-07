@@ -134,6 +134,8 @@
     <Reference Include="Octopus.Shared, Version=4.11.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\Octopus.Shared.4.11.0\lib\net45\Octopus.Shared.dll</HintPath>
       <Private>True</Private>
+    <Reference Include="Octopus.Shared, Version=4.10.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octopus.Shared.4.10.0\lib\net45\Octopus.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.1.5.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Octopus.Time.1.1.5\lib\netstandard1.0\Octopus.Time.dll</HintPath>
