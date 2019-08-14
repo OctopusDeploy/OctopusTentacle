@@ -94,7 +94,7 @@ Task("__LinuxPackage")
     .IsDependentOn("__Clean")
     .IsDependentOn("__UpdateGitVersionCommandLineConfig")
     .IsDependentOn("__BuildToolsContainer")
-    .IsDependentOn("__CreateDebianPackage")
+    .IsDependentOn("__CreateLinuxPackage")
     .IsDependentOn("__CreatePackagesNuGet");
 
 Task("__BuildToolsContainer")
@@ -117,7 +117,7 @@ Task("__UpdateGitVersionCommandLineConfig")
     }
 });
 
-Task("__CreateDebianPackage")
+Task("__CreateLinuxPackage")
     .IsDependentOn("__DotnetPublish")
     .IsDependentOn("__BuildToolsContainer")
     .Does(() =>
