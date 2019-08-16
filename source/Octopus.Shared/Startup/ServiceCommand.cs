@@ -32,7 +32,7 @@ namespace Octopus.Shared.Startup
 
             var serviceType = PlatformDetection.IsRunningOnWindows
                 ? "Windows Service"
-                : "systemd service";
+                : "system service";
 
             Options.Add("start", $"Start the {serviceType} if it is not already running", v => serviceConfigurationState.Start = true);
             Options.Add("stop", $"Stop the {serviceType} if it is running", v => serviceConfigurationState.Stop = true);
