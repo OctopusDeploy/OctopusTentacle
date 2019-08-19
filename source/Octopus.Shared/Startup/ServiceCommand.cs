@@ -1,24 +1,35 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {
-    public class ServiceCommand : AbstractStandardCommand
+    public class ServiceCommand : AbstractCommand
     {
         readonly string serviceDescription;
         readonly Assembly assemblyContainingService;
+        readonly ApplicationName applicationName;
+        readonly IApplicationInstanceStore instanceStore;
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
-        private readonly IServiceConfigurator serviceConfigurator;
+        readonly IServiceConfigurator serviceConfigurator;
         readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
         readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
 
-        public ServiceCommand(IApplicationInstanceSelector instanceSelector, string serviceDescription, Assembly assemblyContainingService, IServiceConfigurator serviceConfigurator) : base(instanceSelector)
+        string instanceName;
+
+        public ServiceCommand(ApplicationName applicationName,
+            IApplicationInstanceStore instanceStore,
+            IApplicationInstanceSelector instanceSelector,
+            string serviceDescription,
+            Assembly assemblyContainingService,
+            IServiceConfigurator serviceConfigurator)
         {
+            this.applicationName = applicationName;
+            this.instanceStore = instanceStore;
             this.instanceSelector = instanceSelector;
             this.serviceDescription = serviceDescription;
             this.assemblyContainingService = assemblyContainingService;
@@ -36,6 +47,7 @@ namespace Octopus.Shared.Startup
 
             Options.Add("start", $"Start the {serviceType} if it is not already running", v => serviceConfigurationState.Start = true);
             Options.Add("stop", $"Stop the {serviceType} if it is running", v => serviceConfigurationState.Stop = true);
+            Options.Add("restart", $"", v => serviceConfigurationState.Restart = true);
             Options.Add("reconfigure", $"Reconfigure the {serviceType}", v => serviceConfigurationState.Reconfigure = true);
             Options.Add("install", $"Install the {serviceType}", v => serviceConfigurationState.Install = true);
             Options.Add("username=|user=", $"Username to run the service under (DOMAIN\\Username format). Only used when --install or --reconfigure are used.  Can also be passed via an environment variable {ServiceUsernameEnvVar}.", v => serviceConfigurationState.Username = v);
@@ -45,18 +57,49 @@ namespace Octopus.Shared.Startup
                 serviceConfigurationState.Password = v;
             }, sensitive: true);
             Options.Add("dependOn=", "", v => serviceConfigurationState.DependOn = v);
+            Options.Add("instance=", "Name of the instance to use, or * to use all instances", v => instanceName = v);
         }
 
         protected override void Start()
         {
-            base.Start();
-
-            var thisServiceName = ServiceName.GetWindowsServiceName(instanceSelector.GetCurrentInstance().ApplicationName, instanceSelector.GetCurrentInstance().InstanceName);
-            var instance = instanceSelector.GetCurrentInstance().InstanceName;
             var fullPath = assemblyContainingService.FullLocalPath();
-            var exePath = PlatformDetection.IsRunningOnWindows ? Path.ChangeExtension(fullPath, "exe") : PathHelper.GetPathWithoutExtension(fullPath);
+            var exePath = PlatformDetection.IsRunningOnWindows
+                ? Path.ChangeExtension(fullPath, "exe")
+                : PathHelper.GetPathWithoutExtension(fullPath);
 
-            serviceConfigurator.ConfigureService(thisServiceName, exePath, instance, serviceDescription, serviceConfigurationState);
+            if (instanceName == "*")
+            {
+                if (serviceConfigurationState.Reconfigure || serviceConfigurationState.Install || serviceConfigurationState.Uninstall)
+                {
+                    throw new ControlledFailureException("--instance=* can only be used for --start, --stop, and --restart flags");
+                }
+
+                var exceptions = new List<Exception>();
+
+                foreach (var instance in instanceStore.ListInstances(applicationName))
+                {
+                    try
+                    {
+                        var thisServiceName = ServiceName.GetWindowsServiceName(instance.ApplicationName, instance.InstanceName);
+                        serviceConfigurator.ConfigureService(thisServiceName, exePath, instance.InstanceName, serviceDescription, serviceConfigurationState);
+                    }
+                    catch (Exception ex)
+                    {
+                        exceptions.Add(ex);
+                    }
+                }
+
+                if (exceptions.Count > 0)
+                {
+                    throw new AggregateException(exceptions);
+                }
+            }
+            else
+            {
+                var instance = instanceSelector.GetCurrentInstance();
+                var thisServiceName = ServiceName.GetWindowsServiceName(instance.ApplicationName, instance.InstanceName);
+                serviceConfigurator.ConfigureService(thisServiceName, exePath, instance.InstanceName, serviceDescription, serviceConfigurationState);
+            }
         }
     }
 }

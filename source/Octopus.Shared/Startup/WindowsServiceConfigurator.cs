@@ -23,6 +23,26 @@ namespace Octopus.Shared.Startup
         {
             var controller = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == thisServiceName);
 
+            if (serviceConfigurationState.Restart)
+            {
+                if (controller == null)
+                {
+                    LogFileOnlyLogger.Info($"Restart requested for service {thisServiceName}, but service controller was not found. Skipping.");
+                }
+                else
+                {
+                    log.Info($"Restarting service {thisServiceName}");
+                    if (TryStopService(controller))
+                    {
+                        StartService(controller);
+                    }
+                    else
+                    {
+                        log.Info($"Service {thisServiceName} wasn't restarted as it is not running.");
+                    }
+                }
+            }
+
             if (serviceConfigurationState.Stop)
             {
                 if (controller == null)
@@ -31,37 +51,7 @@ namespace Octopus.Shared.Startup
                 }
                 else
                 {
-                    if (controller.Status != ServiceControllerStatus.Stopped && controller.Status != ServiceControllerStatus.StopPending)
-                    {
-                        if (!controller.CanStop)
-                        {
-                            try
-                            {
-                                WaitForControllerToBeReadyToStop(controller);
-                            }
-                            catch (Exception)
-                            {
-                                log.Error("The service is not able to stop");
-                                throw;
-                            }
-                        }
-
-                        log.Info("Stopping service...");
-                        Thread.Sleep(300);
-                        controller.Stop();
-                    }
-
-                    try
-                    {
-                        WaitForControllerStatus(controller, ServiceControllerStatus.Stopped);
-                    }
-                    catch (Exception)
-                    {
-                        log.Error("The service could not be stopped");
-                        throw;
-                    }
-
-                    log.Info("Service stopped");
+                    TryStopService(controller);
                 }
             }
 
@@ -157,23 +147,70 @@ namespace Octopus.Shared.Startup
                     throw new ControlledFailureException($"Start requested for service {thisServiceName}, but no service with this name was found.");
                 }
 
-                if (controller.Status != ServiceControllerStatus.Running)
+                StartService(controller);
+            }
+        }
+
+        bool TryStopService(ServiceController controller)
+        {
+
+            if (controller.Status != ServiceControllerStatus.Stopped && controller.Status != ServiceControllerStatus.StopPending)
+            {
+                if (!controller.CanStop)
                 {
-                    if (controller.Status != ServiceControllerStatus.StartPending)
+                    try
                     {
-                        controller.Start();
+                        WaitForControllerToBeReadyToStop(controller);
                     }
-
-                    while (controller.Status != ServiceControllerStatus.Running)
+                    catch (Exception)
                     {
-                        controller.Refresh();
-
-                        log.Info("Waiting for service to start. Current status: " + controller.Status);
-                        Thread.Sleep(300);
+                        log.Error("The service is not able to stop");
+                        throw;
                     }
-
-                    log.Info("Service started");
                 }
+
+                log.Info("Stopping service...");
+                Thread.Sleep(300);
+                controller.Stop();
+            }
+            else
+            {
+                return false;
+            }
+
+            try
+            {
+                WaitForControllerStatus(controller, ServiceControllerStatus.Stopped);
+            }
+            catch (Exception)
+            {
+                log.Error("The service could not be stopped");
+                return false;
+            }
+
+            log.Info("Service stopped");
+
+            return true;
+        }
+
+        void StartService(ServiceController controller)
+        {
+            if (controller.Status != ServiceControllerStatus.Running)
+            {
+                if (controller.Status != ServiceControllerStatus.StartPending)
+                {
+                    controller.Start();
+                }
+
+                while (controller.Status != ServiceControllerStatus.Running)
+                {
+                    controller.Refresh();
+
+                    log.Info("Waiting for service to start. Current status: " + controller.Status);
+                    Thread.Sleep(300);
+                }
+
+                log.Info("Service started");
             }
         }
 
