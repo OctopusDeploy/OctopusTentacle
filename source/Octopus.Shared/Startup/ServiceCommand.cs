@@ -47,7 +47,7 @@ namespace Octopus.Shared.Startup
 
             Options.Add("start", $"Start the {serviceType} if it is not already running", v => serviceConfigurationState.Start = true);
             Options.Add("stop", $"Stop the {serviceType} if it is running", v => serviceConfigurationState.Stop = true);
-            Options.Add("restart", $"", v => serviceConfigurationState.Restart = true);
+            Options.Add("restart", $"Restart the {serviceType} if it is running", v => serviceConfigurationState.Restart = true);
             Options.Add("reconfigure", $"Reconfigure the {serviceType}", v => serviceConfigurationState.Reconfigure = true);
             Options.Add("install", $"Install the {serviceType}", v => serviceConfigurationState.Install = true);
             Options.Add("username=|user=", $"Username to run the service under (DOMAIN\\Username format). Only used when --install or --reconfigure are used.  Can also be passed via an environment variable {ServiceUsernameEnvVar}.", v => serviceConfigurationState.Username = v);

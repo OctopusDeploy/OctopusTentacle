@@ -202,13 +202,7 @@ namespace Octopus.Shared.Startup
                     controller.Start();
                 }
 
-                while (controller.Status != ServiceControllerStatus.Running)
-                {
-                    controller.Refresh();
-
-                    log.Info("Waiting for service to start. Current status: " + controller.Status);
-                    Thread.Sleep(300);
-                }
+                WaitForControllerStatus(controller, ServiceControllerStatus.Running);
 
                 log.Info("Service started");
             }
