@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Octopus.Shared.Startup
+﻿namespace Octopus.Shared.Startup
 {
     public class ServiceConfigurationState
     {
@@ -22,6 +20,7 @@ namespace Octopus.Shared.Startup
 
         public bool Start { get; set; }
         public bool Stop { get; set; }
+        public bool Restart { get; set; }
         public bool Reconfigure { get; set; }
         public bool Install { get; set; }
         public bool Uninstall { get; set; }
