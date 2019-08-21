@@ -71,7 +71,10 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<DeregisterWorkerCommand>("deregister-worker", "Deregisters this worker from an Octopus Server");
             builder.RegisterCommand<NewCertificateCommand>("new-certificate", "Creates and installs a new certificate for this Tentacle");
             builder.RegisterCommand<ShowThumbprintCommand>("show-thumbprint", "Show the thumbprint of this Tentacle's certificate");
-            builder.RegisterCommand<ServiceCommand>("service", "Start, stop, install and configure the Tentacle service").WithParameter("serviceName", "OctopusDeploy Tentacle").WithParameter("serviceDescription", "Octopus Deploy: Tentacle deployment agent").WithParameter("assemblyContainingService", typeof (Program).Assembly);
+            builder.RegisterCommand<ServiceCommand>("service", "Start, stop, install and configure the Tentacle service")
+                .WithParameter("applicationName", ApplicationName.Tentacle)
+                .WithParameter("serviceDescription", "Octopus Deploy: Tentacle deployment agent")
+                .WithParameter("assemblyContainingService", typeof(Program).Assembly);
             builder.RegisterCommand<ProxyConfigurationCommand>("proxy", "Configure the HTTP proxy used by Octopus");
             builder.RegisterCommand<PollingProxyConfigurationCommand>("polling-proxy", "Configure the HTTP proxy used by polling tentacles to reach the Octopus Server");
             builder.RegisterCommand<ServerCommsCommand>("server-comms", "Configure how the Tentacle communicates with an Octopus Server");

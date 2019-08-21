@@ -30,17 +30,9 @@ function splitAndGetArgs {
     echo $finalstring
 }
 
-function showRunCommand {
-    GREEN='\033[1;32m'
-    YELLOW='\033[1;33m'
-    NC='\033[0m' # No Color
-
+function showFinishedMessage {
     echo
-    echo -e "${GREEN}Run the following command to start Tentacle${NC}"
-    echo -e "${YELLOW}sudo /opt/octopus/tentacle/Tentacle run --instance '$1' --noninteractive${NC}"
-    echo
-    echo "To run Tentacle as a service, please refer to the docs on our website."
-    echo -e "${GREEN}https://octopus.com/docs/infrastructure/deployment-targets/linux/tentacle${NC}"
+    echo -e "${GREEN}Tentacle instance '$1' is now installed${NC}"
     echo
 }
 
@@ -69,7 +61,9 @@ function setupListeningTentacle {
     echo -e "${YELLOW}sudo /opt/octopus/tentacle/Tentacle create-instance --instance \"$instancename\" --config \"$logpath/$instancename/tentacle-$instancename.config\""
     echo "sudo /opt/octopus/tentacle/Tentacle new-certificate --instance \"$instancename\" --if-blank"
     echo "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --port $port --noListen False --reset-trust"
-    echo -e "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --trust $thumbprint${NC}"
+    echo -e "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --trust $thumbprint"
+
+    echo -e "sudo /opt/octopus/tentacle/Tentacle service --install --instance \"$instancename\"${NC}"
 
     read -p "Press enter to continue..."
     
@@ -85,7 +79,10 @@ function setupListeningTentacle {
     eval sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --trust $thumbprint
     exitIfCommandFailed
 
-    showRunCommand $instancename
+    eval sudo /opt/octopus/tentacle/Tentacle service --install --instance \"$instancename\"
+    exitIfCommandFailed
+
+    showFinishedMessage
 }
 
 function setupPollingTentacle {
@@ -177,10 +174,12 @@ function setupPollingTentacle {
     echo -e "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --noListen \"True\" --reset-trust"
 
     if [ $machinetype = 2 ]; then
-        echo -e "sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $displayauth --space \"$space\" $workerpoolsstring ${NC}"
+        echo -e "sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $displayauth --space \"$space\" $workerpoolsstring"
     else
-        echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $displayauth --space \"$space\" $envstring $rolesstring ${NC}"
+        echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $displayauth --space \"$space\" $envstring $rolesstring"
     fi
+
+    echo -e "sudo /opt/octopus/tentacle/Tentacle service --install --instance \"$instancename\"${NC}"
 
     read -p "Press enter to continue..."
     
@@ -199,9 +198,12 @@ function setupPollingTentacle {
         eval sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $envstring $rolesstring
     fi
 
-    exitIfCommandFailed  
+    exitIfCommandFailed
 
-    showRunCommand $instancename
+    eval sudo /opt/octopus/tentacle/Tentacle service --install --instance \"$instancename\"
+    exitIfCommandFailed
+
+    showFinishedMessage
 }
 
 instance="Tentacle"
