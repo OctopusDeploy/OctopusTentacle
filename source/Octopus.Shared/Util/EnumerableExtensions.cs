@@ -29,10 +29,9 @@ namespace Octopus.Shared.Util
         {
             var keyArray = keys.ToArray();
             if (keyArray.Length < 1)
-                yield break;
+                return Enumerable.Empty<TValue[]>();
             TValue[] values = new TValue[keyArray.Length];
-            foreach (var array in Permutations(keyArray, 0, selector, values))
-                yield return array;
+            return Permutations(keyArray, 0, selector, values);
         }
 
         static IEnumerable<TValue[]> Permutations<TKey, TValue>(TKey[] keys, int index, Func<TKey, IEnumerable<TValue>> selector, TValue[] values)
@@ -82,5 +81,18 @@ namespace Octopus.Shared.Util
         public static bool Missing<T>(this IEnumerable<T> items, T item) => !items.Contains(item);
 
         public static bool Missing<T>(this IEnumerable<T> items, T item, IEqualityComparer<T> equalityComparer) => !items.Contains(item, equalityComparer);
+
+        public static T OnlyOrDefault<T>(this IEnumerable<T> source)
+        {
+            using (var e = source.GetEnumerator())
+            {
+                if (!e.MoveNext())
+                    return default;
+                var result = e.Current;
+                if (e.MoveNext())
+                    return default;
+                return result;
+            }
+        }
     }
 }
