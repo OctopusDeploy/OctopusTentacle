@@ -8,6 +8,7 @@ namespace Octopus.Shared.Util
         public static readonly string NuGetPackageHostingOptions = "https://octopus.com/docs/packaging-applications";
         public static readonly string HowDoIGetALicense = "https://octopus.com/pricing";
         public static readonly string HowDoIUpgradeMyLicense = "https://octopus.com/upgrade";
+        public static readonly string HowDoIGetAFreeLicense = "https://octopus.com/starter";
         public static readonly string ProductHomePage = "https://octopus.com";
         public static readonly string ProductDownloadPage = "https://octopus.com/downloads";
         public static readonly string ProductBacklog = "https://trello.com/board/octopus/4e907de70880ba000079b75c";
