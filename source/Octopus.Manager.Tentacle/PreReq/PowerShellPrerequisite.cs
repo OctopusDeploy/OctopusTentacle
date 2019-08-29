@@ -12,7 +12,7 @@ namespace Octopus.Manager.Tentacle.PreReq
         {
             return CheckPowerShellIsInstalled()
                 ? PrerequisiteCheckResult.Successful()
-                : PrerequisiteCheckResult.Failed("Windows PowerShell 2.0 or above does not appear to be installed and on the System Path on this machine. Please install Windows PowerShell or add it to the System Path then re-run this setup tool.", helpLink: OutboundLinks.HowDoIInstallPowerShell, helpLinkText: "Download and install Windows PowerShell");
+                : PrerequisiteCheckResult.Failed("Windows PowerShell 2.0 or above does not appear to be installed and on the System Path on this machine. Please install Windows PowerShell or add it to the System Path then re-run this setup tool.", helpLink: "http://g.octopushq.com/HowDoIInstallPowerShell", helpLinkText: "Download and install Windows PowerShell");
         }
 
         static bool CheckPowerShellIsInstalled()
