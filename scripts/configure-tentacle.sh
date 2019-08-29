@@ -147,7 +147,7 @@ function setupPollingTentacle {
             #Get worker pools
             while [ -z "$workerpoolsinput" ] 
             do
-                read -p 'Enter the environments for this Tentacle (comma seperated): ' workerpoolsinput
+                read -p 'Enter the worker pools for this Tentacle (comma seperated): ' workerpoolsinput
             done 
             workerpoolsstring=$(splitAndGetArgs "workerpool" "$workerpoolsinput")
             ;; 
