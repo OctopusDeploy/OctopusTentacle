@@ -19,6 +19,11 @@ function assignNonEmptyValue {
     fi
 }
 
+function sanitizeName {
+    #Remove some special characters
+    echo ${1//[\'\"$^&]/}
+}
+
 function splitAndGetArgs {
     finalstring=""
     IFS=','
@@ -209,7 +214,13 @@ function setupPollingTentacle {
 instance="Tentacle"
 
 read -p "Name of Tentacle instance (default $instance):" inputinstance
-instance=$(assignNonEmptyValue $inputinstance $instance)
+instance=$(assignNonEmptyValue $(sanitizeName $inputinstance) $instance)
+
+if [ "$instance" != "$inputinstance" ]
+then
+    echo -e "${YELLOW}Invalid characters will be ignored, the instance name will be: '${instance}'"
+    echo -e "${NC}"
+fi
 
 read -p 'What kind of Tentacle would you like to configure: 1) Listening or 2) Polling (default 1): ' commsstlye
 
