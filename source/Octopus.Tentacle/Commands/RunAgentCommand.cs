@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
 using Octopus.Diagnostics;
+using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
@@ -24,6 +26,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IProxyInitializer> proxyInitializer;
         readonly AppVersion appVersion;
         int wait;
+        bool halibutHastarted;
 
         public override bool CanRunAsService => true;
 
@@ -69,8 +72,16 @@ namespace Octopus.Tentacle.Commands
             if (home.Value.HomeDirectory == null)
                 throw new InvalidOperationException("No home directory has been configured for this Tentacle. Please run the configure command before starting.");
 
-            if (configuration.Value.TentacleCertificate == null)
-                throw new InvalidOperationException("No certificate has been generated for this Tentacle. Please run the new-certificate command before starting.");
+            try
+            {
+                if (configuration.Value.TentacleCertificate == null)
+                    throw new InvalidOperationException("No certificate has been generated for this Tentacle. Please run the new-certificate command before starting.");
+            }
+            catch (CryptographicException cx)
+            {
+                Log.Error($"The owner of the x509stores is not the current user, please change ownership of the x509stores directory or run with sudo. Details: {cx.Message}");
+                return;
+            }
 
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleHome, home.Value.HomeDirectory);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleApplications, configuration.Value.ApplicationDirectory);
@@ -91,13 +102,15 @@ namespace Octopus.Tentacle.Commands
             proxyInitializer.Value.InitializeProxy();
 
             halibut.Value.Start();
+            halibutHastarted = true;
 
             Runtime.WaitForUserToExit();
         }
 
         protected override void Stop()
         {
-            halibut.Value.Stop();
+            if (halibutHastarted)
+                halibut.Value.Stop();
         }
     }
 }
