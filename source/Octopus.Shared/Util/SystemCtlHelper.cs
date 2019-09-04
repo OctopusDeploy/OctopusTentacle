@@ -17,7 +17,12 @@ namespace Octopus.Shared.Util
         {
             return RunServiceCommand("start", serviceName, logFailureAsError);
         }
-        
+
+        public bool RestartService(string serviceName, bool logFailureAsError = false)
+        {
+            return RunServiceCommand("restart", serviceName, logFailureAsError);
+        }
+
         public bool StopService(string serviceName, bool logFailureAsError = false)
         {
             return RunServiceCommand("stop", serviceName, logFailureAsError);

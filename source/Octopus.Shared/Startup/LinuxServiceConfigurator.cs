@@ -68,22 +68,14 @@ namespace Octopus.Shared.Startup
 
         private void RestartService(string instance)
         {
-            log.Info($"Stopping service: {instance}");
-            if (systemCtlHelper.StopService(instance))
+            log.Info($"Restarting service: {instance}");
+            if (systemCtlHelper.RestartService(instance))
             {
-                log.Info("Service stopped");
-                if (systemCtlHelper.StartService(instance, true))
-                {
-                    log.Info($"Service started: {instance}");
-                }
-                else
-                {
-                    log.Error($"Could not start the systemd service: {instance}");
-                }
+                log.Info("Service has been restarted");
             }
             else
             {
-                log.Error("The service could not be stopped");
+                log.Error("The service could not be restarted");
             }
         }
 
