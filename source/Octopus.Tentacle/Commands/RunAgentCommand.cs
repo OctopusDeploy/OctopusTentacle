@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Commands
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleInstanceName, selector.GetCurrentInstance().InstanceName);
             var exePath = PlatformDetection.IsRunningOnWindows
                 ? Path.ChangeExtension(typeof(RunAgentCommand).Assembly.FullLocalPath(), "exe")
-                : Path.ChangeExtension(typeof(RunAgentCommand).Assembly.FullLocalPath(), "");
+                : Path.GetFileNameWithoutExtension(typeof(RunAgentCommand).Assembly.FullLocalPath());
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleExecutablePath, exePath);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProgramDirectoryPath, Path.GetDirectoryName(exePath));
             Environment.SetEnvironmentVariable(EnvironmentVariables.AgentProgramDirectoryPath, Path.GetDirectoryName(exePath));
