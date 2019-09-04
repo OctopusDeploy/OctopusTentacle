@@ -415,6 +415,9 @@ namespace Octopus.Shared.Util
             {
                 var result = ExecuteCommand(new CommandLineInvocation("/bin/bash", $"-c \"kill -TERM {process.Id}\""));
                 result.Validate();
+                //process.Kill() doesnt seem to work in netcore 2.2 there have been some improvments in netcore 3.0 as well as also allowing to kill child processes
+                //https://github.com/dotnet/corefx/pull/34147
+                //In netcore 2.2 if the process is terminated we still get stuck on process.WaitForExit(); we need to manually check to see if the process has exited and then close it.
                 if(process.HasExited)
                     process.Close();
             }
