@@ -68,7 +68,7 @@ function setupListeningTentacle {
     echo "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --port $port --noListen False --reset-trust"
     echo -e "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --trust $thumbprint"
 
-    echo -e "sudo /opt/octopus/tentacle/Tentacle service --install --instance \"$instancename\"${NC}"
+    echo -e "sudo /opt/octopus/tentacle/Tentacle service --install --start --instance \"$instancename\"${NC}"
 
     read -p "Press enter to continue..."
     
@@ -84,10 +84,10 @@ function setupListeningTentacle {
     eval sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --trust $thumbprint
     exitIfCommandFailed
 
-    eval sudo /opt/octopus/tentacle/Tentacle service --install --instance \"$instancename\"
+    eval sudo /opt/octopus/tentacle/Tentacle service --install --start --instance \"$instancename\"
     exitIfCommandFailed
 
-    showFinishedMessage
+    showFinishedMessage $instancename
 }
 
 function setupPollingTentacle {
@@ -184,7 +184,7 @@ function setupPollingTentacle {
         echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $displayauth --space \"$space\" $envstring $rolesstring"
     fi
 
-    echo -e "sudo /opt/octopus/tentacle/Tentacle service --install --instance \"$instancename\"${NC}"
+    echo -e "sudo /opt/octopus/tentacle/Tentacle service --install --start --instance \"$instancename\"${NC}"
 
     read -p "Press enter to continue..."
     
@@ -205,10 +205,10 @@ function setupPollingTentacle {
 
     exitIfCommandFailed
 
-    eval sudo /opt/octopus/tentacle/Tentacle service --install --instance \"$instancename\"
+    eval sudo /opt/octopus/tentacle/Tentacle service --install --start --instance \"$instancename\"
     exitIfCommandFailed
 
-    showFinishedMessage
+    showFinishedMessage $instancename
 }
 
 instance="Tentacle"
