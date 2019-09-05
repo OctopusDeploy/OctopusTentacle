@@ -377,7 +377,6 @@ namespace Octopus.Shared.Util
             try
             {
                 Hitman.TryKillProcessAndChildrenRecursively(process);
-                var temp = process.HasExited;
             }
             catch (Exception hitmanException)
             {
