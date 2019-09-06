@@ -86,6 +86,11 @@ namespace Octopus.Tentacle.Services.FileTransfer
 
         string ResolvePath(string path)
         {
+            if (!PlatformDetection.IsRunningOnWindows)
+            {
+                path = path.Replace("\\", "/");
+            }
+            
             if (Path.IsPathRooted(path))
                 return fileSystem.GetFullPath(path);
 
