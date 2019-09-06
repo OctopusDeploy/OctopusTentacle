@@ -88,7 +88,7 @@ namespace Octopus.Tentacle.Services.FileTransfer
         {
             if (!PlatformDetection.IsRunningOnWindows)
             {
-                path = path.Replace("\\", "/");
+                path = path.Replace('\\', Path.DirectorySeparatorChar);
             }
             
             if (Path.IsPathRooted(path))
