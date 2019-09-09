@@ -184,7 +184,7 @@ namespace Octopus.Shared.Util
 
             return searchPatterns.Length == 0
                 ? Directory.EnumerateFiles(parentDirectoryPath, "*", SearchOption.AllDirectories)
-                : searchPatterns.SelectMany(pattern => Directory.EnumerateFiles(parentDirectoryPath, pattern, SearchOption.AllDirectories));
+                : searchPatterns.Distinct().SelectMany(pattern => Directory.EnumerateFiles(parentDirectoryPath, pattern, SearchOption.AllDirectories));
         }
 
         public IEnumerable<string> EnumerateDirectories(string parentDirectoryPath)
