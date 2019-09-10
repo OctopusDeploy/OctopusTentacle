@@ -395,8 +395,11 @@ Task("__CreateBinariesNuGet")
     CleanBinariesDirectory($"{binariesPackageDir}/lib/net452");
 
     CreateDirectory($"{binariesPackageDir}/build/net452/Tentacle");
+    CreateDirectory($"{binariesPackageDir}/build/net452/Linux-Tentacle");
     CopyFiles($"./source/Octopus.Tentacle/bin/net452/*", $"{binariesPackageDir}/build/net452/Tentacle");
+    CopyFiles($"{coreLinuxPublishDir}/*", $"{binariesPackageDir}/build/net452/Linux-Tentacle");
     CleanBinariesDirectory($"{binariesPackageDir}/build/net452/Tentacle");
+    CleanBinariesDirectory($"{binariesPackageDir}/build/net452/Linux-Tentacle");
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/net452");
     NuGetPack(Path.Combine(binariesPackageDir, "Tentacle.Binaries.nuspec"), new NuGetPackSettings {
