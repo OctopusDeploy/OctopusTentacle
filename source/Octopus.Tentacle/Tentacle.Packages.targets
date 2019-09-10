@@ -7,7 +7,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <NativeLibs Include="$(MSBuildThisFileDirectory)**\*" />
+    <NativeLibs Include="$(MSBuildThisFileDirectory)**\*.rpm" />
     <None Include="@(NativeLibs)">
       <Link>%(RecursiveDir)%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
