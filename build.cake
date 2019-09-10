@@ -46,6 +46,7 @@ var installerDir = "./build/installer";
 var artifactsDir = "./build/artifacts";
 var localPackagesDir = "../LocalPackages";
 var corePublishDir = "./build/publish";
+var coreLinuxPublishDir = "./build/publish/linux-x64";
 var coreWinPublishDir = "./build/publish/win-x64";
 var tentacleSourceBinDir = "./source/Octopus.Tentacle/bin";
 var managerSourceBinDir = "./source/Octopus.Manager.Tentacle/bin";
@@ -372,9 +373,10 @@ Task("__CreatePackagesNuGet")
 {
     CreateDirectory(packagesPackageDir);
     CreateDirectory($"{packagesPackageDir}/build/Packages");
+    CreateDirectory($"{packagesPackageDir}/build/linux-tentacle");
 
     CopyFiles($"{artifactsDir}/*.deb", $"{packagesPackageDir}/build/Packages");
-    CopyFiles($"{artifactsDir}/*.rpm", $"{packagesPackageDir}/build/Packages");
+    CopyFiles($"{coreLinuxPublishDir}/**/*", $"{packagesPackageDir}/build/linux-tentacle", true);
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Packages.nuspec", packagesPackageDir);
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Packages.targets", $"{packagesPackageDir}/build");
 
