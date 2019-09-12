@@ -17,6 +17,9 @@ namespace Octopus.Shared.Diagnostics.Formatters
                 return null;
             }
 
+            if (string.IsNullOrWhiteSpace(format))
+                return arg.ToString();
+
             var formatParts = format.Split(':');
             if (formatParts.Length != 2)
             {
