@@ -12,13 +12,10 @@ namespace Octopus.Shared.Diagnostics.Formatters
 
         public string Format(string format, object arg, IFormatProvider formatProvider)
         {
-            if (!(arg is int))
+            if (!(arg is int) || string.IsNullOrWhiteSpace(format))
             {
                 return null;
             }
-
-            if (string.IsNullOrWhiteSpace(format))
-                return arg.ToString();
 
             var formatParts = format.Split(':');
             if (formatParts.Length != 2)
