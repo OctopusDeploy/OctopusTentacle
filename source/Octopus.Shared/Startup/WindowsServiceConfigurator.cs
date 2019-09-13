@@ -5,6 +5,7 @@ using System.Management;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
+using NLog.Fluent;
 using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
@@ -21,7 +22,8 @@ namespace Octopus.Shared.Startup
 
         public void ConfigureService(string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
         {
-            var controller = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == thisServiceName);
+            var services = ServiceController.GetServices();
+            var controller = services.FirstOrDefault(s => s.ServiceName == thisServiceName);
 
             if (serviceConfigurationState.Restart)
             {
@@ -74,6 +76,8 @@ namespace Octopus.Shared.Startup
 
             if (!string.IsNullOrWhiteSpace(serviceConfigurationState.DependOn))
             {
+                if (services.None(x => string.Equals(x.ServiceName, serviceConfigurationState.DependOn, StringComparison.OrdinalIgnoreCase)))
+                    throw new ControlledFailureException($"Unable to set dependency on service '{serviceConfigurationState.DependOn}' as no service was found with that name.");
                 serviceDependencies.Add(serviceConfigurationState.DependOn);
             }
 
