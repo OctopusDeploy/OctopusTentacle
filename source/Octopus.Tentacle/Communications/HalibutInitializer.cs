@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using Halibut;
 using Halibut.Transport.Proxy;
 using Octopus.Client.Model;
@@ -111,7 +112,10 @@ namespace Octopus.Tentacle.Communications
 
         IPEndPoint GetEndPointToListenOn()
         {
-            var address = IPAddress.IPv6Any;
+            var address = Socket.OSSupportsIPv6
+                ? IPAddress.IPv6Any
+                : IPAddress.Any;
+
             if (!string.IsNullOrWhiteSpace(configuration.ListenIpAddress))
             {
                 address = IPAddress.Parse(configuration.ListenIpAddress);
