@@ -43,7 +43,7 @@ function showFinishedMessage {
 
 function setupListeningTentacle {
     instancename=$1
-    logpath="/etc/octopus"
+    logpath="$HOME/.octopus"
     applicationpath="/home/Octopus/Applications"
     port="10933"
     
@@ -93,7 +93,7 @@ function setupListeningTentacle {
 function setupPollingTentacle {
     instancename=$1
     displayname=$(hostname)
-    logpath="/etc/octopus"
+    logpath="$HOME/.octopus"
     applicationpath="/home/Octopus/Applications"
     space="Default"
     envstring=""
