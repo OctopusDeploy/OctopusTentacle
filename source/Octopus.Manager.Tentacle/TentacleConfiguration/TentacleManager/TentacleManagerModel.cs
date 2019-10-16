@@ -8,6 +8,7 @@ using Octopus.Manager.Tentacle.Util;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Security;
 using Octopus.Shared.Util;
+using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 {
