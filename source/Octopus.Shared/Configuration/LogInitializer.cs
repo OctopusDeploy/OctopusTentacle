@@ -3,7 +3,7 @@ using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration
 {
-    public class LogInitializer
+    internal class LogInitializer
     {
         readonly ILoggingConfiguration configuration;
 
