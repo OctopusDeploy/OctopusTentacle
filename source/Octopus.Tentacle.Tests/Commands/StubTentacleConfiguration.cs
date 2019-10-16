@@ -5,6 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Security;
 using Octopus.Tentacle.Configuration;
+using IPollingProxyConfiguration = Octopus.Tentacle.Configuration.IPollingProxyConfiguration;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
