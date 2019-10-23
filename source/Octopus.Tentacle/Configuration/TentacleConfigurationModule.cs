@@ -10,6 +10,7 @@ namespace Octopus.Tentacle.Configuration
             base.Load(builder);
 
             builder.RegisterType<TentacleConfiguration>().As<ITentacleConfiguration>().SingleInstance();
+            builder.RegisterType<PollingProxyConfiguration>().As<IPollingProxyConfiguration>();
         }
     }
 }
