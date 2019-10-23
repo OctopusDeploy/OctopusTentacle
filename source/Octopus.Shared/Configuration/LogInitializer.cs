@@ -1,10 +1,9 @@
-using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration
 {
-    public class LogInitializer : ILogInitializer
+    internal class LogInitializer
     {
         readonly ILoggingConfiguration configuration;
 
