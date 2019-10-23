@@ -470,7 +470,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Shared, Version=4.13.8.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Shared.4.13.8-enh-unshared2\lib\net45\Octopus.Shared.dll</HintPath>
+      <HintPath>..\packages\Octopus.Shared.4.13.8\lib\net45\Octopus.Shared.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.1.6.0, Culture=neutral, PublicKeyToken=null">
