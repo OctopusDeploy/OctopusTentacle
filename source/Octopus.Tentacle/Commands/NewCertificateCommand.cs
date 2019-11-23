@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-
+            base.Start();
             if (preserve && !string.IsNullOrWhiteSpace(exportFile))
                 throw new ControlledFailureException("Invalid command: --if-blank and --export-file cannot be specified together");
             if (preserve && !string.IsNullOrWhiteSpace(exportPfx))

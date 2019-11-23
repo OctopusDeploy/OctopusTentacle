@@ -34,6 +34,7 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
+            base.Start();
             if (!fromRegistry && string.IsNullOrWhiteSpace(importFile))
                 throw new ControlledFailureException("Please specify the certificate to import.");
 
