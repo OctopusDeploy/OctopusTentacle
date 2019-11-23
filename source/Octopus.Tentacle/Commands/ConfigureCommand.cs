@@ -88,6 +88,7 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
+            base.Start();
             if (resetTrust)
             {
                 log.Info("Removing all trusted Octopus Servers...");

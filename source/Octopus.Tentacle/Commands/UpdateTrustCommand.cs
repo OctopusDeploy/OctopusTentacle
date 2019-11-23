@@ -38,6 +38,7 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
+            base.Start();
             CheckArgs();
 
             log.Info($"Updating Octopus servers thumbprint from {oldThumbprint} to {newThumbprint}");
