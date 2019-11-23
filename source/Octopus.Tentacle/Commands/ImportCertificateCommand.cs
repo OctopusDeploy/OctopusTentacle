@@ -55,6 +55,9 @@ namespace Octopus.Tentacle.Commands
             }
             else if (!string.IsNullOrWhiteSpace(importFile))
             {
+                if (!File.Exists(importFile))
+                    throw new ControlledFailureException($"Certificate '{importFile}' was not found.");
+                
                 var fileExtension = Path.GetExtension(importFile);
 
                 //We assume if the file does not end in .pfx that it is the legacy base64 encoded certificate, however if this fails we should still attempt to read as the PFX format.
