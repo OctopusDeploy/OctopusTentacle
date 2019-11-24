@@ -115,7 +115,7 @@ namespace Octopus.Tentacle.Commands
             if (serverAddress != null && ServiceEndPoint.IsWebSocketAddress(serverAddress))
             {
                 if (sslThumbprint == null)
-                    throw new Exception($"Could not determine thumbprint of the SSL Certificate at {serverAddress}");
+                    throw new ControlledFailureException($"Could not determine thumbprint of the SSL Certificate at {serverAddress}");
                 return sslThumbprint;
             }
             return (await repository.CertificateConfiguration.GetOctopusCertificate()).Thumbprint;
@@ -127,7 +127,7 @@ namespace Octopus.Tentacle.Commands
                 return new Uri("https://" + api.ServerUri.Host + ":" + commsPort);
 
             if (!HalibutRuntime.OSSupportsWebSockets)
-                throw new Exception("Websockets is only supported on Windows Server 2012 and later");
+                throw new ControlledFailureException("Websockets is only supported on Windows Server 2012 and later");
 
             var address = new Uri(serverWebSocketAddress);
 
