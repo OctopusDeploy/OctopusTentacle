@@ -15,7 +15,8 @@ namespace Octopus.Shared.Tests.Util
         private TestUserPrincipal user;
         private string command;
         private string commandParam;
-
+        private const int SIG_TERM = 143;
+        private const int SIG_KILL = 137;
         [SetUp]
         public void SetUp()
         {
@@ -203,7 +204,7 @@ namespace Octopus.Shared.Tests.Util
                 }
                 else
                 {
-                    exitCode.Should().BeOneOf(137, 0);
+                    exitCode.Should().BeOneOf(SIG_KILL, SIG_TERM, 0);
                 }
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
