@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+#if NETFX
 using System.Data.SqlClient;
+#else
+using Microsoft.Data.SqlClient;
+#endif
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Octopus.Shared.Util
 {
