@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Octopus.Shared.Diagnostics;
+using Polly;
 
 namespace Octopus.Shared.Util
 {
@@ -215,7 +216,11 @@ namespace Octopus.Shared.Util
 
         public string ReadFile(string path)
         {
-            return File.ReadAllText(path);
+            var content = Policy<string>
+                .Handle<IOException>()
+                .WaitAndRetry(10, retryCount => TimeSpan.FromMilliseconds(100 * retryCount))
+                .Execute(() => File.ReadAllText(path));
+            return content;
         }
 
         public void AppendToFile(string path, string contents)
