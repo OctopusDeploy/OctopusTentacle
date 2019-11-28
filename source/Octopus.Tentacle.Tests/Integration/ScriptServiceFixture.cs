@@ -74,14 +74,15 @@ namespace Octopus.Tentacle.Tests.Integration
                 Thread.Sleep(100);
             }
 
-            var bashExpectedResult = $"ping: {guid}: Name or service not known";
+            // The specific bash results might vary depending on the specific platform you are on, which each may have different editions of `ping`
+            var bashExpectedResults = new [] {$"ping: {guid}: Name or service not known", $"ping: {guid}: No address associated with hostname"};
             var cmdExpectedResult = $"Ping request could not find host {guid}. Please check the name and try again.";
             
             var finalStatus = service.CompleteScript(new CompleteScriptCommand(ticket, 0));
             DumpLog(finalStatus);
             Assert.That(finalStatus.State, Is.EqualTo(ProcessState.Complete));
             Assert.That(finalStatus.ExitCode, Is.Not.EqualTo(0));
-            finalStatus.Logs.Select(l => l.Text).Should().Contain(PlatformDetection.IsRunningOnWindows ? cmdExpectedResult : bashExpectedResult);
+            finalStatus.Logs.Select(l => l.Text).Should().IntersectWith(PlatformDetection.IsRunningOnWindows ? new [] {cmdExpectedResult} : bashExpectedResults);
         }
 
         [Test]
