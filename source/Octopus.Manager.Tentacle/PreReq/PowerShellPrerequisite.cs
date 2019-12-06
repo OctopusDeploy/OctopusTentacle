@@ -24,7 +24,7 @@ namespace Octopus.Manager.Tentacle.PreReq
             var stdErr = new StringWriter();
 
             const string powerShellExe = "powershell.exe";
-            const string arguments = "-NonInte3ractive -NoProfile -Command \"Write-Output $PSVersionTable.PSVersion\"";
+            const string arguments = "-NonInteractive -NoProfile -Command \"Write-Output $PSVersionTable.PSVersion\"";
             commandLineOutput = $"{powerShellExe} {arguments}";
         
             // Despite our old check conforming to Microsoft's recommendations
