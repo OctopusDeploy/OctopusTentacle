@@ -9,16 +9,26 @@
     UseLayoutRounding="True"
     FontSize="9pt" TextOptions.TextFormattingMode="Ideal"
     WindowStartupLocation="CenterScreen"
-    SizeToContent="WidthAndHeight" MaxWidth="510"
+    SizeToContent="Height" 
+    MaxWidth="510"
     ResizeMode="NoResize">
     <StackPanel Margin="10">
         <TextBlock Name="statusText" Text="Checking whether required Windows features and roles are enabled..." TextWrapping="Wrap" Margin="7" />
         <ProgressBar Name="progressBar" IsIndeterminate="true" Height="20" Margin="7" />
         <TextBox IsReadOnly="True" Name="correctTextBox" FontSize="10pt" Margin="7" Height="100" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible" />
         <TextBlock Margin="7" TextWrapping="Wrap" Name="correctLinkBlock" />
+        <TextBlock Margin="7" TextWrapping="Wrap" Name="moreInfoLinkBlock" Visibility="Collapsed">
+            <Hyperlink Click="MoreInfoClicked">More Info</Hyperlink>
+        </TextBlock>
+        <TextBox IsReadOnly="True" Name="commandLineOutputTextBox" FontFamily="Courier New" FontSize="8pt" Margin="7" Height="100" TextWrapping="NoWrap" VerticalScrollBarVisibility="Hidden" Visibility="Collapsed"></TextBox>
+        <Grid>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <Button x:Name="copyToClipboard" Style="{StaticResource Button.Default}" Click="CopyToClipboardClicked" Margin="7" Visibility="Collapsed">COPY TO CLIPBOARD</Button>
+            </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="reCheckButton" Content="CHECK AGAIN" Width="110" Margin="7" Click="ReCheckClicked" />
             <Button x:Name="cancelButton" Content="CANCEL" Width="110" Margin="7" Click="CancelClicked" />
         </StackPanel>
+        </Grid>
     </StackPanel>
 </Window>

@@ -11,6 +11,7 @@ namespace Octopus.Manager.Tentacle.PreReq
         public string CommandLineSolution { get; private set; }
         public string HelpLink { get; private set; }
         public string HelpLinkText { get; private set; }
+        public string CommandLineOutput { get; private set; }
 
         public static PrerequisiteCheckResult Successful()
         {
@@ -19,7 +20,7 @@ namespace Octopus.Manager.Tentacle.PreReq
             return result;
         }
 
-        public static PrerequisiteCheckResult Failed(string message, string commandLineSolution = null, string helpLink = null, string helpLinkText = null)
+        public static PrerequisiteCheckResult Failed(string message, string commandLineSolution = null, string helpLink = null, string helpLinkText = null, string commandLineOutput = null)
         {
             var result = new PrerequisiteCheckResult
             {
@@ -27,7 +28,8 @@ namespace Octopus.Manager.Tentacle.PreReq
                 Message = message,
                 CommandLineSolution = commandLineSolution,
                 HelpLink = helpLink,
-                HelpLinkText = helpLinkText
+                HelpLinkText = helpLinkText,
+				CommandLineOutput = commandLineOutput
             };
             return result;
         }
