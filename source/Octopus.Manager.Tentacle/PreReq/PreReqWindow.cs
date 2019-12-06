@@ -77,6 +77,9 @@ namespace Octopus.Manager.Tentacle.PreReq
                             correctTextBox.Text = result.CommandLineSolution;
                             correctTextBox.Visibility = Visibility.Visible;
                         }
+
+                        commandLineOutputTextBox.Text = result.CommandLineOutput;
+                        moreInfoLinkBlock.Visibility = Visibility.Visible;
                     });
 
                     break;
@@ -120,10 +123,25 @@ namespace Octopus.Manager.Tentacle.PreReq
         {
             Close();
         }
+        
+        void CopyToClipboardClicked(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(commandLineOutputTextBox.Text);
+        }
 
         void ReCheckClicked(object sender, RoutedEventArgs e)
         {
+            commandLineOutputTextBox.Visibility = Visibility.Collapsed;
+            moreInfoLinkBlock.Visibility = Visibility.Collapsed;
+            copyToClipboard.Visibility = Visibility.Collapsed;
             Start();
+        }
+
+        void MoreInfoClicked(object sender, RoutedEventArgs e)
+        {
+            commandLineOutputTextBox.Visibility = Visibility.Visible;
+            moreInfoLinkBlock.Visibility = Visibility.Collapsed;
+            copyToClipboard.Visibility = Visibility.Visible;
         }
     }
 }
