@@ -44,7 +44,7 @@ namespace Octopus.Manager.Tentacle.PreReq
 
                 commandLineOutput = $"{commandLineOutput}{Environment.NewLine}{stdOut}{Environment.NewLine}{stdErr}";
 
-                return false;// outputText.Contains("Major");
+                return outputText.Contains("Major");
             }
             catch (Exception ex)
             {
