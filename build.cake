@@ -77,6 +77,7 @@ Teardown(context =>
 //  PRIVATE TASKS
 //////////////////////////////////////////////////////////////////////
 Task("__Default")
+    .IsDependentOn("__CheckForbiddenWords")
     .IsDependentOn("__Version")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
@@ -140,6 +141,29 @@ Task("__CreateDebianPackage")
 
     CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.deb", artifactsDir);
     CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.rpm", artifactsDir);
+});
+
+Task("__CheckForbiddenWords")
+	.Does(() =>
+{
+	Information("Checking codebase for forbidden words.");
+
+	IEnumerable<string> redirectedOutput;
+ 	var exitCodeWithArgument =
+    	StartProcess(
+        	"git",
+        	new ProcessSettings {
+            	Arguments = "grep -i -I -n -f ForbiddenWords.txt -- \"./*\" \":!ForbiddenWords.txt\"",
+             	RedirectStandardOutput = true
+        	},
+        	out redirectedOutput
+     	);
+
+	var filesContainingForbiddenWords = redirectedOutput.ToArray();
+	if (filesContainingForbiddenWords.Any())
+		throw new Exception("Found forbidden words in the following files, please clean them up:\r\n" + string.Join("\r\n", filesContainingForbiddenWords));
+
+	Information("Sanity check passed.");
 });
 
 Task("__Version")
