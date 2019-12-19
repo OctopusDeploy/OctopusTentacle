@@ -182,40 +182,71 @@ namespace Octopus.Shared.Util
 
                     var running = true;
 
-                    cancel.Register(() =>
+                    using (cancel.Register(() => { if (running) DoOurBestToCleanUp(process, error); }))
                     {
-                        if (!running)
-                        {
-                            return;
-                        }
-                        DoOurBestToCleanUp(process, error);
-                    });
+                        if (cancel.IsCancellationRequested)
+                            DoOurBestToCleanUp(process, error);
 
-                    if (cancel.IsCancellationRequested)
-                    {
-                        DoOurBestToCleanUp(process, error);
+                        process.BeginOutputReadLine();
+                        process.BeginErrorReadLine();
+
+                        process.WaitForExit();
+
+                        SafelyCancelRead(process.CancelErrorRead, debug);
+                        SafelyCancelRead(process.CancelOutputRead, debug);
+
+                        SafelyWaitForAllOutput(outputResetEvent, cancel, debug);
+                        SafelyWaitForAllOutput(errorResetEvent, cancel, debug);
+
+                        var exitCode = SafelyGetExitCode(process);
+                        debug($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {exitCode}");
+
+                        running = false;
+                        return exitCode;
                     }
-
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine();
-
-                    process.WaitForExit();
-                    process.CancelErrorRead();
-                    process.CancelOutputRead();
-
-                    outputResetEvent.Wait(CancellationToken.None);
-                    errorResetEvent.Wait(CancellationToken.None);
-
-                    debug($"Process {exeFileNameOrFullPath} in {workingDirectory} exited with code {process.ExitCode}");
-
-                    running = false;
-
-                    return process.ExitCode;
                 }
             }
             catch (Exception ex)
             {
                 throw new Exception($"Error when attempting to execute {executable}: {ex.Message}", ex);
+            }
+        }
+
+        private static int SafelyGetExitCode(Process process)
+        {
+            try
+            {
+                return process.ExitCode;
+            }
+            catch (InvalidOperationException ex) when (ex.Message == "No process is associated with this object.")
+            {
+                return -1;
+            }
+        }
+
+        private static void SafelyWaitForAllOutput(ManualResetEventSlim outputResetEvent, CancellationToken cancel,
+            Action<string> debug)
+        {
+            try
+            {
+                //5 seconds is a bit arbitrary, but the process should have already exited by now, so unwise to wait too long
+                outputResetEvent.Wait(TimeSpan.FromSeconds(5), cancel);
+            }
+            catch (OperationCanceledException ex)
+            {
+                debug($"Swallowing {ex.GetType().Name} while waiting for last of the process output.");
+            }
+        }
+
+        private static void SafelyCancelRead(Action action, Action<string> debug)
+        {
+            try
+            {
+                action();
+            }
+            catch (InvalidOperationException ex)
+            {
+                debug($"Swallowing {ex.GetType().Name} calling {action.Method.Name}.");
             }
         }
 

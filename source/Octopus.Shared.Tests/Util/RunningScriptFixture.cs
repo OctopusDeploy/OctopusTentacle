@@ -78,7 +78,7 @@ namespace Octopus.Shared.Tests.Util
         [Retry(3)]
         public void WriteHost_WritesToStdOut_AndIsReturned()
         {
-            workspace.BootstrapScript($"{EchoCommand()} Hello");
+            workspace.BootstrapScript($"echo Hello");
             runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
@@ -135,7 +135,7 @@ namespace Octopus.Shared.Tests.Util
         public void RunAsCurrentUser_ShouldWork()
         {
             var scriptBody = PlatformDetection.IsRunningOnWindows
-                ? $"{EchoCommand()} {EchoEnvironmentVariable("username")}"
+                ? $"echo {EchoEnvironmentVariable("username")}"
                 : "whoami";
             workspace.BootstrapScript(scriptBody);
             runningScript.Execute();
@@ -176,19 +176,16 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
-                var shell = PlatformDetection.IsRunningOnWindows ? new PowerShell() : new Bash() as IShell;
-                var script = new RunningScript(shell, workspace, scriptLog, taskId, cts.Token);
-                var sleepCommand = "sleep";
-
-                if (PlatformDetection.IsRunningOnWindows)
-                {
-                    sleepCommand = "Start-Sleep -seconds";
-                }
+                var (shell, sleepCommand) = PlatformDetection.IsRunningOnWindows 
+                    ? (new PowerShell(), "Start-Sleep -seconds") 
+                    : (new Bash() as IShell, "sleep");
                 
-                workspace.BootstrapScript($"{EchoCommand()} Starting\n{sleepCommand} 10\n{EchoCommand()} Finito");
+                var script = new RunningScript(shell, workspace, scriptLog, taskId, cts.Token);
+
+                workspace.BootstrapScript($"echo Starting\n{sleepCommand} 10\necho Finito");
                 script.Execute();
                 runningScript.ExitCode.Should().Be(0, "the script should have been canceled");
-                scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
+                scriptLog.StdErr.ToString().Should().Be("", "the script shouldn't have written to stderr");
                 scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Starting", "the starting message should be written to stdout");
                 scriptLog.StdOut.ToString().Should().NotContainEquivalentOf("Finito", "the script should have canceled before writing the finish message");
             }
@@ -199,7 +196,7 @@ namespace Octopus.Shared.Tests.Util
         public void RunAsCurrentUser_ShouldCopyCustomEnvironmentVariables()
         {
             workspace.CustomEnvironmentVariables.Add("customenvironmentvariable", "customvalue");
-            workspace.BootstrapScript($"{EchoCommand()} {EchoEnvironmentVariable("customenvironmentvariable")}");
+            workspace.BootstrapScript($"echo {EchoEnvironmentVariable("customenvironmentvariable")}");
             runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
@@ -213,7 +210,7 @@ namespace Octopus.Shared.Tests.Util
         {
             workspace.RunAs = user.GetCredential();
             workspace.CustomEnvironmentVariables.Add("customenvironmentvariable", "customvalue");
-            workspace.BootstrapScript($"{EchoCommand()} {EchoEnvironmentVariable("customenvironmentvariable")}");
+            workspace.BootstrapScript($"echo {EchoEnvironmentVariable("customenvironmentvariable")}");
             runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
@@ -228,16 +225,6 @@ namespace Octopus.Shared.Tests.Util
             }
 
             return $"${varName}";
-        }
-
-        private static string EchoCommand()
-        {
-            if (PlatformDetection.IsRunningOnWindows)
-            {
-                return "Write-Host";
-            }
-
-            return "echo";
         }
     }
 }
