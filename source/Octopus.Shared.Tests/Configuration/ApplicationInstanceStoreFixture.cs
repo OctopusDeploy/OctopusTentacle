@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -90,17 +91,14 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void GetInstance_ShouldPreferFileSystemEntries()
         {
-            registryStore.GetListFromRegistry(Arg.Any<ApplicationName>()).Returns(new List<ApplicationInstanceRecord>
-            {
-                new ApplicationInstanceRecord("instance1", ApplicationName.OctopusServer, "registryFilePath1"),
-            });
-            fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
-            fileSystem.EnumerateFiles(Arg.Any<string>()).Returns(new List<string> { "file1" });
-            fileSystem.FileExists(Arg.Any<string>()).Returns(true);
-            fileSystem.ReadFile(Arg.Is("file1")).Returns("{\"Name\": \"instance1\",\"ConfigurationFilePath\": \"fileConfigFilePath2\"}");
+            var configFilename = Path.Combine(instanceStore.InstancesFolder(ApplicationName.OctopusServer), "instance-1.config");
 
-            var instance = instanceStore.GetInstance(ApplicationName.OctopusServer, "instance1");
-            instance.InstanceName.Should().Be("instance1");
+            fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
+            fileSystem.FileExists(Arg.Any<string>()).Returns(true);
+            fileSystem.ReadFile(Arg.Is(configFilename)).Returns("{\"Name\": \"instance 1\",\"ConfigurationFilePath\": \"fileConfigFilePath2\"}");
+
+            var instance = instanceStore.GetInstance(ApplicationName.OctopusServer, "instance 1");
+            instance.InstanceName.Should().Be("instance 1");
             instance.ConfigurationFilePath.Should().Be("fileConfigFilePath2");
         }
 

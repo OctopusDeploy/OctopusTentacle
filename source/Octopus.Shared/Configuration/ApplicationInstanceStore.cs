@@ -38,7 +38,7 @@ namespace Octopus.Shared.Configuration
             public string ConfigurationFilePath { get; set; }
         }
 
-        private string InstancesFolder(ApplicationName name)
+        internal string InstancesFolder(ApplicationName name)
         {
             return Path.Combine(machineConfigurationHomeDirectory, name.ToString(), "Instances");
         }
