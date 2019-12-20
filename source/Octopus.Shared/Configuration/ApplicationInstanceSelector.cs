@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Octopus.Diagnostics;
@@ -82,16 +81,16 @@ namespace Octopus.Shared.Configuration
         internal ApplicationInstanceRecord LoadInstance()
         {
             ApplicationInstanceRecord instance = null;
-            var instances = instanceStore.ListInstances(applicationName);
-
-            if (instances.Count == 0)
+            var anyInstances = instanceStore.AnyInstancesConfigured(applicationName);
+            if (!anyInstances)
                 throw new ControlledFailureException(
                     $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
 
-            instance = string.IsNullOrEmpty(currentInstanceName) ? TryLoadDefaultInstance(instances) : TryLoadInstanceByName(instances);
+            instance = string.IsNullOrEmpty(currentInstanceName) ? TryLoadDefaultInstance() : TryLoadInstanceByName();
 
             if (instance == null)
             {
+                var instances = instanceStore.ListInstances(applicationName);
                 throw new ControlledFailureException(
                     $"Instance {currentInstanceName} of {applicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
             }
@@ -140,11 +139,12 @@ namespace Octopus.Shared.Configuration
                 new XmlFileKeyValueStore(fileSystem, record.ConfigurationFilePath));
         }
 
-        private ApplicationInstanceRecord TryLoadInstanceByName(IList<ApplicationInstanceRecord> instances)
+        private ApplicationInstanceRecord TryLoadInstanceByName()
         {
-            var instance = instances.SingleOrDefault(s => s.InstanceName == currentInstanceName);
+            var instance = instanceStore.GetInstance(applicationName, currentInstanceName);
             if (instance == null)
             {
+                var instances = instanceStore.ListInstances(applicationName);
                 var caseInsensitiveMatches = instances.Where(s => string.Equals(s.InstanceName, currentInstanceName, StringComparison.InvariantCultureIgnoreCase)).ToArray();
                 if (caseInsensitiveMatches.Length > 1)
                     throw new ControlledFailureException(
@@ -158,9 +158,10 @@ namespace Octopus.Shared.Configuration
             return instance;
         }
 
-        private ApplicationInstanceRecord TryLoadDefaultInstance(IList<ApplicationInstanceRecord> instances)
+        private ApplicationInstanceRecord TryLoadDefaultInstance()
         {
             ApplicationInstanceRecord instance;
+            var instances = instanceStore.ListInstances(applicationName);
             if (instances.Count == 1)
             {
                 instance = instances.First();
