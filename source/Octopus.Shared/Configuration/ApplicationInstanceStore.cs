@@ -81,7 +81,19 @@ namespace Octopus.Shared.Configuration
 
         public ApplicationInstanceRecord GetInstance(ApplicationName name, string instanceName)
         {
-            return ListInstances(name).SingleOrDefault(s => s.InstanceName == instanceName);
+            var instancesFolder = InstancesFolder(name);
+            if (fileSystem.DirectoryExists(instancesFolder))
+            {
+                var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config");
+                if (fileSystem.FileExists(instanceConfiguration))
+                {
+                    var instance = LoadInstanceConfiguration(instanceConfiguration);
+                    return new ApplicationInstanceRecord(instance.Name, name, instance.ConfigurationFilePath);
+                }
+            }
+
+            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
+            return listFromRegistry.FirstOrDefault(x => x.InstanceName == instanceName);
         }
 
         public ApplicationInstanceRecord GetDefaultInstance(ApplicationName name)
