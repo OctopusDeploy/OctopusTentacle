@@ -38,7 +38,7 @@ namespace Octopus.Shared.Configuration
             public string ConfigurationFilePath { get; set; }
         }
 
-        private string InstancesFolder(ApplicationName name)
+        internal string InstancesFolder(ApplicationName name)
         {
             return Path.Combine(machineConfigurationHomeDirectory, name.ToString(), "Instances");
         }
@@ -57,6 +57,8 @@ namespace Octopus.Shared.Configuration
                     .ToList();
             }
 
+            // for customers running multiple instances on a machine, they may have a version that only understood
+            // using the registry. We need to list those too.
             var combinedInstanceList = listFromFileSystem
                 .Concat(listFromRegistry.Where(x => listFromFileSystem.All(y => y.InstanceName != x.InstanceName)))
                 .OrderBy(i => i.InstanceName);
@@ -81,7 +83,21 @@ namespace Octopus.Shared.Configuration
 
         public ApplicationInstanceRecord GetInstance(ApplicationName name, string instanceName)
         {
-            return ListInstances(name).SingleOrDefault(s => s.InstanceName == instanceName);
+            var instancesFolder = InstancesFolder(name);
+            if (fileSystem.DirectoryExists(instancesFolder))
+            {
+                var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config");
+                if (fileSystem.FileExists(instanceConfiguration))
+                {
+                    var instance = LoadInstanceConfiguration(instanceConfiguration);
+                    return new ApplicationInstanceRecord(instance.Name, name, instance.ConfigurationFilePath);
+                }
+            }
+
+            // for customers running multiple instances on a machine, they may have a version that only understood
+            // using the registry. We need to fall back to there if it doesn't exist in the folder yet.
+            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
+            return listFromRegistry.FirstOrDefault(x => x.InstanceName == instanceName);
         }
 
         public ApplicationInstanceRecord GetDefaultInstance(ApplicationName name)
