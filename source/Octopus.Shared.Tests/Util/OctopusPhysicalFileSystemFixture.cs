@@ -23,5 +23,19 @@ namespace Octopus.Shared.Tests.Util
             Action exec = () => new OctopusPhysicalFileSystem().EnsureDiskHasEnoughFreeSpace(Path.GetTempPath(), long.MaxValue);
             exec.Should().Throw<IOException>().WithMessage("*does not have enough free disk space*");
         }
+
+        [Test] 
+        public void DiskHasEnoughFreeSpace_UncPath_ShouldReturnTrue()
+        {
+            var actual =  new OctopusPhysicalFileSystem().DiskHasEnoughFreeSpace(@"\\does\not\exist");
+            Assert.AreEqual(true, actual);
+        }
+        
+        [Test] 
+        public void DiskHasEnoughFreeSpace_MaxValue_ShouldReturnFalse()
+        {
+            var actual =  new OctopusPhysicalFileSystem().DiskHasEnoughFreeSpace(Path.GetTempPath(), long.MaxValue);
+            Assert.AreEqual(false, actual);
+        }
     }
 }
