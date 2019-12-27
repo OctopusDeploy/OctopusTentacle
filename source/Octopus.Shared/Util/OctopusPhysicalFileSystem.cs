@@ -18,6 +18,8 @@ namespace Octopus.Shared.Util
         // This even applies to long file names https://stackoverflow.com/a/265782/10784
         public const int MaxComponentLength = 255;
         
+        const long FiveHundredMegabytes = 500*1024*1024;
+
         private static readonly char[] InvalidFileNameChars = new char[41]
         {
             // From Path.InvalidPathChars which covers Windows and Linux
@@ -464,14 +466,14 @@ namespace Octopus.Shared.Util
 
         public void EnsureDiskHasEnoughFreeSpace(string directoryPath)
         {
-            EnsureDiskHasEnoughFreeSpace(directoryPath, 500*1024*1024);
+            EnsureDiskHasEnoughFreeSpace(directoryPath, FiveHundredMegabytes);
         }
 
         public void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
-            if (directoryPath.StartsWith(@"\\"))
+            if (IsUncPath(directoryPath))
                 return;
-            
+
             var driveInfo = new DriveInfo(Directory.GetDirectoryRoot(directoryPath));
 
             var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;
@@ -481,6 +483,20 @@ namespace Octopus.Shared.Util
             {
                 throw new IOException($"The drive containing the directory '{directoryPath}' on machine '{Environment.MachineName}' does not have enough free disk space available for this operation to proceed. The disk only has {driveInfo.AvailableFreeSpace.ToFileSizeString()} available; please free up at least {required.ToFileSizeString()}.");
             }
+        }
+
+        public bool DiskHasEnoughFreeSpace(string directoryPath) 
+        {
+            return DiskHasEnoughFreeSpace(directoryPath, FiveHundredMegabytes);
+        }
+
+        public bool DiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes) 
+        {
+            if (IsUncPath(directoryPath)) 
+                return true;
+            
+            var driveInfo = new DriveInfo(Directory.GetDirectoryRoot(directoryPath));
+            return driveInfo.AvailableFreeSpace > requiredSpaceInBytes;
         }
 
         public string GetFullPath(string relativeOrAbsoluteFilePath)
@@ -601,6 +617,11 @@ namespace Octopus.Shared.Util
                 }
                 return true;
             }
+        }
+
+        private static bool IsUncPath(string directoryPath)
+        {
+            return directoryPath.StartsWith(@"\\");
         }
     }
 }

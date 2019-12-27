@@ -39,6 +39,8 @@ namespace Octopus.Shared.Util
         void EnsureDirectoryExists(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes);
+        bool DiskHasEnoughFreeSpace(string directoryPath);
+        bool DiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes);
         string GetFullPath(string relativeOrAbsoluteFilePath);
         void OverwriteAndDelete(string originalFile, string temporaryReplacement);
         void WriteAllBytes(string filePath, byte[] data);
