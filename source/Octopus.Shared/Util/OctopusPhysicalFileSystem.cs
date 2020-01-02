@@ -180,6 +180,19 @@ namespace Octopus.Shared.Util
                 : searchPatterns.SelectMany(pattern => Directory.EnumerateFiles(parentDirectoryPath, pattern, SearchOption.TopDirectoryOnly));
         }
 
+        public IEnumerable<string> EnumerateFiles<TKey>(string parentDirectoryPath, Func<IFileInfo, TKey> order, params string[] searchPatterns)
+        {
+            var files = EnumerateFiles(parentDirectoryPath, searchPatterns).Select(f => new FileInfoAdapter(new FileInfo(f)));
+            return files.OrderBy(order).Select(f => f.FullPath);
+        }
+
+        public IEnumerable<string> EnumerateFiles<TKey>(string parentDirectoryPath, Func<FileInfo, TKey> order, params string[] searchPatterns)
+        {
+            var files = EnumerateFiles(parentDirectoryPath, searchPatterns);
+            var fileInfos = files.Select(f => new FileInfo(f)).OrderBy(order);
+            return fileInfos.Select(x => x.FullName);
+        }
+        
         public IEnumerable<string> EnumerateFilesRecursively(string parentDirectoryPath, params string[] searchPatterns)
         {
             if (!DirectoryExists(parentDirectoryPath))
@@ -311,14 +324,21 @@ namespace Octopus.Shared.Util
             PurgeDirectory(targetDirectory, include, options, CancellationToken.None);
         }
 
-        void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, DeletionOptions options, CancellationToken cancel, bool includeTarget = false)
+        public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, DeletionOptions options, Func<string, IEnumerable<string>> fileEnumerator)
+        {
+            PurgeDirectory(targetDirectory, include, options, CancellationToken.None, fileEnumerationFunc: fileEnumerator);
+        }
+        
+        void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, DeletionOptions options, CancellationToken cancel, bool includeTarget = false, Func<string, IEnumerable<string>> fileEnumerationFunc = null)
         {
             if (!DirectoryExists(targetDirectory))
             {
                 return;
             }
 
-            foreach (var file in EnumerateFiles(targetDirectory))
+            Func<string, IEnumerable<string>> fileEnumerator = fileEnumerationFunc ?? ((target) => EnumerateFiles(target));
+
+            foreach (var file in fileEnumerator(targetDirectory))
             {
                 cancel.ThrowIfCancellationRequested();
 
@@ -621,7 +641,7 @@ namespace Octopus.Shared.Util
 
         private static bool IsUncPath(string directoryPath)
         {
-            return directoryPath.StartsWith(@"\\");
+            return Uri.TryCreate(directoryPath, UriKind.Absolute, out Uri uri) && uri.IsUnc;
         }
     }
 }
