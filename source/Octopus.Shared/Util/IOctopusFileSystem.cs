@@ -18,6 +18,7 @@ namespace Octopus.Shared.Util
         IEnumerable<string> EnumerateDirectories(string parentDirectoryPath);
         IEnumerable<string> EnumerateDirectoriesRecursively(string parentDirectoryPath);
         IEnumerable<string> EnumerateFiles(string parentDirectoryPath, params string[] searchPatterns);
+        IEnumerable<string> EnumerateFiles<TKey>(string parentDirectoryPath, Func<IFileInfo, TKey> order, params string[] searchPatterns);
         IEnumerable<string> EnumerateFilesRecursively(string parentDirectoryPath, params string[] searchPatterns);
         long GetFileSize(string path);
         DateTimeOffset GetFileLastWriteTimeUtc(string path);

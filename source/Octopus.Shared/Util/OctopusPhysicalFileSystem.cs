@@ -180,6 +180,12 @@ namespace Octopus.Shared.Util
                 : searchPatterns.SelectMany(pattern => Directory.EnumerateFiles(parentDirectoryPath, pattern, SearchOption.TopDirectoryOnly));
         }
 
+        public IEnumerable<string> EnumerateFiles<TKey>(string parentDirectoryPath, Func<IFileInfo, TKey> order, params string[] searchPatterns)
+        {
+            var files = EnumerateFiles(parentDirectoryPath, searchPatterns).Select(f => new FileInfoAdapter(new FileInfo(f)));
+            return files.OrderBy(order).Select(f => f.FullPath);
+        }
+
         public IEnumerable<string> EnumerateFiles<TKey>(string parentDirectoryPath, Func<FileInfo, TKey> order, params string[] searchPatterns)
         {
             var files = EnumerateFiles(parentDirectoryPath, searchPatterns);
