@@ -36,6 +36,7 @@ namespace Octopus.Shared.Util
         void PurgeDirectory(string targetDirectory, DeletionOptions options);
         void PurgeDirectory(string targetDirectory, DeletionOptions options, CancellationToken cancel);
         void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, DeletionOptions options);
+        void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, DeletionOptions options, Func<string, IEnumerable<string>> fileEnumerator);
         void EnsureDirectoryExists(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes);
