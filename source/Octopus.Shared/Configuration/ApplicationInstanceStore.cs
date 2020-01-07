@@ -43,6 +43,18 @@ namespace Octopus.Shared.Configuration
             return Path.Combine(machineConfigurationHomeDirectory, name.ToString(), "Instances");
         }
 
+        public bool AnyInstancesConfigured(ApplicationName name)
+        {
+            var instancesFolder = InstancesFolder(name);
+            if (fileSystem.DirectoryExists(instancesFolder))
+            {
+                if (fileSystem.EnumerateFiles(instancesFolder).Any())
+                    return true;
+            }
+            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
+            return listFromRegistry.Any();
+        }
+
         public IList<ApplicationInstanceRecord> ListInstances(ApplicationName name)
         {
             var instancesFolder = InstancesFolder(name);
