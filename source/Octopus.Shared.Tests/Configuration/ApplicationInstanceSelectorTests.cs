@@ -23,6 +23,7 @@ namespace Octopus.Shared.Tests.Configuration
             ((Action)(() => selector.LoadInstance()))
                 .Should().Throw<ControlledFailureException>()
                 .WithMessage("There are no instances of OctopusServer configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
+            instanceStore.DidNotReceive().ListInstances(Arg.Any<ApplicationName>());
         }
 
         [Test]
@@ -97,6 +98,7 @@ namespace Octopus.Shared.Tests.Configuration
             instanceStore.GetInstance(ApplicationName.OctopusServer, "INSTANCE 2").Returns(applicationInstanceRecord);
 
             selector.LoadInstance().InstanceName.Should().Be("INSTANCE 2");
+            instanceStore.DidNotReceive().ListInstances(Arg.Any<ApplicationName>());
         }
 
         [Test]
