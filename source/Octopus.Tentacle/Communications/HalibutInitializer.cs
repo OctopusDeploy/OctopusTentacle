@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Communications
         readonly ITentacleConfiguration configuration;
         readonly HalibutRuntime halibut;
         readonly IProxyConfigParser proxyConfigParser;
-        readonly ILog log = Log.Octopus();
+        readonly ILog log = SystemLog.Instance;
 
         public HalibutInitializer(ITentacleConfiguration configuration, HalibutRuntime halibut, IProxyConfigParser proxyConfigParser)
         {
@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Communications
 
             if (configuration.NoListen)
             {
-                Log.Octopus().Info("Agent will not listen on any TCP ports");
+                SystemLog.Instance.Info("Agent will not listen on any TCP ports");
                 return;
             }
 
@@ -86,7 +86,7 @@ namespace Octopus.Tentacle.Communications
             {
                 if (pollingEndPoint.Address == null)
                 {
-                    Log.Octopus().WarnFormat("Configured to connect to server {0}, but its configuration is incomplete; skipping.", pollingEndPoint);
+                    SystemLog.Instance.WarnFormat("Configured to connect to server {0}, but its configuration is incomplete; skipping.", pollingEndPoint);
                     continue;
                 }
                 if (pollingEndPoint.SubscriptionId == null)

@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Support
 
         public InMemoryLog(ILog log)
         {
-            this.log = log ?? Log.Octopus();
+            this.log = log ?? SystemLog.Instance;
         }
 
         public override ILogContext CurrentContext => new LogContext();
@@ -33,11 +33,6 @@ namespace Octopus.Tentacle.Tests.Support
         protected override void WriteEvents(IList<LogEvent> logEvents)
         {
             throw new NotImplementedException();
-        }
-
-        public override IDisposable WithinBlock(ILogContext logContext)
-        {
-            return null;
         }
 
         public override void Flush()

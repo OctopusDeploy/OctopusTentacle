@@ -9,7 +9,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 {
     public static class UnhandledErrorTrapper
     {
-        static readonly ILog Log = Shared.Diagnostics.Log.Octopus();
+        static readonly ILog Log = Shared.Diagnostics.SystemLog.Instance;
 
         public static void Initialize()
         {

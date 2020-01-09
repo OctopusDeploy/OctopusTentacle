@@ -40,7 +40,7 @@ namespace Octopus.Manager.Tentacle.PreReq
                     s => stdErr.WriteLine($"ERR: {s}"));
 
                 var outputText = stdOut.ToString();
-                Log.Octopus().Verbose("PowerShell prerequisite check output: " + outputText);
+                SystemLog.Instance.Verbose("PowerShell prerequisite check output: " + outputText);
 
                 commandLineOutput = $"{commandLineOutput}{Environment.NewLine}{stdOut}{Environment.NewLine}{stdErr}";
 

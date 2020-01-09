@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Commands
     public class ExtractCommand : AbstractCommand
     {
         readonly Lazy<IPackageInstaller> packageInstaller;
-        readonly ILog log = Log.Octopus();
+        readonly ILog log = SystemLog.Instance;
         string packageFile;
         string destinationDirectory;
 

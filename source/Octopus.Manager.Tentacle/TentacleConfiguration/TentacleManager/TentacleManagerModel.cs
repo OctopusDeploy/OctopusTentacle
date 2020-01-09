@@ -154,7 +154,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                 new CertificateGenerator(),
                 new ProxyConfiguration(keyStore),
                 new PollingProxyConfiguration(keyStore),
-                Shared.Diagnostics.Log.Octopus()
+                Shared.Diagnostics.SystemLog.Instance
             );
 
             pollsServers = false;

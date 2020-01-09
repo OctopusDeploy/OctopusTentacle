@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Services.FileTransfer
     [Service]
     public class FileTransferService : IFileTransferService
     {
-        readonly ILog log = Log.Octopus();
+        readonly ILog log = SystemLog.Instance;
         readonly IOctopusFileSystem fileSystem;
         readonly IHomeConfiguration home;
 

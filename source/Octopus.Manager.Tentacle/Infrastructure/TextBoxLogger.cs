@@ -50,11 +50,6 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             foreach (var log in logEvents) WriteEvent(log);
         }
 
-        public override IDisposable WithinBlock(ILogContext logContext)
-        {
-            return null;
-        }
-
         public override void Flush()
         {
         }
