@@ -90,15 +90,11 @@ namespace Octopus.Shared.Startup
                 }
                 else
                 {
-                    Sc(
-                        string.Format(
-                            "create \"{0}\" binpath= \"\\\"{1}\\\" run --instance=\\\"{2}\\\"\" DisplayName= \"{0}\" depend= {3} start= auto",
-                            thisServiceName,
-                            exePath,
-                            instance,
-                            string.Join("/", serviceDependencies)
-                            ));
+                    var command = exePath.EndsWith(".dll")
+                        ? $"create \"{thisServiceName}\" binpath= \"dotnet \\\"{exePath}\\\" run --instance=\\\"{instance}\\\"\" DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto"
+                        : $"create \"{thisServiceName}\" binpath= \"\\\"{exePath}\\\" run --instance=\\\"{instance}\\\"\" DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto";
 
+                    Sc(command);
                     Sc($"description \"{thisServiceName}\" \"{serviceDescription}\"");
                 }
 
@@ -110,8 +106,10 @@ namespace Octopus.Shared.Startup
 
             if (serviceConfigurationState.Reconfigure)
             {
-                Sc($"config \"{thisServiceName}\" binpath= \"\\\"{exePath}\\\" run --instance=\\\"{instance}\\\"\" DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto");
-
+                var command = exePath.EndsWith(".dll")
+                    ? $"config \"{thisServiceName}\" binpath= \"dotnet \\\"{exePath}\\\" run --instance=\\\"{instance}\\\"\" DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto"
+                    : $"config \"{thisServiceName}\" binpath= \"\\\"{exePath}\\\" run --instance=\\\"{instance}\\\"\" DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto";
+                Sc(command);
                 Sc($"description \"{thisServiceName}\" \"{serviceDescription}\"");
 
                 log.Info("Service reconfigured");

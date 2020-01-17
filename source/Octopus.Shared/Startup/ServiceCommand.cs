@@ -64,7 +64,7 @@ namespace Octopus.Shared.Startup
         {
             var fullPath = assemblyContainingService.FullLocalPath();
             var exePath = PlatformDetection.IsRunningOnWindows
-                ? Path.ChangeExtension(fullPath, "exe")
+                ? fullPath
                 : PathHelper.GetPathWithoutExtension(fullPath);
 
             if (instanceName == "*")
