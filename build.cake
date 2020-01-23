@@ -405,10 +405,10 @@ Task("__CreateBinariesNuGet")
     foreach(var rid in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))
     {
         CleanDirectory(binariesPackageDir);
-        CreateDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
-        CopyFiles($"{corePublishDir}/{rid}/*", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+        CreateDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.{rid}");
+        CopyFiles($"{corePublishDir}/{rid}/*", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.{rid}");
         DeleteFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle/Tentacle.exe.manifest");
-        CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle");
+        CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.{rid}");
         CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
         CopyFile("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.Binaries.{rid}.targets");
 
