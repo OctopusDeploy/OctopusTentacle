@@ -41,6 +41,6 @@ namespace Octopus.Manager.Tentacle.Validators
         }
 
         public static readonly DependencyProperty ExistingInstanceNamesProperty = DependencyProperty.Register(
-            "ExistingInstanceNames", typeof(HashSet<string>), typeof(InstanceNameWrapper), new PropertyMetadata(new HashSet<string>(StringComparer.CurrentCultureIgnoreCase)));
+            "ExistingInstanceNames", typeof(HashSet<string>), typeof(InstanceNameWrapper), new PropertyMetadata(new HashSet<string>(StringComparer.OrdinalIgnoreCase)));
     }
 }

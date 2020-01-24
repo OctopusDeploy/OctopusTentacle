@@ -53,24 +53,5 @@ namespace Octopus.Tentacle.Tests.Support
         {
             return logText.ToString();
         }
-
-        public void AssertContains(LogCategory category, string partialString)
-        {
-            var match = GetLog()
-                .Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
-                .FirstOrDefault(line => line.StartsWith(category.ToString()) &&
-                    CultureInfo.CurrentCulture.CompareInfo.IndexOf(line, partialString, CompareOptions.IgnoreCase) >= 0);
-
-            if (match == null) throw new Exception($"The log does not contain any {category} entry containing the substring {partialString}.");
-        }
-
-        public void AssertContains(string partialString)
-        {
-            var match = GetLog()
-                .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .FirstOrDefault(line => CultureInfo.CurrentCulture.CompareInfo.IndexOf(line, partialString, CompareOptions.IgnoreCase) >= 0);
-
-            if (match == null) throw new Exception($"The log does not contain any entry containing the substring {partialString}.");
-        }
     }
 }
