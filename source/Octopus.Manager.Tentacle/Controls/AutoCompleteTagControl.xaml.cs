@@ -213,17 +213,17 @@ namespace Octopus.Manager.Tentacle.Controls
 
             if (item.IsCreateEntry)
             {
-                filterEventArgs.Accepted = !string.IsNullOrWhiteSpace(Text) && !SuggestedTags.Contains(Text, StringComparison.InvariantCultureIgnoreCase) && !SelectedTags.Contains(Text, StringComparison.InvariantCultureIgnoreCase);
+                filterEventArgs.Accepted = !string.IsNullOrWhiteSpace(Text) && !SuggestedTags.Contains(Text, StringComparison.OrdinalIgnoreCase) && !SelectedTags.Contains(Text, StringComparison.OrdinalIgnoreCase);
                 return;
             }
 
-            if (SelectedTags.Contains(item.Value, StringComparison.CurrentCultureIgnoreCase))
+            if (SelectedTags.Contains(item.Value, StringComparison.OrdinalIgnoreCase))
             {
                 filterEventArgs.Accepted = false;
                 return;
             }
 
-            if (item.Value.Contains(Text, StringComparison.CurrentCultureIgnoreCase))
+            if (item.Value.Contains(Text, StringComparison.OrdinalIgnoreCase))
             {
                 filterEventArgs.Accepted = true;
                 return;
@@ -251,9 +251,9 @@ namespace Octopus.Manager.Tentacle.Controls
 
         private bool AddTag(string value)
         {
-            if (SelectedTags.Contains(value, StringComparison.CurrentCultureIgnoreCase)) return false;
+            if (SelectedTags.Contains(value, StringComparison.OrdinalIgnoreCase)) return false;
 
-            var matchingSuggested = SuggestedTags.Find(value, StringComparison.CurrentCultureIgnoreCase);
+            var matchingSuggested = SuggestedTags.Find(value, StringComparison.OrdinalIgnoreCase);
 
             SelectedTags.Add(matchingSuggested ?? value);
             return true;
