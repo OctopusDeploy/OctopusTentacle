@@ -780,7 +780,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
             void UpdateSelection(ObservableCollection<string> selectedCollection, IEnumerable<string> potentialValues)
             {
-                var potentialValuesSet = new HashSet<string>(potentialValues, StringComparer.InvariantCulture);
+                var potentialValuesSet = new HashSet<string>(potentialValues, StringComparer.Ordinal);
                 selectedCollection.RemoveWhere(v => !potentialValuesSet.Contains(v));
             }
         }
