@@ -11,6 +11,7 @@ using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Security;
 using Octopus.Shared.Security.Certificates;
+using Octopus.Shared.Util;
 
 namespace Octopus.Tentacle.Configuration
 {
@@ -82,8 +83,17 @@ namespace Octopus.Tentacle.Configuration
                 var path = settings.Get<string>("Tentacle.Deployment.ApplicationDirectory");
                 if (string.IsNullOrWhiteSpace(path))
                 {
-                    var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                    path = Path.Combine(Path.GetPathRoot(programFiles), "Octopus\\Applications");
+                    if (PlatformDetection.IsRunningOnWindows)
+                    {
+                        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                        path = Path.Combine(Path.GetPathRoot(programFiles), "Octopus\\Applications");
+                    }
+                    else
+                    {
+                        //this feels wrong... but it's what we're defaulting to with the install scripts
+                        //see https://github.com/OctopusDeploy/OctopusTentacle/blob/d3a0fca5bb67c49b5f594077ff2b3da8ba377ad3/scripts/configure-tentacle.sh#L47
+                        path = "/home/Octopus/Applications";
+                    }
                 }
 
                 return path;
