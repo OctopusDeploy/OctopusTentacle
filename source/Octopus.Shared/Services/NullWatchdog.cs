@@ -6,7 +6,7 @@ namespace Octopus.Shared.Services
 {
     public class NullWatchdog : IWatchdog
     {
-        private static WatchdogConfiguration EmptyWatchdogConfiguration = new WatchdogConfiguration(false, 0, string.Empty);
+        private static WatchdogConfiguration EmptyWatchdogConfiguration = new WatchdogConfiguration(false, 0, "*");
 
         public void Delete()
         {
