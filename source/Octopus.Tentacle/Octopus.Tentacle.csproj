@@ -9,6 +9,7 @@
     <NoWin32Manifest>true</NoWin32Manifest>
     <OutputPath>bin\</OutputPath>
     <ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
+    <AppConfig Condition="'$(TargetFramework)' == 'netcoreapp2.2'">app.netcore.config</AppConfig>
   </PropertyGroup>
   <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
     <TargetFrameworks>net452;netcoreapp2.2</TargetFrameworks>
