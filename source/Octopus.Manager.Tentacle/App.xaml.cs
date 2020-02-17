@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Windows;
@@ -20,6 +21,8 @@ namespace Octopus.Manager.Tentacle
 {
     public partial class App
     {
+        const string EventLogSource = "Octopus Tentacle";
+        
         readonly OptionSet commonOptions = new OptionSet();
         bool reconfigure;
 
@@ -49,6 +52,11 @@ namespace Octopus.Manager.Tentacle
 
             if (reconfigure)
             {
+                if (!EventLog.SourceExists(EventLogSource))
+                {
+                    EventLog.CreateEventSource(EventLogSource, "Application");
+                }
+                
                 ReconfigureTentacleService(container);
             }
 
