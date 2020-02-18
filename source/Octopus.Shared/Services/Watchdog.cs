@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Win32.TaskScheduler;
@@ -81,9 +83,17 @@ namespace Octopus.Shared.Services
                     log.Info($"Updating scheduled task {taskName}");
                 }
 
+                var entryAssembly = Assembly.GetEntryAssembly();
+                var fileName = entryAssembly.GetName().Name;
+                var processFileName = Process.GetCurrentProcess().MainModule?.FileName;
 
+                if (processFileName == null || !Path.GetFileNameWithoutExtension(processFileName).Equals(fileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    processFileName = Path.Combine(Path.GetDirectoryName(entryAssembly.Location) ?? ".", $"{Path.GetFileNameWithoutExtension(entryAssembly.Location)}.exe");
+                }
+   
                 taskDefinition.Actions.Clear();
-                taskDefinition.Actions.Add(new ExecAction(Assembly.GetEntryAssembly().Location, argsPrefix + instanceNames));
+                taskDefinition.Actions.Add(new ExecAction(processFileName, argsPrefix + instanceNames));
 
                 taskDefinition.Triggers.Clear();
                 taskDefinition.Triggers.Add(new TimeTrigger
