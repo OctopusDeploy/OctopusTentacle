@@ -2,7 +2,6 @@
 <Wix
   xmlns="http://schemas.microsoft.com/wix/2006/wi"
   xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension"
-  xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
   >
   <?if $(var.Platform) = x64 ?>
     <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
@@ -84,19 +83,9 @@
         Value="LaunchApplication">NOT Installed</Publish>
     </UI>
 
-    <!-- Event source and windows service -->
+    <!-- Windows service -->
     <DirectoryRef Id="TARGETDIR">
       <Component Id="RegistryEntries" Guid="47A3978E-6718-44F8-B3BC-249E8253163A">
-        <util:EventSource
-          Name="Octopus Tentacle"
-          Log="Application"
-          EventMessageFile="[NETFRAMEWORK40FULLINSTALLROOTDIR]EventLogMessages.dll"
-          />
-        <util:EventSource
-          Name="Octopus"
-          Log="Application"
-          EventMessageFile="[NETFRAMEWORK40FULLINSTALLROOTDIR]EventLogMessages.dll"
-          />
         <ServiceControl Id="StopServiceOnUninstall"
           Name="OctopusDeploy Tentacle"
           Stop="both"
