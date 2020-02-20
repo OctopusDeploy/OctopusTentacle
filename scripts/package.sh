@@ -3,11 +3,11 @@
 # Remove existing packages, fpm doesnt like to overwrite
 rm *.{deb,rpm}
 
-fpm -v $VERSION \
-  -n tentacle \
-  -s dir \
-  -t deb \
-  -m '<support@octopus.com>' \
+fpm --version $VERSION \
+  --name tentacle \
+  --input-type dir \
+  --output-type deb \
+  --maintainer '<support@octopus.com>' \
   --vendor 'Octopus Deploy' \
   --url 'https://octopus.com/' \
   --description 'Octopus Tentacle package' \
@@ -16,11 +16,11 @@ fpm -v $VERSION \
   --before-remove uninstall.sh \
   $TENTACLE_BINARIES=/opt/octopus/tentacle
 
-fpm -v $VERSION \
-  -n tentacle \
-  -s dir \
-  -t rpm \
-  -m '<support@octopus.com>' \
+fpm --version $VERSION \
+  --name tentacle \
+  --input-type dir \
+  --output-type rpm \
+  --maintainer '<support@octopus.com>' \
   --vendor 'Octopus Deploy' \
   --url 'https://octopus.com/' \
   --description 'Octopus Tentacle package' \
