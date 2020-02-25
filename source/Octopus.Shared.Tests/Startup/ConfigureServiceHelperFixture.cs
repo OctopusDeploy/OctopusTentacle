@@ -29,7 +29,7 @@ namespace Octopus.Shared.Tests
             const string instance = "TestInstance";
             const string serviceDescription = "Test service for OctopusShared tests";
             var log = new InMemoryLog();
-            var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullLocalPath());
+            var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullProcessPath());
             var exePath = Path.Combine(root, "Startup\\Packages\\Acme.Service", "Acme.Service.exe");
             
             DeleteExistingService(serviceName);
@@ -67,7 +67,7 @@ namespace Octopus.Shared.Tests
             const string serviceName = "OctopusShared.ServiceHelperTest";
             const string instance = "TestInstance";
             const string serviceDescription = "Test service for OctopusShared tests";
-            var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullLocalPath());
+            var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullProcessPath());
             var exePath = Path.Combine(root, "Startup\\Packages\\Acme.Service", "Acme.Service.exe");
             
             DeleteExistingService(serviceName);

@@ -308,7 +308,9 @@ namespace Octopus.Shared.Startup
 
         void WriteDiagnosticsInfoToLogFile(string instanceName)
         {
-            var executable = Path.GetFileName(Assembly.GetEntryAssembly().FullLocalPath());
+            var executable = PlatformDetection.IsRunningOnWindows
+                ? Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullProcessPath())
+                : Path.GetFileName(Assembly.GetEntryAssembly().FullProcessPath());
             LogFileOnlyLogger.Info($"{executable} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName)}");
             LogFileOnlyLogger.Info($"Environment Information:{Environment.NewLine}" +
                 $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
