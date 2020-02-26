@@ -9,10 +9,19 @@ namespace Octopus.Shared.Util
     {
         public static string FullProcessPath(this Assembly assembly)
         {
-            var fileName = assembly.GetName().Name;
-            var processFileName = Process.GetCurrentProcess().MainModule?.FileName;
+            string GetProcessFileName(string path)
+            {
+                return PlatformDetection.IsRunningOnWindows ? Path.GetFileNameWithoutExtension(path) : Path.GetFileName(path);
+            }
 
-            if (processFileName == null || !Path.GetFileNameWithoutExtension(processFileName).Equals(fileName, StringComparison.OrdinalIgnoreCase))
+            var fileName = assembly.GetName().Name;
+            string processFileName;
+            using (var currentProcess = Process.GetCurrentProcess())
+            {
+                processFileName = currentProcess.MainModule?.FileName;
+            }
+
+            if (processFileName == null || !GetProcessFileName(processFileName).Equals(fileName, StringComparison.OrdinalIgnoreCase))
             {
                 processFileName = Path.Combine(Path.GetDirectoryName(assembly.Location) ?? ".", $"{Path.GetFileNameWithoutExtension(assembly.Location)}{(PlatformDetection.IsRunningOnWindows ? ".exe" : String.Empty)}");
             }
