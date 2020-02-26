@@ -41,7 +41,7 @@ namespace Octopus.Shared.Startup
             var processPath = Assembly.GetEntryAssembly().FullProcessPath();
             var executable = PlatformDetection.IsRunningOnWindows
                 ? Path.GetFileNameWithoutExtension(processPath)
-                : processPath;
+                : Path.GetFileName(processPath);
 
             var firstArgument = commandLineArguments.FirstOrDefault() ?? string.Empty;
             var commandName = LooksLikeCommand(firstArgument) ? firstArgument : null;
