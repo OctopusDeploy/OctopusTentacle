@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Util;
@@ -62,10 +61,7 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
-            var fullPath = assemblyContainingService.FullLocalPath();
-            var exePath = PlatformDetection.IsRunningOnWindows
-                ? fullPath
-                : PathHelper.GetPathWithoutExtension(fullPath);
+            var exePath = assemblyContainingService.FullProcessPath();
 
             if (instanceName == "*")
             {

@@ -5,12 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
 using FluentAssertions;
-using NSubstitute;
 using NUnit.Framework;
-using Octopus.Configuration;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Tests.Support;
 using Octopus.Shared.Tests.Util;
@@ -29,7 +24,7 @@ namespace Octopus.Shared.Tests
             const string instance = "TestInstance";
             const string serviceDescription = "Test service for OctopusShared tests";
             var log = new InMemoryLog();
-            var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullLocalPath());
+            var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullProcessPath());
             var exePath = Path.Combine(root, "Startup\\Packages\\Acme.Service", "Acme.Service.exe");
             
             DeleteExistingService(serviceName);
@@ -67,7 +62,7 @@ namespace Octopus.Shared.Tests
             const string serviceName = "OctopusShared.ServiceHelperTest";
             const string instance = "TestInstance";
             const string serviceDescription = "Test service for OctopusShared tests";
-            var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullLocalPath());
+            var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullProcessPath());
             var exePath = Path.Combine(root, "Startup\\Packages\\Acme.Service", "Acme.Service.exe");
             
             DeleteExistingService(serviceName);

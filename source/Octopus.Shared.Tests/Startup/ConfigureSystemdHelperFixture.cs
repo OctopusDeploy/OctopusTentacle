@@ -23,7 +23,7 @@ namespace Octopus.Shared.Tests.Startup
             const string instance = "TestInstance";
             const string serviceDescription = "Test service for OctopusShared tests";
             var log = new InMemoryLog();
-            var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullLocalPath());
+            var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullProcessPath());
             var scriptPath = Path.Combine(root, "SampleScript.sh");
             WriteUnixFile(scriptPath);
             
