@@ -131,7 +131,7 @@ function setupPollingTentacle {
         *)
             while [ -z "$apikey" ] 
             do
-                read -p 'API-Key: ' apikey
+                read -s -p 'API-Key: ' apikey
             done 
             auth="--apiKey \"$apikey\""
             displayauth="--apiKey \"API-XXXXXXXXXXXXXXXXXXXXXXXXXX\""
