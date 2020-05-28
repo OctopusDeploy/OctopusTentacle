@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
-#tool "nuget:?package=GitVersion.CommandLine&version=5.3.4"
+#tool "nuget:?package=GitVersion.CommandLine&version=4.0.0"
 #tool "nuget:?package=WiX&version=3.11.2"
 #tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
 #addin "nuget:?package=Cake.FileHelpers&version=3.2.1"
@@ -94,6 +94,7 @@ Task("__Default")
 
 Task("__LinuxPackage")
     .IsDependentOn("__Clean")
+    .IsDependentOn("__UpdateGitVersionCommandLineConfig")
     .IsDependentOn("__BuildToolsContainer")
     .IsDependentOn("__CreateDebianPackage")
     .IsDependentOn("__CreatePackagesNuGet");
@@ -102,6 +103,20 @@ Task("__BuildToolsContainer")
     .Does(() =>
 {
     DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "debian-tools" } }, Path.Combine(Environment.CurrentDirectory, @"docker/debian-tools"));
+});
+
+Task("__UpdateGitVersionCommandLineConfig")
+    .Does(() =>
+{
+    if (IsRunningOnUnix())
+    {
+        using(var process = StartAndReturnProcess("xmlstarlet", new ProcessSettings{ Arguments = "edit -O --inplace --update \"//dllmap[@os='linux']/@target\" --value \"/lib64/libgit2.so.26\" tools/GitVersion.CommandLine.5.3.4/tools/LibGit2Sharp.dll.config" }))
+        {
+            process.WaitForExit();
+            // This should output 0 as valid arguments supplied
+            Information("Exit code: {0}", process.GetExitCode());
+        }
+    }
 });
 
 Task("__CreateDebianPackage")
