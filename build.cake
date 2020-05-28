@@ -1,11 +1,12 @@
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
-#tool "nuget:?package=GitVersion.CommandLine&version=4.0.0"
-#tool "nuget:?package=WiX&version=3.10.3"
-#addin "Cake.FileHelpers&version=3.2.0"
+#tool "nuget:?package=GitVersion.CommandLine&version=5.2.0"
+#tool "nuget:?package=WiX&version=3.11.2"
+#tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
+#addin "nuget:?package=Cake.FileHelpers&version=3.2.1"
 #addin "nuget:?package=Cake.Incubator&version=5.0.1"
-#addin "Cake.Docker&version=0.10.0"
+#addin "nuget:?package=Cake.Docker&version=0.10.0"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
