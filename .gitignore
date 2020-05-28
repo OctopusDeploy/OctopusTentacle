@@ -53,3 +53,4 @@ source/Octopus.Tentacle/Properties/launchSettings.json
 !tools/
 tools/*
 !tools/debian-tools/
+!tools/GitVersion.CommandLine.4.0.0-beta0007/
