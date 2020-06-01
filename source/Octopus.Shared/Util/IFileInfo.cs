@@ -8,5 +8,6 @@ namespace Octopus.Shared.Util
         string Extension { get; }
         DateTime LastAccessTimeUtc { get; }
         DateTime LastWriteTimeUtc { get; }
+        long Length { get; }
     }
 }
