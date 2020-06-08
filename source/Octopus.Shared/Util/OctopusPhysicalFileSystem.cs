@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -17,7 +16,7 @@ namespace Octopus.Shared.Util
         // https://referencesource.microsoft.com/#mscorlib/system/io/pathinternal.cs,30
         // This even applies to long file names https://stackoverflow.com/a/265782/10784
         public const int MaxComponentLength = 255;
-        
+
         const long FiveHundredMegabytes = 500*1024*1024;
 
         private static readonly char[] InvalidFileNameChars = new char[41]
@@ -65,7 +64,7 @@ namespace Octopus.Shared.Util
             '\\',
             '/'
         };
-        
+
         public bool FileExists(string path)
         {
             return File.Exists(path);
@@ -192,7 +191,7 @@ namespace Octopus.Shared.Util
             var fileInfos = files.Select(f => new FileInfo(f)).OrderBy(order);
             return fileInfos.Select(x => x.FullName);
         }
-        
+
         public IEnumerable<string> EnumerateFilesRecursively(string parentDirectoryPath, params string[] searchPatterns)
         {
             if (!DirectoryExists(parentDirectoryPath))
@@ -275,7 +274,7 @@ namespace Octopus.Shared.Util
                 throw;
             }
         }
-        
+
         public Stream CreateTemporaryFile(string filename, out string path)
         {
             path = Path.Combine(GetTempBasePath(), filename);
@@ -290,7 +289,7 @@ namespace Octopus.Shared.Util
         {
             var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
             EnsureDirectoryExists(path);
-            
+
             path = Path.Combine(path, Assembly.GetEntryAssembly() != null ? Assembly.GetEntryAssembly().GetName().Name : "Octopus");
             return Path.Combine(path, "Temp");
         }
@@ -328,7 +327,7 @@ namespace Octopus.Shared.Util
         {
             PurgeDirectory(targetDirectory, include, options, CancellationToken.None, fileEnumerationFunc: fileEnumerator);
         }
-        
+
         void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, DeletionOptions options, CancellationToken cancel, bool includeTarget = false, Func<string, IEnumerable<string>> fileEnumerationFunc = null)
         {
             if (!DirectoryExists(targetDirectory))
@@ -505,16 +504,16 @@ namespace Octopus.Shared.Util
             }
         }
 
-        public bool DiskHasEnoughFreeSpace(string directoryPath) 
+        public bool DiskHasEnoughFreeSpace(string directoryPath)
         {
             return DiskHasEnoughFreeSpace(directoryPath, FiveHundredMegabytes);
         }
 
-        public bool DiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes) 
+        public bool DiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
-            if (IsUncPath(directoryPath)) 
+            if (IsUncPath(directoryPath))
                 return true;
-            
+
             var driveInfo = new DriveInfo(Directory.GetDirectoryRoot(directoryPath));
             return driveInfo.AvailableFreeSpace > requiredSpaceInBytes;
         }
