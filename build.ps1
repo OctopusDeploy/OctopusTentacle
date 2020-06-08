@@ -212,7 +212,10 @@ if (!(Test-Path $CAKE_EXE)) {
     Throw "Could not find Cake.exe at $CAKE_EXE"
 }
 
-
+# We added this so we can use dotnet tools
+# See https://www.gep13.co.uk/blog/introducing-cake.dotnettool.module
+Write-Host "Installing cake modules using the --bootstrap argument"
+&$CAKE_EXE --bootstrap
 
 # Build Cake arguments
 $cakeArguments = @("$Script");
