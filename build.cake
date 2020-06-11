@@ -1,9 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
-#tool "nuget:?package=GitVersion.CommandLine&version=3.6.5"
+#tool "nuget:?package=GitVersion.CommandLine&version=5.3.3"
 
-#addin nuget:?package=Cake.FileHelpers&version=2.0.0
+#addin "nuget:?package=Cake.FileHelpers&version=3.2.1"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
@@ -50,11 +50,9 @@ Task("__Default")
     .IsDependentOn("__Version")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
-    .IsDependentOn("__Build")
-    .IsDependentOn("__Test")
-    .IsDependentOn("__Publish")
+    .IsDependentOn("__PublishWindowsTestArtifact")
+    .IsDependentOn("__PublishLinuxTestArtifact")
     .IsDependentOn("__CreateNuGet")
-    .IsDependentOn("Publish")
     .IsDependentOn("__CopyToLocalPackages");
 
 Task("__Version")
@@ -62,7 +60,11 @@ Task("__Version")
     .Does(() =>
 {
     if(BuildSystem.IsRunningOnTeamCity)
-        BuildSystem.TeamCity.SetBuildNumber(gitVersion.NuGetVersion);
+    {
+        GitVersion(new GitVersionSettings {
+            OutputType = GitVersionOutput.BuildServer
+        });
+    }
 
     Information("Building OctopusShared v{0}", gitVersion.NuGetVersion);
 });
@@ -107,36 +109,25 @@ Task("__Clean")
 Task("__Restore")
     .Does(() => DotNetCoreRestore("./source"));
 
-Task("__Build")
-    .Does(() =>
-{
-    MSBuild("./source/Shared.sln", settings =>
-        settings
-            .SetConfiguration(configuration)
-            .SetVerbosity(verbosity)
-            .UseToolVersion(MSBuildToolVersion.VS2017)
-    );
-});
-
-Task("__Test")
-    .IsDependentOn("__Build")
-    .Does(() =>
-{
-    DotNetCoreTest("./source/Octopus.Shared.Tests/Octopus.Shared.Tests.csproj", new DotNetCoreTestSettings
-    {
-        Configuration = configuration,
-        NoBuild = true
-    });
-});
-
-Task("__Publish")
-    .IsDependentOn("__Test")
+Task("__PublishWindowsTestArtifact")
     .Does(() =>
 {
     DotNetCorePublish("./source/Octopus.Shared.Tests/Octopus.Shared.Tests.csproj", new DotNetCorePublishSettings
     {
         Configuration = "Release",
-        Framework = "netcoreapp2.0",
+        Framework = "net452",
+        Runtime = "win-x64",
+        OutputDirectory = new DirectoryPath($"{artifactsDir}/publish/win-x64")
+    });
+});
+
+Task("__PublishLinuxTestArtifact")
+    .Does(() =>
+{
+    DotNetCorePublish("./source/Octopus.Shared.Tests/Octopus.Shared.Tests.csproj", new DotNetCorePublishSettings
+    {
+        Configuration = "Release",
+        Framework = "netcoreapp3.1",
         Runtime = "linux-x64",
         OutputDirectory = new DirectoryPath($"{artifactsDir}/publish/linux-x64")
     });
@@ -145,16 +136,14 @@ Task("__Publish")
 Task("__CreateNuGet")
     .Does(() =>
 {
-    var settings = new DotNetCorePackSettings
+    DotNetCorePack("./source/Octopus.Shared/Octopus.Shared.csproj", new DotNetCorePackSettings
     {
         Configuration = "Release",
         NoBuild = true,
         IncludeSymbols = true,
         OutputDirectory = new DirectoryPath(artifactsDir),
         ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
-    };
-
-    DotNetCorePack("./source/Octopus.Shared/Octopus.Shared.csproj", settings);
+    });
 });
 
 Task("__CopyToLocalPackages")
@@ -166,18 +155,6 @@ Task("__CopyToLocalPackages")
     CopyFileToDirectory(Path.Combine(artifactsDir, $"Octopus.Shared.{gitVersion.NuGetVersion}.nupkg"), localPackagesDir);
     CopyFileToDirectory(Path.Combine(artifactsDir, $"Octopus.Shared.{gitVersion.NuGetVersion}.symbols.nupkg"), localPackagesDir);
 });
-
-Task("Publish")
-    .IsDependentOn("__CreateNuGet")
-    .WithCriteria(BuildSystem.IsRunningOnTeamCity)
-    .Does(() =>
-{
-    NuGetPush(Path.Combine(artifactsDir, $"Octopus.Shared.{gitVersion.NuGetVersion}.nupkg"), new NuGetPushSettings {
-        Source = "https://f.feedz.io/octopus-deploy/dependencies/nuget",
-        ApiKey = EnvironmentVariable("FeedzIoApiKey")
-    });
-});
-
 
 private void InBlock(string block, Action action)
 {
