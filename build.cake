@@ -53,7 +53,6 @@ Task("__Default")
     .IsDependentOn("__PublishWindowsTestArtifact")
     .IsDependentOn("__PublishLinuxTestArtifact")
     .IsDependentOn("__CreateNuGet")
-    .IsDependentOn("Publish")
     .IsDependentOn("__CopyToLocalPackages");
 
 Task("__Version")
@@ -151,17 +150,6 @@ Task("__CopyToLocalPackages")
     CreateDirectory(localPackagesDir);
     CopyFileToDirectory(Path.Combine(artifactsDir, $"Octopus.Shared.{gitVersion.NuGetVersion}.nupkg"), localPackagesDir);
     CopyFileToDirectory(Path.Combine(artifactsDir, $"Octopus.Shared.{gitVersion.NuGetVersion}.symbols.nupkg"), localPackagesDir);
-});
-
-Task("Publish")
-    .IsDependentOn("__CreateNuGet")
-    .WithCriteria(BuildSystem.IsRunningOnTeamCity)
-    .Does(() =>
-{
-    NuGetPush(Path.Combine(artifactsDir, $"Octopus.Shared.{gitVersion.NuGetVersion}.nupkg"), new NuGetPushSettings {
-        Source = "https://f.feedz.io/octopus-deploy/dependencies/nuget",
-        ApiKey = EnvironmentVariable("FeedzIoApiKey")
-    });
 });
 
 private void InBlock(string block, Action action)
