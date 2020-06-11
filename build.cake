@@ -50,7 +50,7 @@ Task("__Default")
     .IsDependentOn("__Version")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
-    .IsDependentOn("__BuildAndTestWindows")
+    .IsDependentOn("__PublishWindowsTestArtifact")
     .IsDependentOn("__PublishLinuxTestArtifact")
     .IsDependentOn("__CreateNuGet")
     .IsDependentOn("Publish")
@@ -106,25 +106,25 @@ Task("__Clean")
 Task("__Restore")
     .Does(() => DotNetCoreRestore("./source"));
 
-Task("__BuildAndTestWindows")
-    .Does(() =>
-{
-    DotNetCoreTest("./source/Octopus.Shared.Tests/Octopus.Shared.Tests.csproj", new DotNetCoreTestSettings
-    {
-        Configuration = configuration,
-        Framework = "net452",
-        Runtime = "win-x64"
-    });
-});
-
-Task("__PublishLinuxTestArtifact")
-    .IsDependentOn("__BuildAndTestWindows")
+Task("__PublishWindowsTestArtifact")
     .Does(() =>
 {
     DotNetCorePublish("./source/Octopus.Shared.Tests/Octopus.Shared.Tests.csproj", new DotNetCorePublishSettings
     {
         Configuration = "Release",
-        Framework = "netcoreapp2.0",
+        Framework = "net452",
+        Runtime = "win-x64",
+        OutputDirectory = new DirectoryPath($"{artifactsDir}/publish/win-x64")
+    });
+});
+
+Task("__PublishLinuxTestArtifact")
+    .Does(() =>
+{
+    DotNetCorePublish("./source/Octopus.Shared.Tests/Octopus.Shared.Tests.csproj", new DotNetCorePublishSettings
+    {
+        Configuration = "Release",
+        Framework = "netcoreapp3.1",
         Runtime = "linux-x64",
         OutputDirectory = new DirectoryPath($"{artifactsDir}/publish/linux-x64")
     });
@@ -133,16 +133,14 @@ Task("__PublishLinuxTestArtifact")
 Task("__CreateNuGet")
     .Does(() =>
 {
-    var settings = new DotNetCorePackSettings
+    DotNetCorePack("./source/Octopus.Shared/Octopus.Shared.csproj", new DotNetCorePackSettings
     {
         Configuration = "Release",
         NoBuild = true,
         IncludeSymbols = true,
         OutputDirectory = new DirectoryPath(artifactsDir),
         ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
-    };
-
-    DotNetCorePack("./source/Octopus.Shared/Octopus.Shared.csproj", settings);
+    });
 });
 
 Task("__CopyToLocalPackages")
@@ -165,7 +163,6 @@ Task("Publish")
         ApiKey = EnvironmentVariable("FeedzIoApiKey")
     });
 });
-
 
 private void InBlock(string block, Action action)
 {
