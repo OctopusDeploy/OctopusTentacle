@@ -35,7 +35,7 @@ version = "2020.1"
 
 project {
 
-    buildType(TestShared)
+    buildType(TestOnLinux)
     buildType(Publish)
     buildType(Build)
     buildType(TestOnWindows)
@@ -43,7 +43,7 @@ project {
     params {
         param("teamcity.vcsTrigger.runBuildInNewEmptyBranch", "true")
     }
-    buildTypesOrder = arrayListOf(Build, TestShared, TestOnWindows, Publish)
+    buildTypesOrder = arrayListOf(Build, TestOnLinux, TestOnWindows, Publish)
 }
 
 object Build : BuildType({
@@ -139,7 +139,7 @@ object Publish : BuildType({
             onDependencyFailure = FailureAction.CANCEL
             onDependencyCancel = FailureAction.CANCEL
         }
-        snapshot(TestShared) {
+        snapshot(TestOnLinux) {
             onDependencyFailure = FailureAction.CANCEL
             onDependencyCancel = FailureAction.CANCEL
         }
@@ -187,7 +187,6 @@ object TestOnWindows : BuildType({
                     token = "credentialsJSON:70b760a0-25e3-406b-9ed2-d73026115dc1"
                 }
             }
-            param("github_oauth_user", "Octobob")
         }
     }
 
@@ -211,7 +210,7 @@ object TestOnWindows : BuildType({
     }
 })
 
-object TestShared : BuildType({
+object TestOnLinux : BuildType({
     name = "Test on Linux"
 
     buildNumberPattern = "${Build.depParamRefs.buildNumber}"
@@ -221,15 +220,6 @@ object TestShared : BuildType({
     }
 
     steps {
-        dotnetVsTest {
-            name = "dotnet vstest"
-            enabled = false
-            assemblies = "build/artifacts/linux-x64/Octopus.Shared.Tests.dll"
-            version = DotnetVsTestStep.VSTestVersion.CrossPlatform
-            logging = DotnetVsTestStep.Verbosity.Detailed
-            param("dotNetCoverage.dotCover.home.path", "%teamcity.tool.JetBrains.dotCover.CommandLineTools.DEFAULT%")
-            param("platform", "auto")
-        }
         script {
             name = "sudo dotnet vstest"
             scriptContent = "sudo dotnet vstest build/artifacts/linux-x64/Octopus.Shared.Tests.dll /logger:logger://teamcity /TestAdapterPath:/opt/TeamCity/BuildAgent/plugins/dotnet/tools/vstest15 /logger:console;verbosity=detailed"
@@ -253,7 +243,6 @@ object TestShared : BuildType({
                     token = "credentialsJSON:70b760a0-25e3-406b-9ed2-d73026115dc1"
                 }
             }
-            param("github_oauth_user", "Octobob")
         }
     }
 
