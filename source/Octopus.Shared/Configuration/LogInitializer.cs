@@ -6,10 +6,12 @@ namespace Octopus.Shared.Configuration
     internal class LogInitializer
     {
         readonly ILoggingConfiguration configuration;
+        private readonly ILogFileOnlyLogger logFileOnlyLogger;
 
-        public LogInitializer(ILoggingConfiguration configuration)
+        public LogInitializer(ILoggingConfiguration configuration, ILogFileOnlyLogger logFileOnlyLogger)
         {
             this.configuration = configuration;
+            this.logFileOnlyLogger = logFileOnlyLogger;
         }
 
         public void Start()
@@ -27,13 +29,13 @@ namespace Octopus.Shared.Configuration
             if (previousLogDirectory != logDirectory)
             {
                 //log to the old log file that we are now logging somewhere else
-                LogFileOnlyLogger.Info($"Changing log folder from {previousLogDirectory} to {logDirectory}");
+                logFileOnlyLogger.Info($"Changing log folder from {previousLogDirectory} to {logDirectory}");
 
                 OctopusLogsDirectoryRenderer.SetLogsDirectory(logDirectory);
 
                 //log to the new log file that we were logging somewhere else
-                LogFileOnlyLogger.Info(new string('=', 80));
-                LogFileOnlyLogger.Info($"Changed log folder from {previousLogDirectory} to {logDirectory}");
+                logFileOnlyLogger.Info(new string('=', 80));
+                logFileOnlyLogger.Info($"Changed log folder from {previousLogDirectory} to {logDirectory}");
             }
         }
     }

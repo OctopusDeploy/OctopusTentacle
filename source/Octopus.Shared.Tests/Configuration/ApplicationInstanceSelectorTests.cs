@@ -6,6 +6,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Configuration
@@ -39,7 +40,7 @@ namespace Octopus.Shared.Tests.Configuration
                 .Should().Throw<ControlledFailureException>()
                 .WithMessage("There is more than one instance of OctopusServer configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: My instance, instance 2.");
         }
-        
+
         [Test]
         public void LoadInstanceReturnsDefaultInstanceWhenNoInstanceNameIsPassedAndThereAreMultipleInstancesAndOneIsTheDefaultInstance()
         {
@@ -53,16 +54,16 @@ namespace Octopus.Shared.Tests.Configuration
             var selector = GetApplicationInstanceSelector(instanceRecords, string.Empty);
             selector.LoadInstance().InstanceName.Should().Be(defaultName);
         }
-        
+
         [Test]
         public void LoadInstanceReturnsOnlyInstanceWhenNoInstanceNameIsPassedAndOnlyOneInstance()
         {
             var instanceRecords = new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("instance 2", ApplicationName.OctopusServer, "c:\\temp\\2.config") };
             var selector = GetApplicationInstanceSelector(instanceRecords, string.Empty);
-            
+
             selector.LoadInstance().InstanceName.Should().Be("instance 2");
         }
-        
+
         [Test]
         public void LoadInstanceThrowsWhenInstanceNameNotFound()
         {
@@ -79,7 +80,7 @@ namespace Octopus.Shared.Tests.Configuration
         {
             var instanceRecords = new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("Instance 2", ApplicationName.OctopusServer, "c:\\temp\\2.config") };
             var selector = GetApplicationInstanceSelector(instanceRecords, "INSTANCE 2");
-            
+
             selector.LoadInstance().InstanceName.Should().Be("Instance 2");
         }
 
@@ -87,14 +88,14 @@ namespace Octopus.Shared.Tests.Configuration
         public void LoadInstanceMatchesInstanceNameCaseSensitivelyWhenOneOfThemIsAnExactMatch()
         {
             var applicationInstanceRecord = new ApplicationInstanceRecord("INSTANCE 2", ApplicationName.OctopusServer, "c:\\temp\\2b.config");
-            
+
             var instanceRecords = new List<ApplicationInstanceRecord>
             {
                 new ApplicationInstanceRecord("Instance 2", ApplicationName.OctopusServer, "c:\\temp\\2a.config"),
                 applicationInstanceRecord
             };
             var selector = GetApplicationInstanceSelector(instanceRecords, "INSTANCE 2");
-            
+
             instanceStore.GetInstance(ApplicationName.OctopusServer, "INSTANCE 2").Returns(applicationInstanceRecord);
 
             selector.LoadInstance().InstanceName.Should().Be("INSTANCE 2");
@@ -115,7 +116,7 @@ namespace Octopus.Shared.Tests.Configuration
                 new ApplicationInstanceRecord("INSTANCE 2", ApplicationName.OctopusServer, "c:\\temp\\2b.config")
             };
             var selector = GetApplicationInstanceSelector(instanceRecords, "instance 2");
-            
+
             ((Action)(() => selector.LoadInstance()))
                 .Should().Throw<ControlledFailureException>()
                 .WithMessage("Instance instance 2 of OctopusServer could not be matched to one of the existing instances: Instance 2, INSTANCE 2.");
@@ -126,7 +127,7 @@ namespace Octopus.Shared.Tests.Configuration
             instanceStore = Substitute.For<IApplicationInstanceStore>();
             instanceStore.ListInstances(Arg.Any<ApplicationName>()).Returns(instanceRecords);
             instanceStore.AnyInstancesConfigured(Arg.Any<ApplicationName>()).Returns(true);
-            var selector = new ApplicationInstanceSelector(ApplicationName.OctopusServer, currentInstanceName, Substitute.For<IOctopusFileSystem>(), instanceStore, Substitute.For<ILog>());
+            var selector = new ApplicationInstanceSelector(ApplicationName.OctopusServer, currentInstanceName, Substitute.For<IOctopusFileSystem>(), instanceStore, Substitute.For<ILog>(), Substitute.For<ILogFileOnlyLogger>());
             return selector;
         }
     }

@@ -58,10 +58,10 @@ namespace Octopus.Shared.Startup
                 opset.Validate();
 
             EnsureSensitiveParametersAreNotLoggedToLogFileOnlyLogger();
-            
-            LogFileOnlyLogger.Info($"==== {GetType().Name} ====");
-            LogFileOnlyLogger.Info($"CommandLine: {string.Join(" ", Environment.GetCommandLineArgs())}");
-            
+
+            LogFileOnlyLogger.Current.Info($"==== {GetType().Name} ====");
+            LogFileOnlyLogger.Current.Info($"CommandLine: {string.Join(" ", Environment.GetCommandLineArgs())}");
+
             Start();
             Completed();
         }
@@ -78,9 +78,9 @@ namespace Octopus.Shared.Startup
                     //sensitive values for the scope of a deployment, not after that. Changing it to be not immutable
                     //is very bad from a perf pespective, as the AhoCorasick masking algoritm is pretty perf intensive.
                     //Also, due to timing issues of when loggers are created, it gets very difficult to ensure that the logger
-                    //will have the sensitive values set. Its all rather complicated, and its preventing a theoritcal problem 
+                    //will have the sensitive values set. Its all rather complicated, and its preventing a theoritcal problem
                     //whereas this LogFileOnlyLogger is definitely logging sensitive values, so we need to mask there
-                    LogFileOnlyLogger.AddSensitiveValues(option.Values);
+                    LogFileOnlyLogger.Current.AddSensitiveValues(option.Values);
                 }
             }
         }

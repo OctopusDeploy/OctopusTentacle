@@ -120,16 +120,16 @@ namespace Octopus.Shared.Startup
 
                 // Suppress logging as soon as practical
                 if (responsibleCommand.SuppressConsoleLogging) DisableConsoleLogging();
-                
+
                 // Now we should have everything we need to select the most appropriate host and run the responsible command
                 commandLineArguments = ParseCommandHostArgumentsFromCommandLineArguments(
-                    commandLineArguments, 
+                    commandLineArguments,
                     out var forceConsoleHost,
                     out var forceNoninteractiveHost,
                     out var monitorMutexHost);
 
                 host = SelectMostAppropriateHost(responsibleCommand, displayName, log, forceConsoleHost, forceNoninteractiveHost, monitorMutexHost);
-                
+
                 RunHost(host);
                 // If we make it to here we can set the error code as either an UnknownCommand for which you got some help, or Success!
                 exitCode = (int)(commandFromCommandLine == null ? ExitCode.UnknownCommand : ExitCode.Success);
@@ -158,7 +158,7 @@ namespace Octopus.Shared.Startup
             host?.OnExit(exitCode);
 
             LogManager.Shutdown();
-            
+
             if (exitCode != (int)ExitCode.Success && Debugger.IsAttached)
                 Debugger.Break();
             return exitCode;
@@ -166,7 +166,7 @@ namespace Octopus.Shared.Startup
 
         private void RunHost(ICommandHost host)
         {
-#if FULL_FRAMEWORK        
+#if FULL_FRAMEWORK
             /*
              * The handler raises under the following conditions:
              *  - Ctrl+C (CTRL_C_EVENT)
@@ -181,22 +181,22 @@ namespace Octopus.Shared.Startup
             });
             CtrlSignaling.SetConsoleCtrlHandler(hr, true);
             host.Run(Start, Shutdown);
-            GC.KeepAlive(hr);        
+            GC.KeepAlive(hr);
 #else
             Console.CancelKeyPress += (s, e) =>
             {
                 //SIGINT (ControlC) and SIGQUIT (ControlBreak)
                 log.Trace("CancelKeyPress signal received: "+ e.SpecialKey);
                 host.Stop(Shutdown);
-            }; 
+            };
             AppDomain.CurrentDomain.ProcessExit += (s, e) =>
             {
                 //SIGTERM - i.e. Docker Stop
                 log.Trace("AppDomain process exiting");
                 host.Stop(Shutdown);
-            }; 
+            };
             host.Run(Start, Shutdown);
-        
+
 #endif
         }
 
@@ -272,8 +272,8 @@ namespace Octopus.Shared.Startup
 
         void InitializeLogging()
         {
-            
-            
+
+
 #if !NLOG_HAS_EVENT_LOG_TARGET
             if(PlatformDetection.IsRunningOnWindows) {
                 Target.Register<EventLogTarget>("EventLog");
@@ -311,9 +311,9 @@ namespace Octopus.Shared.Startup
             var executable = PlatformDetection.IsRunningOnWindows
                 ? Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullProcessPath())
                 : Path.GetFileName(Assembly.GetEntryAssembly().FullProcessPath());
-            LogFileOnlyLogger.Info($"{executable} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName)}");
-            LogFileOnlyLogger.Info($"Environment Information:{Environment.NewLine}" +
-                $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
+            LogFileOnlyLogger.Current.Info($"{executable} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName)}");
+            LogFileOnlyLogger.Current.Info($"Environment Information:{Environment.NewLine}" +
+                                           $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
         }
 
         static void DisableConsoleLogging()
@@ -334,7 +334,7 @@ namespace Octopus.Shared.Startup
         {
             var instanceName = string.Empty;
             var options = AbstractStandardCommand.AddInstanceOption(new OptionSet(), v => instanceName = v);
-            
+
             // Ignore the return parameter here, we want to leave the instance option for the responsible command
             // We're just peeking to see if we can load the instance as early as possible
             options.Parse(commandLineArguments);
@@ -342,7 +342,7 @@ namespace Octopus.Shared.Startup
         }
 
         public static string[] ParseCommandHostArgumentsFromCommandLineArguments(
-            string[] commandLineArguments, 
+            string[] commandLineArguments,
             out bool forceConsoleHost,
             out bool forceNoninteractiveHost,
             out string monitorMutexHost)
@@ -419,7 +419,7 @@ namespace Octopus.Shared.Startup
                 log.Trace("The --monitorMutex switch was provided for a supported command");
                 return new MutexHost(monitorMutexHost);
             }
-        
+
             if (forceNoninteractiveHost && commandSupportsConsoleSwitch)
             {
                 log.Trace($"The --noninteractive switch was provided for a supported command");
@@ -614,9 +614,9 @@ namespace Octopus.Shared.Startup
     {
         [DllImport("Kernel32.dll")]
         public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
-    
+
         public delegate bool HandlerRoutine(CtrlTypes CtrlType);
-    
+
         public enum CtrlTypes
         {
             CTRL_C_EVENT = 0,

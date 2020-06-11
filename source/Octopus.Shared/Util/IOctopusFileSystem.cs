@@ -52,5 +52,6 @@ namespace Octopus.Shared.Util
         ReplaceStatus Replace(string path, Stream stream, int overwriteRetryAttempts = 3);
         bool EqualHash(Stream first, Stream second);
         string ReadAllText(string scriptFile);
+        string GetFileVersion(string file);
     }
 }

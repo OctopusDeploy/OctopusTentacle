@@ -63,7 +63,7 @@ namespace Octopus.Shared.Util
         }
 
         public static int ExecuteCommand(
-            string executable, 
+            string executable,
             string arguments,
             string workingDirectory,
             Action<string> info,
@@ -72,7 +72,7 @@ namespace Octopus.Shared.Util
             IDictionary<string, string> customEnvironmentVariables = null,
             CancellationToken cancel = default(CancellationToken))
         {
-            return ExecuteCommand(executable, arguments, workingDirectory, LogFileOnlyLogger.Info, info, error, runAs, customEnvironmentVariables, cancel);
+            return ExecuteCommand(executable, arguments, workingDirectory, LogFileOnlyLogger.Current.Info, info, error, runAs, customEnvironmentVariables, cancel);
         }
 
         public static int ExecuteCommand(
@@ -124,7 +124,7 @@ namespace Octopus.Shared.Util
                 var runningAs = runAsSameUser
                     ? $@"{ProcessIdentity.CurrentUserName}"
                     : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
-                
+
                 var customEnvironmentVars = hasCustomEnvironmentVariables
                         ? (runAsSameUser
                             ? $"the same environment variables as the launching process plus {customEnvironmentVariables.Count} custom variable(s)"
@@ -133,10 +133,10 @@ namespace Octopus.Shared.Util
                         : (runAsSameUser
                             ? "the same environment variables as the launching process"
                             : "that user's default environment variables");
-                
+
                 debug(
                     $"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVars}");
-                
+
                 using (var outputResetEvent = new ManualResetEventSlim(false))
                 using (var errorResetEvent = new ManualResetEventSlim(false))
                 using (var process = new Process())
@@ -329,7 +329,7 @@ namespace Octopus.Shared.Util
             // However, if the ProcessStartInfo.environmentVariables (field) is not null, these environment variables will be used instead
             // As soon as we touch ProcessStartInfo.EnvironmentVariables (property) it lazy loads the environment variables for the current process
             // which in turn means the launched process will get the environment variables for the wrong user profile!
- 
+
             // See https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx (CreateProcess) used when ProcessStartInfo.Username is not set
             // See https://msdn.microsoft.com/en-us/library/windows/desktop/ms682431(v=vs.85).aspx (CreateProcessWithLogonW) used when ProcessStartInfo.Username is set
 
@@ -351,7 +351,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        
+
 
         private static readonly object EnvironmentVariablesCacheLock = new object();
         private static IDictionary mostRecentMachineEnvironmentVariables = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
@@ -451,7 +451,7 @@ namespace Octopus.Shared.Util
                 if(process.HasExited)
                     process.Close();
             }
-            
+
             private static void TryKillWindowsProcessAndChildrenRecursively(int pid)
             {
                 using (var searcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid))
@@ -585,8 +585,8 @@ namespace Octopus.Shared.Util
 
             [DllImport("kernel32.dll", SetLastError = true)]
             private static extern int GetCurrentThreadId();
-#pragma warning restore PC003 
-            
+#pragma warning restore PC003
+
             // Native API not available in UWP
             // All the code to manipulate a security object is available in .NET framework,
             // but its API tries to be type-safe and handle-safe, enforcing a special implementation
@@ -803,7 +803,7 @@ namespace Octopus.Shared.Util
                     throw new Exception($"{failureDescription}: {ex.Message}", ex);
                 }
             }
-            
+
             public static T Invoke<T>(Func<T> nativeMethod, Func<T, bool> successful, string failureDescription)
             {
                 try
@@ -816,7 +816,7 @@ namespace Octopus.Shared.Util
                     throw new Exception($"{failureDescription}: {ex.Message}", ex);
                 }
             }
-            
+
             public static IntPtr Invoke(Func<IntPtr> nativeMethod, string failureDescription)
             {
                 try

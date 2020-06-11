@@ -14,10 +14,12 @@ namespace Octopus.Shared.Startup
     public class WindowsServiceConfigurator : IServiceConfigurator
     {
         readonly ILog log;
+        private readonly ILogFileOnlyLogger logFileOnlyLogger;
 
-        public WindowsServiceConfigurator(ILog log)
+        public WindowsServiceConfigurator(ILog log, ILogFileOnlyLogger logFileOnlyLogger)
         {
             this.log = log;
+            this.logFileOnlyLogger = logFileOnlyLogger;
         }
 
         public void ConfigureService(string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
@@ -29,7 +31,7 @@ namespace Octopus.Shared.Startup
             {
                 if (controller == null)
                 {
-                    LogFileOnlyLogger.Info($"Restart requested for service {thisServiceName}, but service controller was not found. Skipping.");
+                    logFileOnlyLogger.Info($"Restart requested for service {thisServiceName}, but service controller was not found. Skipping.");
                 }
                 else
                 {
@@ -49,7 +51,7 @@ namespace Octopus.Shared.Startup
             {
                 if (controller == null)
                 {
-                    LogFileOnlyLogger.Info($"Stop requested for service {thisServiceName}, but service controller was not found. Skipping.");
+                    logFileOnlyLogger.Info($"Stop requested for service {thisServiceName}, but service controller was not found. Skipping.");
                 }
                 else
                 {
@@ -61,7 +63,7 @@ namespace Octopus.Shared.Startup
             {
                 if (controller == null)
                 {
-                    LogFileOnlyLogger.Info($"Uninstall requested for service {thisServiceName}, but service controller was not found. Skipping.");
+                    logFileOnlyLogger.Info($"Uninstall requested for service {thisServiceName}, but service controller was not found. Skipping.");
                 }
                 else
                 {
@@ -85,7 +87,7 @@ namespace Octopus.Shared.Startup
             {
                 if (controller != null)
                 {
-                    LogFileOnlyLogger.Info($"Install requested for service {thisServiceName}, but service controller already existing. Triggering 'Reconfigure' mode.");
+                    logFileOnlyLogger.Info($"Install requested for service {thisServiceName}, but service controller already existing. Triggering 'Reconfigure' mode.");
                     serviceConfigurationState.Reconfigure = true;
                 }
                 else
@@ -237,11 +239,11 @@ namespace Octopus.Shared.Startup
             var outputBuilder = new StringBuilder();
             var argumentsToLog = string.Join(" ", arguments);
 
-            LogFileOnlyLogger.Info($"Executing sc.exe {argumentsToLog}");
+            logFileOnlyLogger.Info($"Executing sc.exe {argumentsToLog}");
             var exitCode = SilentProcessRunner.ExecuteCommand("sc.exe", arguments, Environment.CurrentDirectory, output => outputBuilder.AppendLine(output), error => outputBuilder.AppendLine("Error: " + error));
             if (exitCode == 0)
             {
-                LogFileOnlyLogger.Info(outputBuilder.ToString());
+                logFileOnlyLogger.Info(outputBuilder.ToString());
             }
             else
             {

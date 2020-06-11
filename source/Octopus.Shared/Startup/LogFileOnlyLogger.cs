@@ -9,10 +9,19 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {
+    public interface ILogFileOnlyLogger
+    {
+        void Info(string message);
+        void Warn(string message);
+        void Error(string message);
+        void Error(Exception ex, string message);
+        void AddSensitiveValues(string[] values);
+    }
+
     /// <summary>
     /// This logger has a special rule in the nlog config file to write directly to the log file, and prevent logging to the Console.
     /// </summary>
-    public class LogFileOnlyLogger
+    public class LogFileOnlyLogger : ILogFileOnlyLogger
     {
         static readonly string LoggerName = nameof(LogFileOnlyLogger);
         static readonly ILogger Log = LogManager.GetLogger(LoggerName);
@@ -28,7 +37,6 @@ namespace Octopus.Shared.Startup
             if (rule == null)
                 throw new Exception($"It looks like the {LoggerName} logging rule is not configured. {HelpMessage}");
 
-
             if (rule.Targets.Count != 1)
                 throw new Exception($"The {LoggerName} rule should only have a single target. {HelpMessage}");
 
@@ -37,14 +45,15 @@ namespace Octopus.Shared.Startup
                 throw new Exception($"The {LoggerName} rule should write to a file target. {HelpMessage}");
         }
 
-        public static ILogContext Context { get; set; } = new LogContext();
+        public ILogContext Context { get; set; } = new LogContext();
+        public static ILogFileOnlyLogger Current { get; }= new LogFileOnlyLogger();
 
-        public static void Info(string message) => Context.SafeSanitize(message, s => Log.Info(s));
-        public static void Warn(string message) => Context.SafeSanitize(message, s => Log.Warn(s));
-        public static void Error(string message) => Context.SafeSanitize(message, s => Log.Error(s));
-        public static void Error(Exception ex, string message) => Context.SafeSanitize(message, s => Log.Error(ex, s));
+        public void Info(string message) => Context.SafeSanitize(message, s => Log.Info(s));
+        public void Warn(string message) => Context.SafeSanitize(message, s => Log.Warn(s));
+        public void Error(string message) => Context.SafeSanitize(message, s => Log.Error(s));
+        public void Error(Exception ex, string message) => Context.SafeSanitize(message, s => Log.Error(ex, s));
 
-        public static void AddSensitiveValues(string[] values)
+        public void AddSensitiveValues(string[] values)
         {
             Context = Context.WithSensitiveValues(values);
         }

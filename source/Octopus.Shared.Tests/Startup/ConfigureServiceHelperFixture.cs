@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
 using FluentAssertions;
+using NSubstitute;
 using NUnit.Framework;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Tests.Support;
@@ -19,14 +20,14 @@ namespace Octopus.Shared.Tests
     {
         [Test]
         public void CanInstallService()
-        {        
+        {
             const string serviceName = "OctopusShared.ServiceHelperTest";
             const string instance = "TestInstance";
             const string serviceDescription = "Test service for OctopusShared tests";
             var log = new InMemoryLog();
             var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullProcessPath());
             var exePath = Path.Combine(root, "Startup\\Packages\\Acme.Service", "Acme.Service.exe");
-            
+
             DeleteExistingService(serviceName);
 
             var user = new TestUserPrincipal("octo-shared-svc-test");
@@ -37,12 +38,12 @@ namespace Octopus.Shared.Tests
                 Username = user.NTAccountName,
                 Start = true
             };
-            var configureServiceHelper = new WindowsServiceConfigurator(log);
-            
+            var configureServiceHelper = new WindowsServiceConfigurator(log, Substitute.For<ILogFileOnlyLogger>());
+
             try
             {
                 configureServiceHelper.ConfigureService(serviceName, exePath, instance, serviceDescription, serviceConfigurationState);
-                
+
                 using (var installedService = GetInstalledService(serviceName))
                 {
                     Assert.NotNull(installedService, "Service is installed");
@@ -55,16 +56,16 @@ namespace Octopus.Shared.Tests
                 DeleteExistingService(serviceName);
             }
         }
-        
+
         [Test]
         public void ThrowsOnBadServiceDependency()
-        {        
+        {
             const string serviceName = "OctopusShared.ServiceHelperTest";
             const string instance = "TestInstance";
             const string serviceDescription = "Test service for OctopusShared tests";
             var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullProcessPath());
             var exePath = Path.Combine(root, "Startup\\Packages\\Acme.Service", "Acme.Service.exe");
-            
+
             DeleteExistingService(serviceName);
 
             var serviceConfigurationState = new ServiceConfigurationState
@@ -73,17 +74,17 @@ namespace Octopus.Shared.Tests
                 Start = false,
                 DependOn = "ServiceThatDoesNotExist"
             };
-            var configureServiceHelper = new WindowsServiceConfigurator(new InMemoryLog());
-            
+            var configureServiceHelper = new WindowsServiceConfigurator(new InMemoryLog(), Substitute.For<ILogFileOnlyLogger>());
+
             var ex = Assert.Throws<ControlledFailureException>(() => configureServiceHelper.ConfigureService(serviceName, exePath, instance, serviceDescription, serviceConfigurationState));
             ex.Message.Should().Be("Unable to set dependency on service 'ServiceThatDoesNotExist' as no service was found with that name.");
         }
-        
+
         ServiceController GetInstalledService(string serviceName)
         {
             return ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == serviceName);
         }
-        
+
         void DeleteExistingService(string serviceName)
         {
             var service = GetInstalledService(serviceName);

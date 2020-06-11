@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -612,6 +613,11 @@ namespace Octopus.Shared.Util
         public string ReadAllText(string scriptFile)
         {
             return File.ReadAllText(scriptFile);
+        }
+
+        public string GetFileVersion(string file)
+        {
+            return FileVersionInfo.GetVersionInfo(file).FileVersion;
         }
 
         public bool EqualHash(Stream first, Stream second)

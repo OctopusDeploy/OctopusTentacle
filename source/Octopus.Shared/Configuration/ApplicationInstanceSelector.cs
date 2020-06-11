@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Octopus.Diagnostics;
+using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
@@ -13,19 +14,22 @@ namespace Octopus.Shared.Configuration
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
         readonly ILog log;
+        private readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
 
         public ApplicationInstanceSelector(ApplicationName applicationName,
             string currentInstanceName,
             IOctopusFileSystem fileSystem,
             IApplicationInstanceStore instanceStore,
-            ILog log)
+            ILog log,
+            ILogFileOnlyLogger logFileOnlyLogger)
         {
             this.applicationName = applicationName;
             this.currentInstanceName = currentInstanceName;
             this.fileSystem = fileSystem;
             this.instanceStore = instanceStore;
             this.log = log;
+            this.logFileOnlyLogger = logFileOnlyLogger;
         }
 
         LoadedApplicationInstance current;
@@ -64,7 +68,7 @@ namespace Octopus.Shared.Configuration
             // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
             // back to here
             var homeConfig = new HomeConfiguration(applicationName, instance.Configuration);
-            var logInit = new LogInitializer(new LoggingConfiguration(homeConfig));
+            var logInit = new LogInitializer(new LoggingConfiguration(homeConfig), logFileOnlyLogger);
             logInit.Start();
 
             return instance;
@@ -99,7 +103,7 @@ namespace Octopus.Shared.Configuration
             return instance;
         }
 
-        
+
         public void CreateDefaultInstance(string configurationFile, string homeDirectory = null)
         {
             CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(applicationName), configurationFile, homeDirectory);
