@@ -8,21 +8,21 @@
     <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
     <Description>The library shared by Octopus Server and Octopus Tentacle.</Description>
     <Authors>Octopus Deploy</Authors>
-    <PackageIconUrl>http://i.octopusdeploy.com/resources/Avatar3_360.png</PackageIconUrl>
-    <PackageProjectUrl>https://octopus.com</PackageProjectUrl>
-    <PackageLicenseUrl>https://octopus.com/company/customer-agreement</PackageLicenseUrl>
-    <RepositoryUrl>https://github.com/OctopusDeploy/OctopusShared.git</RepositoryUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/OctopusDeploy/OctopusShared</PackageProjectUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/OctopusDeploy/OctopusShared</RepositoryUrl>
     <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
-    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net452;netstandard2.0</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
     <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
@@ -94,5 +94,6 @@
     <Compile Update="Startup\WindowsServiceAdapter.cs">
       <SubType>Component</SubType>
     </Compile>
+    <None Include="icon.png" Pack="true" PackagePath=""/>
   </ItemGroup>
 </Project>

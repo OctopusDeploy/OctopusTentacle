@@ -1,9 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
-#tool "nuget:?package=GitVersion.CommandLine&version=3.6.5"
+#tool "nuget:?package=GitVersion.CommandLine&version=5.3.3"
 
-#addin nuget:?package=Cake.FileHelpers&version=2.0.0
+#addin "nuget:?package=Cake.FileHelpers&version=3.2.1"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
@@ -50,9 +50,8 @@ Task("__Default")
     .IsDependentOn("__Version")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
-    .IsDependentOn("__Build")
-    .IsDependentOn("__Test")
-    .IsDependentOn("__Publish")
+    .IsDependentOn("__BuildAndTestWindows")
+    .IsDependentOn("__PublishLinuxTestArtifact")
     .IsDependentOn("__CreateNuGet")
     .IsDependentOn("Publish")
     .IsDependentOn("__CopyToLocalPackages");
@@ -107,30 +106,19 @@ Task("__Clean")
 Task("__Restore")
     .Does(() => DotNetCoreRestore("./source"));
 
-Task("__Build")
-    .Does(() =>
-{
-    MSBuild("./source/Shared.sln", settings =>
-        settings
-            .SetConfiguration(configuration)
-            .SetVerbosity(verbosity)
-            .UseToolVersion(MSBuildToolVersion.VS2017)
-    );
-});
-
-Task("__Test")
-    .IsDependentOn("__Build")
+Task("__BuildAndTestWindows")
     .Does(() =>
 {
     DotNetCoreTest("./source/Octopus.Shared.Tests/Octopus.Shared.Tests.csproj", new DotNetCoreTestSettings
     {
         Configuration = configuration,
-        NoBuild = true
+        Framework = "net452",
+        Runtime = "win-x64"
     });
 });
 
-Task("__Publish")
-    .IsDependentOn("__Test")
+Task("__PublishLinuxTestArtifact")
+    .IsDependentOn("__BuildAndTestWindows")
     .Does(() =>
 {
     DotNetCorePublish("./source/Octopus.Shared.Tests/Octopus.Shared.Tests.csproj", new DotNetCorePublishSettings

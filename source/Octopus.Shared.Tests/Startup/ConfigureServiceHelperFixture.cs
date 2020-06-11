@@ -52,7 +52,9 @@ namespace Octopus.Shared.Tests
             }
             finally
             {
-                user?.Delete();
+                // Don't delete the user account - we don't delete the user profile, resulting in test failures when the profile names get too long
+                // Security: the user account is not a member of the local admin group, and we reset the password on every execution of the test
+                // user?.Delete();
                 DeleteExistingService(serviceName);
             }
         }
