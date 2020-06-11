@@ -60,7 +60,11 @@ Task("__Version")
     .Does(() =>
 {
     if(BuildSystem.IsRunningOnTeamCity)
-        BuildSystem.TeamCity.SetBuildNumber(gitVersion.NuGetVersion);
+    {
+        GitVersion(new GitVersionSettings {
+            OutputType = GitVersionOutput.BuildServer
+        });
+    }
 
     Information("Building OctopusShared v{0}", gitVersion.NuGetVersion);
 });
