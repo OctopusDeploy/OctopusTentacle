@@ -124,24 +124,8 @@ Task("__CreateDebianPackage")
     .IsDependentOn("__BuildToolsContainer")
     .Does(() =>
 {
-    CopyFile(Path.Combine(Environment.CurrentDirectory, "scripts/configure-tentacle.sh"),Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64/configure-tentacle.sh"));
-    DockerRunWithoutResult(new DockerContainerRunSettings {
-        Rm = true,
-        Tty = true,
-        Env = new string[] { 
-            $"VERSION={gitVersion.NuGetVersion}",
-            "TENTACLE_BINARIES=/app/",
-            "ARTIFACTS=/out"
-        },
-        Volume = new string[] { 
-            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/build",
-            $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
-            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/out"
-        }
-    }, "debian-tools", "/build/package.sh");
-
-    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.deb", artifactsDir);
-    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.rpm", artifactsDir);
+    CreateDebianPackage("linux-x64");
+    CreateDebianPackage("linux-arm64");
 });
 
 Task("__CheckForbiddenWords")
@@ -575,6 +559,27 @@ private void SignAndTimeStamp(params FilePath[] assemblies)
         }
     }
     throw(lastException);
+}
+
+private void CreateDebianPackage(string architecture) {
+    CopyFile(Path.Combine(Environment.CurrentDirectory, "scripts/configure-tentacle.sh"),Path.Combine(Environment.CurrentDirectory, corePublishDir, $"{architecture}/configure-tentacle.sh"));
+    DockerRunWithoutResult(new DockerContainerRunSettings {
+        Rm = true,
+        Tty = true,
+        Env = new string[] { 
+            $"VERSION={gitVersion.NuGetVersion}",
+            "TENTACLE_BINARIES=/app/",
+            "ARTIFACTS=/out"
+        },
+        Volume = new string[] { 
+            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/build",
+            $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, architecture)}:/app",
+            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/out"
+        }
+    }, "debian-tools", "/build/package.sh");
+
+    CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp2.2/{architecture}/*.deb", artifactsDir);
+    CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp2.2/{architecture}/*.rpm", artifactsDir);
 }
 
 //////////////////////////////////////////////////////////////////////
