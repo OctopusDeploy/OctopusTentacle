@@ -576,7 +576,7 @@ private void CreateDebianPackage(string architecture) {
             $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, architecture)}:/app",
             $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/out"
         }
-    }, "debian-tools", "/build/package.sh");
+    }, "debian-tools", $"/build/package.sh {architecture}");
 
     CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp2.2/{architecture}/*.deb", artifactsDir);
     CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp2.2/{architecture}/*.rpm", artifactsDir);

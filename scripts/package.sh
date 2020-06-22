@@ -32,7 +32,9 @@ mkdir tentacle
 
 cp -a $TENTACLE_BINARIES/. tentacle/
 
-tar -czvf tentacle-$VERSION-linux_x64.tar.gz tentacle
+architecture=$1
+
+tar -czvf tentacle-$VERSION-$architecture.tar.gz tentacle
 
 mkdir -p $ARTIFACTS
 
