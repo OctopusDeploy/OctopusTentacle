@@ -95,15 +95,8 @@ Task("__Default")
 Task("__LinuxPackage")
     .IsDependentOn("__Clean")
     .IsDependentOn("__UpdateGitVersionCommandLineConfig")
-    .IsDependentOn("__BuildToolsContainer")
     .IsDependentOn("__CreateDebianPackage")
     .IsDependentOn("__CreatePackagesNuGet");
-
-Task("__BuildToolsContainer")
-    .Does(() =>
-{
-    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "debian-tools" } }, Path.Combine(Environment.CurrentDirectory, @"docker/debian-tools"));
-});
 
 Task("__UpdateGitVersionCommandLineConfig")
     .Does(() =>
@@ -121,7 +114,6 @@ Task("__UpdateGitVersionCommandLineConfig")
 
 Task("__CreateDebianPackage")
     .IsDependentOn("__DotnetPublish")
-    .IsDependentOn("__BuildToolsContainer")
     .Does(() =>
 {
     CopyFile(Path.Combine(Environment.CurrentDirectory, "scripts/configure-tentacle.sh"),Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64/configure-tentacle.sh"));
@@ -138,7 +130,7 @@ Task("__CreateDebianPackage")
             $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
             $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/out"
         }
-    }, "debian-tools", "/build/package.sh");
+    }, "octopusdeploy/package-linux-docker:latest", "/build/package.sh");
 
     CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.deb", artifactsDir);
     CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.rpm", artifactsDir);
