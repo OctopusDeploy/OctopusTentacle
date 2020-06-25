@@ -50,6 +50,7 @@ var corePublishDir = "./build/publish";
 var coreWinPublishDir = "./build/publish/win-x64";
 var tentacleSourceBinDir = "./source/Octopus.Tentacle/bin";
 var managerSourceBinDir = "./source/Octopus.Manager.Tentacle/bin";
+var linuxPackageFeedsDir = "./linux-package-feeds";
 
 GitVersion gitVersion;
 
@@ -116,21 +117,27 @@ Task("__CreateLinuxPackages")
     .IsDependentOn("__DotnetPublish")
     .Does(() =>
 {
+    // This task requires `linuxPackageFeedsDir` to contain tools from https://github.com/OctopusDeploy/linux-package-feeds.
+    // They are currently added as an Artifact Dependency in TeamCity from "Infrastructure / Linux Package Feeds"
+    //   with the rule: LinuxPackageFeedsTools.*.zip!*=>linux-package-feeds
+    // See https://build.octopushq.com/admin/editDependencies.html?id=buildType:OctopusDeploy_OctopusCLI_BuildLinuxContainer
+
     CopyFile(Path.Combine(Environment.CurrentDirectory, "scripts/configure-tentacle.sh"),Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64/configure-tentacle.sh"));
     DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
         Env = new string[] { 
             $"VERSION={gitVersion.NuGetVersion}",
-            "TENTACLE_BINARIES=/app/",
-            "ARTIFACTS=/out"
+            "BINARIES_PATH=/app/",
+            "PACKAGES_PATH=/artifacts"
         },
         Volume = new string[] { 
-            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/build",
+            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/scripts",
+            $"{Path.Combine(Environment.CurrentDirectory, linuxPackageFeedsDir)}:/opt/linux-package-feeds",
             $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
-            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/out"
+            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/artifacts"
         }
-    }, "octopusdeploy/package-linux-docker:latest", "/build/package.sh");
+    }, "octopusdeploy/package-linux-docker:latest", "bash /scripts/package.sh");
 
     CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.deb", artifactsDir);
     CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.rpm", artifactsDir);
