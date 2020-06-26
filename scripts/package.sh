@@ -40,8 +40,10 @@ FPM_OPTS=(
   --before-remove "$SCRIPT_DIR/uninstall.sh"
 )
 FPM_DEB_OPTS=(
+  --depends 'libssl1.0.0 | libssl1.0.2 | libssl1.1'
 )
 FPM_RPM_OPTS=(
+  --depends 'openssl-libs'
 )
 
 source /opt/linux-package-feeds/create-linux-packages.sh || exit
