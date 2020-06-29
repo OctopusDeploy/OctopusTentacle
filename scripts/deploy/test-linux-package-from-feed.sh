@@ -20,6 +20,7 @@ if [[ ! -e /opt/linux-package-feeds ]]; then
 fi
 
 
+# Install the packages from our package feed (with any needed docker config, system registration) using a script from 'linux-package-feeds'.
 export PKG_NAMES="octopuscli tentacle"
 bash /opt/linux-package-feeds/install-linux-feed-package.sh || exit
 

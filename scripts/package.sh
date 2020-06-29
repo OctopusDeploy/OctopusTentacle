@@ -32,7 +32,7 @@ if [[ ! -d "$PACKAGES_PATH" ]]; then
   mkdir -p "$PACKAGES_PATH" || exit
 fi
 
-# Create .deb and .rpm packages
+# Create .deb and .rpm packages, with executable permission and a /usr/bin symlink, using a script from 'linux-package-feeds'.
 COMMAND_FILE=Tentacle
 INSTALL_PATH=/opt/octopus/tentacle
 PACKAGE_NAME=tentacle
@@ -47,7 +47,6 @@ FPM_DEB_OPTS=(
 FPM_RPM_OPTS=(
   --depends 'openssl-libs'
 )
-
 source /opt/linux-package-feeds/create-linux-packages.sh || exit
 
 # Create .tar.gz archive
