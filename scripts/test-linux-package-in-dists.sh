@@ -15,7 +15,7 @@ which docker >/dev/null || {
 SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
 
-for DOCKER_IMAGE in $(cat "$LPF_PATH/test-env-docker-images.conf" | grep -o '^[^#]*' | tr -d '\r' | head -n2) # ZZDY HEAD ONLY
+for DOCKER_IMAGE in $(cat "$LPF_PATH/test-env-docker-images.conf" | grep -o '^[^#]*' | tr -d '\r')
 do
   echo "== Testing in '$DOCKER_IMAGE' =="
   docker pull "$DOCKER_IMAGE" >/dev/null || exit
