@@ -19,9 +19,9 @@ do
   docker pull "$DOCKER_IMAGE" >/dev/null || exit
   docker run --rm \
     --hostname "tentacletestfeedpkg$RANDOM" \
-    --volume "$(pwd):/working" --volume "$SCRIPT_DIR/test-linux-package-feed.sh:/test-linux-package-feed.sh" \
+    --volume "$(pwd):/working" --volume "$SCRIPT_DIR/test-linux-package-from-feed.sh:/test-linux-package-from-feed.sh" \
     --volume "$(realpath "$LPF_PATH"):/opt/linux-package-feeds" \
     --env PUBLISH_LINUX_EXTERNAL \
     --env REDHAT_SUBSCRIPTION_USERNAME --env REDHAT_SUBSCRIPTION_PASSWORD \
-    "$DOCKER_IMAGE" bash -c 'cd /working && bash /test-linux-package-feed.sh' || exit
+    "$DOCKER_IMAGE" bash -c 'cd /working && bash /test-linux-package-from-feed.sh' || exit
 done
