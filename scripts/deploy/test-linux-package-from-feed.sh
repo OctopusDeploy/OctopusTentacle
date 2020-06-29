@@ -1,5 +1,5 @@
 #!/bin/bash
-# Test that octopuscli and tentacle can be installed from our APT and RPM feeds, and octo can list-environments.
+# Test that octopuscli and tentacle can be installed from our APT and RPM feeds, and can run the `version` command.
 
 if [[ -z "$PUBLISH_LINUX_EXTERNAL" ]]; then
   echo 'This script requires the environment variable PUBLISH_LINUX_EXTERNAL - specify "true" to test the external public feed.' >&2
