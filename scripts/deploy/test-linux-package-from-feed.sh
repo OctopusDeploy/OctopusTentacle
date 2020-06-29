@@ -22,7 +22,7 @@ export PKG_NAMES="octopuscli tentacle"
 bash /opt/linux-package-feeds/install-linux-feed-package.sh || exit
 
 echo Testing tentacle.
-/opt/octopus/tentacle/Tentacle version || exit
+Tentacle version || exit
 
 echo Testing octopuscli.
 octo version || exit
