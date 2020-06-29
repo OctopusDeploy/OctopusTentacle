@@ -24,6 +24,6 @@ bash /opt/linux-package-feeds/install-linux-feed-package.sh || exit
 echo Testing tentacle.
 /opt/octopus/tentacle/Tentacle version || exit
 
-echo Softly smoke-testing octopuscli.
-octo version
+echo Testing octopuscli.
+octo version || exit
 echo
