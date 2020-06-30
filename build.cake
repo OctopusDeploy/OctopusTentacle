@@ -129,7 +129,9 @@ Task("__CreateLinuxPackages")
         Env = new string[] { 
             $"VERSION={gitVersion.NuGetVersion}",
             "BINARIES_PATH=/app/",
-            "PACKAGES_PATH=/artifacts"
+            "PACKAGES_PATH=/artifacts",
+            "SIGN_PRIVATE_KEY",
+            "SIGN_PASSPHRASE"
         },
         Volume = new string[] { 
             $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/scripts",
