@@ -117,7 +117,7 @@ Task("__CreateLinuxPackages")
     .IsDependentOn("__DotnetPublish")
     .Does(() =>
 {
-    // This task requires `linuxPackageFeedsDir` to contain scripts from https://github.com/OctopusDeploy/linux-package-feeds/tree/master/source.
+    // This task requires `linuxPackageFeedsDir` to contain scripts from https://github.com/OctopusDeploy/linux-package-feeds.
     // They are currently added as an Artifact Dependency in TeamCity from "Infrastructure / Linux Package Feeds"
     //   with the rule: LinuxPackageFeedsTools.*.zip!*=>linux-package-feeds
     // See https://build.octopushq.com/admin/editDependencies.html?id=buildType:OctopusDeploy_OctopusCLI_BuildLinuxContainer

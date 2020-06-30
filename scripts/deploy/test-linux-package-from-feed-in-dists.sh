@@ -3,7 +3,7 @@
 
 if [[ ! -e "$LPF_PATH" ]]; then
   echo "This script requires the environment variable LPF_PATH - the location of 'linux-package-feeds' scripts to use." >&2
-  echo "They come from https://github.com/OctopusDeploy/linux-package-feeds/tree/master/source, distributed in TeamCity" >&2
+  echo "They come from https://github.com/OctopusDeploy/linux-package-feeds, distributed in TeamCity" >&2
   echo "  via 'Infrastructure / Linux Package Feeds'." >&2
   exit 1
 fi
