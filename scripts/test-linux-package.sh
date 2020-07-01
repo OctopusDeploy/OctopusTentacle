@@ -22,3 +22,4 @@ bash /opt/linux-package-feeds/install-linux-package.sh || exit
 
 echo Testing tentacle.
 Tentacle version || exit
+echo
