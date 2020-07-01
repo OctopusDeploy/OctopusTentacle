@@ -17,7 +17,7 @@ SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
 for DOCKER_IMAGE in $(cat "$LPF_PATH/test-env-docker-images.conf" | grep -o '^[^#]*' | tr -d '\r')
 do
-  if [[ "$DOCKER_IMAGE" == *RHEL* ]]; then
+  if [[ "$DOCKER_IMAGE" == *rhel* ]]; then
     RHEL_OPTS='--env REDHAT_SUBSCRIPTION_USERNAME --env REDHAT_SUBSCRIPTION_PASSWORD'
   else
     RHEL_OPTS=''
