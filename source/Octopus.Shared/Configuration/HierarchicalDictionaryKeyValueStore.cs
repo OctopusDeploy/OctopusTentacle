@@ -6,7 +6,7 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class HierarchicalDictionaryKeyValueStore : DictionaryKeyValueStore
     {
-        private readonly JsonSerializerSettings jsonSerializerSettings;
+        readonly JsonSerializerSettings jsonSerializerSettings;
 
         protected HierarchicalDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
