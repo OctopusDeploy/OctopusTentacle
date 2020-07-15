@@ -86,8 +86,7 @@ namespace Octopus.Shared.Util
 
         static void AddStackTrace(StringBuilder sb, Exception ex)
         {
-            var rtle = ex as ReflectionTypeLoadException;
-            if (rtle != null)
+            if (ex is ReflectionTypeLoadException rtle)
                 AddReflectionTypeLoadExceptionDetails(rtle, sb);
 
             sb.AppendLine(ex.GetType().FullName);
