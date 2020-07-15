@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Octopus.Diagnostics;
 
@@ -20,14 +21,13 @@ namespace Octopus.Shared.Util
             return Enter(obj, null, cancellationToken);
         }
 
-        public static IDisposable Enter(object obj, string waitMessage, CancellationToken cancellationToken)
+        public static IDisposable Enter(object obj, string? waitMessage, CancellationToken cancellationToken)
         {
             SystemLog.Trace($"Acquiring monitor {obj}");
             cancellationToken.ThrowIfCancellationRequested();
 
             // Try to acquire the monitor lock for a few seconds before reporting we are going to start waiting
-            IDisposable mutexReleaser;
-            if (TryAcquire(obj, InitialAcquisitionAttemptTimeout, out mutexReleaser))
+            if (TryAcquire(obj, InitialAcquisitionAttemptTimeout, out var mutexReleaser))
             {
                 SystemLog.Trace($"Acquired monitor {obj}");
                 return new OctoMonitorReleaser(obj);
@@ -38,14 +38,15 @@ namespace Octopus.Shared.Util
             LogWaiting(obj, waitMessage);
             while (true)
             {
-                if (TryAcquire(obj, WaitBetweenAcquisitionAttempts, out mutexReleaser)) return mutexReleaser;
+                if (TryAcquire(obj, WaitBetweenAcquisitionAttempts, out mutexReleaser))
+                    return mutexReleaser;
 
                 cancellationToken.ThrowIfCancellationRequested();
                 LogWaiting(obj, waitMessage);
             }
         }
 
-        static bool TryAcquire(object obj, TimeSpan timeout, out IDisposable mutexReleaser)
+        static bool TryAcquire(object obj, TimeSpan timeout, [NotNullWhen(true)] out IDisposable? mutexReleaser)
         {
             mutexReleaser = null;
             var lockTaken = false;
@@ -67,7 +68,7 @@ namespace Octopus.Shared.Util
             return false;
         }
 
-        static void LogWaiting(object obj, string waitMessage)
+        static void LogWaiting(object obj, string? waitMessage)
         {
             SystemLog.Verbose($"Monitor {obj} in use, waiting. {waitMessage}");
             if (!string.IsNullOrWhiteSpace(waitMessage))

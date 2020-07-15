@@ -11,7 +11,7 @@ namespace Octopus.Shared.Security.Masking
         static readonly object sync = new object();
         readonly StringBuilder builder = new StringBuilder();
         readonly Queue<DeferredAction> deferred = new Queue<DeferredAction>();
-        string lastSearchPath;
+        string? lastSearchPath;
 
         public SensitiveDataMask()
         {

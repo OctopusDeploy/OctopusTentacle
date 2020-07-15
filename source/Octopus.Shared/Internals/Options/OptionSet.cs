@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,7 @@ namespace Octopus.Shared.Internals.Options
         readonly Regex ValueOption = new Regex(
             @"^(?<flag>--|-|/)(?<name>[^:=]+)((?<sep>[:=])(?<value>.*))?$");
 
-        Action<string[]> leftovers;
+        Action<string[]>? leftovers;
 
         public OptionSet()
             : this(delegate(string f)
@@ -48,7 +49,7 @@ namespace Octopus.Shared.Internals.Options
             throw new InvalidOperationException("Option has no names!");
         }
 
-        public Option GetOptionForName(string option)
+        public Option? GetOptionForName(string option)
         {
             if (option == null)
                 throw new ArgumentNullException("option");
@@ -111,19 +112,19 @@ namespace Octopus.Shared.Internals.Options
             return this;
         }
 
-        public OptionSet Add(string prototype, Action<string> action)
+        public OptionSet Add(string prototype, Action<string?> action)
         {
             return Add(prototype, null, action);
         }
 
-        public OptionSet Add(string prototype, string description, Action<string> action, bool hide = false, bool sensitive = false)
+        public OptionSet Add(string prototype, string? description, Action<string> action, bool hide = false, bool sensitive = false)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
             Option p = new ActionOption(prototype, description, 1,
                 delegate(OptionValueCollection v)
                 {
-                    action(v[0]);
+                    action(v[0] ?? string.Empty);
                 });
             p.Hide = hide;
             p.Sensitive = sensitive;
@@ -131,12 +132,12 @@ namespace Octopus.Shared.Internals.Options
             return this;
         }
 
-        public OptionSet Add(string prototype, OptionAction<string, string> action)
+        public OptionSet Add(string prototype, OptionAction<string?, string?> action)
         {
             return Add(prototype, null, action);
         }
 
-        public OptionSet Add(string prototype, string description, OptionAction<string, string> action)
+        public OptionSet Add(string prototype, string? description, OptionAction<string?, string?> action)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
@@ -154,7 +155,7 @@ namespace Octopus.Shared.Internals.Options
             return Add(prototype, null, action);
         }
 
-        public OptionSet Add<T>(string prototype, string description, Action<T> action)
+        public OptionSet Add<T>(string prototype, string? description, Action<T> action)
         {
             return Add(new ActionOption<T>(prototype, description, action));
         }
@@ -164,7 +165,7 @@ namespace Octopus.Shared.Internals.Options
             return Add(prototype, null, action);
         }
 
-        public OptionSet Add<TKey, TValue>(string prototype, string description, OptionAction<TKey, TValue> action)
+        public OptionSet Add<TKey, TValue>(string prototype, string? description, OptionAction<TKey, TValue> action)
         {
             return Add(new ActionOption<TKey, TValue>(prototype, description, action));
         }
@@ -194,17 +195,17 @@ namespace Octopus.Shared.Internals.Options
                             ? (process = false)
                             : !Parse(argument, c)
                                 ? def != null
-                                    ? Unprocessed(null, def, c, argument)
+                                    ? Unprocessed(def, c, argument)
                                     : true
                                 : false
                         : def != null
-                            ? Unprocessed(null, def, c, argument)
+                            ? Unprocessed(def, c, argument)
                             : true
                     : true
                 select argument;
             var r = unprocessed.ToList();
-            if (c.Option != null)
-                c.Option.Invoke(c);
+
+            c.Option?.Invoke(c);
 
             if (leftovers != null && r.Count > 0)
             {
@@ -214,36 +215,47 @@ namespace Octopus.Shared.Internals.Options
             return r;
         }
 
-        static bool Unprocessed(ICollection<string> extra, Option def, OptionContext c, string argument)
+        static bool Unprocessed(Option def, OptionContext c, string argument)
         {
             if (def == null)
-            {
-                extra.Add(argument);
                 return false;
-            }
             c.OptionValues.Add(argument);
             c.Option = def;
             c.Option.Invoke(c);
             return false;
         }
 
-        protected bool GetOptionParts(string argument, out string flag, out string name, out string sep, out string value)
+        protected class OptionParts
+        {
+            public OptionParts(string flag, string name)
+            {
+                this.Flag = flag;
+                this.Name = name;
+            }
+
+            public string Flag { get; }
+            public string Name { get; }
+            public string? Separator { get; set; }
+            public string? Value { get; set; }
+        }
+
+        protected bool GetOptionParts(string argument,
+            out OptionParts? parts)
         {
             if (argument == null)
                 throw new ArgumentNullException("argument");
 
-            flag = name = sep = value = null;
+            parts = null;
             var m = ValueOption.Match(argument);
             if (!m.Success)
             {
                 return false;
             }
-            flag = m.Groups["flag"].Value;
-            name = m.Groups["name"].Value;
+            parts = new OptionParts(m.Groups["flag"].Value, m.Groups["name"].Value);
             if (m.Groups["sep"].Success && m.Groups["value"].Success)
             {
-                sep = m.Groups["sep"].Value;
-                value = m.Groups["value"].Value;
+                parts.Separator = m.Groups["sep"].Value;
+                parts.Value = m.Groups["value"].Value;
             }
             return true;
         }
@@ -256,68 +268,68 @@ namespace Octopus.Shared.Internals.Options
                 return true;
             }
 
-            string f, n, s, v;
-            if (!GetOptionParts(argument, out f, out n, out s, out v))
+            if (!GetOptionParts(argument, out var parts))
+                return false;
+            if (parts == null) // this can't happen, but will keep the compiler happy
                 return false;
 
             Option p;
-            if (Contains(n))
+            if (Contains(parts.Name))
             {
-                p = this[n];
-                c.OptionName = f + n;
+                p = this[parts.Name];
+                c.OptionName = parts.Flag + parts.Name;
                 c.Option = p;
                 switch (p.OptionValueType)
                 {
                     case OptionValueType.None:
-                        c.OptionValues.Add(n);
+                        c.OptionValues.Add(parts.Name);
                         c.Option.Invoke(c);
                         break;
                     case OptionValueType.Optional:
                     case OptionValueType.Required:
-                        ParseValue(v, c);
+                        ParseValue(parts.Value, c);
                         break;
                 }
                 return true;
             }
             // no match; is it a bool option?
-            if (ParseBool(argument, n, c))
+            if (ParseBool(argument, parts.Name, c))
                 return true;
             // is it a bundled option?
-            if (ParseBundledValue(f, string.Concat(n + s + v), c))
+            if (ParseBundledValue(parts.Flag, string.Concat(parts.Name + parts.Separator + parts.Value), c))
                 return true;
 
             return false;
         }
 
-        void ParseValue(string option, OptionContext c)
+        void ParseValue(string? option, OptionContext c)
         {
             if (option != null)
-                foreach (var o in c.Option.ValueSeparators != null
+                foreach (var o in c.Option?.ValueSeparators != null
                     ? option.Split(c.Option.ValueSeparators, StringSplitOptions.None)
                     : new[] {option})
                 {
                     c.OptionValues.Add(o);
                 }
-            if (c.OptionValues.Count == c.Option.MaxValueCount ||
-                c.Option.OptionValueType == OptionValueType.Optional)
+            if (c.OptionValues.Count == c.Option?.MaxValueCount ||
+                c.Option?.OptionValueType == OptionValueType.Optional)
                 c.Option.Invoke(c);
-            else if (c.OptionValues.Count > c.Option.MaxValueCount)
+            else if (c.OptionValues.Count > c.Option?.MaxValueCount)
             {
                 throw new OptionException(localizer(string.Format(
                     "Error: Found {0} option values when expecting {1}.",
                     c.OptionValues.Count, c.Option.MaxValueCount)),
-                    c.OptionName);
+                    c.OptionName ?? string.Empty);
             }
         }
 
         bool ParseBool(string option, string n, OptionContext c)
         {
-            Option p;
             string rn;
             if (n.Length >= 1 && (n[n.Length - 1] == '+' || n[n.Length - 1] == '-') &&
                 Contains((rn = n.Substring(0, n.Length - 1))))
             {
-                p = this[rn];
+                var p = this[rn];
                 var v = n[n.Length - 1] == '+' ? option : null;
                 c.OptionName = option;
                 c.Option = p;
@@ -467,7 +479,7 @@ namespace Octopus.Shared.Internals.Options
             o.Write(s);
         }
 
-        static string GetArgumentName(int index, int maxIndex, string description)
+        static string GetArgumentName(int index, int maxIndex, string? description)
         {
             if (description == null)
                 return maxIndex == 1 ? "VALUE" : "VALUE" + (index + 1);
@@ -493,7 +505,7 @@ namespace Octopus.Shared.Internals.Options
             return maxIndex == 1 ? "VALUE" : "VALUE" + (index + 1);
         }
 
-        static string GetDescription(string description)
+        static string GetDescription(string? description)
         {
             if (description == null)
                 return string.Empty;
@@ -607,11 +619,9 @@ namespace Octopus.Shared.Internals.Options
         {
             readonly Action<OptionValueCollection> action;
 
-            public ActionOption(string prototype, string description, int count, Action<OptionValueCollection> action)
+            public ActionOption(string prototype, string? description, int count, Action<OptionValueCollection> action)
                 : base(prototype, description, count)
             {
-                if (action == null)
-                    throw new ArgumentNullException("action");
                 this.action = action;
             }
 
@@ -625,7 +635,7 @@ namespace Octopus.Shared.Internals.Options
         {
             readonly Action<T> action;
 
-            public ActionOption(string prototype, string description, Action<T> action)
+            public ActionOption(string prototype, string? description, Action<T> action)
                 : base(prototype, description, 1)
             {
                 if (action == null)
@@ -643,7 +653,7 @@ namespace Octopus.Shared.Internals.Options
         {
             readonly OptionAction<TKey, TValue> action;
 
-            public ActionOption(string prototype, string description, OptionAction<TKey, TValue> action)
+            public ActionOption(string prototype, string? description, OptionAction<TKey, TValue> action)
                 : base(prototype, description, 2)
             {
                 if (action == null)

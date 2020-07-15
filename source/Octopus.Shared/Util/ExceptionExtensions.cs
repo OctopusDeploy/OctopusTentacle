@@ -151,7 +151,7 @@ namespace Octopus.Shared.Util
             return message.ToString();
         }
 
-        public static string SuggestSolution(this HttpListenerException error, IList<Uri> prefixes)
+        public static string? SuggestSolution(this HttpListenerException error, IList<Uri> prefixes)
         {
             if (error.ErrorCode != 5)
                 return null;
@@ -175,6 +175,6 @@ namespace Octopus.Shared.Util
 
             return message.ToString();
         }
-        
+
     }
 }

@@ -25,7 +25,7 @@ namespace Octopus.Shared.Configuration
         /// <summary>
         /// Gets or sets the host use when overriding the default proxy. Leave empty to use the default proxy configured in IE.
         /// </summary>
-        string CustomProxyHost { get; set; }
+        string? CustomProxyHost { get; set; }
 
         /// <summary>
         /// Gets or sets the port use when overriding the default proxy configured in IE.

@@ -4,6 +4,6 @@ namespace Octopus.Shared.Scripts
     {
         string GetFullPath();
 
-        string FormatCommandArguments(string bootstrapFile, string[] scriptArguments, bool allowInteractive);
+        string FormatCommandArguments(string bootstrapFile, string[]? scriptArguments, bool allowInteractive);
     }
 }

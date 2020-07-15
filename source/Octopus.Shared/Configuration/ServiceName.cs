@@ -1,12 +1,10 @@
-using System;
-
 namespace Octopus.Shared.Configuration
 {
     public static class ServiceName
     {
         public static string GetWindowsServiceName(ApplicationName application, string instanceName)
         {
-            string name = null;
+            string name = string.Empty;
 
             switch (application)
             {

@@ -51,7 +51,7 @@ namespace Octopus.Shared.Util
             if (list == null) throw new ArgumentNullException("list");
 
             var result = new StringBuilder();
-            object prev = null;
+            object? prev = null;
 
             string separator = "", final = "";
             var enumerator = list.GetEnumerator();
@@ -75,7 +75,7 @@ namespace Octopus.Shared.Util
 
             return result.ToString();
         }
-        
+
         public static string SplitPascalCase(string name)
         {
             return Regex.Replace(name, "([a-z])([A-Z])", "$1 $2");

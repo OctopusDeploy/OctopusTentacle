@@ -8,7 +8,7 @@ namespace Octopus.Shared.Contracts
     public class StartScriptCommand
     {
         [JsonConstructor]
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string taskId)
+        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string? taskId)
         {
             Arguments = arguments;
             TaskId = taskId;
@@ -17,7 +17,7 @@ namespace Octopus.Shared.Contracts
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
         }
 
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string taskId, params ScriptFile[] additionalFiles)
+        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string? taskId, params ScriptFile[] additionalFiles)
             : this(scriptBody, isolation, scriptIsolationMutexTimeout, arguments, taskId)
         {
             if (additionalFiles != null)
@@ -26,7 +26,7 @@ namespace Octopus.Shared.Contracts
             }
         }
 
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string taskId, Dictionary<ScriptType, string> additionalScripts, params ScriptFile[] additionalFiles)
+        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string? taskId, Dictionary<ScriptType, string> additionalScripts, params ScriptFile[] additionalFiles)
             : this(scriptBody, isolation, scriptIsolationMutexTimeout, arguments, taskId, additionalFiles)
         {
             if (!additionalScripts.IsNullOrEmpty())
@@ -45,7 +45,7 @@ namespace Octopus.Shared.Contracts
 
         public string[] Arguments { get; }
 
-        public string TaskId { get; }
+        public string? TaskId { get; }
 
         public TimeSpan ScriptIsolationMutexTimeout { get; }
     }

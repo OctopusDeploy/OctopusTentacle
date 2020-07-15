@@ -1,3 +1,4 @@
+#nullable disable
 #if !NLOG_HAS_EVENT_LOG_TARGET
 using System;
 using System.ComponentModel;
@@ -342,7 +343,7 @@ namespace Octopus.Shared.Diagnostics
         /// </summary>
         /// <returns><c>null</c> when not <see cref="SimpleLayout.IsFixedText"/></returns>
         /// <remarks>Internal for unit tests</remarks>
-        internal string GetFixedSource()
+        string GetFixedSource()
         {
             if (Source == null)
             {

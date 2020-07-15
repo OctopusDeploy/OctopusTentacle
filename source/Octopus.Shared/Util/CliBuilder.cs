@@ -9,7 +9,7 @@ namespace Octopus.Shared.Util
         readonly string executable;
         readonly List<string> arguments = new List<string>();
         readonly List<string> systemArguments = new List<string>();
-        string action;
+        string? action;
         bool ignoreFailedExitCode;
 
         public CliBuilder(string executable)

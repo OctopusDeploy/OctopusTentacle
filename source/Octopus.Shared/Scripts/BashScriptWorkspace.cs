@@ -15,7 +15,7 @@ namespace Octopus.Shared.Scripts
         public override void BootstrapScript(string scriptBody)
         {
             scriptBody = scriptBody.Replace("\r\n", "\n");
-            fileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.Default);
+            FileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.Default);
         }
     }
 }

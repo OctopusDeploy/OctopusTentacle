@@ -37,6 +37,6 @@ namespace Octopus.Shared.Diagnostics
         /// By default this is the friendly name of the current AppDomain.
         /// </remarks>
         /// <docgen category='Event Log Options' order='10' />
-        public Layout Source { get; set; }
+        public Layout? Source { get; set; }
     }
 }

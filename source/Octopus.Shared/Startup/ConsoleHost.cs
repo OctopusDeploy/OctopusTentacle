@@ -92,7 +92,7 @@ namespace Octopus.Shared.Startup
         /// <param name="options">The OptionSet to update, adding the --console switch.</param>
         /// <param name="action">[Optional] The custom action to perform when the switch is provided.</param>
         /// <returns>The resulting OptionSet after adding the --console switch. Can be used as a convenience for method chaining.</returns>
-        public static OptionSet AddConsoleSwitch(OptionSet options, Action<string> action = null)
+        public static OptionSet AddConsoleSwitch(OptionSet options, Action<string>? action = null)
         {
             return options.Add(ConsoleSwitchPrototype, "Don't attempt to run as a service, even if the user is non-interactive", action ?? (v =>
             {

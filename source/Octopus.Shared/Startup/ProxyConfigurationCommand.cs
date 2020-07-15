@@ -10,9 +10,8 @@ namespace Octopus.Shared.Startup
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly List<Action> operations = new List<Action>();
         readonly ILog log;
-        bool hostSet;
         bool useAProxy;
-        string host;
+        string? host;
 
         public ProxyConfigurationCommand(Lazy<IProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ILog log) : base(instanceSelector)
         {
@@ -38,8 +37,7 @@ namespace Octopus.Shared.Startup
 
             Options.Add("proxyHost=", "The proxy host to use. Leave empty to use the default Internet Explorer proxy", v => QueueOperation(delegate
             {
-                hostSet = !string.IsNullOrWhiteSpace(v);
-                if (hostSet)
+                if (!string.IsNullOrWhiteSpace(v))
                 {
                     host = new UriBuilder(v).Host;
                 }
@@ -48,7 +46,7 @@ namespace Octopus.Shared.Startup
             Options.Add("proxyPort=", "The proxy port to use in conjunction with the Host set with proxyHost", v => QueueOperation(delegate
             {
                 proxyConfiguration.Value.CustomProxyPort = string.IsNullOrWhiteSpace(v) ? 80 : int.Parse(v);
-                if (hostSet)
+                if (host != null)
                 {
                     log.Info("Proxy port set to: " + proxyConfiguration.Value.CustomProxyPort);
                 }
@@ -63,9 +61,9 @@ namespace Octopus.Shared.Startup
 
             if (useAProxy)
             {
-                proxyConfiguration.Value.CustomProxyHost = hostSet ? host : null;
-                proxyConfiguration.Value.UseDefaultProxy = !hostSet;
-                log.Info(hostSet 
+                proxyConfiguration.Value.CustomProxyHost = host;
+                proxyConfiguration.Value.UseDefaultProxy = host == null;
+                log.Info(host != null
                     ? "Using custom proxy at: " + host
                     : "Using Internet Explorer Proxy");
             }

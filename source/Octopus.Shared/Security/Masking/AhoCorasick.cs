@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿#nullable disable
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,7 +8,7 @@ namespace Octopus.Shared.Security.Masking
 {
     public class AhoCorasick
     {
-        private readonly Node root = new Node();
+        readonly Node root = new Node();
 
         public void Add(string value)
         {

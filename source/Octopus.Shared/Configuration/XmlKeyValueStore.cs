@@ -13,7 +13,7 @@ namespace Octopus.Shared.Configuration
         {
         }
 
-        protected override void LoadSettings(IDictionary<string, object> settingsToFill)
+        protected override void LoadSettings(IDictionary<string, object?> settingsToFill)
         {
             if (!ExistsForReading())
             {
@@ -33,7 +33,7 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-        protected override void SaveSettings(IDictionary<string, object> settingsToSave)
+        protected override void SaveSettings(IDictionary<string, object?> settingsToSave)
         {
             var settings = new XmlSettingsRoot();
             foreach (var key in settingsToSave.Keys.OrderBy(k => k))

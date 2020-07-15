@@ -4,6 +4,7 @@ using System.Linq;
 using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Octopus.Shared.Configuration
 {
@@ -32,9 +33,9 @@ namespace Octopus.Shared.Configuration
             this.logFileOnlyLogger = logFileOnlyLogger;
         }
 
-        LoadedApplicationInstance current;
+        LoadedApplicationInstance? current;
 
-        public bool TryGetCurrentInstance(out LoadedApplicationInstance instance)
+        public bool TryGetCurrentInstance([NotNullWhen(true)] out LoadedApplicationInstance? instance)
         {
             instance = null;
             try
@@ -84,7 +85,7 @@ namespace Octopus.Shared.Configuration
 
         internal ApplicationInstanceRecord LoadInstance()
         {
-            ApplicationInstanceRecord instance = null;
+            ApplicationInstanceRecord? instance = null;
             var anyInstances = instanceStore.AnyInstancesConfigured(applicationName);
             if (!anyInstances)
                 throw new ControlledFailureException(
@@ -104,12 +105,12 @@ namespace Octopus.Shared.Configuration
         }
 
 
-        public void CreateDefaultInstance(string configurationFile, string homeDirectory = null)
+        public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
         {
             CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(applicationName), configurationFile, homeDirectory);
         }
 
-        public void CreateInstance(string instanceName, string configurationFile, string homeDirectory = null)
+        public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
         {
             var parentDirectory = Path.GetDirectoryName(configurationFile);
             fileSystem.EnsureDirectoryExists(parentDirectory);
@@ -143,7 +144,7 @@ namespace Octopus.Shared.Configuration
                 new XmlFileKeyValueStore(fileSystem, record.ConfigurationFilePath));
         }
 
-        private ApplicationInstanceRecord TryLoadInstanceByName()
+        private ApplicationInstanceRecord? TryLoadInstanceByName()
         {
             var instance = instanceStore.GetInstance(applicationName, currentInstanceName);
             if (instance == null)

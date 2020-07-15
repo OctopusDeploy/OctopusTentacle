@@ -18,10 +18,10 @@ namespace Octopus.Shared.Util
 
         class ExceptionLog
         {
-            public string Label;
-            public string Arg;
-            public string Member;
-            public string Path;
+            public string? Label;
+            public string Arg = string.Empty;
+            public string Member = string.Empty;
+            public string Path = string.Empty;
             public int Line;
 
             public string LabelAndArg
@@ -174,7 +174,7 @@ namespace Octopus.Shared.Util
             return sb.ToString();
         }
 
-        public static async Task<T> Log<T>(this Task<T> task, string label = null, object arg = null, [CallerMemberName]string member = "", [CallerLineNumber]int line = 0, [CallerFilePath]string path = "")
+        public static async Task<T> Log<T>(this Task<T> task, string? label = null, object? arg = null, [CallerMemberName]string member = "", [CallerLineNumber]int line = 0, [CallerFilePath]string path = "")
         {
             try
             {
@@ -187,7 +187,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        public static async Task Log(this Task task, string label = null, object arg = null, [CallerMemberName]string member = "", [CallerLineNumber]int line = 0, [CallerFilePath]string path = "")
+        public static async Task Log(this Task task, string? label = null, object? arg = null, [CallerMemberName]string member = "", [CallerLineNumber]int line = 0, [CallerFilePath]string path = "")
         {
             try
             {

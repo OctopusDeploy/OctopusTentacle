@@ -24,8 +24,8 @@
         public bool Reconfigure { get; set; }
         public bool Install { get; set; }
         public bool Uninstall { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string DependOn { get; set; }
+        public string? Username { get; set; }
+        public string? Password { get; set; }
+        public string? DependOn { get; set; }
     }
 }

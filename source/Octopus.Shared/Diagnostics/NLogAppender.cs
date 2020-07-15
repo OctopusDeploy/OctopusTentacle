@@ -64,12 +64,12 @@ namespace Octopus.Shared.Diagnostics
 
         class OctopusNLogger : Logger
         {
-            public void WriteEvent(LogLevel category, Exception error, string messageText)
+            public void WriteEvent(LogLevel category, Exception? error, string messageText)
             {
                 Log(typeof (OctopusNLogger), GetLogEvent(category, error, messageText));
             }
 
-            LogEventInfo GetLogEvent(LogLevel level, Exception exception, string message)
+            LogEventInfo GetLogEvent(LogLevel level, Exception? exception, string message)
             {
                 return LogEventInfo.Create(level, Name, exception, CultureInfo.InvariantCulture, message);
             }

@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Startup;
 
@@ -31,7 +33,15 @@ namespace Octopus.Shared.Configuration
                 //log to the old log file that we are now logging somewhere else
                 logFileOnlyLogger.Info($"Changing log folder from {previousLogDirectory} to {logDirectory}");
 
-                OctopusLogsDirectoryRenderer.SetLogsDirectory(logDirectory);
+                if (string.IsNullOrEmpty(logDirectory)) throw new ArgumentException("Value cannot be null or empty.", nameof(logDirectory));
+
+                if (!Directory.Exists(logDirectory))
+                {
+                    Directory.CreateDirectory(logDirectory);
+                }
+
+                OctopusLogsDirectoryRenderer.History.Add(logDirectory);
+                OctopusLogsDirectoryRenderer.LogsDirectory = logDirectory;
 
                 //log to the new log file that we were logging somewhere else
                 logFileOnlyLogger.Info(new string('=', 80));

@@ -15,19 +15,25 @@
     <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
-    <TargetFrameworks>net452;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net452;netstandard2.1</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
+    <NoWarn>8601</NoWarn>
     <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE</DefineConstants>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+    <DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net452' ">
+    <NoWarn>CS8600;CS8601;CS8602;CS8603;CS8604</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Web\**" />
     <EmbeddedResource Remove="Web\**" />
@@ -45,7 +51,7 @@
     <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="Octopus.Configuration" Version="2.0.1" />
+    <PackageReference Include="Octopus.Configuration" Version="2.0.2-enh-nullable0006" />
     <PackageReference Include="Octopus.Diagnostics" Version="1.3.0" />
     <PackageReference Include="Octopus.Time" Version="1.1.5" />
     <PackageReference Include="Polly" Version="5.3.1" />
@@ -94,6 +100,6 @@
     <Compile Update="Startup\WindowsServiceAdapter.cs">
       <SubType>Component</SubType>
     </Compile>
-    <None Include="icon.png" Pack="true" PackagePath=""/>
+    <None Include="icon.png" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>

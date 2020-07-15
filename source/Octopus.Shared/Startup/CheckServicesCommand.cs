@@ -11,7 +11,7 @@ namespace Octopus.Shared.Startup
     public class CheckServicesCommand : AbstractCommand
     {
         readonly ILog log;
-        HashSet<string> instances;
+        HashSet<string>? instances;
         readonly IApplicationInstanceStore applicationInstanceStore;
         readonly ApplicationName applicationName;
 

@@ -9,9 +9,9 @@ namespace Octopus.Shared.Configuration
         {
         }
 
-        protected override void SaveSettings(IDictionary<string, object> settingsToSave)
+        protected override void SaveSettings(IDictionary<string, object?> settingsToSave)
         {
-            WriteSerializedData(JsonConvert.SerializeObject(new SortedDictionary<string, object>(settingsToSave), Formatting.Indented, JsonSerializerSettings));
+            WriteSerializedData(JsonConvert.SerializeObject(new SortedDictionary<string, object?>(settingsToSave), Formatting.Indented, JsonSerializerSettings));
         }
 
         protected abstract void WriteSerializedData(string serializedData);

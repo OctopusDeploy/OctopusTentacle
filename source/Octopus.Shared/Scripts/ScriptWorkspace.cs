@@ -11,18 +11,18 @@ namespace Octopus.Shared.Scripts
     public class ScriptWorkspace : IScriptWorkspace
     {
         protected virtual string BootstrapScriptName => "Bootstrap.ps1";
-        
-        protected readonly IOctopusFileSystem fileSystem;
+
+        protected readonly IOctopusFileSystem FileSystem;
 
         public ScriptWorkspace(string workingDirectory, IOctopusFileSystem fileSystem)
         {
             WorkingDirectory = workingDirectory;
-            this.fileSystem = fileSystem;
+            FileSystem = fileSystem;
             fileSystem.EnsureDiskHasEnoughFreeSpace(workingDirectory);
             BootstrapScriptFilePath = Path.Combine(workingDirectory, BootstrapScriptName);
         }
 
-        public NetworkCredential RunAs { get; set; }
+        public NetworkCredential? RunAs { get; set; }
 
         public IDictionary<string, string> CustomEnvironmentVariables { get; set; } = new Dictionary<string, string>();
 
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Scripts
             }
         }
 
-        public string[] ScriptArguments { get; set; }
+        public string[]? ScriptArguments { get; set; }
 
         public string WorkingDirectory { get; }
 
@@ -52,21 +52,21 @@ namespace Octopus.Shared.Scripts
         public virtual void BootstrapScript(string scriptBody)
         {
             // default is UTF8noBOM but powershell doesn't interpret that correctly
-            fileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.UTF8);
+            FileSystem.OverwriteFile(BootstrapScriptFilePath, scriptBody, Encoding.UTF8);
         }
 
         public string ResolvePath(string fileName)
         {
             var path = Path.Combine(WorkingDirectory, fileName);
             var directory = Path.GetDirectoryName(path);
-            fileSystem.EnsureDirectoryExists(directory);
+            FileSystem.EnsureDirectoryExists(directory);
             return path;
         }
 
         public void Delete()
         {
-            fileSystem.PurgeDirectory(WorkingDirectory, DeletionOptions.TryThreeTimesIgnoreFailure);
-            fileSystem.DeleteDirectory(WorkingDirectory, DeletionOptions.TryThreeTimesIgnoreFailure);
+            FileSystem.PurgeDirectory(WorkingDirectory, DeletionOptions.TryThreeTimesIgnoreFailure);
+            FileSystem.DeleteDirectory(WorkingDirectory, DeletionOptions.TryThreeTimesIgnoreFailure);
         }
     }
 }

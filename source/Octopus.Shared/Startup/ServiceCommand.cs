@@ -18,7 +18,7 @@ namespace Octopus.Shared.Startup
         readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
         readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
 
-        string instanceName;
+        string? instanceName;
 
         public ServiceCommand(ApplicationName applicationName,
             IApplicationInstanceStore instanceStore,

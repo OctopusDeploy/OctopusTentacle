@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Octopus.Shared.Util
@@ -82,6 +83,7 @@ namespace Octopus.Shared.Util
 
         public static bool Missing<T>(this IEnumerable<T> items, T item, IEqualityComparer<T> equalityComparer) => !items.Contains(item, equalityComparer);
 
+        [return: MaybeNull]
         public static T OnlyOrDefault<T>(this IEnumerable<T> source)
         {
             using (var e = source.GetEnumerator())

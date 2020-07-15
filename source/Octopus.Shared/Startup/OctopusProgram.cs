@@ -42,9 +42,9 @@ namespace Octopus.Shared.Startup
         readonly string informationalVersion;
         readonly string[] environmentInformation;
         readonly OptionSet commonOptions;
-        IContainer container;
-        ICommand commandFromCommandLine;
-        ICommand responsibleCommand;
+        IContainer? container;
+        ICommand? commandFromCommandLine;
+        ICommand? responsibleCommand;
         string[] commandLineArguments;
         bool helpSwitchProvidedInCommandArguments;
 
@@ -84,7 +84,7 @@ namespace Octopus.Shared.Startup
             AppDomain.CurrentDomain.UnhandledException += LogUnhandledException;
 
             int exitCode;
-            ICommandHost host = null;
+            ICommandHost? host = null;
             try
             {
                 EnsureTempPathIsWriteable();
@@ -206,8 +206,7 @@ namespace Octopus.Shared.Startup
             log.Error(new string('=', 79));
             log.Fatal(unpacked.PrettyPrint());
 
-            ExceptionKnowledgeBaseEntry entry;
-            if (ExceptionKnowledgeBase.TryInterpret(unpacked, out entry))
+            if (ExceptionKnowledgeBase.TryInterpret(unpacked, out var entry))
             {
                 log.Error(new string('=', 79));
                 log.Error(entry.Summary);
@@ -240,8 +239,7 @@ namespace Octopus.Shared.Startup
                 if (!(loaderException is FileNotFoundException))
                     continue;
 
-                var exFileNotFound = loaderException as FileNotFoundException;
-                if (!string.IsNullOrEmpty(exFileNotFound.FusionLog))
+                if (loaderException is FileNotFoundException exFileNotFound && !string.IsNullOrEmpty(exFileNotFound.FusionLog))
                 {
                     log.ErrorFormat("Fusion log: {0}", exFileNotFound.FusionLog);
                 }
@@ -345,12 +343,12 @@ namespace Octopus.Shared.Startup
             string[] commandLineArguments,
             out bool forceConsoleHost,
             out bool forceNoninteractiveHost,
-            out string monitorMutexHost)
+            out string? monitorMutexHost)
         {
             // Sorry for the mess, we can't set the out param in a lambda
             var forceConsole = false;
             var optionSet = ConsoleHost.AddConsoleSwitch(new OptionSet(), v => forceConsole = true);
-            string monitorMutex = null;
+            string? monitorMutex = null;
             var forceNoninteractive = false;
             optionSet.Add("noninteractive", v => forceNoninteractive = true);
             optionSet.Add("monitorMutex=", v => monitorMutex = v);
@@ -408,7 +406,7 @@ namespace Octopus.Shared.Startup
             ILog log,
             bool forceConsoleHost,
             bool forceNoninteractiveHost,
-            string monitorMutexHost)
+            string? monitorMutexHost)
         {
             log.Trace("Selecting the most appropriate host");
 
@@ -505,6 +503,8 @@ namespace Octopus.Shared.Startup
 
         void Start(ICommandRuntime commandRuntime)
         {
+            if (responsibleCommand == null)
+                throw new InvalidOperationException("Responsible command not set");
             responsibleCommand.Start(commandLineArguments, commandRuntime, commonOptions);
         }
 
@@ -512,16 +512,15 @@ namespace Octopus.Shared.Startup
             ICommandLocator commandLocator,
             string[] commandLineArguments,
             bool showHelpForCommand,
-            out ICommand commandFromCommandLine,
+            out ICommand? commandFromCommandLine,
             out ICommand responsibleCommand)
         {
             var commandName = ParseCommandName(commandLineArguments);
 
             var foundCommandMetadata = string.IsNullOrWhiteSpace(commandName) ? null : commandLocator.Find(commandName);
-            var cannotFindCommand = foundCommandMetadata == null;
 
             // <unknowncommand>
-            if (cannotFindCommand)
+            if (foundCommandMetadata == null)
             {
                 commandFromCommandLine = null;
                 responsibleCommand = commandLocator.Find("help").Value;
@@ -531,7 +530,7 @@ namespace Octopus.Shared.Startup
             // <command> --help
             if (showHelpForCommand)
             {
-                commandFromCommandLine = foundCommandMetadata.Value;
+                commandFromCommandLine = foundCommandMetadata?.Value;
                 responsibleCommand = commandLocator.Find("help").Value;
                 return commandLineArguments;
             }
@@ -573,7 +572,7 @@ namespace Octopus.Shared.Startup
             }
 
             log.TraceFormat("Disposing of the container");
-            container.Dispose();
+            container?.Dispose();
         }
 
 #pragma warning disable PC003 // Native API not available in UWP

@@ -1,12 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Octopus.Shared.Internals.Options
 {
-    public class OptionValueCollection : IList, IList<string>
+    public class OptionValueCollection : IList, IList<string?>
     {
-        readonly List<string> values = new List<string>();
+        readonly List<string?> values = new List<string?>();
         readonly OptionContext c;
 
         internal OptionValueCollection(OptionContext c)
@@ -32,12 +33,12 @@ namespace Octopus.Shared.Internals.Options
 
         #endregion
 
-        public List<string> ToList()
+        public List<string?> ToList()
         {
-            return new List<string>(values);
+            return new List<string?>(values);
         }
 
-        public string[] ToArray()
+        public string?[] ToArray()
         {
             return values.ToArray();
         }
@@ -68,7 +69,7 @@ namespace Octopus.Shared.Internals.Options
 
         #region ICollection<T>
 
-        public void Add(string item)
+        public void Add(string? item)
         {
             values.Add(item);
         }
@@ -78,17 +79,17 @@ namespace Octopus.Shared.Internals.Options
             values.Clear();
         }
 
-        public bool Contains(string item)
+        public bool Contains(string? item)
         {
             return values.Contains(item);
         }
 
-        public void CopyTo(string[] array, int arrayIndex)
+        public void CopyTo(string?[] array, int arrayIndex)
         {
             values.CopyTo(array, arrayIndex);
         }
 
-        public bool Remove(string item)
+        public bool Remove(string? item)
         {
             return values.Remove(item);
         }
@@ -142,7 +143,7 @@ namespace Octopus.Shared.Internals.Options
             get { return false; }
         }
 
-        object IList.this[int index]
+        object? IList.this[int index]
         {
             get { return this[index]; }
             set { (values as IList)[index] = value; }
@@ -152,12 +153,12 @@ namespace Octopus.Shared.Internals.Options
 
         #region IList<T>
 
-        public int IndexOf(string item)
+        public int IndexOf(string? item)
         {
             return values.IndexOf(item);
         }
 
-        public void Insert(int index, string item)
+        public void Insert(int index, string? item)
         {
             values.Insert(index, item);
         }
@@ -180,14 +181,15 @@ namespace Octopus.Shared.Internals.Options
                     c.OptionName);
         }
 
-        public string this[int index]
+        [NotNull]
+        public string? this[int index]
         {
             get
             {
                 AssertValid(index);
-                return index >= values.Count ? null : values[index];
+                return values[index] ?? string.Empty;
             }
-            set { values[index] = value; }
+            set => values[index] = value;
         }
 
         #endregion

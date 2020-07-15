@@ -12,7 +12,7 @@ namespace Octopus.Shared.Configuration
             JsonSerializerSettings = settings;
         }
 
-        protected override void SaveSettings(IDictionary<string, object> settingsToSave)
+        protected override void SaveSettings(IDictionary<string, object?> settingsToSave)
         {
             var data = new ObjectHierarchy();
             foreach (var kvp in settingsToSave)
@@ -32,7 +32,8 @@ namespace Octopus.Shared.Configuration
                     {
                         if (i == keyHierarchyItems.Length - 1)
                         {
-                            node.Add(keyHierarchyItem, kvp.Value);
+                            if (kvp.Value != null)
+                                node.Add(keyHierarchyItem, kvp.Value);
                         }
                         else
                         {

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Octopus.Shared.Security
 {
@@ -64,7 +60,7 @@ namespace Octopus.Shared.Security
             }
         }
 
-        AesCryptoServiceProvider GetCryptoProvider(byte[] iv = null)
+        AesCryptoServiceProvider GetCryptoProvider(byte[]? iv = null)
         {
             var provider = new AesCryptoServiceProvider
             {

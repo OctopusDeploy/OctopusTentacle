@@ -17,12 +17,14 @@ namespace Octopus.Shared.Configuration
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
-            string valueAsString = null;
+            string? valueAsString = null;
             try
             {
                 var data = Read(name);
+                if (data == null)
+                    return defaultValue;
                 valueAsString = data as string;
-                if (string.IsNullOrWhiteSpace(valueAsString))
+                if (valueAsString == null || string.IsNullOrWhiteSpace(valueAsString))
                     return defaultValue;
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
@@ -51,7 +53,7 @@ namespace Octopus.Shared.Configuration
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
-            if (IsEmptyString(value))
+            if (value == null || (value is string s && string.IsNullOrWhiteSpace(s)))
             {
                 Write(name, null);
                 if (AutoSaveOnSet)
@@ -96,11 +98,6 @@ namespace Octopus.Shared.Configuration
                 return true;
 
             return false;
-        }
-
-        private bool IsEmptyString(object value)
-        {
-            return value is string s && string.IsNullOrWhiteSpace(s);
         }
     }
 }

@@ -94,7 +94,7 @@ namespace Octopus.Shared.Util
             DeleteFile(path, null);
         }
 
-        public void DeleteFile(string path, DeletionOptions options)
+        public void DeleteFile(string path, DeletionOptions? options)
         {
             options = options ?? DeletionOptions.TryThreeTimes;
 
@@ -329,7 +329,7 @@ namespace Octopus.Shared.Util
             PurgeDirectory(targetDirectory, include, options, CancellationToken.None, fileEnumerationFunc: fileEnumerator);
         }
 
-        void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, DeletionOptions options, CancellationToken cancel, bool includeTarget = false, Func<string, IEnumerable<string>> fileEnumerationFunc = null)
+        void PurgeDirectory(string targetDirectory, Predicate<IFileInfo>? include, DeletionOptions options, CancellationToken cancel, bool includeTarget = false, Func<string, IEnumerable<string>>? fileEnumerationFunc = null)
         {
             if (!DirectoryExists(targetDirectory))
             {

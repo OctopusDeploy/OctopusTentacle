@@ -16,7 +16,7 @@ namespace Octopus.Shared.Configuration
             this.fileSystem = fileSystem;
         }
 
-        protected override void LoadSettings(IDictionary<string, object> settingsToFill)
+        protected override void LoadSettings(IDictionary<string, object?> settingsToFill)
         {
             if (!fileSystem.FileExists(configurationFile))
             {

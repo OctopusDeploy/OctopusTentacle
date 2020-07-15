@@ -7,10 +7,10 @@ namespace Octopus.Shared.Contracts
     {
         readonly string name;
         readonly DataStream contents;
-        readonly string encryptionPassword;
+        readonly string? encryptionPassword;
 
         [JsonConstructor]
-        public ScriptFile(string name, DataStream contents, string encryptionPassword)
+        public ScriptFile(string name, DataStream contents, string? encryptionPassword)
         {
             this.name = name;
             this.contents = contents;
@@ -31,7 +31,7 @@ namespace Octopus.Shared.Contracts
             get { return contents; }
         }
 
-        public string EncryptionPassword
+        public string? EncryptionPassword
         {
             get { return encryptionPassword; }
         }
