@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Communications
                 return true;
             };
 
-            Retry(() =>
+            Retry("Checking that server communications are open", () =>
             {
                 var req = WebRequest.Create(handshake);
                 req.Proxy = proxyOverride;
@@ -75,9 +75,9 @@ namespace Octopus.Tentacle.Communications
             return thumbprint;
         }
 
-        static void Retry(Action action, int retryCount, TimeSpan initalDelay, double backOffFactor = 1.5)
+         void Retry(string actionDescription, Action action, int retryCount, TimeSpan initialDelay, double backOffFactor = 1.5)
         {
-            var delay = initalDelay;
+            var delay = initialDelay;
             for (var i = 1; i <= retryCount; i++)
             {
                 try
@@ -85,15 +85,17 @@ namespace Octopus.Tentacle.Communications
                     action();
                     return;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     if (i >= retryCount)
                     {
+                        log.ErrorFormat(ex, "{0} failed with message {1) after {2} retries.", actionDescription, ex.Message, i);
                         throw;
                     }
-                }
 
-                delay = new TimeSpan((long)(delay.Ticks * backOffFactor));
+                    delay = new TimeSpan((long)(delay.Ticks * backOffFactor));
+                    log.WarnFormat(ex, "{0} failed with message {1). Retrying ({2}/{3}) in {4}.", actionDescription, ex.Message, i, retryCount, delay);
+                }
             }
         }
     }
