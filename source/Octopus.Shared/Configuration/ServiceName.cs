@@ -1,10 +1,12 @@
+using System;
+
 namespace Octopus.Shared.Configuration
 {
     public static class ServiceName
     {
         public static string GetWindowsServiceName(ApplicationName application, string instanceName)
         {
-            string name = string.Empty;
+            string? name;
 
             switch (application)
             {
@@ -14,6 +16,8 @@ namespace Octopus.Shared.Configuration
                 case ApplicationName.Tentacle:
                     name = "OctopusDeploy Tentacle";
                     break;
+                default:
+                    throw new ArgumentException("Invalid application name", nameof(application));
             }
 
             var defaultInstanceName = ApplicationInstanceRecord.GetDefaultInstance(application);

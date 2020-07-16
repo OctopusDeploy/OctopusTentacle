@@ -16,7 +16,7 @@ namespace Octopus.Shared.Configuration
         [Obsolete("Please use the generic overload instead")]
         public string? Get(string name, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
-            return Get(name, default(string), protectionLevel) ?? string.Empty;
+            return Get(name, default(string), protectionLevel);
         }
 
         public abstract TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None);
