@@ -187,7 +187,7 @@ namespace Octopus.Shared.Internals.Options
             get
             {
                 AssertValid(index);
-                return values[index];
+                return values[index] ?? string.Empty;
             }
             set => values[index] = value;
         }
