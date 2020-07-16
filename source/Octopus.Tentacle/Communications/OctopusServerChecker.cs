@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Communications
                 }
             }, 5, TimeSpan.FromSeconds(0.5));
 
-            log.Info("Connected sucessfully");
+            log.Info("Connected successfully");
 
             return thumbprint;
         }
