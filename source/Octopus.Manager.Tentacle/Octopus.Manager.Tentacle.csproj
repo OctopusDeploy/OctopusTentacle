@@ -392,8 +392,8 @@
       <HintPath>..\packages\FluentValidation.7.2.1\lib\net45\FluentValidation.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut, Version=4.3.27.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Halibut.4.3.27\lib\net45\Halibut.dll</HintPath>
+    <Reference Include="Halibut, Version=4.3.31.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Halibut.4.3.31\lib\net45\Halibut.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MaterialDesignColors, Version=1.2.0.325, Culture=neutral, PublicKeyToken=null">
@@ -469,8 +469,8 @@
       <HintPath>..\packages\Octopus.Diagnostics.1.3.0\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Shared, Version=5.0.6.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Shared.5.0.6\lib\net45\Octopus.Shared.dll</HintPath>
+    <Reference Include="Octopus.Shared, Version=5.0.12.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Octopus.Shared.5.0.12\lib\net45\Octopus.Shared.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.1.6.0, Culture=neutral, PublicKeyToken=null">
