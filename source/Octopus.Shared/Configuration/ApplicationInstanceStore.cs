@@ -18,7 +18,7 @@ namespace Octopus.Shared.Configuration
 
         public ApplicationInstanceStore(
             ILog log,
-            IOctopusFileSystem fileSystem, 
+            IOctopusFileSystem fileSystem,
             IRegistryApplicationInstanceStore registryApplicationInstanceStore)
         {
             this.log = log;
@@ -26,7 +26,7 @@ namespace Octopus.Shared.Configuration
             this.registryApplicationInstanceStore = registryApplicationInstanceStore;
             machineConfigurationHomeDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus");
 
-            if (!PlatformDetection.IsRunningOnWindows) 
+            if (!PlatformDetection.IsRunningOnWindows)
             {
                 machineConfigurationHomeDirectory = "/etc/octopus";
             }
@@ -34,8 +34,14 @@ namespace Octopus.Shared.Configuration
 
         public class Instance
         {
-            public string Name { get; set; } = string.Empty;
-            public string ConfigurationFilePath { get; set; } = string.Empty;
+            public Instance(string name, string configurationFilePath)
+            {
+                Name = name;
+                ConfigurationFilePath = configurationFilePath;
+            }
+
+            public string Name { get; }
+            public string ConfigurationFilePath { get; set; }
         }
 
         internal string InstancesFolder(ApplicationName name)
@@ -58,7 +64,7 @@ namespace Octopus.Shared.Configuration
         public IList<ApplicationInstanceRecord> ListInstances(ApplicationName name)
         {
             var instancesFolder = InstancesFolder(name);
-            
+
             var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
             var listFromFileSystem = new List<ApplicationInstanceRecord>();
             if (fileSystem.DirectoryExists(instancesFolder))
@@ -84,6 +90,7 @@ namespace Octopus.Shared.Configuration
                 throw new ArgumentException($"Could not load instance at path {path}");
             return result;
         }
+
         Instance? TryLoadInstanceConfiguration(string path)
         {
             if (!fileSystem.FileExists(path))
@@ -132,10 +139,7 @@ namespace Octopus.Shared.Configuration
                 fileSystem.CreateDirectory(instancesFolder);
             }
             var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceRecord.InstanceName) + ".config");
-            var instance = TryLoadInstanceConfiguration(instanceConfiguration) ?? new Instance
-            {
-                Name = instanceRecord.InstanceName
-            };
+            var instance = TryLoadInstanceConfiguration(instanceConfiguration) ?? new Instance(instanceRecord.InstanceName, instanceRecord.ConfigurationFilePath);
 
             instance.ConfigurationFilePath = instanceRecord.ConfigurationFilePath;
 
