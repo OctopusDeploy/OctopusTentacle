@@ -5,12 +5,12 @@ namespace Octopus.Shared.Diagnostics.Formatters
 {
     public class PluralStringFormatter : IFormatProvider, ICustomFormatter
     {
-        public object GetFormat(Type formatType)
+        public object? GetFormat(Type formatType)
         {
             return formatType == typeof(ICustomFormatter) ? this : null;
         }
 
-        public string Format(string format, object arg, IFormatProvider formatProvider)
+        public string? Format(string format, object arg, IFormatProvider formatProvider)
         {
             if (!(arg is int) || string.IsNullOrWhiteSpace(format))
             {

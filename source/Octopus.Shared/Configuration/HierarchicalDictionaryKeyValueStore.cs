@@ -6,7 +6,7 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class HierarchicalDictionaryKeyValueStore : DictionaryKeyValueStore
     {
-        private readonly JsonSerializerSettings jsonSerializerSettings;
+        readonly JsonSerializerSettings jsonSerializerSettings;
 
         protected HierarchicalDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
@@ -22,7 +22,7 @@ namespace Octopus.Shared.Configuration
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
-            if (IsEmptyString(value))
+            if (value == null || value is string s && string.IsNullOrWhiteSpace(s))
             {
                 Write(name, null);
                 if (AutoSaveOnSet)
@@ -42,11 +42,6 @@ namespace Octopus.Shared.Configuration
             Write(name, valueAsObject);
             if (AutoSaveOnSet)
                 Save();
-        }
-
-        private bool IsEmptyString(object value)
-        {
-            return value is string s && string.IsNullOrWhiteSpace(s);
         }
     }
 }

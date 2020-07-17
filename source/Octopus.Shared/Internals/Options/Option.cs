@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 
 namespace Octopus.Shared.Internals.Options
 {
@@ -10,17 +10,17 @@ namespace Octopus.Shared.Internals.Options
     {
         static readonly char[] NameTerminator = {'=', ':'};
         readonly string prototype;
-        readonly string description;
+        readonly string? description;
         readonly string[] names;
         readonly OptionValueType type;
         readonly int count;
 
-        protected Option(string prototype, string description)
+        protected Option(string prototype, string? description)
             : this(prototype, description, 1)
         {
         }
 
-        protected Option(string prototype, string description, int maxValueCount)
+        protected Option(string prototype, string? description, int maxValueCount)
         {
             if (prototype == null)
                 throw new ArgumentNullException("prototype");
@@ -57,7 +57,7 @@ namespace Octopus.Shared.Internals.Options
             get { return prototype; }
         }
 
-        public string Description
+        public string? Description
         {
             get { return description; }
         }
@@ -77,7 +77,7 @@ namespace Octopus.Shared.Internals.Options
             get { return names; }
         }
 
-        internal string[] ValueSeparators { get; set; }
+        internal string[]? ValueSeparators { get; set; }
         public bool Hide { get; set; }
         public bool Sensitive { get; set; }
 
@@ -93,7 +93,8 @@ namespace Octopus.Shared.Internals.Options
             return (string[])ValueSeparators.Clone();
         }
 
-        protected static T Parse<T>(string value, OptionContext c)
+        [return: NotNullIfNotNull("value"), MaybeNull]
+        protected static T Parse<T>(string? value, OptionContext c)
         {
             var conv = TypeDescriptor.GetConverter(typeof (T));
             var t = default(T);
@@ -199,7 +200,7 @@ namespace Octopus.Shared.Internals.Options
             c.OptionValues.Clear();
         }
 
-        public string[] Values { get; private set; } = new string[0];
+        public string?[] Values { get; private set; } = new string?[0];
 
         protected abstract void OnParseComplete(OptionContext c);
 

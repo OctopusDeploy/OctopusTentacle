@@ -35,7 +35,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        public static string ToUnixString(string windows)
+        public static string? ToUnixString(string windows)
         {
             if (windows == null) return null;
 
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Util
         }
 
         // Also needs refinement - if a CRLF string is passed it will turn into CRCRLF
-        public static string ToWindowsString(string unix)
+        public static string? ToWindowsString(string unix)
         {
             if (unix == null) return null;
 

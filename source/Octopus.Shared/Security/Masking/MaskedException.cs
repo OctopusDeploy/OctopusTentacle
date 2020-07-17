@@ -6,14 +6,14 @@ namespace Octopus.Shared.Security.Masking
     public class MaskedException : Exception
     {
         const string DefaultMessage = "Sensitive data in the original exception has been masked";
-        readonly string originalException;
+        readonly string? originalException;
 
         public MaskedException(string originalException)
             : this(null, originalException)
         {
         }
 
-        public MaskedException(string message, string originalException)
+        public MaskedException(string? message, string originalException)
             : base(message ?? DefaultMessage)
         {
             if (originalException == null) throw new ArgumentNullException("originalException");
@@ -27,7 +27,7 @@ namespace Octopus.Shared.Security.Masking
 
         public override string ToString()
         {
-            return originalException;
+            return originalException ?? string.Empty;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -86,7 +87,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             Rules.Add(builder.Build());
         }
 
-        public static bool TryInterpret(Exception exception, out ExceptionKnowledgeBaseEntry entry)
+        public static bool TryInterpret(Exception exception, [NotNullWhen(true)] out ExceptionKnowledgeBaseEntry? entry)
         {
             var unpacked = exception.UnpackFromContainers();
             try
@@ -97,7 +98,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
                         return true;
                 }
             }
-                // ReSharper disable once EmptyGeneralCatchClause
+            // ReSharper disable once EmptyGeneralCatchClause
             catch
             {
             }

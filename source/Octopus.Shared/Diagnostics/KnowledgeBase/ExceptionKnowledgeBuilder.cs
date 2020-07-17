@@ -7,9 +7,9 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
     public class ExceptionKnowledgeBuilder
     {
         readonly List<Func<Exception, IDictionary<string, object>, bool>> clauses = new List<Func<Exception, IDictionary<string, object>, bool>>();
-        Func<IDictionary<string, object>, string> entrySummary = s => null;
-        Func<IDictionary<string, object>, string> entryHelpText = s => null;
-        Func<IDictionary<string, object>, string> entryHelpLink = s => null;
+        Func<IDictionary<string, object>, string?> entrySummary = s => null;
+        Func<IDictionary<string, object>, string?> entryHelpText = s => null;
+        Func<IDictionary<string, object>, string?> entryHelpLink = s => null;
 
         public ExceptionKnowledge Build()
         {

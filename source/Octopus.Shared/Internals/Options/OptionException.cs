@@ -6,19 +6,15 @@ namespace Octopus.Shared.Internals.Options
     [Serializable]
     public class OptionException : Exception
     {
-        readonly string option;
+        readonly string? option;
 
-        public OptionException()
-        {
-        }
-
-        public OptionException(string message, string optionName)
+        public OptionException(string message, string? optionName)
             : base(message)
         {
             option = optionName;
         }
 
-        public OptionException(string message, string optionName, Exception innerException)
+        public OptionException(string message, string? optionName, Exception innerException)
             : base(message, innerException)
         {
             option = optionName;
@@ -30,7 +26,7 @@ namespace Octopus.Shared.Internals.Options
             option = info.GetString("OptionName");
         }
 
-        public string OptionName
+        public string? OptionName
         {
             get { return option; }
         }

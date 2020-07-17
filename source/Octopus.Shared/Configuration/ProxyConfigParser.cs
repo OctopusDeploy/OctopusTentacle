@@ -9,17 +9,17 @@ namespace Octopus.Shared.Configuration
 {
     public interface IProxyConfigParser
     {
-        ProxyDetails ParseToHalibutProxy(IProxyConfiguration config, Uri destination, ILog log);
-        IWebProxy ParseToWebProxy(IProxyConfiguration config);
+        ProxyDetails? ParseToHalibutProxy(IProxyConfiguration config, Uri destination, ILog log);
+        IWebProxy? ParseToWebProxy(IProxyConfiguration config);
     }
 
     public class ProxyConfigParser : IProxyConfigParser
     {
-        public Func<IWebProxy> GetSystemWebProxy = () => PlatformDetection.IsRunningOnWindows ? WebRequest.GetSystemWebProxy() : null; //allow us to swap this for tests without having to inject
+        public Func<IWebProxy?> GetSystemWebProxy = () => PlatformDetection.IsRunningOnWindows ? WebRequest.GetSystemWebProxy() : null; //allow us to swap this for tests without having to inject
 
         public const string ProxyNotConfiguredForDestination = "Agent configured to use the system proxy, but no system proxy is configured for {0}";
 
-        public ProxyDetails ParseToHalibutProxy(IProxyConfiguration config, Uri destination, ILog log)
+        public ProxyDetails? ParseToHalibutProxy(IProxyConfiguration config, Uri destination, ILog log)
         {
             if (config == null)
                 return null;
@@ -60,7 +60,7 @@ namespace Octopus.Shared.Configuration
             return null;
         }
 
-        public IWebProxy ParseToWebProxy(IProxyConfiguration config)
+        public IWebProxy? ParseToWebProxy(IProxyConfiguration config)
         {
             if (config == null)
                 return null;

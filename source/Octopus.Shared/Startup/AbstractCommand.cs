@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
 
 namespace Octopus.Shared.Startup
@@ -11,13 +9,22 @@ namespace Octopus.Shared.Startup
     public abstract class AbstractCommand : ICommand
     {
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
+        ICommandRuntime? runtime;
 
         public virtual bool SuppressConsoleLogging => false;
         public virtual bool CanRunAsService => false;
 
         public OptionSet Options { get; } = new OptionSet();
 
-        protected ICommandRuntime Runtime { get; private set; }
+        protected ICommandRuntime Runtime
+        {
+            get
+            {
+                if (runtime == null)
+                    throw new InvalidOperationException("Start hasn't set the Runtime correctly!");
+                return runtime;
+            }
+        }
 
         protected TOptionSet AddOptionSet<TOptionSet>(TOptionSet commandOptions)
             where TOptionSet : class, ICommandOptions
@@ -49,7 +56,7 @@ namespace Octopus.Shared.Startup
 
         public virtual void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
-            Runtime = commandRuntime;
+            runtime = commandRuntime;
 
             var unrecognized = Options.Parse(commandLineArguments);
             UnrecognizedArguments(unrecognized);
@@ -73,6 +80,8 @@ namespace Octopus.Shared.Startup
                 foreach (var name in sensitiveOption.GetNames())
                 {
                     var option = Options.GetOptionForName(name);
+                    if (option == null)
+                        throw new ArgumentException($"Unable to locate options for command named {name}");
                     //Ideally, we'd ensure that no logging anywhere would log these values, but its way harder than it sounds.
                     //The LogContext is immutable, and designed so that is a tree structure - usually, you only care about
                     //sensitive values for the scope of a deployment, not after that. Changing it to be not immutable
@@ -90,19 +99,19 @@ namespace Octopus.Shared.Startup
             Stop();
         }
 
-        protected void AssertNotNullOrWhitespace(string value, string name, string errorMessage = null)
+        protected void AssertNotNullOrWhitespace(string value, string name, string? errorMessage = null)
         {
             if (string.IsNullOrWhiteSpace(value))
                 throw new ControlledFailureException(errorMessage ?? $"--{name} must be supplied");
         }
 
-        protected void AssertFileExists(string path, string errorMessage = null)
+        protected void AssertFileExists(string path, string? errorMessage = null)
         {
             if (!File.Exists(path))
                 throw new ControlledFailureException(errorMessage ?? $"File '{path}' cannot be found");
         }
 
-        protected void AssertFileDoesNotExist(string path, string errorMessage = null)
+        protected void AssertFileDoesNotExist(string path, string? errorMessage = null)
         {
             if (File.Exists(path))
             {
@@ -110,7 +119,7 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        protected void AssertDirectoryExists(string path, string errorMessage = null)
+        protected void AssertDirectoryExists(string path, string? errorMessage = null)
         {
             if (!Directory.Exists(path))
                 throw new ControlledFailureException(errorMessage ?? $"Directory '{path}' cannot be found");

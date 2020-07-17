@@ -109,7 +109,7 @@ namespace Octopus.Shared.Diagnostics
             }
         }
 
-        public void Write(LogCategory category, Exception error, string messageText)
+        public void Write(LogCategory category, Exception? error, string messageText)
         {
             if (IsEnabled(category))
             {
@@ -123,7 +123,7 @@ namespace Octopus.Shared.Diagnostics
             WriteFormat(category, null, messageFormat, args);
         }
 
-        public void WriteFormat(LogCategory category, Exception error, string messageFormat, params object[] args)
+        public void WriteFormat(LogCategory category, Exception? error, string messageFormat, params object[] args)
         {
             if (!IsEnabled(category))
                 return;

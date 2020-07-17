@@ -18,7 +18,7 @@ namespace Octopus.Shared.Util
             string processFileName;
             using (var currentProcess = Process.GetCurrentProcess())
             {
-                processFileName = currentProcess.MainModule?.FileName;
+                processFileName = currentProcess.MainModule.FileName;
             }
 
             if (processFileName == null || !GetProcessFileName(processFileName).Equals(fileName, StringComparison.OrdinalIgnoreCase))
@@ -28,7 +28,7 @@ namespace Octopus.Shared.Util
 
             return processFileName;
         }
-        
+
         public static string FullLocalPath(this Assembly assembly)
         {
             var codeBase = assembly.CodeBase;

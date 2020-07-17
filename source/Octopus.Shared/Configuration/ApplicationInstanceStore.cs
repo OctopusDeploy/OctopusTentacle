@@ -34,8 +34,8 @@ namespace Octopus.Shared.Configuration
 
         public class Instance
         {
-            public string Name { get; set; }
-            public string ConfigurationFilePath { get; set; }
+            public string Name { get; set; } = string.Empty;
+            public string ConfigurationFilePath { get; set; } = string.Empty;
         }
 
         internal string InstancesFolder(ApplicationName name)
@@ -79,6 +79,13 @@ namespace Octopus.Shared.Configuration
 
         Instance LoadInstanceConfiguration(string path)
         {
+            var result = TryLoadInstanceConfiguration(path);
+            if (result == null)
+                throw new ArgumentException($"Could not load instance at path {path}");
+            return result;
+        }
+        Instance? TryLoadInstanceConfiguration(string path)
+        {
             if (!fileSystem.FileExists(path))
                 return null;
 
@@ -93,15 +100,15 @@ namespace Octopus.Shared.Configuration
             fileSystem.OverwriteFile(path, data);
         }
 
-        public ApplicationInstanceRecord GetInstance(ApplicationName name, string instanceName)
+        public ApplicationInstanceRecord? GetInstance(ApplicationName name, string instanceName)
         {
             var instancesFolder = InstancesFolder(name);
             if (fileSystem.DirectoryExists(instancesFolder))
             {
                 var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config");
-                if (fileSystem.FileExists(instanceConfiguration))
+                var instance = TryLoadInstanceConfiguration(instanceConfiguration);
+                if (instance != null)
                 {
-                    var instance = LoadInstanceConfiguration(instanceConfiguration);
                     return new ApplicationInstanceRecord(instance.Name, name, instance.ConfigurationFilePath);
                 }
             }
@@ -110,11 +117,6 @@ namespace Octopus.Shared.Configuration
             // using the registry. We need to fall back to there if it doesn't exist in the folder yet.
             var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
             return listFromRegistry.FirstOrDefault(x => x.InstanceName == instanceName);
-        }
-
-        public ApplicationInstanceRecord GetDefaultInstance(ApplicationName name)
-        {
-            return GetInstance(name, ApplicationInstanceRecord.GetDefaultInstance(name));
         }
 
         string InstanceFileName(string instanceName)
@@ -130,7 +132,7 @@ namespace Octopus.Shared.Configuration
                 fileSystem.CreateDirectory(instancesFolder);
             }
             var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceRecord.InstanceName) + ".config");
-            var instance = LoadInstanceConfiguration(instanceConfiguration) ?? new Instance
+            var instance = TryLoadInstanceConfiguration(instanceConfiguration) ?? new Instance
             {
                 Name = instanceRecord.InstanceName
             };

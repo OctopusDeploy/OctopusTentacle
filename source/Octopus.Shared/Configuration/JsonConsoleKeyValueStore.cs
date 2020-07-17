@@ -29,7 +29,7 @@ namespace Octopus.Shared.Configuration
             throw new NotSupportedException($"This store is a write-only store, because it is only intended for displaying formatted content to the console. Please use {nameof(JsonFileKeyValueStore)} if you need a readable store.");
         }
         
-        protected override void LoadSettings(IDictionary<string, object> settingsToFill)
+        protected override void LoadSettings(IDictionary<string, object?> settingsToFill)
         {
             throw new NotSupportedException($"This store is a write-only store, because it is only intended for displaying formatted content to the console. Please use {nameof(JsonFileKeyValueStore)} if you need a readable store.");
         }

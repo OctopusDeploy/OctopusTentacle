@@ -12,7 +12,7 @@ namespace Octopus.Shared.Scripts
 {
     public class ScriptIsolationMutex
     {
-        // Reader-writer locks allow multiple readers, but only one writer which blocks readers. This is perfect for our scenario, because 
+        // Reader-writer locks allow multiple readers, but only one writer which blocks readers. This is perfect for our scenario, because
         // we want to allow lots of scripts to run with the 'no' isolation level, but nothing should be running under the 'full' isolation level.
         // NOTE: Changed from ReaderWriterLockSlim to AsyncReaderWriterLock to enable cooperative cancellation whilst waiting for the lock.
         //       Hopefully in a future version of .NET there will be a fully supported ReaderWriterLock with cooperative cancellation support so we can remove this dependency.
@@ -39,7 +39,7 @@ namespace Octopus.Shared.Scripts
             readonly CancellationToken cancellationToken;
             readonly ILogWithContext systemLog;
             readonly string lockType;
-            IDisposable lockReleaser;
+            IDisposable? lockReleaser;
 
             public ScriptIsolationMutexReleaser(ScriptIsolationLevel isolationLevel, Action<string> taskLog, TaskLock taskLock, CancellationToken cancellationToken, TimeSpan mutexAcquireTimeout, string lockName, string taskId)
             {
@@ -78,7 +78,7 @@ namespace Octopus.Shared.Scripts
             {
                 WriteToSystemLog("Releasing lock.");
                 taskLock.RemoveLock(taskId);
-                lockReleaser.Dispose();
+                lockReleaser?.Dispose();
             }
 
             void EnterWriteLock()
@@ -183,16 +183,16 @@ namespace Octopus.Shared.Scripts
 
         internal class TaskLock
         {
-            readonly ConcurrentDictionary<string, object> readersTaskIds = new ConcurrentDictionary<string, object>();
+            readonly ConcurrentDictionary<string, object?> readersTaskIds = new ConcurrentDictionary<string, object?>();
             readonly AsyncReaderWriterLock asyncReaderWriterLock;
-            string writerTaskId;
+            string? writerTaskId;
 
             public TaskLock()
             {
                 asyncReaderWriterLock = new AsyncReaderWriterLock();
             }
 
-            public bool TryEnterWriteLock(string taskId, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable releaseLock)
+            public bool TryEnterWriteLock(string taskId, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable? releaseLock)
             {
                 if (asyncReaderWriterLock.TryEnterWriteLock(timeout, cancellationToken, out releaseLock))
                 {
@@ -203,7 +203,7 @@ namespace Octopus.Shared.Scripts
                 return false;
             }
 
-            public bool TryEnterReadLock(string taskId, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable releaseLock)
+            public bool TryEnterReadLock(string taskId, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable? releaseLock)
             {
                 if (asyncReaderWriterLock.TryEnterReadLock(timeout, cancellationToken, out releaseLock))
                 {
@@ -222,8 +222,7 @@ namespace Octopus.Shared.Scripts
                     return;
                 }
 
-                object _;
-                readersTaskIds.TryRemove(taskId, out _);
+                readersTaskIds.TryRemove(taskId, out var _);
             }
 
             public string Report()
@@ -244,7 +243,7 @@ namespace Octopus.Shared.Scripts
                     }
 
                     var readerTaskIds = String.Join(", ", ids);
-                    
+
                     result = $"\"{readerTaskIds}\"";
 
                     if (ids.Length > 1)

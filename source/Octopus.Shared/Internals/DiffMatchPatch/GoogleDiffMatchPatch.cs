@@ -673,7 +673,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          *     common middle.  Or null if there was no match.
          */
 
-        protected string[] diff_halfMatch(string text1, string text2)
+        protected string[]? diff_halfMatch(string text1, string text2)
         {
             if (Diff_Timeout <= 0)
             {
@@ -694,22 +694,22 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             var hm2 = diff_halfMatchI(longtext, shorttext,
                 (longtext.Length + 1)/2);
             string[] hm;
-            if (hm1 == null && hm2 == null)
-            {
-                return null;
-            }
-            if (hm2 == null)
-            {
-                hm = hm1;
-            }
-            else if (hm1 == null)
-            {
-                hm = hm2;
-            }
-            else
+            if (hm1 != null && hm2 != null)
             {
                 // Both matched.  Select the longest.
                 hm = hm1[4].Length > hm2[4].Length ? hm1 : hm2;
+            }
+            if (hm2 == null && hm1 != null)
+            {
+                hm = hm1;
+            }
+            else if (hm1 == null && hm2 != null)
+            {
+                hm = hm2;
+            }
+            else // both are null
+            {
+                return null;
             }
 
             // A half-match was found, sort out the return data.
@@ -732,7 +732,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          *     and the common middle.  Or null if there was no match.
          */
 
-        string[] diff_halfMatchI(string longtext, string shorttext, int i)
+        string[]? diff_halfMatchI(string longtext, string shorttext, int i)
         {
             // Start with a 1/4 length Substring at position i as a seed.
             var seed = longtext.Substring(i, longtext.Length/4);
@@ -780,7 +780,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             // Stack of indices where equalities are found.
             var equalities = new Stack<int>();
             // Always equal to equalities[equalitiesLength-1][1]
-            string lastequality = null;
+            string? lastequality = null;
             var pointer = 0; // Index of current position.
             // Number of characters that changed prior to the equality.
             var length_insertions1 = 0;
@@ -1326,7 +1326,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
             var chars2 = 0;
             var last_chars1 = 0;
             var last_chars2 = 0;
-            Diff lastDiff = null;
+            Diff? lastDiff = null;
             foreach (var aDiff in diffs)
             {
                 if (aDiff.operation != Operation.INSERT)
@@ -2334,7 +2334,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
                     precontext = precontext.Substring(Math.Max(0,
                         precontext.Length - Patch_Margin));
 
-                    string postcontext = null;
+                    string? postcontext = null;
                     // Append the end context for this patch.
                     if (diff_text1(bigpatch.diffs).Length > Patch_Margin)
                     {

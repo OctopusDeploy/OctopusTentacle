@@ -6,19 +6,19 @@ namespace Octopus.Shared.Configuration
 {
     public abstract class DictionaryKeyValueStore : AbstractKeyValueStore
     {
-        private Lazy<IDictionary<string, object>> settings;
+        Lazy<IDictionary<string, object?>> settings;
 
         protected DictionaryKeyValueStore(bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet)
         {
-            settings = isWriteOnly ? new Lazy<IDictionary<string, object>>(() => new Dictionary<string, object>()) : new Lazy<IDictionary<string, object>>(Load);
+            settings = isWriteOnly ? new Lazy<IDictionary<string, object?>>(() => new Dictionary<string, object?>()) : new Lazy<IDictionary<string, object?>>(Load);
         }
 
-        protected void Write(string key, object value)
+        protected void Write(string key, object? value)
         {
             settings.Value[key] = value;
         }
 
-        protected object Read(string key)
+        protected object? Read(string key)
         {
             return settings.Value.TryGetValue(key, out var result) ? result : null;
         }
@@ -31,26 +31,26 @@ namespace Octopus.Shared.Configuration
         public sealed override void Save()
         {
             SaveSettings(settings.Value);
-            
+
             // we're reloading on save because at this point the dictionary may contain non-string values (i.e. int/bool/etc)
-            // after reload the dictionary will contain the formatted strings that are converted during the Get<T> call 
+            // after reload the dictionary will contain the formatted strings that are converted during the Get<T> call
             // Reads vastly outnumber writes so performance is not really a concern here.
             // Also, future plan is to move as much configuration to the database as possible.
-            settings = new Lazy<IDictionary<string, object>>(Load);
+            settings = new Lazy<IDictionary<string, object?>>(Load);
         }
 
-        private IDictionary<string, object> Load()
+        IDictionary<string, object?> Load()
         {
-            var dictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            var dictionary = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
             LoadSettings(dictionary);
             return dictionary;
         }
 
-        protected virtual void LoadSettings(IDictionary<string, object> settingsToFill)
+        protected virtual void LoadSettings(IDictionary<string, object?> settingsToFill)
         {
         }
 
-        protected virtual void SaveSettings(IDictionary<string, object> settingsToSave)
+        protected virtual void SaveSettings(IDictionary<string, object?> settingsToSave)
         {
         }
 

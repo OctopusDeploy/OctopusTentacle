@@ -21,7 +21,7 @@ namespace Octopus.Shared.Startup
         private readonly string monitorMutexHost;
         private readonly CancellationTokenSource sourceToken = new CancellationTokenSource();
         private readonly ManualResetEventSlim shutdownTrigger = new ManualResetEventSlim(false);
-        private Task task;
+        private Task? task;
 
         public MutexHost(string monitorMutexHost)
         {
@@ -45,7 +45,7 @@ namespace Octopus.Shared.Startup
                     }
                 });
             }
-            
+
             start(this);
         }
 

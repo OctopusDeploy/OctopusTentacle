@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,7 +5,7 @@ namespace Octopus.Shared.Configuration
 {
     public class NullRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
-        public ApplicationInstanceRecord GetInstanceFromRegistry(ApplicationName name, string instanceName)
+        public ApplicationInstanceRecord? GetInstanceFromRegistry(ApplicationName name, string instanceName)
         {
             return null;
         }
@@ -18,7 +17,6 @@ namespace Octopus.Shared.Configuration
 
         public void DeleteFromRegistry(ApplicationName name, string instanceName)
         {
-            return;
         }
     }
 }

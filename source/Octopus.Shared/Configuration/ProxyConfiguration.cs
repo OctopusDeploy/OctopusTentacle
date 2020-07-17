@@ -30,9 +30,9 @@ namespace Octopus.Shared.Configuration
             set { settings.Set("Octopus.Proxy.ProxyPassword", value, ProtectionLevel.MachineKey); }
         }
 
-        public string CustomProxyHost
+        public string? CustomProxyHost
         {
-            get { return settings.Get("Octopus.Proxy.ProxyHost", string.Empty); }
+            get { return settings.Get("Octopus.Proxy.ProxyHost"); }
             set { settings.Set("Octopus.Proxy.ProxyHost", value); }
         }
 

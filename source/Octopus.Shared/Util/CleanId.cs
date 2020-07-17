@@ -7,7 +7,7 @@ namespace Octopus.Shared.Util
     /// </summary>
     public struct CleanId
     {
-        readonly string value;
+        readonly string? value;
 
         public CleanId(string value)
         {
@@ -30,7 +30,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        public static implicit operator string(CleanId @this)
+        public static implicit operator string?(CleanId @this)
         {
             return @this.value;
         }

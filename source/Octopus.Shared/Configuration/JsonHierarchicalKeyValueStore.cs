@@ -12,7 +12,7 @@ namespace Octopus.Shared.Configuration
             JsonSerializerSettings = settings;
         }
 
-        protected override void SaveSettings(IDictionary<string, object> settingsToSave)
+        protected override void SaveSettings(IDictionary<string, object?> settingsToSave)
         {
             var data = new ObjectHierarchy();
             foreach (var kvp in settingsToSave)
@@ -24,20 +24,20 @@ namespace Octopus.Shared.Configuration
                 {
                     var keyHierarchyItem = keyHierarchyItems[i];
 
-                    if (node.ContainsKey(keyHierarchyItem))
+                    if (node != null && node.ContainsKey(keyHierarchyItem))
                     {
-                        node = (ObjectHierarchy)node[keyHierarchyItem];
+                        node = node[keyHierarchyItem] as ObjectHierarchy;
                     }
                     else
                     {
-                        if (i == keyHierarchyItems.Length - 1)
+                        if (node != null && i == keyHierarchyItems.Length - 1)
                         {
                             node.Add(keyHierarchyItem, kvp.Value);
                         }
                         else
                         {
                             var newNode = new ObjectHierarchy();
-                            node.Add(keyHierarchyItem, newNode);
+                            node?.Add(keyHierarchyItem, newNode);
                             node = newNode;
                         }
                     }
@@ -51,7 +51,7 @@ namespace Octopus.Shared.Configuration
         protected abstract void WriteSerializedData(string serializedData);
     }
 
-    public class ObjectHierarchy : SortedDictionary<string, object>
+    public class ObjectHierarchy : SortedDictionary<string, object?>
     {
     }
 }

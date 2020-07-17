@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Octopus.Configuration;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
@@ -19,7 +18,7 @@ namespace Octopus.Shared.Configuration
             this.configurationFile = PathHelper.ResolveRelativeFilePath(configurationFile);
         }
 
-        protected override void LoadSettings(IDictionary<string, object> settingsToFill)
+        protected override void LoadSettings(IDictionary<string, object?> settingsToFill)
         {
             if (!ExistsForReading())
                 throw new Exception(string.Format("Configuration file {0} could not be found.", configurationFile));

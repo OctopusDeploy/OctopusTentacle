@@ -1,18 +1,19 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Octopus.Shared.Diagnostics.KnowledgeBase
 {
     public class ExceptionKnowledge
     {
-        readonly Func<Exception, ExceptionKnowledgeBaseEntry> tryMatch;
+        readonly Func<Exception, ExceptionKnowledgeBaseEntry?> tryMatch;
 
-        public ExceptionKnowledge(Func<Exception, ExceptionKnowledgeBaseEntry> tryMatch)
+        public ExceptionKnowledge(Func<Exception, ExceptionKnowledgeBaseEntry?> tryMatch)
         {
             if (tryMatch == null) throw new ArgumentNullException("tryMatch");
             this.tryMatch = tryMatch;
         }
 
-        public bool TryMatch(Exception exception, out ExceptionKnowledgeBaseEntry entry)
+        public bool TryMatch(Exception exception, [NotNullWhen(true)] out ExceptionKnowledgeBaseEntry? entry)
         {
             var m = tryMatch(exception);
             if (m == null)

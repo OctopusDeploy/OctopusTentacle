@@ -15,7 +15,7 @@ namespace Octopus.Shared.Security.Certificates
     public static class CertificateEncoder
     {
         static readonly ILog Log = Diagnostics.Log.System();
-        
+
         public static X509Certificate2 FromPfxFile(string pfxFilePath, string password)
         {
             X509Certificate2Collection certificates = new X509Certificate2Collection();
@@ -72,7 +72,7 @@ namespace Octopus.Shared.Security.Certificates
             var encoded = Convert.ToBase64String(exported);
             return encoded;
         }
-        
+
         public static X509Certificate2 FromBase64String(string certificateString)
         {
             return FromBase64String(null, certificateString, null);
@@ -82,12 +82,12 @@ namespace Octopus.Shared.Security.Certificates
             return FromBase64String(thumbprint, certificateString, null);
         }
 
-        public static X509Certificate2 FromBase64String(string thumbprint, string certificateString, string password)
+        public static X509Certificate2 FromBase64String(string? thumbprint, string certificateString, string? password)
         {
             if (certificateString == null) throw new ArgumentNullException(nameof(certificateString));
             var store = new X509Store(PlatformDetection.IsRunningOnWindows ? "Octopus" : "My", StoreLocation.CurrentUser);
             store.Open(OpenFlags.ReadWrite);
-            
+
             try
             {
                 if (thumbprint != null)
@@ -115,7 +115,7 @@ namespace Octopus.Shared.Security.Certificates
                     {
                         certificate = LoadCertificateWithPrivateKey(file, password);
                     }
-                    
+
                     if (certificate == null)
                     {
                         throw new CryptographicException("Unable to load X509 Certificate file. The provided certificate or password may be invalid.");
@@ -136,14 +136,15 @@ namespace Octopus.Shared.Security.Certificates
             }
         }
 
-        static X509Certificate2 LoadCertificateWithPrivateKey(string file, string password)
+        static X509Certificate2 LoadCertificateWithPrivateKey(string file, string? password)
         {
             return TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, true)
                 ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, true)
-                    ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, true)
-                        ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, false)
-                            ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, false)
-                                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, false);
+                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, true)
+                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, false)
+                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, false)
+                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, false)
+                ?? throw new InvalidOperationException($"Unable to load certificate from file {file}");
         }
 
         static bool CheckThatCertificateWasLoadedWithPrivateKey(X509Certificate2 certificate)
@@ -208,7 +209,7 @@ namespace Octopus.Shared.Security.Certificates
             }
         }
 
-        static X509Certificate2 TryLoadCertificate(string file, string password, X509KeyStorageFlags flags, bool requirePrivateKey)
+        static X509Certificate2? TryLoadCertificate(string file, string? password, X509KeyStorageFlags flags, bool requirePrivateKey)
         {
             try
             {
@@ -241,6 +242,7 @@ namespace Octopus.Shared.Security.Certificates
             directory.SetAccessControl(security);
         }
 
+#nullable disable
         #region Nested type: CryptUtils
 
         // This code is from a Microsoft sample that resolves the path to a certificate's private key

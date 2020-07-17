@@ -86,8 +86,7 @@ namespace Octopus.Shared.Util
 
         static void AddStackTrace(StringBuilder sb, Exception ex)
         {
-            var rtle = ex as ReflectionTypeLoadException;
-            if (rtle != null)
+            if (ex is ReflectionTypeLoadException rtle)
                 AddReflectionTypeLoadExceptionDetails(rtle, sb);
 
             sb.AppendLine(ex.GetType().FullName);
@@ -151,7 +150,7 @@ namespace Octopus.Shared.Util
             return message.ToString();
         }
 
-        public static string SuggestSolution(this HttpListenerException error, IList<Uri> prefixes)
+        public static string? SuggestSolution(this HttpListenerException error, IList<Uri> prefixes)
         {
             if (error.ErrorCode != 5)
                 return null;
@@ -175,6 +174,6 @@ namespace Octopus.Shared.Util
 
             return message.ToString();
         }
-        
+
     }
 }

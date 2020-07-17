@@ -18,7 +18,7 @@ namespace Octopus.Shared.Contracts
         readonly Dictionary<ScriptType, string> additionalScripts = new Dictionary<ScriptType, string>();
 
         TimeSpan scriptIsolationMutexTimeout = ScriptIsolationMutex.NoTimeout;
-        string taskId;
+        string? taskId;
 
         public StartScriptCommandBuilder WithScriptBody(string scriptBody)
         {

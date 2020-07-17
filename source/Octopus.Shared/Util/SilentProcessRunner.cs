@@ -68,8 +68,8 @@ namespace Octopus.Shared.Util
             string workingDirectory,
             Action<string> info,
             Action<string> error,
-            NetworkCredential runAs = default(NetworkCredential),
-            IDictionary<string, string> customEnvironmentVariables = null,
+            NetworkCredential? runAs = default(NetworkCredential),
+            IDictionary<string, string>? customEnvironmentVariables = null,
             CancellationToken cancel = default(CancellationToken))
         {
             return ExecuteCommand(executable, arguments, workingDirectory, LogFileOnlyLogger.Current.Info, info, error, runAs, customEnvironmentVariables, cancel);
@@ -82,8 +82,8 @@ namespace Octopus.Shared.Util
             Action<string> debug,
             Action<string> info,
             Action<string> error,
-            NetworkCredential runAs = default(NetworkCredential),
-            IDictionary<string, string> customEnvironmentVariables = null,
+            NetworkCredential? runAs = default(NetworkCredential),
+            IDictionary<string, string>? customEnvironmentVariables = null,
             CancellationToken cancel = default(CancellationToken))
         {
             void WriteData(Action<string> action, ManualResetEventSlim resetEvent, DataReceivedEventArgs e)
@@ -121,14 +121,14 @@ namespace Octopus.Shared.Util
                 var encoding = EncodingDetector.GetOEMEncoding();;
                 var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
                 var runAsSameUser = runAs == default(NetworkCredential);
-                var runningAs = runAsSameUser
+                var runningAs = runAs == default(NetworkCredential)
                     ? $@"{ProcessIdentity.CurrentUserName}"
                     : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
 
                 var customEnvironmentVars = hasCustomEnvironmentVariables
                         ? (runAsSameUser
-                            ? $"the same environment variables as the launching process plus {customEnvironmentVariables.Count} custom variable(s)"
-                            : $"that user's environment variables plus {customEnvironmentVariables.Count} custom variable(s)"
+                            ? $"the same environment variables as the launching process plus {customEnvironmentVariables?.Count} custom variable(s)"
+                            : $"that user's environment variables plus {customEnvironmentVariables?.Count} custom variable(s)"
                         )
                         : (runAsSameUser
                             ? "the same environment variables as the launching process"
@@ -147,7 +147,7 @@ namespace Octopus.Shared.Util
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
 
-                    if (runAsSameUser)
+                    if (runAs == default(NetworkCredential))
                     {
                         RunAsSameUser(process.StartInfo, customEnvironmentVariables);
                     }
@@ -254,8 +254,8 @@ namespace Octopus.Shared.Util
             string executable,
             string arguments,
             string workingDirectory,
-            NetworkCredential runAs = default(NetworkCredential),
-            IDictionary<string, string> customEnvironmentVariables = null)
+            NetworkCredential? runAs = default(NetworkCredential),
+            IDictionary<string, string>? customEnvironmentVariables = null)
         {
             try
             {
@@ -289,7 +289,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        private static void RunAsSameUser(ProcessStartInfo processStartInfo, IDictionary<string, string> customEnvironmentVariables)
+        private static void RunAsSameUser(ProcessStartInfo processStartInfo, IDictionary<string, string>? customEnvironmentVariables)
         {
             // Accessing the ProcessStartInfo.EnvironmentVariables dictionary will pre-load the environment variables for the current process
             // Then we'll add/overwrite with the customEnvironmentVariables
@@ -302,7 +302,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        private static void RunAsDifferentUser(ProcessStartInfo startInfo, NetworkCredential runAs, IDictionary<string, string> customEnvironmentVariables)
+        private static void RunAsDifferentUser(ProcessStartInfo startInfo, NetworkCredential runAs, IDictionary<string, string>? customEnvironmentVariables)
         {
 #pragma warning disable PC001 // API not supported on all platforms
             startInfo.UserName = runAs.UserName;
@@ -547,7 +547,7 @@ namespace Octopus.Shared.Util
         // See http://stackoverflow.com/questions/677874/starting-a-process-with-credentials-from-a-windows-service/30687230#30687230
         internal class WindowStationAndDesktopAccess
         {
-            public static void GrantAccessToWindowStationAndDesktop(string username, string domainName = null)
+            public static void GrantAccessToWindowStationAndDesktop(string username, string? domainName = null)
             {
                 var hWindowStation = Win32Helper.Invoke(() => GetProcessWindowStation(), "Failed to get a handle to the current window station for this process");
                 const int windowStationAllAccess = 0x000f037f;
@@ -557,7 +557,7 @@ namespace Octopus.Shared.Util
                 GrantAccess(username, domainName, hDesktop, desktopRightsAllAccess);
             }
 
-            static void GrantAccess(string username, string domainName, IntPtr handle, int accessMask)
+            static void GrantAccess(string username, string? domainName, IntPtr handle, int accessMask)
             {
                 SafeHandle safeHandle = new NoopSafeHandle(handle);
                 var security =

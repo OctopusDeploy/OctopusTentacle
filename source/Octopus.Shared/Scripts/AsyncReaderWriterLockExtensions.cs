@@ -7,7 +7,7 @@ namespace Octopus.Shared.Scripts
 {
     public static class AsyncReaderWriterLockExtensions
     {
-        public static bool TryEnterReadLock(this AsyncReaderWriterLock @lock, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable releaseLock)
+        public static bool TryEnterReadLock(this AsyncReaderWriterLock @lock, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable? releaseLock)
         {
             releaseLock = null;
             using (var timeoutSource = new CancellationTokenSource(timeout))
@@ -25,7 +25,7 @@ namespace Octopus.Shared.Scripts
             }
         }
 
-        public static bool TryEnterWriteLock(this AsyncReaderWriterLock @lock, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable releaseLock)
+        public static bool TryEnterWriteLock(this AsyncReaderWriterLock @lock, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable? releaseLock)
         {
             releaseLock = null;
             using (var timeoutSource = new CancellationTokenSource(timeout))
