@@ -392,8 +392,8 @@
       <HintPath>..\packages\FluentValidation.7.2.1\lib\net45\FluentValidation.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Halibut, Version=4.3.31.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Halibut.4.3.31\lib\net45\Halibut.dll</HintPath>
+    <Reference Include="Halibut, Version=4.3.32.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Halibut.4.3.32\lib\net45\Halibut.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MaterialDesignColors, Version=1.2.0.325, Culture=neutral, PublicKeyToken=null">
