@@ -40,7 +40,7 @@ namespace Octopus.Shared.Startup
                 log.Info($"Setting watchdog task interval to {v} minutes");
                 interval = int.Parse(v);
             });
-            Options.Add("instances=", "List of instances to be checked (default: *)", v =>
+            Options.Add("instances=", "Comma separated list of instances to be checked, or * to check all instances (default: *)", v =>
             {
                 instances = new HashSet<string>(v.Split(',', ';'));
             });
