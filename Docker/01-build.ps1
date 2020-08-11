@@ -6,7 +6,7 @@ param (
 )
 $VerbosePreference = "continue"
 
-. ./Scripts/build-common.ps1
+. ./Docker/Scripts/build-common.ps1
 
 Confirm-RunningFromRootDirectory
 
