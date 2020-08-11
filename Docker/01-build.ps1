@@ -19,7 +19,7 @@ TeamCity-Block("Build") {
     $baseImage = "mcr.microsoft.com/windows/servercore"
   }
 
-  docker build --pull --tag registry.gitlab.com/octopus-devops/container-registry/tentacle:$imageVersion --build-arg SERVERCORE_VERSION=$OSVersion --build-arg BASE_IMAGE=$baseImage --build-arg TentacleVersion=$TentacleVersion --file Tentacle\Dockerfile .
+  docker build --pull --tag registry.gitlab.com/octopus-devops/container-registry/octopus-tentacle:$imageVersion --build-arg SERVERCORE_VERSION=$OSVersion --build-arg BASE_IMAGE=$baseImage --build-arg TentacleVersion=$TentacleVersion --file Docker\Dockerfile .
 
   if($LastExitCode -ne 0) {
     $last = $LastExitCode
