@@ -1,0 +1,64 @@
+version: '2.1'
+services:
+  db:
+    image: "${SQL_IMAGE}"
+    environment:
+      sa_password: "${SA_PASSWORD}"
+      ACCEPT_EULA: "Y"
+    healthcheck:
+      test: [ "CMD", "sqlcmd", "-U", "sa", "-P", "${SA_PASSWORD}", "-Q", "select 1" ]
+      interval: 10s
+      retries: 10
+  octopus:
+    image: octopusdeploy/octopusdeploy:${OCTOPUS_VERSION}
+    environment:
+      OctopusAdminUsername: "${OCTOPUS_ADMIN_USERNAME}"
+      OctopusAdminPassword: "${OCTOPUS_ADMIN_PASSWORD}"
+      sqlDbConnectionString: "Server=db,1433;Initial Catalog=Octopus;Persist Security Info=False;User ID=sa;Password=${SA_PASSWORD};MultipleActiveResultSets=False;Connection Timeout=30;"
+      OctopusSkipImportVersionCheck: "${OCTOPUS_SKIP_IMPORT_VERSION_CHECK}"
+      ACCEPT_EULA: "Y"
+    ports:
+     - "81"
+     - "10943"
+    depends_on:
+      db:
+        condition: service_healthy
+    stdin_open: true #Process sits and waits for ReadLine
+    volumes:
+      - "../Testing/Import:C:/Import"
+      - "../Testing/Repository:C:/Repository"
+  listeningtentacle:
+    image: octopusdeploy/tentacle${OCTOPUS_TENTACLE_REPO_SUFFIX}:${TENTACLE_VERSION}
+    depends_on:
+      octopus:
+        condition: service_healthy
+    environment:
+      ServerUsername: "${OCTOPUS_ADMIN_USERNAME}"
+      ServerPassword: "${OCTOPUS_ADMIN_PASSWORD}"
+      TargetEnvironment: "Development"
+      TargetRole: "app-server"
+      ServerUrl: "http://octopus:81"
+    stdin_open: true #Process sits and waits for ReadLine
+    volumes:
+      - "../Temp/ListeningApplications:C:/Applications"
+      - "../Temp/ListeningHome:C:/TentacleHome"
+  pollingtentacle:
+    image: octopusdeploy/tentacle${OCTOPUS_TENTACLE_REPO_SUFFIX}:${TENTACLE_VERSION}
+    depends_on:
+      octopus:
+        condition: service_healthy
+    environment:
+      ServerUsername: "${OCTOPUS_ADMIN_USERNAME}"
+      ServerPassword: "${OCTOPUS_ADMIN_PASSWORD}"
+      TargetEnvironment: "Development"
+      TargetRole: "web-server"
+      ServerUrl: "http://octopus:81"
+      ServerPort: "10943"
+    stdin_open: true #Process sits and waits for ReadLine
+    volumes:
+      - "../Temp/PollingApplications:C:/Applications"
+      - "../Temp/PollingHome:C:/TentacleHome"
+networks:
+  default:
+    external:
+      name: nat
