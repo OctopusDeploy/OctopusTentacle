@@ -76,7 +76,7 @@ function Stop-DockerCompose($projectName, $composeFile) {
   & docker-compose --file $composeFile --project-name $ProjectName stop
 
   write-host "Removing $projectName compose project"
-  & docker-compose --file $composeFile --project-name $ProjectName down --remove-orphans
+  & docker-compose --file $composeFile --project-name $ProjectName down --remove-orphans --volumes
 
   if(!$(Test-RunningUnderTeamCity) -and (Test-Path .\Temp)) {
     Write-Host "Cleaning up Temp"
