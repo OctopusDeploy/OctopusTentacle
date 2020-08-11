@@ -3,7 +3,7 @@ param (
   [string]$ProjectName="octopusdocker"
 )
 
-. ./Scripts/build-common.ps1
+. ./Docker/Scripts/build-common.ps1
 Confirm-RunningFromRootDirectory
 
 TeamCity-Block("Stop and remove compose project") {

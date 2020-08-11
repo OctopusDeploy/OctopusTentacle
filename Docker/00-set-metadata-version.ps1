@@ -3,7 +3,7 @@ param (
   [string]$OctopusVersion="latest"
 )
 
-. ./Scripts/build-common.ps1
+. ./Docker/Scripts/build-common.ps1
 
 function Get-OctopusServerVersion($version){
   $dockerImage = "octopusdeploy/octopusdeploy:$version"
