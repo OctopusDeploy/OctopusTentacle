@@ -9,7 +9,7 @@ param (
   [string]$OSVersion
 )
 
-. ./Scripts/build-common.ps1
+. ./Docker/Scripts/build-common.ps1
 
 $env:OCTOPUS_VERSION=$OctopusVersion;
 $env:TENTACLE_VERSION=Get-ImageVersion $TentacleVersion $OSVersion;

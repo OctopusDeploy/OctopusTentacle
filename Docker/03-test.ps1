@@ -7,7 +7,7 @@ param (
 	[string]$TentacleVersion="3.22.0"
 )
 
-. ./Scripts/build-common.ps1
+. ./Docker/Scripts/build-common.ps1
 
 Add-Type -Path './Testing/Tools/Octopus.Client.dll'
 
