@@ -1,7 +1,8 @@
 version: '2.1'
+
 services:
   db:
-    image: "${SQL_IMAGE}"
+    image: ${SQL_IMAGE}:${OS_VERSION}
     environment:
       sa_password: "${SA_PASSWORD}"
       ACCEPT_EULA: "Y"
@@ -9,8 +10,9 @@ services:
       test: [ "CMD", "sqlcmd", "-U", "sa", "-P", "${SA_PASSWORD}", "-Q", "select 1" ]
       interval: 10s
       retries: 10
-  octopus:
-    image: octopusdeploy/octopusdeploy:${OCTOPUS_VERSION}
+
+  octopus-server:
+    image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy:${OCTOPUS_VERSION}-${OS_VERSION}
     environment:
       OctopusAdminUsername: "${OCTOPUS_ADMIN_USERNAME}"
       OctopusAdminPassword: "${OCTOPUS_ADMIN_PASSWORD}"
@@ -25,12 +27,13 @@ services:
         condition: service_healthy
     stdin_open: true #Process sits and waits for ReadLine
     volumes:
-      - "../Testing/Import:C:/Import"
-      - "../Testing/Repository:C:/Repository"
-  listeningtentacle:
-    image: octopusdeploy/tentacle${OCTOPUS_TENTACLE_REPO_SUFFIX}:${TENTACLE_VERSION}
+      - "./docker/Volumes/octopus-server/Import:C:/Import"
+      - "./docker/Volumes/octopus-server/Repository:C:/Repository"
+
+  listening-tentacle:
+    image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-${OS_VERSION}
     depends_on:
-      octopus:
+      octopus-server:
         condition: service_healthy
     environment:
       ServerUsername: "${OCTOPUS_ADMIN_USERNAME}"
@@ -40,12 +43,13 @@ services:
       ServerUrl: "http://octopus:81"
     stdin_open: true #Process sits and waits for ReadLine
     volumes:
-      - "../Temp/ListeningApplications:C:/Applications"
-      - "../Temp/ListeningHome:C:/TentacleHome"
-  pollingtentacle:
-    image: octopusdeploy/tentacle${OCTOPUS_TENTACLE_REPO_SUFFIX}:${TENTACLE_VERSION}
+      - "./docker/Volumes/listening-tentacle/Applications:C:/Applications"
+      - "./docker/Volumes/listening-tentacle/TentacleHome:C:/TentacleHome"
+
+  polling-tentacle:
+    image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-${OS_VERSION}
     depends_on:
-      octopus:
+      octopus-server:
         condition: service_healthy
     environment:
       ServerUsername: "${OCTOPUS_ADMIN_USERNAME}"
@@ -56,8 +60,9 @@ services:
       ServerPort: "10943"
     stdin_open: true #Process sits and waits for ReadLine
     volumes:
-      - "../Temp/PollingApplications:C:/Applications"
-      - "../Temp/PollingHome:C:/TentacleHome"
+      - "./docker/Volumes/polling-tentacle/Applications:C:/Applications"
+      - "./docker/Volumes/polling-tentacle/TentacleHome:C:/TentacleHome"
+
 networks:
   default:
     external:
