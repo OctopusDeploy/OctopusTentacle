@@ -6,10 +6,10 @@ HEALTHCHECK --interval=20s --timeout=20s --retries=6 CMD powershell -file ./Tent
 
 EXPOSE 10933
 
-ADD Docker/Scripts/*.ps1 /Scripts/
+ADD docker/windows/Scripts/*.ps1 /Scripts/
 
-ARG TentacleVersion
-ENV TentacleVersion ${TentacleVersion}
+ARG TENTACLE_VERSION
+ENV TentacleVersion ${TENTACLE_VERSION}
 
 LABEL \
     org.label-schema.schema-version="1.0" \
