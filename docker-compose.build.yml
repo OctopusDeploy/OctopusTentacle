@@ -9,7 +9,7 @@ services:
                 SERVERCORE_VERSION: 1607
                 BUILD_DATE: ${BUILD_DATE:?err}
                 TENTACLE_VERSION: ${BUILD_NUMBER:?err}
-        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER}-1607
+        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER?err}-1607
 
     octopusdeploy-tentacle-windows-1809:
         build:
@@ -20,7 +20,7 @@ services:
                 SERVERCORE_VERSION: 1809
                 BUILD_DATE: ${BUILD_DATE:?err}
                 TENTACLE_VERSION: ${BUILD_NUMBER:?err}
-        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER}-1809
+        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER?err}-1809
 
     octopusdeploy-tentacle-windows-1903:
         build:
@@ -31,7 +31,7 @@ services:
                 SERVERCORE_VERSION: 1903
                 BUILD_DATE: ${BUILD_DATE:?err}
                 TENTACLE_VERSION: ${BUILD_NUMBER:?err}
-        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER}-1903
+        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER?err}-1903
 
     octopusdeploy-tentacle-windows-1909:
         build:
@@ -42,4 +42,4 @@ services:
                 SERVERCORE_VERSION: 1909
                 BUILD_DATE: ${BUILD_DATE:?err}
                 TENTACLE_VERSION: ${BUILD_NUMBER:?err}
-        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER}-1909
+        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER?err}-1909
