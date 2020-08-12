@@ -40,7 +40,7 @@ services:
       ServerPassword: "${OCTOPUS_ADMIN_PASSWORD}"
       TargetEnvironment: "Development"
       TargetRole: "app-server"
-      ServerUrl: "http://octopus:81"
+      ServerUrl: "http://octopus-server:81"
     stdin_open: true #Process sits and waits for ReadLine
     volumes:
       - "./docker/Volumes/listening-tentacle/Applications:C:/Applications"
@@ -56,7 +56,7 @@ services:
       ServerPassword: "${OCTOPUS_ADMIN_PASSWORD}"
       TargetEnvironment: "Development"
       TargetRole: "web-server"
-      ServerUrl: "http://octopus:81"
+      ServerUrl: "http://octopus-server:81"
       ServerPort: "10943"
     stdin_open: true #Process sits and waits for ReadLine
     volumes:
