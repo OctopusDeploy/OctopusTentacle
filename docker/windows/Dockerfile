@@ -16,13 +16,13 @@ LABEL \
     org.label-schema.license="Apache"  \
     org.label-schema.description="Octopus Tentacle instance with auto-registration to Octopus Server" \
     org.label-schema.version=${BUILD_NUMBER} \
-    org.label-schema.build-date=$BUILD_DATE
+    org.label-schema.build-date=${BUILD_DATE}
 
 EXPOSE 10933
 
 WORKDIR /tmp
 RUN \
-    curl --fail -O https://s3-ap-southeast-1.amazonaws.com/octopus-testing/tentacle/Octopus.Tentacle.%BUILD_NUMBER%-x64.msi && \
+    curl --fail --silent -O https://s3-ap-southeast-1.amazonaws.com/octopus-testing/tentacle/Octopus.Tentacle.%BUILD_NUMBER%-x64.msi && \
     msiexec /i Octopus.Tentacle.%BUILD_NUMBER%-x64.msi /qn /l*v Tentacle-Installation.log && \
     del /f Octopus.Tentacle.%BUILD_NUMBER%-x64.msi
 
