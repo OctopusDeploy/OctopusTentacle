@@ -1,0 +1,45 @@
+version: '3'
+services:
+    octopusdeploy-tentacle-windows-1607:
+        build:
+            context: .
+            dockerfile: ./docker/windows/Dockerfile
+            args:
+                BASE_IMAGE: microsoft/windowsservercore
+                SERVERCORE_VERSION: 1607
+                BUILD_DATE: ${BUILD_DATE:?err}
+                OCTOPUS_VERSION: ${BUILD_NUMBER:?err}
+        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER}-1607
+
+    octopusdeploy-tentacle-windows-1809:
+        build:
+            context: .
+            dockerfile: ./docker/windows/Dockerfile
+            args:
+                BASE_IMAGE: mcr.microsoft.com/windows/servercore
+                SERVERCORE_VERSION: 1809
+                BUILD_DATE: ${BUILD_DATE:?err}
+                OCTOPUS_VERSION: ${BUILD_NUMBER:?err}
+        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER}-1809
+
+    octopusdeploy-tentacle-windows-1903:
+        build:
+            context: .
+            dockerfile: ./docker/windows/Dockerfile
+            args:
+                BASE_IMAGE: mcr.microsoft.com/windows/servercore
+                SERVERCORE_VERSION: 1903
+                BUILD_DATE: ${BUILD_DATE:?err}
+                OCTOPUS_VERSION: ${BUILD_NUMBER:?err}
+        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER}-1903
+
+    octopusdeploy-tentacle-windows-1909:
+        build:
+            context: .
+            dockerfile: ./docker/windows/Dockerfile
+            args:
+                BASE_IMAGE: mcr.microsoft.com/windows/servercore
+                SERVERCORE_VERSION: 1909
+                BUILD_DATE: ${BUILD_DATE:?err}
+                OCTOPUS_VERSION: ${BUILD_NUMBER:?err}
+        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER}-1909
