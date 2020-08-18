@@ -1,4 +1,4 @@
-version: '2.1'
+version: "3"
 
 services:
   db:
@@ -23,8 +23,7 @@ services:
      - "81"
      - "10943"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     stdin_open: true #Process sits and waits for ReadLine
     volumes:
       - "./docker/Volumes/octopus-server/Import:C:/Import"
@@ -33,8 +32,7 @@ services:
   listening-tentacle:
     image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-${OS_VERSION}
     depends_on:
-      octopus-server:
-        condition: service_healthy
+      - octopus-server
     environment:
       ServerUsername: "${OCTOPUS_ADMIN_USERNAME}"
       ServerPassword: "${OCTOPUS_ADMIN_PASSWORD}"
@@ -49,8 +47,7 @@ services:
   polling-tentacle:
     image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-${OS_VERSION}
     depends_on:
-      octopus-server:
-        condition: service_healthy
+      - octopus-server
     environment:
       ServerUsername: "${OCTOPUS_ADMIN_USERNAME}"
       ServerPassword: "${OCTOPUS_ADMIN_PASSWORD}"
