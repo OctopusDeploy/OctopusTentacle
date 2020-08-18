@@ -59,8 +59,3 @@ services:
     volumes:
       - "./docker/Volumes/polling-tentacle/Applications:C:/Applications"
       - "./docker/Volumes/polling-tentacle/TentacleHome:C:/TentacleHome"
-
-networks:
-  default:
-    external:
-      name: nat
