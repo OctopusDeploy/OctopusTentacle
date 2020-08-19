@@ -8,6 +8,9 @@ param(
 	[ValidateNotNullOrEmpty()]
 	[string]$TentacleVersion
 )
+
+Add-Type -Path './Testing/Tools/Octopus.Client.dll'
+
 $OctopusURI="http://$($IPAddress):81"
 
 function Registration-Tests($Tentacles){

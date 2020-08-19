@@ -1,29 +1,31 @@
 param(
-  [ValidateNotNullOrEmpty()]
+	[ValidateNotNullOrEmpty()]
 	[string]$IPAddress,
-  [string]$ProjectName
+	[ValidateNotNullOrEmpty()]
+	[string]$ProjectName
 )
 
-$OctopusServerContainer=$ProjectName+"_octopus_1";
-$OctopusListeningTentacleContainer=$ProjectName+"_listeningtentacle_1";
-$OctopusPollingTentacleContainer=$ProjectName+"_pollingtentacle_1";
-$OctopusDBContainer=$ProjectName+"_db_1";
 
+. .\common.ps1
 
-. ./Scripts/build-common.ps1
+$networkName = $ProjectName+"_default";
+$octopusServerContainer=$ProjectName+"_octopus-server_1";
+$octopusListeningTentacleContainer=$ProjectName+"_listening-tentacle_1";
+$octopusPollingTentacleContainer=$ProjectName+"_polling-tentacle_1";
+$octopusDBContainer=$ProjectName+"_db_1";
 
 Describe 'Port 10933' {
 
 	Context 'Listening Tentacle' {
-		$ListeningTentacleIPAddress = $(Get-IPAddress $OctopusListeningTentacleContainer)
-		$result = Test-NetConnection -Port 10933 -ComputerName $ListeningTentacleIPAddress -InformationLevel "Quiet"
+		$listeningTentacleIPAddress = $(Get-IPAddress $networkName $octopusListeningTentacleContainer)
+		$result = Test-NetConnection -Port 10933 -ComputerName $listeningTentacleIPAddress -InformationLevel "Quiet"
 		it 'should be open' {
 			$result | should be $true
 		}
 	}
 
 	# Context 'Polling Tentacle' {
-	# 	$PollingTentacleIPAddress = $(Get-IPAddress $OctopusPollingTentacleContainer)
+	# 	$PollingTentacleIPAddress = $(Get-IPAddress $octopusPollingTentacleContainer)
 	# 	$result = Test-NetConnection -Port 10933 -ComputerName $PollingTentacleIPAddress -InformationLevel "Quiet"
 	# 	it 'should not be open' {
 	# 		$result | should be $false
