@@ -18,7 +18,10 @@ Describe 'Port 10933' {
 
 	Context 'Listening Tentacle' {
 		$listeningTentacleIPAddress = $(Get-IPAddress $networkName $octopusListeningTentacleContainer)
+
+		Write-Host "Testing connectivity to listening tentacle at $listeningTentacleIPAddress"
 		$result = Test-NetConnection -Port 10933 -ComputerName $listeningTentacleIPAddress -InformationLevel "Quiet"
+		
 		it 'should be open' {
 			$result | should be $true
 		}

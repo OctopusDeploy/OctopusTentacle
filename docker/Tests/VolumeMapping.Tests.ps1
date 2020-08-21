@@ -14,7 +14,7 @@ function Write-DeploymentLogs($logs) {
   % { $logs.Children } | % {Write-DeploymentLogs $_}
 }
 
-$OctopusURI="http://$($IPAddress):81"
+$OctopusURI="http://$($IPAddress):8080"
 
 Describe 'Volume Mounts' {
 	$endpoint = new-object Octopus.Client.OctopusServerEndpoint $OctopusURI
@@ -26,9 +26,13 @@ Describe 'Volume Mounts' {
 	$repository.Users.SignIn($LoginObj)
 
 	Context 'C:\TentacleHome' {
-		it 'should contain logs' {
-			Test-Path "./Temp/PollingHome/Logs/OctopusTentacle.txt" | should be $true
-			Test-Path "./Temp/ListeningHome/Logs/OctopusTentacle.txt" | should be $true
+
+		it 'polling-tentacle should contain logs' {
+			Test-Path "./Volumes/polling-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | should be $true
+		}
+		
+		it 'listening-tentacle should contain logs' {
+			Test-Path "./Volumes/listening-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | should be $true
 		}
 	}
 
@@ -40,8 +44,8 @@ Describe 'Volume Mounts' {
 				$repository.Projects.Delete($project)
 			}
 
-			Remove-Item .\Temp\PollingApplications\* -Recurse -Force
-			Remove-Item .\Temp\ListeningApplications\* -Recurse -Force
+			Remove-Item .\Volumes\polling-tentacle\Applications\* -Recurse -Force
+			Remove-Item .\Volumes\listening-tentacle\Applications\* -Recurse -Force
 		}
 
 		BeforeEach {
@@ -60,19 +64,19 @@ Describe 'Volume Mounts' {
 			# Reindex built in library. This ensures that Octopus is aware of the
 			# nupkg file sitting in C:\Repository
 			$task = New-Object Octopus.Client.Model.TaskResource
-      $task.Name = "SynchronizeBuiltInPackageRepositoryIndex"
-      $task.Description = "Re-index built-in package repository"
-      $task.State = [Octopus.Client.Model.TaskState]::Queued
+			$task.Name = "SynchronizeBuiltInPackageRepositoryIndex"
+			$task.Description = "Re-index built-in package repository"
+			$task.State = [Octopus.Client.Model.TaskState]::Queued
 
-      $Task1 = $repository.Tasks.Create($task)
+			$Task1 = $repository.Tasks.Create($task)
 
-      try {
-        $repository.Tasks.WaitForCompletion($Task1)
-      } finally {
-        # Write the logs from the reindex task to debug any issues
-        $details = $repository.Tasks.GetDetails($Task1)
-        $details.ActivityLogs | % { Write-DeploymentLogs $_}
-      }
+			try {
+				$repository.Tasks.WaitForCompletion($Task1)
+			} finally {
+				# Write the logs from the reindex task to debug any issues
+				$details = $repository.Tasks.GetDetails($Task1)
+				$details.ActivityLogs | % { Write-DeploymentLogs $_}
+			}
 
 			# Create Project
 			$pg = $repository.ProjectGroups.FindAll()[0]
@@ -108,14 +112,14 @@ Describe 'Volume Mounts' {
 
 			try {
 			  $repository.Tasks.WaitForCompletion($task, 4, 3)
-      } finally {
-        # Write the logs from the deployment to debug any issues
-        $details = $repository.Tasks.GetDetails($task)
-        $details.ActivityLogs | % { Write-DeploymentLogs $_}
-      }
+			} finally {
+				# Write the logs from the deployment to debug any issues
+				$details = $repository.Tasks.GetDetails($task)
+				$details.ActivityLogs | % { Write-DeploymentLogs $_}
+			}
 
-			Test-Path "./Temp/PollingApplications/$($env.Name)/$($pkg.PackageId)" | should be $true
-			Test-Path "./Temp/ListeningApplications/$($env.Name)/$($pkg.PackageId)" | should be $true
+			Test-Path "./Volumes/polling-tentacle/Applications/$($env.Name)/$($pkg.PackageId)" | should be $true
+			Test-Path "./Volumes/listening-tentacle/Applications/$($env.Name)/$($pkg.PackageId)" | should be $true
 		}
 	}
 }
