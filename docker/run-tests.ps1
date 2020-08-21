@@ -15,6 +15,9 @@ Write-Host "Octopus Server container is $octopusServerContainerName"
 $octopusServerIpAddress = Get-IPAddress $networkName $octopusServerContainerName
 Write-Host "Octopus Server hosted at $octopusServerIpAddress"
 
+# Ensure that the artifacts directory exists so that we can drop test results into it
+New-Item -ItemType Directory -Force -Path ../artifacts | Out-Null
+
 $TestResult = Invoke-Pester `
 	-PassThru `
 	-Script @{
@@ -28,7 +31,7 @@ $TestResult = Invoke-Pester `
 			ProjectName=$ProjectName
 		}
 	} `
-	-OutputFile ./Temp/Tentacle-Test.xml `
+	-OutputFile ../artifacts/TestResults.xml `
 	-OutputFormat NUnitXml
 
 if($TestResult.FailedCount -ne 0) {

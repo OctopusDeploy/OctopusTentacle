@@ -11,7 +11,7 @@ param(
 
 Add-Type -Path './Testing/Tools/Octopus.Client.dll'
 
-$OctopusURI="http://$($IPAddress):81"
+$OctopusURI="http://$($IPAddress):8080"
 
 function Registration-Tests($Tentacles){
 	it 'should have been registered' {
@@ -34,20 +34,29 @@ Describe 'Octopus Registration' {
 		return
 	}
 
+	Write-Host "Using Octopus server at $OctopusURI"
+
+	Write-Host "Creating Octopus client..."
 	$endpoint = new-object Octopus.Client.OctopusServerEndpoint $OctopusURI
+
+	Write-Host "Creating Octopus repository..."
 	$repository = new-object Octopus.Client.OctopusRepository $endpoint
+
+	Write-Host "Signing in..."
 	$LoginObj = New-Object Octopus.Client.Model.LoginCommand
 	$LoginObj.Username = $OctopusUsername
 	$LoginObj.Password = $OctopusPassword
-
 	$repository.Users.SignIn($LoginObj)
 
+	Write-Host "Enumerating machines..."
 	$machines = $repository.Machines.FindAll()
 	$machineIds = $machines | %{$_.Id}
 
+	Write-Host "Updating Calamari..."
 	$task = $repository.Tasks.ExecuteCalamariUpdate($null, $machineIds);
 	$repository.Tasks.WaitForCompletion($task, 4, 3);
 
+	Write-Host "Executing health check..."
 	$task = $repository.Tasks.ExecuteHealthCheck();
 	$repository.Tasks.WaitForCompletion($task, 4, 3);
 
