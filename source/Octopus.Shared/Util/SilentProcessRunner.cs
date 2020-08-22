@@ -27,7 +27,7 @@ namespace Octopus.Shared.Util
 
         public static int ExecuteCommand(this CommandLineInvocation invocation, string workingDirectory, ILog log)
         {
-            var arguments = $"{(invocation.Arguments ?? String.Empty)} {(invocation.SystemArguments ?? String.Empty)}";
+            var arguments = $"{invocation.Arguments} {invocation.SystemArguments ?? string.Empty}";
 
             var exitCode = ExecuteCommand(
                 invocation.Executable,
@@ -47,7 +47,10 @@ namespace Octopus.Shared.Util
 
         public static CmdResult ExecuteCommand(this CommandLineInvocation invocation, string workingDirectory)
         {
-            var arguments = $"{(invocation.Arguments ?? String.Empty)} {(invocation.SystemArguments ?? String.Empty)}";
+            if (workingDirectory == null)
+                throw new ArgumentNullException(nameof(workingDirectory));
+
+            var arguments = $"{invocation.Arguments} {invocation.SystemArguments ?? string.Empty}";
             var infos = new List<string>();
             var errors = new List<string>();
 
@@ -86,6 +89,19 @@ namespace Octopus.Shared.Util
             IDictionary<string, string>? customEnvironmentVariables = null,
             CancellationToken cancel = default(CancellationToken))
         {
+            if (executable == null)
+                throw new ArgumentNullException(nameof(executable));
+            if (arguments == null)
+                throw new ArgumentNullException(nameof(arguments));
+            if (workingDirectory == null)
+                throw new ArgumentNullException(nameof(workingDirectory));
+            if (debug == null)
+                throw new ArgumentNullException(nameof(debug));
+            if (info == null)
+                throw new ArgumentNullException(nameof(info));
+            if (error == null)
+                throw new ArgumentNullException(nameof(error));
+
             void WriteData(Action<string> action, ManualResetEventSlim resetEvent, DataReceivedEventArgs e)
             {
                 try
