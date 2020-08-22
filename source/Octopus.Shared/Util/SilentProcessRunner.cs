@@ -140,11 +140,6 @@ namespace Octopus.Shared.Util
                 debug($"Executable name or full path: {exeFileNameOrFullPath}");
 
                 var encoding = EncodingDetector.GetOEMEncoding();
-                if (encoding == null)
-                {
-                    encoding = Encoding.UTF8;
-                    info($"Failed to get OEM encoding. Defaulting to {encoding.EncodingName}");
-                }
                 var hasCustomEnvironmentVariables = customEnvironmentVariables.Any();
 
                 bool runAsSameUser;
@@ -170,7 +165,6 @@ namespace Octopus.Shared.Util
                         ? "the same environment variables as the launching process"
                         : "that user's default environment variables";
 
-                debug("Summarising...");
                 debug($"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVarsMessage}");
 
                 using (var outputResetEvent = new ManualResetEventSlim(false))
@@ -517,7 +511,9 @@ namespace Octopus.Shared.Util
         {
             public static Encoding GetOEMEncoding()
             {
-                if(PlatformDetection.IsRunningOnWindows){
+                var defaultEncoding = Encoding.UTF8;
+
+                if (PlatformDetection.IsRunningOnWindows)
                     try
                     {
                         // Get the OEM CodePage for the installation, otherwise fall back to code page 850 (DOS Western Europe)
@@ -529,21 +525,20 @@ namespace Octopus.Shared.Util
                         var codepage = GetCPInfoEx(CP_OEMCP, dwFlags, out var info) ? info.CodePage : CodePage850;
 
 #if REQUIRES_CODE_PAGE_PROVIDER
-                        return CodePagesEncodingProvider.Instance.GetEncoding(codepage);
+                        var encoding = CodePagesEncodingProvider.Instance.GetEncoding(codepage);    // When it says that this can return null, it *really can* return null.
+                        return encoding ?? defaultEncoding;
 #else
-                        return Encoding.GetEncoding(codepage);
+                        var encoding = Encoding.GetEncoding(codepage);
+                        return encoding ?? Encoding.UTF8;
 #endif
                     }
                     catch
                     {
                         // Fall back to UTF8 if everything goes wrong
-                        return Encoding.UTF8;
+                        return defaultEncoding;
                     }
-                }
-                else
-                {
-                    return Encoding.UTF8;
-                }
+
+                return defaultEncoding;
             }
         }
 
