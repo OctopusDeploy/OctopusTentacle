@@ -28,9 +28,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Octopus.Configuration" Version="2.0.1" />
+    <PackageReference Include="Octopus.Configuration" Version="2.0.2-enh-nullable0006" />
     <PackageReference Include="Octopus.Client" Version="7.1.1" />
-    <PackageReference Include="Octopus.Shared" Version="5.0.12" />
+    <PackageReference Include="Octopus.Shared" Version="5.1.1-bug-nre-when-launch10" />
   </ItemGroup>
 
   <ItemGroup>
