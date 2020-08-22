@@ -133,14 +133,14 @@ Task("__CreateLinuxPackages")
     DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
-        Env = new string[] { 
+        Env = new string[] {
             $"VERSION={gitVersion.NuGetVersion}",
             "BINARIES_PATH=/app/",
             "PACKAGES_PATH=/artifacts",
             "SIGN_PRIVATE_KEY",
             "SIGN_PASSPHRASE"
         },
-        Volume = new string[] { 
+        Volume = new string[] {
             $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/scripts",
             $"{Path.Combine(Environment.CurrentDirectory, linuxPackageFeedsDir)}:/opt/linux-package-feeds",
             $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
@@ -148,8 +148,8 @@ Task("__CreateLinuxPackages")
         }
     }, "octopusdeploy/package-linux-docker:latest", "bash /scripts/package.sh");
 
-    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.deb", artifactsDir);
-    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp2.2/linux-x64/*.rpm", artifactsDir);
+    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp3.1/linux-x64/*.deb", artifactsDir);
+    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp3.1/linux-x64/*.rpm", artifactsDir);
 });
 
 Task("__CheckForbiddenWords")
@@ -257,7 +257,7 @@ Task("__DotnetPublish")
                 "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
                 new DotNetCorePublishSettings
                 {
-                    Framework = "netcoreapp2.2",
+                    Framework = "netcoreapp3.1",
                     Configuration = configuration,
                     OutputDirectory = $"{corePublishDir}/{rid}",
                     Runtime = rid,
@@ -282,7 +282,7 @@ Task("__SignBuiltFiles")
     // check that any unsigned libraries, that Octopus Deploy authors, get signed to play nice with security scanning tools
     // refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
     // decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
-    var filesToSign = 
+    var filesToSign =
         GetFiles($"{coreWinPublishDir}/**/Octo*.exe",
             $"{coreWinPublishDir}/**/Octo*.dll",
             $"{coreWinPublishDir}/**/Tentacle.exe",
@@ -438,12 +438,12 @@ Task("__CreateBinariesNuGet")
     foreach(var rid in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))
     {
         CleanDirectory(binariesPackageDir);
-        CreateDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.{rid}");
-        CopyFiles($"{corePublishDir}/{rid}/*", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.{rid}");
-        DeleteFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.{rid}/Tentacle.exe.manifest");
-        CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.{rid}");
+        CreateDirectory($"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}");
+        CopyFiles($"{corePublishDir}/{rid}/*", $"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}");
+        DeleteFile($"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}/Tentacle.exe.manifest");
+        CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}");
         CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
-        CopyFile("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.Binaries.{rid}.targets");
+        CopyFile("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.Binaries.{rid}.targets");
 
         NuGetPack(Path.Combine(binariesPackageDir, $"Tentacle.Binaries.nuspec"), new NuGetPackSettings {
             Version = gitVersion.NuGetVersion,
