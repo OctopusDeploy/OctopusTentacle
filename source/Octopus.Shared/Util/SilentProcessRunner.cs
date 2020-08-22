@@ -87,7 +87,7 @@ namespace Octopus.Shared.Util
             Action<string> error,
             NetworkCredential? runAs = default(NetworkCredential),
             IDictionary<string, string>? customEnvironmentVariables = null,
-            CancellationToken cancel = default(CancellationToken))
+            CancellationToken cancel = default)
         {
             if (executable == null)
                 throw new ArgumentNullException(nameof(executable));
@@ -131,7 +131,7 @@ namespace Octopus.Shared.Util
             {
                 // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
                 var exeInSamePathAsWorkingDirectory = string.Equals(
-                    Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'),
+                    Path.GetDirectoryName(executable)?.TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'),
                     StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
                 var encoding = EncodingDetector.GetOEMEncoding();;
