@@ -85,7 +85,7 @@ namespace Octopus.Shared.Util
             Action<string> debug,
             Action<string> info,
             Action<string> error,
-            NetworkCredential? runAs = default(NetworkCredential),
+            NetworkCredential? runAs = default,
             IDictionary<string, string>? customEnvironmentVariables = null,
             CancellationToken cancel = default)
         {
@@ -130,8 +130,12 @@ namespace Octopus.Shared.Util
             try
             {
                 // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
+                debug("Confirming executable directory...");
+                var executableDirectoryName = Path.GetDirectoryName(executable);
+                debug($"Executable directory is {executableDirectoryName}");
+
                 var exeInSamePathAsWorkingDirectory = string.Equals(
-                    Path.GetDirectoryName(executable)?.TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'),
+                    executableDirectoryName?.TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'),
                     StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
                 var encoding = EncodingDetector.GetOEMEncoding();;
