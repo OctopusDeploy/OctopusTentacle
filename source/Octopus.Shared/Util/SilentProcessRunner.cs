@@ -140,6 +140,11 @@ namespace Octopus.Shared.Util
                 debug($"Executable name or full path: {exeFileNameOrFullPath}");
 
                 var encoding = EncodingDetector.GetOEMEncoding();
+                if (encoding == null)
+                {
+                    encoding = Encoding.UTF8;
+                    info($"Failed to get OEM encoding. Defaulting to {encoding.EncodingName}");
+                }
                 var hasCustomEnvironmentVariables = customEnvironmentVariables.Any();
 
                 bool runAsSameUser;
@@ -165,6 +170,7 @@ namespace Octopus.Shared.Util
                         ? "the same environment variables as the launching process"
                         : "that user's default environment variables";
 
+                debug("Summarising...");
                 debug($"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVarsMessage}");
 
                 using (var outputResetEvent = new ManualResetEventSlim(false))
