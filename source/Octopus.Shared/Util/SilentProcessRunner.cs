@@ -71,9 +71,9 @@ namespace Octopus.Shared.Util
             string workingDirectory,
             Action<string> info,
             Action<string> error,
-            NetworkCredential? runAs = default(NetworkCredential),
+            NetworkCredential? runAs = null,
             IDictionary<string, string>? customEnvironmentVariables = null,
-            CancellationToken cancel = default(CancellationToken))
+            CancellationToken cancel = default)
         {
             return ExecuteCommand(executable, arguments, workingDirectory, LogFileOnlyLogger.Current.Info, info, error, runAs, customEnvironmentVariables, cancel);
         }
@@ -134,28 +134,38 @@ namespace Octopus.Shared.Util
                 var executableDirectoryName = Path.GetDirectoryName(executable);
                 debug($"Executable directory is {executableDirectoryName}");
 
-                var exeInSamePathAsWorkingDirectory = string.Equals(
-                    executableDirectoryName?.TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'),
-                    StringComparison.OrdinalIgnoreCase);
+                var exeInSamePathAsWorkingDirectory = string.Equals(executableDirectoryName?.TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
-                var encoding = EncodingDetector.GetOEMEncoding();;
+                debug($"Executable name or full path: {exeFileNameOrFullPath}");
+
+                var encoding = EncodingDetector.GetOEMEncoding();
+                ;
                 var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
-                var runAsSameUser = runAs == default(NetworkCredential);
-                var runningAs = runAs == default(NetworkCredential)
-                    ? $@"{ProcessIdentity.CurrentUserName}"
-                    : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
+
+                bool runAsSameUser;
+                string runningAs;
+                if (runAs == null)
+                {
+                    debug("No user context provided. Running as current user.");
+                    runAsSameUser = true;
+                    runningAs = $@"{ProcessIdentity.CurrentUserName}";
+                }
+                else
+                {
+                    runAsSameUser = false;
+                    runningAs = $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
+                    debug($"Different user context provided. Running as {runningAs}");
+                }
 
                 var customEnvironmentVars = hasCustomEnvironmentVariables
-                        ? (runAsSameUser
-                            ? $"the same environment variables as the launching process plus {customEnvironmentVariables?.Count} custom variable(s)"
-                            : $"that user's environment variables plus {customEnvironmentVariables?.Count} custom variable(s)"
-                        )
-                        : (runAsSameUser
-                            ? "the same environment variables as the launching process"
-                            : "that user's default environment variables");
+                    ? runAsSameUser
+                        ? $"the same environment variables as the launching process plus {customEnvironmentVariables?.Count} custom variable(s)"
+                        : $"that user's environment variables plus {customEnvironmentVariables?.Count} custom variable(s)"
+                    : runAsSameUser
+                        ? "the same environment variables as the launching process"
+                        : "that user's default environment variables";
 
-                debug(
-                    $"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVars}");
+                debug($"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVars}");
 
                 using (var outputResetEvent = new ManualResetEventSlim(false))
                 using (var errorResetEvent = new ManualResetEventSlim(false))
