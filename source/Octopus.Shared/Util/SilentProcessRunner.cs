@@ -118,7 +118,7 @@ namespace Octopus.Shared.Util
                 {
                     try
                     {
-                        error($"Error occured handling message: {ex.PrettyPrint()}");
+                        error($"Error occurred handling message: {ex.PrettyPrint()}");
                     }
                     catch
                     {
@@ -173,7 +173,7 @@ namespace Octopus.Shared.Util
                     }
                     else
                     {
-                        throw new PlatformNotSupportedException("NetCore on linux or Mac does not support running a process as a different user.");
+                        throw new PlatformNotSupportedException("NetCore on Linux or Mac does not support running a process as a different user.");
                     }
 
                     process.StartInfo.RedirectStandardOutput = true;
