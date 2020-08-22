@@ -90,6 +90,7 @@ namespace Octopus.Shared.Scripts
             catch (Exception ex)
             {
                 writer.WriteOutput(ProcessOutputSource.StdErr, "An exception was thrown when invoking " + shellPath + ": " + ex.Message);
+                writer.WriteOutput(ProcessOutputSource.StdErr, ex.ToString());
                 ExitCode = PowershellInvocationErrorExitCode;
                 State = ProcessState.Complete;
             }
