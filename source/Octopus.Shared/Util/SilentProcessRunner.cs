@@ -102,6 +102,8 @@ namespace Octopus.Shared.Util
             if (error == null)
                 throw new ArgumentNullException(nameof(error));
 
+            customEnvironmentVariables ??= new Dictionary<string, string>();
+
             void WriteData(Action<string> action, ManualResetEventSlim resetEvent, DataReceivedEventArgs e)
             {
                 try
@@ -130,7 +132,6 @@ namespace Octopus.Shared.Util
             try
             {
                 // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
-                debug("Confirming executable directory...");
                 var executableDirectoryName = Path.GetDirectoryName(executable);
                 debug($"Executable directory is {executableDirectoryName}");
 
@@ -139,8 +140,7 @@ namespace Octopus.Shared.Util
                 debug($"Executable name or full path: {exeFileNameOrFullPath}");
 
                 var encoding = EncodingDetector.GetOEMEncoding();
-                ;
-                var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
+                var hasCustomEnvironmentVariables = customEnvironmentVariables.Any();
 
                 bool runAsSameUser;
                 string runningAs;
@@ -157,15 +157,15 @@ namespace Octopus.Shared.Util
                     debug($"Different user context provided. Running as {runningAs}");
                 }
 
-                var customEnvironmentVars = hasCustomEnvironmentVariables
+                var customEnvironmentVarsMessage = hasCustomEnvironmentVariables
                     ? runAsSameUser
-                        ? $"the same environment variables as the launching process plus {customEnvironmentVariables?.Count} custom variable(s)"
-                        : $"that user's environment variables plus {customEnvironmentVariables?.Count} custom variable(s)"
+                        ? $"the same environment variables as the launching process plus {customEnvironmentVariables.Count} custom variable(s)"
+                        : $"that user's environment variables plus {customEnvironmentVariables.Count} custom variable(s)"
                     : runAsSameUser
                         ? "the same environment variables as the launching process"
                         : "that user's default environment variables";
 
-                debug($"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVars}");
+                debug($"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVarsMessage}");
 
                 using (var outputResetEvent = new ManualResetEventSlim(false))
                 using (var errorResetEvent = new ManualResetEventSlim(false))
