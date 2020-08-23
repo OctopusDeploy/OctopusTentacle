@@ -1,20 +1,20 @@
 param(
-    [ValidateNotNullOrEmpty()]
+	[ValidateNotNullOrEmpty()]
 	[string]$IPAddress,
-    [ValidateNotNullOrEmpty()]
+	[ValidateNotNullOrEmpty()]
 	[string]$OctopusUsername,
-    [ValidateNotNullOrEmpty()]
+	[ValidateNotNullOrEmpty()]
 	[string]$OctopusPassword,
 	[ValidateNotNullOrEmpty()]
 	[string]$OctopusVersion
 )
 
 function Write-DeploymentLogs($logs) {
-  % { $logs.LogElements} | % {Write-Host $_.MessageText}
-  % { $logs.Children } | % {Write-DeploymentLogs $_}
+ % { $logs.LogElements } | % { Write-Host $_.MessageText }
+ % { $logs.Children } | % { Write-DeploymentLogs $_ }
 }
 
-$OctopusURI="http://$($IPAddress):8080"
+$OctopusURI = "http://$($IPAddress):8080"
 
 Describe 'Volume Mounts' {
 	$endpoint = new-object Octopus.Client.OctopusServerEndpoint $OctopusURI
@@ -57,10 +57,10 @@ Describe 'Volume Mounts' {
 		}
 
 		it 'should contain deployed packages' {
-            if ([System.Environment]::OSVersion.Version -eq '10.0.14393.0') {
-                Write-Warning "This test does not run successfully on windows 2016"
-                return
-            }
+			if ([System.Environment]::OSVersion.Version -eq '10.0.14393.0') {
+				Write-Warning "This test does not run successfully on windows 2016"
+				return
+			}
 			# Reindex built in library. This ensures that Octopus is aware of the
 			# nupkg file sitting in C:\Repository
 			$task = New-Object Octopus.Client.Model.TaskResource
@@ -72,10 +72,11 @@ Describe 'Volume Mounts' {
 
 			try {
 				$repository.Tasks.WaitForCompletion($Task1)
-			} finally {
+			}
+			finally {
 				# Write the logs from the reindex task to debug any issues
 				$details = $repository.Tasks.GetDetails($Task1)
-				$details.ActivityLogs | % { Write-DeploymentLogs $_}
+				$details.ActivityLogs | % { Write-DeploymentLogs $_ }
 			}
 
 			# Create Project
@@ -85,7 +86,7 @@ Describe 'Volume Mounts' {
 			$project = $repository.Projects.CreateOrModify("MyFirstProject", $pg, $lc)			
 			$pkg = New-Object Octopus.Client.Model.PackageResource
 			$pkg.PackageId = "Serilog.Sinks.TextWriter"
-			$pkg.FeedId ="feeds-builtin"
+			$pkg.FeedId = "feeds-builtin"
 			$project.DeploymentProcess.AddOrUpdateStep("Deploy").TargetingRoles("app-server", "web-server").AddOrUpdatePackageAction("DeploySeriLog", $pkg)
 			$p = $project.Save()
 
@@ -98,7 +99,7 @@ Describe 'Volume Mounts' {
 			$selectedPackage.StepName = "DeploySeriLog"
 			$selectedPackage.Version = "2.1.0"
 			$release.SelectedPackages.Add($selectedPackage)
-			$release = $repository.Releases.Create($release,  $true)
+			$release = $repository.Releases.Create($release, $true)
 
 			# Create Deployment
 			$deployment = New-Object Octopus.Client.Model.DeploymentResource
@@ -111,11 +112,12 @@ Describe 'Volume Mounts' {
 			$task = $repository.Tasks.Get($deployment.TaskId)
 
 			try {
-			  $repository.Tasks.WaitForCompletion($task, 4, 3)
-			} finally {
+				$repository.Tasks.WaitForCompletion($task, 4, 3)
+			}
+			finally {
 				# Write the logs from the deployment to debug any issues
 				$details = $repository.Tasks.GetDetails($task)
-				$details.ActivityLogs | % { Write-DeploymentLogs $_}
+				$details.ActivityLogs | % { Write-DeploymentLogs $_ }
 			}
 
 			Test-Path "./Volumes/polling-tentacle/Applications/$($env.Name)/$($pkg.PackageId)" | should be $true
