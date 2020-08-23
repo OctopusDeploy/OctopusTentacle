@@ -8,11 +8,11 @@ param(
 
 . .\common.ps1
 
-$networkName = $ProjectName+"_default";
-$octopusServerContainer=$ProjectName+"_octopus-server_1";
-$octopusListeningTentacleContainer=$ProjectName+"_listening-tentacle_1";
-$octopusPollingTentacleContainer=$ProjectName+"_polling-tentacle_1";
-$octopusDBContainer=$ProjectName+"_db_1";
+$networkName = $ProjectName + "_default";
+$octopusServerContainer = $ProjectName + "_octopus-server_1";
+$octopusListeningTentacleContainer = $ProjectName + "_listening-tentacle_1";
+$octopusPollingTentacleContainer = $ProjectName + "_polling-tentacle_1";
+$octopusDBContainer = $ProjectName + "_db_1";
 
 Describe 'Port 10933' {
 

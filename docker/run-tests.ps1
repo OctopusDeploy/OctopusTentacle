@@ -27,22 +27,23 @@ New-Item -ItemType Directory -Force -Path ../artifacts | Out-Null
 $TestResult = Invoke-Pester `
 	-PassThru `
 	-Script @{
-		Path = './Tests/*.Tests.ps1';
-		Parameters = @{
-			IPAddress = $octopusServerIpAddress;
-			OctopusUsername="admin";
-			OctopusPassword="Passw0rd123";
-			OctopusVersion=$OctopusVersion;
-			TentacleVersion=$TentacleVersion;
-			ProjectName=$ProjectName
-		}
-	} `
+	Path       = './Tests/*.Tests.ps1';
+	Parameters = @{
+		IPAddress       = $octopusServerIpAddress;
+		OctopusUsername = "admin";
+		OctopusPassword = "Passw0rd123";
+		OctopusVersion  = $OctopusVersion;
+		TentacleVersion = $TentacleVersion;
+		ProjectName     = $ProjectName
+	}
+} `
 	-OutputFile ../artifacts/TestResults.xml `
 	-OutputFormat NUnitXml
 
-if($TestResult.FailedCount -ne 0) {
+if ($TestResult.FailedCount -ne 0) {
 	Write-Host "Failed $($TestResult.FailedCount)/$($TestResult.TotalCount) Tests"
 	Exit 1
-} else {
+}
+else {
 	Write-Host "All $($TestResult.TotalCount) Tests Passed";
 }
