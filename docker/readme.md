@@ -22,7 +22,7 @@ Usage of this `docker-compose.yml` file implies acceptance of the Microsoft EULA
 
 Default values are set in the `.env` file.
 
-- **SA_PASSWORD**: SA password to use the the sql express database
+- **SA_PASSWORD**: SA password to use the sql express database
 - **OctopusAdminUsername**: The admin user to create for the Octopus Server
 - **OctopusAdminPassword**: The password for the admin user for the Octopus Server
 
