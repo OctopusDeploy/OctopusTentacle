@@ -1,9 +1,9 @@
 param(
-    [ValidateNotNullOrEmpty()]
+	[ValidateNotNullOrEmpty()]
 	[string]$IPAddress,
-    [ValidateNotNullOrEmpty()]
+	[ValidateNotNullOrEmpty()]
 	[string]$OctopusUsername,
-    [ValidateNotNullOrEmpty()]
+	[ValidateNotNullOrEmpty()]
 	[string]$OctopusPassword,
 	[ValidateNotNullOrEmpty()]
 	[string]$TentacleVersion
@@ -11,9 +11,9 @@ param(
 
 Add-Type -Path './Testing/Tools/Octopus.Client.dll'
 
-$OctopusURI="http://$($IPAddress):8080"
+$OctopusURI = "http://$($IPAddress):8080"
 
-function Registration-Tests($Tentacles){
+function Registration-Tests($Tentacles) {
 	it 'should have been registered' {
 		$Tentacles.Count | should be 1
 	}
@@ -50,7 +50,7 @@ Describe 'Octopus Registration' {
 
 	Write-Host "Enumerating machines..."
 	$machines = $repository.Machines.FindAll()
-	$machineIds = $machines | %{$_.Id}
+	$machineIds = $machines | % { $_.Id }
 
 	Write-Host "Updating Calamari..."
 	$task = $repository.Tasks.ExecuteCalamariUpdate($null, $machineIds);
@@ -63,12 +63,12 @@ Describe 'Octopus Registration' {
 	$Machines = $repository.Machines.FindAll()
 
 	Context 'Polling Tentacle' {
-		$PollingTentacles = $($Machines | where {$_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentacleActive})
+		$PollingTentacles = $($Machines | where { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentacleActive })
 		Registration-Tests $PollingTentacles
 	}
 
 	Context 'Listening Tentacle' {
-		$ListeningTentacles = $($Machines | where {$_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentaclePassive})
+		$ListeningTentacles = $($Machines | where { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentaclePassive })
 		Registration-Tests $ListeningTentacles
 	}
 
