@@ -1,6 +1,6 @@
 # tentacle
 
-Due to required build context, all scirpts should be executed from the root directory.
+Due to required build context, all scripts should be executed from the root directory.
 
 ## Building the container
 
