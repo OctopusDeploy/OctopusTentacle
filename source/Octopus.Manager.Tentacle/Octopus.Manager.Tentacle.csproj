@@ -461,16 +461,16 @@
       <HintPath>..\packages\Octopus.Client.7.1.1\lib\net45\Octopus.Client.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Configuration, Version=2.0.1.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Configuration.2.0.1\lib\net45\Octopus.Configuration.dll</HintPath>
+    <Reference Include="Octopus.Configuration, Version=2.1.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Octopus.Configuration.2.1.0\lib\net45\Octopus.Configuration.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Diagnostics, Version=1.3.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\Octopus.Diagnostics.1.3.0\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Shared, Version=5.0.12.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Shared.5.0.12\lib\net45\Octopus.Shared.dll</HintPath>
+    <Reference Include="Octopus.Shared, Version=5.1.13.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Octopus.Shared.5.1.13\lib\net45\Octopus.Shared.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.1.6.0, Culture=neutral, PublicKeyToken=null">
