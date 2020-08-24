@@ -85,7 +85,7 @@ namespace Octopus.Shared.Util
             Action<string> debug,
             Action<string> info,
             Action<string> error,
-            NetworkCredential? runAs = default,
+            NetworkCredential? runAs = null,
             IDictionary<string, string>? customEnvironmentVariables = null,
             CancellationToken cancel = default)
         {
@@ -177,7 +177,7 @@ namespace Octopus.Shared.Util
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
 
-                    if (runAs == default(NetworkCredential))
+                    if (runAs == null)
                     {
                         RunAsSameUser(process.StartInfo, customEnvironmentVariables);
                     }
@@ -284,7 +284,7 @@ namespace Octopus.Shared.Util
             string executable,
             string arguments,
             string workingDirectory,
-            NetworkCredential? runAs = default(NetworkCredential),
+            NetworkCredential? runAs = null,
             IDictionary<string, string>? customEnvironmentVariables = null)
         {
             try
@@ -297,7 +297,7 @@ namespace Octopus.Shared.Util
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
 
-                    if (runAs == default(NetworkCredential))
+                    if (runAs == null)
                     {
                         RunAsSameUser(process.StartInfo, customEnvironmentVariables);
                     }
