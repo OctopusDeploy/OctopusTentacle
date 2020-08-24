@@ -33,7 +33,7 @@ services:
     # entrypoint: cmd.exe
 
   listening-tentacle:
-    image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-${OS_VERSION}
+    image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-windows-${OS_VERSION}
     depends_on:
       - octopus-server
     environment:
@@ -48,7 +48,7 @@ services:
       - "./docker/Volumes/listening-tentacle/TentacleHome:C:/TentacleHome"
 
   polling-tentacle:
-    image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-${OS_VERSION}
+    image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-windows-${OS_VERSION}
     depends_on:
       - octopus-server
     environment:
