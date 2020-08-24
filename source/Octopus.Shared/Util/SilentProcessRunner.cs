@@ -27,7 +27,7 @@ namespace Octopus.Shared.Util
 
         public static int ExecuteCommand(this CommandLineInvocation invocation, string workingDirectory, ILog log)
         {
-            var arguments = $"{(invocation.Arguments ?? String.Empty)} {(invocation.SystemArguments ?? String.Empty)}";
+            var arguments = $"{invocation.Arguments} {invocation.SystemArguments ?? string.Empty}";
 
             var exitCode = ExecuteCommand(
                 invocation.Executable,
@@ -47,7 +47,10 @@ namespace Octopus.Shared.Util
 
         public static CmdResult ExecuteCommand(this CommandLineInvocation invocation, string workingDirectory)
         {
-            var arguments = $"{(invocation.Arguments ?? String.Empty)} {(invocation.SystemArguments ?? String.Empty)}";
+            if (workingDirectory == null)
+                throw new ArgumentNullException(nameof(workingDirectory));
+
+            var arguments = $"{invocation.Arguments} {invocation.SystemArguments ?? string.Empty}";
             var infos = new List<string>();
             var errors = new List<string>();
 
@@ -68,9 +71,9 @@ namespace Octopus.Shared.Util
             string workingDirectory,
             Action<string> info,
             Action<string> error,
-            NetworkCredential? runAs = default(NetworkCredential),
+            NetworkCredential? runAs = null,
             IDictionary<string, string>? customEnvironmentVariables = null,
-            CancellationToken cancel = default(CancellationToken))
+            CancellationToken cancel = default)
         {
             return ExecuteCommand(executable, arguments, workingDirectory, LogFileOnlyLogger.Current.Info, info, error, runAs, customEnvironmentVariables, cancel);
         }
@@ -82,10 +85,25 @@ namespace Octopus.Shared.Util
             Action<string> debug,
             Action<string> info,
             Action<string> error,
-            NetworkCredential? runAs = default(NetworkCredential),
+            NetworkCredential? runAs = null,
             IDictionary<string, string>? customEnvironmentVariables = null,
-            CancellationToken cancel = default(CancellationToken))
+            CancellationToken cancel = default)
         {
+            if (executable == null)
+                throw new ArgumentNullException(nameof(executable));
+            if (arguments == null)
+                throw new ArgumentNullException(nameof(arguments));
+            if (workingDirectory == null)
+                throw new ArgumentNullException(nameof(workingDirectory));
+            if (debug == null)
+                throw new ArgumentNullException(nameof(debug));
+            if (info == null)
+                throw new ArgumentNullException(nameof(info));
+            if (error == null)
+                throw new ArgumentNullException(nameof(error));
+
+            customEnvironmentVariables ??= new Dictionary<string, string>();
+
             void WriteData(Action<string> action, ManualResetEventSlim resetEvent, DataReceivedEventArgs e)
             {
                 try
@@ -102,7 +120,7 @@ namespace Octopus.Shared.Util
                 {
                     try
                     {
-                        error($"Error occured handling message: {ex.PrettyPrint()}");
+                        error($"Error occurred handling message: {ex.PrettyPrint()}");
                     }
                     catch
                     {
@@ -114,28 +132,40 @@ namespace Octopus.Shared.Util
             try
             {
                 // We need to be careful to make sure the message is accurate otherwise people could wrongly assume the exe is in the working directory when it could be somewhere completely different!
-                var exeInSamePathAsWorkingDirectory = string.Equals(
-                    Path.GetDirectoryName(executable).TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'),
-                    StringComparison.OrdinalIgnoreCase);
+                var executableDirectoryName = Path.GetDirectoryName(executable);
+                debug($"Executable directory is {executableDirectoryName}");
+
+                var exeInSamePathAsWorkingDirectory = string.Equals(executableDirectoryName?.TrimEnd('\\', '/'), workingDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
                 var exeFileNameOrFullPath = exeInSamePathAsWorkingDirectory ? Path.GetFileName(executable) : executable;
-                var encoding = EncodingDetector.GetOEMEncoding();;
-                var hasCustomEnvironmentVariables = customEnvironmentVariables != null && customEnvironmentVariables.Any();
-                var runAsSameUser = runAs == default(NetworkCredential);
-                var runningAs = runAs == default(NetworkCredential)
-                    ? $@"{ProcessIdentity.CurrentUserName}"
-                    : $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
+                debug($"Executable name or full path: {exeFileNameOrFullPath}");
 
-                var customEnvironmentVars = hasCustomEnvironmentVariables
-                        ? (runAsSameUser
-                            ? $"the same environment variables as the launching process plus {customEnvironmentVariables?.Count} custom variable(s)"
-                            : $"that user's environment variables plus {customEnvironmentVariables?.Count} custom variable(s)"
-                        )
-                        : (runAsSameUser
-                            ? "the same environment variables as the launching process"
-                            : "that user's default environment variables");
+                var encoding = EncodingDetector.GetOEMEncoding();
+                var hasCustomEnvironmentVariables = customEnvironmentVariables.Any();
 
-                debug(
-                    $"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVars}");
+                bool runAsSameUser;
+                string runningAs;
+                if (runAs == null)
+                {
+                    debug("No user context provided. Running as current user.");
+                    runAsSameUser = true;
+                    runningAs = $@"{ProcessIdentity.CurrentUserName}";
+                }
+                else
+                {
+                    runAsSameUser = false;
+                    runningAs = $@"{runAs.Domain ?? Environment.MachineName}\{runAs.UserName}";
+                    debug($"Different user context provided. Running as {runningAs}");
+                }
+
+                var customEnvironmentVarsMessage = hasCustomEnvironmentVariables
+                    ? runAsSameUser
+                        ? $"the same environment variables as the launching process plus {customEnvironmentVariables.Count} custom variable(s)"
+                        : $"that user's environment variables plus {customEnvironmentVariables.Count} custom variable(s)"
+                    : runAsSameUser
+                        ? "the same environment variables as the launching process"
+                        : "that user's default environment variables";
+
+                debug($"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{runningAs}' with {customEnvironmentVarsMessage}");
 
                 using (var outputResetEvent = new ManualResetEventSlim(false))
                 using (var errorResetEvent = new ManualResetEventSlim(false))
@@ -147,7 +177,7 @@ namespace Octopus.Shared.Util
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
 
-                    if (runAs == default(NetworkCredential))
+                    if (runAs == null)
                     {
                         RunAsSameUser(process.StartInfo, customEnvironmentVariables);
                     }
@@ -157,7 +187,7 @@ namespace Octopus.Shared.Util
                     }
                     else
                     {
-                        throw new PlatformNotSupportedException("NetCore on linux or Mac does not support running a process as a different user.");
+                        throw new PlatformNotSupportedException("NetCore on Linux or Mac does not support running a process as a different user.");
                     }
 
                     process.StartInfo.RedirectStandardOutput = true;
@@ -254,7 +284,7 @@ namespace Octopus.Shared.Util
             string executable,
             string arguments,
             string workingDirectory,
-            NetworkCredential? runAs = default(NetworkCredential),
+            NetworkCredential? runAs = null,
             IDictionary<string, string>? customEnvironmentVariables = null)
         {
             try
@@ -267,7 +297,7 @@ namespace Octopus.Shared.Util
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
 
-                    if (runAs == default(NetworkCredential))
+                    if (runAs == null)
                     {
                         RunAsSameUser(process.StartInfo, customEnvironmentVariables);
                     }
@@ -481,7 +511,9 @@ namespace Octopus.Shared.Util
         {
             public static Encoding GetOEMEncoding()
             {
-                if(PlatformDetection.IsRunningOnWindows){
+                var defaultEncoding = Encoding.UTF8;
+
+                if (PlatformDetection.IsRunningOnWindows)
                     try
                     {
                         // Get the OEM CodePage for the installation, otherwise fall back to code page 850 (DOS Western Europe)
@@ -493,21 +525,20 @@ namespace Octopus.Shared.Util
                         var codepage = GetCPInfoEx(CP_OEMCP, dwFlags, out var info) ? info.CodePage : CodePage850;
 
 #if REQUIRES_CODE_PAGE_PROVIDER
-                        return CodePagesEncodingProvider.Instance.GetEncoding(codepage);
+                        var encoding = CodePagesEncodingProvider.Instance.GetEncoding(codepage);    // When it says that this can return null, it *really can* return null.
+                        return encoding ?? defaultEncoding;
 #else
-                        return Encoding.GetEncoding(codepage);
+                        var encoding = Encoding.GetEncoding(codepage);
+                        return encoding ?? Encoding.UTF8;
 #endif
                     }
                     catch
                     {
                         // Fall back to UTF8 if everything goes wrong
-                        return Encoding.UTF8;
+                        return defaultEncoding;
                     }
-                }
-                else
-                {
-                    return Encoding.UTF8;
-                }
+
+                return defaultEncoding;
             }
         }
 
