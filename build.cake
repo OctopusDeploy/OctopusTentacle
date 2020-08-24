@@ -139,10 +139,11 @@ Task("__CreateNuGet")
     DotNetCorePack("./source/Octopus.Shared/Octopus.Shared.csproj", new DotNetCorePackSettings
     {
         Configuration = "Release",
+        NoRestore = true,
         NoBuild = true,
         IncludeSymbols = true,
         OutputDirectory = new DirectoryPath(artifactsDir),
-        ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
+        ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion} /p:NoWarn=NU5104")
     });
 });
 
