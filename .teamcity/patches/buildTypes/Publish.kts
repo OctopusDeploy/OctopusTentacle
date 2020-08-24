@@ -32,5 +32,17 @@ changeBuildType(RelativeId("Publish")) {
             }
         }
 
+        expect(RelativeId("TestOnLinux")) {
+            snapshot {
+                onDependencyFailure = FailureAction.CANCEL
+                onDependencyCancel = FailureAction.CANCEL
+            }
+        }
+        update(RelativeId("TestOnLinux")) {
+            snapshot {
+                onDependencyFailure = FailureAction.FAIL_TO_START
+            }
+        }
+
     }
 }
