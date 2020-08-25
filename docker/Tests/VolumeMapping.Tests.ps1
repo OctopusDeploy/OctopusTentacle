@@ -1,25 +1,35 @@
 # Pester 5 doesn't yet support parameterised tests
-[string]$IPAddress = $env:IPAddress
-[string]$OctopusUsername = $env:OctopusUsername
-[string]$OctopusPassword = $env:OctopusPassword
-[string]$TentacleVersion = $env:TentacleVersion
-[string]$ProjectName = $env:ProjectName
+[string]$script:IPAddress = $env:IPAddress
+[string]$script:OctopusUsername = $env:OctopusUsername
+[string]$script:OctopusPassword = $env:OctopusPassword
+[string]$script:TentacleVersion = $env:TentacleVersion
+[string]$script:ProjectName = $env:ProjectName
 
-function Write-DeploymentLogs($logs) {
+function script:Write-DeploymentLogs($logs) {
  % { $logs.LogElements } | % { Write-Host $_.MessageText }
  % { $logs.Children } | % { Write-DeploymentLogs $_ }
 }
 
-$OctopusURI = "http://$($IPAddress):8080"
+function script:New-OctopusRepository() {
+	$octopusURI = "http://$($script:IPAddress):8080"
+	Write-Host "Using Octopus server at $octopusURI"
 
-Describe 'Volume Mounts' {
-	$endpoint = new-object Octopus.Client.OctopusServerEndpoint $OctopusURI
+	$endpoint = new-object Octopus.Client.OctopusServerEndpoint $octopusURI
 	$repository = new-object Octopus.Client.OctopusRepository $endpoint
 
-	$LoginObj = New-Object Octopus.Client.Model.LoginCommand
-	$LoginObj.Username = $OctopusUsername
-	$LoginObj.Password = $OctopusPassword
-	$repository.Users.SignIn($LoginObj)
+	$loginObj = New-Object Octopus.Client.Model.LoginCommand
+	$loginObj.Username = $script:OctopusUsername
+	$loginObj.Password = $script:OctopusPassword
+	$repository.Users.SignIn($loginObj)
+
+	[Octopus.Client.OctopusRepository]$repository
+}
+
+Describe 'Volume Mounts' {
+
+	BeforeAll {
+		$repository = script:New-OctopusRepository
+	}
 
 	Context 'C:\TentacleHome' {
 
@@ -34,22 +44,22 @@ Describe 'Volume Mounts' {
 
 	Context 'C:\Applications' {
 
-		function Clean {
+		function script:Clean {
 			$project = $repository.Projects.FindByName("MyFirstProject")
 			if ($null -ne $project) {
 				$repository.Projects.Delete($project)
 			}
 
-			Remove-Item .\Volumes\polling-tentacle\Applications\* -Recurse -Force
-			Remove-Item .\Volumes\listening-tentacle\Applications\* -Recurse -Force
+			Remove-Item .\Volumes\polling-tentacle\Applications\Development -Recurse -Force
+			Remove-Item .\Volumes\listening-tentacle\Applications\Development -Recurse -Force
 		}
 
 		BeforeEach {
-			Clean
+			script:Clean
 		}
 
 		AfterEach {
-			Clean
+			script:Clean
 		}
 
 		it 'should contain deployed packages' {
@@ -72,7 +82,7 @@ Describe 'Volume Mounts' {
 			finally {
 				# Write the logs from the reindex task to debug any issues
 				$details = $repository.Tasks.GetDetails($Task1)
-				$details.ActivityLogs | % { Write-DeploymentLogs $_ }
+				$details.ActivityLogs | % { script:Write-DeploymentLogs $_ }
 			}
 
 			# Create Project
