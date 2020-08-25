@@ -1,10 +1,9 @@
-param(
-	[ValidateNotNullOrEmpty()]
-	[string]$IPAddress,
-	[ValidateNotNullOrEmpty()]
-	[string]$ProjectName
-)
-
+# Pester 5 doesn't yet support parameterised tests
+[string]$IPAddress = $env:IPAddress
+[string]$OctopusUsername = $env:OctopusUsername
+[string]$OctopusPassword = $env:OctopusPassword
+[string]$TentacleVersion = $env:TentacleVersion
+[string]$ProjectName = $env:ProjectName
 
 . .\common.ps1
 
@@ -23,7 +22,7 @@ Describe 'Port 10933' {
 		$result = Test-NetConnection -Port 10933 -ComputerName $listeningTentacleIPAddress -InformationLevel "Quiet"
 		
 		it 'should be open' {
-			$result | should be $true
+			$result | Should -Be $true
 		}
 	}
 
@@ -31,7 +30,7 @@ Describe 'Port 10933' {
 	# 	$PollingTentacleIPAddress = $(Get-IPAddress $octopusPollingTentacleContainer)
 	# 	$result = Test-NetConnection -Port 10933 -ComputerName $PollingTentacleIPAddress -InformationLevel "Quiet"
 	# 	it 'should not be open' {
-	# 		$result | should be $false
+	# 		$result | Should -Be $false
 	# 	}
 	# }
 }

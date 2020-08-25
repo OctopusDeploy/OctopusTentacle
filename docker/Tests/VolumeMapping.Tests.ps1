@@ -1,13 +1,9 @@
-param(
-	[ValidateNotNullOrEmpty()]
-	[string]$IPAddress,
-	[ValidateNotNullOrEmpty()]
-	[string]$OctopusUsername,
-	[ValidateNotNullOrEmpty()]
-	[string]$OctopusPassword,
-	[ValidateNotNullOrEmpty()]
-	[string]$OctopusVersion
-)
+# Pester 5 doesn't yet support parameterised tests
+[string]$IPAddress = $env:IPAddress
+[string]$OctopusUsername = $env:OctopusUsername
+[string]$OctopusPassword = $env:OctopusPassword
+[string]$TentacleVersion = $env:TentacleVersion
+[string]$ProjectName = $env:ProjectName
 
 function Write-DeploymentLogs($logs) {
  % { $logs.LogElements } | % { Write-Host $_.MessageText }
@@ -28,11 +24,11 @@ Describe 'Volume Mounts' {
 	Context 'C:\TentacleHome' {
 
 		it 'polling-tentacle should contain logs' {
-			Test-Path "./Volumes/polling-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | should be $true
+			Test-Path "./Volumes/polling-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | Should -Be $true
 		}
 		
 		it 'listening-tentacle should contain logs' {
-			Test-Path "./Volumes/listening-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | should be $true
+			Test-Path "./Volumes/listening-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | Should -Be $true
 		}
 	}
 
@@ -120,8 +116,8 @@ Describe 'Volume Mounts' {
 				$details.ActivityLogs | % { Write-DeploymentLogs $_ }
 			}
 
-			Test-Path "./Volumes/polling-tentacle/Applications/$($env.Name)/$($pkg.PackageId)" | should be $true
-			Test-Path "./Volumes/listening-tentacle/Applications/$($env.Name)/$($pkg.PackageId)" | should be $true
+			Test-Path "./Volumes/polling-tentacle/Applications/$($env.Name)/$($pkg.PackageId)" | Should -Be $true
+			Test-Path "./Volumes/listening-tentacle/Applications/$($env.Name)/$($pkg.PackageId)" | Should -Be $true
 		}
 	}
 }

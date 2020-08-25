@@ -1,13 +1,9 @@
-param(
-	[ValidateNotNullOrEmpty()]
-	[string]$IPAddress,
-	[ValidateNotNullOrEmpty()]
-	[string]$OctopusUsername,
-	[ValidateNotNullOrEmpty()]
-	[string]$OctopusPassword,
-	[ValidateNotNullOrEmpty()]
-	[string]$TentacleVersion
-)
+# Pester 5 doesn't yet support parameterised tests
+[string]$IPAddress = $env:IPAddress
+[string]$OctopusUsername = $env:OctopusUsername
+[string]$OctopusPassword = $env:OctopusPassword
+[string]$TentacleVersion = $env:TentacleVersion
+[string]$ProjectName = $env:ProjectName
 
 Add-Type -Path './Testing/Tools/Octopus.Client.dll'
 
@@ -15,16 +11,16 @@ $OctopusURI = "http://$($IPAddress):8080"
 
 function Registration-Tests($Tentacles) {
 	it 'should have been registered' {
-		$Tentacles.Count | should be 1
+		$Tentacles.Count | Should -Be 1
 	}
 
 	it 'should be healthy' {
 		$isHealthy = $Tentacles[0].HealthStatus -eq "Healthy" -or $Tentacles[0].HealthStatus -eq "HasWarnings"
-		$isHealthy | Should Be $true
+		$isHealthy | Should -Be $true
 	}
 
 	it 'should have the correct version installed' {
-		$Tentacles[0].Endpoint.TentacleVersionDetails.Version | should be $TentacleVersion
+		$Tentacles[0].Endpoint.TentacleVersionDetails.Version | Should -Be $TentacleVersion
 	}
 }
 
@@ -71,9 +67,4 @@ Describe 'Octopus Registration' {
 		$ListeningTentacles = $($Machines | where { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentaclePassive })
 		Registration-Tests $ListeningTentacles
 	}
-
-	# it 'should have imported the migration export' {
-	# 	$DevEnv = $repository.Environments.FindByName("Development")
-	# 	$DevEnv | should not be $null
-	# }
 }
