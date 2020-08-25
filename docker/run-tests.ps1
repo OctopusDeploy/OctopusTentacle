@@ -11,6 +11,9 @@ param (
 Install-Module -Name "Pester" -MinimumVersion "5.0.2" -Force -SkipPublisherCheck
 Import-Module -Name "Pester"
 
+Install-Package Octopus.Client -source https://www.nuget.org/api/v2 -Force -SkipDependencies
+Add-Type -Path (Join-Path (Get-Item ((Get-Package Octopus.Client).source)).Directory.FullName "lib/net452/Octopus.Client.dll")
+
 . .\common.ps1
 
 $networkName = "${ProjectName}_default"
@@ -27,7 +30,6 @@ Wait-ForServiceToPassHealthCheck $pollingTentacleContainerName
 
 # Ensure that the artifacts directory exists so that we can drop test results into it
 New-Item -ItemType Directory -Force -Path ../artifacts | Out-Null
-
 
 Write-Output "Running Pester Tests"
 $configuration = [PesterConfiguration]::Default
