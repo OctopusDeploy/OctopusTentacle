@@ -5,28 +5,26 @@
 [string]$TentacleVersion = $env:TentacleVersion
 [string]$ProjectName = $env:ProjectName
 
-Add-Type -Path './Testing/Tools/Octopus.Client.dll'
-
 $OctopusURI = "http://$($IPAddress):8080"
 
-function Registration-Tests($Tentacles) {
+function Registration-Tests($tentacles) {
 	it 'should have been registered' {
-		$Tentacles.Count | Should -Be 1
+		$tentacles.Count | Should -Be 1
 	}
 
 	it 'should be healthy' {
-		$isHealthy = $Tentacles[0].HealthStatus -eq "Healthy" -or $Tentacles[0].HealthStatus -eq "HasWarnings"
+		$isHealthy = $tentacles[0].HealthStatus -eq "Healthy" -or $tentacles[0].HealthStatus -eq "HasWarnings"
 		$isHealthy | Should -Be $true
 	}
 
 	it 'should have the correct version installed' {
-		$Tentacles[0].Endpoint.TentacleVersionDetails.Version | Should -Be $TentacleVersion
+		$tentacles[0].Endpoint.TentacleVersionDetails.Version | Should -Be $TentacleVersion
 	}
 }
 
 Describe 'Octopus Registration' {
 	if ([System.Environment]::OSVersion.Version -eq '10.0.14393.0') {
-		Write-Warning "This test does not run successfully on windows 2016"
+		Write-Warning "This test does not run successfully on Windows 2016"
 		return
 	}
 
@@ -46,7 +44,7 @@ Describe 'Octopus Registration' {
 
 	Write-Host "Enumerating machines..."
 	$machines = $repository.Machines.FindAll()
-	$machineIds = $machines | % { $_.Id }
+	$machineIds = $machines | ForEach-Object { $_.Id }
 
 	Write-Host "Updating Calamari..."
 	$task = $repository.Tasks.ExecuteCalamariUpdate($null, $machineIds);
@@ -59,12 +57,12 @@ Describe 'Octopus Registration' {
 	$Machines = $repository.Machines.FindAll()
 
 	Context 'Polling Tentacle' {
-		$PollingTentacles = $($Machines | where { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentacleActive })
-		Registration-Tests $PollingTentacles
+		$tentacles = $($Machines | Where-Object { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentacleActive })
+		Registration-Tests $tentacles
 	}
 
 	Context 'Listening Tentacle' {
-		$ListeningTentacles = $($Machines | where { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentaclePassive })
-		Registration-Tests $ListeningTentacles
+		$tentacles = $($Machines | Where-Object { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentaclePassive })
+		Registration-Tests $tentacles
 	}
 }
