@@ -10,6 +10,7 @@ services:
       test: [ "CMD", "sqlcmd", "-U", "sa", "-P", "${SA_PASSWORD}", "-Q", "select 1" ]
       interval: 10s
       retries: 10
+    restart: always
 
   octopus-server:
     image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy:${OCTOPUS_VERSION}-${OS_VERSION}
@@ -30,7 +31,7 @@ services:
       - "./docker/Volumes/octopus-server/Import:C:/Import"
       - "./docker/Volumes/octopus-server/Repository:C:/Repository"
       - "./docker/Volumes/octopus-server/MasterKey:C:/MasterKey"
-    # entrypoint: cmd.exe
+    restart: always
 
   listening-tentacle:
     image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-windows-${OS_VERSION}
@@ -46,6 +47,7 @@ services:
     volumes:
       - "./docker/Volumes/listening-tentacle/Applications:C:/Applications"
       - "./docker/Volumes/listening-tentacle/TentacleHome:C:/TentacleHome"
+    restart: always
 
   polling-tentacle:
     image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-windows-${OS_VERSION}
@@ -62,3 +64,4 @@ services:
     volumes:
       - "./docker/Volumes/polling-tentacle/Applications:C:/Applications"
       - "./docker/Volumes/polling-tentacle/TentacleHome:C:/TentacleHome"
+    restart: always
