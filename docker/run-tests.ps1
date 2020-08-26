@@ -38,7 +38,6 @@ $configuration.TestResult.OutputPath = '../artifacts/TestResults.xml'
 $configuration.TestResult.OutputFormat = 'NUnitXml'
 $configuration.Run.PassThru = $true
 $configuration.Run.Path = "./Tests/*.Tests.ps1"
-$configuration.Run.Path = "./Tests/VolumeMapping.Tests.ps1"
 $configuration.Should.ErrorAction = 'Continue'
 
 $env:IPAddress = $octopusServerIpAddress;
