@@ -5,9 +5,6 @@
 [string]$script:TentacleVersion = $env:TentacleVersion
 [string]$script:ProjectName = $env:ProjectName
 
-Install-Package Octopus.Client -source https://www.nuget.org/api/v2 -Force -SkipDependencies
-Add-Type -Path (Join-Path (Get-Item ((Get-Package Octopus.Client).source)).Directory.FullName "lib/net452/Octopus.Client.dll")
-
 function script:Write-DeploymentLogs($logs) {
  % { $logs.LogElements } | % { Write-Host $_.MessageText }
  % { $logs.Children } | % { Write-DeploymentLogs $_ }
