@@ -36,7 +36,7 @@ Describe 'Octopus Registration' {
 		$machines = $repository.Machines.FindAll()
 
 		Write-Host "Updating Calamari..."
-		$machineIds = $machines | ForEach-Object { $_.Id }
+		$machineIds = $machines.id
 		$task = ($repository).Tasks.ExecuteCalamariUpdate($null, $machineIds);
 		$repository.Tasks.WaitForCompletion($task, 4, 3);
 
@@ -48,7 +48,7 @@ Describe 'Octopus Registration' {
 	Context 'Polling Tentacle' {
 
 		BeforeAll {
-			$tentacles = $($machines | Where-Object { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentacleActive })
+			$tentacles = , ($machines | Where-Object { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentacleActive })
 		}
 		
 		It 'should have been registered' {
@@ -87,4 +87,3 @@ Describe 'Octopus Registration' {
 	
 	}
 }
-
