@@ -1,8 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle", "Octopus.Tentacle\Octopus.Tentacle.csproj", "{B0B059FE-55E0-4D1A-A61D-AD998C887C9F}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30406.217
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle", "Octopus.Tentacle\Octopus.Tentacle.csproj", "{B0B059FE-55E0-4D1A-A61D-AD998C887C9F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Tests", "Octopus.Tentacle.Tests\Octopus.Tentacle.Tests.csproj", "{6C2142D0-4FBC-4530-BB10-72031BA88634}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Tests", "Octopus.Tentacle.Tests\Octopus.Tentacle.Tests.csproj", "{6C2142D0-4FBC-4530-BB10-72031BA88634}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Upgrader", "Octopus.Upgrader\Octopus.Upgrader.csproj", "{B9B5973F-C6BA-4C54-8A43-42FB2D1B67C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +23,15 @@ Global
 		{6C2142D0-4FBC-4530-BB10-72031BA88634}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C2142D0-4FBC-4530-BB10-72031BA88634}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C2142D0-4FBC-4530-BB10-72031BA88634}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9B5973F-C6BA-4C54-8A43-42FB2D1B67C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9B5973F-C6BA-4C54-8A43-42FB2D1B67C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9B5973F-C6BA-4C54-8A43-42FB2D1B67C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9B5973F-C6BA-4C54-8A43-42FB2D1B67C0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {304A4C5A-D6B8-419A-8621-792D937D596D}
 	EndGlobalSection
 EndGlobal
