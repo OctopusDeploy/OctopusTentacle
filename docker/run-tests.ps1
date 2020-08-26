@@ -11,6 +11,11 @@ param (
 Install-Module -Name "Pester" -MinimumVersion "5.0.2" -Force -SkipPublisherCheck
 Import-Module -Name "Pester"
 
+# We do this here even though it's a dependency of our tests because we can't install it more than once
+# without erroring.
+Install-Package Octopus.Client -source https://www.nuget.org/api/v2 -Force -SkipDependencies
+Add-Type -Path (Join-Path (Get-Item ((Get-Package Octopus.Client).source)).Directory.FullName "lib/net452/Octopus.Client.dll")
+
 . .\common.ps1
 
 $networkName = "${ProjectName}_default"
