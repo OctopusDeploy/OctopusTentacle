@@ -5,9 +5,6 @@
 [string]$script:TentacleVersion = $env:TentacleVersion
 [string]$script:ProjectName = $env:ProjectName
 
-Install-Package Octopus.Client -source https://www.nuget.org/api/v2 -Force -SkipDependencies
-Add-Type -Path (Join-Path (Get-Item ((Get-Package Octopus.Client).source)).Directory.FullName "lib/net452/Octopus.Client.dll")
-
 function script:New-OctopusRepository() {
 	$octopusURI = "http://$($script:IPAddress):8080"
 	Write-Host "Using Octopus server at $octopusURI"
@@ -56,7 +53,7 @@ Describe 'Octopus Registration' {
 		}
 
 		it 'should be healthy' {
-			$isHealthy = $tentacles[0].HealthStatus -eq "Healthy" -or $tentacle[0].HealthStatus -eq "HasWarnings"
+			$isHealthy = $tentacles[0].HealthStatus -eq "Healthy" -or $tentacles[0].HealthStatus -eq "HasWarnings"
 			$isHealthy | Should -Be $true
 		}
 
@@ -77,7 +74,7 @@ Describe 'Octopus Registration' {
 		}
 
 		it 'should be healthy' {
-			$isHealthy = $tentacles[0].HealthStatus -eq "Healthy" -or $tentacle[0].HealthStatus -eq "HasWarnings"
+			$isHealthy = $tentacles[0].HealthStatus -eq "Healthy" -or $tentacles[0].HealthStatus -eq "HasWarnings"
 			$isHealthy | Should -Be $true
 		}
 
