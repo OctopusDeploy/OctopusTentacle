@@ -11,6 +11,7 @@
     <ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
     <AppConfig Condition="'$(TargetFramework)' == 'netcoreapp3.1'">app.netcore.config</AppConfig>
   </PropertyGroup>
+
   <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
     <TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
   </PropertyGroup>
@@ -50,7 +51,7 @@
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
     <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+  <ItemGroup>
     <ProjectReference Include="..\Octopus.Upgrader\Octopus.Upgrader.csproj" />
   </ItemGroup>
 </Project>
