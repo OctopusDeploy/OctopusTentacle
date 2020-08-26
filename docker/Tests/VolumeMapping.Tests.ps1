@@ -50,8 +50,10 @@ Describe 'Volume Mounts' {
 				$repository.Projects.Delete($project)
 			}
 
-			Remove-Item .\Volumes\polling-tentacle\Applications\Development -Recurse -Force
-			Remove-Item .\Volumes\listening-tentacle\Applications\Development -Recurse -Force
+			# We clean everything in here except .gitversion as the directory's existence needs to be preserved
+			# in order that the Docker bind mounts (required before our tests even start) can be wired up.
+			Remove-Item .\Volumes\polling-tentacle\Applications\* -Recurse -Force -Exclude ".gitignore"
+			Remove-Item .\Volumes\listening-tentacle\Applications\* -Recurse -Force -Exclude ".gitignore"
 		}
 
 		BeforeEach {
