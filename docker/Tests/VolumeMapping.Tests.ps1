@@ -1,59 +1,70 @@
-param(
-	[ValidateNotNullOrEmpty()]
-	[string]$IPAddress,
-	[ValidateNotNullOrEmpty()]
-	[string]$OctopusUsername,
-	[ValidateNotNullOrEmpty()]
-	[string]$OctopusPassword,
-	[ValidateNotNullOrEmpty()]
-	[string]$OctopusVersion
-)
+# Pester 5 doesn't yet support parameterised tests
+[string]$script:IPAddress = $env:IPAddress
+[string]$script:OctopusUsername = $env:OctopusUsername
+[string]$script:OctopusPassword = $env:OctopusPassword
+[string]$script:TentacleVersion = $env:TentacleVersion
+[string]$script:ProjectName = $env:ProjectName
 
-function Write-DeploymentLogs($logs) {
+Install-Package Octopus.Client -source https://www.nuget.org/api/v2 -Force -SkipDependencies
+Add-Type -Path (Join-Path (Get-Item ((Get-Package Octopus.Client).source)).Directory.FullName "lib/net452/Octopus.Client.dll")
+
+function script:Write-DeploymentLogs($logs) {
  % { $logs.LogElements } | % { Write-Host $_.MessageText }
  % { $logs.Children } | % { Write-DeploymentLogs $_ }
 }
 
-$OctopusURI = "http://$($IPAddress):8080"
+function script:New-OctopusRepository() {
+	$octopusURI = "http://$($script:IPAddress):8080"
+	Write-Host "Using Octopus server at $octopusURI"
 
-Describe 'Volume Mounts' {
-	$endpoint = new-object Octopus.Client.OctopusServerEndpoint $OctopusURI
+	$endpoint = new-object Octopus.Client.OctopusServerEndpoint $octopusURI
 	$repository = new-object Octopus.Client.OctopusRepository $endpoint
 
-	$LoginObj = New-Object Octopus.Client.Model.LoginCommand
-	$LoginObj.Username = $OctopusUsername
-	$LoginObj.Password = $OctopusPassword
-	$repository.Users.SignIn($LoginObj)
+	$loginObj = New-Object Octopus.Client.Model.LoginCommand
+	$loginObj.Username = $script:OctopusUsername
+	$loginObj.Password = $script:OctopusPassword
+	$repository.Users.SignIn($loginObj)
+
+	[Octopus.Client.OctopusRepository]$repository
+}
+
+Describe 'Volume Mounts' {
+
+	BeforeAll {
+		$repository = script:New-OctopusRepository
+	}
 
 	Context 'C:\TentacleHome' {
 
 		it 'polling-tentacle should contain logs' {
-			Test-Path "./Volumes/polling-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | should be $true
+			Test-Path "./Volumes/polling-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | Should -Be $true
 		}
 		
 		it 'listening-tentacle should contain logs' {
-			Test-Path "./Volumes/listening-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | should be $true
+			Test-Path "./Volumes/listening-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | Should -Be $true
 		}
 	}
 
 	Context 'C:\Applications' {
 
-		function Clean {
+		function script:Clean {
 			$project = $repository.Projects.FindByName("MyFirstProject")
 			if ($null -ne $project) {
 				$repository.Projects.Delete($project)
 			}
 
-			Remove-Item .\Volumes\polling-tentacle\Applications\* -Recurse -Force
-			Remove-Item .\Volumes\listening-tentacle\Applications\* -Recurse -Force
+			# We clean everything in here except .gitversion as the directory's existence needs to be preserved
+			# in order that the Docker bind mounts (required before our tests even start) can be wired up.
+			Remove-Item .\Volumes\polling-tentacle\Applications\* -Recurse -Force -Exclude ".gitignore"
+			Remove-Item .\Volumes\listening-tentacle\Applications\* -Recurse -Force -Exclude ".gitignore"
 		}
 
 		BeforeEach {
-			Clean
+			script:Clean
 		}
 
 		AfterEach {
-			Clean
+			script:Clean
 		}
 
 		it 'should contain deployed packages' {
@@ -76,7 +87,7 @@ Describe 'Volume Mounts' {
 			finally {
 				# Write the logs from the reindex task to debug any issues
 				$details = $repository.Tasks.GetDetails($Task1)
-				$details.ActivityLogs | % { Write-DeploymentLogs $_ }
+				$details.ActivityLogs | % { script:Write-DeploymentLogs $_ }
 			}
 
 			# Create Project
@@ -120,8 +131,8 @@ Describe 'Volume Mounts' {
 				$details.ActivityLogs | % { Write-DeploymentLogs $_ }
 			}
 
-			Test-Path "./Volumes/polling-tentacle/Applications/$($env.Name)/$($pkg.PackageId)" | should be $true
-			Test-Path "./Volumes/listening-tentacle/Applications/$($env.Name)/$($pkg.PackageId)" | should be $true
+			Test-Path "./Volumes/polling-tentacle/Applications/$($env.Name)/$($pkg.PackageId)" | Should -Be $true
+			Test-Path "./Volumes/listening-tentacle/Applications/$($env.Name)/$($pkg.PackageId)" | Should -Be $true
 		}
 	}
 }

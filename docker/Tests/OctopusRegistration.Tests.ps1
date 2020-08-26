@@ -1,79 +1,89 @@
-param(
-	[ValidateNotNullOrEmpty()]
-	[string]$IPAddress,
-	[ValidateNotNullOrEmpty()]
-	[string]$OctopusUsername,
-	[ValidateNotNullOrEmpty()]
-	[string]$OctopusPassword,
-	[ValidateNotNullOrEmpty()]
-	[string]$TentacleVersion
-)
+# Pester 5 doesn't yet support parameterised tests
+[string]$script:IPAddress = $env:IPAddress
+[string]$script:OctopusUsername = $env:OctopusUsername
+[string]$script:OctopusPassword = $env:OctopusPassword
+[string]$script:TentacleVersion = $env:TentacleVersion
+[string]$script:ProjectName = $env:ProjectName
 
-Add-Type -Path './Testing/Tools/Octopus.Client.dll'
+Install-Package Octopus.Client -source https://www.nuget.org/api/v2 -Force -SkipDependencies
+Add-Type -Path (Join-Path (Get-Item ((Get-Package Octopus.Client).source)).Directory.FullName "lib/net452/Octopus.Client.dll")
 
-$OctopusURI = "http://$($IPAddress):8080"
+function script:New-OctopusRepository() {
+	$octopusURI = "http://$($script:IPAddress):8080"
+	Write-Host "Using Octopus server at $octopusURI"
 
-function Registration-Tests($Tentacles) {
-	it 'should have been registered' {
-		$Tentacles.Count | should be 1
-	}
+	$endpoint = new-object Octopus.Client.OctopusServerEndpoint $octopusURI
+	$repository = new-object Octopus.Client.OctopusRepository $endpoint
 
-	it 'should be healthy' {
-		$isHealthy = $Tentacles[0].HealthStatus -eq "Healthy" -or $Tentacles[0].HealthStatus -eq "HasWarnings"
-		$isHealthy | Should Be $true
-	}
+	$loginObj = New-Object Octopus.Client.Model.LoginCommand
+	$loginObj.Username = $script:OctopusUsername
+	$loginObj.Password = $script:OctopusPassword
+	$repository.Users.SignIn($loginObj)
 
-	it 'should have the correct version installed' {
-		$Tentacles[0].Endpoint.TentacleVersionDetails.Version | should be $TentacleVersion
-	}
+	[Octopus.Client.OctopusRepository]$repository
 }
 
 Describe 'Octopus Registration' {
 	if ([System.Environment]::OSVersion.Version -eq '10.0.14393.0') {
-		Write-Warning "This test does not run successfully on windows 2016"
+		Write-Warning "This test does not run successfully on Windows 2016"
 		return
 	}
 
-	Write-Host "Using Octopus server at $OctopusURI"
+	BeforeAll {
+		$repository = script:New-OctopusRepository
 
-	Write-Host "Creating Octopus client..."
-	$endpoint = new-object Octopus.Client.OctopusServerEndpoint $OctopusURI
+		Write-Host "Enumerating machines..."
+		$machines = $repository.Machines.FindAll()
 
-	Write-Host "Creating Octopus repository..."
-	$repository = new-object Octopus.Client.OctopusRepository $endpoint
+		Write-Host "Updating Calamari..."
+		$machineIds = $machines.id
+		$task = ($repository).Tasks.ExecuteCalamariUpdate($null, $machineIds);
+		$repository.Tasks.WaitForCompletion($task, 4, 3);
 
-	Write-Host "Signing in..."
-	$LoginObj = New-Object Octopus.Client.Model.LoginCommand
-	$LoginObj.Username = $OctopusUsername
-	$LoginObj.Password = $OctopusPassword
-	$repository.Users.SignIn($LoginObj)
-
-	Write-Host "Enumerating machines..."
-	$machines = $repository.Machines.FindAll()
-	$machineIds = $machines | % { $_.Id }
-
-	Write-Host "Updating Calamari..."
-	$task = $repository.Tasks.ExecuteCalamariUpdate($null, $machineIds);
-	$repository.Tasks.WaitForCompletion($task, 4, 3);
-
-	Write-Host "Executing health check..."
-	$task = $repository.Tasks.ExecuteHealthCheck();
-	$repository.Tasks.WaitForCompletion($task, 4, 3);
-
-	$Machines = $repository.Machines.FindAll()
+		Write-Host "Executing health checks..."
+		$task = $repository.Tasks.ExecuteHealthCheck();
+		$repository.Tasks.WaitForCompletion($task, 4, 3);
+	}
 
 	Context 'Polling Tentacle' {
-		$PollingTentacles = $($Machines | where { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentacleActive })
-		Registration-Tests $PollingTentacles
+
+		BeforeAll {
+			$tentacles = , ($machines | Where-Object { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentacleActive })
+		}
+		
+		It 'should have been registered' {
+			$tentacles.Length | Should -Be 1
+		}
+
+		it 'should be healthy' {
+			$isHealthy = $tentacles[0].HealthStatus -eq "Healthy" -or $tentacle[0].HealthStatus -eq "HasWarnings"
+			$isHealthy | Should -Be $true
+		}
+
+		it 'should have the correct version installed' {
+			$tentacles[0].Endpoint.TentacleVersionDetails.Version | Should -Be $TentacleVersion
+		}
+	
 	}
 
 	Context 'Listening Tentacle' {
-		$ListeningTentacles = $($Machines | where { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentaclePassive })
-		Registration-Tests $ListeningTentacles
-	}
 
-	# it 'should have imported the migration export' {
-	# 	$DevEnv = $repository.Environments.FindByName("Development")
-	# 	$DevEnv | should not be $null
-	# }
+		BeforeAll {
+			$tentacles = , ($machines | Where-Object { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentaclePassive })
+		}
+		
+		It 'should have been registered' {
+			$tentacles.Length | Should -Be 1
+		}
+
+		it 'should be healthy' {
+			$isHealthy = $tentacles[0].HealthStatus -eq "Healthy" -or $tentacle[0].HealthStatus -eq "HasWarnings"
+			$isHealthy | Should -Be $true
+		}
+
+		it 'should have the correct version installed' {
+			$tentacles[0].Endpoint.TentacleVersionDetails.Version | Should -Be $TentacleVersion
+		}
+	
+	}
 }
