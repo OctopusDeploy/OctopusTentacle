@@ -93,6 +93,20 @@ Task("__Default")
     .IsDependentOn("__CreateBinariesNuGet")
     .IsDependentOn("__CopyToLocalPackages");
 
+Task("__DefaultExcludingTests")
+    .IsDependentOn("__CheckForbiddenWords")
+    .IsDependentOn("__Version")
+    .IsDependentOn("__Clean")
+    .IsDependentOn("__Restore")
+    .IsDependentOn("__Build")
+    .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__SignBuiltFiles")
+    .IsDependentOn("__CreateTentacleInstaller")
+    .IsDependentOn("__CreateChocolateyPackage")
+    .IsDependentOn("__CreateInstallerNuGet")
+    .IsDependentOn("__CreateBinariesNuGet")
+    .IsDependentOn("__CopyToLocalPackages");
+
 Task("__LinuxPackage")
     .IsDependentOn("__Clean")
     .IsDependentOn("__UpdateGitVersionCommandLineConfig")
@@ -588,6 +602,9 @@ private void SignAndTimeStamp(params FilePath[] assemblies)
 //////////////////////////////////////////////////////////////////////
 Task("Default")
     .IsDependentOn("__Default");
+
+Task("DefaultExcludingTests")
+    .IsDependentOn("__DefaultExcludingTests");
 
 Task("LinuxPackage")
     .IsDependentOn("__LinuxPackage");
