@@ -65,11 +65,3 @@ services:
       - "./docker/Volumes/polling-tentacle/Applications:C:/Applications"
       - "./docker/Volumes/polling-tentacle/TentacleHome:C:/TentacleHome"
     restart: always
-
-networks:
-  # Windows Server 2016 doesn't support multiple NAT networks so we rely on the existence of Docker's
-  # default "nat" network rather than creating one per docker-compose project.
-  default:
-    external:
-      name: nat
-  
