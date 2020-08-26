@@ -53,7 +53,7 @@ Describe 'Octopus Registration' {
 		}
 
 		it 'should be healthy' {
-			$isHealthy = $tentacles[0].HealthStatus -eq "Healthy" -or $tentacle[0].HealthStatus -eq "HasWarnings"
+			$isHealthy = $tentacles[0].HealthStatus -eq "Healthy" -or $tentacles[0].HealthStatus -eq "HasWarnings"
 			$isHealthy | Should -Be $true
 		}
 
@@ -74,7 +74,7 @@ Describe 'Octopus Registration' {
 		}
 
 		it 'should be healthy' {
-			$isHealthy = $tentacles[0].HealthStatus -eq "Healthy" -or $tentacle[0].HealthStatus -eq "HasWarnings"
+			$isHealthy = $tentacles[0].HealthStatus -eq "Healthy" -or $tentacles[0].HealthStatus -eq "HasWarnings"
 			$isHealthy | Should -Be $true
 		}
 
