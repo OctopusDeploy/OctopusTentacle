@@ -5,8 +5,8 @@ services:
             context: .
             dockerfile: ./docker/windows/Dockerfile
             args:
-                BASE_IMAGE: microsoft/windowsservercore
-                SERVERCORE_VERSION: 1607
+                BASE_IMAGE: registry.gitlab.com/octopus-devops/container-registry/windowsservercore
+                SERVERCORE_VERSION: 0.1.0-add-windowsservercore-base-image.57-windows-1607
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
         image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER?err}-windows-1607
