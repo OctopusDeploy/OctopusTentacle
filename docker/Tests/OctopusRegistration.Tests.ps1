@@ -69,7 +69,7 @@ Describe 'Octopus Registration' {
 	Context 'Listening Tentacle' {
 
 		BeforeAll {
-			$tentacles = $($machines | Where-Object { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentaclePassive })
+			$tentacles = , ($machines | Where-Object { $_.Endpoint.CommunicationStyle -eq [Octopus.Client.Model.CommunicationStyle]::TentaclePassive })
 		}
 		
 		It 'should have been registered' {
