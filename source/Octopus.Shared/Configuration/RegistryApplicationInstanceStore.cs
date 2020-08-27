@@ -21,6 +21,7 @@ namespace Octopus.Shared.Configuration
         {
             var results = new List<ApplicationInstanceRecord>();
 
+#if FULL_FRAMEWORK
             using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
             using (var subKey = rootKey.OpenSubKey(KeyName, false))
             {
@@ -47,6 +48,7 @@ namespace Octopus.Shared.Configuration
                     }
                 }
             }
+#endif
 
             return results;
         }
@@ -55,6 +57,7 @@ namespace Octopus.Shared.Configuration
 
         public void DeleteFromRegistry(ApplicationName name, string instanceName)
         {
+#if FULL_FRAMEWORK
             using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
             using (var subKey = rootKey.OpenSubKey(KeyName, true))
             {
@@ -70,6 +73,7 @@ namespace Octopus.Shared.Configuration
                     applicationNameKey.Flush();
                 }
             }
+#endif
         }
     }
 }
