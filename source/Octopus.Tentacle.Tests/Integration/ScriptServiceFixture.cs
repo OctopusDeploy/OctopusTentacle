@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using FluentAssertions;
@@ -91,8 +92,9 @@ namespace Octopus.Tentacle.Tests.Integration
 
             try
             {
-                var pollInterval = 100;
-                var safetyLimit = (20 * 1000) / pollInterval;
+                var pollInterval = TimeSpan.FromSeconds(1);
+                var safetyLimit = TimeSpan.FromSeconds(120);
+                var sw = Stopwatch.StartNew();
                 
                 var bashPing = "ping 127.0.0.1 -c 100";
                 var cmdPing = "& ping.exe 127.0.0.1 -n 100";
@@ -109,7 +111,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 {
                     Console.WriteLine(state);
                     Thread.Sleep(pollInterval);
-                    if (safetyLimit-- == 0) Assert.Fail("Did not start in a reasonable time");
+                    if (sw.Elapsed > safetyLimit) Assert.Fail("Did not start in a reasonable time");
                 }
                 Console.WriteLine("***" + state);
 
@@ -118,10 +120,11 @@ namespace Octopus.Tentacle.Tests.Integration
                 while ((service.GetStatus(new ScriptStatusRequest(ticket, 0)).State) == ProcessState.Running)
                 {
                     var status = service.GetStatus(new ScriptStatusRequest(ticket, 0));
+                    Console.WriteLine($"{status.State} ({sw.Elapsed} elapsed)");
                     if (status.Logs.Any(l => l.Source == ProcessOutputSource.StdOut)) break;
                     Console.WriteLine("...");
                     Thread.Sleep(pollInterval);
-                    if (safetyLimit-- == 0) Assert.Fail("Did not log something in a reasonable time");
+                    if (sw.Elapsed > safetyLimit) Assert.Fail("Did not log something in a reasonable time");
                 }
 
                 Console.WriteLine("Canceling");
@@ -130,9 +133,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 Console.WriteLine("Waiting for complete");
                 while ((state = service.GetStatus(new ScriptStatusRequest(ticket, 0)).State) != ProcessState.Complete)
                 {
-                    Console.WriteLine(state);
+                    var status = service.GetStatus(new ScriptStatusRequest(ticket, 0));
+                    Console.WriteLine($"{status.State} ({sw.Elapsed} elapsed)");
                     Thread.Sleep(pollInterval);
-                    if (safetyLimit-- == 0) Assert.Fail("Did not complete in a reasonable time");
+                    if (sw.Elapsed > safetyLimit) Assert.Fail("Did not complete in a reasonable time");
                 }
                 Console.WriteLine("***" + state);
 
@@ -146,7 +150,7 @@ namespace Octopus.Tentacle.Tests.Integration
             }
             finally
             {
-                // Try and do our best to clean up the running powershell process which can get left open if we fail before attempting to cancel
+                // Try and do our best to clean up the running PowerShell process which can get left open if we fail before attempting to cancel
                 if (ticket != null)
                 {
                     Console.WriteLine("The test didn't complete successfully. Attempting to cancel the running script which should clean up any dangling processes.");

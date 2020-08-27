@@ -50,6 +50,7 @@ var corePublishDir = "./build/publish";
 var coreWinPublishDir = "./build/publish/win-x64";
 var tentacleSourceBinDir = "./source/Octopus.Tentacle/bin";
 var managerSourceBinDir = "./source/Octopus.Manager.Tentacle/bin";
+var linuxPackageFeedsDir = "./linux-package-feeds";
 
 GitVersion gitVersion;
 
@@ -92,18 +93,25 @@ Task("__Default")
     .IsDependentOn("__CreateBinariesNuGet")
     .IsDependentOn("__CopyToLocalPackages");
 
+Task("__DefaultExcludingTests")
+    .IsDependentOn("__CheckForbiddenWords")
+    .IsDependentOn("__Version")
+    .IsDependentOn("__Clean")
+    .IsDependentOn("__Restore")
+    .IsDependentOn("__Build")
+    .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__SignBuiltFiles")
+    .IsDependentOn("__CreateTentacleInstaller")
+    .IsDependentOn("__CreateChocolateyPackage")
+    .IsDependentOn("__CreateInstallerNuGet")
+    .IsDependentOn("__CreateBinariesNuGet")
+    .IsDependentOn("__CopyToLocalPackages");
+
 Task("__LinuxPackage")
     .IsDependentOn("__Clean")
     .IsDependentOn("__UpdateGitVersionCommandLineConfig")
-    .IsDependentOn("__BuildToolsContainer")
-    .IsDependentOn("__CreateDebianPackage")
+    .IsDependentOn("__CreateLinuxPackages")
     .IsDependentOn("__CreatePackagesNuGet");
-
-Task("__BuildToolsContainer")
-    .Does(() =>
-{
-    DockerBuild(new DockerImageBuildSettings { Tag = new string[] { "debian-tools" } }, Path.Combine(Environment.CurrentDirectory, @"docker/debian-tools"));
-});
 
 Task("__UpdateGitVersionCommandLineConfig")
     .Does(() =>
@@ -119,13 +127,43 @@ Task("__UpdateGitVersionCommandLineConfig")
     }
 });
 
-Task("__CreateDebianPackage")
+Task("__CreateLinuxPackages")
     .IsDependentOn("__DotnetPublish")
-    .IsDependentOn("__BuildToolsContainer")
-    .Does(() =>
+    .Does(context =>
 {
-    CreateDebianPackage("linux-x64");
-    CreateDebianPackage("linux-arm64");
+    if (string.IsNullOrEmpty(context.EnvironmentVariable("SIGN_PRIVATE_KEY"))
+        || string.IsNullOrEmpty(context.EnvironmentVariable("SIGN_PASSPHRASE"))) {
+        throw new Exception("This build requires environment variables `SIGN_PRIVATE_KEY` (in a format gpg1 can import)"
+            + " and `SIGN_PASSPHRASE`, which are used to sign the .rpm.");
+    }
+    if (!context.DirectoryExists(linuxPackageFeedsDir)) {
+        throw new Exception($"This build requires `{linuxPackageFeedsDir}` to contain scripts from https://github.com/OctopusDeploy/linux-package-feeds.\n"
+            + "They are usually added as an Artifact Dependency in TeamCity from 'Infrastructure / Linux Package Feeds' with the rule:\n"
+            + "  LinuxPackageFeedsTools.*.zip!*=>linux-package-feeds\n"
+            + "See https://build.octopushq.com/admin/editDependencies.html?id=buildType:OctopusDeploy_OctopusTentacle_PackageBuildLinuxPackages");
+    }
+
+    CopyFile(Path.Combine(Environment.CurrentDirectory, "scripts/configure-tentacle.sh"),Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64/configure-tentacle.sh"));
+    DockerRunWithoutResult(new DockerContainerRunSettings {
+        Rm = true,
+        Tty = true,
+        Env = new string[] {
+            $"VERSION={gitVersion.NuGetVersion}",
+            "BINARIES_PATH=/app/",
+            "PACKAGES_PATH=/artifacts",
+            "SIGN_PRIVATE_KEY",
+            "SIGN_PASSPHRASE"
+        },
+        Volume = new string[] {
+            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/scripts",
+            $"{Path.Combine(Environment.CurrentDirectory, linuxPackageFeedsDir)}:/opt/linux-package-feeds",
+            $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
+            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/artifacts"
+        }
+    }, "octopusdeploy/package-linux-docker:latest", "bash /scripts/package.sh");
+
+    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp3.1/linux-x64/*.deb", artifactsDir);
+    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp3.1/linux-x64/*.rpm", artifactsDir);
 });
 
 Task("__CheckForbiddenWords")
@@ -208,7 +246,6 @@ Task("__Build")
         settings
             .SetConfiguration(configuration)
             .SetVerbosity(verbosity)
-            .UseToolVersion(MSBuildToolVersion.VS2019)
     );
 });
 
@@ -233,7 +270,7 @@ Task("__DotnetPublish")
                 "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
                 new DotNetCorePublishSettings
                 {
-                    Framework = "netcoreapp2.2",
+                    Framework = "netcoreapp3.1",
                     Configuration = configuration,
                     OutputDirectory = $"{corePublishDir}/{rid}",
                     Runtime = rid,
@@ -258,7 +295,7 @@ Task("__SignBuiltFiles")
     // check that any unsigned libraries, that Octopus Deploy authors, get signed to play nice with security scanning tools
     // refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
     // decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
-    var filesToSign = 
+    var filesToSign =
         GetFiles($"{coreWinPublishDir}/**/Octo*.exe",
             $"{coreWinPublishDir}/**/Octo*.dll",
             $"{coreWinPublishDir}/**/Tentacle.exe",
@@ -414,12 +451,12 @@ Task("__CreateBinariesNuGet")
     foreach(var rid in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))
     {
         CleanDirectory(binariesPackageDir);
-        CreateDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.{rid}");
-        CopyFiles($"{corePublishDir}/{rid}/*", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.{rid}");
-        DeleteFile($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.{rid}/Tentacle.exe.manifest");
-        CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.{rid}");
+        CreateDirectory($"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}");
+        CopyFiles($"{corePublishDir}/{rid}/*", $"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}");
+        DeleteFile($"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}/Tentacle.exe.manifest");
+        CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}");
         CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
-        CopyFile("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp2.2/Tentacle.Binaries.{rid}.targets");
+        CopyFile("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.Binaries.{rid}.targets");
 
         NuGetPack(Path.Combine(binariesPackageDir, $"Tentacle.Binaries.nuspec"), new NuGetPackSettings {
             Version = gitVersion.NuGetVersion,
@@ -499,7 +536,6 @@ private void BuildInstallerForPlatform(PlatformTarget platformTarget)
             .WithProperty("AllowUpgrade", allowUpgrade.ToString())
             .SetVerbosity(verbosity)
             .SetPlatformTarget(platformTarget)
-            .UseToolVersion(MSBuildToolVersion.VS2019)
             .WithTarget("build")
     );
     var builtMsi = File($"./source/Octopus.Tentacle.Installer/bin/{platformTarget}/Octopus.Tentacle.msi");
@@ -587,6 +623,9 @@ private void CreateDebianPackage(string architecture) {
 //////////////////////////////////////////////////////////////////////
 Task("Default")
     .IsDependentOn("__Default");
+
+Task("DefaultExcludingTests")
+    .IsDependentOn("__DefaultExcludingTests");
 
 Task("LinuxPackage")
     .IsDependentOn("__LinuxPackage");
