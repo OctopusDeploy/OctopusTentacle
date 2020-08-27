@@ -54,5 +54,5 @@ architecture=$1
 rm -rf tentacle || exit
 mkdir tentacle || exit
 cp -a "$BINARIES_PATH/." tentacle/ || exit
-tar czvf "tentacle-$VERSION-linux_x64.tar.gz" tentacle || exit
-mv -f "tentacle-$VERSION-linux_x64.tar.gz" "$PACKAGES_PATH" || exit
+tar czvf "tentacle-$VERSION-$architecture.tar.gz" tentacle || exit
+mv -f "tentacle-$VERSION-$architecture.tar.gz" "$PACKAGES_PATH" || exit
