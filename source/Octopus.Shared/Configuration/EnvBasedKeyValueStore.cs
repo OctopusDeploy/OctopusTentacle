@@ -104,14 +104,16 @@ namespace Octopus.Shared.Configuration
             {
                 var lastPathSeparator = directoryToCheck.LastIndexOf(Path.DirectorySeparatorChar);
                 directoryToCheck = directoryToCheck.Substring(0, lastPathSeparator);
-                if (directoryToCheck.Length == 2 && directoryToCheck.EndsWith(":"))
-                    directoryToCheck += Path.DirectorySeparatorChar; // for root path in Windows we need to add the separator back on
-                envPathToCheck = Path.Combine(directoryToCheck, ".env");
-                
-                envFileExists = fileSystem.FileExists(envPathToCheck);
 
                 if (lastPathSeparator >= 0 && lastPathSeparator <= 2)
                     rootDirectoryReached = true;
+
+                if (rootDirectoryReached)
+                    directoryToCheck += Path.DirectorySeparatorChar; // for root path when need to tack the separator back on
+                
+                envPathToCheck = Path.Combine(directoryToCheck, ".env");
+                
+                envFileExists = fileSystem.FileExists(envPathToCheck);
             }
 
             return envFileExists ? envPathToCheck : null;
