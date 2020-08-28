@@ -100,10 +100,10 @@ namespace Octopus.Shared.Tests.Configuration
             var testAssemblyLocation = Path.GetDirectoryName(typeof(EnvBasedKeyValueStoreFixture).Assembly.Location);
             var envPath = Path.Combine(testAssemblyLocation, ".env");
             fileSystem.FileExists(envPath).Returns(true);
-            fileSystem.ReadAllText(envPath).Returns(TestFileContent(new []{ "Octopus.HomeDirectory=.", "Foo=Bar" }));
+            fileSystem.ReadAllText(envPath).Returns(TestFileContent(new []{ "Octopus.HomeDirectory=.", "Foo=Bar==" }));
             var subject = new EnvBasedKeyValueStore(fileSystem);
             var value = subject.Get("Foo");
-            value.Should().Be("Bar");
+            value.Should().Be("Bar==");
         }
 
         string TestFileContent(string[] content)

@@ -71,10 +71,12 @@ namespace Octopus.Shared.Configuration
             
             foreach (var line in lines.Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith("#")))
             {
-                var kvp = line.Split('=');
-                if (kvp.Length < 2)
+                var splitIndex = line.IndexOf('=');
+                if (splitIndex < 0)
                     throw new ArgumentException($"The line '{line}' is not formatted correctly");
-                results.Add(kvp[0].Trim(), kvp[1].Trim());
+                var key = line.Substring(0, splitIndex).Trim();
+                var value = line.Substring(splitIndex + 1).Trim();
+                results.Add(key, value);
             }
 
             return results;
