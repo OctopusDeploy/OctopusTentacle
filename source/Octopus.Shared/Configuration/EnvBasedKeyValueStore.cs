@@ -61,7 +61,7 @@ namespace Octopus.Shared.Configuration
 
         Dictionary<string, object?> LoadFromEnvFile()
         {
-            var envFile = LocateEnvFile();
+            var envFile = LocateEnvFile(fileSystem);
             if (envFile == null)
                 throw new InvalidOperationException("Could not locate .env file");
 
@@ -82,7 +82,7 @@ namespace Octopus.Shared.Configuration
             return results;
         }
 
-        string? LocateEnvFile()
+        internal static string? LocateEnvFile(IOctopusFileSystem fileSystem)
         {
             var directoryToCheck = Path.GetDirectoryName(typeof(EnvBasedKeyValueStore).Assembly.Location);
 

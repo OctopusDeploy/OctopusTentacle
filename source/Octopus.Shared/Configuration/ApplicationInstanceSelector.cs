@@ -1,18 +1,18 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
-using System.Diagnostics.CodeAnalysis;
 using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
     public class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
-        const string DebugDefaultInstanceName = "DebugDefault";
+        const string EnvFileBasedInstanceName = "EnvFileInstance";
 
         readonly ApplicationName applicationName;
         string currentInstanceName;
@@ -91,19 +91,14 @@ namespace Octopus.Shared.Configuration
         {
             ApplicationInstanceRecord? instance = null;
 
-            if (Debugger.IsAttached && string.IsNullOrWhiteSpace(currentInstanceName))
-            {
-                // for debug we allow use of a .env file, and no instance config is required on the machine in this scenario
-                // This does mean that in debug, if there is a default instance and you want that, you have to pass the `--instance` explicitly
-                return new ApplicationInstanceRecord(DebugDefaultInstanceName, applicationName, string.Empty);
-            }
-            
+            var envFile = EnvBasedKeyValueStore.LocateEnvFile(fileSystem);
+
             var anyInstances = instanceStore.AnyInstancesConfigured(applicationName);
-            if (!anyInstances)
+            if (!anyInstances && envFile == null)
                 throw new ControlledFailureException(
                     $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
 
-            instance = string.IsNullOrEmpty(currentInstanceName) ? TryLoadDefaultInstance() : TryLoadInstanceByName();
+            instance = string.IsNullOrEmpty(currentInstanceName) ? TryLoadDefaultInstance(envFile) : TryLoadInstanceByName();
 
             if (instance == null)
             {
@@ -153,7 +148,7 @@ namespace Octopus.Shared.Configuration
                 applicationName,
                 record.InstanceName,
                 record.ConfigurationFilePath,
-                record.InstanceName == DebugDefaultInstanceName ? (IKeyValueStore)new EnvBasedKeyValueStore(fileSystem) :  new XmlFileKeyValueStore(fileSystem, record.ConfigurationFilePath));
+                record.InstanceName == EnvFileBasedInstanceName ? (IKeyValueStore)new EnvBasedKeyValueStore(fileSystem) :  new XmlFileKeyValueStore(fileSystem, record.ConfigurationFilePath));
         }
 
         private ApplicationInstanceRecord? TryLoadInstanceByName()
@@ -175,10 +170,14 @@ namespace Octopus.Shared.Configuration
             return instance;
         }
 
-        private ApplicationInstanceRecord TryLoadDefaultInstance()
+        private ApplicationInstanceRecord TryLoadDefaultInstance(string? envFile)
         {
             ApplicationInstanceRecord instance;
             var instances = instanceStore.ListInstances(applicationName);
+            if (instances.Count == 0 && envFile != null)
+            {
+                return new ApplicationInstanceRecord(EnvFileBasedInstanceName, applicationName, string.Empty);
+            }
             if (instances.Count == 1)
             {
                 instance = instances.First();
