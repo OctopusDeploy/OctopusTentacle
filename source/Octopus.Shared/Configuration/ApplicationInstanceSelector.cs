@@ -1,15 +1,19 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using System.Diagnostics.CodeAnalysis;
+using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
     public class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
+        const string DebugDefaultInstanceName = "DebugDefault";
+
         readonly ApplicationName applicationName;
         string currentInstanceName;
         readonly IOctopusFileSystem fileSystem;
@@ -86,6 +90,14 @@ namespace Octopus.Shared.Configuration
         internal ApplicationInstanceRecord LoadInstance()
         {
             ApplicationInstanceRecord? instance = null;
+
+            if (Debugger.IsAttached && string.IsNullOrWhiteSpace(currentInstanceName))
+            {
+                // for debug we allow use of a .env file, and no instance config is required on the machine in this scenario
+                // This does mean that in debug, if there is a default instance and you want that, you have to pass the `--instance` explicitly
+                return new ApplicationInstanceRecord(DebugDefaultInstanceName, applicationName, string.Empty);
+            }
+            
             var anyInstances = instanceStore.AnyInstancesConfigured(applicationName);
             if (!anyInstances)
                 throw new ControlledFailureException(
@@ -141,7 +153,7 @@ namespace Octopus.Shared.Configuration
                 applicationName,
                 record.InstanceName,
                 record.ConfigurationFilePath,
-                new XmlFileKeyValueStore(fileSystem, record.ConfigurationFilePath));
+                record.InstanceName == DebugDefaultInstanceName ? (IKeyValueStore)new EnvBasedKeyValueStore(fileSystem) :  new XmlFileKeyValueStore(fileSystem, record.ConfigurationFilePath));
         }
 
         private ApplicationInstanceRecord? TryLoadInstanceByName()
