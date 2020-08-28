@@ -49,10 +49,9 @@ FPM_RPM_OPTS=(
 )
 
 architecture=$1
-if [ $architecture == 'linux-x64' ]
+if [[ $architecture == 'linux-x64' ]]; then
   source /opt/linux-package-feeds/create-linux-packages.sh || exit
 fi
-
 
 # Create .tar.gz archive
 rm -rf tentacle || exit
