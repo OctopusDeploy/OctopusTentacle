@@ -67,26 +67,14 @@ namespace Octopus.Shared.Configuration
 
             var content = fileSystem.ReadAllText(envFile);
             var lines = content.Split(Environment.NewLine.ToCharArray());
-            var inBlock = false;
             var results = new Dictionary<string, object?>();
             
-            foreach (var line in lines.Where(l => !string.IsNullOrWhiteSpace(l)))
+            foreach (var line in lines.Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith("#")))
             {
-                if (line == "[octopus]")
-                {
-                    inBlock = true;
-                }
-                else if (inBlock && line.StartsWith("["))
-                {
-                    return results;
-                }
-                else
-                {
-                    var kvp = line.Split('=');
-                    if (kvp.Length < 2)
-                        throw new ArgumentException($"The line '{line}' is not formatted correctly");
-                    results.Add(kvp[0].Trim(), kvp[1].Trim());
-                }
+                var kvp = line.Split('=');
+                if (kvp.Length < 2)
+                    throw new ArgumentException($"The line '{line}' is not formatted correctly");
+                results.Add(kvp[0].Trim(), kvp[1].Trim());
             }
 
             return results;

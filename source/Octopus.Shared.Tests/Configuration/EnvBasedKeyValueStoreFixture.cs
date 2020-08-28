@@ -36,6 +36,19 @@ namespace Octopus.Shared.Tests.Configuration
         }
 
         [Test]
+        public void CommentsGetIgnored()
+        {
+            var fileSystem = Substitute.For<IOctopusFileSystem>();
+            var testAssemblyLocation = Path.GetDirectoryName(typeof(EnvBasedKeyValueStoreFixture).Assembly.Location);
+            var envPath = Path.Combine(testAssemblyLocation, ".env");
+            fileSystem.FileExists(envPath).Returns(true);
+            fileSystem.ReadAllText(envPath).Returns(TestFileContent(new []{ "", "# some comment to test", "Octopus.HomeDirectory=." }));
+            var subject = new EnvBasedKeyValueStore(fileSystem);
+            var dir = subject.Get("Octopus.HomeDirectory");
+            dir.Should().Be(".");
+        }
+
+        [Test]
         public void FindsInParentDirectory()
         {
             var fileSystem = Substitute.For<IOctopusFileSystem>();
@@ -95,7 +108,7 @@ namespace Octopus.Shared.Tests.Configuration
 
         string TestFileContent(string[] content)
         {
-            var lines = new[] { "", "[octopus]" }.Union(content).Union(new[] { "" }).ToArray();
+            var lines = new[] { "" }.Union(content).Union(new[] { "" }).ToArray();
             var textContent = string.Join(Environment.NewLine, lines);
             return textContent;
         }
