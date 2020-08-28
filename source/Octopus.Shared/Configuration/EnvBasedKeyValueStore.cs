@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared.Util;
@@ -31,8 +32,12 @@ namespace Octopus.Shared.Configuration
                 return defaultValue;
 
             var data = loadedValues[name];
+            if (data == null)
+                return default(TData)!;
             if (typeof(TData) != typeof(string))
-                return (TData)Convert.ChangeType(data, typeof(TData));
+            {
+                return JsonConvert.DeserializeObject<TData>((string)data, JsonSerialization.GetDefaultSerializerSettings());
+            }
             return (TData) data!;
         }
 
