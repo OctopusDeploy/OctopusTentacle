@@ -279,6 +279,20 @@ Task("__DotnetPublish")
                 }
             );
         }
+
+        // R2R single files require compilation on the target environment.
+        // TODO: split compilation so we can compile on and publish R2R for multiple runtimes
+        // https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#readytorun-images
+        DotNetCorePublish(
+            "./source/Octopus.Upgrader/Octopus.Upgrader.csproj",
+            new DotNetCorePublishSettings
+            {
+                Configuration = configuration,
+                OutputDirectory = $"{corePublishDir}/win-x64",
+                Runtime = "win-x64",
+                ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
+            }
+        );
     });
 
 private IEnumerable<string> GetProjectRuntimeIds(string projectFile)

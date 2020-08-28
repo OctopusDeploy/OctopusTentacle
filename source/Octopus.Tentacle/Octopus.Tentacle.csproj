@@ -51,7 +51,4 @@
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
     <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Octopus.Upgrader\Octopus.Upgrader.csproj" />
-  </ItemGroup>
 </Project>
