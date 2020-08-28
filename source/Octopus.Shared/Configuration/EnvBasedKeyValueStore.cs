@@ -31,6 +31,8 @@ namespace Octopus.Shared.Configuration
                 return defaultValue;
 
             var data = loadedValues[name];
+            if (typeof(TData) != typeof(string))
+                return (TData)Convert.ChangeType(data, typeof(TData));
             return (TData) data!;
         }
 
