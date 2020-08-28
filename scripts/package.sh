@@ -47,9 +47,13 @@ FPM_DEB_OPTS=(
 FPM_RPM_OPTS=(
   --depends 'openssl-libs'
 )
-source /opt/linux-package-feeds/create-linux-packages.sh || exit
 
 architecture=$1
+if [ $architecture == 'linux-x64' ]
+  source /opt/linux-package-feeds/create-linux-packages.sh || exit
+fi
+
+
 # Create .tar.gz archive
 rm -rf tentacle || exit
 mkdir tentacle || exit
