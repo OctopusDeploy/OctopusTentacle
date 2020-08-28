@@ -91,7 +91,7 @@ namespace Octopus.Shared.Configuration
         {
             ApplicationInstanceRecord? instance = null;
 
-            var envFile = EnvBasedKeyValueStore.LocateEnvFile(fileSystem);
+            var envFile = EnvBasedKeyValueStore.LocateEnvFile(fileSystem, log);
 
             var anyInstances = instanceStore.AnyInstancesConfigured(applicationName);
             if (!anyInstances && envFile == null)

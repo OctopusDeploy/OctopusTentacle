@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Octopus.Configuration;
+using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
@@ -61,7 +62,7 @@ namespace Octopus.Shared.Configuration
 
         Dictionary<string, object?> LoadFromEnvFile()
         {
-            var envFile = LocateEnvFile(fileSystem);
+            var envFile = LocateEnvFile(fileSystem, null);
             if (envFile == null)
                 throw new InvalidOperationException("Could not locate .env file");
 
@@ -82,9 +83,14 @@ namespace Octopus.Shared.Configuration
             return results;
         }
 
-        internal static string? LocateEnvFile(IOctopusFileSystem fileSystem)
+        internal static string? LocateEnvFile(IOctopusFileSystem fileSystem, ILog? log)
         {
             var directoryToCheck = Path.GetDirectoryName(typeof(EnvBasedKeyValueStore).Assembly.Location);
+
+            if (log != null)
+            {
+                log.InfoFormat("Search for .env file, starting from {0}", directoryToCheck);
+            }
 
             var envPathToCheck = Path.Combine(directoryToCheck, ".env");
             var envFileExists = fileSystem.FileExists(envPathToCheck);
@@ -105,6 +111,12 @@ namespace Octopus.Shared.Configuration
                 
                 envFileExists = fileSystem.FileExists(envPathToCheck);
             }
+
+            if (log != null)
+                if (envFileExists)
+                    log.InfoFormat("Found .env file, {0}", envPathToCheck);
+                else
+                    log.Info("No .env file found");
 
             return envFileExists ? envPathToCheck : null;
         }
