@@ -86,6 +86,7 @@ Task("__Default")
     .IsDependentOn("__Build")
     .IsDependentOn("__Test")
     .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__DotnetPublish-Upgrader-Windows")
     .IsDependentOn("__SignBuiltFiles")
     .IsDependentOn("__CreateTentacleInstaller")
     .IsDependentOn("__CreateChocolateyPackage")
@@ -100,6 +101,7 @@ Task("__DefaultExcludingTests")
     .IsDependentOn("__Restore")
     .IsDependentOn("__Build")
     .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__DotnetPublish-Upgrader-Windows")
     .IsDependentOn("__SignBuiltFiles")
     .IsDependentOn("__CreateTentacleInstaller")
     .IsDependentOn("__CreateChocolateyPackage")
@@ -129,6 +131,7 @@ Task("__UpdateGitVersionCommandLineConfig")
 
 Task("__CreateLinuxPackages")
     .IsDependentOn("__DotnetPublish")
+    .IsDependentOn("__DotnetPublish-Upgrader-Linux")
     .Does(context =>
 {
     if (string.IsNullOrEmpty(context.EnvironmentVariable("SIGN_PRIVATE_KEY"))
@@ -279,21 +282,32 @@ Task("__DotnetPublish")
                 }
             );
         }
-
-        // R2R single files require compilation on the target environment.
-        // TODO: split compilation so we can compile on and publish R2R for multiple runtimes
-        // https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#readytorun-images
-        DotNetCorePublish(
-            "./source/Octopus.Upgrader/Octopus.Upgrader.csproj",
-            new DotNetCorePublishSettings
-            {
-                Configuration = configuration,
-                OutputDirectory = $"{corePublishDir}/win-x64",
-                Runtime = "win-x64",
-                ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
-            }
-        );
     });
+
+Task("__DotnetPublish-Upgrader-Windows")
+	.Does(() =>  {
+        PublishUpgrader("win-x64");
+    });
+
+Task("__DotnetPublish-Upgrader-Linux")
+	.Does(() =>  {
+        PublishUpgrader("linux-x64");
+    });
+
+private void PublishUpgrader(string runtimeId) {
+    // R2R single files require compilation on the target environment.
+    // https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#readytorun-images
+    DotNetCorePublish(
+        "./source/Octopus.Upgrader/Octopus.Upgrader.csproj",
+        new DotNetCorePublishSettings
+        {
+            Configuration = configuration,
+            OutputDirectory = $"{corePublishDir}/{runtimeId}",
+            Runtime = runtimeId,
+            ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
+        }
+    );
+}
 
 private IEnumerable<string> GetProjectRuntimeIds(string projectFile)
 {
