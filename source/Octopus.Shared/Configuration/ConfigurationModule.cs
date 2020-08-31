@@ -33,7 +33,15 @@ namespace Octopus.Shared.Configuration
                 builder.RegisterType<LinuxServiceConfigurator>().As<IServiceConfigurator>();
             }
             
-            builder.RegisterType<PersistedApplicationInstanceStore>().As<IPersistedApplicationInstanceStore>();
+            builder.RegisterType<PersistedApplicationInstanceStore>()
+                .As<IPersistedApplicationInstanceStore>()
+                .As<IApplicationInstanceStrategy>();
+            
+            builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>();
+            builder.RegisterType<EnvFileInstanceStrategy>().As<IApplicationInstanceStrategy>();
+
+            builder.RegisterType<ConfigFileInstanceStrategy>().As<IApplicationInstanceStrategy>();
+            
             builder.RegisterType<ApplicationInstanceSelector>()
                 .WithParameter("applicationName", applicationName)
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
