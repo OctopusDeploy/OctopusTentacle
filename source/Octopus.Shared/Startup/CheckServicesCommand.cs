@@ -5,6 +5,7 @@ using System.ServiceProcess;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Startup
 {
@@ -12,11 +13,11 @@ namespace Octopus.Shared.Startup
     {
         readonly ILog log;
         HashSet<string>? instances;
-        readonly IApplicationInstanceStore applicationInstanceStore;
+        readonly IPersistedApplicationInstanceStore applicationInstanceStore;
         readonly ApplicationName applicationName;
 
         public CheckServicesCommand(ILog log,
-            IApplicationInstanceStore applicationInstanceStore,
+            IPersistedApplicationInstanceStore applicationInstanceStore,
             ApplicationName applicationName)
         {
             this.log = log;
@@ -38,7 +39,7 @@ namespace Octopus.Shared.Startup
             var serviceControllers = ServiceController.GetServices();
             try
             {
-                foreach (var instance in applicationInstanceStore.ListInstances(applicationName))
+                foreach (var instance in applicationInstanceStore.ListInstances())
                 {
                     if (!startAll && instances.Contains(instance.InstanceName) == false)
                         continue;

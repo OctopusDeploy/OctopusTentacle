@@ -4,7 +4,7 @@ using System.Linq;
 using Microsoft.Win32;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Configuration
+namespace Octopus.Shared.Configuration.Instances
 {
     public class RegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
@@ -12,15 +12,22 @@ namespace Octopus.Shared.Configuration
         const RegistryView View = RegistryView.Registry64;
         const string KeyName = "Software\\Octopus";
 
-        public ApplicationInstanceRecord GetInstanceFromRegistry(ApplicationName name, string instanceName)
+        readonly ApplicationName applicationName;
+
+        public RegistryApplicationInstanceStore(ApplicationName applicationName)
         {
-            var allInstances = GetListFromRegistry(name);
+            this.applicationName = applicationName;
+        }
+
+        public PersistedApplicationInstanceRecord GetInstanceFromRegistry(string instanceName)
+        {
+            var allInstances = GetListFromRegistry();
             return allInstances.SingleOrDefault(i => i.InstanceName.Equals(instanceName, StringComparison.CurrentCultureIgnoreCase));
         }
 
-        public IEnumerable<ApplicationInstanceRecord> GetListFromRegistry(ApplicationName name)
+        public IEnumerable<PersistedApplicationInstanceRecord> GetListFromRegistry()
         {
-            var results = new List<ApplicationInstanceRecord>();
+            var results = new List<PersistedApplicationInstanceRecord>();
 
             if (PlatformDetection.IsRunningOnWindows)
             {
@@ -30,7 +37,7 @@ namespace Octopus.Shared.Configuration
                     if (subKey == null)
                         return results;
 
-                    using (var applicationNameKey = subKey.OpenSubKey(name.ToString(), false))
+                    using (var applicationNameKey = subKey.OpenSubKey(applicationName.ToString(), false))
                     {
                         if (applicationNameKey == null)
                             return results;
@@ -45,7 +52,7 @@ namespace Octopus.Shared.Configuration
                                     continue;
 
                                 var path = instanceKey.GetValue("ConfigurationFilePath");
-                                results.Add(new ApplicationInstanceRecord(instanceName, name, (string)path));
+                                results.Add(new PersistedApplicationInstanceRecord(instanceName, (string)path, instanceName == PersistedApplicationInstanceRecord.GetDefaultInstance(applicationName)));
                             }
                         }
                     }
@@ -55,7 +62,7 @@ namespace Octopus.Shared.Configuration
             return results;
         }
 
-        public void DeleteFromRegistry(ApplicationName name, string instanceName)
+        public void DeleteFromRegistry(string instanceName)
         {
             if (PlatformDetection.IsRunningOnWindows)
             {
@@ -65,7 +72,7 @@ namespace Octopus.Shared.Configuration
                     if (subKey == null)
                         return;
 
-                    using (var applicationNameKey = subKey.OpenSubKey(name.ToString(), true))
+                    using (var applicationNameKey = subKey.OpenSubKey(applicationName.ToString(), true))
                     {
                         if (applicationNameKey == null)
                             return;

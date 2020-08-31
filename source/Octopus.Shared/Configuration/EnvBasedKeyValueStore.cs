@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using Octopus.Configuration;
-using Octopus.Diagnostics;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
@@ -12,11 +11,13 @@ namespace Octopus.Shared.Configuration
     public class EnvBasedKeyValueStore : IKeyValueStore
     {
         readonly IOctopusFileSystem fileSystem;
+        readonly IEnvFileLocator envFileLocator;
         Dictionary<string, object?>? values;
 
-        public EnvBasedKeyValueStore(IOctopusFileSystem fileSystem)
+        public EnvBasedKeyValueStore(IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator)
         {
             this.fileSystem = fileSystem;
+            this.envFileLocator = envFileLocator;
         }
         
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
@@ -34,7 +35,7 @@ namespace Octopus.Shared.Configuration
             var data = loadedValues[name];
             if (data == null)
                 return default(TData)!;
-            if (typeof(TData) != typeof(string))
+            if (typeof(TData) == typeof(byte[]))
             {
                 return JsonConvert.DeserializeObject<TData>((string)data, JsonSerialization.GetDefaultSerializerSettings());
             }
@@ -69,7 +70,7 @@ namespace Octopus.Shared.Configuration
 
         Dictionary<string, object?> LoadFromEnvFile()
         {
-            var envFile = LocateEnvFile(fileSystem, null);
+            var envFile = envFileLocator.LocateEnvFile();
             if (envFile == null)
                 throw new InvalidOperationException("Could not locate .env file");
 
@@ -88,44 +89,6 @@ namespace Octopus.Shared.Configuration
             }
 
             return results;
-        }
-
-        internal static string? LocateEnvFile(IOctopusFileSystem fileSystem, ILog? log)
-        {
-            var directoryToCheck = Path.GetDirectoryName(typeof(EnvBasedKeyValueStore).Assembly.Location);
-
-            if (log != null)
-            {
-                log.InfoFormat("Search for .env file, starting from {0}", directoryToCheck);
-            }
-
-            var envPathToCheck = Path.Combine(directoryToCheck, ".env");
-            var envFileExists = fileSystem.FileExists(envPathToCheck);
-            var rootDirectoryReached = false;
-
-            while (!envFileExists && !rootDirectoryReached)
-            {
-                var lastPathSeparator = directoryToCheck.LastIndexOf(Path.DirectorySeparatorChar);
-                directoryToCheck = directoryToCheck.Substring(0, lastPathSeparator);
-
-                if (lastPathSeparator >= 0 && lastPathSeparator <= 2)
-                    rootDirectoryReached = true;
-
-                if (rootDirectoryReached)
-                    directoryToCheck += Path.DirectorySeparatorChar; // for root path when need to tack the separator back on
-                
-                envPathToCheck = Path.Combine(directoryToCheck, ".env");
-                
-                envFileExists = fileSystem.FileExists(envPathToCheck);
-            }
-
-            if (log != null)
-                if (envFileExists)
-                    log.InfoFormat("Found .env file, {0}", envPathToCheck);
-                else
-                    log.Info("No .env file found");
-
-            return envFileExists ? envPathToCheck : null;
         }
     }
 }

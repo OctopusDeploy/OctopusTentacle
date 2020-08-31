@@ -1,4 +1,5 @@
 using System;
+using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Configuration
 {
@@ -20,7 +21,7 @@ namespace Octopus.Shared.Configuration
                     throw new ArgumentException("Invalid application name", nameof(application));
             }
 
-            var defaultInstanceName = ApplicationInstanceRecord.GetDefaultInstance(application);
+            var defaultInstanceName = PersistedApplicationInstanceRecord.GetDefaultInstance(application);
             if (defaultInstanceName == instanceName)
             {
                 return name;

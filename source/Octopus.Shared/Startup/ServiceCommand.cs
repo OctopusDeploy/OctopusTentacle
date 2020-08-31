@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
@@ -11,7 +12,7 @@ namespace Octopus.Shared.Startup
         readonly string serviceDescription;
         readonly Assembly assemblyContainingService;
         readonly ApplicationName applicationName;
-        readonly IApplicationInstanceStore instanceStore;
+        readonly IPersistedApplicationInstanceStore instanceStore;
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
@@ -21,7 +22,7 @@ namespace Octopus.Shared.Startup
         string? instanceName;
 
         public ServiceCommand(ApplicationName applicationName,
-            IApplicationInstanceStore instanceStore,
+            IPersistedApplicationInstanceStore instanceStore,
             IApplicationInstanceSelector instanceSelector,
             string serviceDescription,
             Assembly assemblyContainingService,
@@ -72,11 +73,11 @@ namespace Octopus.Shared.Startup
 
                 var exceptions = new List<Exception>();
 
-                foreach (var instance in instanceStore.ListInstances(applicationName))
+                foreach (var instance in instanceStore.ListInstances())
                 {
                     try
                     {
-                        var thisServiceName = ServiceName.GetWindowsServiceName(instance.ApplicationName, instance.InstanceName);
+                        var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
                         serviceConfigurator.ConfigureService(thisServiceName, exePath, instance.InstanceName, serviceDescription, serviceConfigurationState);
                     }
                     catch (Exception ex)
@@ -93,7 +94,7 @@ namespace Octopus.Shared.Startup
             else
             {
                 var instance = instanceSelector.GetCurrentInstance();
-                var thisServiceName = ServiceName.GetWindowsServiceName(instance.ApplicationName, instance.InstanceName);
+                var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
                 serviceConfigurator.ConfigureService(thisServiceName, exePath, instance.InstanceName, serviceDescription, serviceConfigurationState);
             }
         }

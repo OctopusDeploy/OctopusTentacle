@@ -1,5 +1,6 @@
 using Autofac;
 using Octopus.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Services;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
@@ -9,12 +10,12 @@ namespace Octopus.Shared.Configuration
     public class ConfigurationModule : Module
     {
         readonly ApplicationName applicationName;
-        readonly string instanceName;
+        readonly StartUpInstanceRequest startUpInstanceRequest;
 
-        public ConfigurationModule(ApplicationName applicationName, string instanceName)
+        public ConfigurationModule(ApplicationName applicationName, StartUpInstanceRequest startUpInstanceRequest)
         {
             this.applicationName = applicationName;
-            this.instanceName = instanceName;
+            this.startUpInstanceRequest = startUpInstanceRequest;
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -32,10 +33,10 @@ namespace Octopus.Shared.Configuration
                 builder.RegisterType<LinuxServiceConfigurator>().As<IServiceConfigurator>();
             }
             
-            builder.RegisterType<ApplicationInstanceStore>().As<IApplicationInstanceStore>();
+            builder.RegisterType<PersistedApplicationInstanceStore>().As<IPersistedApplicationInstanceStore>();
             builder.RegisterType<ApplicationInstanceSelector>()
                 .WithParameter("applicationName", applicationName)
-                .WithParameter("currentInstanceName", instanceName)
+                .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
 

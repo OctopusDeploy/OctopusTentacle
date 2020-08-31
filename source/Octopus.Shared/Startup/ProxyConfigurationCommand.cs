@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Startup
 {
@@ -13,7 +14,7 @@ namespace Octopus.Shared.Startup
         bool useAProxy;
         string? host;
 
-        public ProxyConfigurationCommand(Lazy<IProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ILog log) : base(instanceSelector)
+        public ProxyConfigurationCommand(ApplicationName applicationName, Lazy<IProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ILog log) : base(applicationName, instanceSelector)
         {
             this.proxyConfiguration = proxyConfiguration;
             this.log = log;
