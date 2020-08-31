@@ -6,7 +6,7 @@ namespace Octopus.Shared.Configuration.Instances
     public interface IPersistedApplicationInstanceStore
     {
         bool AnyInstancesConfigured();
-        PersistedApplicationInstanceRecord? GetInstance(string instanceName);
+        PersistedApplicationInstanceRecord? GetInstance(string? instanceName);
         IList<ApplicationInstanceRecord> ListInstances();
         
         void CreateDefaultInstance(string configurationFile, string? homeDirectory = null);

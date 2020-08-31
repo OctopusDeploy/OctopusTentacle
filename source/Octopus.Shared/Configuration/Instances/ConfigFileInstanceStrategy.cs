@@ -5,7 +5,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class ConfigFileInstanceStrategy : IVirtualApplicationInstanceStrategy
+    public class ConfigFileInstanceStrategy : IApplicationInstanceStrategy
     {
         const string ConfigFileBasedInstanceName = "ConfigFileInstance";
 

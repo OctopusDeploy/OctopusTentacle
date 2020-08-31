@@ -13,17 +13,4 @@ namespace Octopus.Shared.Configuration.Instances
 
         LoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance);
     }
-    
-    public interface IPersistedApplicationInstanceStrategy : IApplicationInstanceStrategy
-    {
-        PersistedApplicationInstanceRecord? GetInstance(string? instanceName);
-
-        void MigrateInstance(PersistedApplicationInstanceRecord instanceRecord);
-
-    }
-
-    public interface IVirtualApplicationInstanceStrategy : IApplicationInstanceStrategy
-    {
-        ApplicationInstanceRecord? GetInstance();
-    }
 }

@@ -9,7 +9,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class PersistedApplicationInstanceStore : IPersistedApplicationInstanceStore, IPersistedApplicationInstanceStrategy
+    public class PersistedApplicationInstanceStore : IPersistedApplicationInstanceStore, IApplicationInstanceStrategy
     {
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly ILog log;
@@ -42,6 +42,10 @@ namespace Octopus.Shared.Configuration.Instances
             var instance = applicationInstance as PersistedApplicationInstanceRecord;
             if (instance == null)
                 throw new ArgumentException("Incorrect application instance record type", nameof(applicationInstance));
+            
+            // If the entry is still in the registry then migrate it to the file index
+            MigrateInstance(instance);
+            
             return new LoadedPhysicalApplicationInstance(applicationInstance.InstanceName, new XmlFileKeyValueStore(fileSystem, instance.ConfigurationFilePath), instance.ConfigurationFilePath);
         }
 
@@ -126,6 +130,7 @@ namespace Octopus.Shared.Configuration.Instances
             var instancesFolder = InstancesFolder();
             if (instanceName == null)
                 instanceName = PersistedApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName);
+
             if (fileSystem.DirectoryExists(instancesFolder))
             {
                 var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config");

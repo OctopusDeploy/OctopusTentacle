@@ -13,7 +13,7 @@ namespace Octopus.Shared.Tests.Configuration
     [TestFixture]
     public class ApplicationInstanceSelectorTests
     {
-        static IPersistedApplicationInstanceStrategy instanceStore;
+        static IApplicationInstanceStrategy instanceStore;
 
         [Test]
         public void LoadInstanceThrowsWhenNoInstanceNamePassedAndNoInstancesConfigured()
@@ -94,8 +94,6 @@ namespace Octopus.Shared.Tests.Configuration
             };
             var selector = GetApplicationInstanceSelector(instanceRecords, "INSTANCE 2");
 
-            instanceStore.GetInstance("INSTANCE 2").Returns(applicationInstanceRecord);
-
             selector.LoadInstance().InstanceName.Should().Be("INSTANCE 2");
         }
 
@@ -121,7 +119,7 @@ namespace Octopus.Shared.Tests.Configuration
 
         static ApplicationInstanceSelector GetApplicationInstanceSelector(List<ApplicationInstanceRecord> instanceRecords, string currentInstanceName)
         {
-            instanceStore = Substitute.For<IPersistedApplicationInstanceStrategy>();
+            instanceStore = Substitute.For<IApplicationInstanceStrategy>();
             instanceStore.ListInstances().Returns(instanceRecords);
             instanceStore.AnyInstancesConfigured().Returns(true);
 

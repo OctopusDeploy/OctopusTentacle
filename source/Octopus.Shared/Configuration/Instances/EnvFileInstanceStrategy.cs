@@ -4,7 +4,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class EnvFileInstanceStrategy : IVirtualApplicationInstanceStrategy
+    public class EnvFileInstanceStrategy : IApplicationInstanceStrategy
     {
         const string EnvFileBasedInstanceName = "EnvFileInstance";
 
@@ -19,7 +19,7 @@ namespace Octopus.Shared.Configuration.Instances
             this.envFileLocator = envFileLocator;
         }
 
-        public int Priority => 100;
+        public int Priority => 200;
 
         public bool AnyInstancesConfigured()
         {
