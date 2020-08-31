@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Win32;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
@@ -21,59 +22,59 @@ namespace Octopus.Shared.Configuration
         {
             var results = new List<ApplicationInstanceRecord>();
 
-#if FULL_FRAMEWORK
-            using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
-            using (var subKey = rootKey.OpenSubKey(KeyName, false))
+            if (PlatformDetection.IsRunningOnWindows)
             {
-                if (subKey == null)
-                    return results;
-
-                using (var applicationNameKey = subKey.OpenSubKey(name.ToString(), false))
+                using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
+                using (var subKey = rootKey.OpenSubKey(KeyName, false))
                 {
-                    if (applicationNameKey == null)
+                    if (subKey == null)
                         return results;
 
-                    var instanceNames = applicationNameKey.GetSubKeyNames();
-
-                    foreach (var instanceName in instanceNames)
+                    using (var applicationNameKey = subKey.OpenSubKey(name.ToString(), false))
                     {
-                        using (var instanceKey = applicationNameKey.OpenSubKey(instanceName, false))
-                        {
-                            if (instanceKey == null)
-                                continue;
+                        if (applicationNameKey == null)
+                            return results;
 
-                            var path = instanceKey.GetValue("ConfigurationFilePath");
-                            results.Add(new ApplicationInstanceRecord(instanceName, name, (string)path));
+                        var instanceNames = applicationNameKey.GetSubKeyNames();
+
+                        foreach (var instanceName in instanceNames)
+                        {
+                            using (var instanceKey = applicationNameKey.OpenSubKey(instanceName, false))
+                            {
+                                if (instanceKey == null)
+                                    continue;
+
+                                var path = instanceKey.GetValue("ConfigurationFilePath");
+                                results.Add(new ApplicationInstanceRecord(instanceName, name, (string)path));
+                            }
                         }
                     }
                 }
             }
-#endif
 
             return results;
         }
 
-
-
         public void DeleteFromRegistry(ApplicationName name, string instanceName)
         {
-#if FULL_FRAMEWORK
-            using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
-            using (var subKey = rootKey.OpenSubKey(KeyName, true))
+            if (PlatformDetection.IsRunningOnWindows)
             {
-                if (subKey == null)
-                    return;
-
-                using (var applicationNameKey = subKey.OpenSubKey(name.ToString(), true))
+                using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
+                using (var subKey = rootKey.OpenSubKey(KeyName, true))
                 {
-                    if (applicationNameKey == null)
+                    if (subKey == null)
                         return;
 
-                    applicationNameKey.DeleteSubKey(instanceName);
-                    applicationNameKey.Flush();
+                    using (var applicationNameKey = subKey.OpenSubKey(name.ToString(), true))
+                    {
+                        if (applicationNameKey == null)
+                            return;
+
+                        applicationNameKey.DeleteSubKey(instanceName);
+                        applicationNameKey.Flush();
+                    }
                 }
             }
-#endif
         }
     }
 }
