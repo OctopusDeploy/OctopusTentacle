@@ -1,5 +1,6 @@
 using Autofac;
 using Octopus.Configuration;
+using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Services;
 using Octopus.Shared.Startup;
@@ -32,15 +33,23 @@ namespace Octopus.Shared.Configuration
                 builder.RegisterType<NullRegistryApplicationInstanceStore>().As<IRegistryApplicationInstanceStore>();
                 builder.RegisterType<LinuxServiceConfigurator>().As<IServiceConfigurator>();
             }
-            
+
+            builder.RegisterType<EnvironmentVariableReader>().As<IEnvironmentVariableReader>();
+            builder.RegisterType<MapEnvironmentVariablesToConfigItems>().As<IMapEnvironmentVariablesToConfigItems>();
+
             builder.RegisterType<PersistedApplicationInstanceStore>()
+                .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
                 .As<IPersistedApplicationInstanceStore>()
                 .As<IApplicationInstanceStrategy>();
             
             builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>();
-            builder.RegisterType<EnvFileInstanceStrategy>().As<IApplicationInstanceStrategy>();
+            builder.RegisterType<EnvFileInstanceStrategy>()
+                .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
+                .As<IApplicationInstanceStrategy>();
 
-            builder.RegisterType<ConfigFileInstanceStrategy>().As<IApplicationInstanceStrategy>();
+            builder.RegisterType<ConfigFileInstanceStrategy>()
+                .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
+                .As<IApplicationInstanceStrategy>();
             
             builder.RegisterType<ApplicationInstanceSelector>()
                 .WithParameter("applicationName", applicationName)

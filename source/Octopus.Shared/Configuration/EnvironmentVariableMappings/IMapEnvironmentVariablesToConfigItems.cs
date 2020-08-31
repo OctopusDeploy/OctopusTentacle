@@ -1,13 +1,12 @@
-﻿namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
+﻿using System.Collections.Generic;
+
+namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
 {
     public interface IMapEnvironmentVariablesToConfigItems
     {
-        string[] SupportedConfigurationKeys { get; }
+        HashSet<string> SupportedEnvironmentVariables { get; }
         
-        string[] SupportedEnvironmentVariables { get; }
-
-        void SetEnvironmentVariableValue(string key, string value);
-
-        string GetConfigurationValue(string key);
+        void SetEnvironmentValue(string variableName, string? value);
+        string? GetConfigurationValue(string configurationSettingName);
     }
 }

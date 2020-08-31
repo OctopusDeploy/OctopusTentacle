@@ -4,6 +4,7 @@ using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
 
@@ -18,9 +19,11 @@ namespace Octopus.Shared.Tests.Configuration
             var fileSystem = Substitute.For<IOctopusFileSystem>();
             var fileLocator = Substitute.For<IEnvFileLocator>();
             fileLocator.LocateEnvFile().Returns("test");
-            fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "", "# some comment to test", "Octopus.HomeDirectory=." }));
+            fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "", "# some comment to test", "OCTOPUS_HOME=." }));
+            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            mapper.GetConfigurationValue("Octopus.HomeDirectory").Returns(".");
             
-            var subject = new EnvBasedKeyValueStore(fileSystem, fileLocator);
+            var subject = new EnvFileBasedKeyValueStore(fileSystem, fileLocator, mapper);
             var dir = subject.Get("Octopus.HomeDirectory");
             dir.Should().Be(".");
         }
@@ -31,8 +34,11 @@ namespace Octopus.Shared.Tests.Configuration
             var fileSystem = Substitute.For<IOctopusFileSystem>();
             var fileLocator = Substitute.For<IEnvFileLocator>();
             fileLocator.LocateEnvFile().Returns("test");
-            fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "Octopus.HomeDirectory=.", "Broken" }));
-            var subject = new EnvBasedKeyValueStore(fileSystem, fileLocator);
+            fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "OCTOPUS_HOME=.", "Broken" }));
+            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+
+            var subject = new EnvFileBasedKeyValueStore(fileSystem, fileLocator, mapper);
+            
             Action testAction = () => subject.Get("Octopus.HomeDirectory");
             testAction.Should().Throw<ArgumentException>();
         }
@@ -43,8 +49,11 @@ namespace Octopus.Shared.Tests.Configuration
             var fileSystem = Substitute.For<IOctopusFileSystem>();
             var fileLocator = Substitute.For<IEnvFileLocator>();
             fileLocator.LocateEnvFile().Returns("test");
-            fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "Octopus.HomeDirectory=.", "Foo=Bar==" }));
-            var subject = new EnvBasedKeyValueStore(fileSystem, fileLocator);
+            fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "OCTOPUS_HOME=.", "Foo=Bar==" }));
+            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            
+            var subject = new EnvFileBasedKeyValueStore(fileSystem, fileLocator, mapper);
+            
             var value = subject.Get("Foo");
             value.Should().Be("Bar==");
         }

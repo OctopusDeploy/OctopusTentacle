@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
@@ -11,12 +12,14 @@ namespace Octopus.Shared.Configuration.Instances
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IOctopusFileSystem fileSystem;
         readonly IEnvFileLocator envFileLocator;
+        readonly IMapEnvironmentVariablesToConfigItems mapper;
 
-        public EnvFileInstanceStrategy(StartUpInstanceRequest startUpInstanceRequest, IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator)
+        public EnvFileInstanceStrategy(StartUpInstanceRequest startUpInstanceRequest, IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentVariablesToConfigItems mapper)
         {
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.fileSystem = fileSystem;
             this.envFileLocator = envFileLocator;
+            this.mapper = mapper;
         }
 
         public int Priority => 200;
@@ -35,7 +38,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public LoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
         {
-            return new LoadedApplicationInstance(applicationInstance.InstanceName, new EnvBasedKeyValueStore(fileSystem, envFileLocator));
+            return new LoadedApplicationInstance(applicationInstance.InstanceName, new EnvFileBasedKeyValueStore(fileSystem, envFileLocator, mapper));
         }
 
         public ApplicationInstanceRecord? GetInstance()

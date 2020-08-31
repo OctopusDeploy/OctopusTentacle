@@ -5,25 +5,25 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
 {
     public abstract class MapEnvironmentVariablesToConfigItems : IMapEnvironmentVariablesToConfigItems
     {
-        readonly Dictionary<string, string> environmentVariableValues;
+        readonly Dictionary<string, string?> environmentVariableValues;
 
         public MapEnvironmentVariablesToConfigItems(string[] supportedConfigurationKeys, string[] supportedEnvironmentVariables)
         {
-            SupportedConfigurationKeys = supportedConfigurationKeys;
-            SupportedEnvironmentVariables = supportedEnvironmentVariables;
-            environmentVariableValues = new Dictionary<string, string>();
+            SupportedConfigurationKeys = new HashSet<string>(supportedConfigurationKeys);
+            SupportedEnvironmentVariables = new HashSet<string>(supportedEnvironmentVariables);
+            environmentVariableValues = new Dictionary<string, string?>();
         }
 
-        public string[] SupportedConfigurationKeys { get; }
-        public string[] SupportedEnvironmentVariables { get; }
+        public HashSet<string> SupportedConfigurationKeys { get; }
+        public HashSet<string> SupportedEnvironmentVariables { get; }
 
-        protected IReadOnlyDictionary<string, string> EnvironmentVariableValues => environmentVariableValues;
-
-        public void SetEnvironmentVariableValue(string key, string value)
+        public void SetEnvironmentValue(string variableName, string? value)
         {
-            environmentVariableValues[key] = value;
+            if (!SupportedEnvironmentVariables.Contains(variableName))
+                throw new ArgumentException("Given variable name is not support", nameof(variableName));
+            environmentVariableValues[variableName] = value;
         }
-
-        public abstract string GetConfigurationValue(string key);
+        
+        public abstract string? GetConfigurationValue(string configurationSettingName);
     }
 }
