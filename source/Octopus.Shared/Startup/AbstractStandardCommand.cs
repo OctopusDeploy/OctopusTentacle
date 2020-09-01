@@ -51,9 +51,10 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        public static OptionSet AddInstanceOption(OptionSet options, Action<string>? instanceAction = null)
+        public static OptionSet AddInstanceOption(OptionSet options, Action<string>? instanceAction = null, Action<string>? configFileAction = null)
         {
-            return options.Add("instance=", "Name of the instance to use", instanceAction ?? (v => {}));
+            return options.Add("instance=", "Name of the instance to use", instanceAction ?? (v => {}))
+                .Add("config=", "Configuration file to use", configFileAction ?? (v => {}));
         }
     }
 }

@@ -1,27 +1,22 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
-    public class EnvFileBasedKeyValueStore : IKeyValueStore
+    public class EnvironmentBasedKeyValueStore : IKeyValueStore
     {
-        readonly IOctopusFileSystem fileSystem;
-        readonly IEnvFileLocator envFileLocator;
         readonly IMapEnvironmentVariablesToConfigItems mapper;
+        readonly IEnvironmentVariableReader reader;
         bool loaded;
 
-        public EnvFileBasedKeyValueStore(IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentVariablesToConfigItems mapper)
+        public EnvironmentBasedKeyValueStore(IMapEnvironmentVariablesToConfigItems mapper, IEnvironmentVariableReader reader)
         {
-            this.fileSystem = fileSystem;
-            this.envFileLocator = envFileLocator;
             this.mapper = mapper;
+            this.reader = reader;
         }
-        
+
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             EnsureLoaded();
@@ -60,7 +55,7 @@ namespace Octopus.Shared.Configuration
         {
             throw new NotImplementedException();
         }
-
+        
         void EnsureLoaded()
         {
             if (!loaded)
@@ -70,24 +65,9 @@ namespace Octopus.Shared.Configuration
 
         void LoadFromEnvFile()
         {
-            var envFile = envFileLocator.LocateEnvFile();
-            if (envFile == null)
-                throw new InvalidOperationException("Could not locate .env file");
-
-            var content = fileSystem.ReadAllText(envFile);
-            var lines = content.Split(Environment.NewLine.ToCharArray());
-            
-            foreach (var line in lines.Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith("#")))
+            foreach (var variableName in mapper.SupportedEnvironmentVariables)
             {
-                var splitIndex = line.IndexOf('=');
-                if (splitIndex < 0)
-                    throw new ArgumentException($"The line '{line}' is not formatted correctly");
-
-                var key = line.Substring(0, splitIndex).Trim();
-                var value = line.Substring(splitIndex + 1).Trim();
-                
-                if (mapper.SupportedEnvironmentVariables.Contains(key))
-                    mapper.SetEnvironmentValue(key, value);
+                mapper.SetEnvironmentValue(variableName, reader.Get(variableName));
             }
         }
     }

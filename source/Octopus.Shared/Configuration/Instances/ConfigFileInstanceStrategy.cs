@@ -24,14 +24,23 @@ namespace Octopus.Shared.Configuration.Instances
 
         public bool AnyInstancesConfigured()
         {
-            return startUpInstanceRequest is StartUpConfigFileInstanceRequest request && fileSystem.FileExists(request.ConfigFile);
+            if (!(startUpInstanceRequest is StartUpConfigFileInstanceRequest request))
+                return false;
+            if (!fileSystem.FileExists(request.ConfigFile))
+                throw new ArgumentException($"Specified config file {request.ConfigFile} not found.");
+            return true;
         }
 
         public IList<ApplicationInstanceRecord> ListInstances()
         {
             if (!AnyInstancesConfigured())
                 return Enumerable.Empty<ApplicationInstanceRecord>().ToList();
-            return new List<ApplicationInstanceRecord>();
+
+            var request = (StartUpConfigFileInstanceRequest)startUpInstanceRequest;
+            return new List<ApplicationInstanceRecord>
+            {
+                new PersistedApplicationInstanceRecord(ConfigFileBasedInstanceName, request.ConfigFile, true)
+            };
         }
 
         public LoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
@@ -40,14 +49,6 @@ namespace Octopus.Shared.Configuration.Instances
             if (request == null)
                 throw new ControlledFailureException("Configuration File was not specified");
             return new LoadedApplicationInstance(applicationInstance.InstanceName, new XmlFileKeyValueStore(fileSystem, request.ConfigFile));
-        }
-
-        public ApplicationInstanceRecord? GetInstance()
-        {
-            if (!AnyInstancesConfigured())
-                return null;
-            var request = (StartUpConfigFileInstanceRequest)startUpInstanceRequest;
-            return new PersistedApplicationInstanceRecord(ConfigFileBasedInstanceName, request.ConfigFile, true);
         }
     }
 }

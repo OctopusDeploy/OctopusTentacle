@@ -47,6 +47,10 @@ namespace Octopus.Shared.Configuration
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
                 .As<IApplicationInstanceStrategy>();
 
+            builder.RegisterType<EnvironmentInstanceStrategy>()
+                .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
+                .As<IApplicationInstanceStrategy>();
+
             builder.RegisterType<ConfigFileInstanceStrategy>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
                 .As<IApplicationInstanceStrategy>();

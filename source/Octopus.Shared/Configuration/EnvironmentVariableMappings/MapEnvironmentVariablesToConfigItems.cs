@@ -7,7 +7,7 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
     {
         readonly Dictionary<string, string?> environmentVariableValues;
 
-        public MapEnvironmentVariablesToConfigItems(string[] supportedConfigurationKeys, string[] supportedEnvironmentVariables)
+        protected MapEnvironmentVariablesToConfigItems(string[] supportedConfigurationKeys, string[] supportedEnvironmentVariables)
         {
             SupportedConfigurationKeys = new HashSet<string>(supportedConfigurationKeys);
             SupportedEnvironmentVariables = new HashSet<string>(supportedEnvironmentVariables);
@@ -16,6 +16,8 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
 
         public HashSet<string> SupportedConfigurationKeys { get; }
         public HashSet<string> SupportedEnvironmentVariables { get; }
+
+        protected IReadOnlyDictionary<string, string?> EnvironmentValues => environmentVariableValues;
 
         public void SetEnvironmentValue(string variableName, string? value)
         {

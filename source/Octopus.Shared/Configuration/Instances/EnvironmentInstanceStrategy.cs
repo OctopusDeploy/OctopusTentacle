@@ -1,30 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class EnvFileInstanceStrategy : IApplicationInstanceStrategy
+    public class EnvironmentInstanceStrategy : IApplicationInstanceStrategy
     {
         readonly StartUpInstanceRequest startUpInstanceRequest;
-        readonly IOctopusFileSystem fileSystem;
-        readonly IEnvFileLocator envFileLocator;
         readonly IMapEnvironmentVariablesToConfigItems mapper;
+        readonly IEnvironmentVariableReader reader;
 
-        public EnvFileInstanceStrategy(StartUpInstanceRequest startUpInstanceRequest, IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentVariablesToConfigItems mapper)
+        public EnvironmentInstanceStrategy(StartUpInstanceRequest startUpInstanceRequest, IMapEnvironmentVariablesToConfigItems mapper, IEnvironmentVariableReader reader)
         {
             this.startUpInstanceRequest = startUpInstanceRequest;
-            this.fileSystem = fileSystem;
-            this.envFileLocator = envFileLocator;
             this.mapper = mapper;
+            this.reader = reader;
         }
 
-        public int Priority => 200;
+        public int Priority => 300;
 
         public bool AnyInstancesConfigured()
         {
-            return startUpInstanceRequest is StartUpDynamicInstanceRequest && envFileLocator.LocateEnvFile() != null;
+            return startUpInstanceRequest is StartUpDynamicInstanceRequest;
         }
 
         public IList<ApplicationInstanceRecord> ListInstances()
@@ -33,13 +31,13 @@ namespace Octopus.Shared.Configuration.Instances
                 return Enumerable.Empty<ApplicationInstanceRecord>().ToList();
             return new List<ApplicationInstanceRecord>
             {
-                new ApplicationInstanceRecord("EnvFile", true)
+                new ApplicationInstanceRecord("Environmental", true)
             };
         }
 
         public LoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
         {
-            return new LoadedApplicationInstance(applicationInstance.InstanceName, new EnvFileBasedKeyValueStore(fileSystem, envFileLocator, mapper));
+            return new LoadedApplicationInstance(applicationInstance.InstanceName, new EnvironmentBasedKeyValueStore(mapper, reader));
         }
     }
 }
