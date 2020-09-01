@@ -138,8 +138,7 @@ namespace Octopus.Shared.Tests.Configuration
             else
                 startupRequest = new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, currentInstanceName);
             
-            var selector = new ApplicationInstanceSelector(ApplicationName.OctopusServer,
-                startupRequest, 
+            var selector = new ApplicationInstanceSelector(startupRequest, 
                 new [] { instanceStore },
                 Substitute.For<ILogFileOnlyLogger>());
             return selector;

@@ -8,25 +8,22 @@ namespace Octopus.Shared.Configuration.Instances
 {
     public class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
-        readonly ApplicationName applicationName;
-        readonly StartUpInstanceRequest? startUpInstanceRequest;
+        readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IApplicationInstanceStrategy[] instanceStrategies;
         readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
         LoadedApplicationInstance? current;
 
-        public ApplicationInstanceSelector(ApplicationName applicationName,
-            StartUpInstanceRequest? startUpInstanceRequest,
+        public ApplicationInstanceSelector(StartUpInstanceRequest startUpInstanceRequest,
             IApplicationInstanceStrategy[] instanceStrategies,
             ILogFileOnlyLogger logFileOnlyLogger)
         {
-            this.applicationName = applicationName;
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.instanceStrategies = instanceStrategies;
             this.logFileOnlyLogger = logFileOnlyLogger;
         }
 
-        public ApplicationName ApplicationName => applicationName;
+        public ApplicationName ApplicationName => startUpInstanceRequest.ApplicationName;
 
         public IList<ApplicationInstanceRecord> ListInstances()
         {
@@ -66,7 +63,7 @@ namespace Octopus.Shared.Configuration.Instances
 
             // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
             // back to here
-            var homeConfig = new HomeConfiguration(applicationName, instance.Configuration);
+            var homeConfig = new HomeConfiguration(startUpInstanceRequest.ApplicationName, instance.Configuration);
             var logInit = new LogInitializer(new LoggingConfiguration(homeConfig), logFileOnlyLogger);
             logInit.Start();
 
@@ -144,7 +141,7 @@ namespace Octopus.Shared.Configuration.Instances
                 throw new ControlledFailureException($"There is more than one instance of OctopusServer configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {AvailableInstances()}.");
 
             throw new ControlledFailureException(
-                $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file, or set the required environment variables.");
+                $"There are no instances of {startUpInstanceRequest.ApplicationName} configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file, or set the required environment variables.");
         }
 
         string AvailableInstances()
