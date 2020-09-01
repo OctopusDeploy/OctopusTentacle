@@ -129,7 +129,7 @@ namespace Octopus.Shared.Tests.Configuration
                 .Returns(c =>
                 {
                     var record = (PersistedApplicationInstanceRecord)c.Args()[0];
-                    return new LoadedPhysicalApplicationInstance(record.InstanceName, keyValueStore, record.ConfigurationFilePath);
+                    return new LoadedPersistedApplicationInstance(record.InstanceName, keyValueStore, record.ConfigurationFilePath);
                 });
 
             StartUpInstanceRequest startupRequest;

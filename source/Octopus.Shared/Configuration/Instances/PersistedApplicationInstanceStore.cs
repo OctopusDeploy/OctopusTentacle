@@ -46,7 +46,7 @@ namespace Octopus.Shared.Configuration.Instances
             // If the entry is still in the registry then migrate it to the file index
             MigrateInstance(instance);
             
-            return new LoadedPhysicalApplicationInstance(applicationInstance.InstanceName, new XmlFileKeyValueStore(fileSystem, instance.ConfigurationFilePath), instance.ConfigurationFilePath);
+            return new LoadedPersistedApplicationInstance(applicationInstance.InstanceName, new XmlFileKeyValueStore(fileSystem, instance.ConfigurationFilePath), instance.ConfigurationFilePath);
         }
 
         public class Instance

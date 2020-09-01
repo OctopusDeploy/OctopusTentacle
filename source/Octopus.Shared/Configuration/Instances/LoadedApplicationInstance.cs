@@ -16,9 +16,9 @@ namespace Octopus.Shared.Configuration.Instances
         public IKeyValueStore Configuration { get; }
     }
 
-    public class LoadedPhysicalApplicationInstance : LoadedApplicationInstance
+    public class LoadedPersistedApplicationInstance : LoadedApplicationInstance
     {
-        public LoadedPhysicalApplicationInstance(string instanceName, IKeyValueStore configuration, string configurationPath) : base(instanceName, configuration)
+        public LoadedPersistedApplicationInstance(string instanceName, IKeyValueStore configuration, string configurationPath) : base(instanceName, configuration)
         {
             ConfigurationPath = configurationPath;
         }
