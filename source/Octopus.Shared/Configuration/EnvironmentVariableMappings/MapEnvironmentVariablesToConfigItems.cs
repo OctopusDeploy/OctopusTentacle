@@ -12,6 +12,12 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             SupportedConfigurationKeys = new HashSet<string>(supportedConfigurationKeys);
             SupportedEnvironmentVariables = new HashSet<string>(supportedEnvironmentVariables);
             environmentVariableValues = new Dictionary<string, string?>();
+            
+            // initialise the dictionary to contain a value for every supported variable, then we don't need ContainsKey all over the place
+            foreach (var variable in supportedEnvironmentVariables)
+            {
+                environmentVariableValues.Add(variable, null);
+            }
         }
 
         public HashSet<string> SupportedConfigurationKeys { get; }
