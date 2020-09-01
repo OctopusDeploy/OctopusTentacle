@@ -25,7 +25,9 @@ namespace Octopus.Shared.Configuration
 
             if (PlatformDetection.IsRunningOnWindows)
             {
-                builder.RegisterType<RegistryApplicationInstanceStore>().As<IRegistryApplicationInstanceStore>();
+                builder.RegisterType<RegistryApplicationInstanceStore>()
+                    .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
+                    .As<IRegistryApplicationInstanceStore>();
                 builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
             }
             else

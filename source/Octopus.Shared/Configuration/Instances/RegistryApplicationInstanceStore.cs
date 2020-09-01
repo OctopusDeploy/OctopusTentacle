@@ -15,11 +15,11 @@ namespace Octopus.Shared.Configuration.Instances
         const RegistryView View = RegistryView.Registry64;
         const string KeyName = "Software\\Octopus";
 
-        readonly ApplicationName applicationName;
+        readonly StartUpInstanceRequest startUpInstanceRequest;
 
-        public RegistryApplicationInstanceStore(ApplicationName applicationName)
+        public RegistryApplicationInstanceStore(StartUpInstanceRequest startUpInstanceRequest)
         {
-            this.applicationName = applicationName;
+            this.startUpInstanceRequest = startUpInstanceRequest;
         }
 
         public PersistedApplicationInstanceRecord GetInstanceFromRegistry(string instanceName)
@@ -40,7 +40,7 @@ namespace Octopus.Shared.Configuration.Instances
                     if (subKey == null)
                         return results;
 
-                    using (var applicationNameKey = subKey.OpenSubKey(applicationName.ToString(), false))
+                    using (var applicationNameKey = subKey.OpenSubKey(startUpInstanceRequest.ApplicationName.ToString(), false))
                     {
                         if (applicationNameKey == null)
                             return results;
@@ -55,7 +55,7 @@ namespace Octopus.Shared.Configuration.Instances
                                     continue;
 
                                 var path = instanceKey.GetValue("ConfigurationFilePath");
-                                results.Add(new PersistedApplicationInstanceRecord(instanceName, (string)path, instanceName == PersistedApplicationInstanceRecord.GetDefaultInstance(applicationName)));
+                                results.Add(new PersistedApplicationInstanceRecord(instanceName, (string)path, instanceName == PersistedApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName)));
                             }
                         }
                     }
@@ -75,7 +75,7 @@ namespace Octopus.Shared.Configuration.Instances
                     if (subKey == null)
                         return;
 
-                    using (var applicationNameKey = subKey.OpenSubKey(applicationName.ToString(), true))
+                    using (var applicationNameKey = subKey.OpenSubKey(startUpInstanceRequest.ApplicationName.ToString(), true))
                     {
                         if (applicationNameKey == null)
                             return;
