@@ -6,6 +6,8 @@ namespace Octopus.Shared.Configuration.Instances
 {
     public interface IApplicationInstanceSelector
     {
+        ApplicationName ApplicationName { get; }
+        
         LoadedApplicationInstance GetCurrentInstance();
 
         IList<ApplicationInstanceRecord> ListInstances();

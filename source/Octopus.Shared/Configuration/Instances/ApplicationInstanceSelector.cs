@@ -13,6 +13,7 @@ namespace Octopus.Shared.Configuration.Instances
         readonly IApplicationInstanceStrategy[] instanceStrategies;
         readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
+        LoadedApplicationInstance? current;
 
         public ApplicationInstanceSelector(ApplicationName applicationName,
             StartUpInstanceRequest? startUpInstanceRequest,
@@ -25,7 +26,7 @@ namespace Octopus.Shared.Configuration.Instances
             this.logFileOnlyLogger = logFileOnlyLogger;
         }
 
-        LoadedApplicationInstance? current;
+        public ApplicationName ApplicationName => applicationName;
 
         public IList<ApplicationInstanceRecord> ListInstances()
         {

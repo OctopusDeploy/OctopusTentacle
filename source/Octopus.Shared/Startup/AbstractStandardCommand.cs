@@ -1,6 +1,5 @@
 using System;
 using Octopus.Diagnostics;
-using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Internals.Options;
 
@@ -15,9 +14,8 @@ namespace Octopus.Shared.Startup
         bool voteForRestart;
         protected void VoteForRestart() => voteForRestart = true;
 
-        protected AbstractStandardCommand(ApplicationName applicationName, IApplicationInstanceSelector instanceSelector)
+        protected AbstractStandardCommand(IApplicationInstanceSelector instanceSelector)
         {
-            ApplicationName = applicationName;
             this.instanceSelector = instanceSelector;
 
             // The instance is actually parsed from the command-line as early as possible when the program starts to make sure logs end up in the most appropriate folder for the instance
@@ -31,8 +29,6 @@ namespace Octopus.Shared.Startup
             instanceSelector.TryGetCurrentInstance(out var unused);
         }
 
-        protected ApplicationName ApplicationName { get; }
-        
         protected override void Start()
         {
             // These kinds of commands depend on being able to load the correct instance
@@ -47,7 +43,7 @@ namespace Octopus.Shared.Startup
 
             if (voteForRestart)
             {
-                var applicationName = instanceSelector.TryGetCurrentInstance(out var instance) ? ApplicationName.ToString() : "service";
+                var applicationName = instanceSelector.TryGetCurrentInstance(out var instance) ? instanceSelector.ApplicationName.ToString() : "service";
                 Log.Warn($"These changes require a restart of the {applicationName}.");
             }
         }

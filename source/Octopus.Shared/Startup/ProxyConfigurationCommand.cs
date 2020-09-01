@@ -14,7 +14,7 @@ namespace Octopus.Shared.Startup
         bool useAProxy;
         string? host;
 
-        public ProxyConfigurationCommand(ApplicationName applicationName, Lazy<IProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ILog log) : base(applicationName, instanceSelector)
+        public ProxyConfigurationCommand(Lazy<IProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ILog log) : base(instanceSelector)
         {
             this.proxyConfiguration = proxyConfiguration;
             this.log = log;
