@@ -10,7 +10,6 @@ namespace Octopus.Shared.Startup
     {
         protected static readonly ILogWithContext Log = Diagnostics.Log.System();
 
-        readonly ApplicationName applicationName;
         readonly IApplicationInstanceSelector instanceSelector;
 
         bool voteForRestart;
@@ -18,7 +17,7 @@ namespace Octopus.Shared.Startup
 
         protected AbstractStandardCommand(ApplicationName applicationName, IApplicationInstanceSelector instanceSelector)
         {
-            this.applicationName = applicationName;
+            ApplicationName = applicationName;
             this.instanceSelector = instanceSelector;
 
             // The instance is actually parsed from the command-line as early as possible when the program starts to make sure logs end up in the most appropriate folder for the instance
@@ -32,6 +31,8 @@ namespace Octopus.Shared.Startup
             instanceSelector.TryGetCurrentInstance(out var unused);
         }
 
+        protected ApplicationName ApplicationName { get; }
+        
         protected override void Start()
         {
             // These kinds of commands depend on being able to load the correct instance
@@ -46,7 +47,7 @@ namespace Octopus.Shared.Startup
 
             if (voteForRestart)
             {
-                var applicationName = instanceSelector.TryGetCurrentInstance(out var instance) ? this.applicationName.ToString() : "service";
+                var applicationName = instanceSelector.TryGetCurrentInstance(out var instance) ? ApplicationName.ToString() : "service";
                 Log.Warn($"These changes require a restart of the {applicationName}.");
             }
         }
