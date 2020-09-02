@@ -20,7 +20,7 @@ namespace Octopus.Shared.Configuration.Instances
             this.mapper = mapper;
         }
 
-        public int Priority => 200;
+        public int Priority => 300;
 
         public bool AnyInstancesConfigured()
         {

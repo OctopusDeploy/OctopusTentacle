@@ -18,7 +18,7 @@ namespace Octopus.Shared.Configuration.Instances
             this.reader = reader;
         }
 
-        public int Priority => 300;
+        public int Priority => 200;
 
         public bool AnyInstancesConfigured()
         {
