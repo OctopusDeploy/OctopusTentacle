@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
@@ -65,10 +66,12 @@ namespace Octopus.Shared.Configuration
 
         void LoadFromEnvFile()
         {
+            var results = new Dictionary<string, string?>();
             foreach (var variableName in mapper.SupportedEnvironmentVariables)
             {
-                mapper.SetEnvironmentValue(variableName, reader.Get(variableName));
+                results.Add(variableName, reader.Get(variableName));
             }
+            mapper.SetEnvironmentValues(results);
         }
     }
 }

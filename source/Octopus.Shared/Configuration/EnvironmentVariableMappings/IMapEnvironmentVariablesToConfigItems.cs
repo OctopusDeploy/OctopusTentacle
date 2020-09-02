@@ -6,7 +6,8 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
     {
         HashSet<string> SupportedEnvironmentVariables { get; }
         
-        void SetEnvironmentValue(string variableName, string? value);
+        void SetEnvironmentValues(Dictionary<string, string?> variableNamesToValues);
+        
         string? GetConfigurationValue(string configurationSettingName);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Octopus.Configuration;
@@ -76,6 +77,7 @@ namespace Octopus.Shared.Configuration
 
             var content = fileSystem.ReadAllText(envFile);
             var lines = content.Split(Environment.NewLine.ToCharArray());
+            var results = new Dictionary<string, string?>();
             
             foreach (var line in lines.Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith("#")))
             {
@@ -85,10 +87,12 @@ namespace Octopus.Shared.Configuration
 
                 var key = line.Substring(0, splitIndex).Trim();
                 var value = line.Substring(splitIndex + 1).Trim();
-                
+
                 if (mapper.SupportedEnvironmentVariables.Contains(key))
-                    mapper.SetEnvironmentValue(key, value);
+                    results.Add(key, value);
             }
+            
+            mapper.SetEnvironmentValues(results);
         }
     }
 }

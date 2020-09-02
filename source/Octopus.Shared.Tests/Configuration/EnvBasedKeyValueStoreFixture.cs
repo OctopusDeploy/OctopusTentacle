@@ -16,15 +16,12 @@ namespace Octopus.Shared.Tests.Configuration
     {
         class TestMapper : MapEnvironmentVariablesToConfigItems
         {
-            public TestMapper(string[] supportedConfigurationKeys, string[] supportedEnvironmentVariables) : base(supportedConfigurationKeys, supportedEnvironmentVariables)
+            public TestMapper(string[] supportedConfigurationKeys, string[] supportedEnvironmentVariables) : base(supportedConfigurationKeys, new string[0], supportedEnvironmentVariables)
             {
             }
 
-            public override string? GetConfigurationValue(string configurationSettingName)
+            protected override string? MapConfigurationValue(string configurationSettingName)
             {
-                if (!SupportedConfigurationKeys.Contains(configurationSettingName))
-                    throw new ArgumentException("Unknown configuration setting");
-
                 if (configurationSettingName == "Octopus.Home")
                     return EnvironmentValues.ContainsKey("OCTOPUS_HOME") ? EnvironmentValues["OCTOPUS_HOME"] : null;
                 if (configurationSettingName == "Foo")
