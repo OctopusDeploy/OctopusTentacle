@@ -60,11 +60,11 @@ namespace Octopus.Shared.Configuration
         void EnsureLoaded()
         {
             if (!loaded)
-                LoadFromEnvFile();
+                LoadFromEnvironment();
             loaded = true;
         }
 
-        void LoadFromEnvFile()
+        void LoadFromEnvironment()
         {
             var results = new Dictionary<string, string?>();
             foreach (var variableName in mapper.SupportedEnvironmentVariables)
