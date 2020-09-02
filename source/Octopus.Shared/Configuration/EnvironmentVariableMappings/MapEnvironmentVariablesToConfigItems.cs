@@ -9,11 +9,33 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
         readonly Dictionary<string, string?> environmentVariableValues;
         bool valuesHaveBeenSet;
 
+        string[] sharedConfigurationKeys =
+        {
+            HomeConfiguration.OctopusHome,
+            HomeConfiguration.OctopusNodeCache,
+            ProxyConfiguration.OctopusProxyUseDefault,
+            ProxyConfiguration.OctopusProxyHost,
+            ProxyConfiguration.OctopusProxyPort,
+            ProxyConfiguration.OctopusProxyUsername,
+            ProxyConfiguration.OctopusProxyPassword
+        };
+        
+        string[] sharedOptionalVariables =
+        {
+            "OCTOPUS_HOME",
+            "OCTOPUS_NODE_CACHE",
+            "OCTOPUS_PROXY_USE_DEFAULT",
+            "OCTOPUS_PROXY_HOST",
+            "OCTOPUS_PROXY_PORT",
+            "OCTOPUS_PROXY_USERNAME",
+            "OCTOPUS_PROXY_PASSWORD"
+        };
+
         protected MapEnvironmentVariablesToConfigItems(string[] supportedConfigurationKeys, string[] requiredEnvironmentVariables, string[] optionalEnvironmentVariables)
         {
-            SupportedConfigurationKeys = new HashSet<string>(supportedConfigurationKeys.OrderBy(x => x));
+            SupportedConfigurationKeys = new HashSet<string>(sharedConfigurationKeys.Union(supportedConfigurationKeys).OrderBy(x => x));
             RequiredEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.OrderBy(x => x));
-            SupportedEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.Union(optionalEnvironmentVariables).OrderBy(x => x));
+            SupportedEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.Union(sharedOptionalVariables.Union(optionalEnvironmentVariables)).OrderBy(x => x));
             environmentVariableValues = new Dictionary<string, string?>();
             
             // initialise the dictionary to contain a value for every supported variable, then we don't need ContainsKey all over the place
