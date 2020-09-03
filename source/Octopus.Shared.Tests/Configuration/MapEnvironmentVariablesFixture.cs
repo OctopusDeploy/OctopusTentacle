@@ -20,10 +20,10 @@ namespace Octopus.Shared.Tests.Configuration
 
             protected override string? MapConfigurationValue(string configurationSettingName)
             {
-                if (configurationSettingName == "Octopus.Home")
-                    return EnvironmentValues["OCTOPUS_HOME"];
                 if (configurationSettingName == "Octopus.Port")
                     return EnvironmentValues["OCTOPUS_PORT"];
+                if (configurationSettingName == "Octopus.ListenPrefixes")
+                    return EnvironmentValues["OCTOPUS_LISTEN_PREFIXES"];
                 throw new ArgumentException($"Unknown setting {configurationSettingName}");
             }
         }
@@ -31,7 +31,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void NoSetupConfigState()
         {
-            var mapper = new TestMapper(new []{ "Octopus.Home" }, new []{ "OCTOPUS_HOME" }, new []{ "OCTOPUS_OPTIONAL" });
+            var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL" });
             var state = mapper.ConfigState;
             state.Should().Be(ConfigState.None);
         }
@@ -39,8 +39,8 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void CompleteSetupConfigState()
         {
-            var mapper = new TestMapper(new []{ "Octopus.Home" }, new []{ "OCTOPUS_HOME" }, new []{ "OCTOPUS_OPTIONAL" });
-            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_HOME", "Test" } });
+            var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL" });
+            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_PORT", "1234" } });
             var state = mapper.ConfigState;
             state.Should().Be(ConfigState.Complete);
         }
@@ -48,8 +48,8 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void IncompleteSetupError()
         {
-            var mapper = new TestMapper(new []{ "Octopus.Home" }, new []{ "OCTOPUS_HOME" }, new []{ "OCTOPUS_OPTIONAL" });
-            Action testAction = () => mapper.GetConfigurationValue("Octopus.Home");
+            var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL" });
+            Action testAction = () => mapper.GetConfigurationValue("Octopus.Port");
 
             testAction.Should().Throw<InvalidOperationException>()
                 .WithMessage("No variable values have been specified.");
@@ -58,7 +58,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void UnsupportedVariableErrorIsDescriptive()
         {
-            var mapper = new TestMapper(new []{ "Octopus.Home" }, new []{ "OCTOPUS_HOME" }, new []{ "OCTOPUS_OPTIONAL" });
+            var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL" });
             Action testAction = () => mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_WRONG", "Test" } });
 
             testAction.Should().Throw<ArgumentException>()
@@ -68,7 +68,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void UnsupportedVariablesErrorIsDescriptive()
         {
-            var mapper = new TestMapper(new []{ "Octopus.Home" }, new []{ "OCTOPUS_HOME" }, new []{ "OCTOPUS_OPTIONAL" });
+            var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL" });
             Action testAction = () => mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_WRONG", "Test" }, { "OCTOPUS_MORE_WRONG", "Test" } });
 
             testAction.Should().Throw<ArgumentException>()
@@ -78,50 +78,59 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void RequiredVariableErrorIsDescriptive()
         {
-            var mapper = new TestMapper(new []{ "Octopus.Home" }, new []{ "OCTOPUS_HOME" }, new []{ "OCTOPUS_OPTIONAL" });
+            var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL" });
             Action testAction = () => mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_OPTIONAL", "Test" } });
 
             testAction.Should().Throw<ArgumentException>()
-                .WithMessage("Required environment variable was not provided. 'OCTOPUS_HOME'");
+                .WithMessage("Required environment variable was not provided. 'OCTOPUS_PORT'");
         }
         
         [Test]
         public void RequiredVariablesErrorIsDescriptive()
         {
-            var mapper = new TestMapper(new []{ "Octopus.Home" }, new []{ "OCTOPUS_PORT", "OCTOPUS_HOME" }, new []{ "OCTOPUS_OPTIONAL" });
+            var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT", "OCTOPUS_FORCE_SSL" }, new []{ "OCTOPUS_OPTIONAL" });
             Action testAction = () => mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_OPTIONAL", "Test" } });
 
             testAction.Should().Throw<ArgumentException>()
-                .WithMessage("Required environment variables were not provided. 'OCTOPUS_HOME, OCTOPUS_PORT'");
+                .WithMessage("Required environment variables were not provided. 'OCTOPUS_FORCE_SSL, OCTOPUS_PORT'");
         }
         
         [Test]
         public void InvalidConfigSettingNameErrorIsDescriptive()
         {
-            var mapper = new TestMapper(new []{ "Octopus.Home" }, new []{ "OCTOPUS_HOME" }, new []{ "OCTOPUS_OPTIONAL" });
-            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_HOME", "Test" } });
-            Action testAction = () => mapper.GetConfigurationValue("Octopus.Port");
+            var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL" });
+            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_PORT", "1234" } });
+            Action testAction = () => mapper.GetConfigurationValue("Octopus.ForceSSL");
 
             testAction.Should().Throw<ArgumentException>()
-                .WithMessage("Given configuration setting name is not supported. 'Octopus.Port'");
+                .WithMessage("Given configuration setting name is not supported. 'Octopus.ForceSSL'");
         }
         
         [Test]
         public void RequiredConfigSettingCanBeRetrieved()
         {
-            var mapper = new TestMapper(new []{ "Octopus.Home" }, new []{ "OCTOPUS_HOME" }, new []{ "OCTOPUS_OPTIONAL" });
-            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_HOME", "Test" } });
+            var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL" });
+            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_PORT", "1234" } });
             
-            mapper.GetConfigurationValue("Octopus.Home").Should().Be("Test");
+            mapper.GetConfigurationValue("Octopus.Port").Should().Be("1234");
         }
         
         [Test]
         public void OptionalConfigSettingCanBeRetrieved()
         {
-            var mapper = new TestMapper(new []{ "Octopus.Home", "Octopus.Port" }, new []{ "OCTOPUS_HOME" }, new []{ "OCTOPUS_PORT" });
+            var mapper = new TestMapper(new []{ "Octopus.Port", "Octopus.ListenPrefixes" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL", "OCTOPUS_LISTEN_PREFIXES" });
             mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_HOME", "Test" }, { "OCTOPUS_PORT", "1234" } });
             
-            mapper.GetConfigurationValue("Octopus.Port").Should().Be("1234");
+            mapper.GetConfigurationValue("Octopus.ListenPrefixes").Should().BeNull();
+        }
+        
+        [Test]
+        public void SharedConfigSettingCanBeRetrieved()
+        {
+            var mapper = new TestMapper(new []{ "Octopus.Port", "Octopus.ListenPrefixes" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL", "OCTOPUS_LISTEN_PREFIXES" });
+            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_HOME", "Test" }, { "OCTOPUS_PORT", "1234" } });
+            
+            mapper.GetConfigurationValue("Octopus.Home").Should().Be("Test", because: "shared settings get contributed by the base mapper");
         }
     }
 }

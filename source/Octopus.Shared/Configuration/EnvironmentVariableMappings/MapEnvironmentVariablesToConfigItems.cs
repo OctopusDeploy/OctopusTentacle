@@ -11,7 +11,8 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
         readonly Dictionary<string, string?> environmentVariableValues;
         bool valuesHaveBeenSet;
 
-        string[] sharedConfigurationKeys =
+        // These are the settings that calling code can ask for a value for
+        string[] sharedConfigurationSettingNames =
         {
             HomeConfiguration.OctopusHome,
             HomeConfiguration.OctopusNodeCache,
@@ -22,7 +23,10 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             ProxyConfiguration.OctopusProxyPassword
         };
         
-        string[] sharedOptionalVariables =
+        // There are no required settings/variables in Shared. The
+        // following are the name of the environment variables that
+        // align with the above settings. 
+        string[] sharedOptionalEnvironmentVariableNames =
         {
             "OCTOPUS_HOME",
             "OCTOPUS_NODE_CACHE",
@@ -36,9 +40,9 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
         protected MapEnvironmentVariablesToConfigItems(ILog log, string[] supportedConfigurationKeys, string[] requiredEnvironmentVariables, string[] optionalEnvironmentVariables)
         {
             this.log = log;
-            SupportedConfigurationKeys = new HashSet<string>(sharedConfigurationKeys.Union(supportedConfigurationKeys).OrderBy(x => x));
+            SupportedConfigurationKeys = new HashSet<string>(sharedConfigurationSettingNames.Union(supportedConfigurationKeys).OrderBy(x => x));
             RequiredEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.OrderBy(x => x));
-            SupportedEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.Union(sharedOptionalVariables.Union(optionalEnvironmentVariables)).OrderBy(x => x));
+            SupportedEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.Union(sharedOptionalEnvironmentVariableNames.Union(optionalEnvironmentVariables)).OrderBy(x => x));
             environmentVariableValues = new Dictionary<string, string?>();
             
             // initialise the dictionary to contain a value for every supported variable, then we don't need ContainsKey all over the place
@@ -103,7 +107,25 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
                 throw new ArgumentException($"Given configuration setting name is not supported. '{configurationSettingName}'");
             if (!valuesHaveBeenSet)
                 throw new InvalidOperationException("No variable values have been specified.");
-            
+
+            // handle the shared setting here and pass others to the derived mapper
+            switch (configurationSettingName)
+            {
+                case HomeConfiguration.OctopusHome:
+                    return environmentVariableValues["OCTOPUS_HOME"];
+                case HomeConfiguration.OctopusNodeCache:
+                    return environmentVariableValues["OCTOPUS_NODE_CACHE"];
+                case ProxyConfiguration.OctopusProxyUseDefault:
+                    return environmentVariableValues["OCTOPUS_PROXY_USE_DEFAULT"];
+                case ProxyConfiguration.OctopusProxyHost:
+                    return environmentVariableValues["OCTOPUS_PROXY_HOST"];
+                case ProxyConfiguration.OctopusProxyPort:
+                    return environmentVariableValues["OCTOPUS_PROXY_PORT"];
+                case ProxyConfiguration.OctopusProxyUsername:
+                    return environmentVariableValues["OCTOPUS_PROXY_USERNAME"];
+                case ProxyConfiguration.OctopusProxyPassword:
+                    return environmentVariableValues["OCTOPUS_PROXY_PASSWORD"];
+            }
             return MapConfigurationValue(configurationSettingName);
         }
         
