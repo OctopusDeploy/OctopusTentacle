@@ -44,22 +44,22 @@ namespace Octopus.Shared.Configuration
 
         public void Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException($"Persisting the {name} configuration value through the EnvFileBaseKeyValueStore is not supported");
         }
 
         public void Set<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException($"Persisting the {name} configuration value through the EnvFileBaseKeyValueStore is not supported");
         }
 
         public void Remove(string name)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException($"Persisting the {name} configuration value through the EnvFileBaseKeyValueStore is not supported");
         }
 
         public void Save()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException($"Persisting configuration values through the EnvFileBaseKeyValueStore is not supported");
         }
 
         void EnsureLoaded()
