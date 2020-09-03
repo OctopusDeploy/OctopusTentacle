@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
 {
     public abstract class MapEnvironmentVariablesToConfigItems : IMapEnvironmentVariablesToConfigItems
     {
+        readonly ILog log;
         readonly Dictionary<string, string?> environmentVariableValues;
         bool valuesHaveBeenSet;
 
@@ -31,8 +33,9 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             "OCTOPUS_PROXY_PASSWORD"
         };
 
-        protected MapEnvironmentVariablesToConfigItems(string[] supportedConfigurationKeys, string[] requiredEnvironmentVariables, string[] optionalEnvironmentVariables)
+        protected MapEnvironmentVariablesToConfigItems(ILog log, string[] supportedConfigurationKeys, string[] requiredEnvironmentVariables, string[] optionalEnvironmentVariables)
         {
+            this.log = log;
             SupportedConfigurationKeys = new HashSet<string>(sharedConfigurationKeys.Union(supportedConfigurationKeys).OrderBy(x => x));
             RequiredEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.OrderBy(x => x));
             SupportedEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.Union(sharedOptionalVariables.Union(optionalEnvironmentVariables)).OrderBy(x => x));
@@ -42,6 +45,24 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             foreach (var variable in SupportedEnvironmentVariables)
             {
                 environmentVariableValues.Add(variable, null);
+            }
+        }
+        
+        public ConfigState ConfigState
+        {
+            get
+            {
+                if (!valuesHaveBeenSet || SupportedEnvironmentVariables.All(v => string.IsNullOrWhiteSpace(environmentVariableValues[v])))
+                    return ConfigState.None;
+                {
+                    if (RequiredEnvironmentVariables.All(v => !string.IsNullOrWhiteSpace(environmentVariableValues[v])))
+                        return ConfigState.Complete;
+                    
+                    // We should never get here, SetEnvironmentValues should fail if required values are missing
+                    log.Warn($"Some environment variables were found, but the following required variables were missing '{string.Join(", ", RequiredEnvironmentVariables.Where(v => string.IsNullOrWhiteSpace(environmentVariableValues[v])))}'");
+                    return ConfigState.Partial;
+                }
+
             }
         }
 

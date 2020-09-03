@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using FluentAssertions;
+using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 
 namespace Octopus.Shared.Tests.Configuration
@@ -12,7 +14,7 @@ namespace Octopus.Shared.Tests.Configuration
     {
         class TestMapper : MapEnvironmentVariablesToConfigItems
         {
-            public TestMapper(string[] supportedConfigurationKeys, string[] requiredEnvironmentVariables, string[] optionalEnvironmentVariables) : base(supportedConfigurationKeys, requiredEnvironmentVariables, optionalEnvironmentVariables)
+            public TestMapper(string[] supportedConfigurationKeys, string[] requiredEnvironmentVariables, string[] optionalEnvironmentVariables) : base(Substitute.For<ILog>(), supportedConfigurationKeys, requiredEnvironmentVariables, optionalEnvironmentVariables)
             {
             }
 
@@ -24,6 +26,23 @@ namespace Octopus.Shared.Tests.Configuration
                     return EnvironmentValues["OCTOPUS_PORT"];
                 throw new ArgumentException($"Unknown setting {configurationSettingName}");
             }
+        }
+        
+        [Test]
+        public void NoSetupConfigState()
+        {
+            var mapper = new TestMapper(new []{ "Octopus.Home" }, new []{ "OCTOPUS_HOME" }, new []{ "OCTOPUS_OPTIONAL" });
+            var state = mapper.ConfigState;
+            state.Should().Be(ConfigState.None);
+        }
+        
+        [Test]
+        public void CompleteSetupConfigState()
+        {
+            var mapper = new TestMapper(new []{ "Octopus.Home" }, new []{ "OCTOPUS_HOME" }, new []{ "OCTOPUS_OPTIONAL" });
+            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_HOME", "Test" } });
+            var state = mapper.ConfigState;
+            state.Should().Be(ConfigState.Complete);
         }
         
         [Test]

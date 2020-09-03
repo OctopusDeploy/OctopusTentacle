@@ -24,7 +24,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public bool AnyInstancesConfigured()
         {
-            return startUpInstanceRequest is StartUpDynamicInstanceRequest && envFileLocator.LocateEnvFile() != null;
+            return startUpInstanceRequest is StartUpDynamicInstanceRequest && envFileLocator.LocateEnvFile() != null && mapper.ConfigState == ConfigState.Complete;
         }
 
         public IList<ApplicationInstanceRecord> ListInstances()

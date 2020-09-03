@@ -4,6 +4,7 @@ using System.Linq;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Configuration.Instances;
@@ -16,7 +17,7 @@ namespace Octopus.Shared.Tests.Configuration
     {
         class TestMapper : MapEnvironmentVariablesToConfigItems
         {
-            public TestMapper(string[] supportedConfigurationKeys, string[] supportedEnvironmentVariables) : base(supportedConfigurationKeys, new string[0], supportedEnvironmentVariables)
+            public TestMapper(string[] supportedConfigurationKeys, string[] supportedEnvironmentVariables) : base(Substitute.For<ILog>(), supportedConfigurationKeys, new string[0], supportedEnvironmentVariables)
             {
             }
 

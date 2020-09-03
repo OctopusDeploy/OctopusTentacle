@@ -22,7 +22,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public bool AnyInstancesConfigured()
         {
-            return startUpInstanceRequest is StartUpDynamicInstanceRequest;
+            return startUpInstanceRequest is StartUpDynamicInstanceRequest && mapper.ConfigState == ConfigState.Complete;
         }
 
         public IList<ApplicationInstanceRecord> ListInstances()
