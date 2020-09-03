@@ -1,8 +1,10 @@
 ﻿#nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using NSubstitute;
+using NSubstitute.ReceivedExtensions;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
@@ -38,11 +40,12 @@ namespace Octopus.Shared.Tests.Configuration
             var fileLocator = Substitute.For<IEnvFileLocator>();
             fileLocator.LocateEnvFile().Returns("test");
             fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "", "# some comment to test", "OCTOPUS_HOME=." }));
-            var mapper = new TestMapper(new [] { "Octopus.Home" }, new [] { "OCTOPUS_HOME" });
+            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new [] { "OCTOPUS_HOME" }));
             
             var subject = new EnvFileBasedKeyValueStore(fileSystem, fileLocator, mapper);
-            var dir = subject.Get("Octopus.Home");
-            dir.Should().Be(".");
+            subject.Get("Octopus.Home");
+            mapper.Received(1).SetEnvironmentValues(Arg.Is<Dictionary<string,string?>>(c => c.Count == 1 && c.ContainsKey("OCTOPUS_HOME")));
         }
 
         [Test]
@@ -57,7 +60,7 @@ namespace Octopus.Shared.Tests.Configuration
             var subject = new EnvFileBasedKeyValueStore(fileSystem, fileLocator, mapper);
             
             Action testAction = () => subject.Get("Octopus.Home");
-            testAction.Should().Throw<ArgumentException>();
+            testAction.Should().Throw<ArgumentException>().WithMessage("Line 2 is not formatted correctly");
         }
         
         [Test]
@@ -77,7 +80,7 @@ namespace Octopus.Shared.Tests.Configuration
 
         string TestFileContent(string[] content)
         {
-            var lines = new[] { "" }.Union(content).Union(new[] { "" }).ToArray();
+            var lines = content.ToArray();
             var textContent = string.Join(Environment.NewLine, lines);
             return textContent;
         }

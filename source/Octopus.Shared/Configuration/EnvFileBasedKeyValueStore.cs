@@ -78,18 +78,27 @@ namespace Octopus.Shared.Configuration
             var content = fileSystem.ReadAllText(envFile);
             var lines = content.Split(Environment.NewLine.ToCharArray());
             var results = new Dictionary<string, string?>();
+            var lineNumber = 0;
             
-            foreach (var line in lines.Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith("#")))
+            foreach (var line in lines)
             {
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
+                {   
+                    lineNumber++;
+                    continue;
+                }
+                
                 var splitIndex = line.IndexOf('=');
                 if (splitIndex < 0)
-                    throw new ArgumentException($"The line '{line}' is not formatted correctly");
+                    throw new ArgumentException($"Line {lineNumber} is not formatted correctly");
 
                 var key = line.Substring(0, splitIndex).Trim();
                 var value = line.Substring(splitIndex + 1).Trim();
 
                 if (mapper.SupportedEnvironmentVariables.Contains(key))
                     results.Add(key, value);
+
+                lineNumber++;
             }
             
             mapper.SetEnvironmentValues(results);
