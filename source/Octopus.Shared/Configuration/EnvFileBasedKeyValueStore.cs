@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
@@ -76,17 +75,20 @@ namespace Octopus.Shared.Configuration
                 throw new InvalidOperationException("Could not locate .env file");
 
             var content = fileSystem.ReadAllText(envFile);
+#if FULL_FRAMEWORK
             var lines = content.Split(Environment.NewLine.ToCharArray());
+#else
+            var lines = content.Split(Environment.NewLine);
+#endif
             var results = new Dictionary<string, string?>();
             var lineNumber = 0;
             
             foreach (var line in lines)
             {
+                lineNumber++;
+
                 if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
-                {   
-                    lineNumber++;
                     continue;
-                }
                 
                 var splitIndex = line.IndexOf('=');
                 if (splitIndex < 0)
@@ -97,8 +99,6 @@ namespace Octopus.Shared.Configuration
 
                 if (mapper.SupportedEnvironmentVariables.Contains(key))
                     results.Add(key, value);
-
-                lineNumber++;
             }
             
             mapper.SetEnvironmentValues(results);
