@@ -42,7 +42,7 @@ namespace Octopus.Shared.Tests.Configuration
             var subject = new EnvFileLocator(fileSystem, log);
 
             var envFile = subject.LocateEnvFile();
-            envFile.Should().Be(envPath);
+            envFile.Should().Be(envPath, because: "the .env file is discoverable from the working directory");
         }
 
         
@@ -57,7 +57,7 @@ namespace Octopus.Shared.Tests.Configuration
             var subject = new EnvFileLocator(fileSystem, log);
 
             var envFile = subject.LocateEnvFile();
-            envFile.Should().Be(envPath);
+            envFile.Should().Be(envPath, because: "the .env file is discoverable up the directory tree");
         }
 
         [Test]
@@ -71,7 +71,7 @@ namespace Octopus.Shared.Tests.Configuration
             var subject = new EnvFileLocator(fileSystem, log);
 
             var envFile = subject.LocateEnvFile();
-            envFile.Should().Be(envPath);
+            envFile.Should().Be(envPath, because: "the .env file is discoverable at the root of the directory tree");
         }
 
         string GetParentPath(string path)
