@@ -35,7 +35,7 @@ namespace Octopus.Shared.Tests.Configuration
         public void FindsInLocalDirectory()
         {
             var fileSystem = Substitute.For<IOctopusFileSystem>();
-            var testAssemblyLocation = Path.GetDirectoryName(typeof(EnvBasedKeyValueStoreFixture).Assembly.Location);
+            var testAssemblyLocation = Path.GetDirectoryName(typeof(EnvFileInstanceStrategyFixture).Assembly.Location);
             var envPath = Path.Combine(testAssemblyLocation, ".env");
             fileSystem.FileExists(envPath).Returns(true);
 
@@ -50,7 +50,7 @@ namespace Octopus.Shared.Tests.Configuration
         public void FindsInParentDirectory()
         {
             var fileSystem = Substitute.For<IOctopusFileSystem>();
-            var testAssemblyLocation = Path.GetDirectoryName(typeof(EnvBasedKeyValueStoreFixture).Assembly.Location);
+            var testAssemblyLocation = Path.GetDirectoryName(typeof(EnvFileInstanceStrategyFixture).Assembly.Location);
             var envPath = Path.Combine(GetParentPath(testAssemblyLocation), ".env");
             fileSystem.FileExists(Arg.Any<string>()).Returns(c => (string)c.Args()[0] == envPath);
             
@@ -64,7 +64,7 @@ namespace Octopus.Shared.Tests.Configuration
         public void FindsInRootDirectory()
         {
             var fileSystem = Substitute.For<IOctopusFileSystem>();
-            var testAssemblyLocation = Path.GetDirectoryName(typeof(EnvBasedKeyValueStoreFixture).Assembly.Location);
+            var testAssemblyLocation = Path.GetDirectoryName(typeof(EnvFileInstanceStrategyFixture).Assembly.Location);
             var envPath = Path.Combine(Directory.GetDirectoryRoot(testAssemblyLocation), ".env");
             fileSystem.FileExists(Arg.Any<string>()).Returns(c => (string)c.Args()[0] == envPath);
             

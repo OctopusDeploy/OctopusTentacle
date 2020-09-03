@@ -10,6 +10,7 @@ namespace Octopus.Shared.Configuration.Instances
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IMapEnvironmentVariablesToConfigItems mapper;
         readonly IEnvironmentVariableReader reader;
+        bool loaded;
 
         public EnvironmentInstanceStrategy(StartUpInstanceRequest startUpInstanceRequest, IMapEnvironmentVariablesToConfigItems mapper, IEnvironmentVariableReader reader)
         {
@@ -22,7 +23,10 @@ namespace Octopus.Shared.Configuration.Instances
 
         public bool AnyInstancesConfigured()
         {
-            return startUpInstanceRequest is StartUpDynamicInstanceRequest && mapper.ConfigState == ConfigState.Complete;
+            if (!(startUpInstanceRequest is StartUpDynamicInstanceRequest))
+                return false;
+            EnsureLoaded();
+            return mapper.ConfigState == ConfigState.Complete;
         }
 
         public IList<ApplicationInstanceRecord> ListInstances()
@@ -37,7 +41,32 @@ namespace Octopus.Shared.Configuration.Instances
 
         public LoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
         {
-            return new LoadedApplicationInstance(applicationInstance.InstanceName, new EnvironmentBasedKeyValueStore(mapper, reader));
+            EnsureLoaded();
+            return new LoadedApplicationInstance(applicationInstance.InstanceName, new InMemoryKeyValueStore(mapper));
+        }
+                
+        void EnsureLoaded()
+        {
+            if (!loaded)
+            {
+                var results = LoadFromEnvironment(reader, mapper);
+                if (results.Values.Any(x => x != null))
+                {
+                    mapper.SetEnvironmentValues(results);
+                }
+            }
+            loaded = true;
+        }
+
+        internal static Dictionary<string, string?> LoadFromEnvironment(IEnvironmentVariableReader reader, IMapEnvironmentVariablesToConfigItems mapper)
+        {
+            var results = new Dictionary<string, string?>();
+            foreach (var variableName in mapper.SupportedEnvironmentVariables)
+            {
+                results.Add(variableName, reader.Get(variableName));
+            }
+
+            return results;
         }
     }
 }

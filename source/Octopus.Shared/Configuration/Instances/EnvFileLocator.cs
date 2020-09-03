@@ -23,7 +23,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public string? LocateEnvFile()
         {
-            var directoryToCheck = Path.GetDirectoryName(typeof(EnvFileBasedKeyValueStore).Assembly.Location);
+            var directoryToCheck = Path.GetDirectoryName(typeof(InMemoryKeyValueStore).Assembly.Location);
 
             if (log != null)
             {
