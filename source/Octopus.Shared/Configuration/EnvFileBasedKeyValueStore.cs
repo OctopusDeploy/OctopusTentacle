@@ -75,11 +75,7 @@ namespace Octopus.Shared.Configuration
                 throw new InvalidOperationException("Could not locate .env file");
 
             var content = fileSystem.ReadAllText(envFile);
-#if FULL_FRAMEWORK
-            var lines = content.Split(Environment.NewLine.ToCharArray());
-#else
-            var lines = content.Split(Environment.NewLine);
-#endif
+            var lines = content.Split(new [] {  Environment.NewLine }, StringSplitOptions.None);
             var results = new Dictionary<string, string?>();
             var lineNumber = 0;
             
