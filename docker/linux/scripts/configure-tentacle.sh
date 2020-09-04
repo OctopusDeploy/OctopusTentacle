@@ -6,6 +6,11 @@ set -eux
 #
 # This script only currently supports configuring polling tentacles.
 
+if [[ "$ACCEPT_EULA" != "Y" ]]; then
+    echo "ERROR: You must accept the EULA at https://octopus.com/company/legal by passing an environment variable 'ACCEPT_EULA=Y'"
+    exit 1
+fi
+
 # TODO This check doesn't account for multiple instances, or for reconfiguring an existing instance.
 if [ -f "/usr/bin/tentacle" ]; then
     echo "Octopus Tentacle is already configured."
