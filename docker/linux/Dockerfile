@@ -4,16 +4,23 @@ ARG BUILD_NUMBER
 ARG BUILD_DATE
 
 RUN apt-get update && \
-    apt-get install -y curl sudo && \
+    apt-get install -y curl sudo dos2unix && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 EXPOSE 10933
 
 WORKDIR /tmp
-COPY tentacle_${BUILD_NUMBER}_amd64.deb /tmp/
+
+COPY docker/linux/install-scripts/* /install-scripts/
 COPY docker/linux/scripts/* /scripts/
 
+# Install Docker daemon and CLI
+COPY docker/linux/scripts/dockerd-entrypoint.sh /usr/local/bin/
+RUN /install-scripts/install-docker.sh
+
+# Install Tentacle
+COPY tentacle_${BUILD_NUMBER}_amd64.deb /tmp/
 RUN apt-get update && \
     apt install ./tentacle_${BUILD_NUMBER}_amd64.deb && \
     apt-get clean && \
@@ -34,6 +41,8 @@ ENV OCTOPUS_SERVER_PORT=10943
 ENV OCTOPUS_SERVER_API_KEY="API-SOURCE-THIS-FROM-YOUR-OCTOPUS-SERVER"
 ENV OCTOPUS_SERVER_SPACE="Default"
 ENV OCTOPUS_SERVER_WORKER_POOL="Default Worker Pool"
+ENV ENABLE_DIND=Y
+ENV ACCEPT_EULA=N
 
 CMD /scripts/configure-tentacle.sh && /scripts/run-tentacle.sh
 

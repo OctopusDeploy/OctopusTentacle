@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -eux
 
 # This is very much a work in progress. Please do not view this as production-ready. It's in Octopus-internal use at
 # the moment and will be made more robust in due course.
@@ -13,8 +13,6 @@ if [ -f "/usr/bin/tentacle" ]; then
 fi
 
 ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
-
-whoami
 
 mkdir -p $OCTOPUS_TENTACLE_CONFIG_DIR
 mkdir -p $OCTOPUS_TENTACLE_APPLICATIONS_DIR
