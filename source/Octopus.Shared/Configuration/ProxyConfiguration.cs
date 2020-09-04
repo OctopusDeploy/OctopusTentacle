@@ -5,11 +5,11 @@ namespace Octopus.Shared.Configuration
 {
     public class ProxyConfiguration : IProxyConfiguration
     {
-        internal const string OctopusProxyUseDefault = "Octopus.Proxy.UseDefaultProxy";
-        internal const string OctopusProxyHost = "Octopus.Proxy.ProxyHost";
-        internal const string OctopusProxyPort = "Octopus.Proxy.ProxyPort";
-        internal const string OctopusProxyUsername = "Octopus.Proxy.ProxyUsername";
-        internal const string OctopusProxyPassword = "Octopus.Proxy.ProxyPassword";
+        public const string OctopusProxyUseDefault = "Octopus.Proxy.UseDefaultProxy";
+        public const string OctopusProxyHost = "Octopus.Proxy.ProxyHost";
+        public const string OctopusProxyPort = "Octopus.Proxy.ProxyPort";
+        public const string OctopusProxyUsername = "Octopus.Proxy.ProxyUsername";
+        public const string OctopusProxyPassword = "Octopus.Proxy.ProxyPassword";
         
         readonly IKeyValueStore settings;
 
