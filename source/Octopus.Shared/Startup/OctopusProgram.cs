@@ -14,6 +14,7 @@ using NLog.Config;
 using NLog.Targets;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 using Octopus.Shared.Internals.Options;

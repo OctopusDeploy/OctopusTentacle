@@ -5,6 +5,7 @@ using System.ServiceProcess;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Startup
 {

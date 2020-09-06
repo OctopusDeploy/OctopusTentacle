@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Octopus.Shared.Configuration
+namespace Octopus.Shared.Configuration.Instances
 {
     public interface IApplicationInstanceSelector
     {

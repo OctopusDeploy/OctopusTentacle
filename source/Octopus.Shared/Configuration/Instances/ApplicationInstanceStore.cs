@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Configuration
+namespace Octopus.Shared.Configuration.Instances
 {
     public class ApplicationInstanceStore : IApplicationInstanceStore
     {

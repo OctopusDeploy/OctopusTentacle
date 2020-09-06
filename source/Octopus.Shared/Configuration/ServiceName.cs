@@ -1,4 +1,5 @@
 using System;
+using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Configuration
 {
