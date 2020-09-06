@@ -31,15 +31,12 @@ WORKDIR /
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
-ENV OCTOPUS_TENTACLE_DISPLAY_NAME="Octopus Tentacle"
-ENV OCTOPUS_TENTACLE_CONFIG_DIR=/etc/octopus
-ENV OCTOPUS_TENTACLE_APPLICATIONS_DIR=/home/Octopus/Applications
-ENV OCTOPUS_TENTACLE_COMMS_STYLE=TentacleActive
-ENV OCTOPUS_SERVER_URL="https://octopus.example.com/"
-ENV OCTOPUS_SERVER_PORT=10943
-ENV OCTOPUS_SERVER_API_KEY="API-SOURCE-THIS-FROM-YOUR-OCTOPUS-SERVER"
-ENV OCTOPUS_SERVER_SPACE="Default"
-ENV OCTOPUS_SERVER_WORKER_POOL="Default Worker Pool"
+ENV ServerUrl="https://octopus.example.com/"
+ENV ServerPort=10943
+ENV ServerApiKey="API-SOURCE-THIS-FROM-YOUR-OCTOPUS-SERVER"
+ENV Space="Default"
+ENV WorkerPool="Default Worker Pool"
+ENV CommunicationsStype=TentacleActive
 ENV ENABLE_DIND=Y
 ENV ACCEPT_EULA=N
 
