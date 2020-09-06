@@ -22,7 +22,7 @@ mkdir -p $OCTOPUS_TENTACLE_CONFIG_DIR
 mkdir -p $OCTOPUS_TENTACLE_APPLICATIONS_DIR
 
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
-export $instanceName=Tentacle
+instanceName=Tentacle
 
 tentacle create-instance --instance "$instanceName" --config "$OCTOPUS_TENTACLE_CONFIG_DIR/tentacle/$instanceName.config"
 tentacle new-certificate --instance "$instanceName" --if-blank
