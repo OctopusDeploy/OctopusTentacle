@@ -6,9 +6,11 @@ namespace Octopus.Shared.Configuration
 {
     public class HomeConfiguration : IHomeConfiguration
     {
+        internal const string OctopusHomeSettingName = "Octopus.Home";
+        internal const string OctopusNodeCacheSettingName = "Octopus.Node.Cache";
+
         readonly ApplicationName application;
         readonly IKeyValueStore settings;
-        
 
         public HomeConfiguration(ApplicationName application, IKeyValueStore settings)
         {
@@ -22,19 +24,19 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var value = settings.Get<string?>("Octopus.Home", null);
+                var value = settings.Get<string?>(OctopusHomeSettingName, null);
                 if (value != null && !Path.IsPathRooted(value))
                     value = PathHelper.ResolveRelativeDirectoryPath(value);
                 return value;
             }
-            set => settings.Set<string?>("Octopus.Home", value);
+            set => settings.Set<string?>(OctopusHomeSettingName, value);
         }
         
         public string? CacheDirectory
         {
             get
             {
-                var value = settings.Get<string?>("Octopus.Node.Cache", null);
+                var value = settings.Get<string?>(OctopusNodeCacheSettingName, null);
                 if (value == null)
                     return ApplicationSpecificHomeDirectory;
                 
@@ -43,7 +45,7 @@ namespace Octopus.Shared.Configuration
                 
                 return value;
             }
-            set => settings.Set<string?>("Octopus.Node.Cache", value);
+            set => settings.Set<string?>(OctopusNodeCacheSettingName, value);
         }
     }
 }
