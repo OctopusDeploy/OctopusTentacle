@@ -5,6 +5,7 @@ namespace Octopus.Shared.Configuration
 {
     public class ProxyConfiguration : IProxyConfiguration
     {
+        // These are deliberately public so consumers like Octopus Server and Tentacle can use the configuration keys
         public const string OctopusProxyUseDefault = "Octopus.Proxy.UseDefaultProxy";
         public const string OctopusProxyHost = "Octopus.Proxy.ProxyHost";
         public const string OctopusProxyPort = "Octopus.Proxy.ProxyPort";
