@@ -1,5 +1,15 @@
 version: '3'
 services:
+
+    octopusdeploy-tentacle-linux:
+        build:
+            context: .
+            dockerfile: ./docker/linux/Dockerfile
+            args:
+                BUILD_DATE: ${BUILD_DATE:?err}
+                BUILD_NUMBER: ${BUILD_NUMBER:?err}
+        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER?err}-linux
+
     octopusdeploy-tentacle-windows-1607:
         build:
             context: .
