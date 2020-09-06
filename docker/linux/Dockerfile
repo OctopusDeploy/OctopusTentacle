@@ -37,7 +37,7 @@ ENV ServerApiKey="API-SOURCE-THIS-FROM-YOUR-OCTOPUS-SERVER"
 ENV Space="Default"
 ENV WorkerPool="Default Worker Pool"
 ENV CommunicationsStype=TentacleActive
-ENV ENABLE_DIND=Y
+ENV DISABLE_DIND=N
 ENV ACCEPT_EULA=N
 
 CMD /scripts/configure-tentacle.sh && /scripts/run-tentacle.sh
