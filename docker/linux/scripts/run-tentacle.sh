@@ -1,11 +1,11 @@
 #!/bin/bash
 set -eux
 
-if [[ "$ENABLE_DIND" == "Y" ]]; then
+if [[ "$DISABLE_DIND" == "Y" ]]; then
+    echo Docker-in-Docker is disabled.
+else
     echo "Starting Docker-in-Docker daemon. This requires that this container be run in privileged mode."
     nohup /usr/local/bin/dockerd-entrypoint.sh dockerd &
-else
-    echo Docker-in-Docker is disabled.
 fi
 
 tentacle agent --instance Tentacle
