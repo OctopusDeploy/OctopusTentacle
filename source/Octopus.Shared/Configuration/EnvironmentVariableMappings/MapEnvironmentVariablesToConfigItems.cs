@@ -14,13 +14,13 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
         // These are the settings that calling code can ask for a value for
         string[] sharedConfigurationSettingNames =
         {
-            HomeConfiguration.OctopusHome,
-            HomeConfiguration.OctopusNodeCache,
-            ProxyConfiguration.OctopusProxyUseDefault,
-            ProxyConfiguration.OctopusProxyHost,
-            ProxyConfiguration.OctopusProxyPort,
-            ProxyConfiguration.OctopusProxyUsername,
-            ProxyConfiguration.OctopusProxyPassword
+            HomeConfiguration.OctopusHomeSettingName,
+            HomeConfiguration.OctopusNodeCacheSettingName,
+            ProxyConfiguration.ProxyUseDefaultSettingName,
+            ProxyConfiguration.ProxyHostSettingName,
+            ProxyConfiguration.ProxyPortSettingName,
+            ProxyConfiguration.ProxyUsernameSettingName,
+            ProxyConfiguration.ProxyPasswordSettingName
         };
         
         // There are no required settings/variables in Shared. The
@@ -111,19 +111,19 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             // handle the shared setting here and pass others to the derived mapper
             switch (configurationSettingName)
             {
-                case HomeConfiguration.OctopusHome:
+                case HomeConfiguration.OctopusHomeSettingName:
                     return environmentVariableValues["OCTOPUS_HOME"];
-                case HomeConfiguration.OctopusNodeCache:
+                case HomeConfiguration.OctopusNodeCacheSettingName:
                     return environmentVariableValues["OCTOPUS_NODE_CACHE"];
-                case ProxyConfiguration.OctopusProxyUseDefault:
+                case ProxyConfiguration.ProxyUseDefaultSettingName:
                     return environmentVariableValues["OCTOPUS_PROXY_USE_DEFAULT"];
-                case ProxyConfiguration.OctopusProxyHost:
+                case ProxyConfiguration.ProxyHostSettingName:
                     return environmentVariableValues["OCTOPUS_PROXY_HOST"];
-                case ProxyConfiguration.OctopusProxyPort:
+                case ProxyConfiguration.ProxyPortSettingName:
                     return environmentVariableValues["OCTOPUS_PROXY_PORT"];
-                case ProxyConfiguration.OctopusProxyUsername:
+                case ProxyConfiguration.ProxyUsernameSettingName:
                     return environmentVariableValues["OCTOPUS_PROXY_USERNAME"];
-                case ProxyConfiguration.OctopusProxyPassword:
+                case ProxyConfiguration.ProxyPasswordSettingName:
                     return environmentVariableValues["OCTOPUS_PROXY_PASSWORD"];
             }
             return MapConfigurationValue(configurationSettingName);

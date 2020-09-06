@@ -5,11 +5,12 @@ namespace Octopus.Shared.Configuration
 {
     public class ProxyConfiguration : IProxyConfiguration
     {
-        public const string OctopusProxyUseDefault = "Octopus.Proxy.UseDefaultProxy";
-        public const string OctopusProxyHost = "Octopus.Proxy.ProxyHost";
-        public const string OctopusProxyPort = "Octopus.Proxy.ProxyPort";
-        public const string OctopusProxyUsername = "Octopus.Proxy.ProxyUsername";
-        public const string OctopusProxyPassword = "Octopus.Proxy.ProxyPassword";
+        // These are deliberately public so consumers like Octopus Server and Tentacle can use the configuration keys
+        public const string ProxyUseDefaultSettingName = "Octopus.Proxy.UseDefaultProxy";
+        public const string ProxyHostSettingName = "Octopus.Proxy.ProxyHost";
+        public const string ProxyPortSettingName = "Octopus.Proxy.ProxyPort";
+        public const string ProxyUsernameSettingName = "Octopus.Proxy.ProxyUsername";
+        public const string ProxyPasswordSettingName = "Octopus.Proxy.ProxyPassword";
         
         readonly IKeyValueStore settings;
 
@@ -20,32 +21,32 @@ namespace Octopus.Shared.Configuration
 
         public bool UseDefaultProxy
         {
-            get { return settings.Get<bool>(OctopusProxyUseDefault, true); }
-            set { settings.Set(OctopusProxyUseDefault, value); }
+            get => settings.Get<bool>(ProxyUseDefaultSettingName, true);
+            set => settings.Set(ProxyUseDefaultSettingName, value);
         }
 
         public string CustomProxyUsername
         {
-            get { return settings.Get(OctopusProxyUsername, string.Empty); }
-            set { settings.Set(OctopusProxyUsername, value); }
+            get => settings.Get(ProxyUsernameSettingName, string.Empty);
+            set => settings.Set(ProxyUsernameSettingName, value);
         }
 
         public string CustomProxyPassword
         {
-            get { return settings.Get<string>(OctopusProxyPassword, protectionLevel: ProtectionLevel.MachineKey); }
-            set { settings.Set(OctopusProxyPassword, value, ProtectionLevel.MachineKey); }
+            get => settings.Get<string>(ProxyPasswordSettingName, protectionLevel: ProtectionLevel.MachineKey);
+            set => settings.Set(ProxyPasswordSettingName, value, ProtectionLevel.MachineKey);
         }
 
         public string? CustomProxyHost
         {
-            get { return settings.Get(OctopusProxyHost); }
-            set { settings.Set(OctopusProxyHost, value); }
+            get => settings.Get(ProxyHostSettingName);
+            set => settings.Set(ProxyHostSettingName, value);
         }
 
         public int CustomProxyPort
         {
-            get { return settings.Get(OctopusProxyPort, 80); }
-            set { settings.Set(OctopusProxyPort, value); }
+            get => settings.Get(ProxyPortSettingName, 80);
+            set => settings.Set(ProxyPortSettingName, value);
         }
     }
 }
