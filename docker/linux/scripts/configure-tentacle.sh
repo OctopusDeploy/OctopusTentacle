@@ -18,13 +18,15 @@ fi
 
 ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
 
-mkdir -p $OCTOPUS_TENTACLE_CONFIG_DIR
-mkdir -p $OCTOPUS_TENTACLE_APPLICATIONS_DIR
+mkdir -p $configurationDirectory
+mkdir -p $applicationsDirectory
 
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
 instanceName=Tentacle
+configurationDirectory=/etc/octopus
+applicationsDirectory=/home/Octopus/Applications
 
-tentacle create-instance --instance "$instanceName" --config "$OCTOPUS_TENTACLE_CONFIG_DIR/tentacle/$instanceName.config"
+tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config"
 tentacle new-certificate --instance "$instanceName" --if-blank
-tentacle configure --instance "$instanceName" --app "$OCTOPUS_TENTACLE_APPLICATIONS_DIR" --noListen "True" --reset-trust
-tentacle register-worker --instance "$instanceName" --server "$OCTOPUS_SERVER_URL" --name "$HOSTNAME" --comms-style "$OCTOPUS_TENTACLE_COMMS_STYLE" --server-comms-port $OCTOPUS_SERVER_PORT --apiKey $OCTOPUS_SERVER_API_KEY --space "$OCTOPUS_SERVER_SPACE" --workerpool="$OCTOPUS_SERVER_WORKER_POOL" --force
+tentacle configure --instance "$instanceName" --app "$applicationsDirectory" --noListen "True" --reset-trust
+tentacle register-worker --instance "$instanceName" --server "$ServerUrl" --name "$HOSTNAME" --comms-style "$CommunicationsStype" --server-comms-port $ServerPort --apiKey $ServerApiKey --space "$Space" --workerpool="$WorkerPool" --force

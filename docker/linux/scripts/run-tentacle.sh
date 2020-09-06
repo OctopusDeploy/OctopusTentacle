@@ -8,4 +8,4 @@ else
     echo Docker-in-Docker is disabled.
 fi
 
-tentacle agent --instance "$OCTOPUS_TENTACLE_INSTANCE_NAME"
+tentacle agent --instance Tentacle
