@@ -1,5 +1,6 @@
 using Autofac;
 using Octopus.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Services;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;

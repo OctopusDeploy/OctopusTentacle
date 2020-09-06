@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Octopus.Shared.Configuration
+namespace Octopus.Shared.Configuration.Instances
 {
     public interface IApplicationInstanceStore
     {

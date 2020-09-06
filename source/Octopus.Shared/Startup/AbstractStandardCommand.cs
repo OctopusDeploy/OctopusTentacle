@@ -1,6 +1,7 @@
 using System;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Internals.Options;
 
 namespace Octopus.Shared.Startup

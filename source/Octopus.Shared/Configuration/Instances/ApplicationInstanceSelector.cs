@@ -1,12 +1,12 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
-using System.Diagnostics.CodeAnalysis;
 
-namespace Octopus.Shared.Configuration
+namespace Octopus.Shared.Configuration.Instances
 {
     public class ApplicationInstanceSelector : IApplicationInstanceSelector
     {

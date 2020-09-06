@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
