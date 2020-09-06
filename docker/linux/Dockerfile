@@ -28,7 +28,7 @@ RUN apt-get update && \
 
 WORKDIR /
 
-# # We know this won't reduce the image size at all. It's just to make the filesystem a little more tidy.
+# We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
 ENV OCTOPUS_TENTACLE_INSTANCE_NAME=Tentacle
