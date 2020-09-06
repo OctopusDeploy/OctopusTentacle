@@ -31,7 +31,6 @@ WORKDIR /
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
-ENV OCTOPUS_TENTACLE_INSTANCE_NAME=Tentacle
 ENV OCTOPUS_TENTACLE_DISPLAY_NAME="Octopus Tentacle"
 ENV OCTOPUS_TENTACLE_CONFIG_DIR=/etc/octopus
 ENV OCTOPUS_TENTACLE_APPLICATIONS_DIR=/home/Octopus/Applications
