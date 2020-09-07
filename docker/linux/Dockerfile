@@ -39,6 +39,7 @@ ENV ServerPort=10943
 ENV ServerApiKey="API-SOURCE-THIS-FROM-YOUR-OCTOPUS-SERVER"
 ENV Space="Default"
 ENV WorkerPool="Default Worker Pool"
+ENV MachinePolicy="Default Machine Policy"
 ENV CommunicationsStype=TentacleActive
 ENV DISABLE_DIND=N
 ENV ACCEPT_EULA=N
