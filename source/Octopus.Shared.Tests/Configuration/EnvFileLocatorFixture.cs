@@ -3,8 +3,8 @@ using System.IO;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Configuration
@@ -13,13 +13,13 @@ namespace Octopus.Shared.Tests.Configuration
     public class EnvFileLocatorFixture
     {
         IOctopusFileSystem fileSystem;
-        ILog log;
+        ILogFileOnlyLogger log;
 
         [SetUp]
         public void SetUp()
         {
             fileSystem = Substitute.For<IOctopusFileSystem>();
-            log = Substitute.For<ILog>();
+            log = Substitute.For<ILogFileOnlyLogger>();
         }
         
         [Test]

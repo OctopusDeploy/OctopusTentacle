@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Octopus.Diagnostics;
+using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
@@ -13,9 +13,10 @@ namespace Octopus.Shared.Configuration.Instances
     public class EnvFileLocator : IEnvFileLocator
     {
         readonly IOctopusFileSystem fileSystem;
-        readonly ILog log;
+        readonly ILogFileOnlyLogger log;
+        string? envFile;
 
-        public EnvFileLocator(IOctopusFileSystem fileSystem, ILog log)
+        public EnvFileLocator(IOctopusFileSystem fileSystem, ILogFileOnlyLogger log)
         {
             this.fileSystem = fileSystem;
             this.log = log;
@@ -23,12 +24,12 @@ namespace Octopus.Shared.Configuration.Instances
 
         public string? LocateEnvFile()
         {
+            if (envFile != null)
+                return envFile;
+            
             var directoryToCheck = Path.GetDirectoryName(typeof(InMemoryKeyValueStore).Assembly.Location);
 
-            if (log != null)
-            {
-                log.InfoFormat("Search for .env file, starting from {0}", directoryToCheck);
-            }
+            log.Info($"Search for .env file, starting from {directoryToCheck}");
 
             var envPathToCheck = Path.Combine(directoryToCheck, ".env");
             var envFileExists = fileSystem.FileExists(envPathToCheck);
@@ -50,13 +51,13 @@ namespace Octopus.Shared.Configuration.Instances
                 envFileExists = fileSystem.FileExists(envPathToCheck);
             }
 
-            if (log != null)
-                if (envFileExists)
-                    log.InfoFormat("Found .env file, {0}", envPathToCheck);
-                else
-                    log.Info("No .env file found");
+            if (envFileExists)
+                log.Info($"Found .env file, {envPathToCheck}");
+            else
+                log.Info("No .env file found");
 
-            return envFileExists ? envPathToCheck : null;
+            envFile = envFileExists ? envPathToCheck : null;
+            return envFile;
         }
     }
 }

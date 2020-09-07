@@ -44,7 +44,7 @@ namespace Octopus.Shared.Configuration
                 .As<IPersistedApplicationInstanceStore>()
                 .As<IApplicationInstanceStrategy>();
             
-            builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>();
+            builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>().SingleInstance();
             builder.RegisterType<EnvFileInstanceStrategy>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
                 .As<IApplicationInstanceStrategy>();
