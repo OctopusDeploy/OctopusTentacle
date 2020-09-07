@@ -29,4 +29,4 @@ mkdir -p $applicationsDirectory
 tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config"
 tentacle new-certificate --instance "$instanceName" --if-blank
 tentacle configure --instance "$instanceName" --app "$applicationsDirectory" --noListen "True" --reset-trust
-tentacle register-worker --instance "$instanceName" --server "$ServerUrl" --name "$HOSTNAME" --comms-style "$CommunicationsStype" --server-comms-port $ServerPort --apiKey $ServerApiKey --space "$Space" --workerpool="$WorkerPool" --force
+tentacle register-worker --instance "$instanceName" --server "$ServerUrl" --name "$HOSTNAME" --comms-style "$CommunicationsStype" --server-comms-port $ServerPort --apiKey $ServerApiKey --space "$Space" --workerpool="$WorkerPool" --policy="$MachinePolicy" --force
