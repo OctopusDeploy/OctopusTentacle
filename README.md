@@ -1,13 +1,37 @@
-OctopusTentacle
----------------
+# Tentacle
 
-### Notes
+Tentacle is the secure, lightweight, cross-platform agent for [Octopus Server](https://github.com/OctopusDeploy/OctopusDeploy) which turns any computer into a worker or deployment target for automated deployments and operations runbooks.
 
-Issues related to fixes in this repo should be created in the Tentacle repo so they appear in the release notes.
+![Tentacles Everywhere](https://user-images.githubusercontent.com/1627582/92418318-430ed000-f1aa-11ea-8a46-6d6763feef3a.png)
 
-Tentacle is released via ReleaseBot. Run `@releasebot What's up Octopus Tentacle` to get him to spring into action.
+## Contributing
 
-To include a new version into the next Octopus Server release, update the [reference in Octopus.E2ETests.csproj](https://github.com/OctopusDeploy/OctopusDeploy/blob/master/source/Octopus.E2ETests/Octopus.E2ETests.csproj#L29).
+:+1::tada: First off, thanks for your contribution to Tentacle! :tada::+1:
+
+If you are a customer of Octopus Deploy, please start a conversation about any problems with Tentacle with our [support team](mailto:support@octopus.com) - this is the best way to get our attention.
+
+### Issues, Pull Requests, and Release Notes
+
+Please [create a new issue](issues/new) for each bug fix or enhancement. [Issues in this repository](issues) are automatically used to create release notes for [releases](releases).
+
+### Build, Test, and delivery
+
+We use the [Octopus Tentacle project in our private TeamCity server](https://build.octopushq.com/project/OctopusDeploy_OctopusTentacle) for automated build and test reporting status changes to pull requests.
+
+We use the [Octopus Tentacle project in our private Octopus server](https://deploy.octopus.app/app#/Spaces-1/projects/octopus-tentacle) to deploy releases of Tentacle. You can also use `@releasebot What's up Octopus Tentacle` in our Slack workspace to start a deployment.
+
+### Bundling Tentacle with Octopus Server
+
+We bundle Tentacle inside Octopus Server to make it super duper easy to keep Tentacle updated across entire fleets of customer installations. Choosing the version of Tentacle to bundle inside Octopus Server is currently a manual process.
+
+To include a new version into the next Octopus Server release, update the [reference in Octopus.E2ETests.csproj](https://github.com/OctopusDeploy/OctopusDeploy/blob/master/source/Octopus.E2ETests/Octopus.E2ETests.csproj#L29). This is how we guarantee the version of Tentacle we bundle is also the version we use for all the end to end tests.
+
+## Debugging
+
+In most scenarios, Tentacle is simple to debug:
+
+1. Just like a customer, set up an instance of Tentacle and connect it to an Octopus Server
+2. Start Tentacle using the debugger in your development environment of choice, using the `Tentacle.exe run --instance=YOUR_INSTANCE_NAME` command
 
 ## Debugging in WSL (Windows Subsystem for Linux )
 Currently we can only debug netcore apps running in WSL from VSCode, Visual Studio and Rider dont seem to have good working solutions
