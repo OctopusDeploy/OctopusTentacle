@@ -8,4 +8,4 @@ else
     nohup /usr/local/bin/dockerd-entrypoint.sh dockerd &
 fi
 
-tentacle agent --instance Tentacle
+tentacle agent --instance Tentacle --noninteractive
