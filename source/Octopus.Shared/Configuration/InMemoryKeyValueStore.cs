@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Newtonsoft.Json;
 using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 
@@ -13,21 +14,21 @@ namespace Octopus.Shared.Configuration
         {
             this.mapper = mapper;
         }
-        
+
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             return mapper.GetConfigurationValue(name);
         }
 
-        public TData Get<TData>(string name, TData defaultValue = default(TData), ProtectionLevel protectionLevel = ProtectionLevel.None)
+        public TData Get<TData>(string name, TData defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             var data = mapper.GetConfigurationValue(name);
 
             if (data == null)
-                return default(TData)!;
+                return default!;
             if (typeof(TData) == typeof(byte[]))
-                return (TData)(object)Encoding.ASCII.GetBytes(data);
-            return (TData)(object)data;
+                return (TData)(object)Encoding.UTF8.GetBytes(data);
+            return JsonConvert.DeserializeObject<TData>(data);
         }
 
         public void Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
@@ -47,7 +48,7 @@ namespace Octopus.Shared.Configuration
 
         public void Save()
         {
-            throw new InvalidOperationException($"Persisting configuration values through the EnvFileBaseKeyValueStore is not supported");
+            throw new InvalidOperationException("Persisting configuration values through the EnvFileBaseKeyValueStore is not supported");
         }
     }
 }
