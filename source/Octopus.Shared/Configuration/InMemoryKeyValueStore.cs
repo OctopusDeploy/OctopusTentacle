@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using Newtonsoft.Json;
 using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
@@ -26,8 +25,13 @@ namespace Octopus.Shared.Configuration
 
             if (data == null)
                 return default!;
-            if (typeof(TData) == typeof(byte[]))
-                return (TData)(object)Encoding.UTF8.GetBytes(data);
+            if (typeof(TData) == typeof(string))
+                return (TData)(object) data;
+            if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
+                return (TData) (object) bool.Parse((string) data);
+            if (typeof(TData).IsEnum)
+                return (TData) Enum.Parse(typeof(TData), ((string) data).Trim('"'));
+
             return JsonConvert.DeserializeObject<TData>(data);
         }
 
