@@ -18,7 +18,7 @@ namespace Octopus.Shared.Configuration.Instances
         /// <summary>
         /// Gets a key value store that can be modified, if an appropriate IApplicationInstanceStrategy is in play
         /// </summary>
-        IModifiableKeyValueStore? ModifiableKeyValueStore { get; }
+        IPersistedKeyValueStore? PersistedKeyValueStore { get; }
         
         /// <summary>
         /// Gets a HomeConfiguration that can be modified, if an appropriate IApplicationInstanceStrategy is in play

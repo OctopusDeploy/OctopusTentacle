@@ -26,9 +26,9 @@ namespace Octopus.Shared.Configuration.Instances
 
         public ApplicationName ApplicationName => startUpInstanceRequest.ApplicationName;
 
-        public IModifiableKeyValueStore? ModifiableKeyValueStore => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? persisted.ModifiableConfiguration : null; 
-        public IModifiableHomeConfiguration? ModifiableHomeConfiguration => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? new ModifiableHomeConfiguration(ApplicationName, persisted.ModifiableConfiguration) : null; 
-        public IModifiableProxyConfiguration? ModifiableProxyConfiguration => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? new ModifiableProxyConfiguration(persisted.ModifiableConfiguration) : null;
+        public IPersistedKeyValueStore? PersistedKeyValueStore => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? persisted.PersistedConfiguration : null; 
+        public IModifiableHomeConfiguration? ModifiableHomeConfiguration => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? new ModifiableHomeConfiguration(ApplicationName, persisted.PersistedConfiguration) : null; 
+        public IModifiableProxyConfiguration? ModifiableProxyConfiguration => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? new ModifiableProxyConfiguration(persisted.PersistedConfiguration) : null;
 
 
         public IList<ApplicationInstanceRecord> ListInstances()

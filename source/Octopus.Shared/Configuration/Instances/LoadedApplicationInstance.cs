@@ -25,18 +25,18 @@ namespace Octopus.Shared.Configuration.Instances
 
     public interface ILoadedPersistedApplicationInstance : ILoadedApplicationInstance
     {
-        IModifiableKeyValueStore ModifiableConfiguration { get; }
+        IPersistedKeyValueStore PersistedConfiguration { get; }
     }
     
     public class LoadedPersistedApplicationInstance : LoadedApplicationInstance, ILoadedPersistedApplicationInstance
     {
-        public LoadedPersistedApplicationInstance(string instanceName, IModifiableKeyValueStore configuration, string configurationPath) : base(instanceName, configuration)
+        public LoadedPersistedApplicationInstance(string instanceName, IPersistedKeyValueStore configuration, string configurationPath) : base(instanceName, configuration)
         {
             ConfigurationPath = configurationPath;
-            ModifiableConfiguration = configuration;
+            PersistedConfiguration = configuration;
         }
 
-        public IModifiableKeyValueStore ModifiableConfiguration { get; }
+        public IPersistedKeyValueStore PersistedConfiguration { get; }
 
         public string ConfigurationPath { get; }
     }
