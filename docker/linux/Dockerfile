@@ -44,6 +44,8 @@ ENV CommunicationsStype=TentacleActive
 ENV DISABLE_DIND=N
 ENV ACCEPT_EULA=N
 
+VOLUME /var/lib/docker
+
 CMD /scripts/configure-tentacle.sh && /scripts/run-tentacle.sh
 
 LABEL \
