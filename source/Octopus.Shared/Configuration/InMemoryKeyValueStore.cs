@@ -25,13 +25,17 @@ namespace Octopus.Shared.Configuration
 
             if (data == null)
                 return default!;
-            if (typeof(TData) == typeof(string))
-                return (TData)(object) data;
             if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
                 return (TData) (object) bool.Parse((string) data);
             if (typeof(TData).IsEnum)
                 return (TData) Enum.Parse(typeof(TData), ((string) data).Trim('"'));
-
+            
+            // See FlatDictionaryKeyValueStore.ValueNeedsToBeSerialized, some of the types are serialized, and will therefore expect to be
+            // double quote delimited
+            var dataType = typeof(TData);
+            if (protectionLevel == ProtectionLevel.MachineKey || dataType.IsClass)
+                return JsonConvert.DeserializeObject<TData>("\"" + data + "\"");
+            
             return JsonConvert.DeserializeObject<TData>(data);
         }
 

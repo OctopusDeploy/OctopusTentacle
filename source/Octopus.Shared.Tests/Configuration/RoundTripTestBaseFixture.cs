@@ -13,6 +13,8 @@ namespace Octopus.Shared.Tests.Configuration
         protected readonly string ConfigurationFile;
         protected readonly OctopusPhysicalFileSystem FileSystem;
 
+        protected byte[] EncryptedValue { get; set; }
+
         protected RoundTripTestBaseFixture()
         {
             ConfigurationFile = System.IO.Path.GetTempFileName();
@@ -30,19 +32,19 @@ namespace Octopus.Shared.Tests.Configuration
         {
             ReloadedSettings.Get("group1.setting1", false).Should().BeTrue();
         }
-            
+
         [Test]
         public void ReadsIntValue()
         {
             ReloadedSettings.Get("group1.setting2", 1).Should().Be(123);
         }
-            
+
         [Test]
         public void ReadsStringValue()
         {
             ReloadedSettings.Get("group2.setting3", "").Should().Be("a string");
         }
-            
+
         [Test]
         public void ReadsNestedObjectValue()
         {
@@ -55,7 +57,7 @@ namespace Octopus.Shared.Tests.Configuration
             nestedObject.ArrayField[1].Id.Should().Be(2);
             nestedObject.ArrayField[2].Id.Should().Be(3);
         }
-            
+
         [Test]
         public void ReadsNullStringValue()
         {
@@ -67,25 +69,25 @@ namespace Octopus.Shared.Tests.Configuration
         {
             ReloadedSettings.Get<MyObject>("group4.setting6", null).Should().Be(null);
         }
-            
+
         [Test]
         public void ReadsEncryptedBooleanValue()
         {
             ReloadedSettings.Get("group5.setting1", false, ProtectionLevel.MachineKey).Should().BeTrue();
         }
-            
+
         [Test]
         public void ReadsEncryptedIntValue()
         {
             ReloadedSettings.Get("group5.setting2", 1, ProtectionLevel.MachineKey).Should().Be(123);
         }
-            
+
         [Test]
         public void ReadsEncryptedStringValue()
         {
             ReloadedSettings.Get("group5.setting3", "", ProtectionLevel.MachineKey).Should().Be("a string");
         }
-            
+
         [Test]
         public void ReadsEncryptedNestedObjectValue()
         {
@@ -98,7 +100,7 @@ namespace Octopus.Shared.Tests.Configuration
             nestedObject.ArrayField[1].Id.Should().Be(2);
             nestedObject.ArrayField[2].Id.Should().Be(3);
         }
-            
+
         [Test]
         public void ReadsEncryptedNullStringValue()
         {
@@ -109,6 +111,18 @@ namespace Octopus.Shared.Tests.Configuration
         public void ReadsEncryptedNullObjectValue()
         {
             ReloadedSettings.Get<MyObject>("group5.setting6", null, ProtectionLevel.MachineKey).Should().Be(null);
+        }
+
+        [Test]
+        public void ReadsEncryptedByteArrayValue()
+        {
+            ReloadedSettings.Get<byte[]>("secretthing", null).Should().BeEquivalentTo(EncryptedValue);
+        }
+
+        [Test]
+        public void ReadsMachineEncryptedByteArrayValue()
+        {
+            ReloadedSettings.Get<byte[]>("secretmachinething", null, ProtectionLevel.MachineKey).Should().BeEquivalentTo(EncryptedValue);
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -101,7 +102,7 @@ namespace Octopus.Shared.Tests.Configuration
                         new MyNestedObject {Id = 3}
                     }
                 };
-            
+                
                 var settings = new OldImplementation(configurationFile);
                 settings.Set("group1.setting2", 123);
                 settings.Set("group1.setting1", true);
@@ -217,6 +218,8 @@ namespace Octopus.Shared.Tests.Configuration
                     }
                 };
             
+                EncryptedValue = GenerateValue();
+            
                 var settings = new XmlFileKeyValueStore(FileSystem, ConfigurationFile);
                 settings.Set("group1.setting2", 123);
                 settings.Set("group1.setting1", true);
@@ -234,9 +237,19 @@ namespace Octopus.Shared.Tests.Configuration
                 settings.Set<MyObject>("group5.setting6", null, ProtectionLevel.MachineKey);
                 settings.Set("group5.setting7", SomeEnum.SomeOtherEnumValue, ProtectionLevel.MachineKey);
                 settings.Set<SomeEnum?>("group5.setting8", null, ProtectionLevel.MachineKey);
+                settings.Set("secretthing", EncryptedValue);
+                settings.Set("secretmachinething", EncryptedValue, ProtectionLevel.MachineKey);
                 settings.Save();
 
                 return settings;
+            }
+            
+            static byte[] GenerateValue()
+            {
+                var key = new byte[16];
+                using (var provider = new RNGCryptoServiceProvider())
+                    provider.GetBytes(key);
+                return key;
             }
         }
 
