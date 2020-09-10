@@ -123,7 +123,7 @@ namespace Octopus.Shared.Tests.Configuration
             instanceStore.ListInstances().Returns(instanceRecords);
             instanceStore.AnyInstancesConfigured().Returns(true);
 
-            var keyValueStore = Substitute.For<IModifiableKeyValueStore>();
+            var keyValueStore = Substitute.For<IPersistedKeyValueStore>();
 
             instanceStore.LoadedApplicationInstance(Arg.Any<ApplicationInstanceRecord>())
                 .Returns(c =>
