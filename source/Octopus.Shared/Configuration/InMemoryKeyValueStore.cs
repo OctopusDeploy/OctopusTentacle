@@ -24,7 +24,7 @@ namespace Octopus.Shared.Configuration
             var data = mapper.GetConfigurationValue(name);
 
             if (data == null)
-                return default!;
+                return defaultValue;
             if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
                 return (TData) (object) bool.Parse((string) data);
             if (typeof(TData).IsEnum)
