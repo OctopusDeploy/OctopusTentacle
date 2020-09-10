@@ -7,30 +7,44 @@ namespace Octopus.Shared.Configuration
     public interface IProxyConfiguration
     {
         /// <summary>
-        /// Gets or sets a flag indicating whether to use the a proxy.
+        /// Gets a flag indicating whether to use the a proxy.
         /// </summary>
-        bool UseDefaultProxy { get; set; }
+        bool UseDefaultProxy { get; }
 
         /// <summary>
-        /// Gets or sets a custom username for the proxy. If empty, we should assume to use the default Windows network
+        /// Gets a custom username for the proxy. If empty, we should assume to use the default Windows network
         /// credentials if <see cref="UseDefaultProxy" /> is true.
         /// </summary>
-        string CustomProxyUsername { get; set; }
+        string? CustomProxyUsername { get; }
 
         /// <summary>
-        /// Gets or sets the password to go with <see cref="CustomProxyUsername" />.
+        /// Gets the password to go with <see cref="CustomProxyUsername" />.
         /// </summary>
-        string CustomProxyPassword { get; set; }
+        string? CustomProxyPassword { get; }
 
         /// <summary>
-        /// Gets or sets the host use when overriding the default proxy. Leave empty to use the default proxy configured in IE.
+        /// Gets the host use when overriding the default proxy. Leave empty to use the default proxy configured in IE.
         /// </summary>
-        string? CustomProxyHost { get; set; }
+        string? CustomProxyHost { get; }
 
         /// <summary>
-        /// Gets or sets the port use when overriding the default proxy configured in IE.
+        /// Gets the port use when overriding the default proxy configured in IE.
         /// </summary>
-        int CustomProxyPort { get; set; }
+        int CustomProxyPort { get; }
+    }
+
+    public interface IModifiableProxyConfiguration : IProxyConfiguration
+    {
+        void SetUseDefaultProxy(bool useDefaultProxy);
+
+        void SetCustomProxyUsername(string? username);
+
+        void SetCustomProxyPassword(string? password);
+
+        void SetCustomProxyHost(string? host);
+
+        void SetCustomProxyPort(int? port);
+
     }
 
     public static class ProxyConfigurationExtensions

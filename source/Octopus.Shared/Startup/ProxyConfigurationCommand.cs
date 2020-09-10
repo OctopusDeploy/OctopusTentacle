@@ -8,15 +8,20 @@ namespace Octopus.Shared.Startup
 {
     public class ProxyConfigurationCommand : AbstractStandardCommand
     {
-        readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly List<Action> operations = new List<Action>();
+        readonly Lazy<IModifiableProxyConfiguration> proxyConfiguration;
         readonly ILog log;
         bool useAProxy;
         string? host;
 
-        public ProxyConfigurationCommand(Lazy<IProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ILog log) : base(instanceSelector)
+        public ProxyConfigurationCommand(IApplicationInstanceSelector instanceSelector, ILog log) : base(instanceSelector)
         {
-            this.proxyConfiguration = proxyConfiguration;
+            proxyConfiguration = new Lazy<IModifiableProxyConfiguration>(() =>
+            {
+                if (instanceSelector.ModifiableProxyConfiguration == null)
+                    throw new InvalidOperationException("The proxy command can only be used when a stored configuration is in use");
+                return instanceSelector.ModifiableProxyConfiguration;
+            });
             this.log = log;
 
             Options.Add("proxyEnable=", "Whether to use a proxy", v => QueueOperation(delegate
@@ -26,13 +31,13 @@ namespace Octopus.Shared.Startup
 
             Options.Add("proxyUsername=", "Username to use when authenticating with the proxy", v => QueueOperation(delegate
             {
-                proxyConfiguration.Value.CustomProxyUsername = v;
+                proxyConfiguration.Value.SetCustomProxyUsername(v);
                 log.Info(string.IsNullOrWhiteSpace(v) ? "Proxy username cleared" : "Proxy username set to: " + v);
             }));
 
             Options.Add("proxyPassword=", "Password to use when authenticating with the proxy", v => QueueOperation(delegate
             {
-                proxyConfiguration.Value.CustomProxyPassword = v;
+                proxyConfiguration.Value.SetCustomProxyPassword(v);
                 log.Info(string.IsNullOrWhiteSpace(v) ? "Proxy password cleared" : "Proxy password set to: *******");
             }), sensitive: true);
 
@@ -46,7 +51,7 @@ namespace Octopus.Shared.Startup
 
             Options.Add("proxyPort=", "The proxy port to use in conjunction with the Host set with proxyHost", v => QueueOperation(delegate
             {
-                proxyConfiguration.Value.CustomProxyPort = string.IsNullOrWhiteSpace(v) ? 80 : int.Parse(v);
+                proxyConfiguration.Value.SetCustomProxyPort(string.IsNullOrWhiteSpace(v) ? 80 : int.Parse(v));
                 if (host != null)
                 {
                     log.Info("Proxy port set to: " + proxyConfiguration.Value.CustomProxyPort);
@@ -62,16 +67,16 @@ namespace Octopus.Shared.Startup
 
             if (useAProxy)
             {
-                proxyConfiguration.Value.CustomProxyHost = host;
-                proxyConfiguration.Value.UseDefaultProxy = host == null;
+                proxyConfiguration.Value.SetCustomProxyHost(host);
+                proxyConfiguration.Value.SetUseDefaultProxy(host == null);
                 log.Info(host != null
                     ? "Using custom proxy at: " + host
                     : "Using Internet Explorer Proxy");
             }
             else
             {
-                proxyConfiguration.Value.CustomProxyHost = null;
-                proxyConfiguration.Value.UseDefaultProxy = false;
+                proxyConfiguration.Value.SetCustomProxyHost(null);
+                proxyConfiguration.Value.SetUseDefaultProxy(false);
                 log.Info("Proxy use is disabled");
             }
         }

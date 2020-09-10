@@ -29,9 +29,8 @@ namespace Octopus.Shared.Configuration
                     value = PathHelper.ResolveRelativeDirectoryPath(value);
                 return value;
             }
-            set => settings.Set<string?>(OctopusHomeSettingName, value);
         }
-        
+
         public string? CacheDirectory
         {
             get
@@ -45,7 +44,6 @@ namespace Octopus.Shared.Configuration
                 
                 return value;
             }
-            set => settings.Set<string?>(OctopusNodeCacheSettingName, value);
         }
     }
 }

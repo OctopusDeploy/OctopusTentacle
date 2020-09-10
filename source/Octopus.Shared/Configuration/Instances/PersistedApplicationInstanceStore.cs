@@ -37,7 +37,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public int Priority => 1000;
 
-        public LoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
+        public ILoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
         {
             var instance = applicationInstance as PersistedApplicationInstanceRecord;
             if (instance == null)
@@ -46,7 +46,9 @@ namespace Octopus.Shared.Configuration.Instances
             // If the entry is still in the registry then migrate it to the file index
             MigrateInstance(instance);
             
-            return new LoadedPersistedApplicationInstance(applicationInstance.InstanceName, new XmlFileKeyValueStore(fileSystem, instance.ConfigurationFilePath), instance.ConfigurationFilePath);
+            return new LoadedPersistedApplicationInstance(applicationInstance.InstanceName,
+                new XmlFileKeyValueStore(fileSystem, instance.ConfigurationFilePath),
+                instance.ConfigurationFilePath);
         }
 
         public class Instance
@@ -80,16 +82,23 @@ namespace Octopus.Shared.Configuration.Instances
 
         public IList<ApplicationInstanceRecord> ListInstances()
         {
+            return ((IPersistedApplicationInstanceStore)this)
+                .ListInstances()
+                .Cast<ApplicationInstanceRecord>()
+                .ToList();
+        }
+
+        IList<PersistedApplicationInstanceRecord> IPersistedApplicationInstanceStore.ListInstances()
+        {
             var instancesFolder = InstancesFolder();
 
             var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry();
-            var listFromFileSystem = new List<ApplicationInstanceRecord>();
+            var listFromFileSystem = new List<PersistedApplicationInstanceRecord>();
             if (fileSystem.DirectoryExists(instancesFolder))
             {
                 listFromFileSystem = fileSystem.EnumerateFiles(instancesFolder)
                     .Select(LoadInstanceConfiguration)
                     .Select(instance => new PersistedApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath, instance.Name == PersistedApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName)))
-                    .Cast<ApplicationInstanceRecord>()
                     .ToList();
             }
 
@@ -172,10 +181,10 @@ namespace Octopus.Shared.Configuration.Instances
             var instance = new PersistedApplicationInstanceRecord(instanceName, configurationFile, instanceName == PersistedApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName));
             SaveInstance(instance);
 
-            var homeConfig = new HomeConfiguration(startUpInstanceRequest.ApplicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
+            var homeConfig = new ModifiableHomeConfiguration(startUpInstanceRequest.ApplicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
             var home = !string.IsNullOrWhiteSpace(homeDirectory) ? homeDirectory : parentDirectory;
             log.Info($"Setting home directory to: {home}");
-            homeConfig.HomeDirectory = home;
+            homeConfig.SetHomeDirectory(home);
         }
 
         public void SaveInstance(PersistedApplicationInstanceRecord instanceRecord)

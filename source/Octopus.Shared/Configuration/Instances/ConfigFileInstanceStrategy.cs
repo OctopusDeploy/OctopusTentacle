@@ -43,7 +43,7 @@ namespace Octopus.Shared.Configuration.Instances
             };
         }
 
-        public LoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
+        public ILoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
         {
             var request = startUpInstanceRequest as StartUpConfigFileInstanceRequest;
             if (request == null)

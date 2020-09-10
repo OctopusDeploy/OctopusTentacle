@@ -38,25 +38,5 @@ namespace Octopus.Shared.Configuration
             
             return JsonConvert.DeserializeObject<TData>(data);
         }
-
-        public void Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
-        {
-            throw new InvalidOperationException($"Persisting the {name} configuration value through the EnvFileBaseKeyValueStore is not supported");
-        }
-
-        public void Set<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None)
-        {
-            throw new InvalidOperationException($"Persisting the {name} configuration value through the EnvFileBaseKeyValueStore is not supported");
-        }
-
-        public void Remove(string name)
-        {
-            throw new InvalidOperationException($"Persisting the {name} configuration value through the EnvFileBaseKeyValueStore is not supported");
-        }
-
-        public void Save()
-        {
-            throw new InvalidOperationException("Persisting configuration values through the EnvFileBaseKeyValueStore is not supported");
-        }
     }
 }

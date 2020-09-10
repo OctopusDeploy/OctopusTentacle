@@ -46,7 +46,7 @@ namespace Octopus.Shared.Configuration.Instances
             };
         }
 
-        public LoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
+        public ILoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
         {
             EnsureLoaded();
             return new LoadedApplicationInstance(applicationInstance.InstanceName, new InMemoryKeyValueStore(mapper));

@@ -11,6 +11,6 @@ namespace Octopus.Shared.Configuration.Instances
         
         int Priority { get; }
 
-        LoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance);
+        ILoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance);
     }
 }

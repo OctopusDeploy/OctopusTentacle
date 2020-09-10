@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Octopus.Configuration;
 using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration.Instances
@@ -12,7 +13,7 @@ namespace Octopus.Shared.Configuration.Instances
         readonly IApplicationInstanceStrategy[] instanceStrategies;
         readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
-        LoadedApplicationInstance? current;
+        ILoadedApplicationInstance? current;
 
         public ApplicationInstanceSelector(StartUpInstanceRequest startUpInstanceRequest,
             IApplicationInstanceStrategy[] instanceStrategies,
@@ -25,12 +26,17 @@ namespace Octopus.Shared.Configuration.Instances
 
         public ApplicationName ApplicationName => startUpInstanceRequest.ApplicationName;
 
+        public IModifiableKeyValueStore? ModifiableKeyValueStore => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? persisted.ModifiableConfiguration : null; 
+        public IModifiableHomeConfiguration? ModifiableHomeConfiguration => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? new ModifiableHomeConfiguration(ApplicationName, persisted.ModifiableConfiguration) : null; 
+        public IModifiableProxyConfiguration? ModifiableProxyConfiguration => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? new ModifiableProxyConfiguration(persisted.ModifiableConfiguration) : null;
+
+
         public IList<ApplicationInstanceRecord> ListInstances()
         {
             return instanceStrategies.SelectMany(s => s.ListInstances()).ToList();
         }
         
-        public bool TryGetCurrentInstance([NotNullWhen(true)] out LoadedApplicationInstance? instance)
+        public bool TryGetCurrentInstance([NotNullWhen(true)] out ILoadedApplicationInstance? instance)
         {
             instance = null;
             try
@@ -44,7 +50,7 @@ namespace Octopus.Shared.Configuration.Instances
             }
         }
 
-        public LoadedApplicationInstance GetCurrentInstance()
+        public ILoadedApplicationInstance GetCurrentInstance()
         {
             if (current == null)
             {
@@ -57,20 +63,21 @@ namespace Octopus.Shared.Configuration.Instances
             return current;
         }
         
-        LoadedApplicationInstance LoadCurrentInstance()
+        ILoadedApplicationInstance LoadCurrentInstance()
         {
             var instance = LoadInstance();
 
+            var homeConfig = new HomeConfiguration(startUpInstanceRequest.ApplicationName, instance.Configuration);
+
             // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
             // back to here
-            var homeConfig = new HomeConfiguration(startUpInstanceRequest.ApplicationName, instance.Configuration);
             var logInit = new LogInitializer(new LoggingConfiguration(homeConfig), logFileOnlyLogger);
             logInit.Start();
 
             return instance;
         }
 
-        internal LoadedApplicationInstance LoadInstance()
+        internal ILoadedApplicationInstance LoadInstance()
         {
             if (startUpInstanceRequest is StartUpPersistedInstanceRequest persistedRequest)
             {

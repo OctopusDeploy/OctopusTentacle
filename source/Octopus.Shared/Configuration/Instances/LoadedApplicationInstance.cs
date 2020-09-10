@@ -3,7 +3,14 @@ using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class LoadedApplicationInstance
+    public interface ILoadedApplicationInstance
+    {
+        string InstanceName { get; }
+        
+        public IKeyValueStore Configuration { get; }
+    }
+
+    public class LoadedApplicationInstance : ILoadedApplicationInstance
     {
         public LoadedApplicationInstance(string instanceName, IKeyValueStore configuration)
         {
@@ -16,12 +23,20 @@ namespace Octopus.Shared.Configuration.Instances
         public IKeyValueStore Configuration { get; }
     }
 
-    public class LoadedPersistedApplicationInstance : LoadedApplicationInstance
+    public interface ILoadedPersistedApplicationInstance : ILoadedApplicationInstance
     {
-        public LoadedPersistedApplicationInstance(string instanceName, IKeyValueStore configuration, string configurationPath) : base(instanceName, configuration)
+        IModifiableKeyValueStore ModifiableConfiguration { get; }
+    }
+    
+    public class LoadedPersistedApplicationInstance : LoadedApplicationInstance, ILoadedPersistedApplicationInstance
+    {
+        public LoadedPersistedApplicationInstance(string instanceName, IModifiableKeyValueStore configuration, string configurationPath) : base(instanceName, configuration)
         {
             ConfigurationPath = configurationPath;
+            ModifiableConfiguration = configuration;
         }
+
+        public IModifiableKeyValueStore ModifiableConfiguration { get; }
 
         public string ConfigurationPath { get; }
     }
