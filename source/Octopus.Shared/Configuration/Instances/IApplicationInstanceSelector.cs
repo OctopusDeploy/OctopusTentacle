@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration.Instances
 {
@@ -14,20 +13,5 @@ namespace Octopus.Shared.Configuration.Instances
         IList<ApplicationInstanceRecord> ListInstances();
         
         bool TryGetCurrentInstance([NotNullWhen(true)] out ILoadedApplicationInstance? instance);
-
-        /// <summary>
-        /// Gets a key value store that can be modified, if an appropriate IApplicationInstanceStrategy is in play
-        /// </summary>
-        IPersistedKeyValueStore? PersistedKeyValueStore { get; }
-        
-        /// <summary>
-        /// Gets a HomeConfiguration that can be modified, if an appropriate IApplicationInstanceStrategy is in play
-        /// </summary>
-        IModifiableHomeConfiguration? ModifiableHomeConfiguration { get; }
-
-        /// <summary>
-        /// Gets a ProxyConfiguration that can be modified, if an appropriate IApplicationInstanceStrategy is in play
-        /// </summary>
-        IModifiableProxyConfiguration? ModifiableProxyConfiguration { get; }
     }
 }

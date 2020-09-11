@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Octopus.Configuration;
 using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration.Instances
@@ -25,11 +24,6 @@ namespace Octopus.Shared.Configuration.Instances
         }
 
         public ApplicationName ApplicationName => startUpInstanceRequest.ApplicationName;
-
-        public IPersistedKeyValueStore? PersistedKeyValueStore => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? persisted.PersistedConfiguration : null; 
-        public IModifiableHomeConfiguration? ModifiableHomeConfiguration => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? new ModifiableHomeConfiguration(ApplicationName, persisted.PersistedConfiguration) : null; 
-        public IModifiableProxyConfiguration? ModifiableProxyConfiguration => GetCurrentInstance() is ILoadedPersistedApplicationInstance persisted ? new ModifiableProxyConfiguration(persisted.PersistedConfiguration) : null;
-
 
         public IList<ApplicationInstanceRecord> ListInstances()
         {

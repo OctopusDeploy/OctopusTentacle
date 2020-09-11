@@ -49,7 +49,7 @@ namespace Octopus.Shared.Configuration
             }
         }
         
-        public override void Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
+        public override bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -58,7 +58,7 @@ namespace Octopus.Shared.Configuration
                 Write(name, null);
                 if (AutoSaveOnSet)
                     Save();
-                return;
+                return true;
             }
 
             var valueAsObject = (object) value;
@@ -76,6 +76,8 @@ namespace Octopus.Shared.Configuration
             Write(name, valueAsObject);
             if (AutoSaveOnSet)
                 Save();
+
+            return true;
         }
 
         protected virtual bool ValueNeedsToBeSerialized(ProtectionLevel protectionLevel, object valueAsObject)

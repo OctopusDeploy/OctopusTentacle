@@ -19,49 +19,34 @@ namespace Octopus.Shared.Configuration
             this.settings = settings;
         }
 
-        public bool UseDefaultProxy => settings.Get<bool>(ProxyUseDefaultSettingName, true);
-
-        public string CustomProxyUsername => settings.Get(ProxyUsernameSettingName, string.Empty);
-
-        public string CustomProxyPassword => settings.Get<string>(ProxyPasswordSettingName, protectionLevel: ProtectionLevel.MachineKey);
-
-        public string? CustomProxyHost => settings.Get(ProxyHostSettingName);
-
-        public int CustomProxyPort => settings.Get(ProxyPortSettingName, 80);
-    }
-
-    public class ModifiableProxyConfiguration : ProxyConfiguration, IModifiableProxyConfiguration
-    {
-        readonly IModifiableKeyValueStore settings;
-
-        public ModifiableProxyConfiguration(IModifiableKeyValueStore settings) : base(settings)
+        public bool UseDefaultProxy
         {
-            this.settings = settings;
+            get => settings.Get<bool>(ProxyUseDefaultSettingName, true);
+            set => settings.Set(ProxyUseDefaultSettingName, value);
         }
 
-        public void SetUseDefaultProxy(bool useDefaultProxy)
+        public string? CustomProxyUsername
         {
-            settings.Set(ProxyUseDefaultSettingName, useDefaultProxy);
+            get => settings.Get(ProxyUsernameSettingName, string.Empty);
+            set => settings.Set(ProxyUsernameSettingName, value);
         }
 
-        public void SetCustomProxyUsername(string? username)
+        public string? CustomProxyPassword
         {
-            settings.Set(ProxyUsernameSettingName, username);
+            get => settings.Get<string?>(ProxyPasswordSettingName, protectionLevel: ProtectionLevel.MachineKey);
+            set => settings.Set(ProxyPasswordSettingName, value);
         }
 
-        public void SetCustomProxyPassword(string? password)
+        public string? CustomProxyHost
         {
-            settings.Set(ProxyPasswordSettingName, password, ProtectionLevel.MachineKey);
+            get => settings.Get(ProxyHostSettingName);
+            set => settings.Set(ProxyHostSettingName, value);
         }
 
-        public void SetCustomProxyHost(string? host)
+        public int CustomProxyPort
         {
-            settings.Set(ProxyHostSettingName, host);;
-        }
-
-        public void SetCustomProxyPort(int? port)
-        {
-            settings.Set(ProxyPortSettingName, port);
+            get => settings.Get(ProxyPortSettingName, 80);
+            set => settings.Set(ProxyPortSettingName, value);
         }
     }
 }

@@ -3,7 +3,7 @@ using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
-    public abstract class AbstractKeyValueStore : IPersistedKeyValueStore
+    public abstract class AbstractKeyValueStore : IKeyValueStore
     {
         protected readonly bool AutoSaveOnSet;
         protected abstract void Delete(string key);
@@ -22,18 +22,20 @@ namespace Octopus.Shared.Configuration
         public abstract TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None);
 
         [Obsolete("Please use the generic overload instead")]
-        public void Set(string name, string? value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
+        public bool Set(string name, string? value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
             Set<string?>(name, value, protectionLevel);
+            return true;
         }
 
-        public abstract void Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None);
+        public abstract bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None);
 
-        public void Remove(string name)
+        public bool Remove(string name)
         {
             Delete(name);
+            return true;
         }
 
-        public abstract void Save();
+        public abstract bool Save();
     }
 }

@@ -38,5 +38,25 @@ namespace Octopus.Shared.Configuration
             
             return JsonConvert.DeserializeObject<TData>(data);
         }
+
+        public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        {
+            return false;
+        }
+
+        public bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        {
+            return false;
+        }
+
+        public bool Remove(string name)
+        {
+            return false;
+        }
+
+        public bool Save()
+        {
+            return false;
+        }
     }
 }
