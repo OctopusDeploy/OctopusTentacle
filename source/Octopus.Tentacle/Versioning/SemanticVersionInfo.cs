@@ -32,10 +32,10 @@ namespace Octopus.Tentacle.Versioning
         /// <summary>
         /// Example: "release/3.0.0"
         /// </summary>
-        public string BranchName => GitVersionInformation.BranchName;
+        public string BranchName => VersionInformation.BranchName;
         /// <summary>
         /// Example: "3.0.0-beta0001"
         /// </summary>
-        public string NuGetVersion => GitVersionInformation.NuGetVersion;
+        public string NuGetVersion => VersionInformation.NuGetVersion;
     }
 }
