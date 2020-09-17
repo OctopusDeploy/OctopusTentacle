@@ -7,6 +7,8 @@
 #addin "nuget:?package=Cake.FileHelpers&version=3.2.1"
 #addin "nuget:?package=Cake.Incubator&version=5.0.1"
 #addin "nuget:?package=Cake.Docker&version=0.10.0"
+#addin "nuget:?package=Cake.Json&version=5.2"
+#addin "nuget:?package=Newtonsoft.Json&version=11.0.2"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
@@ -27,10 +29,11 @@ var signingCertificatPassword = Argument("signing_certificate_password", "Passwo
 var gpgSigningCertificatePath = Argument("gpg_signing_certificate_path", "./certificates/octopus-privkey.asc");
 var gpgSigningCertificatePassword = Argument("gpg_signing_certificate_password", "Password01!");
 
-var gitVersionParm = Argument("git_version", EnvironmentVariable("VERSION") ?? "0.0.0");
-
 var awsAccessKeyId = Argument("aws_access_key_id", EnvironmentVariable("AWS_ACCESS_KEY") ?? "XXXX");
 var awsSecretAccessKey = Argument("aws_secret_access_key", EnvironmentVariable("AWS_SECRET_KEY") ?? "YYYY");
+
+EnsureGitBranch();
+var gitBranch = EnvironmentVariable("OCTOVERSION_CURRENTBRANCH");
 
 // Keep this list in order by most likely to succeed
 var signingTimestampUrls = new string[] {
@@ -52,7 +55,20 @@ var tentacleSourceBinDir = "./source/Octopus.Tentacle/bin";
 var managerSourceBinDir = "./source/Octopus.Manager.Tentacle/bin";
 var linuxPackageFeedsDir = "./linux-package-feeds";
 
-GitVersion gitVersion;
+class VersionInfo
+{
+    public string Major { get; set; }
+    public string Minor { get; set; }
+    public string Patch { get; set; }
+    public string MajorMinorPatch { get; set; }
+    public string PreReleaseTag { get; set; }
+    public string PreReleaseTagWithDash { get; set; }
+    public string BuildMetadata { get; set; }
+    public string BuildMetadataWithPlus { get; set; }
+    public string FullSemVer { get; set; }
+}
+
+VersionInfo versionInfo;
 
 var cleanups = new List<Action>();
 
@@ -69,15 +85,58 @@ Teardown(context =>
     Information("Cleaning up");
     foreach(var cleanup in cleanups)
         cleanup();
-
-    if (gitVersion != null)
-        Information("Finished running tasks for build v{0}", gitVersion.NuGetVersion);
 });
 
 
 //////////////////////////////////////////////////////////////////////
 //  PRIVATE TASKS
 //////////////////////////////////////////////////////////////////////
+
+private string RunProcessAndGetOutput(string fileName, string args) {
+    var stdoutStringBuilder = new StringBuilder();
+    var settings = new ProcessSettings() {
+        Arguments = args,
+        RedirectStandardOutput = true,
+        RedirectedStandardOutputHandler = s => { stdoutStringBuilder.Append(s); return s; }
+     };
+
+	var exitCode = StartProcess(fileName, settings);
+    var stdout = stdoutStringBuilder.ToString();
+
+	if(exitCode != 0)
+	{
+		var safeArgs = settings.Arguments.RenderSafe();
+		throw new Exception($"{fileName} {safeArgs} failed with {exitCode} exitcode.");
+	}
+
+    return stdout;
+}
+
+private void RunProcess(string fileName, string args)
+{
+    var settings = new ProcessSettings() {
+        Arguments = args
+     };
+
+	var exitCode = StartProcess(fileName, settings);
+
+	if(exitCode != 0)
+	{
+		var safeArgs = settings.Arguments.RenderSafe();
+		throw new Exception($"{fileName} {safeArgs} failed with {exitCode} exitcode.");
+	}
+}
+
+private void EnsureGitBranch()
+{
+    var branch = EnvironmentVariable("OCTOVERSION_CURRENTBRANCH");
+    if (!string.IsNullOrEmpty(branch)) return;
+
+    Warning("Git branch not available from environment variable. Attempting to work it out for ourselves. DANGER: Don't rely on this on your build server!");
+    branch = RunProcessAndGetOutput("git", "branch --show-current");
+    Environment.SetEnvironmentVariable("OCTOVERSION_CURRENTBRANCH", branch);
+}
+
 Task("__Default")
     .IsDependentOn("__CheckForbiddenWords")
     .IsDependentOn("__Version")
@@ -109,23 +168,9 @@ Task("__DefaultExcludingTests")
 
 Task("__LinuxPackage")
     .IsDependentOn("__Clean")
-    .IsDependentOn("__UpdateGitVersionCommandLineConfig")
     .IsDependentOn("__CreateLinuxPackages")
     .IsDependentOn("__CreatePackagesNuGet");
 
-Task("__UpdateGitVersionCommandLineConfig")
-    .Does(() =>
-{
-    if (IsRunningOnUnix())
-    {
-        using(var process = StartAndReturnProcess("xmlstarlet", new ProcessSettings{ Arguments = "edit -O --inplace --update \"//dllmap[@os='linux']/@target\" --value \"/lib64/libgit2.so.26\" tools/GitVersion.CommandLine.4.0.0/tools/LibGit2Sharp.dll.config" }))
-        {
-            process.WaitForExit();
-            // This should output 0 as valid arguments supplied
-            Information("Exit code: {0}", process.GetExitCode());
-        }
-    }
-});
 
 Task("__CreateLinuxPackages")
     .IsDependentOn("__DotnetPublish")
@@ -148,7 +193,7 @@ Task("__CreateLinuxPackages")
         Rm = true,
         Tty = true,
         Env = new string[] {
-            $"VERSION={gitVersion.NuGetVersion}",
+            $"VERSION={versionInfo.FullSemVer}",
             "BINARIES_PATH=/app/",
             "PACKAGES_PATH=/artifacts",
             "SIGN_PRIVATE_KEY",
@@ -190,29 +235,30 @@ Task("__CheckForbiddenWords")
 });
 
 Task("__Version")
-    .IsDependentOn("__GitVersionAssemblies")
     .Does(() =>
 {
-    if(BuildSystem.IsRunningOnTeamCity)
-        BuildSystem.TeamCity.SetBuildNumber(gitVersion.NuGetVersion);
+    var octoVersionArgs = TeamCity.IsRunningOnTeamCity ? "--OutputFormats:0=Console --OutputFormats:1=TeamCity" : "--OutputFormats:0=Console";
+    RunProcess("octoversion", octoVersionArgs);
 
-    Information("Building OctopusTentacle v{0}", gitVersion.NuGetVersion);
+    var versionJson = RunProcessAndGetOutput("octoversion", "--OutputFormats:0=Json");
+    versionInfo = DeserializeJson<VersionInfo>(versionJson);
+
+    Information("Building OctopusTentacle {0}", versionInfo.FullSemVer);
 });
 
-Task("__GitVersionAssemblies")
+Task("__VersionAssemblies")
+    .IsDependentOn("__Version")
     .Does(() =>
 {
-    var gitVersionFile = "./source/Solution Items/VersionInfo.cs";
+    var versionInfoFile = "./source/Solution Items/VersionInfo.cs";
 
-    RestoreFileOnCleanup(gitVersionFile);
+    RestoreFileOnCleanup(versionInfoFile);
 
-    gitVersion = GitVersion(new GitVersionSettings {
-        UpdateAssemblyInfo = true,
-        UpdateAssemblyInfoFilePath = gitVersionFile
-    });
-
-    ReplaceRegexInFiles(gitVersionFile, "BranchName = \".*?\"", $"BranchName = \"{gitVersion.BranchName}\"");
-    ReplaceRegexInFiles(gitVersionFile, "NuGetVersion = \".*?\"", $"NuGetVersion = \"{gitVersion.NuGetVersion}\"");
+    ReplaceRegexInFiles(versionInfoFile, "AssemblyVersion = \".*?\"", $"AssemblyVersion = \"{versionInfo.MajorMinorPatch}\"");
+    ReplaceRegexInFiles(versionInfoFile, "AssemblyFileVersion = \".*?\"", $"AssemblyFileVersion = \"{versionInfo.MajorMinorPatch}\"");
+    ReplaceRegexInFiles(versionInfoFile, "AssemblyInformationalVersion = \".*?\"", $"AssemblyInformationalVersion = \"{versionInfo.FullSemVer}\"");
+    ReplaceRegexInFiles(versionInfoFile, "BranchName = \".*?\"", $"BranchName = \"{gitBranch}\"");
+    ReplaceRegexInFiles(versionInfoFile, "NuGetVersion = \".*?\"", $"NuGetVersion = \"{versionInfo.FullSemVer}\"");
 });
 
 Task("__Clean")
@@ -237,7 +283,7 @@ Task("__Restore")
     });
 
 Task("__Build")
-    .IsDependentOn("__Version")
+    .IsDependentOn("__VersionAssemblies")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
     .Does(() =>
@@ -275,7 +321,7 @@ Task("__DotnetPublish")
                     OutputDirectory = $"{corePublishDir}/{rid}",
                     Runtime = rid,
                     SelfContained = true,
-                    ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
+                    ArgumentCustomization = args => args.Append($"/p:Version={versionInfo.FullSemVer}")
                 }
             );
         }
@@ -364,7 +410,7 @@ Task("__UpdateWixVersion")
     nsmgr.AddNamespace("wi", "http://schemas.microsoft.com/wix/2006/wi");
 
     var product = xmlDoc.SelectSingleNode("//wi:Product", nsmgr);
-    product.Attributes["Version"].Value = gitVersion.MajorMinorPatch;
+    product.Attributes["Version"].Value = versionInfo.MajorMinorPatch;
     xmlDoc.Save(installerProductFile);
 });
 
@@ -373,18 +419,18 @@ Task("__CreateChocolateyPackage")
 {
     InBlock ("Create Chocolatey package...", () =>
     {
-        var checksum = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}.msi"));
+        var checksum = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{versionInfo.FullSemVer}.msi"));
         var checksumValue = BitConverter.ToString(checksum.ComputedHash).Replace("-", "");
         Information($"Checksum: Octopus.Tentacle.msi = {checksumValue}");
 
-        var checksum64 = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}-x64.msi"));
+        var checksum64 = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi"));
         var checksum64Value = BitConverter.ToString(checksum64.ComputedHash).Replace("-", "");
         Information($"Checksum: Octopus.Tentacle-x64.msi = {checksum64Value}");
 
         var chocolateyInstallScriptPath = "./source/Chocolatey/chocolateyInstall.ps1";
         RestoreFileOnCleanup(chocolateyInstallScriptPath);
 
-        ReplaceTextInFiles(chocolateyInstallScriptPath, "0.0.0", gitVersion.NuGetVersion);
+        ReplaceTextInFiles(chocolateyInstallScriptPath, "0.0.0", versionInfo.FullSemVer);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum>", checksumValue);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype>", checksum.Algorithm.ToString());
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", checksum64Value);
@@ -394,7 +440,7 @@ Task("__CreateChocolateyPackage")
         CreateDirectory(chocolateyArtifactsDir);
 
         NuGetPack("./source/Chocolatey/OctopusDeploy.Tentacle.nuspec", new NuGetPackSettings {
-            Version = gitVersion.NuGetVersion,
+            Version = versionInfo.FullSemVer,
             OutputDirectory = chocolateyArtifactsDir,
             NoPackageAnalysis = true
         });
@@ -408,7 +454,7 @@ Task("__CreateInstallerNuGet")
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Installers.nuspec", installerPackageDir);
 
     NuGetPack(Path.Combine(installerPackageDir, "Tentacle.Installers.nuspec"), new NuGetPackSettings {
-        Version = gitVersion.NuGetVersion,
+        Version = versionInfo.FullSemVer,
         OutputDirectory = artifactsDir
     });
 });
@@ -425,7 +471,7 @@ Task("__CreatePackagesNuGet")
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Packages.targets", $"{packagesPackageDir}/build");
 
     NuGetPack(Path.Combine(packagesPackageDir, "Tentacle.Packages.nuspec"), new NuGetPackSettings {
-        Version = gitVersion.NuGetVersion,
+        Version = versionInfo.FullSemVer,
         OutputDirectory = artifactsDir
     });
 });
@@ -444,7 +490,7 @@ Task("__CreateBinariesNuGet")
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/net452");
     NuGetPack(Path.Combine(binariesPackageDir, "Tentacle.Binaries.nuspec"), new NuGetPackSettings {
-        Version = gitVersion.NuGetVersion,
+        Version = versionInfo.FullSemVer,
         OutputDirectory = artifactsDir
     });
 
@@ -459,7 +505,7 @@ Task("__CreateBinariesNuGet")
         CopyFile("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.Binaries.{rid}.targets");
 
         NuGetPack(Path.Combine(binariesPackageDir, $"Tentacle.Binaries.nuspec"), new NuGetPackSettings {
-            Version = gitVersion.NuGetVersion,
+            Version = versionInfo.FullSemVer,
             OutputDirectory = artifactsDir,
             Id = $"Tentacle.Binaries.{rid}"
         });
@@ -472,7 +518,7 @@ Task("__CopyToLocalPackages")
     .Does(() =>
 {
     CreateDirectory(localPackagesDir);
-    CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.Binaries.{gitVersion.NuGetVersion}.nupkg"), localPackagesDir);
+    CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.Binaries.{versionInfo.FullSemVer}.nupkg"), localPackagesDir);
 });
 
 private void InBlock(string block, Action action)
@@ -528,7 +574,8 @@ private void GenerateInstallerContents()
 
 private void BuildInstallerForPlatform(PlatformTarget platformTarget)
 {
-    var allowUpgrade = !string.Equals(gitVersion.PreReleaseLabel, "alpha");
+    //TODO Does this still reflect our intentions? Should it be any non-release branch? -andrewh 18/09/2020
+    var allowUpgrade = !string.Equals(versionInfo.PreReleaseTag, "alpha");
 
     MSBuild("./source/Octopus.Tentacle.Installer/Octopus.Tentacle.Installer.wixproj", settings =>
         settings
@@ -546,7 +593,7 @@ private void BuildInstallerForPlatform(PlatformTarget platformTarget)
         ? "-x64"
         : "";
 
-    var artifactDestination = $"{artifactsDir}/Octopus.Tentacle.{gitVersion.NuGetVersion}{platformStr}.msi";
+    var artifactDestination = $"{artifactsDir}/Octopus.Tentacle.{versionInfo.FullSemVer}{platformStr}.msi";
 
     MoveFile(builtMsi, File(artifactDestination));
 }
