@@ -9,33 +9,32 @@ namespace Octopus.Tentacle.Versioning
     /// </summary>
     public class SemanticVersionInfo
     {
-        readonly Lazy<SemanticVersion> semanticVersion;
-
         public SemanticVersionInfo(Assembly assembly)
         {
-            semanticVersion = new Lazy<SemanticVersion>(() => LoadSemanticVersionDetails(assembly));
-        }
-
-        static SemanticVersion LoadSemanticVersionDetails(Assembly assembly)
-        {
-            return SemanticVersion.Parse(assembly.GetInformationalVersion());
+            SemanticVersion = SemanticVersion.Parse(assembly.GetInformationalVersion());
+            MajorMinorPatch = SemanticVersion.ToString("V", new VersionFormatter());
+            BranchName = assembly.GetCustomAttribute<AssemblyGitBranchAttribute>().BranchName;
+            NuGetVersion = assembly.GetCustomAttribute<AssemblyNuGetVersionAttribute>().NuGetVersion;
         }
 
         /// <summary>
         /// The SemanticVersion parsed from the AssemblyInformationalVersion
         /// </summary>
-        public SemanticVersion SemanticVersion => semanticVersion.Value;
+        public SemanticVersion SemanticVersion { get; }
+
         /// <summary>
-        ///  Example: "3.0.0"
+        /// Example: "3.0.0"
         /// </summary>
-        public string MajorMinorPatch => semanticVersion.Value.ToString("V", new VersionFormatter());
+        public string MajorMinorPatch { get; }
+
         /// <summary>
         /// Example: "release/3.0.0"
         /// </summary>
-        public string BranchName => VersionInformation.BranchName;
+        public string BranchName { get; }
+
         /// <summary>
         /// Example: "3.0.0-beta0001"
         /// </summary>
-        public string NuGetVersion => VersionInformation.NuGetVersion;
+        public string NuGetVersion { get; }
     }
 }

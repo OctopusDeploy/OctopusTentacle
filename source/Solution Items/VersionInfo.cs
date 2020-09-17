@@ -2,20 +2,10 @@
 
 using System;
 using System.Reflection;
-using Octopus.Tentacle;
+using Octopus.Tentacle.Versioning;
 
-[assembly: AssemblyVersion(VersionInformation.AssemblyVersion)]
-[assembly: AssemblyInformationalVersion(VersionInformation.AssemblyInformationalVersion)]
-[assembly: AssemblyFileVersion(VersionInformation.AssemblyFileVersion)]
-
-namespace Octopus.Tentacle
-{
-    static class VersionInformation
-    {
-        public const string AssemblyVersion = "0.0.0.0";
-        public const string AssemblyFileVersion = "0.0.0.0";
-        public const string AssemblyInformationalVersion = "0.0.0-local";
-        public const string BranchName = "UNKNOWNBRANCH";
-        public const string NuGetVersion = "0.0.0-local";
-    }
-}
+[assembly: AssemblyVersion("0.0.0.0")]
+[assembly: AssemblyFileVersion("0.0.0.0")]
+[assembly: AssemblyInformationalVersion("0.0.0-local")]
+[assembly: AssemblyGitBranch("UNKNOWNBRANCH")]
+[assembly: AssemblyNuGetVersion("0.0.0-local")]

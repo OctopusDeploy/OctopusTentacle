@@ -254,11 +254,11 @@ Task("__VersionAssemblies")
 
     RestoreFileOnCleanup(versionInfoFile);
 
-    ReplaceRegexInFiles(versionInfoFile, "AssemblyVersion = \".*?\"", $"AssemblyVersion = \"{versionInfo.MajorMinorPatch}\"");
-    ReplaceRegexInFiles(versionInfoFile, "AssemblyFileVersion = \".*?\"", $"AssemblyFileVersion = \"{versionInfo.MajorMinorPatch}\"");
-    ReplaceRegexInFiles(versionInfoFile, "AssemblyInformationalVersion = \".*?\"", $"AssemblyInformationalVersion = \"{versionInfo.FullSemVer}\"");
-    ReplaceRegexInFiles(versionInfoFile, "BranchName = \".*?\"", $"BranchName = \"{gitBranch}\"");
-    ReplaceRegexInFiles(versionInfoFile, "NuGetVersion = \".*?\"", $"NuGetVersion = \"{versionInfo.FullSemVer}\"");
+    ReplaceRegexInFiles(versionInfoFile, "AssemblyVersion\\(\".*?\"\\)", $"AssemblyVersion(\"{versionInfo.MajorMinorPatch}\")");
+    ReplaceRegexInFiles(versionInfoFile, "AssemblyFileVersion\\(\".*?\"\\)", $"AssemblyFileVersion(\"{versionInfo.MajorMinorPatch}\")");
+    ReplaceRegexInFiles(versionInfoFile, "AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{versionInfo.FullSemVer}\")");
+    ReplaceRegexInFiles(versionInfoFile, "AssemblyGitBranch\\(\".*?\"\\)", $"AssemblyGitBranch(\"{gitBranch}\")");
+    ReplaceRegexInFiles(versionInfoFile, "AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{versionInfo.FullSemVer}\")");
 });
 
 Task("__Clean")
