@@ -48,13 +48,13 @@ function setupListeningTentacle {
     port="10933"
     
     read -p "Where would you like Tentacle to store log files? ($logpath):" inputlogpath
-    logpath=$(assignNonEmptyValue $inputlogpath $logpath)
+    logpath=$(assignNonEmptyValue "$inputlogpath" $logpath)
     
     read -p "Where would you like Tentacle to install applications to? ($applicationpath):" inputapplicationpath
-    applicationpath=$(assignNonEmptyValue $inputapplicationpath $applicationpath)
+    applicationpath=$(assignNonEmptyValue "$inputapplicationpath" $applicationpath)
 
     read -p "Enter the port that this Tentacle will listen on ($port):" inputport
-    port=$(assignNonEmptyValue $inputport $port)
+    port=$(assignNonEmptyValue "$inputport" $port)
 
     while [ -z "$thumbprint" ] 
     do
@@ -102,10 +102,10 @@ function setupPollingTentacle {
     machinetype=1
 
     read -p "Where would you like Tentacle to store log files? ($logpath):" inputlogpath
-    logpath=$(assignNonEmptyValue $inputlogpath $logpath)
+    logpath=$(assignNonEmptyValue "$inputlogpath" $logpath)
     
     read -p "Where would you like Tentacle to install appications to? ($applicationpath):" inputapplicationpath
-    applicationpath=$(assignNonEmptyValue $inputapplicationpath $applicationpath)
+    applicationpath=$(assignNonEmptyValue "$inputapplicationpath" $applicationpath)
 
     while [ -z "$octopusserverurl" ] 
     do
@@ -139,13 +139,13 @@ function setupPollingTentacle {
     esac
 
     read -p "Select type of Tentacle do you want to setup: 1) Deployment Target or 2) Worker (default $machinetype): " inputmachinetype
-    machinetype=$(assignNonEmptyValue $inputmachinetype $machinetype)
+    machinetype=$(assignNonEmptyValue "$inputmachinetype" $machinetype)
 
     read -p 'What Space would you like to register this Tentacle in? (Default): ' spaceinput
-    space=$(assignNonEmptyValue $spaceinput $space)
+    space=$(assignNonEmptyValue "$spaceinput" $space)
 
     read -p "What name would you like to register this Tentacle with? ($displayname): " displaynameinput
-    displayname=$(assignNonEmptyValue $displaynameinput $displayname)
+    displayname=$(assignNonEmptyValue "$displaynameinput" $displayname)
 
     case $machinetype in
         2)
@@ -214,7 +214,7 @@ function setupPollingTentacle {
 instance="Tentacle"
 
 read -p "Name of Tentacle instance (default $instance):" inputinstance
-instance=$(assignNonEmptyValue $(sanitizeName $inputinstance) $instance)
+instance=$(assignNonEmptyValue "$(sanitizeName "$inputinstance")" $instance)
 
 if [ "$instance" != "$inputinstance" ]
 then
