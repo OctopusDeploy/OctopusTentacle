@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
-#tool "nuget:?package=GitVersion.CommandLine&version=4.0.0"
+#tool "nuget:?package=OctoVersion.Tool&version=0.0.32"
 #tool "nuget:?package=WiX&version=3.11.2"
 #tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
 #addin "nuget:?package=Cake.FileHelpers&version=3.2.1"
