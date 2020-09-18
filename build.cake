@@ -1,7 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
-#tool "nuget:?package=OctoVersion.Tool&version=0.0.32"
+#module nuget:?package=Cake.DotNetTool.Module&version=0.4.0
+#tool "dotnet:?package=OctoVersion.Tool&version=0.0.32"
 #tool "nuget:?package=WiX&version=3.11.2"
 #tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
 #addin "nuget:?package=Cake.FileHelpers&version=3.2.1"
@@ -238,9 +239,9 @@ Task("__Version")
     .Does(() =>
 {
     var octoVersionArgs = TeamCity.IsRunningOnTeamCity ? "--OutputFormats:0=Console --OutputFormats:1=TeamCity" : "--OutputFormats:0=Console";
-    RunProcess("octoversion", octoVersionArgs);
+    RunProcess("octoversion", $"{octoVersionArgs}");
 
-    var versionJson = RunProcessAndGetOutput("octoversion", "--OutputFormats:0=Json");
+    var versionJson = RunProcessAndGetOutput("octoversion", $"--OutputFormats:0=Json");
     versionInfo = DeserializeJson<VersionInfo>(versionJson);
 
     Information("Building OctopusTentacle {0}", versionInfo.FullSemVer);
