@@ -129,10 +129,10 @@ then
 	exit 1
 fi
 
-
+# Bootstrap Cake
 echo mono "$CAKE_EXE" $SCRIPT "--bootstrap"
 exec mono "$CAKE_EXE" $SCRIPT "--bootstrap"
 
+# Run Cake
 echo mono "$CAKE_EXE" $SCRIPT "${CAKE_ARGUMENTS[@]}"
-# Start Cake
 exec mono "$CAKE_EXE" $SCRIPT "${CAKE_ARGUMENTS[@]}"
