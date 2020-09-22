@@ -114,20 +114,24 @@ if [ ! -f "$CAKE_EXE" ]; then
 fi
 
 # Make sure that xmlstartlet is insatlled, its needed to update the version of libgit2 in a config below
-if ! [ -x "$(command -v xmlstarlet)" ] 
-then         
-	echo "Error: xmlstarlet is not installed."         
-	exit 1 
+if ! [ -x "$(command -v xmlstarlet)" ]
+then
+	echo "Error: xmlstarlet is not installed."
+	exit 1
 fi
 
 # Make sure that libgit2 is installed, this is needed for GitVersion.CommandLine to work.
 ldconfigoutput=$(ldconfig -p | grep -Po "/.+libgit2.+$" | xargs)
 
-if [ -z "$ldconfigoutput" ] 
-then         
-	echo "Error: libgit2 is not installed"         
-	exit 1 
+if [ -z "$ldconfigoutput" ]
+then
+	echo "Error: libgit2 is not installed"
+	exit 1
 fi
+
+
+echo mono "$CAKE_EXE" $SCRIPT "--bootstrap"
+exec mono "$CAKE_EXE" $SCRIPT "--bootstrap"
 
 echo mono "$CAKE_EXE" $SCRIPT "${CAKE_ARGUMENTS[@]}"
 # Start Cake
