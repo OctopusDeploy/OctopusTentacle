@@ -3,8 +3,8 @@
 //////////////////////////////////////////////////////////////////////
 #module nuget:?package=Cake.DotNetTool.Module&version=0.4.0
 #tool "dotnet:?package=OctoVersion.Tool&version=0.0.32"
-#tool "nuget:?package=WiX&version=3.11.2"
 #tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
+#tool "nuget:?package=WiX&version=3.11.2"
 #addin "nuget:?package=Cake.FileHelpers&version=3.2.1"
 #addin "nuget:?package=Cake.Incubator&version=5.0.1"
 #addin "nuget:?package=Cake.Docker&version=0.10.0"
