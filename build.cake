@@ -34,7 +34,7 @@ var awsAccessKeyId = Argument("aws_access_key_id", EnvironmentVariable("AWS_ACCE
 var awsSecretAccessKey = Argument("aws_secret_access_key", EnvironmentVariable("AWS_SECRET_KEY") ?? "YYYY");
 
 EnsureGitBranch();
-var gitBranch = EnvironmentVariable("OCTOVERSION_CURRENTBRANCH");
+var gitBranch = EnvironmentVariable("OCTOVERSION_CurrentBranch");
 
 // Keep this list in order by most likely to succeed
 var signingTimestampUrls = new string[] {
@@ -130,12 +130,12 @@ private void RunProcess(string fileName, string args)
 
 private void EnsureGitBranch()
 {
-    var branch = EnvironmentVariable("OCTOVERSION_CURRENTBRANCH");
+    var branch = EnvironmentVariable("OCTOVERSION_CurrentBranch");
     if (!string.IsNullOrEmpty(branch)) return;
 
     Warning("Git branch not available from environment variable. Attempting to work it out for ourselves. DANGER: Don't rely on this on your build server!");
     branch = RunProcessAndGetOutput("git", "branch --show-current");
-    Environment.SetEnvironmentVariable("OCTOVERSION_CURRENTBRANCH", branch);
+    Environment.SetEnvironmentVariable("OCTOVERSION_CurrentBranch", branch);
 }
 
 Task("__Default")
@@ -169,7 +169,6 @@ Task("__DefaultExcludingTests")
 
 Task("__LinuxPackage")
     .IsDependentOn("__Clean")
-    .IsDependentOn("__CreateLinuxPackages")
     .IsDependentOn("__CreatePackagesNuGet");
 
 
@@ -440,27 +439,23 @@ Task("__CreateChocolateyPackage")
         var chocolateyArtifactsDir = $"{artifactsDir}/Chocolatey";
         CreateDirectory(chocolateyArtifactsDir);
 
-        NuGetPack("./source/Chocolatey/OctopusDeploy.Tentacle.nuspec", new NuGetPackSettings {
-            Version = versionInfo.FullSemVer,
-            OutputDirectory = chocolateyArtifactsDir,
-            NoPackageAnalysis = true
-        });
+        RunProcess("dotnet", $"octo pack --id=OctopusDeploy.Tentacle --version={versionInfo.FullSemVer} --basePath=./source/Chocolatey --outFolder={chocolateyArtifactsDir}");
     });
 });
 
 Task("__CreateInstallerNuGet")
+    .IsDependentOn("__Version")
     .Does(() =>
 {
     CopyFiles($"{artifactsDir}/*.msi", installerPackageDir);
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Installers.nuspec", installerPackageDir);
 
-    NuGetPack(Path.Combine(installerPackageDir, "Tentacle.Installers.nuspec"), new NuGetPackSettings {
-        Version = versionInfo.FullSemVer,
-        OutputDirectory = artifactsDir
-    });
+    RunProcess("dotnet", $"octo pack --id=Tentacle.Installers --version={versionInfo.FullSemVer} --basePath={installerPackageDir} --outFolder={artifactsDir}");
 });
 
 Task("__CreatePackagesNuGet")
+    .IsDependentOn("__Version")
+    .IsDependentOn("__CreateLinuxPackages")
     .Does(() =>
 {
     CreateDirectory(packagesPackageDir);
@@ -471,10 +466,7 @@ Task("__CreatePackagesNuGet")
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Packages.nuspec", packagesPackageDir);
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Packages.targets", $"{packagesPackageDir}/build");
 
-    NuGetPack(Path.Combine(packagesPackageDir, "Tentacle.Packages.nuspec"), new NuGetPackSettings {
-        Version = versionInfo.FullSemVer,
-        OutputDirectory = artifactsDir
-    });
+    RunProcess("dotnet", $"octo pack --id=Tentacle.Packages --version={versionInfo.FullSemVer} --basePath={packagesPackageDir} --outFolder={artifactsDir}");
 });
 
 Task("__CreateBinariesNuGet")
@@ -490,10 +482,8 @@ Task("__CreateBinariesNuGet")
     CleanBinariesDirectory($"{binariesPackageDir}/build/net452/Tentacle");
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
     CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/net452");
-    NuGetPack(Path.Combine(binariesPackageDir, "Tentacle.Binaries.nuspec"), new NuGetPackSettings {
-        Version = versionInfo.FullSemVer,
-        OutputDirectory = artifactsDir
-    });
+
+    RunProcess("dotnet", $"octo pack --id=Tentacle.Binaries --version={versionInfo.FullSemVer} --basePath={binariesPackageDir} --outFolder={artifactsDir}");
 
     foreach(var rid in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))
     {
@@ -505,11 +495,7 @@ Task("__CreateBinariesNuGet")
         CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
         CopyFile("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.Binaries.{rid}.targets");
 
-        NuGetPack(Path.Combine(binariesPackageDir, $"Tentacle.Binaries.nuspec"), new NuGetPackSettings {
-            Version = versionInfo.FullSemVer,
-            OutputDirectory = artifactsDir,
-            Id = $"Tentacle.Binaries.{rid}"
-        });
+        RunProcess("dotnet", $"octo pack --id=Tentacle.Binaries.{rid} --version={versionInfo.FullSemVer} --basePath={binariesPackageDir} --outFolder={artifactsDir}");
     }
 });
 
