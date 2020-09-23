@@ -246,7 +246,7 @@ Task("__Version")
     Information("Building OctopusTentacle {0}", versionInfo.FullSemVer);
 });
 
-Task("__VersionAssemblies")
+Task("__VersionfilePaths")
     .IsDependentOn("__Version")
     .Does(() =>
 {
@@ -283,7 +283,7 @@ Task("__Restore")
     });
 
 Task("__Build")
-    .IsDependentOn("__VersionAssemblies")
+    .IsDependentOn("__VersionfilePaths")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
     .Does(() =>
@@ -391,8 +391,8 @@ Task("__CreateTentacleInstaller")
 
     InBlock("Running HEAT to generate the installer contents...", () => GenerateInstallerContents());
 
-    InBlock("Building 32-bit installer", () => BuildInstallerForPlatform(PlatformTarget.x86));
     InBlock("Building 64-bit installer", () => BuildInstallerForPlatform(PlatformTarget.x64));
+    InBlock("Building 32-bit installer", () => BuildInstallerForPlatform(PlatformTarget.x86));
 
     CopyFiles($"{artifactsDir}/*.msi", installerPackageDir);
 });
@@ -602,33 +602,51 @@ private void SignAndTimeStamp(params string[] paths)
     SignAndTimeStamp(allFiles.ToArray());
 }
 
-private void SignAndTimeStamp(params FilePath[] assemblies)
+private void SignAndTimeStamp(params FilePath[] filePaths)
 {
-    var lastException = default(Exception);
-    var signSettings = new SignToolSignSettings
-    {
-        CertPath = File(signingCertificatePath),
-        Password = signingCertificatPassword,
-        DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
-        Description = "Octopus Tentacle Agent",
-        DescriptionUri = new Uri("http://octopus.com")
-    };
+    InBlock("Signing and timestamping...", () => {
 
-    foreach (var url in signingTimestampUrls)
-    {
-        Information($"  Trying to time stamp {assemblies} using {url}");
-        signSettings.TimeStampUri = new Uri(url);
-        try
-        {
-            Sign(assemblies, signSettings);
-            return;
+        foreach (var filePath in filePaths) {
+            if (!FileExists(filePath)) throw new Exception($"File {filePath} does not exist");
+            var fileInfo = new System.IO.FileInfo(filePath.FullPath);
+
+            if (fileInfo.IsReadOnly) {
+                InBlock($"{filePath.FullPath} is readonly. Making it writeable.", () => {
+                    fileInfo.IsReadOnly = false;
+                });
+            }
         }
-        catch (Exception ex)
+
+        var lastException = default(Exception);
+        var signSettings = new SignToolSignSettings
         {
-            lastException = ex;
+            CertPath = File(signingCertificatePath),
+            Password = signingCertificatPassword,
+            DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+            Description = "Octopus Tentacle Agent",
+            DescriptionUri = new Uri("http://octopus.com")
+        };
+
+        foreach (var url in signingTimestampUrls)
+        {
+            InBlock($"Trying to time stamp [{string.Join(Environment.NewLine, filePaths.Select(a => a.ToString()))}] using {url}", () => {
+                signSettings.TimeStampUri = new Uri(url);
+                try
+                {
+                    Sign(filePaths, signSettings);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                }
+            });
+
+            if (lastException == null) return;
         }
-    }
-    throw(lastException);
+
+        throw(lastException);
+    });
 }
 
 //////////////////////////////////////////////////////////////////////
