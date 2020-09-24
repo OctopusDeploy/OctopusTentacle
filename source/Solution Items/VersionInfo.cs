@@ -1,16 +1,11 @@
-// Versioned by GitVersion
+// This file will be updated by our build process at compile time.
 
+using System;
 using System.Reflection;
+using Octopus.Tentacle.Versioning;
 
 [assembly: AssemblyVersion("0.0.0.0")]
-[assembly: AssemblyInformationalVersion("0.0.0-local")]
 [assembly: AssemblyFileVersion("0.0.0.0")]
-
-namespace Octopus.Tentacle
-{
-    static class GitVersionInformation
-    {
-        public static string BranchName = "UNKNOWNBRANCH";
-        public static string NuGetVersion = "0.0.0-local";
-    }
-}
+[assembly: AssemblyInformationalVersion("0.0.0-local")]
+[assembly: AssemblyGitBranch("UNKNOWNBRANCH")]
+[assembly: AssemblyNuGetVersion("0.0.0-local")]
