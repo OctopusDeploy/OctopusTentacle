@@ -4,6 +4,7 @@
     <WixToolPath>..\..\tools\WiX.3.11.2\tools\</WixToolPath>
     <WixTargetsPath>..\..\tools\WiX.3.11.2\tools\Wix.targets</WixTargetsPath>
     <WixTasksPath>..\..\WiX.3.11.2\tools\wixtasks.dll</WixTasksPath>
+    <SuppressAclReset>True</SuppressAclReset>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
