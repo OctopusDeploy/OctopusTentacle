@@ -34,14 +34,21 @@ fi
 
 architecture=$1
 
+if [[ $architecture == "arm64" ]]; then
+  PACKAGE_ARCHITECTURE="aarch64"
+else if [[ $architecture == "linux-x64"]]; then
+  PACKAGE_ARCHITECTURE="x86_64";
+fi
+
 # Create .deb and .rpm packages, with executable permission and a /usr/bin symlink, using a script from 'linux-package-feeds'.
 COMMAND_FILE=Tentacle
 INSTALL_PATH=/opt/octopus/tentacle
-PACKAGE_NAME="tentacle-$architecture"
+PACKAGE_NAME="tentacle"
 PACKAGE_DESC='Octopus Tentacle package'
 FPM_OPTS=(
   --after-install "$SCRIPT_DIR/setup.sh"
   --before-remove "$SCRIPT_DIR/uninstall.sh"
+  --architecture "$PACKAGE_ARCHITECTURE"
 )
 FPM_DEB_OPTS=(
   --depends 'libssl1.0.0 | libssl1.0.2 | libssl1.1'
@@ -50,10 +57,7 @@ FPM_RPM_OPTS=(
   --depends 'openssl-libs'
 )
 
-
-# if [[ $architecture == 'linux-x64' ]]; then
-#   source /opt/linux-package-feeds/create-linux-packages.sh || exit
-# fi
+source /opt/linux-package-feeds/create-linux-packages.sh || exit
 
 # Create .tar.gz archive
 rm -rf tentacle || exit
