@@ -18,8 +18,8 @@ fi
 
 # Install the package (with any needed docker config, system registration, dependencies) using a script from 'linux-package-feeds'.
 export PKG_PATH_PREFIX="tentacle"
-bash /opt/linux-package-feeds/install-linux-package.sh || exit
+bash /opt/linux-package-feeds/install-linux-package.sh || exit 1
 
 echo Testing tentacle.
-Tentacle version || exit
+Tentacle version || exit 1
 echo
