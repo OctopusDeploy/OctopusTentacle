@@ -24,11 +24,11 @@ do
   fi
 
   echo "== Testing in '$DOCKER_IMAGE' =="
-  docker pull "$DOCKER_IMAGE" >/dev/null || exit
+  docker pull "$DOCKER_IMAGE" >/dev/null || exit 1
   docker run --rm \
     --hostname "tentacletestpkg$RANDOM" \
     --volume "$(pwd):/working" --volume "$SCRIPT_DIR/test-linux-package.sh:/test-linux-package.sh" \
     --volume "$(realpath "$LPF_PATH"):/opt/linux-package-feeds" \
     $RHEL_OPTS \
-    "$DOCKER_IMAGE" bash -c 'cd /working && bash /test-linux-package.sh' || exit
+    "$DOCKER_IMAGE" bash -c 'cd /working && bash /test-linux-package.sh' || exit 1
 done
