@@ -204,4 +204,5 @@
 	{&#xD;
 		Column(m =&gt; m.Foo);&#xD;
 	}&#xD;
-}</s:String></wpf:ResourceDictionary>
+}</s:String>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Versioning/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
