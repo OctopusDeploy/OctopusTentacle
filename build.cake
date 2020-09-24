@@ -246,7 +246,7 @@ Task("__Version")
     Information("Building OctopusTentacle {0}", versionInfo.FullSemVer);
 });
 
-Task("__VersionfilePaths")
+Task("__VersionFilePaths")
     .IsDependentOn("__Version")
     .Does(() =>
 {
@@ -283,7 +283,7 @@ Task("__Restore")
     });
 
 Task("__Build")
-    .IsDependentOn("__VersionfilePaths")
+    .IsDependentOn("__VersionFilePaths")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
     .Does(() =>
@@ -307,7 +307,7 @@ Task("__Test")
 });
 
 Task("__DotnetPublish")
-	.IsDependentOn("__Version")
+    .IsDependentOn("__VersionFilePaths")
 	.Does(() =>  {
 
         foreach(var rid in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))

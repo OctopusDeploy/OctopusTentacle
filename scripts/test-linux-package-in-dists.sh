@@ -8,6 +8,13 @@ if [[ ! -e "$LPF_PATH" ]]; then
   exit 1
 fi
 
+if [[ -z "$BUILD_NUMBER" ]]; then
+  echo "This script requires the environment variable BUILD_NUMBER." >&2
+  echo "If running locally, it should be set to the default value specified in the AssemblyInformationalVersion attribute of VersionInfo.cs." >&2
+  echo "If running on a TeamCity build agent, it should be set to %build.number%, which should in turn represent the correct version." >&2
+  exit 1
+fi
+
 which docker >/dev/null || {
   echo 'This script requires docker.' >&2
   exit 1
@@ -29,6 +36,7 @@ do
     --hostname "tentacletestpkg$RANDOM" \
     --volume "$(pwd):/working" --volume "$SCRIPT_DIR/test-linux-package.sh:/test-linux-package.sh" \
     --volume "$(realpath "$LPF_PATH"):/opt/linux-package-feeds" \
+    -e BUILD_NUMBER \
     $RHEL_OPTS \
     "$DOCKER_IMAGE" bash -c 'cd /working && bash /test-linux-package.sh' || exit 1
 done
