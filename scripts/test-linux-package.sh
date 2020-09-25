@@ -18,8 +18,13 @@ fi
 
 # Install the package (with any needed docker config, system registration, dependencies) using a script from 'linux-package-feeds'.
 export PKG_PATH_PREFIX="tentacle"
-bash /opt/linux-package-feeds/install-linux-package.sh || exit
+bash /opt/linux-package-feeds/install-linux-package.sh || exit 1
 
 echo Testing tentacle.
-Tentacle version || exit
+TENTACLE_VERSION=$(Tentacle version)
+if [[ "$TENTACLE_VERSION" != "$BUILD_NUMBER" ]]; then
+  echo "Tentacle version was $TENTACLE_VERSION but expected version was $BUILD_NUMBER."
+  exit 1
+fi
+
 echo
