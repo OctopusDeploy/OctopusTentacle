@@ -36,7 +36,7 @@ architecture=$1
 
 if [[ $architecture == "arm64" ]]; then
   PACKAGE_ARCHITECTURE="aarch64"
-else if [[ $architecture == "linux-x64"]]; then
+elif [[ $architecture == "linux-x64"]]; then
   PACKAGE_ARCHITECTURE="x86_64"
 fi
 
