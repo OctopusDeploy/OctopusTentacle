@@ -37,7 +37,7 @@ architecture=$1
 if [[ $architecture == "arm64" ]]; then
   PACKAGE_ARCHITECTURE="aarch64"
 else if [[ $architecture == "linux-x64"]]; then
-  PACKAGE_ARCHITECTURE="x86_64";
+  PACKAGE_ARCHITECTURE="x86_64"
 fi
 
 # Create .deb and .rpm packages, with executable permission and a /usr/bin symlink, using a script from 'linux-package-feeds'.
