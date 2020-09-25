@@ -34,7 +34,7 @@ services:
     restart: always
 
   listening-tentacle:
-    image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-windows-${OS_VERSION}
+    image: docker.packages.octopushq.com/octopusdeploy/tentacle:${TENTACLE_VERSION}-windows-${OS_VERSION}
     depends_on:
       - octopus-server
     environment:
@@ -50,7 +50,7 @@ services:
     restart: always
 
   polling-tentacle:
-    image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${TENTACLE_VERSION}-windows-${OS_VERSION}
+    image: docker.packages.octopushq.com/octopusdeploy/tentacle:${TENTACLE_VERSION}-windows-${OS_VERSION}
     depends_on:
       - octopus-server
     environment:

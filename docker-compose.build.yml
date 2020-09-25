@@ -8,7 +8,7 @@ services:
             args:
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
-        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER?err}-linux
+        image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-linux
 
     octopusdeploy-tentacle-windows-1607:
         build:
@@ -19,7 +19,7 @@ services:
                 SERVERCORE_VERSION: 0.1.0-add-windowsservercore-base-image.57-windows-1607
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
-        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER?err}-windows-1607
+        image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-windows-1607
 
     octopusdeploy-tentacle-windows-1809:
         build:
@@ -30,7 +30,7 @@ services:
                 SERVERCORE_VERSION: 1809
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
-        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER?err}-windows-1809
+        image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-windows-1809
 
     octopusdeploy-tentacle-windows-1903:
         build:
@@ -41,7 +41,7 @@ services:
                 SERVERCORE_VERSION: 1903
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
-        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER?err}-windows-1903
+        image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-windows-1903
 
     octopusdeploy-tentacle-windows-1909:
         build:
@@ -52,4 +52,4 @@ services:
                 SERVERCORE_VERSION: 1909
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
-        image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy-tentacle:${BUILD_NUMBER?err}-windows-1909
+        image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-windows-1909
