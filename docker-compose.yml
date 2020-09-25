@@ -2,7 +2,7 @@ version: "3"
 
 services:
   db:
-    image: ${SQL_IMAGE}:${OS_VERSION}
+    image: octopusdeploy/mssql-server-windows-express
     environment:
       sa_password: "${SA_PASSWORD}"
       ACCEPT_EULA: "Y"
@@ -13,7 +13,7 @@ services:
     restart: always
 
   octopus-server:
-    image: registry.gitlab.com/octopus-devops/container-registry/octopusdeploy:${OCTOPUS_VERSION}-${OS_VERSION}
+    image: octopusdeploy/octopusdeploy:${OCTOPUS_VERSION}
     environment:
       ADMIN_USERNAME: "${OCTOPUS_ADMIN_USERNAME}"
       ADMIN_PASSWORD: "${OCTOPUS_ADMIN_PASSWORD}"
@@ -34,7 +34,7 @@ services:
     restart: always
 
   listening-tentacle:
-    image: docker.packages.octopushq.com/octopusdeploy/tentacle:${TENTACLE_VERSION}-windows-${OS_VERSION}
+    image: docker.packages.octopushq.com/octopusdeploy/tentacle:${TENTACLE_VERSION}
     depends_on:
       - octopus-server
     environment:
@@ -50,7 +50,7 @@ services:
     restart: always
 
   polling-tentacle:
-    image: docker.packages.octopushq.com/octopusdeploy/tentacle:${TENTACLE_VERSION}-windows-${OS_VERSION}
+    image: docker.packages.octopushq.com/octopusdeploy/tentacle:${TENTACLE_VERSION}
     depends_on:
       - octopus-server
     environment:

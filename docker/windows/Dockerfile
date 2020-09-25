@@ -1,6 +1,4 @@
-ARG SERVERCORE_VERSION
-ARG BASE_IMAGE
-FROM ${BASE_IMAGE}:${SERVERCORE_VERSION}
+FROM docker.packages.octopushq.com/octopusdeploy/tool-containers/windowsservercore
 
 ARG BUILD_NUMBER
 ARG BUILD_DATE
@@ -21,11 +19,10 @@ LABEL \
 EXPOSE 10933
 
 # Either from a build artifact dependency or local build output.
-COPY artifacts/Octopus.Tentacle.%BUILD_NUMBER%-x64.msi /tmp/
+COPY artifacts/Octopus.Tentacle.${BUILD_NUMBER}-x64.msi /tmp/
 
 WORKDIR /tmp
 RUN msiexec /i Octopus.Tentacle.%BUILD_NUMBER%-x64.msi /qn /l*v Tentacle-Installation.log
-RUN rmdir /s /q /tmp
 
 RUN setx path "%path%;C:\Program Files\Octopus Deploy\Tentacle"
 RUN tentacle create-instance --console --instance Tentacle --config C:\Octopus\Tentacle.config
