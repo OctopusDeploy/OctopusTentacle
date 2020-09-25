@@ -2,7 +2,7 @@ version: "3"
 
 services:
   db:
-    image: octopusdeploy/mssql-server-windows-express
+    image: docker.packages.octopushq.com/octopusdeploy/mssql-server-windows-express
     environment:
       sa_password: "${SA_PASSWORD}"
       ACCEPT_EULA: "Y"
@@ -13,7 +13,7 @@ services:
     restart: always
 
   octopus-server:
-    image: octopusdeploy/octopusdeploy:${OCTOPUS_VERSION}
+    image: docker.packages.octopushq.com/octopusdeploy/octopusdeploy:${OCTOPUS_VERSION}
     environment:
       ADMIN_USERNAME: "${OCTOPUS_ADMIN_USERNAME}"
       ADMIN_PASSWORD: "${OCTOPUS_ADMIN_PASSWORD}"
