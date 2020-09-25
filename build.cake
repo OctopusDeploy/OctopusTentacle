@@ -586,6 +586,7 @@ private void CreateLinuxPackage(string architecture)
             "SIGN_PASSPHRASE"
         },
         Volume = new string[] {
+            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/scripts",
             $"{Path.Combine(Environment.CurrentDirectory, linuxPackageFeedsDir)}:/opt/linux-package-feeds",
             $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, architecture)}:/app",
             $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/artifacts"
