@@ -20,11 +20,12 @@ LABEL \
 
 EXPOSE 10933
 
+# Either from a build artifact dependency or local build output.
+COPY artifacts/Octopus.Tentacle.%BUILD_NUMBER%-x64.msi /tmp/
+
 WORKDIR /tmp
-RUN \
-    curl --fail --silent -O https://s3-ap-southeast-1.amazonaws.com/octopus-testing/tentacle/Octopus.Tentacle.%BUILD_NUMBER%-x64.msi && \
-    msiexec /i Octopus.Tentacle.%BUILD_NUMBER%-x64.msi /qn /l*v Tentacle-Installation.log && \
-    del /f Octopus.Tentacle.%BUILD_NUMBER%-x64.msi
+RUN msiexec /i Octopus.Tentacle.%BUILD_NUMBER%-x64.msi /qn /l*v Tentacle-Installation.log
+RUN rmdir /s /q /tmp
 
 RUN setx path "%path%;C:\Program Files\Octopus Deploy\Tentacle"
 RUN tentacle create-instance --console --instance Tentacle --config C:\Octopus\Tentacle.config
