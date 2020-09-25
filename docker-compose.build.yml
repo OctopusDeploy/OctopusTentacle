@@ -15,8 +15,6 @@ services:
             context: .
             dockerfile: ./docker/windows/Dockerfile
             args:
-                BASE_IMAGE: registry.gitlab.com/octopus-devops/container-registry/windowsservercore
-                SERVERCORE_VERSION: 0.1.0-add-windowsservercore-base-image.57-windows-1607
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
         image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-windows-1607
@@ -26,8 +24,6 @@ services:
             context: .
             dockerfile: ./docker/windows/Dockerfile
             args:
-                BASE_IMAGE: mcr.microsoft.com/windows/servercore
-                SERVERCORE_VERSION: 1809
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
         image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-windows-1809
@@ -37,8 +33,6 @@ services:
             context: .
             dockerfile: ./docker/windows/Dockerfile
             args:
-                BASE_IMAGE: mcr.microsoft.com/windows/servercore
-                SERVERCORE_VERSION: 1903
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
         image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-windows-1903
@@ -48,8 +42,6 @@ services:
             context: .
             dockerfile: ./docker/windows/Dockerfile
             args:
-                BASE_IMAGE: mcr.microsoft.com/windows/servercore
-                SERVERCORE_VERSION: 1909
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
         image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-windows-1909
