@@ -34,7 +34,7 @@ fi
 
 architecture=$1
 
-if [ $architecture == "arm64" ] ; then
+if [ $architecture == "linux-arm64" ] ; then
   PACKAGE_ARCHITECTURE="aarch64";
 elif [ $architecture == "linux-x64" ] ; then
   PACKAGE_ARCHITECTURE="x86_64";
