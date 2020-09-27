@@ -1,20 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.168
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C193BA12-CA2F-40AC-AEB8-21B5D24BCA6E}"
 	ProjectSection(SolutionItems) = preProject
+		..\.gitattributes = ..\.gitattributes
+		..\.gitignore = ..\.gitignore
+		..\build.cake = ..\build.cake
+		..\ForbiddenWords.txt = ..\ForbiddenWords.txt
+		..\octoversion.json = ..\octoversion.json
+		..\NuGet.Config = ..\NuGet.Config
+		..\README.md = ..\README.md
 		Solution Items\SolutionInfo.cs = Solution Items\SolutionInfo.cs
 		text.settings.json = text.settings.json
 		Solution Items\VersionInfo.cs = Solution Items\VersionInfo.cs
-		..\build.cake = ..\build.cake
-		..\.gitattributes = ..\.gitattributes
-		..\.gitignore = ..\.gitignore
-		..\ForbiddenWords.txt = ..\ForbiddenWords.txt
-		..\GitVersion.yml = ..\GitVersion.yml
-		..\NuGet.Config = ..\NuGet.Config
-		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle", "Octopus.Tentacle\Octopus.Tentacle.csproj", "{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}"
@@ -22,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Manager.Tentacle", "Octopus.Manager.Tentacle\Octopus.Manager.Tentacle.csproj", "{A9E01394-4A21-418F-9ACC-D5A164E8491B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Tests", "Octopus.Tentacle.Tests\Octopus.Tentacle.Tests.csproj", "{8A33CADF-9D7F-4835-842C-B71700DB6A3B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Upgrader", "Octopus.Upgrader\Octopus.Upgrader.csproj", "{011636E3-832B-4F30-9BB7-2B6D5DDC69FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,10 @@ Global
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{011636E3-832B-4F30-9BB7-2B6D5DDC69FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{011636E3-832B-4F30-9BB7-2B6D5DDC69FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{011636E3-832B-4F30-9BB7-2B6D5DDC69FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{011636E3-832B-4F30-9BB7-2B6D5DDC69FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
