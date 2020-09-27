@@ -36,7 +36,7 @@ Describe 'Volume Mounts' {
 		it 'polling-tentacle should contain logs' {
 			Test-Path "./Volumes/polling-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | Should -Be $true
 		}
-		
+
 		it 'listening-tentacle should contain logs' {
 			Test-Path "./Volumes/listening-tentacle/TentacleHome/Logs/OctopusTentacle.txt" | Should -Be $true
 		}
@@ -50,7 +50,7 @@ Describe 'Volume Mounts' {
 				$repository.Projects.Delete($project)
 			}
 
-			# We clean everything in here except .gitversion as the directory's existence needs to be preserved
+			# We clean everything in here except .gitignore as the directory's existence needs to be preserved
 			# in order that the Docker bind mounts (required before our tests even start) can be wired up.
 			Remove-Item .\Volumes\polling-tentacle\Applications\* -Recurse -Force -Exclude ".gitignore"
 			Remove-Item .\Volumes\listening-tentacle\Applications\* -Recurse -Force -Exclude ".gitignore"
@@ -91,7 +91,7 @@ Describe 'Volume Mounts' {
 			$pg = $repository.ProjectGroups.FindAll()[0]
 			$lc = $repository.Lifecycles.FindAll()[0]
 			$env = $repository.Environments.FindAll()[0]
-			$project = $repository.Projects.CreateOrModify("MyFirstProject", $pg, $lc)			
+			$project = $repository.Projects.CreateOrModify("MyFirstProject", $pg, $lc)
 			$pkg = New-Object Octopus.Client.Model.PackageResource
 			$pkg.PackageId = "Serilog.Sinks.TextWriter"
 			$pkg.FeedId = "feeds-builtin"
