@@ -188,27 +188,8 @@ Task("__CreateLinuxPackages")
             + "See https://build.octopushq.com/admin/editDependencies.html?id=buildType:OctopusDeploy_OctopusTentacle_PackageBuildLinuxPackages");
     }
 
-    CopyFile(Path.Combine(Environment.CurrentDirectory, "scripts/configure-tentacle.sh"),Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64/configure-tentacle.sh"));
-    DockerRunWithoutResult(new DockerContainerRunSettings {
-        Rm = true,
-        Tty = true,
-        Env = new string[] {
-            $"VERSION={versionInfo.FullSemVer}",
-            "BINARIES_PATH=/app/",
-            "PACKAGES_PATH=/artifacts",
-            "SIGN_PRIVATE_KEY",
-            "SIGN_PASSPHRASE"
-        },
-        Volume = new string[] {
-            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/scripts",
-            $"{Path.Combine(Environment.CurrentDirectory, linuxPackageFeedsDir)}:/opt/linux-package-feeds",
-            $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, "linux-x64")}:/app",
-            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/artifacts"
-        }
-    }, "octopusdeploy/package-linux-docker:latest", "bash /scripts/package.sh");
-
-    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp3.1/linux-x64/*.deb", artifactsDir);
-    CopyFiles("./source/Octopus.Tentacle/bin/netcoreapp3.1/linux-x64/*.rpm", artifactsDir);
+    CreateLinuxPackage("linux-x64");
+    CreateLinuxPackage("linux-arm64");
 });
 
 Task("__CheckForbiddenWords")
@@ -589,6 +570,31 @@ private void CleanBinariesDirectory(string directory)
 {
     Information($"Cleaning {directory}");
     DeleteFiles($"{directory}/*.xml");
+}
+
+private void CreateLinuxPackage(string architecture) 
+{
+    CopyFile(Path.Combine(Environment.CurrentDirectory, "scripts/configure-tentacle.sh"),Path.Combine(Environment.CurrentDirectory, corePublishDir, $"{architecture}/configure-tentacle.sh"));
+    DockerRunWithoutResult(new DockerContainerRunSettings {
+        Rm = true,
+        Tty = true,
+        Env = new string[] {
+            $"VERSION={versionInfo.FullSemVer}",
+            "BINARIES_PATH=/app/",
+            "PACKAGES_PATH=/artifacts",
+            "SIGN_PRIVATE_KEY",
+            "SIGN_PASSPHRASE"
+        },
+        Volume = new string[] {
+            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/scripts",
+            $"{Path.Combine(Environment.CurrentDirectory, linuxPackageFeedsDir)}:/opt/linux-package-feeds",
+            $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, architecture)}:/app",
+            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/artifacts"
+        }
+    }, "octopusdeploy/package-linux-docker:latest", $"bash /scripts/package.sh {architecture}");
+
+    CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp3.1/{architecture}/*.deb", artifactsDir);
+    CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp3.1/{architecture}/*.rpm", artifactsDir);
 }
 
 private void SignAndTimeStamp(params string[] paths)
