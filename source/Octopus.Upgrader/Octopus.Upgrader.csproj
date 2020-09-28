@@ -18,6 +18,19 @@
     <Optimize>True</Optimize>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\Solution Items\SolutionInfo.cs">
+			<Link>Properties\SolutionInfo.cs</Link>
+		</Compile>
+		<Compile Include="..\Solution Items\VersionInfo.cs">
+			<Link>Properties\VersionInfo.cs</Link>
+		</Compile>
+	</ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.7.0" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
