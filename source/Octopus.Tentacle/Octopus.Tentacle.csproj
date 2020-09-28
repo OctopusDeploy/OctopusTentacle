@@ -3,7 +3,7 @@
     <RootNamespace>Octopus.Tentacle</RootNamespace>
     <AssemblyName>Tentacle</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;linux-arm64</RuntimeIdentifiers>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputType>Exe</OutputType>
     <NoWin32Manifest>true</NoWin32Manifest>
