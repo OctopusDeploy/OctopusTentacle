@@ -308,21 +308,22 @@ Task("__DotnetPublish")
                     ArgumentCustomization = args => args.Append($"/p:Version={versionInfo.FullSemVer}")
                 }
             );
-
-            DotNetCorePublish(
-                "./source/Octopus.Upgrader/Octopus.Upgrader.csproj",
-                new DotNetCorePublishSettings
-                {
-                    Configuration = configuration,
-                    OutputDirectory = $"{corePublishDir}/{runtimeId}",
-                    Runtime = runtimeId,
-                    PublishReadyToRun = false,
-                    SelfContained = true,
-                    ArgumentCustomization = args => args.Append($"/p:Version={versionInfo.FullSemVer}")
-                }
-            );
-
         }
+
+        // Just publish the Octopus.Upgrader project for Windows, as that's the only target
+        // operating system it supports.
+        DotNetCorePublish(
+            "./source/Octopus.Upgrader/Octopus.Upgrader.csproj",
+            new DotNetCorePublishSettings
+            {
+                Configuration = configuration,
+                OutputDirectory = $"{corePublishDir}/win-x64",
+                Runtime = "win-x64",
+                PublishReadyToRun = false,
+                SelfContained = true,
+                ArgumentCustomization = args => args.Append($"/p:Version={versionInfo.FullSemVer}")
+            }
+        );
     });
 
 private IEnumerable<string> GetProjectRuntimeIds(string projectFile)
@@ -589,7 +590,7 @@ private void CleanBinariesDirectory(string directory)
     DeleteFiles($"{directory}/*.xml");
 }
 
-private void CreateLinuxPackage(string architecture) 
+private void CreateLinuxPackage(string architecture)
 {
     CopyFile(Path.Combine(Environment.CurrentDirectory, "scripts/configure-tentacle.sh"),Path.Combine(Environment.CurrentDirectory, corePublishDir, $"{architecture}/configure-tentacle.sh"));
     DockerRunWithoutResult(new DockerContainerRunSettings {
