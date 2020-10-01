@@ -54,7 +54,6 @@ var corePublishDir = "./build/publish";
 var coreWinPublishDir = "./build/publish/win-x64";
 var tentacleSourceBinDir = "./source/Octopus.Tentacle/bin";
 var managerSourceBinDir = "./source/Octopus.Manager.Tentacle/bin";
-var linuxPackageFeedsDir = "./linux-package-feeds";
 
 class VersionInfo
 {
@@ -181,13 +180,7 @@ Task("__CreateLinuxPackages")
         throw new Exception("This build requires environment variables `SIGN_PRIVATE_KEY` (in a format gpg1 can import)"
             + " and `SIGN_PASSPHRASE`, which are used to sign the .rpm.");
     }
-    if (!context.DirectoryExists(linuxPackageFeedsDir)) {
-        throw new Exception($"This build requires `{linuxPackageFeedsDir}` to contain scripts from https://github.com/OctopusDeploy/linux-package-feeds.\n"
-            + "They are usually added as an Artifact Dependency in TeamCity from 'Infrastructure / Linux Package Feeds' with the rule:\n"
-            + "  LinuxPackageFeedsTools.*.zip!*=>linux-package-feeds\n"
-            + "See https://build.octopushq.com/admin/editDependencies.html?id=buildType:OctopusDeploy_OctopusTentacle_PackageBuildLinuxPackages");
-    }
-
+    
     CreateLinuxPackage("linux-x64");
     CreateLinuxPackage("linux-arm64");
 });
@@ -605,11 +598,10 @@ private void CreateLinuxPackage(string architecture)
         },
         Volume = new string[] {
             $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/scripts",
-            $"{Path.Combine(Environment.CurrentDirectory, linuxPackageFeedsDir)}:/opt/linux-package-feeds",
             $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, architecture)}:/app",
             $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/artifacts"
         }
-    }, "octopusdeploy/package-linux-docker:latest", $"bash /scripts/package.sh {architecture}");
+    }, "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages", $"bash /scripts/package.sh {architecture}");
 
     CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp3.1/{architecture}/*.deb", artifactsDir);
     CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp3.1/{architecture}/*.rpm", artifactsDir);
