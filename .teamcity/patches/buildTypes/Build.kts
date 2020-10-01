@@ -10,8 +10,17 @@ accordingly, and delete the patch script.
 */
 changeBuildType(RelativeId("Build")) {
     requirements {
+        remove {
+            equals("system.Octopus.AgentType", "Build-VS2019")
+        }
+        add {
+            equals("system.Octopus.AgentType", "Build-VS2019", "RQ_1")
+        }
         add {
             exists("DotNetCoreSDK3.1_Path")
         }
     }
+
+    expectDisabledSettings()
+    updateDisabledSettings("RQ_1")
 }
