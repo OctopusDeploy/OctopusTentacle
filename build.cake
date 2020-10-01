@@ -601,7 +601,7 @@ private void CreateLinuxPackage(string architecture)
             $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, architecture)}:/app",
             $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/artifacts"
         }
-    }, "registry.gitlab.com/octopus-devops/container-registry/tool-linux-packages:latest", $"bash /scripts/package.sh {architecture}");
+    }, "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages", $"bash /scripts/package.sh {architecture}");
 
     CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp3.1/{architecture}/*.deb", artifactsDir);
     CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp3.1/{architecture}/*.rpm", artifactsDir);
