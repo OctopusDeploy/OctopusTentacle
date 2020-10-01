@@ -19,6 +19,9 @@ changeBuildType(RelativeId("Build")) {
         add {
             exists("DotNetCoreSDK3.1_Path")
         }
+        add {
+            equals("env.OS", "Windows_NT")
+        }
     }
 
     expectDisabledSettings()
