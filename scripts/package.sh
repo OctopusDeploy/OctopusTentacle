@@ -16,15 +16,10 @@ if [[ -z "$PACKAGES_PATH" ]]; then
 fi
 
 which fpm >/dev/null || {
-  echo 'This script requires fpm and related tools, and is intended to be run in the container "octopusdeploy/package-linux-docker".' >&2
+  echo 'This script requires fpm and related tools, and is intended to be run in the container "octopusdeploy/tool-linux-packages".' >&2
   exit 1
 }
-if [[ ! -e /opt/linux-package-feeds ]]; then
-  echo "This script requires 'linux-package-feeds' scripts, installed in '/opt/linux-package-feeds'." >&2
-  echo "They come from https://github.com/OctopusDeploy/linux-package-feeds, distributed in TeamCity" >&2
-  echo "  via 'Infrastructure / Linux Package Feeds'. If running inside a Docker container, supply them using a volume mount." >&2
-  exit 1
-fi
+
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 
@@ -40,7 +35,7 @@ elif [ $architecture == "linux-x64" ] ; then
   PACKAGE_ARCHITECTURE="x86_64";
 fi
 
-# Create .deb and .rpm packages, with executable permission and a /usr/bin symlink, using a script from 'linux-package-feeds'.
+# Create .deb and .rpm packages, with executable permission and a /usr/bin symlink, using a script from container 'octopusdeploy/tool-linux-packages'.
 COMMAND_FILE=Tentacle
 INSTALL_PATH=/opt/octopus/tentacle
 PACKAGE_NAME="tentacle"
@@ -57,7 +52,7 @@ FPM_RPM_OPTS=(
   --depends 'openssl-libs'
 )
 
-source /opt/linux-package-feeds/create-linux-packages.sh || exit
+source create-linux-packages.sh || exit
 
 # Create .tar.gz archive
 rm -rf tentacle || exit
