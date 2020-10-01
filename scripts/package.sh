@@ -54,9 +54,12 @@ FPM_RPM_OPTS=(
 
 source create-linux-packages.sh || exit
 
+# the archives have a different naming format for the architecture
+archivename="tentacle-$VERSION-${architecture/-/_}.tar.gz"
+
 # Create .tar.gz archive
 rm -rf tentacle || exit
 mkdir tentacle || exit
 cp -a "$BINARIES_PATH/." tentacle/ || exit
-tar czvf "tentacle-$VERSION-$architecture.tar.gz" tentacle || exit
-mv -f "tentacle-$VERSION-$architecture.tar.gz" "$PACKAGES_PATH" || exit
+tar czvf "$archivename" tentacle || exit
+mv -f "$archivename" "$PACKAGES_PATH" || exit
