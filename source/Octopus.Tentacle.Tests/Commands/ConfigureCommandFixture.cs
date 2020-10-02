@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Octopus.Client.Model;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
