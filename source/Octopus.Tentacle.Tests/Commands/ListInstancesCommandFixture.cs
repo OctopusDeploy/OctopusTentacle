@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Tentacle.Commands;
 
 namespace Octopus.Tentacle.Tests.Commands
