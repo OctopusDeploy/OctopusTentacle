@@ -484,15 +484,29 @@ namespace Octopus.Shared.Util
 
             private static void TryKillWindowsProcessAndChildrenRecursively(int pid)
             {
-                using (var searcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid))
+                try
                 {
-                    using (var moc = searcher.Get())
+                    using (var searcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid))
                     {
-                        foreach (var mo in moc.OfType<ManagementObject>())
+                        using (var moc = searcher.Get())
                         {
-                            TryKillWindowsProcessAndChildrenRecursively(Convert.ToInt32(mo["ProcessID"]));
+                            foreach (var mo in moc.OfType<ManagementObject>())
+                            {
+                                TryKillWindowsProcessAndChildrenRecursively(Convert.ToInt32(mo["ProcessID"]));
+                            }
                         }
                     }
+                }
+                catch (MarshalDirectiveException)
+                {
+                    // This is a known framework bug: https://github.com/dotnet/runtime/issues/28840
+                    //
+                    // The ManagementObjectSearcher netcore3.1 is completely broken. It's possible to crash it just by creating
+                    // a new instance of ManagementScope. Once this framework bug is addressed, we should be able to remove
+                    // this catch block.
+                    //
+                    // Unfortunately, this means that we have no feasible way to recursively kill processes under netcore, so
+                    // we're left with just killing the top-level process and hoping that the others terminate soon.
                 }
 
                 try
