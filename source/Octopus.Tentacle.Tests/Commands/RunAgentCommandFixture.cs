@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Security;
 using Octopus.Tentacle.Versioning;
 using Octopus.Tentacle.Commands;

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Linq;
-using Halibut;
 using Octopus.Client.Model;
 using Octopus.Diagnostics;
 using Octopus.Shared;
-using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Configuration;

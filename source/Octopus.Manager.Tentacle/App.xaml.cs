@@ -11,6 +11,7 @@ using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration;
 using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Security;

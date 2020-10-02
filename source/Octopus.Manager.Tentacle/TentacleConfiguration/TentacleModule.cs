@@ -5,6 +5,7 @@ using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using InstanceSelectionModel = Octopus.Manager.Tentacle.Shell.InstanceSelectionModel;
 using ShellViewModel = Octopus.Manager.Tentacle.Shell.ShellViewModel;
 

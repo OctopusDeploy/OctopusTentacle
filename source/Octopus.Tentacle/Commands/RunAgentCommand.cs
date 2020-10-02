@@ -2,8 +2,8 @@
 using System.IO;
 using System.Security.Cryptography;
 using Octopus.Diagnostics;
-using Octopus.Shared;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using Octopus.Shared.Variables;
@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IProxyInitializer> proxyInitializer;
         readonly AppVersion appVersion;
         int wait;
-        bool halibutHastarted;
+        bool halibutHasStarted;
 
         public override bool CanRunAsService => true;
 
@@ -105,14 +105,14 @@ namespace Octopus.Tentacle.Commands
             proxyInitializer.Value.InitializeProxy();
 
             halibut.Value.Start();
-            halibutHastarted = true;
+            halibutHasStarted = true;
 
             Runtime.WaitForUserToExit();
         }
 
         protected override void Stop()
         {
-            if (halibutHastarted)
+            if (halibutHasStarted)
                 halibut.Value.Stop();
         }
     }

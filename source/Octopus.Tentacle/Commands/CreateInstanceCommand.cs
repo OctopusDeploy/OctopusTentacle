@@ -1,6 +1,6 @@
 using System;
 using Octopus.Shared;
-using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 

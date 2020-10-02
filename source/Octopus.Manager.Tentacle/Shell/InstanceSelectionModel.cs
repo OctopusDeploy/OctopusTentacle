@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
 
 namespace Octopus.Manager.Tentacle.Shell
