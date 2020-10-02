@@ -6,7 +6,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Client.Model;
 using Octopus.Shared;
-using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Startup;
 using Octopus.Tentacle.Commands;

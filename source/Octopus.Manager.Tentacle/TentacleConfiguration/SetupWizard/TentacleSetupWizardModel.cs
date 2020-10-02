@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -15,6 +14,7 @@ using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
