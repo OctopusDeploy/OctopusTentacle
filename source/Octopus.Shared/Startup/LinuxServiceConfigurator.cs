@@ -175,19 +175,19 @@ namespace Octopus.Shared.Startup
             if (!File.Exists("/bin/bash"))
             {
                 throw new ControlledFailureException(
-                    $"Could not detect bash, bash is required to run tentacle.");
+                    $"Could not detect bash. bash is required to run tentacle.");
             }
 
             if (!HaveSudoPrivileges())
             {
                 throw new ControlledFailureException(
-                    $"Requires elevated privileges, please run command as sudo.");
+                    $"Requires elevated privileges. Please run command as sudo.");
             }
 
             if (!IsSystemdInstalled())
             {
                 throw new ControlledFailureException(
-                    $"Could not detect systemd, systemd is required to run Tentacle as a service");
+                    $"Could not detect systemd. systemd is required to run Tentacle as a service");
             }
         }
 
