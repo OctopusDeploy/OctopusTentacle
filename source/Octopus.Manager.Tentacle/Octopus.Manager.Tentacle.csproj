@@ -469,9 +469,9 @@
       <HintPath>..\packages\Octopus.Diagnostics.1.3.0\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Octopus.Shared, Version=5.1.14.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Users\andrewh\.nuget\packages\octopus.shared\5.1.14\lib\net452\Octopus.Shared.dll</HintPath>
+    <Reference Include="Octopus.Shared, Version=5.1.14.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Octopus.Shared.5.1.14\lib\net45\Octopus.Shared.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Octopus.Time, Version=1.1.6.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\Octopus.Time.1.1.6\lib\netstandard1.0\Octopus.Time.dll</HintPath>
