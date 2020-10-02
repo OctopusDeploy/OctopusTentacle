@@ -1,313 +1,39 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A9E01394-4A21-418F-9ACC-D5A164E8491B}</ProjectGuid>
+    <TargetFrameworks>net452</TargetFrameworks>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <OutputType>WinExe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Octopus.Manager.Tentacle</RootNamespace>
-    <AssemblyName>Octopus.Manager.Tentacle</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <WarningLevel>4</WarningLevel>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <TargetFrameworkProfile />
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
+    <OutputPath>bin</OutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <OutputPath>../../_build/$(AssemblyName)</OutputPath>
+    <IsPublishable>false</IsPublishable>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
   </PropertyGroup>
-  <PropertyGroup />
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Framework)'=='net-452'">
+    <IsPublishable>true</IsPublishable>
+  </PropertyGroup>
+
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </ApplicationDefinition>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>
     </Compile>
     <Compile Include="..\Solution Items\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
-    <Compile Include="Controls\ErrorPanelControl.xaml.cs">
-      <DependentUpon>ErrorPanelControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\AutoCompleteTagControl.xaml.cs">
-      <DependentUpon>AutoCompleteTagControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\ControlGroup.cs" />
-    <Compile Include="Controls\ErrorMessage.cs" />
-    <Compile Include="Controls\ImageLink.cs" />
-    <Compile Include="Controls\PasswordEditor.cs" />
-    <Compile Include="Controls\RetinaImage.cs" />
-    <Compile Include="Controls\ServiceWatcher.cs" />
-    <Compile Include="Controls\TaggingAutoCompleteBox.cs" />
-    <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
-    <Compile Include="Converters\BooleanToYesNoConverter.cs" />
-    <Compile Include="Converters\CapitalizeFirstLetterConverter.cs" />
-    <Compile Include="Converters\EnumBooleanConverter.cs" />
-    <Compile Include="Converters\EnumToVisibilityConverter.cs" />
-    <Compile Include="Converters\InverseBooleanConverter.cs" />
-    <Compile Include="Converters\InverseBooleanToVisibilityConverter.cs" />
-    <Compile Include="Converters\StringEmptyConverter.cs" />
-    <Compile Include="Converters\StringToVisibilityConverter.cs" />
-    <Compile Include="DeleteWizard\DeleteWizardLauncher.cs" />
-    <Compile Include="DeleteWizard\DeleteWizardModel.cs" />
-    <Compile Include="DeleteWizard\Views\DeleteWelcome.cs" />
-    <Compile Include="Dialogs\EditTrustedOctopusDialog.xaml.cs">
-      <DependentUpon>EditTrustedOctopusDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\ErrorDialog.cs" />
-    <Compile Include="Dialogs\NewInstanceNameDialog.cs">
-      <DependentUpon>NewInstanceNameDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\RunProcessDialog.cs" />
-    <Compile Include="Dialogs\ServerConnectionDialog.xaml.cs">
-      <DependentUpon>ServerConnectionDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\SetPasswordDialog.cs" />
-    <Compile Include="Dialogs\ViewScriptDialog.cs" />
-    <Compile Include="Infrastructure\DispatchHelper.cs" />
-    <Compile Include="Infrastructure\ElevationHelper.cs" />
-    <Compile Include="Infrastructure\IHaveServices.cs" />
-    <Compile Include="Infrastructure\IScriptableViewModel.cs" />
-    <Compile Include="Infrastructure\OctoService.cs" />
-    <Compile Include="Infrastructure\TextBoxLogger.cs" />
-    <Compile Include="Infrastructure\UnhandledErrorTrapper.cs" />
-    <Compile Include="Infrastructure\ViewModel.cs" />
-    <Compile Include="PreReq\IPrerequisite.cs" />
-    <Compile Include="PreReq\IPrerequisiteProfile.cs" />
-    <Compile Include="PreReq\PowerShellPrerequisite.cs" />
-    <Compile Include="PreReq\PrerequisiteCheckResult.cs" />
-    <Compile Include="PreReq\PreReqWindow.cs" />
-    <Compile Include="PreReq\TentaclePrerequisiteProfile.cs" />
-    <Compile Include="Properties\Annotations.cs" />
-    <Compile Include="Proxy\ProxyConfigurationControl.xaml.cs">
-      <DependentUpon>ProxyConfigurationControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Proxy\ProxyConfigurationDialog.xaml.cs">
-      <DependentUpon>ProxyConfigurationDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Proxy\ProxyConfigurationTab.cs" />
-    <Compile Include="Proxy\ProxyWizardLauncher.cs" />
-    <Compile Include="Proxy\ProxyWizardModel.cs" />
-    <Compile Include="Proxy\TentacleProxyWizardModel.cs" />
-    <Compile Include="Shell\InstanceSelectionModel.cs" />
-    <Compile Include="Shell\ITab.cs" />
-    <Compile Include="Shell\ITabWithNotifications.cs" />
-    <Compile Include="Shell\ShellView.cs" />
-    <Compile Include="Shell\ShellViewModel.cs" />
-    <Compile Include="Shell\TabbedWizard.cs" />
-    <Compile Include="Shell\TabView.cs" />
-    <Compile Include="TentacleConfiguration\SetupWizard\TentacleSetupWizardLauncher.cs" />
-    <Compile Include="TentacleConfiguration\SetupWizard\TentacleSetupWizardModel.cs" />
-    <Compile Include="TentacleConfiguration\SetupWizard\Views\CommunicationStyleTab.xaml.cs">
-      <DependentUpon>CommunicationStyleTab.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="TentacleConfiguration\SetupWizard\Views\InstallTab.cs" />
-    <Compile Include="TentacleConfiguration\SetupWizard\Views\MachineType.xaml.cs">
-      <DependentUpon>MachineType.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="TentacleConfiguration\SetupWizard\Views\StorageTab.xaml.cs">
-      <DependentUpon>StorageTab.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="TentacleConfiguration\SetupWizard\Views\TentacleActiveDetailsTab.xaml.cs">
-      <DependentUpon>TentacleActiveDetailsTab.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="TentacleConfiguration\SetupWizard\Views\OctopusServerConnectionTab.xaml.cs">
-      <DependentUpon>OctopusServerConnectionTab.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="TentacleConfiguration\SetupWizard\Views\TentaclePassiveTab.xaml.cs">
-      <DependentUpon>TentaclePassiveTab.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="TentacleConfiguration\SetupWizard\Views\WelcomeTab.xaml.cs">
-      <DependentUpon>WelcomeTab.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="TentacleConfiguration\TentacleManager\TentacleManagerModel.cs" />
-    <Compile Include="TentacleConfiguration\TentacleManager\TentacleManagerView.xaml.cs">
-      <DependentUpon>TentacleManagerView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="TentacleConfiguration\TentacleModule.cs" />
-    <Compile Include="TentacleManager.cs" />
-    <Compile Include="Util\BrowserHelper.cs" />
-    <Compile Include="Util\CommandLine.cs" />
-    <Compile Include="Util\PasswordBoxAssistant.cs" />
-    <Compile Include="Util\RelayCommand.cs" />
-    <Compile Include="Util\StringExtensions.cs" />
-    <Compile Include="Validators\BindingProxy.cs" />
-    <Compile Include="Validators\InstanceName.cs" />
-    <Page Include="Controls\ErrorPanelControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Controls\AutoCompleteTagControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="DeleteWizard\Views\DeleteWelcome.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Dialogs\EditTrustedOctopusDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
-      <SubType>
-      </SubType>
-    </Compile>
-    <Page Include="Dialogs\ErrorDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Dialogs\NewInstanceNameDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Dialogs\RunProcessDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Dialogs\ServerConnectionDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialogs\SetPasswordDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Dialogs\ViewScriptDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="PreReq\PreReqWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Proxy\ProxyConfigurationControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Proxy\ProxyConfigurationDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Proxy\ProxyConfigurationTab.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Resources\Styles.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Shell\ShellView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Shell\TabbedWizard.xaml">
-      <SubType>Designer</SubType>
-      <Generator>XamlIntelliSenseFileGenerator</Generator>
-    </Page>
-    <Page Include="TentacleConfiguration\SetupWizard\Views\CommunicationStyleTab.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="TentacleConfiguration\SetupWizard\Views\InstallTab.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="TentacleConfiguration\SetupWizard\Views\MachineType.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="TentacleConfiguration\SetupWizard\Views\StorageTab.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="TentacleConfiguration\SetupWizard\Views\TentacleActiveDetailsTab.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="TentacleConfiguration\SetupWizard\Views\OctopusServerConnectionTab.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="TentacleConfiguration\SetupWizard\Views\TentaclePassiveTab.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="TentacleConfiguration\SetupWizard\Views\WelcomeTab.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="TentacleConfiguration\TentacleManager\TentacleManagerView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <None Include="app.manifest" />
-    <None Include="packages.config" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj">
-      <Project>{0fca52bd-3d2c-4f05-9f87-42920c1fa4f4}</Project>
-      <Name>Octopus.Tentacle</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Properties\Icon.ico" />
@@ -380,161 +106,76 @@
     <Resource Include="Resources\Images\warning.png" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Autofac, Version=4.6.2.0, Culture=neutral, PublicKeyToken=17863af14b0044da">
-      <HintPath>..\packages\Autofac.4.6.2\lib\net45\Autofac.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="BouncyCastle.Crypto, Version=1.8.4.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
-      <HintPath>..\packages\Portable.BouncyCastle.1.8.4\lib\net40\BouncyCastle.Crypto.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FluentValidation, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0">
-      <HintPath>..\packages\FluentValidation.7.2.1\lib\net45\FluentValidation.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Halibut, Version=4.3.32.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Halibut.4.3.32\lib\net45\Halibut.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="MaterialDesignColors, Version=1.2.0.325, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\MaterialDesignColors.1.2.0\lib\net45\MaterialDesignColors.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="MaterialDesignThemes.Wpf, Version=2.5.0.1205, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\MaterialDesignThemes.2.5.0.1205\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.Win32.TaskScheduler, Version=2.7.2.0, Culture=neutral, PublicKeyToken=c416bc1b32d97233">
-      <HintPath>..\packages\TaskScheduler.2.7.2\lib\net452\Microsoft.Win32.TaskScheduler.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json.Bson, Version=1.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
-      <HintPath>..\packages\Newtonsoft.Json.Bson.1.0.1\lib\net45\Newtonsoft.Json.Bson.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Nito.AsyncEx, Version=3.0.1.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Nito.AsyncEx.Concurrent, Version=3.0.1.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Concurrent.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Nito.AsyncEx.Enlightenment, Version=3.0.1.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c">
-      <HintPath>..\packages\NLog.4.6.2\lib\net45\NLog.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Common, Version=3.6.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\NuGet.Common.3.6.0-octopus-58692\lib\net45\NuGet.Common.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Frameworks, Version=3.6.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\NuGet.Frameworks.3.6.0-octopus-58692\lib\net45\NuGet.Frameworks.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Packaging, Version=3.6.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\NuGet.Packaging.3.6.0-octopus-58692\lib\net45\NuGet.Packaging.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Packaging.Core, Version=3.6.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\NuGet.Packaging.Core.3.6.0-octopus-58692\lib\net45\NuGet.Packaging.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Packaging.Core.Types, Version=3.6.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\NuGet.Packaging.Core.Types.3.6.0-octopus-58692\lib\net45\NuGet.Packaging.Core.Types.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NuGet.Versioning, Version=3.6.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\NuGet.Versioning.3.6.0-octopus-58692\lib\net45\NuGet.Versioning.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Octopus.Client, Version=7.1.1.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Client.7.1.1\lib\net45\Octopus.Client.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Octopus.Configuration, Version=2.1.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Configuration.2.1.0\lib\net45\Octopus.Configuration.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Octopus.Diagnostics, Version=1.3.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Diagnostics.1.3.0\lib\netstandard1.0\Octopus.Diagnostics.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Octopus.Shared, Version=5.1.14.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Shared.5.1.14\lib\net45\Octopus.Shared.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Octopus.Time, Version=1.1.6.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Octopus.Time.1.1.6\lib\netstandard1.0\Octopus.Time.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Polly, Version=5.3.1.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Polly.5.3.1\lib\net45\Polly.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.DirectoryServices" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.IO.Compression" />
-    <Reference Include="System.IO.Compression.FileSystem" />
-    <Reference Include="System.Management" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <HintPath>..\packages\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Transactions" />
-    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51">
-      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Web" />
-    <Reference Include="System.Windows.Controls.Input.Toolkit, Version=3.5.40128.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <HintPath>..\packages\WPFToolkit.3.5.50211.1\lib\System.Windows.Controls.Input.Toolkit.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Windows.Controls.Layout.Toolkit, Version=3.5.40128.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <HintPath>..\packages\WPFToolkit.3.5.50211.1\lib\System.Windows.Controls.Layout.Toolkit.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xaml" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="WindowsBase" />
-    <Reference Include="WPFToolkit, Version=3.5.40128.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <HintPath>..\packages\WPFToolkit.3.5.50211.1\lib\WPFToolkit.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="4.6.2" />
+    <PackageReference Include="FluentValidation" Version="7.2.1" />
+    <PackageReference Include="Halibut" Version="4.3.32" />
+    <PackageReference Include="MaterialDesignColors" Version="1.2.0" />
+    <PackageReference Include="MaterialDesignThemes" Version="2.5.0.1205" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.NETCore.Platforms" Version="1.1.0" />
+    <PackageReference Include="NETStandard.Library" Version="1.6.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.1" />
+    <PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
+    <PackageReference Include="NLog" Version="4.6.2" />
+    <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58692" />
+    <PackageReference Include="Octopus.Client" Version="7.1.1" />
+    <PackageReference Include="Octopus.Configuration" Version="2.1.0" />
+    <PackageReference Include="Octopus.Diagnostics" Version="1.3.0" />
+    <PackageReference Include="Octopus.Shared" Version="5.1.14" />
+    <PackageReference Include="Octopus.Time" Version="1.1.6" />
+    <PackageReference Include="Polly" Version="5.3.1" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.4" />
+    <PackageReference Include="System.Collections" Version="4.3.0" />
+    <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="4.7.0" />
+    <PackageReference Include="System.Diagnostics.Debug" Version="4.3.0" />
+    <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0" />
+    <PackageReference Include="System.Diagnostics.Tracing" Version="4.3.0" />
+    <PackageReference Include="System.DirectoryServices" Version="4.7.0" />
+    <PackageReference Include="System.Globalization" Version="4.3.0" />
+    <PackageReference Include="System.IO" Version="4.3.0" />
+    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+    <PackageReference Include="System.Linq" Version="4.3.0" />
+    <PackageReference Include="System.Linq.Expressions" Version="4.3.0" />
+    <PackageReference Include="System.Management" Version="4.7.0" />
+    <PackageReference Include="System.Management" Version="4.7.0" />
+    <PackageReference Include="System.Net.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.ObjectModel" Version="4.3.0" />
+    <PackageReference Include="System.Reflection" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Extensions" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Resources.ResourceManager" Version="4.3.0" />
+    <PackageReference Include="System.Runtime" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Extensions" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Numerics" Version="4.3.0" />
+    <PackageReference Include="System.Text.Encoding" Version="4.3.0" />
+    <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.0" />
+    <PackageReference Include="System.Threading" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Timer" Version="4.3.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="System.Xml.ReaderWriter" Version="4.3.0" />
+    <PackageReference Include="System.Xml.XDocument" Version="4.3.0" />
+    <PackageReference Include="TaskScheduler" Version="2.7.2" />
+    <PackageReference Include="WPFToolkit" Version="3.5.50211.1" />
+  </ItemGroup>
 </Project>

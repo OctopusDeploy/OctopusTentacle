@@ -19,13 +19,9 @@ UpgradeLog*.*
 _UpgradeReport_Files
 _[Rr]e[Ss]harper.*/
 lint.db
-/build
 source/Octopus.Tentacle/Applications
-source/Octopus.Tentacle/Packages/*.nupkg
 source/Applications
 source/Data
-source/Packages/Acme*.nupkg
-source/packages/Online.*.nupkg
 _NCrunch*
 desktop.ini
 source/packages
@@ -48,10 +44,11 @@ source/_ReSharper*
 source/.idea
 source/Octopus.sln.iml
 
-source/Octopus.Tentacle/Properties/launchSettings.json
+launchSettings.json
 
 !tools/
 tools/*
 !tools/debian-tools/
 
-artifacts
+_artifacts
+_build
