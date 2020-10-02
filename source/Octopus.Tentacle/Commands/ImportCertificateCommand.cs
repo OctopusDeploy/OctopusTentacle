@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.Win32;
 using Octopus.Diagnostics;
 using Octopus.Shared;
-using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Security;
 using Octopus.Shared.Security.Certificates;
 using Octopus.Shared.Startup;

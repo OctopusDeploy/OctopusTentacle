@@ -1,8 +1,9 @@
 using System;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
-using IPollingProxyConfiguration = Octopus.Tentacle.Configuration.IPollingProxyConfiguration;
+using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Tentacle.Commands
 {
