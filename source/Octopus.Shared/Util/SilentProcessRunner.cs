@@ -548,10 +548,13 @@ namespace Octopus.Shared.Util
         static extern bool GetCPInfoEx([MarshalAs(UnmanagedType.U4)] int codePage, [MarshalAs(UnmanagedType.U4)] int dwFlags, out CPINFOEX lpCPInfoEx);
 #pragma warning restore PC003 // Native API not available in UWP
 
+        // ReSharper disable InconsistentNaming
         const int MAX_DEFAULTCHAR = 2;
         const int MAX_LEADBYTES = 12;
         const int MAX_PATH = 260;
 
+        // ReSharper disable MemberCanBePrivate.Local
+        // ReSharper disable once StructCanBeMadeReadOnly
         [StructLayout(LayoutKind.Sequential)]
         struct CPINFOEX
         {
@@ -572,6 +575,8 @@ namespace Octopus.Shared.Util
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MAX_PATH)]
             public readonly string CodePageName;
         }
+        // ReSharper restore MemberCanBePrivate.Local
+        // ReSharper restore InconsistentNaming
 
 
         // Required to allow a service to run a process as another user
