@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 using Octopus.Client.Model;
 using Octopus.Client.Operations;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Properties;
-using Halibut;
+using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Tentacle.Commands
 {

@@ -4,7 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Octopus.Diagnostics;
 using Octopus.Shared;
-using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Security;
 using Octopus.Shared.Security.Certificates;
 using Octopus.Shared.Startup;
