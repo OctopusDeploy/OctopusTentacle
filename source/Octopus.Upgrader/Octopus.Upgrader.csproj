@@ -6,16 +6,21 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <OutputPath>bin\</OutputPath>
+    <OutputPath>../../_build/$(AssemblyName)</OutputPath>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <PublishDir>..\..\build\outputs\$(RuntimeIdentifier)\upgrader</PublishDir>
+    <IsPublishable>false</IsPublishable>
     <PublishReadyToRun>true</PublishReadyToRun>
+    <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1' AND '$(RuntimeIdentifier)'=='win-x64'">
+    <IsPublishable>true</IsPublishable>
   </PropertyGroup>
 
   <PropertyGroup>
