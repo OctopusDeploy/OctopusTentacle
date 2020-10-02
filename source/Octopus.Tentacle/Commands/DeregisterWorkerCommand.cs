@@ -5,6 +5,7 @@ using Octopus.Client;
 using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;

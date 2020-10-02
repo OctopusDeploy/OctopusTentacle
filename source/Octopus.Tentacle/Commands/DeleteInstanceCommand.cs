@@ -1,7 +1,5 @@
 using System;
-using System.Data.SqlClient;
-using Octopus.Diagnostics;
-using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
 
 namespace Octopus.Tentacle.Commands
@@ -10,7 +8,7 @@ namespace Octopus.Tentacle.Commands
     {
         readonly IApplicationInstanceSelector instanceSelector;
 
-        public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector): base(instanceSelector)
+        public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector) : base(instanceSelector)
         {
             this.instanceSelector = instanceSelector;
         }
