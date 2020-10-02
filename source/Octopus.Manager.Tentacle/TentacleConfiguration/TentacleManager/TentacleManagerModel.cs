@@ -6,6 +6,7 @@ using Octopus.Manager.Tentacle.Controls;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Security;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Configuration;

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Octopus.Client;
@@ -10,6 +9,7 @@ using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
 using Octopus.Shared.Services;

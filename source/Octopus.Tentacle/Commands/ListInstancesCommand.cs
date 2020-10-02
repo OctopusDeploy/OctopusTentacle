@@ -5,6 +5,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Octopus.Shared;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
 
 namespace Octopus.Tentacle.Commands
