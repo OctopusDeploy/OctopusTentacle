@@ -3,11 +3,11 @@
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
 		<AssemblyName>Tentacle</AssemblyName>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64;linux-arm64</RuntimeIdentifiers>
+		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64;linux-arm64;linux-musl-x64</RuntimeIdentifiers>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<OutputType>Exe</OutputType>
 		<NoWin32Manifest>true</NoWin32Manifest>
-		<OutputPath>bin\</OutputPath>
+	    <OutputPath>../../_build/$(AssemblyName)</OutputPath>
 		<ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
 		<AppConfig Condition="'$(TargetFramework)' == 'netcoreapp3.1'">app.netcore.config</AppConfig>
 	</PropertyGroup>
