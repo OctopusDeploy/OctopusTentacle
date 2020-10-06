@@ -10,12 +10,10 @@ namespace Octopus.Shared.Configuration
 {
     public class ConfigurationModule : Module
     {
-        readonly ApplicationName applicationName;
         readonly StartUpInstanceRequest startUpInstanceRequest;
 
-        public ConfigurationModule(ApplicationName applicationName, StartUpInstanceRequest startUpInstanceRequest)
+        public ConfigurationModule(StartUpInstanceRequest startUpInstanceRequest)
         {
-            this.applicationName = applicationName;
             this.startUpInstanceRequest = startUpInstanceRequest;
         }
 
@@ -43,7 +41,7 @@ namespace Octopus.Shared.Configuration
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
                 .As<IPersistedApplicationInstanceStore>()
                 .As<IApplicationInstanceStrategy>();
-            
+
             builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>().SingleInstance();
             builder.RegisterType<EnvFileInstanceStrategy>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
@@ -56,9 +54,8 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<ConfigFileInstanceStrategy>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
                 .As<IApplicationInstanceStrategy>();
-            
+
             builder.RegisterType<ApplicationInstanceSelector>()
-                .WithParameter("applicationName", applicationName)
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
@@ -70,7 +67,7 @@ namespace Octopus.Shared.Configuration
             }).As<IKeyValueStore>().SingleInstance();
 
             builder.RegisterType<HomeConfiguration>()
-                .WithParameter("application", applicationName)
+                .WithParameter("application", startUpInstanceRequest.ApplicationName)
                 .As<IHomeConfiguration>()
                 .SingleInstance();
 
@@ -86,7 +83,7 @@ namespace Octopus.Shared.Configuration
             if (PlatformDetection.IsRunningOnWindows)
             {
                 builder.RegisterType<Watchdog>().As<IWatchdog>()
-                    .WithParameter("applicationName", applicationName);
+                    .WithParameter("applicationName", startUpInstanceRequest.ApplicationName);
             }
             else
             {
