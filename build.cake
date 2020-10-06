@@ -532,7 +532,7 @@ private void CreateLinuxPackages(string runtimeId)
 
     // Use fully-qualified paths here so that the bind mount points work correctly.
     var scriptsBindMountPoint = new System.IO.DirectoryInfo($"./scripts").FullName;
-    var inputBindMountPoint = new System.IO.DirectoryInfo($"{buildDir}/tentacle/netcoreapp3.1/{runtimeId}").FullName;
+    var inputBindMountPoint = new System.IO.DirectoryInfo($"{buildDir}/Tentacle/netcoreapp3.1/{runtimeId}/publish").FullName;
     var outputBindMountPoint = new System.IO.DirectoryInfo($"{debBuildDir}/output").FullName;
 
     DockerRunWithoutResult(new DockerContainerRunSettings {
