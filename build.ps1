@@ -5,14 +5,11 @@
 ##########################################################################
 
 <#
-
 .SYNOPSIS
 This is a Powershell script to bootstrap a Cake build.
-
 .DESCRIPTION
 This Powershell script will download NuGet if missing, restore NuGet tools (including Cake)
 and execute your Cake build script with the parameters you provide.
-
 .PARAMETER Script
 The build script to execute.
 .PARAMETER Target
@@ -32,10 +29,8 @@ Tells Cake to use the Mono scripting engine.
 Skips restoring of packages.
 .PARAMETER ScriptArgs
 Remaining arguments are added here.
-
 .LINK
 http://cakebuild.net
-
 #>
 
 [CmdletBinding()]
@@ -80,6 +75,7 @@ function MD5HashFile([string] $filePath)
     }
 }
 
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
 Write-Host "Preparing to run build script..."
 
 if(!$PSScriptRoot){
@@ -182,6 +178,11 @@ if(-Not $SkipToolPackageRestore.IsPresent) {
 if (!(Test-Path $CAKE_EXE)) {
     Throw "Could not find Cake.exe at $CAKE_EXE"
 }
+
+# We added this so we can use dotnet tools
+# See https://www.gep13.co.uk/blog/introducing-cake.dotnettool.module
+Write-Host "Installing cake modules using the --bootstrap argument"
+&$CAKE_EXE --bootstrap
 
 # Start Cake
 Write-Host "Running build script..."
