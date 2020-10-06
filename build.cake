@@ -535,6 +535,7 @@ private void CreateLinuxPackages(string runtimeId)
     var inputBindMountPoint = new System.IO.DirectoryInfo($"{buildDir}/Tentacle/netcoreapp3.1/{runtimeId}/publish").FullName;
     var outputBindMountPoint = new System.IO.DirectoryInfo($"{debBuildDir}/output").FullName;
 
+    DockerPull("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages");
     DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
