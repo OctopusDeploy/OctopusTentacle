@@ -112,6 +112,7 @@ Task("Restore")
     });
 
 Task("VersionAssemblies")
+    .Description("Modifies the VersionInfo.cs and Product.wxs files to embed version information into the shipped product.")
     .Does(() =>
     {
         var versionInfoFile = "./source/Solution Items/VersionInfo.cs";
@@ -127,94 +128,71 @@ Task("VersionAssemblies")
         UpdateProductVersionInWiX(productWxs);
     });
 
-Task("Build")
-    .IsDependentOn("Restore")
-    .IsDependentOn("VersionAssemblies")
-    .Does(() =>
+// Task("Build-Windows")
+//  .IsDependentOn("<all the windows builds>")
+var taskBuildWindows = Task("Build-Windows")
+    .Description("Builds all of the win-* runtime targets.")    ;
+
+// Task("Build-Linux")
+//  .IsDependentOn("<all the linux builds>")
+var taskBuildLinux = Task("Build-Linux")
+    .Description("Builds all of the linux-* runtime targets.")    ;
+
+// Task("Build-OSX")
+//  .IsDependentOn("<all the osx builds>")
+var taskBuildOSX = Task("Build-OSX")
+    .Description("Builds all of the osx-* runtime targets.")    ;
+
+// Task("Build-<framework>-<runtimeId>)
+//
+// We dynamically define build tasks based on the cross-product of frameworks and runtimes.
+// We do this rather than attempting to have a single "Build" task because although we can
+// run the actual compilation task for all targets on a single OS, we can't run the associated
+// packaging tasks. E.g. we need Windows (or wine) to run WiX, but we also need a Linux Docker
+// machine to package .deb and .rpm files. This makes it more sensible to split the compilation
+// for different platforms into separate tasks, and then have a single unifying task only for
+// local completeness.
+foreach (var framework in frameworks)
+{
+    foreach (var runtimeId in runtimeIds )
     {
-        // 1. Build everything
-        // 2. Sign the Windows binaries
-        // 3. Publish everything. This avoids signing binaries twice.
-        foreach (var framework in frameworks)
+        if (framework == "net452" && runtimeId != "win-x64") continue;
+
+        var taskName = $"Build-{framework}-{runtimeId}";
+        Task(taskName)
+            .IsDependentOn("Restore")
+            .IsDependentOn("VersionAssemblies")
+            .Description($"Builds and publishes for {framework}/{runtimeId}.")
+            .Does(() => {
+                RunBuildFor(framework, runtimeId);
+            });
+
+        // Include this task in the dependencies of whichever is the appropriate rolled-up build task for its operating system.
+        if (runtimeId.StartsWith("win-"))
         {
-            foreach (var runtimeId in runtimeIds)
-            {
-                var configuration = $"Release-{framework}-{runtimeId}";
-
-                if (framework == "net452") {
-                    if (runtimeId != "win-x64") continue;
-                }
-
-                DotNetCoreBuild("./source/Tentacle.sln", new DotNetCoreBuildSettings {
-                    Configuration = configuration,
-                    Framework = framework,
-                    MSBuildSettings = new DotNetCoreMSBuildSettings {
-                        MaxCpuCount = 256
-                    },
-                    NoRestore = true,
-                    Runtime = runtimeId
-                });
-            }
+            taskBuildWindows.IsDependentOn(taskName);
         }
-
-        // check that any unsigned libraries, that Octopus Deploy authors, get signed to play nice with security scanning tools
-        // refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
-        // decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
-        var windowsOnlyBuiltFileSpec = $"{buildDir}/**/win-x64/**";
-        var filesToSign =
-            GetFiles(
-                $"{windowsOnlyBuiltFileSpec}/**/Octo*.exe",
-                $"{windowsOnlyBuiltFileSpec}/**/Octo*.dll",
-                $"{windowsOnlyBuiltFileSpec}/**/Tentacle.exe",
-                $"{windowsOnlyBuiltFileSpec}/**/Tentacle.dll",
-                $"{windowsOnlyBuiltFileSpec}/**/Halibut.dll",
-                $"{windowsOnlyBuiltFileSpec}/**/Nuget.*.dll"
-            )
-            .Where(f => !HasAuthenticodeSignature(f))
-            .Select(f => f.FullPath)
-            .ToArray();
-
-        SignAndTimeStamp(filesToSign);
-
-        foreach (var framework in frameworks)
+        else if (runtimeId.StartsWith("linux-"))
         {
-            foreach (var runtimeId in runtimeIds)
-            {
-                var configuration = $"Release-{framework}-{runtimeId}";
-
-                if (framework == "net452") {
-                    if (runtimeId != "win-x64") continue;
-                }
-
-                DotNetCorePublish("./source/Tentacle.sln",
-                    new DotNetCorePublishSettings
-                    {
-                        ArgumentCustomization = args => args.Append($"/p:Version={versionInfo.FullSemVer}"),
-                        Configuration = configuration,
-                        Framework = framework,
-                        NoBuild = true,
-                        NoRestore = true,
-                        Runtime = runtimeId
-                    }
-                );
-            }
+            taskBuildLinux.IsDependentOn(taskName);
         }
-    });
+        else if (runtimeId.StartsWith("osx-"))
+        {
+            taskBuildOSX.IsDependentOn(taskName);
+        }
+    }
+}
 
-Task("Pack-TentacleUpgraderPackage")
-    .IsDependentOn("Pack-WindowsInstallers")
-    .Does(() => {
-        var workingDir = $"{buildDir}/tentacle-upgrader";
-        CreateDirectory(workingDir);
-        CopyFiles($"./source/Octopus.Upgrader/Tentacle.spec", workingDir);
-        CopyFiles($"{artifactsDir}/msi/*.msi", workingDir);
-        CopyFiles($"{artifactsDir}/msi/*.msi", workingDir);
+Task("Build")
+    .Description("Build all the framework/runtime combinations. Notional task - running this on a single host is possible but cumbersome.")
+    .IsDependentOn("Build-Windows")
+    .IsDependentOn("Build-Linux")
+    .IsDependentOn("Build-OSX")
+    ;
 
-        RunProcess("dotnet", $"octo pack --id=Tentacle --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
-    });
-
-Task("Pack-WindowsZip")
-    .IsDependentOn("Build")
+Task("Pack-WindowsZips")
+    .Description("Packs the Windows .zip files containing the published binaries.")
+    .IsDependentOn("Build-Windows")
     .Does(() => {
 
         var targetTrameworks = frameworks;
@@ -229,8 +207,9 @@ Task("Pack-WindowsZip")
         }
     });
 
-Task("Pack-LinuxTarball")
-    .IsDependentOn("Build")
+Task("Pack-LinuxTarballs")
+    .Description("Packs the Linux tarballs containing the published binaries.")
+    .IsDependentOn("Build-Linux")
     .Does(() => {
 
         var targetTrameworks = frameworks.Where(f => f.StartsWith("netcore"));
@@ -245,8 +224,9 @@ Task("Pack-LinuxTarball")
         }
     });
 
-Task("Pack-OSXTarball")
-    .IsDependentOn("Build")
+Task("Pack-OSXTarballs")
+    .Description("Packs the OS/X tarballs containing the published binaries.")
+    .IsDependentOn("Build-OSX")
     .Does(() => {
 
         var targetTrameworks = frameworks.Where(f => f.StartsWith("netcore"));
@@ -262,6 +242,7 @@ Task("Pack-OSXTarball")
     });
 
 Task("Pack-ChocolateyPackage")
+    .Description("Packs the Chocolatey installer.")
     .IsDependentOn("Pack-WindowsInstallers")
     .Does(() => {
         var checksum = CalculateFileHash(File($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi"));
@@ -289,7 +270,7 @@ Task("Pack-ChocolateyPackage")
 
 
 Task("Pack-LinuxPackages-Legacy")
-    .IsDependentOn("Pack-LinuxTarball")
+    .IsDependentOn("Pack-LinuxTarballs")
     .Description("Legacy task until we can split creation of .rpm and .deb packages into their own tasks")
     .Does(() => {
         var runtimeIds = new [] { "linux-x64", "linux-arm64", "linux-musl-x64"};
@@ -316,7 +297,8 @@ Task("Pack-RedHatPackage")
     ;
 
 Task("Pack-WindowsInstallers")
-    .IsDependentOn("Build")
+    .Description("Packs the Windows .msi files.")
+    .IsDependentOn("Build-Windows")
     .Does(() =>
     {
         var installerDir = $"{buildDir}/Installer";
@@ -330,27 +312,45 @@ Task("Pack-WindowsInstallers")
         BuildInstallerForPlatform(PlatformTarget.x86);
     });
 
-Task("Pack")
-    .IsDependentOn("Pack-WindowsZip")
-    .IsDependentOn("Pack-LinuxTarball")
-    .IsDependentOn("Pack-OSXTarball")
+Task("Pack-TentacleUpgraderPackage")
+    .Description("Packs the Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
+    .IsDependentOn("Pack-WindowsInstallers")
+    .Does(() => {
+        var workingDir = $"{buildDir}/tentacle-upgrader";
+        CreateDirectory(workingDir);
+        CopyFiles($"./source/Octopus.Upgrader/Tentacle.spec", workingDir);
+        CopyFiles($"{artifactsDir}/msi/*.msi", workingDir);
+        CopyFiles($"{artifactsDir}/msi/*.msi", workingDir);
+
+        RunProcess("dotnet", $"octo pack --id=Tentacle --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
+    });
+
+Task("Pack-Windows")
+    .Description("Packs all the Windows targets.")
+    .IsDependentOn("Pack-WindowsZips")
     .IsDependentOn("Pack-ChocolateyPackage")
-    .IsDependentOn("Pack-DebianPackage")
-    .IsDependentOn("Pack-RedHatPackage")
     .IsDependentOn("Pack-WindowsInstallers")
     .IsDependentOn("Pack-TentacleUpgraderPackage")
     ;
 
-Task("Copy-ToLocalPackages")
-    .WithCriteria(BuildSystem.IsLocalBuild)
-    .IsDependentOn("Pack-TentacleUpgraderPackage")
-    .Does(() =>
-    {
-        CreateDirectory(localPackagesDir);
-        CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.{versionInfo.FullSemVer}.nupkg"), localPackagesDir);
-    })
+Task("Pack-Linux")
+    .Description("Packs all the Linux targets.")
+    .IsDependentOn("Pack-LinuxTarballs")
+    .IsDependentOn("Pack-DebianPackage")
+    .IsDependentOn("Pack-RedHatPackage")
     ;
 
+Task("Pack-OSX")
+    .Description("Packs all the OS/X targets.")
+    .IsDependentOn("Pack-OSXTarballs")
+    ;
+
+Task("Pack")
+    .Description("Pack all the artifacts. Notional task - running this on a single host is possible but cumbersome.")
+    .IsDependentOn("Pack-Windows")
+    .IsDependentOn("Pack-Linux")
+    .IsDependentOn("Pack-OSX")
+    ;
 
 // Task("Test-<framework>-<runtimeId>)
 //
@@ -364,14 +364,26 @@ foreach (var framework in frameworks)
     {
         if (framework == "net452" && runtimeId != "win-x64") continue;
 
-        var taskName = $"Test-{framework}-{runtimeId}";
-        Task(taskName)
-            .IsDependentOn("Build")
+        var testTaskName = $"Test-{framework}-{runtimeId}";
+        var buildTaskName = $"Build-{framework}-{runtimeId}";
+        Task(testTaskName)
+            .IsDependentOn(buildTaskName)
+            .Description($"Runs the test suite for {framework}/{runtimeId}")
             .Does(() => {
                 RunTestSuiteFor(framework, runtimeId);
             });
     }
 }
+
+Task("Copy-ToLocalPackages")
+    .WithCriteria(BuildSystem.IsLocalBuild)
+    .IsDependentOn("Pack-TentacleUpgraderPackage")
+    .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
+    .Does(() =>
+    {
+        CreateDirectory(localPackagesDir);
+        CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.{versionInfo.FullSemVer}.nupkg"), localPackagesDir);
+    });
 
 Task("Default")
     .IsDependentOn("Pack")
@@ -652,6 +664,58 @@ private void RunProcess(string fileName, string args)
 		var safeArgs = settings.Arguments.RenderSafe();
 		throw new Exception($"{fileName} {safeArgs} failed with {exitCode} exitcode.");
 	}
+}
+
+private void RunBuildFor(string framework, string runtimeId)
+{
+    // 1. Build everything
+    // 2. If Windows, sign the binaries
+    // 3. Publish everything. This avoids signing binaries twice.
+    var configuration = $"Release-{framework}-{runtimeId}";
+
+    DotNetCoreBuild("./source/Tentacle.sln", new DotNetCoreBuildSettings {
+        Configuration = configuration,
+        Framework = framework,
+        MSBuildSettings = new DotNetCoreMSBuildSettings {
+            MaxCpuCount = 256
+        },
+        NoRestore = true,
+        Runtime = runtimeId
+    });
+
+    if (runtimeId == "win-x64")
+    {
+        // check that any unsigned libraries, that Octopus Deploy authors, get signed to play nice with security scanning tools
+        // refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
+        // decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
+        var windowsOnlyBuiltFileSpec = $"{buildDir}/**/win-x64/**";
+        var filesToSign =
+            GetFiles(
+                $"{windowsOnlyBuiltFileSpec}/**/Octo*.exe",
+                $"{windowsOnlyBuiltFileSpec}/**/Octo*.dll",
+                $"{windowsOnlyBuiltFileSpec}/**/Tentacle.exe",
+                $"{windowsOnlyBuiltFileSpec}/**/Tentacle.dll",
+                $"{windowsOnlyBuiltFileSpec}/**/Halibut.dll",
+                $"{windowsOnlyBuiltFileSpec}/**/Nuget.*.dll"
+            )
+            .Where(f => !HasAuthenticodeSignature(f))
+            .Select(f => f.FullPath)
+            .ToArray();
+
+        SignAndTimeStamp(filesToSign);
+    }
+
+    DotNetCorePublish("./source/Tentacle.sln",
+        new DotNetCorePublishSettings
+        {
+            ArgumentCustomization = args => args.Append($"/p:Version={versionInfo.FullSemVer}"),
+            Configuration = configuration,
+            Framework = framework,
+            NoBuild = true,
+            NoRestore = true,
+            Runtime = runtimeId
+        }
+    );
 }
 
 private void RunTestSuiteFor(string framework, string runtimeId)
