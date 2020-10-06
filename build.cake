@@ -121,7 +121,7 @@ Task("VersionAssemblies")
 
         var productWxs = "./installer/Octopus.Tentacle.Installer/Product.wxs";
         RestoreFileOnCleanup(productWxs);
-        UpdateProductVersionInWiX(productWxs);
+        UpdateMsiProductVersion(productWxs);
     });
 
 // This task will have dependencies programmatically added to it below.
@@ -306,9 +306,9 @@ Task("Pack-WindowsInstallers")
         CopyFiles($"{buildDir}/Tentacle/net452/win-x64/publish/*", installerDir);
         CopyFiles($"{buildDir}/Octopus.Manager.Tentacle/net452/win-x64/*", installerDir);
 
-        GenerateInstallerContents(installerDir);
-        BuildInstallerForPlatform(PlatformTarget.x64);
-        BuildInstallerForPlatform(PlatformTarget.x86);
+        GenerateMsiInstallerContents(installerDir);
+        BuildMsiInstallerForPlatform(PlatformTarget.x64);
+        BuildMsiInstallerForPlatform(PlatformTarget.x86);
     });
 
 Task("Pack-CrossPlatformTentacleNuGetPackage")
@@ -421,29 +421,6 @@ private VersionInfo DeriveVersionInfo() {
     return version;
 }
 
-// note: Doesn't check if existing signatures are valid, only that one exists
-// source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
-private bool HasAuthenticodeSignature(FilePath fileInfo)
-{
-    try
-    {
-        X509Certificate.CreateFromSignedFile(fileInfo.FullPath);
-        return true;
-    }
-    catch
-    {
-        return false;
-    }
-}
-
-private IEnumerable<string> GetProjectRuntimeIds(string projectFile)
-{
-    var doc = new XmlDocument();
-    doc.Load(projectFile);
-    var rids = doc.SelectSingleNode("Project/PropertyGroup/RuntimeIdentifiers").InnerText;
-    return rids.Split(';');
-}
-
 private void InBlock(string block, Action action)
 {
     if (TeamCity.IsRunningOnTeamCity)
@@ -473,7 +450,7 @@ private void RestoreFileOnCleanup(string file)
     });
 }
 
-private void UpdateProductVersionInWiX(string productWxs)
+private void UpdateMsiProductVersion(string productWxs)
 {
     var xmlDoc = new XmlDocument();
     xmlDoc.Load(productWxs);
@@ -486,7 +463,7 @@ private void UpdateProductVersionInWiX(string productWxs)
     xmlDoc.Save(productWxs);
 }
 
-private void GenerateInstallerContents(string installerDir)
+private void GenerateMsiInstallerContents(string installerDir)
 {
     InBlock("Running HEAT to generate the installer contents...", () => {
         var harvestDirectory = Directory(installerDir);
@@ -509,7 +486,7 @@ private void GenerateInstallerContents(string installerDir)
     });
 }
 
-private void BuildInstallerForPlatform(PlatformTarget platformTarget)
+private void BuildMsiInstallerForPlatform(PlatformTarget platformTarget)
 {
     InBlock($"Building {platformTarget} installer", () => {
         MSBuild("./installer/Octopus.Tentacle.Installer/Octopus.Tentacle.Installer.wixproj", settings =>
@@ -575,6 +552,21 @@ private void CreateLinuxPackages(string runtimeId)
             $"{outputBindMountPoint}:/artifacts"
         }
     }, "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages", $"bash /scripts/package.sh {runtimeId}");
+}
+
+// note: Doesn't check if existing signatures are valid, only that one exists
+// source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
+private bool HasAuthenticodeSignature(FilePath fileInfo)
+{
+    try
+    {
+        X509Certificate.CreateFromSignedFile(fileInfo.FullPath);
+        return true;
+    }
+    catch
+    {
+        return false;
+    }
 }
 
 private void SignAndTimeStamp(params string[] paths)
