@@ -5,7 +5,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64;linux-arm64;linux-musl-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;linux-arm64;linux-musl-x64</RuntimeIdentifiers>
     <OutputPath>../../_build/$(AssemblyName)</OutputPath>
     <IsPublishable>false</IsPublishable>
   </PropertyGroup>
