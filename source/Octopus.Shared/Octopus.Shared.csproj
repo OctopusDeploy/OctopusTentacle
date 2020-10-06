@@ -72,7 +72,6 @@
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.5.0" />
-    <PackageReference Include="System.Management" Version="4.5.0" />
     <PackageReference Include="NLog" Version="4.6.8" />
     <PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
     <PackageReference Include="System.Diagnostics.EventLog" Version="4.5.0" />
@@ -86,7 +85,6 @@
     <Reference Include="System.Security" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.IdentityModel" />
-    <Reference Include="System.Management" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web" />
   </ItemGroup>
