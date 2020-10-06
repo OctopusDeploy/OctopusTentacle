@@ -216,7 +216,7 @@ Task("Pack-LinuxTarballs")
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
-                GZipCompress($"{buildDir}/tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                GZipCompress($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -234,7 +234,7 @@ Task("Pack-OSXTarballs")
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
-                GZipCompress($"{buildDir}/tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                GZipCompress($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -270,16 +270,19 @@ Task("Pack-LinuxPackages-Legacy")
     .IsDependentOn("Pack-LinuxTarballs")
     .Description("Legacy task until we can split creation of .rpm and .deb packages into their own tasks")
     .Does(() => {
-        var runtimeIds = new [] { "linux-x64", "linux-arm64", "linux-musl-x64"};
-        foreach (var runtimeId in runtimeIds)
+        var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("linux-"))
+        .Where(rid => rid != "linux-musl-x64")  // not supported yet. Work in progress.
+        .ToArray();
+
+        foreach (var runtimeId in targetRuntimeIds)
         {
             CreateLinuxPackages(runtimeId);
 
             CreateDirectory($"{artifactsDir}/deb");
-            CopyFiles($".{buildDir}/deb/{runtimeId}/out/*.deb", $"{artifactsDir}/deb");
+            CopyFiles($"{buildDir}/deb/{runtimeId}/output/*.deb", $"{artifactsDir}/deb");
 
             CreateDirectory($"{artifactsDir}/rpm");
-            CopyFiles($".{buildDir}/deb/{runtimeId}/out/*.rpm", $"{artifactsDir}/rpm");
+            CopyFiles($"{buildDir}/deb/{runtimeId}/output/*.rpm", $"{artifactsDir}/rpm");
         }
     });
 
