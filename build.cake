@@ -143,10 +143,10 @@ var taskBuildLinux = Task("Build-Linux")
 var taskBuildOSX = Task("Build-OSX")
     .Description("Builds all of the osx-* runtime targets.")    ;
 
-// Task("Build-<framework>-<runtimeId>)
+// Task("Build-<framework>-<runtimeId>")
 //
 // We dynamically define build tasks based on the cross-product of frameworks and runtimes.
-// We do this rather than attempting to have a single "Build" task because although we can
+// We do this rather than attempting to have a single "Build" task because, although we can
 // run the actual compilation task for all targets on a single OS, we can't run the associated
 // packaging tasks. E.g. we need Windows (or wine) to run WiX, but we also need a Linux Docker
 // machine to package .deb and .rpm files. This makes it more sensible to split the compilation
@@ -312,7 +312,7 @@ Task("Pack-WindowsInstallers")
         BuildInstallerForPlatform(PlatformTarget.x86);
     });
 
-Task("Pack-TentacleUpgraderPackage")
+Task("Pack-CrossPlatformTentacleNuGetPackage")
     .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
     .IsDependentOn("Pack-WindowsInstallers")
     .IsDependentOn("Pack-LinuxTarballs")
@@ -332,7 +332,6 @@ Task("Pack-Windows")
     .IsDependentOn("Pack-WindowsZips")
     .IsDependentOn("Pack-ChocolateyPackage")
     .IsDependentOn("Pack-WindowsInstallers")
-    .IsDependentOn("Pack-TentacleUpgraderPackage")
     ;
 
 Task("Pack-Linux")
@@ -349,12 +348,13 @@ Task("Pack-OSX")
 
 Task("Pack")
     .Description("Pack all the artifacts. Notional task - running this on a single host is possible but cumbersome.")
+    .IsDependentOn("Pack-CrossPlatformTentacleNuGetPackage")
     .IsDependentOn("Pack-Windows")
     .IsDependentOn("Pack-Linux")
     .IsDependentOn("Pack-OSX")
     ;
 
-// Task("Test-<framework>-<runtimeId>)
+// Task("Test-<framework>-<runtimeId>")
 //
 // We dynamically define test tasks based on the cross-product of frameworks and runtimes.
 // We do this rather than attempting to have a single "Test" task because there's no feasible way to actually run
@@ -379,7 +379,7 @@ foreach (var framework in frameworks)
 
 Task("Copy-ToLocalPackages")
     .WithCriteria(BuildSystem.IsLocalBuild)
-    .IsDependentOn("Pack-TentacleUpgraderPackage")
+    .IsDependentOn("Pack-CrossPlatformTentacleNuGetPackage")
     .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
     .Does(() =>
     {
