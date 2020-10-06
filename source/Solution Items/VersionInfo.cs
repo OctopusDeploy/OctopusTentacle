@@ -3,11 +3,11 @@
 using System;
 using System.Reflection;
 
-[assembly: AssemblyVersion("6.0.35")]
-[assembly: AssemblyFileVersion("6.0.35")]
-[assembly: AssemblyInformationalVersion("6.0.35-restructure-cakefile-and-build")]
-[assembly: AssemblyGitBranch("refs/heads/restructure-cakefile-and-build")]
-[assembly: AssemblyNuGetVersion("6.0.35-restructure-cakefile-and-build")]
+[assembly: AssemblyVersion("0.0.0.0")]
+[assembly: AssemblyFileVersion("0.0.0.0")]
+[assembly: AssemblyInformationalVersion("0.0.0-local")]
+[assembly: AssemblyGitBranch("UNKNOWNBRANCH")]
+[assembly: AssemblyNuGetVersion("0.0.0-local")]
 
 #if DEFINE_VERSION_ATTRIBUTES
     [AttributeUsage(AttributeTargets.Assembly)]
