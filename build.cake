@@ -313,14 +313,16 @@ Task("Pack-WindowsInstallers")
     });
 
 Task("Pack-TentacleUpgraderPackage")
-    .Description("Packs the Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
+    .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
     .IsDependentOn("Pack-WindowsInstallers")
+    .IsDependentOn("Pack-LinuxTarballs")
+    .IsDependentOn("Pack-OSXTarballs")
     .Does(() => {
         var workingDir = $"{buildDir}/tentacle-upgrader";
         CreateDirectory(workingDir);
         CopyFiles($"./source/Octopus.Upgrader/Tentacle.spec", workingDir);
-        CopyFiles($"{artifactsDir}/msi/*.msi", workingDir);
-        CopyFiles($"{artifactsDir}/msi/*.msi", workingDir);
+        CopyFiles($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}*.msi", workingDir); // Windows x86 and x64 .msi files
+        CopyFiles($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-*.tar.gz", workingDir);    // Linux and OS/X tarballs
 
         RunProcess("dotnet", $"octo pack --id=Tentacle --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
     });
