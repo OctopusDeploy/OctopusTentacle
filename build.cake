@@ -204,13 +204,13 @@ Task("Build")
 Task("Pack-TentacleUpgraderPackage")
     .IsDependentOn("Pack-WindowsInstallers")
     .Does(() => {
-        var crossPlatformUpgraderDir = $"{buildDir}/tentacle-upgrader";
-        CreateDirectory(crossPlatformUpgraderDir);
-        CopyFiles($"./source/Octopus.Upgrader/Tentacle.spec", crossPlatformUpgraderDir);
-        CopyFiles($"{artifactsDir}/msi/*.msi", crossPlatformUpgraderDir);
-        CopyFiles($"{artifactsDir}/msi/*.msi", crossPlatformUpgraderDir);
+        var workingDir = $"{buildDir}/tentacle-upgrader";
+        CreateDirectory(workingDir);
+        CopyFiles($"./source/Octopus.Upgrader/Tentacle.spec", workingDir);
+        CopyFiles($"{artifactsDir}/msi/*.msi", workingDir);
+        CopyFiles($"{artifactsDir}/msi/*.msi", workingDir);
 
-        RunProcess("dotnet", $"octo pack --id=Tentacle --version={versionInfo.FullSemVer} --basePath={crossPlatformUpgraderDir} --outFolder={artifactsDir}/nuget");
+        RunProcess("dotnet", $"octo pack --id=Tentacle --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
     });
 
 Task("Pack-WindowsZip")
