@@ -22,6 +22,9 @@ changeBuildType(RelativeId("Build")) {
         add {
             equals("env.OS", "Windows_NT")
         }
+        add {
+            exists("DotNetFrameworkTargetingPack4.5.2_Path")
+        }
     }
 
     expectDisabledSettings()
