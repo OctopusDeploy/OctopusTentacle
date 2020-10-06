@@ -7,7 +7,7 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<OutputType>Exe</OutputType>
 		<NoWin32Manifest>true</NoWin32Manifest>
-	    <OutputPath>../../_build/$(AssemblyName)</OutputPath>
+		<OutputPath>../../_build/$(AssemblyName)</OutputPath>
 		<ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
 		<AppConfig Condition="'$(TargetFramework)' == 'netcoreapp3.1'">app.netcore.config</AppConfig>
 	</PropertyGroup>
