@@ -99,10 +99,6 @@ Task("Clean")
         CleanDirectories("./source/**/TestResults");
         CleanDirectories(artifactsDir);
         CleanDirectories(buildDir);
-        CreateDirectory($"{artifactsDir}/teamcity");
-        CreateDirectory($"{artifactsDir}/nuget");
-        CreateDirectory($"{artifactsDir}/msi");
-        CreateDirectory($"{artifactsDir}/zip");
     });
 
 Task("Restore")
@@ -193,6 +189,7 @@ Task("Pack-WindowsZips")
     .Description("Packs the Windows .zip files containing the published binaries.")
     .IsDependentOn("Build-Windows")
     .Does(() => {
+        CreateDirectory($"{artifactsDir}/zip");
 
         var targetTrameworks = frameworks;
         var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("win-")).ToArray();
@@ -210,6 +207,7 @@ Task("Pack-LinuxTarballs")
     .Description("Packs the Linux tarballs containing the published binaries.")
     .IsDependentOn("Build-Linux")
     .Does(() => {
+        CreateDirectory($"{artifactsDir}/zip");
 
         var targetTrameworks = frameworks.Where(f => f.StartsWith("netcore"));
         var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("linux-")).ToArray();
@@ -227,6 +225,7 @@ Task("Pack-OSXTarballs")
     .Description("Packs the OS/X tarballs containing the published binaries.")
     .IsDependentOn("Build-OSX")
     .Does(() => {
+        CreateDirectory($"{artifactsDir}/zip");
 
         var targetTrameworks = frameworks.Where(f => f.StartsWith("netcore"));
         var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("osx-")).ToArray();
@@ -244,6 +243,8 @@ Task("Pack-ChocolateyPackage")
     .Description("Packs the Chocolatey installer.")
     .IsDependentOn("Pack-WindowsInstallers")
     .Does(() => {
+        CreateDirectory($"{artifactsDir}/chocolatey");
+
         var checksum = CalculateFileHash(File($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi"));
         var checksumValue = BitConverter.ToString(checksum.ComputedHash).Replace("-", "");
         Information($"Checksum: Octopus.Tentacle.msi = {checksumValue}");
@@ -261,10 +262,7 @@ Task("Pack-ChocolateyPackage")
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", checksum64Value);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype64>", checksum64.Algorithm.ToString());
 
-        var chocolateyArtifactsDir = $"{artifactsDir}/chocolatey";
-        CreateDirectory(chocolateyArtifactsDir);
-
-        RunProcess("dotnet", $"octo pack --id=OctopusDeploy.Tentacle --version={versionInfo.FullSemVer} --basePath=./source/Chocolatey --outFolder={chocolateyArtifactsDir}");
+        RunProcess("dotnet", $"octo pack --id=OctopusDeploy.Tentacle --version={versionInfo.FullSemVer} --basePath=./source/Chocolatey --outFolder={artifactsDir}/chocolatey");
     });
 
 
@@ -300,6 +298,8 @@ Task("Pack-WindowsInstallers")
     .IsDependentOn("Build-Windows")
     .Does(() =>
     {
+        CreateDirectory($"{artifactsDir}/msi");
+
         var installerDir = $"{buildDir}/Installer";
         CreateDirectory(installerDir);
 
@@ -317,6 +317,8 @@ Task("Pack-CrossPlatformTentacleNuGetPackage")
     .IsDependentOn("Pack-LinuxTarballs")
     .IsDependentOn("Pack-OSXTarballs")
     .Does(() => {
+        CreateDirectory($"{artifactsDir}/nuget");
+
         var workingDir = $"{buildDir}/tentacle-upgrader";
         CreateDirectory(workingDir);
         CopyFiles($"./source/Octopus.Upgrader/Tentacle.spec", workingDir);
@@ -723,6 +725,8 @@ private void RunBuildFor(string framework, string runtimeId)
 
 private void RunTestSuiteFor(string framework, string runtimeId)
 {
+    CreateDirectory($"{artifactsDir}/teamcity");
+
     // We call dotnet test against the assemblies directly here because calling it against the .sln requires
     // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
     // have to shunt them all around the place.
