@@ -3,6 +3,7 @@
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
 		<AssemblyName>Tentacle</AssemblyName>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
 		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64;linux-arm64;linux-musl-x64</RuntimeIdentifiers>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<OutputType>Exe</OutputType>
@@ -10,12 +11,6 @@
 		<OutputPath>../../_build/$(AssemblyName)</OutputPath>
 		<ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
 		<AppConfig Condition="'$(TargetFramework)' == 'netcoreapp3.1'">app.netcore.config</AppConfig>
-	</PropertyGroup>
-	<PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
-		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
-	</PropertyGroup>
-	<PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
-		<TargetFramework>netcoreapp3.1</TargetFramework>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
