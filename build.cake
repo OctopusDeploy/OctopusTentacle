@@ -128,21 +128,20 @@ Task("VersionAssemblies")
         UpdateProductVersionInWiX(productWxs);
     });
 
-// Task("Build-Windows")
-//  .IsDependentOn("<all the windows builds>")
+// This task will have dependencies programmatically added to it below.
 var taskBuildWindows = Task("Build-Windows")
-    .Description("Builds all of the win-* runtime targets.")    ;
+    .Description("Builds all of the win-* runtime targets.");
 
-// Task("Build-Linux")
-//  .IsDependentOn("<all the linux builds>")
+// This task will have dependencies programmatically added to it below.
 var taskBuildLinux = Task("Build-Linux")
-    .Description("Builds all of the linux-* runtime targets.")    ;
+    .Description("Builds all of the linux-* runtime targets.");
 
-// Task("Build-OSX")
-//  .IsDependentOn("<all the osx builds>")
+// This task will have dependencies programmatically added to it below.
 var taskBuildOSX = Task("Build-OSX")
-    .Description("Builds all of the osx-* runtime targets.")    ;
+    .Description("Builds all of the osx-* runtime targets.");
 
+// This block defines tasks looking like this:
+//
 // Task("Build-<framework>-<runtimeId>")
 //
 // We dynamically define build tasks based on the cross-product of frameworks and runtimes.
@@ -354,6 +353,8 @@ Task("Pack")
     .IsDependentOn("Pack-OSX")
     ;
 
+// This block defines tasks looking like this:
+//
 // Task("Test-<framework>-<runtimeId>")
 //
 // We dynamically define test tasks based on the cross-product of frameworks and runtimes.
