@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd" xmlns:octopus="http://octopus.org">
   <metadata>
-    <id>Tentacle</id>
+    <id>Octopus.Tentacle.CrossPlatformBundle</id>
     <version></version>
     <authors>Octopus Deploy</authors>
     <description>The deployment agent that is installed on each machine you plan to deploy to using Octopus.</description>
