@@ -50,8 +50,6 @@ public class VersionInfo
     public string FullSemVer { get; set; }
 }
 
-EnsureGitBranch();
-var gitBranch = EnvironmentVariable("OCTOVERSION_CurrentBranch");
 var versionInfo = DeriveVersionInfo();
 
 // Keep this list in order by most likely to succeed
@@ -111,6 +109,8 @@ Task("VersionAssemblies")
     .Description("Modifies the VersionInfo.cs and Product.wxs files to embed version information into the shipped product.")
     .Does(() =>
     {
+        var gitBranch = DeriveGitBranch();
+
         var versionInfoFile = "./source/Solution Items/VersionInfo.cs";
         RestoreFileOnCleanup(versionInfoFile);
         ReplaceRegexInFiles(versionInfoFile, "AssemblyVersion\\(\".*?\"\\)", $"AssemblyVersion(\"{versionInfo.MajorMinorPatch}\")");
@@ -403,17 +403,27 @@ Task("Default")
 // IMPLEMENTATION DETAILS
 //////////////////////////////////////////////////////////////////////
 
-private void EnsureGitBranch()
+private string DeriveGitBranch()
 {
     var branch = EnvironmentVariable("OCTOVERSION_CurrentBranch");
-    if (!string.IsNullOrEmpty(branch)) return;
+    if (string.IsNullOrEmpty(branch))
+    {
+        Warning("Git branch not available from environment variable. Attempting to work it out for ourselves. DANGER: Don't rely on this on your build server!");
+        branch = "refs/heads/" + RunProcessAndGetOutput("git", "rev-parse --abbrev-ref HEAD");
+    }
 
-    Warning("Git branch not available from environment variable. Attempting to work it out for ourselves. DANGER: Don't rely on this on your build server!");
-    branch = "refs/heads/" + RunProcessAndGetOutput("git", "branch --show-current");
-    Environment.SetEnvironmentVariable("OCTOVERSION_CurrentBranch", branch);
+    return branch;
 }
 
 private VersionInfo DeriveVersionInfo() {
+
+    var existingFullSemVer = EnvironmentVariable("OCTOVERSION_FullSemVer");
+    if (string.IsNullOrEmpty(existingFullSemVer))
+    {
+        var branch = DeriveGitBranch();
+        Environment.SetEnvironmentVariable("OCTOVERSION_CurrentBranch", branch);
+    }
+
     var octoVersionArgs = TeamCity.IsRunningOnTeamCity ? "--OutputFormats:0=Console --OutputFormats:1=TeamCity" : "--OutputFormats:0=Console";
     RunProcess("dotnet", $"tool run octoversion {octoVersionArgs}");
 
