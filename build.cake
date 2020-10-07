@@ -2,14 +2,20 @@
 // TOOLS
 //////////////////////////////////////////////////////////////////////
 #module nuget:?package=Cake.DotNetTool.Module&version=0.4.0
-#tool "dotnet:?package=OctoVersion.Tool&version=0.0.32"
+
+// NOTE: This solution uses dotnet core tooling in preference to Cake tools where possible.
+// dotnet tools are installed via the `dotnet tool install` command (not via this Cakefile),
+// and are restored using `dotnet tool restore` on build.
+
 #tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
 #tool "nuget:?package=WiX&version=3.11.2"
+#addin "nuget:?package=Cake.Compression&version=0.2.4"
+#addin "nuget:?package=Cake.Docker&version=0.10.0"
 #addin "nuget:?package=Cake.FileHelpers&version=3.2.1"
 #addin "nuget:?package=Cake.Incubator&version=5.0.1"
-#addin "nuget:?package=Cake.Docker&version=0.10.0"
 #addin "nuget:?package=Cake.Json&version=5.2"
 #addin "nuget:?package=Newtonsoft.Json&version=11.0.2"
+#addin "nuget:?package=SharpZipLib&version=1.2.0"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
@@ -17,12 +23,14 @@ using System.Xml;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
+
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 //////////////////////////////////////////////////////////////////////
 var target = Argument("target", "Default");
-var configuration = Argument("configuration", "Release");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
+var runtimeIds =  new [] { "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "osx-x64" };
+var frameworks = new [] { "net452", "netcoreapp3.1" };
 
 var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
 var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
@@ -33,29 +41,7 @@ var gpgSigningCertificatePassword = Argument("gpg_signing_certificate_password",
 var awsAccessKeyId = Argument("aws_access_key_id", EnvironmentVariable("AWS_ACCESS_KEY") ?? "XXXX");
 var awsSecretAccessKey = Argument("aws_secret_access_key", EnvironmentVariable("AWS_SECRET_KEY") ?? "YYYY");
 
-EnsureGitBranch();
-var gitBranch = EnvironmentVariable("OCTOVERSION_CurrentBranch");
-
-// Keep this list in order by most likely to succeed
-var signingTimestampUrls = new string[] {
-    "http://timestamp.globalsign.com/scripts/timestamp.dll",
-    "http://www.startssl.com/timestamp",
-    "http://timestamp.comodoca.com/rfc3161",
-    "http://timestamp.verisign.com/scripts/timstamp.dll",
-    "http://tsa.starfieldtech.com"};
-
-var installerPackageDir = "./build/package/installer";
-var binariesPackageDir = "./build/package/binaries";
-var packagesPackageDir = "./build/package/packages";
-var installerDir = "./build/installer";
-var artifactsDir = "./build/artifacts";
-var localPackagesDir = "../LocalPackages";
-var corePublishDir = "./build/publish";
-var coreWinPublishDir = "./build/publish/win-x64";
-var tentacleSourceBinDir = "./source/Octopus.Tentacle/bin";
-var managerSourceBinDir = "./source/Octopus.Manager.Tentacle/bin";
-
-class VersionInfo
+public class VersionInfo
 {
     public string Major { get; set; }
     public string Minor { get; set; }
@@ -68,13 +54,28 @@ class VersionInfo
     public string FullSemVer { get; set; }
 }
 
-VersionInfo versionInfo;
+var versionInfo = DeriveVersionInfo();
+
+// Keep this list in order by most likely to succeed
+var signingTimestampUrls = new string[] {
+    "http://timestamp.globalsign.com/scripts/timestamp.dll",
+    "http://www.startssl.com/timestamp",
+    "http://timestamp.comodoca.com/rfc3161",
+    "http://timestamp.verisign.com/scripts/timstamp.dll",
+    "http://tsa.starfieldtech.com"};
+
+
+var artifactsDir = "./_artifacts";
+var buildDir = "./_build";
+var localPackagesDir = "../LocalPackages";
+
+
+//////////////////////////////////////////////////////////////////////
+// SETUP/TEARDOWN
+//////////////////////////////////////////////////////////////////////
 
 var cleanups = new List<Action>();
 
-///////////////////////////////////////////////////////////////////////////////
-// SETUP / TEARDOWN
-///////////////////////////////////////////////////////////////////////////////
 Setup(context =>
 {
     context.Tools.RegisterFile("./signtool.exe");
@@ -89,333 +90,170 @@ Teardown(context =>
 
 
 //////////////////////////////////////////////////////////////////////
-//  PRIVATE TASKS
+// TASKS
 //////////////////////////////////////////////////////////////////////
 
-private string RunProcessAndGetOutput(string fileName, string args) {
-    var stdoutStringBuilder = new StringBuilder();
-    var settings = new ProcessSettings() {
-        Arguments = args,
-        RedirectStandardOutput = true,
-        RedirectedStandardOutputHandler = s => { stdoutStringBuilder.Append(s); return s; }
-     };
-
-	var exitCode = StartProcess(fileName, settings);
-    var stdout = stdoutStringBuilder.ToString();
-
-	if(exitCode != 0)
-	{
-		var safeArgs = settings.Arguments.RenderSafe();
-		throw new Exception($"{fileName} {safeArgs} failed with {exitCode} exitcode.");
-	}
-
-    return stdout;
-}
-
-private void RunProcess(string fileName, string args)
-{
-    var settings = new ProcessSettings() {
-        Arguments = args
-     };
-
-	var exitCode = StartProcess(fileName, settings);
-
-	if(exitCode != 0)
-	{
-		var safeArgs = settings.Arguments.RenderSafe();
-		throw new Exception($"{fileName} {safeArgs} failed with {exitCode} exitcode.");
-	}
-}
-
-private void EnsureGitBranch()
-{
-    var branch = EnvironmentVariable("OCTOVERSION_CurrentBranch");
-    if (!string.IsNullOrEmpty(branch)) return;
-
-    Warning("Git branch not available from environment variable. Attempting to work it out for ourselves. DANGER: Don't rely on this on your build server!");
-    branch = RunProcessAndGetOutput("git", "branch --show-current");
-    Environment.SetEnvironmentVariable("OCTOVERSION_CurrentBranch", branch);
-}
-
-Task("__Default")
-    .IsDependentOn("__CheckForbiddenWords")
-    .IsDependentOn("__Version")
-    .IsDependentOn("__Clean")
-    .IsDependentOn("__Restore")
-    .IsDependentOn("__Build")
-    .IsDependentOn("__Test")
-    .IsDependentOn("__DotnetPublish")
-    .IsDependentOn("__SignBuiltFiles")
-    .IsDependentOn("__CreateTentacleInstaller")
-    .IsDependentOn("__CreateChocolateyPackage")
-    .IsDependentOn("__CreateInstallerNuGet")
-    .IsDependentOn("__CreateBinariesNuGet")
-    .IsDependentOn("__CopyToLocalPackages");
-
-Task("__DefaultExcludingTests")
-    .IsDependentOn("__CheckForbiddenWords")
-    .IsDependentOn("__Version")
-    .IsDependentOn("__Clean")
-    .IsDependentOn("__Restore")
-    .IsDependentOn("__Build")
-    .IsDependentOn("__DotnetPublish")
-    .IsDependentOn("__SignBuiltFiles")
-    .IsDependentOn("__CreateTentacleInstaller")
-    .IsDependentOn("__CreateChocolateyPackage")
-    .IsDependentOn("__CreateInstallerNuGet")
-    .IsDependentOn("__CreateBinariesNuGet")
-    .IsDependentOn("__CopyToLocalPackages");
-
-Task("__LinuxPackage")
-    .IsDependentOn("__Clean")
-    .IsDependentOn("__CreatePackagesNuGet");
-
-
-Task("__CreateLinuxPackages")
-    .IsDependentOn("__DotnetPublish")
-    .Does(context =>
-{
-    if (string.IsNullOrEmpty(context.EnvironmentVariable("SIGN_PRIVATE_KEY"))
-        || string.IsNullOrEmpty(context.EnvironmentVariable("SIGN_PASSPHRASE"))) {
-        throw new Exception("This build requires environment variables `SIGN_PRIVATE_KEY` (in a format gpg1 can import)"
-            + " and `SIGN_PASSPHRASE`, which are used to sign the .rpm.");
-    }
-    
-    CreateLinuxPackage("linux-x64");
-    CreateLinuxPackage("linux-arm64");
-});
-
-Task("__CheckForbiddenWords")
-	.Does(() =>
-{
-	Information("Checking codebase for forbidden words.");
-
-	IEnumerable<string> redirectedOutput;
- 	var exitCodeWithArgument =
-    	StartProcess(
-        	"git",
-        	new ProcessSettings {
-            	Arguments = "grep -i -I -n -f ForbiddenWords.txt -- \"./*\" \":!ForbiddenWords.txt\"",
-             	RedirectStandardOutput = true
-        	},
-        	out redirectedOutput
-     	);
-
-	var filesContainingForbiddenWords = redirectedOutput.ToArray();
-	if (filesContainingForbiddenWords.Any())
-		throw new Exception("Found forbidden words in the following files, please clean them up:\r\n" + string.Join("\r\n", filesContainingForbiddenWords));
-
-	Information("Sanity check passed.");
-});
-
-Task("__Version")
+Task("Clean")
     .Does(() =>
-{
-    var octoVersionArgs = TeamCity.IsRunningOnTeamCity ? "--OutputFormats:0=Console --OutputFormats:1=TeamCity" : "--OutputFormats:0=Console";
-    RunProcess("octoversion", $"{octoVersionArgs}");
+    {
+        CleanDirectories("./source/**/bin");
+        CleanDirectories("./source/**/obj");
+        CleanDirectories("./source/**/TestResults");
+        CleanDirectories(artifactsDir);
+        CleanDirectories(buildDir);
+    });
 
-    var versionJson = RunProcessAndGetOutput("octoversion", $"--OutputFormats:0=Json");
-    versionInfo = DeserializeJson<VersionInfo>(versionJson);
-
-    Information("Building OctopusTentacle {0}", versionInfo.FullSemVer);
-});
-
-Task("__VersionFilePaths")
-    .IsDependentOn("__Version")
-    .Does(() =>
-{
-    var versionInfoFile = "./source/Solution Items/VersionInfo.cs";
-
-    RestoreFileOnCleanup(versionInfoFile);
-
-    ReplaceRegexInFiles(versionInfoFile, "AssemblyVersion\\(\".*?\"\\)", $"AssemblyVersion(\"{versionInfo.MajorMinorPatch}\")");
-    ReplaceRegexInFiles(versionInfoFile, "AssemblyFileVersion\\(\".*?\"\\)", $"AssemblyFileVersion(\"{versionInfo.MajorMinorPatch}\")");
-    ReplaceRegexInFiles(versionInfoFile, "AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{versionInfo.FullSemVer}\")");
-    ReplaceRegexInFiles(versionInfoFile, "AssemblyGitBranch\\(\".*?\"\\)", $"AssemblyGitBranch(\"{gitBranch}\")");
-    ReplaceRegexInFiles(versionInfoFile, "AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{versionInfo.FullSemVer}\")");
-});
-
-Task("__Clean")
-    .Does(() =>
-{
-    CleanDirectories("./source/**/bin");
-    CleanDirectories("./source/**/obj");
-    CleanDirectory("./build");
-    CreateDirectory(installerPackageDir);
-    CreateDirectory(binariesPackageDir);
-    CreateDirectory(installerDir);
-    CreateDirectory(artifactsDir);
-});
-
-Task("__Restore")
+Task("Restore")
+    .IsDependentOn("Clean")
     .Does(() => {
         DotNetCoreRestore("./source/Tentacle.sln");
-        NuGetRestore(
-            "./source/Octopus.Manager.Tentacle/Octopus.Manager.Tentacle.csproj",
-            new NuGetRestoreSettings { PackagesDirectory = "./source/packages" }
-        );
     });
 
-Task("__Build")
-    .IsDependentOn("__VersionFilePaths")
-    .IsDependentOn("__Clean")
-    .IsDependentOn("__Restore")
+Task("VersionAssemblies")
+    .Description("Modifies the VersionInfo.cs and Product.wxs files to embed version information into the shipped product.")
     .Does(() =>
-{
-    MSBuild("./source/Tentacle.sln", settings =>
-        settings
-            .SetConfiguration(configuration)
-            .SetMaxCpuCount(256)
-            .SetVerbosity(verbosity)
-    );
-});
-
-Task("__Test")
-    .IsDependentOn("__Build")
-    .Does(() =>
-{
-    DotNetCoreTest("./source/Octopus.Tentacle.Tests/Octopus.Tentacle.Tests.csproj", new DotNetCoreTestSettings
     {
-        Configuration = configuration,
-        NoBuild = true
+        var gitBranch = DeriveGitBranch();
+
+        var versionInfoFile = "./source/Solution Items/VersionInfo.cs";
+        RestoreFileOnCleanup(versionInfoFile);
+        ReplaceRegexInFiles(versionInfoFile, "AssemblyVersion\\(\".*?\"\\)", $"AssemblyVersion(\"{versionInfo.MajorMinorPatch}\")");
+        ReplaceRegexInFiles(versionInfoFile, "AssemblyFileVersion\\(\".*?\"\\)", $"AssemblyFileVersion(\"{versionInfo.MajorMinorPatch}\")");
+        ReplaceRegexInFiles(versionInfoFile, "AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{versionInfo.FullSemVer}\")");
+        ReplaceRegexInFiles(versionInfoFile, "AssemblyGitBranch\\(\".*?\"\\)", $"AssemblyGitBranch(\"{gitBranch}\")");
+        ReplaceRegexInFiles(versionInfoFile, "AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{versionInfo.FullSemVer}\")");
+
+        var productWxs = "./installer/Octopus.Tentacle.Installer/Product.wxs";
+        RestoreFileOnCleanup(productWxs);
+        UpdateMsiProductVersion(productWxs);
     });
-});
 
-Task("__DotnetPublish")
-    .IsDependentOn("__VersionFilePaths")
-	.Does(() =>  {
+// This task will have dependencies programmatically added to it below.
+var taskBuildWindows = Task("Build-Windows")
+    .Description("Builds all of the win-* runtime targets.");
 
-        // R2R single files require compilation on the target environment.
-        // https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#readytorun-images
-        foreach(var runtimeId in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))
+// This task will have dependencies programmatically added to it below.
+var taskBuildLinux = Task("Build-Linux")
+    .Description("Builds all of the linux-* runtime targets.");
+
+// This task will have dependencies programmatically added to it below.
+var taskBuildOSX = Task("Build-OSX")
+    .Description("Builds all of the osx-* runtime targets.");
+
+// This block defines tasks looking like this:
+//
+// Task("Build-<framework>-<runtimeId>")
+//
+// We dynamically define build tasks based on the cross-product of frameworks and runtimes.
+// We do this rather than attempting to have a single "Build" task because, although we can
+// run the actual compilation task for all targets on a single OS, we can't run the associated
+// packaging tasks. E.g. we need Windows (or wine) to run WiX, but we also need a Linux Docker
+// machine to package .deb and .rpm files. This makes it more sensible to split the compilation
+// for different platforms into separate tasks, and then have a single unifying task only for
+// local completeness.
+foreach (var framework in frameworks)
+{
+    foreach (var runtimeId in runtimeIds )
+    {
+        if (framework == "net452" && runtimeId != "win-x64") continue;
+
+        var taskName = $"Build-{framework}-{runtimeId}";
+        Task(taskName)
+            .IsDependentOn("Restore")
+            .IsDependentOn("VersionAssemblies")
+            .Description($"Builds and publishes for {framework}/{runtimeId}.")
+            .Does(() => {
+                RunBuildFor(framework, runtimeId);
+            });
+
+        // Include this task in the dependencies of whichever is the appropriate rolled-up build task for its operating system.
+        if (runtimeId.StartsWith("win-"))
         {
-            DotNetCorePublish(
-                "./source/Octopus.Tentacle/Octopus.Tentacle.csproj",
-                new DotNetCorePublishSettings
-                {
-                    Framework = "netcoreapp3.1",
-                    Configuration = configuration,
-                    OutputDirectory = $"{corePublishDir}/{runtimeId}",
-                    Runtime = runtimeId,
-                    SelfContained = true,
-                    ArgumentCustomization = args => args.Append($"/p:Version={versionInfo.FullSemVer}")
-                }
-            );
+            taskBuildWindows.IsDependentOn(taskName);
         }
+        else if (runtimeId.StartsWith("linux-"))
+        {
+            taskBuildLinux.IsDependentOn(taskName);
+        }
+        else if (runtimeId.StartsWith("osx-"))
+        {
+            taskBuildOSX.IsDependentOn(taskName);
+        }
+    }
+}
 
-        // Just publish the Octopus.Upgrader project for Windows, as that's the only target
-        // operating system it supports.
-        DotNetCorePublish(
-            "./source/Octopus.Upgrader/Octopus.Upgrader.csproj",
-            new DotNetCorePublishSettings
+Task("Build")
+    .Description("Build all the framework/runtime combinations. Notional task - running this on a single host is possible but cumbersome.")
+    .IsDependentOn("Build-Windows")
+    .IsDependentOn("Build-Linux")
+    .IsDependentOn("Build-OSX")
+    ;
+
+Task("Pack-WindowsZips")
+    .Description("Packs the Windows .zip files containing the published binaries.")
+    .IsDependentOn("Build-Windows")
+    .Does(() => {
+        CreateDirectory($"{artifactsDir}/zip");
+
+        var targetTrameworks = frameworks;
+        var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("win-")).ToArray();
+
+        foreach (var framework in targetTrameworks)
+        {
+            foreach (var runtimeId in targetRuntimeIds)
             {
-                Configuration = configuration,
-                OutputDirectory = $"{corePublishDir}/win-x64",
-                Runtime = "win-x64",
-                PublishReadyToRun = false,
-                SelfContained = true,
-                ArgumentCustomization = args => args.Append($"/p:Version={versionInfo.FullSemVer}")
+                Zip($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.zip");
             }
-        );
+        }
     });
 
-private IEnumerable<string> GetProjectRuntimeIds(string projectFile)
-{
-    var doc = new XmlDocument();
-    doc.Load(projectFile);
-    var rids = doc.SelectSingleNode("Project/PropertyGroup/RuntimeIdentifiers").InnerText;
-    return rids.Split(';');
-}
+Task("Pack-LinuxTarballs")
+    .Description("Packs the Linux tarballs containing the published binaries.")
+    .IsDependentOn("Build-Linux")
+    .Does(() => {
+        CreateDirectory($"{artifactsDir}/zip");
 
-Task("__SignBuiltFiles")
-    .Does(() =>
-{
-    // check that any unsigned libraries, that Octopus Deploy authors, get signed to play nice with security scanning tools
-    // refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
-    // decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
-    var filesToSign =
-        GetFiles($"{coreWinPublishDir}/**/Octo*.exe",
-            $"{coreWinPublishDir}/**/Octo*.dll",
-            $"{coreWinPublishDir}/**/Tentacle.exe",
-            $"{coreWinPublishDir}/**/Tentacle.dll",
-            $"{coreWinPublishDir}/**/Halibut.dll",
-            $"{coreWinPublishDir}/**/Nuget.*.dll",
-            $"{tentacleSourceBinDir}/**/Octo*.exe",
-            $"{tentacleSourceBinDir}/**/Octo*.dll",
-            $"{tentacleSourceBinDir}/**/Tentacle.exe",
-            $"{tentacleSourceBinDir}/**/Halibut.dll",
-            $"{tentacleSourceBinDir}/**/Nuget.*.dll",
-            $"{managerSourceBinDir}/Octo*.exe",
-            $"{managerSourceBinDir}/Octo*.dll",
-            $"{managerSourceBinDir}/Tentacle.exe",
-            $"{managerSourceBinDir}/Halibut.dll",
-            $"{managerSourceBinDir}/Nuget.*.dll")
-            .Where(f => !HasAuthenticodeSignature(f))
-            .Select(f => f.FullPath)
-            .ToArray();
+        var targetTrameworks = frameworks.Where(f => f.StartsWith("netcore"));
+        var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("linux-")).ToArray();
 
-    SignAndTimeStamp(filesToSign);
-});
+        foreach (var framework in targetTrameworks)
+        {
+            foreach (var runtimeId in targetRuntimeIds)
+            {
+                GZipCompress($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+            }
+        }
+    });
 
-// note: Doesn't check if existing signatures are valid, only that one exists
-// source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
-private bool HasAuthenticodeSignature(FilePath fileInfo)
-{
-    try
-    {
-        X509Certificate.CreateFromSignedFile(fileInfo.FullPath);
-        return true;
-    }
-    catch
-    {
-        return false;
-    }
-}
+Task("Pack-OSXTarballs")
+    .Description("Packs the OS/X tarballs containing the published binaries.")
+    .IsDependentOn("Build-OSX")
+    .Does(() => {
+        CreateDirectory($"{artifactsDir}/zip");
 
-Task("__CreateTentacleInstaller")
-    .IsDependentOn("__UpdateWixVersion")
-    .Does(() =>
-{
-    CopyFiles("./source/Octopus.Manager.Tentacle/bin/*", installerDir);
-    CopyFiles("./source/Octopus.Tentacle/bin/net452/*", installerDir);
+        var targetTrameworks = frameworks.Where(f => f.StartsWith("netcore"));
+        var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("osx-")).ToArray();
 
-    CleanBinariesDirectory(installerDir);
+        foreach (var framework in targetTrameworks)
+        {
+            foreach (var runtimeId in targetRuntimeIds)
+            {
+                GZipCompress($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+            }
+        }
+    });
 
-    InBlock("Running HEAT to generate the installer contents...", () => GenerateInstallerContents());
+Task("Pack-ChocolateyPackage")
+    .Description("Packs the Chocolatey installer.")
+    .IsDependentOn("Pack-WindowsInstallers")
+    .Does(() => {
+        CreateDirectory($"{artifactsDir}/chocolatey");
 
-    InBlock("Building 64-bit installer", () => BuildInstallerForPlatform(PlatformTarget.x64));
-    InBlock("Building 32-bit installer", () => BuildInstallerForPlatform(PlatformTarget.x86));
-
-    CopyFiles($"{artifactsDir}/*.msi", installerPackageDir);
-});
-
-Task("__UpdateWixVersion")
-    .Does(() =>
-{
-    var installerProductFile = "./source/Octopus.Tentacle.Installer/Product.wxs";
-    RestoreFileOnCleanup(installerProductFile);
-
-    var xmlDoc = new XmlDocument();
-    xmlDoc.Load(installerProductFile);
-
-    var nsmgr = new XmlNamespaceManager(xmlDoc.NameTable);
-    nsmgr.AddNamespace("wi", "http://schemas.microsoft.com/wix/2006/wi");
-
-    var product = xmlDoc.SelectSingleNode("//wi:Product", nsmgr);
-    product.Attributes["Version"].Value = versionInfo.MajorMinorPatch;
-    xmlDoc.Save(installerProductFile);
-});
-
-Task("__CreateChocolateyPackage")
-    .Does(() =>
-{
-    InBlock ("Create Chocolatey package...", () =>
-    {
-        var checksum = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{versionInfo.FullSemVer}.msi"));
+        var checksum = CalculateFileHash(File($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi"));
         var checksumValue = BitConverter.ToString(checksum.ComputedHash).Replace("-", "");
         Information($"Checksum: Octopus.Tentacle.msi = {checksumValue}");
 
-        var checksum64 = CalculateFileHash(File($"{artifactsDir}/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi"));
+        var checksum64 = CalculateFileHash(File($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi"));
         var checksum64Value = BitConverter.ToString(checksum64.ComputedHash).Replace("-", "");
         Information($"Checksum: Octopus.Tentacle-x64.msi = {checksum64Value}");
 
@@ -428,77 +266,190 @@ Task("__CreateChocolateyPackage")
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", checksum64Value);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype64>", checksum64.Algorithm.ToString());
 
-        var chocolateyArtifactsDir = $"{artifactsDir}/Chocolatey";
-        CreateDirectory(chocolateyArtifactsDir);
-
-        RunProcess("dotnet", $"octo pack --id=OctopusDeploy.Tentacle --version={versionInfo.FullSemVer} --basePath=./source/Chocolatey --outFolder={chocolateyArtifactsDir}");
+        RunProcess("dotnet", $"tool run dotnet-octo pack --id=OctopusDeploy.Tentacle --version={versionInfo.FullSemVer} --basePath=./source/Chocolatey --outFolder={artifactsDir}/chocolatey");
     });
-});
 
-Task("__CreateInstallerNuGet")
-    .IsDependentOn("__Version")
+
+Task("Pack-LinuxPackages-Legacy")
+    .IsDependentOn("Pack-LinuxTarballs")
+    .Description("Legacy task until we can split creation of .rpm and .deb packages into their own tasks")
+    .Does(() => {
+        var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("linux-"))
+        .Where(rid => rid != "linux-musl-x64")  // not supported yet. Work in progress.
+        .ToArray();
+
+        foreach (var runtimeId in targetRuntimeIds)
+        {
+            CreateLinuxPackages(runtimeId);
+
+            CreateDirectory($"{artifactsDir}/deb");
+            CopyFiles($"{buildDir}/deb/{runtimeId}/output/*.deb", $"{artifactsDir}/deb");
+
+            CreateDirectory($"{artifactsDir}/rpm");
+            CopyFiles($"{buildDir}/deb/{runtimeId}/output/*.rpm", $"{artifactsDir}/rpm");
+        }
+    });
+
+Task("Pack-DebianPackage")
+    .IsDependentOn("Pack-LinuxPackages-Legacy")
+    .Description("TODO: Move .deb creation into this task")
+    ;
+
+Task("Pack-RedHatPackage")
+    .IsDependentOn("Pack-LinuxPackages-Legacy")
+    .Description("TODO: Move .rpm creation into this task")
+    ;
+
+Task("Pack-WindowsInstallers")
+    .Description("Packs the Windows .msi files.")
+    .IsDependentOn("Build-Windows")
     .Does(() =>
-{
-    CopyFiles($"{artifactsDir}/*.msi", installerPackageDir);
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Installers.nuspec", installerPackageDir);
-
-    RunProcess("dotnet", $"octo pack --id=Tentacle.Installers --version={versionInfo.FullSemVer} --basePath={installerPackageDir} --outFolder={artifactsDir}");
-});
-
-Task("__CreatePackagesNuGet")
-    .IsDependentOn("__Version")
-    .IsDependentOn("__CreateLinuxPackages")
-    .Does(() =>
-{
-    CreateDirectory(packagesPackageDir);
-    CreateDirectory($"{packagesPackageDir}/build/Packages");
-
-    CopyFiles($"{artifactsDir}/*.deb", $"{packagesPackageDir}/build/Packages");
-    CopyFiles($"{artifactsDir}/*.rpm", $"{packagesPackageDir}/build/Packages");
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Packages.nuspec", packagesPackageDir);
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Packages.targets", $"{packagesPackageDir}/build");
-
-    RunProcess("dotnet", $"octo pack --id=Tentacle.Packages --version={versionInfo.FullSemVer} --basePath={packagesPackageDir} --outFolder={artifactsDir}");
-});
-
-Task("__CreateBinariesNuGet")
-    .IsDependentOn("__SignBuiltFiles")
-    .Does(() =>
-{
-    CreateDirectory($"{binariesPackageDir}/lib/net452");
-    CopyFileToDirectory($"./source/Octopus.Manager.Tentacle/bin/Octopus.Manager.Tentacle.exe", $"{binariesPackageDir}/lib/net452");
-    CleanBinariesDirectory($"{binariesPackageDir}/lib/net452");
-
-    CreateDirectory($"{binariesPackageDir}/build/net452/Tentacle");
-    CopyFiles($"./source/Octopus.Tentacle/bin/net452/*", $"{binariesPackageDir}/build/net452/Tentacle");
-    CleanBinariesDirectory($"{binariesPackageDir}/build/net452/Tentacle");
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
-    CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/net452");
-
-    RunProcess("dotnet", $"octo pack --id=Tentacle.Binaries --version={versionInfo.FullSemVer} --basePath={binariesPackageDir} --outFolder={artifactsDir}");
-
-    foreach(var rid in GetProjectRuntimeIds(@"./source/Octopus.Tentacle/Octopus.Tentacle.csproj"))
     {
-        CleanDirectory(binariesPackageDir);
-        CreateDirectory($"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}");
-        CopyFiles($"{corePublishDir}/{rid}/*", $"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}");
-        DeleteFile($"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}/Tentacle.exe.manifest");
-        CleanBinariesDirectory($"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.{rid}");
-        CopyFileToDirectory("./source/Octopus.Tentacle/Tentacle.Binaries.nuspec", binariesPackageDir);
-        CopyFile("./source/Octopus.Tentacle/Tentacle.Binaries.targets", $"{binariesPackageDir}/build/netcoreapp3.1/Tentacle.Binaries.{rid}.targets");
+        CreateDirectory($"{artifactsDir}/msi");
 
-        RunProcess("dotnet", $"octo pack --id=Tentacle.Binaries.{rid} --version={versionInfo.FullSemVer} --basePath={binariesPackageDir} --outFolder={artifactsDir}");
-    }
-});
+        var installerDir = $"{buildDir}/Installer";
+        CreateDirectory(installerDir);
 
-Task("__CopyToLocalPackages")
-    .WithCriteria(BuildSystem.IsLocalBuild)
-    .IsDependentOn("__CreateInstallerNuGet")
-    .Does(() =>
+        CopyFiles($"{buildDir}/Tentacle/net452/win-x64/publish/*", installerDir);
+        CopyFiles($"{buildDir}/Octopus.Manager.Tentacle/net452/win-x64/*", installerDir);
+
+        GenerateMsiInstallerContents(installerDir);
+        BuildMsiInstallerForPlatform(PlatformTarget.x64);
+        BuildMsiInstallerForPlatform(PlatformTarget.x86);
+    });
+
+Task("Pack-CrossPlatformBundle")
+    .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
+    .IsDependentOn("Pack-WindowsInstallers")
+    .IsDependentOn("Pack-LinuxTarballs")
+    .IsDependentOn("Pack-OSXTarballs")
+    .Does(() => {
+        CreateDirectory($"{artifactsDir}/nuget");
+
+        var workingDir = $"{buildDir}/tentacle-upgrader";
+        CreateDirectory(workingDir);
+
+        // Rather than taking wildcards here, we expressly declare each file so that we can be confident that we have everything.
+        // The copy task will fail hard if a file does not exist.
+        CopyFiles($"./source/Octopus.Upgrader/Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDir);
+        CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi", $"{workingDir}/Octopus.Tentacle.msi");
+        CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi", $"{workingDir}/Octopus.Tentacle-x64.msi");
+        foreach (var framework in frameworks)
+        {
+            foreach (var runtimeId in runtimeIds)
+            {
+                if (framework == "net452" && runtimeId != "win-x64") continue;
+
+                var fileExtension = runtimeId.StartsWith("win-") ? "zip" : "tar.gz";
+                CopyFile($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}", $"{workingDir}/tentacle-{framework}-{runtimeId}.{fileExtension}");
+            }
+        }
+
+        RunProcess("dotnet", $"tool run dotnet-octo pack --id=Octopus.Tentacle.CrossPlatformBundle --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
+    });
+
+Task("Pack-Windows")
+    .Description("Packs all the Windows targets.")
+    .IsDependentOn("Pack-WindowsZips")
+    .IsDependentOn("Pack-ChocolateyPackage")
+    .IsDependentOn("Pack-WindowsInstallers")
+    ;
+
+Task("Pack-Linux")
+    .Description("Packs all the Linux targets.")
+    .IsDependentOn("Pack-LinuxTarballs")
+    .IsDependentOn("Pack-DebianPackage")
+    .IsDependentOn("Pack-RedHatPackage")
+    ;
+
+Task("Pack-OSX")
+    .Description("Packs all the OS/X targets.")
+    .IsDependentOn("Pack-OSXTarballs")
+    ;
+
+Task("Pack")
+    .Description("Pack all the artifacts. Notional task - running this on a single host is possible but cumbersome.")
+    .IsDependentOn("Pack-CrossPlatformBundle")
+    .IsDependentOn("Pack-Windows")
+    .IsDependentOn("Pack-Linux")
+    .IsDependentOn("Pack-OSX")
+    ;
+
+// This block defines tasks looking like this:
+//
+// Task("Test-<framework>-<runtimeId>")
+//
+// We dynamically define test tasks based on the cross-product of frameworks and runtimes.
+// We do this rather than attempting to have a single "Test" task because there's no feasible way to actually run
+// all of the different framework/runtime combinations on a single host. Notable examples would be
+// net452/win-x64 and netcoreapp3.1/linux-musl-x64, or anything linux-x64 versus linux-arm64.
+foreach (var framework in frameworks)
 {
-    CreateDirectory(localPackagesDir);
-    CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.Binaries.{versionInfo.FullSemVer}.nupkg"), localPackagesDir);
-});
+    foreach (var runtimeId in runtimeIds )
+    {
+        if (framework == "net452" && runtimeId != "win-x64") continue;
+
+        var testTaskName = $"Test-{framework}-{runtimeId}";
+        var buildTaskName = $"Build-{framework}-{runtimeId}";
+        Task(testTaskName)
+            .IsDependentOn(buildTaskName)
+            .Description($"Runs the test suite for {framework}/{runtimeId}")
+            .Does(() => {
+                RunTestSuiteFor(framework, runtimeId);
+            });
+    }
+}
+
+Task("Copy-ToLocalPackages")
+    .WithCriteria(BuildSystem.IsLocalBuild)
+    .IsDependentOn("Pack-CrossPlatformBundle")
+    .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
+    .Does(() =>
+    {
+        CreateDirectory(localPackagesDir);
+        CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.{versionInfo.FullSemVer}.nupkg"), localPackagesDir);
+    });
+
+Task("Default")
+    .IsDependentOn("Pack")
+    .IsDependentOn("Copy-ToLocalPackages")
+    ;
+
+
+//////////////////////////////////////////////////////////////////////
+// IMPLEMENTATION DETAILS
+//////////////////////////////////////////////////////////////////////
+
+private string DeriveGitBranch()
+{
+    var branch = EnvironmentVariable("OCTOVERSION_CurrentBranch");
+    if (string.IsNullOrEmpty(branch))
+    {
+        Warning("Git branch not available from environment variable. Attempting to work it out for ourselves. DANGER: Don't rely on this on your build server!");
+        branch = "refs/heads/" + RunProcessAndGetOutput("git", "rev-parse --abbrev-ref HEAD");
+    }
+
+    return branch;
+}
+
+private VersionInfo DeriveVersionInfo() {
+
+    var existingFullSemVer = EnvironmentVariable("OCTOVERSION_FullSemVer");
+    if (string.IsNullOrEmpty(existingFullSemVer))
+    {
+        var branch = DeriveGitBranch();
+        Environment.SetEnvironmentVariable("OCTOVERSION_CurrentBranch", branch);
+    }
+
+    var octoVersionArgs = TeamCity.IsRunningOnTeamCity ? "--OutputFormats:0=Console --OutputFormats:1=TeamCity" : "--OutputFormats:0=Console";
+    RunProcess("dotnet", $"tool run octoversion {octoVersionArgs}");
+
+    var versionJson = RunProcessAndGetOutput("dotnet", $"tool run octoversion --OutputFormats:0=Json");
+    var version = DeserializeJson<VersionInfo>(versionJson);
+
+    Information("Building OctopusTentacle {0}", version.FullSemVer);
+    return version;
+}
 
 private void InBlock(string block, Action action)
 {
@@ -529,63 +480,92 @@ private void RestoreFileOnCleanup(string file)
     });
 }
 
-private void GenerateInstallerContents()
+private void UpdateMsiProductVersion(string productWxs)
 {
-    var harvestDirectory = Directory(installerDir);
+    var xmlDoc = new XmlDocument();
+    xmlDoc.Load(productWxs);
 
-    var harvestFile = "./source/Octopus.Tentacle.Installer/Tentacle.Generated.wxs";
-    RestoreFileOnCleanup(harvestFile);
+    var nsmgr = new XmlNamespaceManager(xmlDoc.NameTable);
+    nsmgr.AddNamespace("wi", "http://schemas.microsoft.com/wix/2006/wi");
 
-    var heatSettings = new HeatSettings {
-        NoLogo = true,
-        GenerateGuid = true,
-        SuppressFragments = true,
-        SuppressRootDirectory = true,
-        SuppressRegistry = true,
-        SuppressUniqueIds = true,
-        ComponentGroupName = "TentacleComponents",
-        PreprocessorVariable = "var.TentacleSource",
-        DirectoryReferenceId = "INSTALLLOCATION"
-    };
-
-    WiXHeat(harvestDirectory, File(harvestFile), WiXHarvestType.Dir, heatSettings);
+    var product = xmlDoc.SelectSingleNode("//wi:Product", nsmgr);
+    product.Attributes["Version"].Value = versionInfo.MajorMinorPatch;
+    xmlDoc.Save(productWxs);
 }
 
-private void BuildInstallerForPlatform(PlatformTarget platformTarget)
+private void GenerateMsiInstallerContents(string installerDir)
 {
-    //TODO Does this still reflect our intentions? Should it be any non-release branch? -andrewh 18/09/2020
-    var allowUpgrade = !string.Equals(versionInfo.PreReleaseTag, "alpha");
+    InBlock("Running HEAT to generate the installer contents...", () => {
+        var harvestDirectory = Directory(installerDir);
+        var harvestFile = "./installer/Octopus.Tentacle.Installer/Tentacle.Generated.wxs";
+        RestoreFileOnCleanup(harvestFile);
 
-    MSBuild("./source/Octopus.Tentacle.Installer/Octopus.Tentacle.Installer.wixproj", settings =>
-        settings
-            .SetConfiguration(configuration)
-            .WithProperty("AllowUpgrade", allowUpgrade.ToString())
-            .SetVerbosity(verbosity)
-            .SetPlatformTarget(platformTarget)
-            .WithTarget("build")
-    );
-    var builtMsi = File($"./source/Octopus.Tentacle.Installer/bin/{platformTarget}/Octopus.Tentacle.msi");
+        var heatSettings = new HeatSettings {
+            NoLogo = true,
+            GenerateGuid = true,
+            SuppressFragments = true,
+            SuppressRootDirectory = true,
+            SuppressRegistry = true,
+            SuppressUniqueIds = true,
+            ComponentGroupName = "TentacleComponents",
+            PreprocessorVariable = "var.TentacleSource",
+            DirectoryReferenceId = "INSTALLLOCATION"
+        };
 
-    SignAndTimeStamp(builtMsi);
-
-    var platformStr = platformTarget == PlatformTarget.x64
-        ? "-x64"
-        : "";
-
-    var artifactDestination = $"{artifactsDir}/Octopus.Tentacle.{versionInfo.FullSemVer}{platformStr}.msi";
-
-    MoveFile(builtMsi, File(artifactDestination));
+        WiXHeat(harvestDirectory, File(harvestFile), WiXHarvestType.Dir, heatSettings);
+    });
 }
 
-private void CleanBinariesDirectory(string directory)
+private void BuildMsiInstallerForPlatform(PlatformTarget platformTarget)
 {
-    Information($"Cleaning {directory}");
-    DeleteFiles($"{directory}/*.xml");
+    InBlock($"Building {platformTarget} installer", () => {
+        MSBuild("./installer/Octopus.Tentacle.Installer/Octopus.Tentacle.Installer.wixproj", settings =>
+            settings
+                .SetConfiguration("Release")
+                .WithProperty("AllowUpgrade", "True")
+                .SetVerbosity(verbosity)
+                .SetPlatformTarget(platformTarget)
+                .WithTarget("build")
+        );
+        var builtMsi = File($"./installer/Octopus.Tentacle.Installer/bin/{platformTarget}/Octopus.Tentacle.msi");
+
+        SignAndTimeStamp(builtMsi);
+
+        var platformStr = platformTarget == PlatformTarget.x64
+            ? "-x64"
+            : "";
+
+        var artifactDestination = $"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}{platformStr}.msi";
+
+        MoveFile(builtMsi, File(artifactDestination));
+    });
 }
 
-private void CreateLinuxPackage(string architecture)
+private void CreateLinuxPackages(string runtimeId)
 {
-    CopyFile(Path.Combine(Environment.CurrentDirectory, "scripts/configure-tentacle.sh"),Path.Combine(Environment.CurrentDirectory, corePublishDir, $"{architecture}/configure-tentacle.sh"));
+    if (string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY")) )
+    {
+        throw new Exception("This build requires environment variables `SIGN_PRIVATE_KEY` (in a format gpg1 can import)"
+            + " and `SIGN_PASSPHRASE`, which are used to sign the .rpm.");
+    }
+
+    //TODO It's probable that the .deb and .rpm package layouts will be different - and potentially _should already_ be different.
+    // We're approaching this with the assumption that we'll split .deb and .rpm creation soon, which means that we'll create a separate
+    // filesystem layout for each of them. Using .deb for now; expecting to replicate that soon for .rpm.
+    var debBuildDir = $"{buildDir}/deb/{runtimeId}";
+    CreateDirectory($"{debBuildDir}");
+    CreateDirectory($"{debBuildDir}/input");
+    CreateDirectory($"{debBuildDir}/input/scripts");
+    CreateDirectory($"{debBuildDir}/output");
+
+    CopyFiles("./scripts/configure-tentacle.sh", $"{debBuildDir}/input/scripts/");  //TODO this doesn't quite wire up yet.
+
+    // Use fully-qualified paths here so that the bind mount points work correctly.
+    var scriptsBindMountPoint = new System.IO.DirectoryInfo($"./scripts").FullName;
+    var inputBindMountPoint = new System.IO.DirectoryInfo($"{buildDir}/Tentacle/netcoreapp3.1/{runtimeId}/publish").FullName;
+    var outputBindMountPoint = new System.IO.DirectoryInfo($"{debBuildDir}/output").FullName;
+
+    DockerPull("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages");
     DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
@@ -596,15 +576,28 @@ private void CreateLinuxPackage(string architecture)
             "SIGN_PRIVATE_KEY",
             "SIGN_PASSPHRASE"
         },
+        //TODO Impedance mismatch here with paths.
         Volume = new string[] {
-            $"{Path.Combine(Environment.CurrentDirectory, "scripts")}:/scripts",
-            $"{Path.Combine(Environment.CurrentDirectory, corePublishDir, architecture)}:/app",
-            $"{Path.Combine(Environment.CurrentDirectory, artifactsDir)}:/artifacts"
+            $"{scriptsBindMountPoint}:/scripts",
+            $"{inputBindMountPoint}:/app",
+            $"{outputBindMountPoint}:/artifacts"
         }
-    }, "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages", $"bash /scripts/package.sh {architecture}");
+    }, "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages", $"bash /scripts/package.sh {runtimeId}");
+}
 
-    CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp3.1/{architecture}/*.deb", artifactsDir);
-    CopyFiles($"./source/Octopus.Tentacle/bin/netcoreapp3.1/{architecture}/*.rpm", artifactsDir);
+// note: Doesn't check if existing signatures are valid, only that one exists
+// source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
+private bool HasAuthenticodeSignature(FilePath fileInfo)
+{
+    try
+    {
+        X509Certificate.CreateFromSignedFile(fileInfo.FullPath);
+        return true;
+    }
+    catch
+    {
+        return false;
+    }
 }
 
 private void SignAndTimeStamp(params string[] paths)
@@ -615,6 +608,7 @@ private void SignAndTimeStamp(params string[] paths)
         var files = GetFiles(path);
         allFiles.AddRange(files);
     }
+
     SignAndTimeStamp(allFiles.ToArray());
 }
 
@@ -665,19 +659,113 @@ private void SignAndTimeStamp(params FilePath[] filePaths)
     });
 }
 
-//////////////////////////////////////////////////////////////////////
-// TASKS
-//////////////////////////////////////////////////////////////////////
-Task("Default")
-    .IsDependentOn("__Default");
+private string RunProcessAndGetOutput(string fileName, string args) {
+    var stdoutStringBuilder = new StringBuilder();
+    var settings = new ProcessSettings() {
+        Arguments = args,
+        RedirectStandardOutput = true,
+        RedirectedStandardOutputHandler = s => { stdoutStringBuilder.Append(s); return s; }
+     };
 
-Task("DefaultExcludingTests")
-    .IsDependentOn("__DefaultExcludingTests");
+	var exitCode = StartProcess(fileName, settings);
+    var stdout = stdoutStringBuilder.ToString();
 
-Task("LinuxPackage")
-    .IsDependentOn("__LinuxPackage");
+	if(exitCode != 0)
+	{
+		var safeArgs = settings.Arguments.RenderSafe();
+		throw new Exception($"{fileName} {safeArgs} failed with {exitCode} exitcode.");
+	}
 
-//////////////////////////////////////////////////////////////////////
-// EXECUTION
-//////////////////////////////////////////////////////////////////////
+    return stdout;
+}
+
+private void RunProcess(string fileName, string args)
+{
+    var settings = new ProcessSettings() {
+        Arguments = args
+     };
+
+	var exitCode = StartProcess(fileName, settings);
+
+	if(exitCode != 0)
+	{
+		var safeArgs = settings.Arguments.RenderSafe();
+		throw new Exception($"{fileName} {safeArgs} failed with {exitCode} exitcode.");
+	}
+}
+
+private void RunBuildFor(string framework, string runtimeId)
+{
+    // 1. Build everything
+    // 2. If Windows, sign the binaries
+    // 3. Publish everything. This avoids signing binaries twice.
+    var configuration = $"Release-{framework}-{runtimeId}";
+
+    DotNetCoreBuild("./source/Tentacle.sln", new DotNetCoreBuildSettings {
+        Configuration = configuration,
+        Framework = framework,
+        MSBuildSettings = new DotNetCoreMSBuildSettings {
+            MaxCpuCount = 256
+        },
+        NoRestore = true,
+        Runtime = runtimeId
+    });
+
+    if (runtimeId == "win-x64")
+    {
+        // check that any unsigned libraries, that Octopus Deploy authors, get signed to play nice with security scanning tools
+        // refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
+        // decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
+        var windowsOnlyBuiltFileSpec = $"{buildDir}/**/win-x64/**";
+        var filesToSign =
+            GetFiles(
+                $"{windowsOnlyBuiltFileSpec}/**/Octo*.exe",
+                $"{windowsOnlyBuiltFileSpec}/**/Octo*.dll",
+                $"{windowsOnlyBuiltFileSpec}/**/Tentacle.exe",
+                $"{windowsOnlyBuiltFileSpec}/**/Tentacle.dll",
+                $"{windowsOnlyBuiltFileSpec}/**/Halibut.dll",
+                $"{windowsOnlyBuiltFileSpec}/**/Nuget.*.dll"
+            )
+            .Where(f => !HasAuthenticodeSignature(f))
+            .Select(f => f.FullPath)
+            .ToArray();
+
+        SignAndTimeStamp(filesToSign);
+    }
+
+    DotNetCorePublish("./source/Tentacle.sln",
+        new DotNetCorePublishSettings
+        {
+            ArgumentCustomization = args => args.Append($"/p:Version={versionInfo.FullSemVer}"),
+            Configuration = configuration,
+            Framework = framework,
+            NoBuild = true,
+            NoRestore = true,
+            Runtime = runtimeId
+        }
+    );
+}
+
+private void RunTestSuiteFor(string framework, string runtimeId)
+{
+    CreateDirectory($"{artifactsDir}/teamcity");
+
+    // We call dotnet test against the assemblies directly here because calling it against the .sln requires
+    // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
+    // have to shunt them all around the place.
+    // By doing things this way, we can have a seamless experience between local and remote builds.
+    var configuration = $"Release-{framework}-{runtimeId}";
+    var testAssembliesPath = $"{buildDir}/Octopus.Tentacle.Tests/{framework}/{runtimeId}/*.Tests.dll";
+    var testResultsPath = new System.IO.FileInfo($"{artifactsDir}/teamcity/TestResults-{framework}-{runtimeId}.xml").FullName;
+
+    // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
+    // when the test runner is being asked to build things, not when they're already built.
+    // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
+    DotNetCoreTest(testAssembliesPath, new DotNetCoreTestSettings
+    {
+        Framework = framework,
+        ArgumentCustomization = args => args.Append($"--logger \"trx;LogFileName={testResultsPath}\"")
+    });
+}
+
 RunTarget(target);
