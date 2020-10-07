@@ -2,7 +2,7 @@
 // TOOLS
 //////////////////////////////////////////////////////////////////////
 #module nuget:?package=Cake.DotNetTool.Module&version=0.4.0
-#tool "dotnet:?package=OctoVersion.Tool&version=0.0.61"
+#tool "dotnet:?package=OctoVersion.Tool&version=0.0.64"
 #tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
 #tool "nuget:?package=WiX&version=3.11.2"
 #addin "nuget:?package=Cake.Compression&version=0.2.4"
@@ -328,7 +328,7 @@ Task("Pack-CrossPlatformTentacleNuGetPackage")
         CopyFiles($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}*.msi", workingDir); // Windows x86 and x64 .msi files
         CopyFiles($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-*.tar.gz", workingDir);    // Linux and OS/X tarballs
 
-        RunProcess("dotnet", $"octo pack --id=Tentacle --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
+        RunProcess("dotnet", $"octo pack --id=Octopus.Tentacle.CrossPlatformUpgrader --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
     });
 
 Task("Pack-Windows")
@@ -415,9 +415,9 @@ private void EnsureGitBranch()
 
 private VersionInfo DeriveVersionInfo() {
     var octoVersionArgs = TeamCity.IsRunningOnTeamCity ? "--OutputFormats:0=Console --OutputFormats:1=TeamCity" : "--OutputFormats:0=Console";
-    RunProcess("octoversion", $"{octoVersionArgs}");
+    RunProcess("dotnet", $"tool run octoversion {octoVersionArgs}");
 
-    var versionJson = RunProcessAndGetOutput("octoversion", $"--OutputFormats:0=Json");
+    var versionJson = RunProcessAndGetOutput("dotnet", $"tool run octoversion --OutputFormats:0=Json");
     var version = DeserializeJson<VersionInfo>(versionJson);
 
     Information("Building OctopusTentacle {0}", version.FullSemVer);
