@@ -46,9 +46,7 @@ source/Octopus.sln.iml
 
 launchSettings.json
 
-!tools/
-tools/*
-!tools/debian-tools/
+tools
 
 _artifacts
 _build
