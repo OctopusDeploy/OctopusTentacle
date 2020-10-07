@@ -318,7 +318,7 @@ Task("Pack-WindowsInstallers")
         BuildMsiInstallerForPlatform(PlatformTarget.x86);
     });
 
-Task("Pack-CrossPlatformTentacleNuGetPackage")
+Task("Pack-CrossPlatformBundle")
     .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
     .IsDependentOn("Pack-WindowsInstallers")
     .IsDependentOn("Pack-LinuxTarballs")
@@ -328,11 +328,24 @@ Task("Pack-CrossPlatformTentacleNuGetPackage")
 
         var workingDir = $"{buildDir}/tentacle-upgrader";
         CreateDirectory(workingDir);
-        CopyFiles($"./source/Octopus.Upgrader/Tentacle.spec", workingDir);
-        CopyFiles($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}*.msi", workingDir); // Windows x86 and x64 .msi files
-        CopyFiles($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-*.tar.gz", workingDir);    // Linux and OS/X tarballs
 
-        RunProcess("dotnet", $"tool run dotnet-octo pack --id=Octopus.Tentacle.CrossPlatformUpgrader --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
+        // Rather than taking wildcards here, we expressly declare each file so that we can be confident that we have everything.
+        // The copy task will fail hard if a file does not exist.
+        CopyFiles($"./source/Octopus.Upgrader/Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDir);
+        CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi", $"{workingDir}/Octopus.Tentacle.msi");
+        CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi", $"{workingDir}/Octopus.Tentacle-x64.msi");
+        foreach (var framework in frameworks)
+        {
+            foreach (var runtimeId in runtimeIds)
+            {
+                if (framework == "net452" && runtimeId != "win-x64") continue;
+
+                var fileExtension = runtimeId.StartsWith("win-") ? "zip" : "tar.gz";
+                CopyFile($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}", $"{workingDir}/tentacle-{framework}-{runtimeId}.{fileExtension}");
+            }
+        }
+
+        RunProcess("dotnet", $"tool run dotnet-octo pack --id=Octopus.Tentacle.CrossPlatformBundle --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
     });
 
 Task("Pack-Windows")
@@ -356,7 +369,7 @@ Task("Pack-OSX")
 
 Task("Pack")
     .Description("Pack all the artifacts. Notional task - running this on a single host is possible but cumbersome.")
-    .IsDependentOn("Pack-CrossPlatformTentacleNuGetPackage")
+    .IsDependentOn("Pack-CrossPlatformBundle")
     .IsDependentOn("Pack-Windows")
     .IsDependentOn("Pack-Linux")
     .IsDependentOn("Pack-OSX")
@@ -389,7 +402,7 @@ foreach (var framework in frameworks)
 
 Task("Copy-ToLocalPackages")
     .WithCriteria(BuildSystem.IsLocalBuild)
-    .IsDependentOn("Pack-CrossPlatformTentacleNuGetPackage")
+    .IsDependentOn("Pack-CrossPlatformBundle")
     .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
     .Does(() =>
     {
