@@ -2,7 +2,11 @@
 // TOOLS
 //////////////////////////////////////////////////////////////////////
 #module nuget:?package=Cake.DotNetTool.Module&version=0.4.0
-#tool "dotnet:?package=OctoVersion.Tool&version=0.0.64"
+
+// NOTE: This solution uses dotnet core tooling in preference to Cake tools where possible.
+// dotnet tools are installed via the `dotnet tool install` command (not via this Cakefile),
+// and are restored using `dotnet tool restore` on build.
+
 #tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
 #tool "nuget:?package=WiX&version=3.11.2"
 #addin "nuget:?package=Cake.Compression&version=0.2.4"
@@ -262,7 +266,7 @@ Task("Pack-ChocolateyPackage")
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", checksum64Value);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype64>", checksum64.Algorithm.ToString());
 
-        RunProcess("dotnet", $"octo pack --id=OctopusDeploy.Tentacle --version={versionInfo.FullSemVer} --basePath=./source/Chocolatey --outFolder={artifactsDir}/chocolatey");
+        RunProcess("dotnet", $"tool run dotnet-octo pack --id=OctopusDeploy.Tentacle --version={versionInfo.FullSemVer} --basePath=./source/Chocolatey --outFolder={artifactsDir}/chocolatey");
     });
 
 
@@ -328,7 +332,7 @@ Task("Pack-CrossPlatformTentacleNuGetPackage")
         CopyFiles($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}*.msi", workingDir); // Windows x86 and x64 .msi files
         CopyFiles($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-*.tar.gz", workingDir);    // Linux and OS/X tarballs
 
-        RunProcess("dotnet", $"octo pack --id=Octopus.Tentacle.CrossPlatformUpgrader --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
+        RunProcess("dotnet", $"tool run dotnet-octo pack --id=Octopus.Tentacle.CrossPlatformUpgrader --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
     });
 
 Task("Pack-Windows")
