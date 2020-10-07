@@ -23,7 +23,7 @@ COPY docker/linux/scripts/dockerd-entrypoint.sh /usr/local/bin/
 RUN /install-scripts/install-docker.sh
 
 # Install Tentacle
-COPY tentacle_${BUILD_NUMBER}_amd64.deb /tmp/
+COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_amd64.deb /tmp/
 RUN apt-get update && \
     apt install ./tentacle_${BUILD_NUMBER}_amd64.deb && \
     apt-get clean && \
