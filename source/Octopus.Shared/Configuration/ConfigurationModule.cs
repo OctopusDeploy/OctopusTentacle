@@ -35,7 +35,6 @@ namespace Octopus.Shared.Configuration
             }
 
             builder.RegisterType<EnvironmentVariableReader>().As<IEnvironmentVariableReader>();
-            builder.RegisterType<MapEnvironmentVariablesToConfigItems>().As<IMapEnvironmentVariablesToConfigItems>();
 
             builder.RegisterType<PersistedApplicationInstanceStore>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
