@@ -2,7 +2,7 @@
 // TOOLS
 //////////////////////////////////////////////////////////////////////
 #module nuget:?package=Cake.DotNetTool.Module&version=0.4.0
-#tool "dotnet:?package=OctoVersion.Tool&version=0.0.32"
+#tool "dotnet:?package=OctoVersion.Tool&version=0.0.61"
 #tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
 #tool "nuget:?package=WiX&version=3.11.2"
 #addin "nuget:?package=Cake.Compression&version=0.2.4"
