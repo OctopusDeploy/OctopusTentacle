@@ -1,12 +1,18 @@
 #!/bin/bash
 set -eux
 
+# Get the directory of the cucrrently-executing script so that we can call its siblings later.
+# fpm appears to be sensitive to working directories so we don't want to just cd to anywhere.
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+
 # Package tentacle from INPUT_PATH, with executable permission into .deb and .rpm packages (with a /usr/bin symlink)
 # and a .tar.gz archive, placed in OUTPUT_PATH.
 
 echo Package versions will be $VERSION
 echo Will pack content from $INPUT_PATH
 echo Will write artifacts to $OUTPUT_PATH
+
+find $INPUT_PATH
 
 # Ensure that all the scripts in the input path have the correct attributes
 find $INPUT_PATH -name "*.sh" -type f -exec chmod +x {} \;
@@ -27,17 +33,13 @@ elif [ $architecture == "linux-x64" ] ; then
 elif [ $architecture == "linux-musl-x64" ] ; then
   PACKAGE_ARCHITECTURE="x86_64";
 fi
-
-# Trailing slashes here are *important* because the script we're calling is very, very particular.
-BINARIES_PATH="$INPUT_PATH/"
-PACKAGES_PATH="$OUTPUT_PATH/"
 COMMAND_FILE=Tentacle
-INSTALL_PATH=/opt/octopus
+INSTALL_PATH=/opt/octopus/tentacle
 PACKAGE_NAME="tentacle"
 PACKAGE_DESC='Octopus Tentacle package'
 FPM_OPTS=(
-  --after-install "$INPUT_PATH/tentacle/after-install.sh"
-  --before-remove "$INPUT_PATH/tentacle/before-uninstall.sh"
+  --after-install "$INPUT_PATH/after-install.sh"
+  --before-remove "$INPUT_PATH/before-uninstall.sh"
   --architecture "$PACKAGE_ARCHITECTURE"
 )
 FPM_DEB_OPTS=(
@@ -48,4 +50,4 @@ FPM_RPM_OPTS=(
 )
 
 # The script has interstitial errors so we can't use set -e here.
-source create-linux-packages.sh || exit 1
+source $SCRIPT_DIR/create-linux-packages2.sh || exit 1

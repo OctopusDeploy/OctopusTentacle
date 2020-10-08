@@ -29,8 +29,33 @@ using System.Security.Cryptography.X509Certificates;
 //////////////////////////////////////////////////////////////////////
 var target = Argument("target", "Default");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
-var runtimeIds =  new [] { "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "osx-x64" };
 var frameworks = new [] { "net452", "netcoreapp3.1" };
+var runtimeIds =  new [] { "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "osx-x64" };
+var testOnLinuxDistributions = new Dictionary<string, string[]> {
+    { "deb", new string[]
+        {
+            "debian:buster",
+            "debian:oldoldstable-slim",
+            "debian:oldstable-slim",
+            "debian:stable-slim",
+            "linuxmintd/mint19.3-amd64",
+            "ubuntu:latest",
+            "ubuntu:rolling",
+            "ubuntu:trusty",
+            "ubuntu:xenial",
+        }
+    },
+    { "rpm", new string[]
+        {
+            "centos:latest",
+            "centos:7",
+            "fedora:latest",
+            "roboxes/rhel7",
+            "roboxes/rhel8",
+        }
+    }
+
+};
 
 var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
 var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
@@ -414,6 +439,33 @@ foreach (var framework in frameworks)
     }
 }
 
+var testLinuxPackagesTask = Task("Test-LinuxPackages")
+    .Description("Tests installing the .deb and .rpm packages onto all of the Linux target distributions.")
+    .Does(() => {
+        InTestSuite("Test-LinuxPackages", () => {
+            foreach (var framework in frameworks)
+            {
+                if (!framework.StartsWith("netcore")) continue;
+
+                foreach (var runtimeId in runtimeIds)
+                {
+                    if (!runtimeId.StartsWith("linux-")) continue;
+
+                    var packageTypes = new [] { "deb", "rpm" };
+                    foreach (var packageType in packageTypes)
+                    {
+                        var baseDockerImagesToTest = testOnLinuxDistributions[packageType];
+                        foreach (var dockerImage in baseDockerImagesToTest)
+                        {
+                            RunLinuxPackageTestsFor(framework, runtimeId, dockerImage, packageType);
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+
 Task("Copy-ToLocalPackages")
     .WithCriteria(BuildSystem.IsLocalBuild)
     .IsDependentOn("Pack-CrossPlatformBundle")
@@ -440,6 +492,12 @@ private string DeriveGitBranch()
     if (string.IsNullOrEmpty(branch))
     {
         Warning("Git branch not available from environment variable. Attempting to work it out for ourselves. DANGER: Don't rely on this on your build server!");
+        if (TeamCity.IsRunningOnTeamCity)
+        {
+            Console.WriteLine("##teamcity[message text='Git branch not available from environment variable' status='FAILURE']");
+            Console.WriteLine("##teamcity[buildStop comment='Git branch not available from environment variable' readdToQueue='false']");
+        }
+
         branch = "refs/heads/" + RunProcessAndGetOutput("git", "rev-parse --abbrev-ref HEAD");
     }
 
@@ -482,6 +540,42 @@ private void InBlock(string block, Action action)
             TeamCity.WriteEndBlock(block);
         else
             Information($"Finished {block}");
+    }
+}
+
+private void InTestSuite(string testSuite, Action action)
+{
+    if (TeamCity.IsRunningOnTeamCity) Console.WriteLine($"##teamcity[testSuiteStarted name='{testSuite}']");
+
+    try
+    {
+        action();
+    }
+    finally
+    {
+        if (TeamCity.IsRunningOnTeamCity) Console.WriteLine($"##teamcity[testSuiteFinished name='{testSuite}']");
+    }
+}
+
+private void InTest(string test, Action action)
+{
+    var startTime = DateTimeOffset.UtcNow;
+
+    try
+    {
+        if (TeamCity.IsRunningOnTeamCity) Console.WriteLine($"##teamcity[testStarted name='{test}' captureStandardOutput='true']");
+        action();
+    }
+    catch (Exception ex)
+    {
+        if (TeamCity.IsRunningOnTeamCity) Console.WriteLine($"##teamcity[testFailed name='{test}' message='{ex.Message}']");
+        Error(ex.ToString());
+    }
+    finally
+    {
+        var finishTime = DateTimeOffset.UtcNow;
+        var elapsed = finishTime - startTime;
+        if (TeamCity.IsRunningOnTeamCity) Console.WriteLine($"##teamcity[testFinished name='{test}' duration='{elapsed.TotalMilliseconds}']");
     }
 }
 
@@ -571,12 +665,10 @@ private void CreateLinuxPackages(string runtimeId)
     CreateDirectory($"{debBuildDir}/scripts");
     CreateDirectory($"{debBuildDir}/output");
 
-    CopyFiles("./scripts/configure-tentacle.sh", $"{debBuildDir}/input/scripts/");  //TODO this doesn't quite wire up yet.
-
     // Use fully-qualified paths here so that the bind mount points work correctly.
     CopyFiles($"./linux-packages/packaging-scripts/*", $"{debBuildDir}/scripts/");
     var scriptsBindMountPoint = new System.IO.DirectoryInfo($"{debBuildDir}/scripts").FullName;
-    var inputBindMountPoint = new System.IO.DirectoryInfo($"{buildDir}/zip/netcoreapp3.1/{runtimeId}").FullName;
+    var inputBindMountPoint = new System.IO.DirectoryInfo($"{buildDir}/zip/netcoreapp3.1/{runtimeId}/tentacle").FullName;
     var outputBindMountPoint = new System.IO.DirectoryInfo($"{debBuildDir}/output").FullName;
 
     DockerPull("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest");
@@ -596,6 +688,49 @@ private void CreateLinuxPackages(string runtimeId)
             $"{outputBindMountPoint}:/output"
         }
     }, "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest", $"bash /scripts/package.sh {runtimeId}");
+}
+
+private void RunLinuxPackageTestsFor(string framework, string runtimeId, string dockerImage, string packageType)
+{
+    InTest($"{framework}/{runtimeId}/{dockerImage}/{packageType}", () => {
+        string archSuffix = null;
+        if (packageType == "deb")
+        {
+            if (runtimeId == "linux-x64") archSuffix = "_amd64";
+        } else if (packageType == "rpm")
+        {
+            if (runtimeId == "linux-x64") archSuffix = ".x86_64";
+        }
+        if (string.IsNullOrEmpty(archSuffix)) throw new NotSupportedException();
+
+        var packageFileSpec = $"_artifacts/{packageType}/*{archSuffix}.{packageType}";
+        Information($"Searching for files in {packageFileSpec}");
+        var packageFile = new System.IO.FileInfo(GetFiles(packageFileSpec).AsEnumerable().Single().FullPath);
+        Information($"Testing Linux package file {packageFile.Name}");
+
+        var testScriptsBindMountPoint = new System.IO.DirectoryInfo($"linux-packages/test-scripts").FullName;
+        var artifactsBindMountPoint = new System.IO.DirectoryInfo($"_artifacts").FullName;
+
+        DockerPull(dockerImage);
+        DockerRunWithoutResult(new DockerContainerRunSettings {
+            Rm = true,
+            Tty = true,
+            Env = new string[] {
+                $"VERSION={versionInfo.FullSemVer}",
+                "INPUT_PATH=/input",
+                "OUTPUT_PATH=/output",
+                "SIGN_PRIVATE_KEY",
+                "SIGN_PASSPHRASE",
+                "REDHAT_SUBSCRIPTION_USERNAME",
+                "REDHAT_SUBSCRIPTION_PASSWORD",
+                $"BUILD_NUMBER={versionInfo.FullSemVer}"
+            },
+            Volume = new string[] {
+                $"{testScriptsBindMountPoint}:/test-scripts:ro",
+                $"{artifactsBindMountPoint}:/artifacts:ro"
+            }
+        }, dockerImage, $"bash /test-scripts/test-linux-package.sh /artifacts/{packageType}/{packageFile.Name}");
+    });
 }
 
 // note: Doesn't check if existing signatures are valid, only that one exists
