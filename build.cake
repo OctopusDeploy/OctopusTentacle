@@ -202,7 +202,11 @@ Task("Pack-WindowsZips")
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
-                Zip($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.zip");
+                var workingDir = $"{buildDir}/zip/{framework}/{runtimeId}";
+                CreateDirectory(workingDir);
+                CreateDirectory($"{workingDir}/tentacle");
+                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish/*", $"{workingDir}/tentacle/");
+                Zip($"{workingDir}", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.zip");
             }
         }
     });
@@ -220,7 +224,12 @@ Task("Pack-LinuxTarballs")
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
-                GZipCompress($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                var workingDir = $"{buildDir}/zip/{framework}/{runtimeId}";
+                CreateDirectory(workingDir);
+                CreateDirectory($"{workingDir}/tentacle");
+                CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
+                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish/*", $"{workingDir}/tentacle/");
+                GZipCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -238,7 +247,12 @@ Task("Pack-OSXTarballs")
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
-                GZipCompress($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                var workingDir = $"{buildDir}/zip/{framework}/{runtimeId}";
+                CreateDirectory(workingDir);
+                CreateDirectory($"{workingDir}/tentacle");
+                CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
+                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish/*", $"{workingDir}/tentacle/");
+                GZipCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -554,35 +568,34 @@ private void CreateLinuxPackages(string runtimeId)
     // filesystem layout for each of them. Using .deb for now; expecting to replicate that soon for .rpm.
     var debBuildDir = $"{buildDir}/deb/{runtimeId}";
     CreateDirectory($"{debBuildDir}");
-    CreateDirectory($"{debBuildDir}/input");
-    CreateDirectory($"{debBuildDir}/input/scripts");
+    CreateDirectory($"{debBuildDir}/scripts");
     CreateDirectory($"{debBuildDir}/output");
 
     CopyFiles("./scripts/configure-tentacle.sh", $"{debBuildDir}/input/scripts/");  //TODO this doesn't quite wire up yet.
 
     // Use fully-qualified paths here so that the bind mount points work correctly.
-    var scriptsBindMountPoint = new System.IO.DirectoryInfo($"./scripts").FullName;
-    var inputBindMountPoint = new System.IO.DirectoryInfo($"{buildDir}/Tentacle/netcoreapp3.1/{runtimeId}/publish").FullName;
+    CopyFiles($"./linux-packages/packaging-scripts/*", $"{debBuildDir}/scripts/");
+    var scriptsBindMountPoint = new System.IO.DirectoryInfo($"{debBuildDir}/scripts").FullName;
+    var inputBindMountPoint = new System.IO.DirectoryInfo($"{buildDir}/zip/netcoreapp3.1/{runtimeId}").FullName;
     var outputBindMountPoint = new System.IO.DirectoryInfo($"{debBuildDir}/output").FullName;
 
-    DockerPull("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages");
+    DockerPull("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest");
     DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
         Env = new string[] {
             $"VERSION={versionInfo.FullSemVer}",
-            "BINARIES_PATH=/app/",
-            "PACKAGES_PATH=/artifacts",
+            "INPUT_PATH=/input",
+            "OUTPUT_PATH=/output",
             "SIGN_PRIVATE_KEY",
             "SIGN_PASSPHRASE"
         },
-        //TODO Impedance mismatch here with paths.
         Volume = new string[] {
             $"{scriptsBindMountPoint}:/scripts",
-            $"{inputBindMountPoint}:/app",
-            $"{outputBindMountPoint}:/artifacts"
+            $"{inputBindMountPoint}:/input",
+            $"{outputBindMountPoint}:/output"
         }
-    }, "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages", $"bash /scripts/package.sh {runtimeId}");
+    }, "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest", $"bash /scripts/package.sh {runtimeId}");
 }
 
 // note: Doesn't check if existing signatures are valid, only that one exists
