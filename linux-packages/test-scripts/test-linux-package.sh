@@ -4,25 +4,16 @@ set -eux
 # Test that the tentacle*.deb or tentacle*.rpm package installs a Tentacle command that runs successfully.
 
 PACKAGE_FILENAME="$1"
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 
-# Install Tentacle
-set +e
-if apt-get --version 2> /dev/null; then
-  set -e
-  apt-get update
-  apt install -y --no-install-recommends "$PACKAGE_FILENAME"
-elif yum --version 2> /dev/null; then
-  set -e
-  yum --quiet --assumeyes localinstall "$PACKAGE_FILENAME"
-else
-  set -e
-  echo "No supported package management tools found."
-  exit 1
-fi
-echo "Tentacle package was successfully installed."
-echo ""
+stat "$PACKAGE_FILENAME"
 
-set +x
+pwd
+ls -la
+ls -la $PACKAGE_FILENAME
+ls -la /test-scripts
+
+$SCRIPT_DIR/install-package.sh "$PACKAGE_FILENAME"
 
 # Confirm that Tentacle is on the path
 # We don't use `which Tentacle` here as, although Tentacle should have been installed, we can't trust that `which` exists.
