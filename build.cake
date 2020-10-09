@@ -29,8 +29,24 @@ using System.Security.Cryptography.X509Certificates;
 //////////////////////////////////////////////////////////////////////
 var target = Argument("target", "Default");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
-var runtimeIds =  new [] { "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "osx-x64" };
 var frameworks = new [] { "net452", "netcoreapp3.1" };
+var runtimeIds =  new [] { "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "osx-x64" };
+var testOnLinuxDistributions = new string[][] {
+    new [] { "netcoreapp3.1", "linux-x64", "debian:buster", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "debian:oldoldstable-slim", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "debian:oldstable-slim", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "debian:stable-slim", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "linuxmintd/mint19.3-amd64", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "ubuntu:latest", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "ubuntu:rolling", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "ubuntu:trusty", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "ubuntu:xenial", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "centos:latest", "rpm" },
+    new [] { "netcoreapp3.1", "linux-x64", "centos:7", "rpm" },
+    new [] { "netcoreapp3.1", "linux-x64", "fedora:latest", "rpm" },
+    new [] { "netcoreapp3.1", "linux-x64", "roboxes/rhel7", "rpm" },
+    new [] { "netcoreapp3.1", "linux-x64", "roboxes/rhel8", "rpm" },
+};
 
 var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
 var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
@@ -202,7 +218,11 @@ Task("Pack-WindowsZips")
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
-                Zip($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.zip");
+                var workingDir = $"{buildDir}/zip/{framework}/{runtimeId}";
+                CreateDirectory(workingDir);
+                CreateDirectory($"{workingDir}/tentacle");
+                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish/*", $"{workingDir}/tentacle/");
+                Zip($"{workingDir}", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.zip");
             }
         }
     });
@@ -220,7 +240,12 @@ Task("Pack-LinuxTarballs")
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
-                GZipCompress($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                var workingDir = $"{buildDir}/zip/{framework}/{runtimeId}";
+                CreateDirectory(workingDir);
+                CreateDirectory($"{workingDir}/tentacle");
+                CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
+                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish/*", $"{workingDir}/tentacle/");
+                GZipCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -238,7 +263,12 @@ Task("Pack-OSXTarballs")
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
-                GZipCompress($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                var workingDir = $"{buildDir}/zip/{framework}/{runtimeId}";
+                CreateDirectory(workingDir);
+                CreateDirectory($"{workingDir}/tentacle");
+                CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
+                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish/*", $"{workingDir}/tentacle/");
+                GZipCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -400,6 +430,23 @@ foreach (var framework in frameworks)
     }
 }
 
+var testLinuxPackagesTask = Task("Test-LinuxPackages")
+    .Description("Tests installing the .deb and .rpm packages onto all of the Linux target distributions.")
+    .Does(() => {
+        InTestSuite("Test-LinuxPackages", () => {
+            foreach (var testConfiguration in testOnLinuxDistributions)
+            {
+                var framework = testConfiguration[0];
+                var runtimeId = testConfiguration[1];
+                var dockerImage = testConfiguration[2];
+                var packageType = testConfiguration[3];
+
+                RunLinuxPackageTestsFor(framework, runtimeId, dockerImage, packageType);
+            }
+        });
+    });
+
+
 Task("Copy-ToLocalPackages")
     .WithCriteria(BuildSystem.IsLocalBuild)
     .IsDependentOn("Pack-CrossPlatformBundle")
@@ -426,6 +473,12 @@ private string DeriveGitBranch()
     if (string.IsNullOrEmpty(branch))
     {
         Warning("Git branch not available from environment variable. Attempting to work it out for ourselves. DANGER: Don't rely on this on your build server!");
+        if (TeamCity.IsRunningOnTeamCity)
+        {
+            Console.WriteLine("##teamcity[message text='Git branch not available from environment variable' status='FAILURE']");
+            Console.WriteLine("##teamcity[buildStop comment='Git branch not available from environment variable' readdToQueue='false']");
+        }
+
         branch = "refs/heads/" + RunProcessAndGetOutput("git", "rev-parse --abbrev-ref HEAD");
     }
 
@@ -468,6 +521,42 @@ private void InBlock(string block, Action action)
             TeamCity.WriteEndBlock(block);
         else
             Information($"Finished {block}");
+    }
+}
+
+private void InTestSuite(string testSuite, Action action)
+{
+    if (TeamCity.IsRunningOnTeamCity) Console.WriteLine($"##teamcity[testSuiteStarted name='{testSuite}']");
+
+    try
+    {
+        action();
+    }
+    finally
+    {
+        if (TeamCity.IsRunningOnTeamCity) Console.WriteLine($"##teamcity[testSuiteFinished name='{testSuite}']");
+    }
+}
+
+private void InTest(string test, Action action)
+{
+    var startTime = DateTimeOffset.UtcNow;
+
+    try
+    {
+        if (TeamCity.IsRunningOnTeamCity) Console.WriteLine($"##teamcity[testStarted name='{test}' captureStandardOutput='true']");
+        action();
+    }
+    catch (Exception ex)
+    {
+        if (TeamCity.IsRunningOnTeamCity) Console.WriteLine($"##teamcity[testFailed name='{test}' message='{ex.Message}']");
+        Error(ex.ToString());
+    }
+    finally
+    {
+        var finishTime = DateTimeOffset.UtcNow;
+        var elapsed = finishTime - startTime;
+        if (TeamCity.IsRunningOnTeamCity) Console.WriteLine($"##teamcity[testFinished name='{test}' duration='{elapsed.TotalMilliseconds}']");
     }
 }
 
@@ -554,35 +643,75 @@ private void CreateLinuxPackages(string runtimeId)
     // filesystem layout for each of them. Using .deb for now; expecting to replicate that soon for .rpm.
     var debBuildDir = $"{buildDir}/deb/{runtimeId}";
     CreateDirectory($"{debBuildDir}");
-    CreateDirectory($"{debBuildDir}/input");
-    CreateDirectory($"{debBuildDir}/input/scripts");
+    CreateDirectory($"{debBuildDir}/scripts");
     CreateDirectory($"{debBuildDir}/output");
 
-    CopyFiles("./scripts/configure-tentacle.sh", $"{debBuildDir}/input/scripts/");  //TODO this doesn't quite wire up yet.
-
     // Use fully-qualified paths here so that the bind mount points work correctly.
-    var scriptsBindMountPoint = new System.IO.DirectoryInfo($"./scripts").FullName;
-    var inputBindMountPoint = new System.IO.DirectoryInfo($"{buildDir}/Tentacle/netcoreapp3.1/{runtimeId}/publish").FullName;
+    CopyFiles($"./linux-packages/packaging-scripts/*", $"{debBuildDir}/scripts/");
+    var scriptsBindMountPoint = new System.IO.DirectoryInfo($"{debBuildDir}/scripts").FullName;
+    var inputBindMountPoint = new System.IO.DirectoryInfo($"{buildDir}/zip/netcoreapp3.1/{runtimeId}/tentacle").FullName;
     var outputBindMountPoint = new System.IO.DirectoryInfo($"{debBuildDir}/output").FullName;
 
-    DockerPull("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages");
+    DockerPull("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest");
     DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
         Env = new string[] {
             $"VERSION={versionInfo.FullSemVer}",
-            "BINARIES_PATH=/app/",
-            "PACKAGES_PATH=/artifacts",
+            "INPUT_PATH=/input",
+            "OUTPUT_PATH=/output",
             "SIGN_PRIVATE_KEY",
             "SIGN_PASSPHRASE"
         },
-        //TODO Impedance mismatch here with paths.
         Volume = new string[] {
             $"{scriptsBindMountPoint}:/scripts",
-            $"{inputBindMountPoint}:/app",
-            $"{outputBindMountPoint}:/artifacts"
+            $"{inputBindMountPoint}:/input",
+            $"{outputBindMountPoint}:/output"
         }
-    }, "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages", $"bash /scripts/package.sh {runtimeId}");
+    }, "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest", $"bash /scripts/package.sh {runtimeId}");
+}
+
+private void RunLinuxPackageTestsFor(string framework, string runtimeId, string dockerImage, string packageType)
+{
+    InTest($"{framework}/{runtimeId}/{dockerImage}/{packageType}", () => {
+        string archSuffix = null;
+        if (packageType == "deb")
+        {
+            if (runtimeId == "linux-x64") archSuffix = "_amd64";
+        } else if (packageType == "rpm")
+        {
+            if (runtimeId == "linux-x64") archSuffix = ".x86_64";
+        }
+        if (string.IsNullOrEmpty(archSuffix)) throw new NotSupportedException();
+
+        var packageFileSpec = $"_artifacts/{packageType}/*{archSuffix}.{packageType}";
+        Information($"Searching for files in {packageFileSpec}");
+        var packageFile = new System.IO.FileInfo(GetFiles(packageFileSpec).AsEnumerable().Single().FullPath);
+        Information($"Testing Linux package file {packageFile.Name}");
+
+        var testScriptsBindMountPoint = new System.IO.DirectoryInfo($"linux-packages/test-scripts").FullName;
+        var artifactsBindMountPoint = new System.IO.DirectoryInfo($"_artifacts").FullName;
+
+        DockerPull(dockerImage);
+        DockerRunWithoutResult(new DockerContainerRunSettings {
+            Rm = true,
+            Tty = true,
+            Env = new string[] {
+                $"VERSION={versionInfo.FullSemVer}",
+                "INPUT_PATH=/input",
+                "OUTPUT_PATH=/output",
+                "SIGN_PRIVATE_KEY",
+                "SIGN_PASSPHRASE",
+                "REDHAT_SUBSCRIPTION_USERNAME",
+                "REDHAT_SUBSCRIPTION_PASSWORD",
+                $"BUILD_NUMBER={versionInfo.FullSemVer}"
+            },
+            Volume = new string[] {
+                $"{testScriptsBindMountPoint}:/test-scripts:ro",
+                $"{artifactsBindMountPoint}:/artifacts:ro"
+            }
+        }, dockerImage, $"bash /test-scripts/test-linux-package.sh /artifacts/{packageType}/{packageFile.Name}");
+    });
 }
 
 // note: Doesn't check if existing signatures are valid, only that one exists
@@ -758,14 +887,22 @@ private void RunTestSuiteFor(string framework, string runtimeId)
     var testAssembliesPath = $"{buildDir}/Octopus.Tentacle.Tests/{framework}/{runtimeId}/*.Tests.dll";
     var testResultsPath = new System.IO.FileInfo($"{artifactsDir}/teamcity/TestResults-{framework}-{runtimeId}.xml").FullName;
 
-    // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
-    // when the test runner is being asked to build things, not when they're already built.
-    // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
-    DotNetCoreTest(testAssembliesPath, new DotNetCoreTestSettings
+    try
     {
-        Framework = framework,
-        ArgumentCustomization = args => args.Append($"--logger \"trx;LogFileName={testResultsPath}\"")
-    });
+        // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
+        // when the test runner is being asked to build things, not when they're already built.
+        // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
+        DotNetCoreTest(testAssembliesPath, new DotNetCoreTestSettings
+        {
+            Framework = framework,
+            ArgumentCustomization = args => args.Append($"--logger \"trx;LogFileName={testResultsPath}\"")
+        });
+    }
+    catch (Exception ex)
+    {
+        // We want Cake to continue running even if tests fail. It's the responsibility of the build system to inspect
+        // the test results files and assert on whether a failed test should fail the build. E.g. muted, ignored tests.
+    }
 }
 
 RunTarget(target);
