@@ -887,14 +887,22 @@ private void RunTestSuiteFor(string framework, string runtimeId)
     var testAssembliesPath = $"{buildDir}/Octopus.Tentacle.Tests/{framework}/{runtimeId}/*.Tests.dll";
     var testResultsPath = new System.IO.FileInfo($"{artifactsDir}/teamcity/TestResults-{framework}-{runtimeId}.xml").FullName;
 
-    // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
-    // when the test runner is being asked to build things, not when they're already built.
-    // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
-    DotNetCoreTest(testAssembliesPath, new DotNetCoreTestSettings
+    try
     {
-        Framework = framework,
-        ArgumentCustomization = args => args.Append($"--logger \"trx;LogFileName={testResultsPath}\"")
-    });
+        // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
+        // when the test runner is being asked to build things, not when they're already built.
+        // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
+        DotNetCoreTest(testAssembliesPath, new DotNetCoreTestSettings
+        {
+            Framework = framework,
+            ArgumentCustomization = args => args.Append($"--logger \"trx;LogFileName={testResultsPath}\"")
+        });
+    }
+    catch (Exception ex)
+    {
+        // We want Cake to continue running even if tests fail. It's the responsibility of the build system to inspect
+        // the test results files and assert on whether a failed test should fail the build. E.g. muted, ignored tests.
+    }
 }
 
 RunTarget(target);
