@@ -50,4 +50,4 @@ FPM_RPM_OPTS=(
 )
 
 # The script has interstitial errors so we can't use set -e here.
-source $SCRIPT_DIR/create-linux-packages2.sh || exit 1
+source $SCRIPT_DIR/create-linux-packages.sh || exit 1
