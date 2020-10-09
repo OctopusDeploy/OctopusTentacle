@@ -7,13 +7,7 @@ PACKAGE_FILENAME="$1"
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 
 stat "$PACKAGE_FILENAME"
-
-pwd
-ls -la
-ls -la $PACKAGE_FILENAME
-ls -la /test-scripts
-
-$SCRIPT_DIR/install-package.sh "$PACKAGE_FILENAME"
+. $SCRIPT_DIR/install-package.sh "$PACKAGE_FILENAME"
 
 # Confirm that Tentacle is on the path
 # We don't use `which Tentacle` here as, although Tentacle should have been installed, we can't trust that `which` exists.

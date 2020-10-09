@@ -18,7 +18,7 @@ if apt-get --version 2> /dev/null; then
 
 elif yum --version 2> /dev/null; then
   set -e
-  yum --quiet --assumeyes localinstall *
+  yum --quiet --assumeyes localinstall $PACKAGE_FILENAME
 else
   set -e
   echo "No supported package management tools found."

@@ -31,30 +31,21 @@ var target = Argument("target", "Default");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
 var frameworks = new [] { "net452", "netcoreapp3.1" };
 var runtimeIds =  new [] { "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "osx-x64" };
-var testOnLinuxDistributions = new Dictionary<string, string[]> {
-    { "deb", new string[]
-        {
-            "debian:buster",
-            "debian:oldoldstable-slim",
-            "debian:oldstable-slim",
-            "debian:stable-slim",
-            "linuxmintd/mint19.3-amd64",
-            "ubuntu:latest",
-            "ubuntu:rolling",
-            "ubuntu:trusty",
-            "ubuntu:xenial",
-        }
-    },
-    { "rpm", new string[]
-        {
-            "centos:latest",
-            "centos:7",
-            "fedora:latest",
-            "roboxes/rhel7",
-            "roboxes/rhel8",
-        }
-    }
-
+var testOnLinuxDistributions = new string[][] {
+    new [] { "netcoreapp3.1", "linux-x64", "debian:buster", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "debian:oldoldstable-slim", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "debian:oldstable-slim", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "debian:stable-slim", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "linuxmintd/mint19.3-amd64", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "ubuntu:latest", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "ubuntu:rolling", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "ubuntu:trusty", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "ubuntu:xenial", "deb" },
+    new [] { "netcoreapp3.1", "linux-x64", "centos:latest", "rpm" },
+    new [] { "netcoreapp3.1", "linux-x64", "centos:7", "rpm" },
+    new [] { "netcoreapp3.1", "linux-x64", "fedora:latest", "rpm" },
+    new [] { "netcoreapp3.1", "linux-x64", "roboxes/rhel7", "rpm" },
+    new [] { "netcoreapp3.1", "linux-x64", "roboxes/rhel8", "rpm" },
 };
 
 var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
@@ -443,24 +434,14 @@ var testLinuxPackagesTask = Task("Test-LinuxPackages")
     .Description("Tests installing the .deb and .rpm packages onto all of the Linux target distributions.")
     .Does(() => {
         InTestSuite("Test-LinuxPackages", () => {
-            foreach (var framework in frameworks)
+            foreach (var testConfiguration in testOnLinuxDistributions)
             {
-                if (!framework.StartsWith("netcore")) continue;
+                var framework = testConfiguration[0];
+                var runtimeId = testConfiguration[1];
+                var dockerImage = testConfiguration[2];
+                var packageType = testConfiguration[3];
 
-                foreach (var runtimeId in runtimeIds)
-                {
-                    if (!runtimeId.StartsWith("linux-")) continue;
-
-                    var packageTypes = new [] { "deb", "rpm" };
-                    foreach (var packageType in packageTypes)
-                    {
-                        var baseDockerImagesToTest = testOnLinuxDistributions[packageType];
-                        foreach (var dockerImage in baseDockerImagesToTest)
-                        {
-                            RunLinuxPackageTestsFor(framework, runtimeId, dockerImage, packageType);
-                        }
-                    }
-                }
+                RunLinuxPackageTestsFor(framework, runtimeId, dockerImage, packageType);
             }
         });
     });
