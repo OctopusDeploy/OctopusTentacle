@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "pattern": "_artifacts/chocolatey/*.nupkg",
+      "target": "chocolatey"
+    },
+    {
+      "pattern": "_artifacts/msi/*.msi",
+      "target": "msi"
+    },
+    {
+      "pattern": "_artifacts/zip/*",
+      "target": "zip"
+    }
+  ]
+}
