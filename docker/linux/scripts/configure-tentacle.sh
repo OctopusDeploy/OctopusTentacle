@@ -8,7 +8,7 @@ function getPublicHostName() {
 	if [[ $1 == 'PublicIp' ]]; then
 		curl https://api.ipify.org/
 	elif [[ $1 == 'FQDN' ]]; then
-		
+		echo "NotSupported"
 	elif [[ $1 == 'ComputerName' ]]; then
 		hostname
 	else
