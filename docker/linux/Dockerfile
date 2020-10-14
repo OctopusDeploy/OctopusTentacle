@@ -34,7 +34,7 @@ WORKDIR /
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
-ENV ServerUrl="https://octopus.example.com/"
+ENV ServerUrl=""
 ENV ServerPort=""
 ENV ServerApiKey=""
 ENV Space="Default"
@@ -43,9 +43,9 @@ ENV MachinePolicy="Default Machine Policy"
 ENV CommunicationsStype=TentacleActive
 ENV DISABLE_DIND=N
 ENV ACCEPT_EULA=N
-ENV ServerUsername="admin"
-ENV ServerPassword="PasswordGoesHere"
-ENV TargetEnvironment="Development"
+ENV ServerUsername=""
+ENV ServerPassword=""
+ENV TargetEnvironment=""
 ENV TargetRole="docker"
 ENV TargetName="Tentacle"
 ENV ListeningPort=""
