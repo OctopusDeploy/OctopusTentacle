@@ -13,15 +13,15 @@ namespace Octopus.Shared.Startup
     {
         readonly ILog log;
         HashSet<string>? instances;
-        readonly IPersistedApplicationInstanceStore applicationInstanceStore;
+        readonly IPersistedApplicationConfigurationStore applicationConfigurationStore;
         readonly ApplicationName applicationName;
 
         public CheckServicesCommand(ILog log,
-            IPersistedApplicationInstanceStore applicationInstanceStore,
+            IPersistedApplicationConfigurationStore applicationConfigurationStore,
             ApplicationName applicationName)
         {
             this.log = log;
-            this.applicationInstanceStore = applicationInstanceStore;
+            this.applicationConfigurationStore = applicationConfigurationStore;
             this.applicationName = applicationName;
 
             Options.Add("instances=", "Comma-separated list of instances to check, or * to check all instances", v =>
@@ -39,7 +39,7 @@ namespace Octopus.Shared.Startup
             var serviceControllers = ServiceController.GetServices();
             try
             {
-                foreach (var instance in applicationInstanceStore.ListInstances())
+                foreach (var instance in applicationConfigurationStore.ListInstances())
                 {
                     if (!startAll && instances.Contains(instance.InstanceName) == false)
                         continue;

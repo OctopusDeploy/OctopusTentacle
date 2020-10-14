@@ -12,7 +12,7 @@ namespace Octopus.Shared.Startup
         readonly string serviceDescription;
         readonly Assembly assemblyContainingService;
         readonly ApplicationName applicationName;
-        readonly IPersistedApplicationInstanceStore instanceStore;
+        readonly IPersistedApplicationConfigurationStore instanceStore;
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
@@ -22,7 +22,7 @@ namespace Octopus.Shared.Startup
         string? instanceName;
 
         public ServiceCommand(ApplicationName applicationName,
-            IPersistedApplicationInstanceStore instanceStore,
+            IPersistedApplicationConfigurationStore instanceStore,
             IApplicationInstanceSelector instanceSelector,
             string serviceDescription,
             Assembly assemblyContainingService,

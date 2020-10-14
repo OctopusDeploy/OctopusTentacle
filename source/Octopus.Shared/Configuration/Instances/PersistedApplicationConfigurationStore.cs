@@ -10,7 +10,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class PersistedApplicationConfigurationStore : IPersistedApplicationInstanceStore, IApplicationConfigurationStrategy
+    public class PersistedApplicationConfigurationStore : IPersistedApplicationConfigurationStore, IApplicationConfigurationStrategy
     {
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly ILog log;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public interface IPersistedApplicationInstanceStore : IApplicationConfigurationWithMultipleInstances
+    public interface IPersistedApplicationConfigurationStore : IApplicationConfigurationWithMultipleInstances
     {
         bool AnyInstancesConfigured();
         PersistedApplicationInstanceRecord? GetInstance(string? instanceName);
