@@ -46,7 +46,21 @@ if [[ ! -z "$WorkerPool" ]]; then
 		ARGS+=('--workerpool' $i)
 	done
 else
-	  ARGS+=('register-with')
+	ARGS+=('register-with')
+	  
+	if [[ ! -z "$TargetEnvironment" ]]; then
+		IFS=',' read -ra ENVIRONMENTS <<< "$TargetEnvironment"
+		for i in "${ENVIRONMENTS[@]}"; do
+			ARGS+=('--environment' $i)
+		done
+	fi
+	
+	if [[ ! -z "$TargetRole" ]]; then
+		IFS=',' read -ra ROLES <<< "$TargetRole"
+		for i in "${ROLES[@]}"; do
+			ARGS+=('--role' $i)
+		done
+	fi
 fi
 
 ARGS+=(
@@ -76,20 +90,6 @@ fi
 
 if [[ ! -z "$TargetName" ]]; then
 	ARGS+=('--name' $TargetName)
-fi
-
-if [[ ! -z "$TargetEnvironment" ]]; then
-	IFS=',' read -ra ENVIRONMENTS <<< "$TargetEnvironment"
-	for i in "${ENVIRONMENTS[@]}"; do
-		ARGS+=('--environment' $i)
-	done
-fi
-
-if [[ ! -z "$TargetRole" ]]; then
-	IFS=',' read -ra ROLES <<< "$TargetRole"
-	for i in "${ROLES[@]}"; do
-		ARGS+=('--role' $i)
-	done
 fi
 
 tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config"
