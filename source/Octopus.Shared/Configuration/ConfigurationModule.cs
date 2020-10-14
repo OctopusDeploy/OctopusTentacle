@@ -65,6 +65,12 @@ namespace Octopus.Shared.Configuration
                 return selector.GetCurrentConfiguration();
             }).As<IKeyValueStore>().SingleInstance();
 
+            builder.Register(c =>
+            {
+                var selector = c.Resolve<IApplicationInstanceSelector>();
+                return selector.GetWritableCurrentConfiguration();
+            }).As<IWritableKeyValueStore>().SingleInstance();
+
             builder.RegisterType<HomeConfiguration>()
                 .WithParameter("application", startUpInstanceRequest.ApplicationName)
                 .As<IHomeConfiguration>()
