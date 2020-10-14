@@ -36,7 +36,7 @@ RUN rm -rf /tmp/*
 
 ENV ServerUrl="https://octopus.example.com/"
 ENV ServerPort=""
-ENV ServerApiKey="API-SOURCE-THIS-FROM-YOUR-OCTOPUS-SERVER"
+ENV ServerApiKey=""
 ENV Space="Default"
 ENV WorkerPool=""
 ENV MachinePolicy="Default Machine Policy"
