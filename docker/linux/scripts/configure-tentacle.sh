@@ -43,7 +43,7 @@ if [[ ! -z "$WorkerPool" ]]; then
 			
 	IFS=',' read -ra WORKER_POOLS <<< "$WorkerPool"
 	for i in "${WORKER_POOLS[@]}"; do
-		ARGS+=('--workerpool', $i)
+		ARGS+=('--workerpool' $i)
 	done
 else
 	  ARGS+=('register-with')
@@ -61,7 +61,7 @@ if [[ ! -z "$ServerPort" ]]; then
 		'--server-comms-port' $ServerPort)
 else
 	ARGS+=(
-		'--comms-style' 'TentaclePassive',
+		'--comms-style' 'TentaclePassive'
 		'--publicHostName' $(getPublicHostName)
 		'--tentacle-comms-port' $ListeningPort)
 fi
@@ -70,7 +70,7 @@ if [[ ! -z "$ServerApiKey" ]]; then
 	ARGS+=('apiKey' $ServerApiKey)
 else
 	ARGS+=(
-		'--username' $ServerUsername,
+		'--username' $ServerUsername
     	'--password' $ServerPassword)
 fi
 
