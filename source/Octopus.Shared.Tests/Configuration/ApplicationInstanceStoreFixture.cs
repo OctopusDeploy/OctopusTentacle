@@ -17,7 +17,7 @@ namespace Octopus.Shared.Tests.Configuration
     {
         private IRegistryApplicationInstanceStore registryStore;
         private IOctopusFileSystem fileSystem;
-        private PersistedApplicationInstanceStore instanceStore;
+        private PersistedApplicationConfigurationStore configurationStore;
 
         [SetUp]
         public void Setup()
@@ -25,7 +25,7 @@ namespace Octopus.Shared.Tests.Configuration
             registryStore = Substitute.For<IRegistryApplicationInstanceStore>();
             fileSystem = Substitute.For<IOctopusFileSystem>();
             ILog log = Substitute.For<ILog>();
-            instanceStore = new PersistedApplicationInstanceStore(new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, "instance 1"),  log, fileSystem, registryStore);
+            configurationStore = new PersistedApplicationConfigurationStore(new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, "instance 1"),  log, fileSystem, registryStore);
         }
 
         [Test]
@@ -38,8 +38,8 @@ namespace Octopus.Shared.Tests.Configuration
             fileSystem.ReadFile(Arg.Is("file1")).Returns("{\"Name\": \"instance1\",\"ConfigurationFilePath\": \"configFilePath1\"}");
             fileSystem.ReadFile(Arg.Is("file2")).Returns("{\"Name\": \"instance2\",\"ConfigurationFilePath\": \"configFilePath2\"}");
 
-            var instances = instanceStore.ListInstances();
-            instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
+            var instances = configurationStore.ListInstances();
+            instances.Should().BeEquivalentTo(new List<PersistedApplicationInstanceRecord>
             {
                 new PersistedApplicationInstanceRecord("instance1", "configFilePath1", false),
                 new PersistedApplicationInstanceRecord("instance2", "configFilePath2", false)
@@ -56,8 +56,8 @@ namespace Octopus.Shared.Tests.Configuration
             });
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(false);
 
-            var instances = instanceStore.ListInstances();
-            instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
+            var instances = configurationStore.ListInstances();
+            instances.Should().BeEquivalentTo(new List<PersistedApplicationInstanceRecord>
             {
                 new PersistedApplicationInstanceRecord("instance1", "configFilePath1", false),
                 new PersistedApplicationInstanceRecord("instance2", "configFilePath2", false)
@@ -78,8 +78,8 @@ namespace Octopus.Shared.Tests.Configuration
             fileSystem.ReadFile(Arg.Is("file1")).Returns("{\"Name\": \"instance2\",\"ConfigurationFilePath\": \"fileConfigFilePath2\"}");
             fileSystem.ReadFile(Arg.Is("file2")).Returns("{\"Name\": \"instance3\",\"ConfigurationFilePath\": \"fileConfigFilePath3\"}");
 
-            var instances = instanceStore.ListInstances();
-            instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
+            var instances = configurationStore.ListInstances();
+            instances.Should().BeEquivalentTo(new List<PersistedApplicationInstanceRecord>
             {
                 new PersistedApplicationInstanceRecord("instance1", "registryFilePath1", false),
                 new PersistedApplicationInstanceRecord("instance2", "fileConfigFilePath2", false),
@@ -90,17 +90,17 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void GetInstance_ShouldPreferFileSystemEntries()
         {
-            var configFilename = Path.Combine(instanceStore.InstancesFolder(), "instance-1.config");
+            var configFilename = Path.Combine(configurationStore.InstancesFolder(), "instance-1.config");
 
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
             fileSystem.FileExists(Arg.Any<string>()).Returns(true);
             fileSystem.ReadFile(Arg.Is(configFilename)).Returns("{\"Name\": \"instance 1\",\"ConfigurationFilePath\": \"fileConfigFilePath2\"}");
 
-            var instance = instanceStore.GetInstance("instance 1");
+            var instance = configurationStore.GetInstance("instance 1");
             instance.InstanceName.Should().Be("instance 1");
             instance.ConfigurationFilePath.Should().Be("fileConfigFilePath2");
         }
-        
+
         [Test]
         public void GetInstance_ShouldReturnNullIfNoneFound()
         {
@@ -110,7 +110,7 @@ namespace Octopus.Shared.Tests.Configuration
                 new PersistedApplicationInstanceRecord("instance2", "ServerPath2", false)
             });
 
-            var instance = instanceStore.GetInstance("I AM FAKE");
+            var instance = configurationStore.GetInstance("I AM FAKE");
             Assert.IsNull(instance);
         }
 
@@ -120,7 +120,7 @@ namespace Octopus.Shared.Tests.Configuration
             var sourceInstance = new PersistedApplicationInstanceRecord("instance1", "configFilePath", false);
             registryStore.GetInstanceFromRegistry(Arg.Is("instance1")).Returns(sourceInstance);
 
-            instanceStore.MigrateInstance(sourceInstance);
+            configurationStore.MigrateInstance(sourceInstance);
             fileSystem.Received().CreateDirectory(Arg.Any<string>());
             fileSystem.Received().OverwriteFile(Arg.Is<string>(x => x.Contains(sourceInstance.InstanceName)), Arg.Is<string>(x => x.Contains(sourceInstance.ConfigurationFilePath)));
 

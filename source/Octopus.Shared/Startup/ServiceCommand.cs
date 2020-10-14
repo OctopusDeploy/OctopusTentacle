@@ -93,9 +93,11 @@ namespace Octopus.Shared.Startup
             }
             else
             {
-                var instance = instanceSelector.GetCurrentInstance();
-                var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
-                serviceConfigurator.ConfigureService(thisServiceName, exePath, instance.InstanceName, serviceDescription, serviceConfigurationState);
+                var currentName = instanceSelector.GetCurrentName();
+                if (currentName == null)
+                    throw new ArgumentException("Unable to locate instance configuration");
+                var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, currentName);
+                serviceConfigurator.ConfigureService(thisServiceName, exePath, currentName, serviceDescription, serviceConfigurationState);
             }
         }
     }

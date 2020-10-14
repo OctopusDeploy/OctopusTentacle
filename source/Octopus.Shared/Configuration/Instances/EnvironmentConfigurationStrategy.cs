@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class EnvironmentInstanceStrategy : IApplicationInstanceStrategy
+    public class EnvironmentConfigurationStrategy : IApplicationConfigurationStrategy
     {
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IMapEnvironmentVariablesToConfigItems mapper;
         readonly IEnvironmentVariableReader reader;
         bool loaded;
 
-        public EnvironmentInstanceStrategy(StartUpInstanceRequest startUpInstanceRequest, IMapEnvironmentVariablesToConfigItems mapper, IEnvironmentVariableReader reader)
+        public EnvironmentConfigurationStrategy(StartUpInstanceRequest startUpInstanceRequest, IMapEnvironmentVariablesToConfigItems mapper, IEnvironmentVariableReader reader)
         {
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.mapper = mapper;
@@ -21,30 +22,14 @@ namespace Octopus.Shared.Configuration.Instances
 
         public int Priority => 200;
 
-        public bool AnyInstancesConfigured()
+        public IKeyValueStore? LoadedConfiguration(ApplicationInstanceRecord applicationInstance)
         {
+            EnsureLoaded();
             if (!(startUpInstanceRequest is StartUpDynamicInstanceRequest))
-                return false;
-            EnsureLoaded();
-            return mapper.ConfigState == ConfigState.Complete;
+                return null;
+            return new InMemoryKeyValueStore(mapper);
         }
 
-        public IList<ApplicationInstanceRecord> ListInstances()
-        {
-            if (!AnyInstancesConfigured())
-                return Enumerable.Empty<ApplicationInstanceRecord>().ToList();
-            return new List<ApplicationInstanceRecord>
-            {
-                new ApplicationInstanceRecord("Environmental", true)
-            };
-        }
-
-        public ILoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
-        {
-            EnsureLoaded();
-            return new LoadedApplicationInstance(applicationInstance.InstanceName, new InMemoryKeyValueStore(mapper));
-        }
-                
         void EnsureLoaded()
         {
             if (!loaded)

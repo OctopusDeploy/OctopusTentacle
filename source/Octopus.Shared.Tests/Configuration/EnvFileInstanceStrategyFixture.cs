@@ -25,7 +25,7 @@ namespace Octopus.Shared.Tests.Configuration
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new [] { "OCTOPUS_HOME" }));
             
-            var results = EnvFileInstanceStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);
+            var results = EnvFileConfigurationStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);
             results.Should().NotBeNull(because: "the envFile exists");
             results!.Count.Should().Be(1, because: "blank lines and comments should be ignored");
         }
@@ -40,7 +40,7 @@ namespace Octopus.Shared.Tests.Configuration
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new [] { "OCTOPUS_HOME" }));
 
-            Action testAction = () => EnvFileInstanceStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);
+            Action testAction = () => EnvFileConfigurationStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);
             testAction.Should().Throw<ArgumentException>().WithMessage("Line 2 is not formatted correctly");
         }
         
@@ -54,7 +54,7 @@ namespace Octopus.Shared.Tests.Configuration
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new [] { "OCTOPUS_HOME", "Foo" }));
             
-            var results = EnvFileInstanceStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);            
+            var results = EnvFileConfigurationStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);            
             results.Should().NotBeNull(because: "the envFile exists");
             var value = results!["Foo"];
             value.Should().Be("Bar==", because: "values should be able to contain an equals sign");
@@ -75,7 +75,7 @@ namespace Octopus.Shared.Tests.Configuration
             fileLocator.LocateEnvFile().Returns((string?)null);
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
 
-            var subject = new EnvFileInstanceStrategy(new StartUpConfigFileInstanceRequest(ApplicationName.OctopusServer, "test.config"), fileSystem, fileLocator, mapper);            
+            var subject = new EnvFileConfigurationStrategy(new StartUpConfigFileInstanceRequest(ApplicationName.OctopusServer, "test.config"), fileSystem, fileLocator, mapper);            
             subject.AnyInstancesConfigured().Should().BeFalse(because: "there isn't an instance when the startup request isn't 'dynamic'");
         }
               
@@ -87,7 +87,7 @@ namespace Octopus.Shared.Tests.Configuration
             fileLocator.LocateEnvFile().Returns((string?)null);
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
 
-            var subject = new EnvFileInstanceStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);            
+            var subject = new EnvFileConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);            
             subject.AnyInstancesConfigured().Should().BeFalse(because: "there isn't an instance when there is no envFile");
         }
 
@@ -102,7 +102,7 @@ namespace Octopus.Shared.Tests.Configuration
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new[] { "OCTOPUS_HOME " }));
             mapper.ConfigState.Returns(ConfigState.None);
 
-            var subject = new EnvFileInstanceStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);            
+            var subject = new EnvFileConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);            
             subject.AnyInstancesConfigured().Should().BeFalse(because: "there isn't an instance when there is no config");
         }
         
@@ -117,7 +117,7 @@ namespace Octopus.Shared.Tests.Configuration
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new[] { "OCTOPUS_HOME" }));
             mapper.ConfigState.Returns(ConfigState.Complete);
 
-            var subject = new EnvFileInstanceStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);            
+            var subject = new EnvFileConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);            
             subject.AnyInstancesConfigured().Should().BeTrue(because: "there is an instance when there is a complete config");
             mapper.Received(1).SetEnvironmentValues(Arg.Is<Dictionary<string, string?>>(v => v.Count() == 1 && v["OCTOPUS_HOME"] == "."));
         }

@@ -36,23 +36,23 @@ namespace Octopus.Shared.Configuration
 
             builder.RegisterType<EnvironmentVariableReader>().As<IEnvironmentVariableReader>();
 
-            builder.RegisterType<PersistedApplicationInstanceStore>()
+            builder.RegisterType<PersistedApplicationConfigurationStore>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
                 .As<IPersistedApplicationInstanceStore>()
-                .As<IApplicationInstanceStrategy>();
+                .As<IApplicationConfigurationStrategy>();
 
             builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>().SingleInstance();
-            builder.RegisterType<EnvFileInstanceStrategy>()
+            builder.RegisterType<EnvFileConfigurationStrategy>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
-                .As<IApplicationInstanceStrategy>();
+                .As<IApplicationConfigurationStrategy>();
 
-            builder.RegisterType<EnvironmentInstanceStrategy>()
+            builder.RegisterType<EnvironmentConfigurationStrategy>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
-                .As<IApplicationInstanceStrategy>();
+                .As<IApplicationConfigurationStrategy>();
 
-            builder.RegisterType<ConfigFileInstanceStrategy>()
+            builder.RegisterType<ConfigFileConfigurationStrategy>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
-                .As<IApplicationInstanceStrategy>();
+                .As<IApplicationConfigurationStrategy>();
 
             builder.RegisterType<ApplicationInstanceSelector>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
@@ -62,7 +62,7 @@ namespace Octopus.Shared.Configuration
             builder.Register(c =>
             {
                 var selector = c.Resolve<IApplicationInstanceSelector>();
-                return selector.GetCurrentInstance().Configuration;
+                return selector.GetCurrentConfiguration();
             }).As<IKeyValueStore>().SingleInstance();
 
             builder.RegisterType<HomeConfiguration>()

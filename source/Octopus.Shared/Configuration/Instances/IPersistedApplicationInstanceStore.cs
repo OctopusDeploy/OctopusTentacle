@@ -3,12 +3,11 @@ using System.Collections.Generic;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public interface IPersistedApplicationInstanceStore
+    public interface IPersistedApplicationInstanceStore : IApplicationConfigurationWithMultipleInstances
     {
         bool AnyInstancesConfigured();
         PersistedApplicationInstanceRecord? GetInstance(string? instanceName);
-        IList<PersistedApplicationInstanceRecord> ListInstances();
-        
+
         void CreateDefaultInstance(string configurationFile, string? homeDirectory = null);
         void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null);
 

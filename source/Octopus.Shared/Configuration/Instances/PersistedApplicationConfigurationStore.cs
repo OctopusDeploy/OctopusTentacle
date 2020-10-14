@@ -4,12 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
+using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class PersistedApplicationInstanceStore : IPersistedApplicationInstanceStore, IApplicationInstanceStrategy
+    public class PersistedApplicationConfigurationStore : IPersistedApplicationInstanceStore, IApplicationConfigurationStrategy
     {
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly ILog log;
@@ -17,7 +18,7 @@ namespace Octopus.Shared.Configuration.Instances
         readonly IRegistryApplicationInstanceStore registryApplicationInstanceStore;
         readonly string machineConfigurationHomeDirectory;
 
-        public PersistedApplicationInstanceStore(
+        public PersistedApplicationConfigurationStore(
             StartUpInstanceRequest startUpInstanceRequest,
             ILog log,
             IOctopusFileSystem fileSystem,
@@ -37,21 +38,19 @@ namespace Octopus.Shared.Configuration.Instances
 
         public int Priority => 1000;
 
-        public ILoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
+        public IKeyValueStore LoadedConfiguration(ApplicationInstanceRecord applicationInstance)
         {
             var instance = applicationInstance as PersistedApplicationInstanceRecord;
             if (instance == null)
                 throw new ArgumentException("Incorrect application instance record type", nameof(applicationInstance));
-            
+
             // If the entry is still in the registry then migrate it to the file index
             MigrateInstance(instance);
-            
-            return new LoadedPersistedApplicationInstance(applicationInstance.InstanceName,
-                new XmlFileKeyValueStore(fileSystem, instance.ConfigurationFilePath),
-                instance.ConfigurationFilePath);
+
+            return new XmlFileKeyValueStore(fileSystem, instance.ConfigurationFilePath);
         }
 
-        public class Instance
+        class Instance
         {
             public Instance(string name, string configurationFilePath)
             {
@@ -80,15 +79,7 @@ namespace Octopus.Shared.Configuration.Instances
             return listFromRegistry.Any();
         }
 
-        public IList<ApplicationInstanceRecord> ListInstances()
-        {
-            return ((IPersistedApplicationInstanceStore)this)
-                .ListInstances()
-                .Cast<ApplicationInstanceRecord>()
-                .ToList();
-        }
-
-        IList<PersistedApplicationInstanceRecord> IPersistedApplicationInstanceStore.ListInstances()
+        public IList<PersistedApplicationInstanceRecord> ListInstances()
         {
             var instancesFolder = InstancesFolder();
 

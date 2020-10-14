@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class EnvFileInstanceStrategy : IApplicationInstanceStrategy
+    public class EnvFileConfigurationStrategy : IApplicationConfigurationStrategy
     {
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IOctopusFileSystem fileSystem;
@@ -14,7 +15,7 @@ namespace Octopus.Shared.Configuration.Instances
         readonly IMapEnvironmentVariablesToConfigItems mapper;
         bool loaded;
 
-        public EnvFileInstanceStrategy(StartUpInstanceRequest startUpInstanceRequest, IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentVariablesToConfigItems mapper)
+        public EnvFileConfigurationStrategy(StartUpInstanceRequest startUpInstanceRequest, IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentVariablesToConfigItems mapper)
         {
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.fileSystem = fileSystem;
@@ -36,22 +37,14 @@ namespace Octopus.Shared.Configuration.Instances
             return mapper.ConfigState == ConfigState.Complete;
         }
 
-        public IList<ApplicationInstanceRecord> ListInstances()
+        public IKeyValueStore? LoadedConfiguration(ApplicationInstanceRecord applicationInstance)
         {
-            if (!AnyInstancesConfigured())
-                return Enumerable.Empty<ApplicationInstanceRecord>().ToList();
-            return new List<ApplicationInstanceRecord>
-            {
-                new ApplicationInstanceRecord("EnvFile", true)
-            };
+            if (!(startUpInstanceRequest is StartUpDynamicInstanceRequest))
+                return null;
+            EnsureLoaded();
+            return new InMemoryKeyValueStore(mapper);
         }
 
-        public ILoadedApplicationInstance LoadedApplicationInstance(ApplicationInstanceRecord applicationInstance)
-        {
-            EnsureLoaded();
-            return new LoadedApplicationInstance(applicationInstance.InstanceName, new InMemoryKeyValueStore(mapper));
-        }
-        
         void EnsureLoaded()
         {
             if (!loaded)
@@ -76,14 +69,14 @@ namespace Octopus.Shared.Configuration.Instances
             var lines = content.Split(new [] {  Environment.NewLine }, StringSplitOptions.None);
             var results = new Dictionary<string, string?>();
             var lineNumber = 0;
-            
+
             foreach (var line in lines)
             {
                 lineNumber++;
 
                 if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
                     continue;
-                
+
                 var splitIndex = line.IndexOf('=');
                 if (splitIndex < 0)
                     throw new ArgumentException($"Line {lineNumber} is not formatted correctly");
