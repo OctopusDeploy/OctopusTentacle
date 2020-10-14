@@ -67,7 +67,7 @@ else
 fi
 
 if [[ ! -z "$ServerApiKey" ]]; then
-	ARGS+=('apiKey' $ServerApiKey)
+	ARGS+=('--apiKey' $ServerApiKey)
 else
 	ARGS+=(
 		'--username' $ServerUsername
