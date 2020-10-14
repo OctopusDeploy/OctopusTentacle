@@ -1,6 +1,5 @@
 using System;
 using Octopus.Configuration;
-using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Configuration
 {
@@ -15,12 +14,9 @@ namespace Octopus.Shared.Configuration
 
         readonly IWritableKeyValueStore settings;
 
-        public ProxyConfiguration(IApplicationInstanceSelector instanceSelector)
+        public ProxyConfiguration(IWritableKeyValueStore settings)
         {
-            var writableKeyValueStore = instanceSelector.GetWritableCurrentConfiguration();
-            if (writableKeyValueStore == null)
-                throw new ArgumentException("Instance not configured correctly");
-            settings = writableKeyValueStore;
+            this.settings = settings;
         }
 
         public bool UseDefaultProxy
