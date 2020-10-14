@@ -49,6 +49,7 @@ ENV TargetEnvironment=""
 ENV TargetRole="docker"
 ENV TargetName="Tentacle"
 ENV ListeningPort=""
+ENV PublicHostNameConfiguration="PublicIp"
 ENV CustomPublicHostName=""
 
 VOLUME /var/lib/docker

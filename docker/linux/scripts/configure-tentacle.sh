@@ -5,11 +5,11 @@ set -eux
 # the moment and will be made more robust in due course.
 
 function getPublicHostName() {
-	if [[ $1 == 'PublicIp' ]]; then
+	if [[ $PublicHostNameConfiguration == 'PublicIp' ]]; then
 		curl https://api.ipify.org/
-	elif [[ $1 == 'FQDN' ]]; then
+	elif [[ $PublicHostNameConfiguration == 'FQDN' ]]; then
 		hostname --fqdn
-	elif [[ $1 == 'ComputerName' ]]; then
+	elif [[ $PublicHostNameConfiguration == 'ComputerName' ]]; then
 		hostname
 	else
 		echo $CustomPublicHostName
@@ -71,7 +71,6 @@ ARGS+=(
 		
 if [[ ! -z "$ServerPort" ]]; then
 	ARGS+=(
-		'--comms-style' 'TentacleActive'
 		'--server-comms-port' $ServerPort)
 else
 	ARGS+=(
