@@ -27,24 +27,7 @@ namespace Octopus.Shared.Tests.Configuration
                 throw new ArgumentException($"Unknown setting {configurationSettingName}");
             }
         }
-        
-        [Test]
-        public void NoSetupConfigState()
-        {
-            var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL" });
-            var state = mapper.ConfigState;
-            state.Should().Be(ConfigState.None);
-        }
-        
-        [Test]
-        public void CompleteSetupConfigState()
-        {
-            var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL" });
-            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_PORT", "1234" } });
-            var state = mapper.ConfigState;
-            state.Should().Be(ConfigState.Complete);
-        }
-        
+
         [Test]
         public void IncompleteSetupError()
         {
@@ -54,7 +37,7 @@ namespace Octopus.Shared.Tests.Configuration
             testAction.Should().Throw<InvalidOperationException>()
                 .WithMessage("No variable values have been specified.");
         }
-                
+
         [Test]
         public void UnsupportedVariableErrorIsDescriptive()
         {
@@ -64,7 +47,7 @@ namespace Octopus.Shared.Tests.Configuration
             testAction.Should().Throw<ArgumentException>()
                 .WithMessage("Unsupported environment variable was provided. 'OCTOPUS_WRONG'");
         }
-                
+
         [Test]
         public void UnsupportedVariablesErrorIsDescriptive()
         {
@@ -84,7 +67,7 @@ namespace Octopus.Shared.Tests.Configuration
             testAction.Should().Throw<ArgumentException>()
                 .WithMessage("Required environment variable was not provided. 'OCTOPUS_PORT'");
         }
-        
+
         [Test]
         public void RequiredVariablesErrorIsDescriptive()
         {
@@ -94,7 +77,7 @@ namespace Octopus.Shared.Tests.Configuration
             testAction.Should().Throw<ArgumentException>()
                 .WithMessage("Required environment variables were not provided. 'OCTOPUS_FORCE_SSL, OCTOPUS_PORT'");
         }
-        
+
         [Test]
         public void InvalidConfigSettingNameErrorIsDescriptive()
         {
@@ -105,31 +88,31 @@ namespace Octopus.Shared.Tests.Configuration
             testAction.Should().Throw<ArgumentException>()
                 .WithMessage("Given configuration setting name is not supported. 'Octopus.ForceSSL'");
         }
-        
+
         [Test]
         public void RequiredConfigSettingCanBeRetrieved()
         {
             var mapper = new TestMapper(new []{ "Octopus.Port" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL" });
             mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_PORT", "1234" } });
-            
+
             mapper.GetConfigurationValue("Octopus.Port").Should().Be("1234");
         }
-        
+
         [Test]
         public void OptionalConfigSettingCanBeRetrieved()
         {
             var mapper = new TestMapper(new []{ "Octopus.Port", "Octopus.ListenPrefixes" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL", "OCTOPUS_LISTEN_PREFIXES" });
             mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_HOME", "Test" }, { "OCTOPUS_PORT", "1234" } });
-            
+
             mapper.GetConfigurationValue("Octopus.ListenPrefixes").Should().BeNull();
         }
-        
+
         [Test]
         public void SharedConfigSettingCanBeRetrieved()
         {
             var mapper = new TestMapper(new []{ "Octopus.Port", "Octopus.ListenPrefixes" }, new []{ "OCTOPUS_PORT" }, new []{ "OCTOPUS_OPTIONAL", "OCTOPUS_LISTEN_PREFIXES" });
             mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_HOME", "Test" }, { "OCTOPUS_PORT", "1234" } });
-            
+
             mapper.GetConfigurationValue("Octopus.Home").Should().Be("Test", because: "shared settings get contributed by the base mapper");
         }
     }

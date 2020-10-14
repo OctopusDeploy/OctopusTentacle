@@ -12,6 +12,7 @@ namespace Octopus.Shared.Configuration.Instances
         readonly IMapEnvironmentVariablesToConfigItems mapper;
         readonly IEnvironmentVariableReader reader;
         bool loaded;
+        bool foundValues;
 
         public EnvironmentConfigurationStrategy(StartUpInstanceRequest startUpInstanceRequest, IMapEnvironmentVariablesToConfigItems mapper, IEnvironmentVariableReader reader)
         {
@@ -24,10 +25,12 @@ namespace Octopus.Shared.Configuration.Instances
 
         public IKeyValueStore? LoadedConfiguration(ApplicationInstanceRecord applicationInstance)
         {
-            EnsureLoaded();
             if (!(startUpInstanceRequest is StartUpDynamicInstanceRequest))
                 return null;
-            return new InMemoryKeyValueStore(mapper);
+
+            EnsureLoaded();
+
+            return !foundValues ? null : new InMemoryKeyValueStore(mapper);
         }
 
         void EnsureLoaded()
@@ -38,6 +41,7 @@ namespace Octopus.Shared.Configuration.Instances
                 if (results.Values.Any(x => x != null))
                 {
                     mapper.SetEnvironmentValues(results);
+                    foundValues = true;
                 }
             }
             loaded = true;

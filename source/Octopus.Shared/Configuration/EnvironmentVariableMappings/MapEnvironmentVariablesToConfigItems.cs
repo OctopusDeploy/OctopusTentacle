@@ -22,10 +22,10 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             ProxyConfiguration.ProxyUsernameSettingName,
             ProxyConfiguration.ProxyPasswordSettingName
         };
-        
+
         // There are no required settings/variables in Shared. The
         // following are the name of the environment variables that
-        // align with the above settings. 
+        // align with the above settings.
         string[] sharedOptionalEnvironmentVariableNames =
         {
             "OCTOPUS_HOME",
@@ -44,34 +44,16 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             RequiredEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.OrderBy(x => x));
             SupportedEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.Union(sharedOptionalEnvironmentVariableNames.Union(optionalEnvironmentVariables)).OrderBy(x => x));
             environmentVariableValues = new Dictionary<string, string?>();
-            
+
             // initialise the dictionary to contain a value for every supported variable, then we don't need ContainsKey all over the place
             foreach (var variable in SupportedEnvironmentVariables)
             {
                 environmentVariableValues.Add(variable, null);
             }
         }
-        
-        public ConfigState ConfigState
-        {
-            get
-            {
-                if (!valuesHaveBeenSet || SupportedEnvironmentVariables.All(v => string.IsNullOrWhiteSpace(environmentVariableValues[v])))
-                    return ConfigState.None;
-                {
-                    if (RequiredEnvironmentVariables.All(v => !string.IsNullOrWhiteSpace(environmentVariableValues[v])))
-                        return ConfigState.Complete;
-                    
-                    // We should never get here, SetEnvironmentValues should fail if required values are missing
-                    log.Warn($"Some environment variables were found, but the following required variables were missing '{string.Join(", ", RequiredEnvironmentVariables.Where(v => string.IsNullOrWhiteSpace(environmentVariableValues[v])))}'");
-                    return ConfigState.Partial;
-                }
-
-            }
-        }
 
         HashSet<string> SupportedConfigurationKeys { get; }
-        
+
         HashSet<string> RequiredEnvironmentVariables { get; }
         public HashSet<string> SupportedEnvironmentVariables { get; }
 
@@ -128,7 +110,7 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             }
             return MapConfigurationValue(configurationSettingName);
         }
-        
+
         protected abstract string? MapConfigurationValue(string configurationSettingName);
     }
 }

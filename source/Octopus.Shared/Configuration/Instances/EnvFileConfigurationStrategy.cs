@@ -14,6 +14,7 @@ namespace Octopus.Shared.Configuration.Instances
         readonly IEnvFileLocator envFileLocator;
         readonly IMapEnvironmentVariablesToConfigItems mapper;
         bool loaded;
+        bool foundValues;
 
         public EnvFileConfigurationStrategy(StartUpInstanceRequest startUpInstanceRequest, IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentVariablesToConfigItems mapper)
         {
@@ -25,24 +26,14 @@ namespace Octopus.Shared.Configuration.Instances
 
         public int Priority => 300;
 
-        public bool AnyInstancesConfigured()
-        {
-            if (!(startUpInstanceRequest is StartUpDynamicInstanceRequest))
-                return false;
-            var envFile = envFileLocator.LocateEnvFile();
-            if (envFile == null)
-                return false;
-
-            EnsureLoaded();
-            return mapper.ConfigState == ConfigState.Complete;
-        }
-
         public IKeyValueStore? LoadedConfiguration(ApplicationInstanceRecord applicationInstance)
         {
             if (!(startUpInstanceRequest is StartUpDynamicInstanceRequest))
                 return null;
+
             EnsureLoaded();
-            return new InMemoryKeyValueStore(mapper);
+
+            return !foundValues ? null : new InMemoryKeyValueStore(mapper);
         }
 
         void EnsureLoaded()
@@ -53,6 +44,7 @@ namespace Octopus.Shared.Configuration.Instances
                 if (results != null && results.Values.Any(x => x != null))
                 {
                     mapper.SetEnvironmentValues(results);
+                    foundValues = true;
                 }
 
             }

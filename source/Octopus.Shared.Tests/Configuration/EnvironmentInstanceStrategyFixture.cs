@@ -41,12 +41,11 @@ namespace Octopus.Shared.Tests.Configuration
         }
 
         [Test]
-        public void IsNotConfiguredWhenEnvFileInIncomplete()
+        public void IsNotConfiguredWhenEnvFileIsEmpty()
         {
             var reader = Substitute.For<IEnvironmentVariableReader>();
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
-            mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new[] { "OCTOPUS_HOME " }));
-            mapper.ConfigState.Returns(ConfigState.None);
+            mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>());
 
             var subject = new EnvironmentConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), mapper, reader);
             subject.LoadedConfiguration(new ApplicationInstanceRecord()).Should().BeNull(because: "there isn't an instance when there is no config");
@@ -59,7 +58,6 @@ namespace Octopus.Shared.Tests.Configuration
             reader.Get("OCTOPUS_HOME").Returns(".");
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new[] { "OCTOPUS_HOME" }));
-            mapper.ConfigState.Returns(ConfigState.Complete);
 
             var subject = new EnvironmentConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), mapper, reader);
             subject.LoadedConfiguration(new ApplicationInstanceRecord()).Should().NotBeNull(because: "there is an instance when there is a complete config");

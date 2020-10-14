@@ -2,7 +2,7 @@
 
 namespace Octopus.Shared.Configuration
 {
-    public class StartUpConfigFileInstanceRequest : StartUpDynamicInstanceRequest
+    public class StartUpConfigFileInstanceRequest : StartUpInstanceRequest
     {
         public StartUpConfigFileInstanceRequest(ApplicationName applicationName, string configFile) : base(applicationName)
         {
