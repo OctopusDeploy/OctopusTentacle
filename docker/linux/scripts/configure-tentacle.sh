@@ -50,45 +50,45 @@ else
 fi
 
 ARGS+=(
-	'--console',
-	'--instance', $instanceName,
-	'--server', $ServerUrl,
+	'--console'
+	'--instance' $instanceName
+	'--server' $ServerUrl
 	'--force')
 		
 if [[ ! -z "$ServerPort" ]]; then
 	ARGS+=(
-		'--comms-style', 'TentacleActive',
-		'--server-comms-port', $ServerPort)
+		'--comms-style' 'TentacleActive'
+		'--server-comms-port' $ServerPort)
 else
 	ARGS+=(
-		'--comms-style', 'TentaclePassive',
-		'--publicHostName', $(getPublicHostName),
-		'--tentacle-comms-port', $ListeningPort)
+		'--comms-style' 'TentaclePassive',
+		'--publicHostName' $(getPublicHostName)
+		'--tentacle-comms-port' $ListeningPort)
 fi
 
 if [[ ! -z "$ServerApiKey" ]]; then
-	ARGS+=('apiKey', $ServerApiKey)
+	ARGS+=('apiKey' $ServerApiKey)
 else
 	ARGS+=(
-		'--username', $ServerUsername,
-    	'--password', $ServerPassword)
+		'--username' $ServerUsername,
+    	'--password' $ServerPassword)
 fi
 
 if [[ ! -z "$TargetName" ]]; then
-	ARGS+=('--name', $TargetName)
+	ARGS+=('--name' $TargetName)
 fi
 
 if [[ ! -z "$TargetEnvironment" ]]; then
 	IFS=',' read -ra ENVIRONMENTS <<< "$TargetEnvironment"
 	for i in "${ENVIRONMENTS[@]}"; do
-		ARGS+=('--environment', $i)
+		ARGS+=('--environment' $i)
 	done
 fi
 
 if [[ ! -z "$TargetRole" ]]; then
 	IFS=',' read -ra ROLES <<< "$TargetRole"
 	for i in "${ROLES[@]}"; do
-		ARGS+=('--role', $i)
+		ARGS+=('--role' $i)
 	done
 fi
 
