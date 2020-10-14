@@ -10,6 +10,7 @@ namespace Octopus.Shared.Configuration.Instances
         bool IsCurrentInstanceDefault();
         string? GetCurrentName();
         IKeyValueStore GetCurrentConfiguration();
+        IWritableKeyValueStore? GetWritableCurrentConfiguration();
 
         bool CanLoadCurrentInstance();
     }

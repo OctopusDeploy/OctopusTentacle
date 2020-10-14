@@ -3,7 +3,7 @@ using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
-    public abstract class AbstractKeyValueStore : IKeyValueStore
+    public abstract class AbstractKeyValueStore : IWritableKeyValueStore
     {
         protected readonly bool AutoSaveOnSet;
         protected abstract void Delete(string key);

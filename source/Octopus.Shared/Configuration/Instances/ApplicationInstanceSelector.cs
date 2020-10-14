@@ -13,7 +13,7 @@ namespace Octopus.Shared.Configuration.Instances
         readonly IApplicationConfigurationStrategy[] instanceStrategies;
         readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
-        (string? InstanceName, IKeyValueStore Configuration)? current;
+        (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore? WritableConfiguration)? current;
 
         public ApplicationInstanceSelector(ILog log,
             StartUpInstanceRequest startUpInstanceRequest,
@@ -80,11 +80,24 @@ namespace Octopus.Shared.Configuration.Instances
             return current.Value.Configuration;
         }
 
-        (string? InstanceName, IKeyValueStore Configuration) LoadCurrentInstance()
+        public IWritableKeyValueStore? GetWritableCurrentConfiguration()
+        {
+            if (current == null)
+            {
+                lock (@lock)
+                {
+                    if (current == null)
+                        current = LoadCurrentInstance();
+                }
+            }
+            return current.Value.WritableConfiguration;
+        }
+
+        (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore? WritableConfiguration) LoadCurrentInstance()
         {
             var instance = LoadInstance();
 
-            var homeConfig = new HomeConfiguration(startUpInstanceRequest.ApplicationName, instance.Configuration);
+            var homeConfig = new HomeConfiguration(startUpInstanceRequest.ApplicationName, instance.WritableConfiguration);
 
             // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
             // back to here
@@ -94,12 +107,15 @@ namespace Octopus.Shared.Configuration.Instances
             return instance;
         }
 
-        internal (string? InstanceName, IKeyValueStore Configuration) LoadInstance()
+        internal (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore? WritableConfiguration) LoadInstance()
         {
             string? instanceName = null;
+            IWritableKeyValueStore? writableConfiguration = null;
 
             // build a composite configuration
-            var keyValueStores = instanceStrategies.Select(s =>
+            var keyValueStores = instanceStrategies
+                .OrderBy(x => x.Priority)
+                .Select(s =>
                 {
                     ApplicationInstanceRecord? record = null;
 
@@ -166,7 +182,13 @@ namespace Octopus.Shared.Configuration.Instances
                     else
                         record = new ApplicationInstanceRecord();
 
-                    return s.LoadedConfiguration(record);
+                    var keyValueStore = s.LoadedConfiguration(record);
+                    if (writableConfiguration == null && keyValueStore is IWritableKeyValueStore writableKeyValueStore)
+                    {
+                        writableConfiguration = writableKeyValueStore;
+                    }
+
+                    return keyValueStore;
                 })
                 .Where(x => x != null)
                 .Cast<IKeyValueStore>()
@@ -176,7 +198,7 @@ namespace Octopus.Shared.Configuration.Instances
                 throw new ControlledFailureException(
                     $"There are no instances of {startUpInstanceRequest.ApplicationName} configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file, or set the required environment variables.");
 
-            return (instanceName, new AggregatedKeyValueStore(log, keyValueStores));
+            return (instanceName, new AggregatedKeyValueStore(log, keyValueStores), writableConfiguration);
         }
 
         string AvailableInstances(IApplicationConfigurationWithMultipleInstances multipleInstances)

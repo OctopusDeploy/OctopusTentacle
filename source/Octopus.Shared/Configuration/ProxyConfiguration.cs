@@ -1,5 +1,6 @@
 using System;
 using Octopus.Configuration;
+using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Configuration
 {
@@ -11,17 +12,20 @@ namespace Octopus.Shared.Configuration
         public const string ProxyPortSettingName = "Octopus.Proxy.ProxyPort";
         public const string ProxyUsernameSettingName = "Octopus.Proxy.ProxyUsername";
         public const string ProxyPasswordSettingName = "Octopus.Proxy.ProxyPassword";
-        
-        readonly IKeyValueStore settings;
 
-        public ProxyConfiguration(IKeyValueStore settings)
+        readonly IWritableKeyValueStore settings;
+
+        public ProxyConfiguration(IApplicationInstanceSelector instanceSelector)
         {
-            this.settings = settings;
+            var writableKeyValueStore = instanceSelector.GetWritableCurrentConfiguration();
+            if (writableKeyValueStore == null)
+                throw new ArgumentException("Instance not configured correctly");
+            settings = writableKeyValueStore;
         }
 
         public bool UseDefaultProxy
         {
-            get => settings.Get<bool>(ProxyUseDefaultSettingName, true);
+            get => settings.Get(ProxyUseDefaultSettingName, true);
             set => settings.Set(ProxyUseDefaultSettingName, value);
         }
 
