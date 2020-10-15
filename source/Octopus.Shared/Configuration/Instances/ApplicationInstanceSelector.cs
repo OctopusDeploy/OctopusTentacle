@@ -123,10 +123,6 @@ namespace Octopus.Shared.Configuration.Instances
                     {
                         var persistedApplicationInstanceRecords = multipleInstances.ListInstances();
 
-                        if (persistedApplicationInstanceRecords.Count == 0)
-                            throw new ControlledFailureException(
-                                $"There are no instances of {startUpInstanceRequest.ApplicationName} configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file, or set the required environment variables.");
-
                         if (startUpInstanceRequest is StartUpPersistedInstanceRequest persistedRequest)
                         {
                             instanceName = persistedRequest.InstanceName;
@@ -168,15 +164,18 @@ namespace Octopus.Shared.Configuration.Instances
                             }
 
                             // if there is only a single instance, then pick it
-                            if (persistedApplicationInstanceRecords.Count() == 1)
+                            if (persistedApplicationInstanceRecords.Count == 1)
                             {
                                 var singleInstance = persistedApplicationInstanceRecords.Single();
                                 instanceName = singleInstance.InstanceName;
                                 record = singleInstance;
                             }
 
-                            if (record == null)
+                            if (record == null && persistedApplicationInstanceRecords.Count > 1)
                                 throw new ControlledFailureException($"There is more than one instance of {startUpInstanceRequest.ApplicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {AvailableInstances(multipleInstances)}.");
+
+                            if (record == null)
+                                return null;
                         }
                     }
                     else

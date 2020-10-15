@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
@@ -16,15 +17,31 @@ namespace Octopus.Shared.Tests.Configuration
     public class ApplicationInstanceSelectorTests
     {
         static readonly object ConfigurationStore = Substitute.For<IApplicationConfigurationStrategy, IApplicationConfigurationWithMultipleInstances>();
+        static readonly IApplicationConfigurationStrategy OtherStrategy = Substitute.For<IApplicationConfigurationStrategy>();
 
         [Test]
         public void LoadInstanceThrowsWhenNoInstanceNamePassedAndNoInstancesConfigured()
         {
             var selector = GetApplicationInstanceSelector(new List<PersistedApplicationInstanceRecord>(), string.Empty);
             ((IApplicationConfigurationStrategy)ConfigurationStore).LoadedConfiguration(Arg.Any<ApplicationInstanceRecord>()).Returns((IKeyValueStore)null);
+            OtherStrategy.LoadedConfiguration(Arg.Any<ApplicationInstanceRecord>()).Returns((IKeyValueStore)null);
             ((Action)(() => selector.LoadInstance()))
                 .Should().Throw<ControlledFailureException>()
                 .WithMessage("There are no instances of OctopusServer configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file, or set the required environment variables.");
+        }
+
+        [Test]
+        public void LoadInstanceDoesNotThrowsWhenNoInstanceNamePassedAndNoInstancesConfiguredButAnotherStrategyCanBeLoaded()
+        {
+            var selector = GetApplicationInstanceSelector(new List<PersistedApplicationInstanceRecord>(), string.Empty);
+            ((IApplicationConfigurationStrategy)ConfigurationStore).LoadedConfiguration(Arg.Any<ApplicationInstanceRecord>()).Returns((IKeyValueStore)null);
+
+            OtherStrategy.LoadedConfiguration(Arg.Any<ApplicationInstanceRecord>()).Returns(new InMemoryKeyValueStore(Substitute.For<IMapEnvironmentVariablesToConfigItems>()));
+
+            selector.CanLoadCurrentInstance().Should().BeTrue("because the in memory config should be used");
+            selector.GetCurrentName().Should().BeNull("in memory config should have no instance name");
+            selector.GetCurrentConfiguration().Should().NotBeNull("in memory config should available");
+            selector.GetWritableCurrentConfiguration().Should().BeNull("in memory config means no writes");
         }
 
         [Test]
@@ -138,7 +155,7 @@ namespace Octopus.Shared.Tests.Configuration
 
             var selector = new ApplicationInstanceSelector(Substitute.For<ILog>(),
                 startupRequest,
-                new [] { ((IApplicationConfigurationStrategy)ConfigurationStore) },
+                new [] { (IApplicationConfigurationStrategy)ConfigurationStore, OtherStrategy },
                 Substitute.For<ILogFileOnlyLogger>());
             return selector;
         }
