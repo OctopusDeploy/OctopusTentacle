@@ -172,7 +172,7 @@ namespace Octopus.Shared.Configuration.Instances
             var instance = new PersistedApplicationInstanceRecord(instanceName, configurationFile, instanceName == PersistedApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName));
             SaveInstance(instance);
 
-            var homeConfig = new HomeConfiguration(startUpInstanceRequest.ApplicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
+            var homeConfig = new WritableHomeConfiguration(startUpInstanceRequest.ApplicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
             var home = !string.IsNullOrWhiteSpace(homeDirectory) ? homeDirectory : parentDirectory;
             log.Info($"Setting home directory to: {home}");
             homeConfig.HomeDirectory = home;

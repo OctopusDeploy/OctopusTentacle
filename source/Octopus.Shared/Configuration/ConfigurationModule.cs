@@ -75,10 +75,15 @@ namespace Octopus.Shared.Configuration
                 .WithParameter("application", startUpInstanceRequest.ApplicationName)
                 .As<IHomeConfiguration>()
                 .SingleInstance();
+            builder.RegisterType<WritableHomeConfiguration>()
+                .WithParameter("application", startUpInstanceRequest.ApplicationName)
+                .As<IWritableHomeConfiguration>()
+                .SingleInstance();
 
             builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().SingleInstance();
             builder.RegisterType<ProxyConfigParser>().As<IProxyConfigParser>();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
+            builder.RegisterType<WritableProxyConfiguration>().As<IWritableProxyConfiguration>();
             builder.RegisterType<ProxyInitializer>().As<IProxyInitializer>().SingleInstance();
             RegisterWatchdog(builder);
         }

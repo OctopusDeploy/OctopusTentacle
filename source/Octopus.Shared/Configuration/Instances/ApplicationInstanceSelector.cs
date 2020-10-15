@@ -97,7 +97,7 @@ namespace Octopus.Shared.Configuration.Instances
         {
             var instance = LoadInstance();
 
-            var homeConfig = new HomeConfiguration(startUpInstanceRequest.ApplicationName, instance.WritableConfiguration);
+            var homeConfig = new HomeConfiguration(startUpInstanceRequest.ApplicationName, instance.Configuration);
 
             // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
             // back to here
