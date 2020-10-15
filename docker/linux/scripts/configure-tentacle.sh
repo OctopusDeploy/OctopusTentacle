@@ -91,6 +91,8 @@ if [[ ! -z "$TargetName" ]]; then
 	ARGS+=('--name' $TargetName)
 fi
 
+ARGS+=('--force')
+
 tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config"
 tentacle new-certificate --instance "$instanceName" --if-blank
 tentacle configure --instance "$instanceName" --app "$applicationsDirectory" --noListen "True" --reset-trust
