@@ -36,6 +36,7 @@ RUN rm -rf /tmp/*
 
 ENV MachinePolicy="Default Machine Policy"
 ENV CommunicationsStype=TentacleActive
+ENV PublicHostNameConfiguration="PublicIp"
 ENV DISABLE_DIND=N
 ENV ACCEPT_EULA=N
 
@@ -47,10 +48,9 @@ ENV WorkerPool=""
 ENV ServerUsername=""
 ENV ServerPassword=""
 ENV TargetEnvironment=""
-ENV TargetRole="docker"
-ENV TargetName="Tentacle"
 ENV ListeningPort=""
-ENV PublicHostNameConfiguration="PublicIp"
+ENV TargetRole=""
+ENV TargetName=""
 ENV CustomPublicHostName=""
 
 VOLUME /var/lib/docker
