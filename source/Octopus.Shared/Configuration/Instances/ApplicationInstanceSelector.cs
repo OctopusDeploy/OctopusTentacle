@@ -142,7 +142,7 @@ namespace Octopus.Shared.Configuration.Instances
                             {
                                 var applicationInstanceRecord = possibleNamedInstances.First();
                                 instanceName = applicationInstanceRecord.InstanceName;
-                                record = new PersistedApplicationInstanceRecord(instanceName, applicationInstanceRecord.ConfigurationFilePath, instanceName == ApplicationName.ToString());
+                                record = applicationInstanceRecord;
                             }
                             else
                             {
@@ -151,7 +151,7 @@ namespace Octopus.Shared.Configuration.Instances
                                 if (exactMatch == null) // null here means all matches were different case
                                     throw new ControlledFailureException($"Instance {persistedRequest.InstanceName} of {persistedRequest.ApplicationName} could not be matched to one of the existing instances: {AvailableInstances(multipleInstances)}.");
                                 instanceName = exactMatch.InstanceName;
-                                record = new PersistedApplicationInstanceRecord(exactMatch.InstanceName, exactMatch.ConfigurationFilePath, exactMatch.InstanceName == ApplicationName.ToString());
+                                record = exactMatch;
                             }
 
                             if (record == null)
@@ -164,7 +164,7 @@ namespace Octopus.Shared.Configuration.Instances
                             if (defaultInstance != null)
                             {
                                 instanceName = defaultInstance.InstanceName;
-                                record = new PersistedApplicationInstanceRecord(defaultInstance.InstanceName, defaultInstance.ConfigurationFilePath, true);
+                                record = defaultInstance;
                             }
 
                             // if there is only a single instance, then pick it
@@ -172,7 +172,7 @@ namespace Octopus.Shared.Configuration.Instances
                             {
                                 var singleInstance = persistedApplicationInstanceRecords.Single();
                                 instanceName = singleInstance.InstanceName;
-                                record = new PersistedApplicationInstanceRecord(singleInstance.InstanceName, singleInstance.ConfigurationFilePath, singleInstance.InstanceName == ApplicationName.ToString());
+                                record = singleInstance;
                             }
 
                             if (record == null)
@@ -187,6 +187,9 @@ namespace Octopus.Shared.Configuration.Instances
                     {
                         writableConfiguration = writableKeyValueStore;
                     }
+
+                    if (record is PersistedApplicationInstanceRecord persistedRecord)
+                        log.InfoFormat("Using config from {0}", persistedRecord.ConfigurationFilePath);
 
                     return keyValueStore;
                 })
