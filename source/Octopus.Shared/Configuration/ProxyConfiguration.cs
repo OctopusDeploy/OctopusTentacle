@@ -20,49 +20,44 @@ namespace Octopus.Shared.Configuration
         }
 
         public bool UseDefaultProxy => settings.Get(ProxyUseDefaultSettingName, true);
-        public string? CustomProxyUsername => settings.Get(ProxyUsernameSettingName, string.Empty);
+        public string? CustomProxyUsername => settings.Get(ProxyUsernameSettingName, (string?)null);
         public string? CustomProxyPassword => settings.Get<string?>(ProxyPasswordSettingName, protectionLevel: ProtectionLevel.MachineKey);
         public string? CustomProxyHost => settings.Get(ProxyHostSettingName);
         public int CustomProxyPort => settings.Get(ProxyPortSettingName, 80);
     }
 
-    public class WritableProxyConfiguration : IWritableProxyConfiguration
+    public class WritableProxyConfiguration : ProxyConfiguration, IWritableProxyConfiguration
     {
         readonly IWritableKeyValueStore settings;
 
-        public WritableProxyConfiguration(IWritableKeyValueStore settings)
+        public WritableProxyConfiguration(IWritableKeyValueStore settings) : base(settings)
         {
             this.settings = settings;
         }
 
-        public bool UseDefaultProxy
+        public bool SetUseDefaultProxy(bool useDefaultProxy)
         {
-            get => settings.Get(ProxyConfiguration.ProxyUseDefaultSettingName, true);
-            set => settings.Set(ProxyConfiguration.ProxyUseDefaultSettingName, value);
+            return settings.Set(ProxyUseDefaultSettingName, useDefaultProxy);
         }
 
-        public string? CustomProxyUsername
+        public bool SetCustomProxyUsername(string? username)
         {
-            get => settings.Get(ProxyConfiguration.ProxyUsernameSettingName, string.Empty);
-            set => settings.Set(ProxyConfiguration.ProxyUsernameSettingName, value);
+            return settings.Set(ProxyUsernameSettingName, username);
         }
 
-        public string? CustomProxyPassword
+        public bool SetCustomProxyPassword(string? password)
         {
-            get => settings.Get<string?>(ProxyConfiguration.ProxyPasswordSettingName, protectionLevel: ProtectionLevel.MachineKey);
-            set => settings.Set(ProxyConfiguration.ProxyPasswordSettingName, value);
+            return settings.Set(ProxyPasswordSettingName, password);
         }
 
-        public string? CustomProxyHost
+        public bool SetCustomProxyHost(string? host)
         {
-            get => settings.Get(ProxyConfiguration.ProxyHostSettingName);
-            set => settings.Set(ProxyConfiguration.ProxyHostSettingName, value);
+            return settings.Set(ProxyConfiguration.ProxyHostSettingName, host);
         }
 
-        public int CustomProxyPort
+        public bool SetCustomProxyPort(int port)
         {
-            get => settings.Get(ProxyConfiguration.ProxyPortSettingName, 80);
-            set => settings.Set(ProxyConfiguration.ProxyPortSettingName, value);
+            return settings.Set(ProxyConfiguration.ProxyPortSettingName, port);
         }
     }
 }

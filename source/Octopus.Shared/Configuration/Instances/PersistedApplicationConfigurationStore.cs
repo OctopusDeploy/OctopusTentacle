@@ -175,7 +175,7 @@ namespace Octopus.Shared.Configuration.Instances
             var homeConfig = new WritableHomeConfiguration(startUpInstanceRequest.ApplicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
             var home = !string.IsNullOrWhiteSpace(homeDirectory) ? homeDirectory : parentDirectory;
             log.Info($"Setting home directory to: {home}");
-            homeConfig.HomeDirectory = home;
+            homeConfig.SetHomeDirectory(home);
         }
 
         public void SaveInstance(PersistedApplicationInstanceRecord instanceRecord)

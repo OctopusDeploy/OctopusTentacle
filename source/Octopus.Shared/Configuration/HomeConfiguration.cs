@@ -48,45 +48,25 @@ namespace Octopus.Shared.Configuration
         }
     }
 
-    public class WritableHomeConfiguration : IWritableHomeConfiguration
+    public class WritableHomeConfiguration : HomeConfiguration, IWritableHomeConfiguration
     {
         readonly ApplicationName application;
         readonly IWritableKeyValueStore settings;
 
-        public WritableHomeConfiguration(ApplicationName application, IWritableKeyValueStore writableConfiguration)
+        public WritableHomeConfiguration(ApplicationName application, IWritableKeyValueStore writableConfiguration) : base(application, writableConfiguration)
         {
             this.application = application;
             settings = writableConfiguration;
         }
 
-        public string? ApplicationSpecificHomeDirectory => HomeDirectory == null ? null : Path.Combine(HomeDirectory, application.ToString());
-
-        public string? HomeDirectory
+        public bool SetHomeDirectory(string? homeDirectory)
         {
-            get
-            {
-                var value = settings.Get<string?>(HomeConfiguration.OctopusHomeSettingName, null);
-                if (value != null && !Path.IsPathRooted(value))
-                    value = PathHelper.ResolveRelativeDirectoryPath(value);
-                return value;
-            }
-            set => settings.Set(HomeConfiguration.OctopusHomeSettingName, value);
+            return settings.Set(OctopusHomeSettingName, homeDirectory);
         }
 
-        public string? CacheDirectory
+        public bool SetCacheDirectory(string? cacheDirectory)
         {
-            get
-            {
-                var value = settings.Get<string?>(HomeConfiguration.OctopusNodeCacheSettingName, null);
-                if (value == null)
-                    return ApplicationSpecificHomeDirectory;
-
-                if (!Path.IsPathRooted(value))
-                    value = PathHelper.ResolveRelativeDirectoryPath(value);
-
-                return value;
-            }
-            set => settings.Set(HomeConfiguration.OctopusNodeCacheSettingName, value);
+            return settings.Set(OctopusNodeCacheSettingName, cacheDirectory);
         }
     }
 }

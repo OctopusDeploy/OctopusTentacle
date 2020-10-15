@@ -36,33 +36,33 @@ namespace Octopus.Shared.Configuration
     /// <summary>
     /// Octopus and Tentacle machine-wide proxy settings (backed by the Windows Registry).
     /// </summary>
-    public interface IWritableProxyConfiguration
+    public interface IWritableProxyConfiguration : IProxyConfiguration
     {
         /// <summary>
-        /// Gets or sets a flag indicating whether to use the a proxy.
+        /// Sets a flag indicating whether to use the a proxy.
         /// </summary>
-        bool UseDefaultProxy { get; set; }
+        bool SetUseDefaultProxy(bool useDefaultProxy);
 
         /// <summary>
-        /// Gets or sets a custom username for the proxy. If empty, we should assume to use the default Windows network
+        /// Sets a custom username for the proxy. If empty, we should assume to use the default Windows network
         /// credentials if <see cref="UseDefaultProxy" /> is true.
         /// </summary>
-        string? CustomProxyUsername { get; set; }
+        bool SetCustomProxyUsername(string? username);
 
         /// <summary>
-        /// Gets or sets the password to go with <see cref="CustomProxyUsername" />.
+        /// Sets the password to go with <see cref="CustomProxyUsername" />.
         /// </summary>
-        string? CustomProxyPassword { get; set; }
+        bool SetCustomProxyPassword(string? password);
 
         /// <summary>
-        /// Gets or sets the host use when overriding the default proxy. Leave empty to use the default proxy configured in IE.
+        /// Sets the host use when overriding the default proxy. Leave empty to use the default proxy configured in IE.
         /// </summary>
-        string? CustomProxyHost { get; set; }
+        bool SetCustomProxyHost(string? host);
 
         /// <summary>
-        /// Gets or sets the port use when overriding the default proxy configured in IE.
+        /// Sets the port use when overriding the default proxy configured in IE.
         /// </summary>
-        int CustomProxyPort { get; set; }
+        bool SetCustomProxyPort(int port);
     }
 
     public static class ProxyConfigurationExtensions

@@ -9,10 +9,9 @@ namespace Octopus.Shared.Configuration
         string? CacheDirectory { get; }
     }
 
-    public interface IWritableHomeConfiguration
+    public interface IWritableHomeConfiguration : IHomeConfiguration
     {
-        string? ApplicationSpecificHomeDirectory { get; }
-        string? HomeDirectory { get; set; }
-        string? CacheDirectory { get; set; }
+        bool SetHomeDirectory(string? homeDirectory);
+        bool SetCacheDirectory(string? cacheDirectory);
     }
 }
