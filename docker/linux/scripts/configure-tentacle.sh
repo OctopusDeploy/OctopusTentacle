@@ -85,13 +85,14 @@ function registerTentacle() {
 	fi
 	
 	ARGS+=(
-		'--console'
 		'--instance' $instanceName
 		'--server' $ServerUrl
 		'--force')
 			
 	if [[ ! -z "$ServerPort" ]]; then
-		ARGS+=('--server-comms-port' $ServerPort)
+		ARGS+=(
+			'--comms-style' 'TentacleActive'
+			'--server-comms-port' $ServerPort)
 	else
 		ARGS+=(
 			'--comms-style' 'TentaclePassive'

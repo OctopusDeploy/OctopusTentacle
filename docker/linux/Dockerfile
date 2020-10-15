@@ -34,6 +34,7 @@ WORKDIR /
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
+ENV Space="Default"
 ENV MachinePolicy="Default Machine Policy"
 ENV CommunicationsStype=TentacleActive
 ENV PublicHostNameConfiguration="PublicIp"
@@ -43,7 +44,6 @@ ENV ACCEPT_EULA=N
 ENV ServerUrl=""
 ENV ServerPort=""
 ENV ServerApiKey=""
-ENV Space="Default"
 ENV WorkerPool=""
 ENV ServerUsername=""
 ENV ServerPassword=""
