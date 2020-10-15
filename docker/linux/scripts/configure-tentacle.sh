@@ -45,7 +45,7 @@ function configureTentacle() {
 	echo "Configuring communication type ..."
 	if [[ ! -z "$ServerPort" ]]; then
 		tentacle configure --instance "$instanceName" --noListen "True"
-	elif
+	else
 		tentacle configure --instance "$instanceName" --port $ListeningPort --noListen "False"
 	fi
 	
