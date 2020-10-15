@@ -13,7 +13,7 @@ namespace Octopus.Shared.Configuration.Instances
         readonly IApplicationConfigurationStrategy[] instanceStrategies;
         readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
-        (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore? WritableConfiguration)? current;
+        (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore WritableConfiguration)? current;
 
         public ApplicationInstanceSelector(ILog log,
             StartUpInstanceRequest startUpInstanceRequest,
@@ -80,7 +80,7 @@ namespace Octopus.Shared.Configuration.Instances
             return current.Value.Configuration;
         }
 
-        public IWritableKeyValueStore? GetWritableCurrentConfiguration()
+        public IWritableKeyValueStore GetWritableCurrentConfiguration()
         {
             if (current == null)
             {
@@ -93,7 +93,7 @@ namespace Octopus.Shared.Configuration.Instances
             return current.Value.WritableConfiguration;
         }
 
-        (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore? WritableConfiguration) LoadCurrentInstance()
+        (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore WritableConfiguration) LoadCurrentInstance()
         {
             var instance = LoadInstance();
 
@@ -107,7 +107,7 @@ namespace Octopus.Shared.Configuration.Instances
             return instance;
         }
 
-        internal (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore? WritableConfiguration) LoadInstance()
+        internal (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore WritableConfiguration) LoadInstance()
         {
             string? instanceName = null;
             IWritableKeyValueStore? writableConfiguration = null;
@@ -200,7 +200,12 @@ namespace Octopus.Shared.Configuration.Instances
                 throw new ControlledFailureException(
                     $"There are no instances of {startUpInstanceRequest.ApplicationName} configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file, or set the required environment variables.");
 
-            return (instanceName, new AggregatedKeyValueStore(log, keyValueStores), writableConfiguration);
+            var aggregatedKeyValueStore = new AggregatedKeyValueStore(log, keyValueStores);
+
+            if (writableConfiguration == null)
+                writableConfiguration = new DoNotAllowWritesInThisModeKeyValueStore(aggregatedKeyValueStore);
+
+            return (instanceName, aggregatedKeyValueStore, writableConfiguration);
         }
 
         string AvailableInstances(IApplicationConfigurationWithMultipleInstances multipleInstances)
