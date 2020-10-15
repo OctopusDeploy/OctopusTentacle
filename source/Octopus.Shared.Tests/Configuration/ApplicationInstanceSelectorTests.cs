@@ -41,7 +41,7 @@ namespace Octopus.Shared.Tests.Configuration
             selector.CanLoadCurrentInstance().Should().BeTrue("because the in memory config should be used");
             selector.GetCurrentName().Should().BeNull("in memory config should have no instance name");
             selector.GetCurrentConfiguration().Should().NotBeNull("in memory config should available");
-            selector.GetWritableCurrentConfiguration().Should().BeNull("in memory config means no writes");
+            selector.GetWritableCurrentConfiguration().Should().BeAssignableTo<DoNotAllowWritesInThisModeKeyValueStore>("in memory config means no writes");
         }
 
         [Test]
