@@ -8,14 +8,14 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class ApplicationInstanceSelector : IApplicationInstanceSelector
+    class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
         readonly ApplicationName applicationName;
         string currentInstanceName;
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
         readonly ILog log;
-        private readonly ILogFileOnlyLogger logFileOnlyLogger;
+        readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
 
         public ApplicationInstanceSelector(ApplicationName applicationName,
@@ -86,7 +86,7 @@ namespace Octopus.Shared.Configuration.Instances
         internal ApplicationInstanceRecord LoadInstance()
         {
             ApplicationInstanceRecord? instance = null;
-            var anyInstances = instanceStore.AnyInstancesConfigured(applicationName);
+            var anyInstances = instanceStore.AnyInstancesConfigured();
             if (!anyInstances)
                 throw new ControlledFailureException(
                     $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
@@ -95,7 +95,7 @@ namespace Octopus.Shared.Configuration.Instances
 
             if (instance == null)
             {
-                var instances = instanceStore.ListInstances(applicationName);
+                var instances = instanceStore.ListInstances();
                 throw new ControlledFailureException(
                     $"Instance {currentInstanceName} of {applicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
             }
@@ -122,7 +122,7 @@ namespace Octopus.Shared.Configuration.Instances
             }
 
             log.Info("Saving instance: " + instanceName);
-            var instance = new ApplicationInstanceRecord(instanceName, applicationName, configurationFile);
+            var instance = new ApplicationInstanceRecord(instanceName, configurationFile);
             instanceStore.SaveInstance(instance);
 
             var homeConfig = new HomeConfiguration(applicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
@@ -146,10 +146,10 @@ namespace Octopus.Shared.Configuration.Instances
 
         private ApplicationInstanceRecord? TryLoadInstanceByName()
         {
-            var instance = instanceStore.GetInstance(applicationName, currentInstanceName);
+            var instance = instanceStore.GetInstance(currentInstanceName);
             if (instance == null)
             {
-                var instances = instanceStore.ListInstances(applicationName);
+                var instances = instanceStore.ListInstances();
                 var caseInsensitiveMatches = instances.Where(s => string.Equals(s.InstanceName, currentInstanceName, StringComparison.InvariantCultureIgnoreCase)).ToArray();
                 if (caseInsensitiveMatches.Length > 1)
                     throw new ControlledFailureException(
@@ -166,7 +166,7 @@ namespace Octopus.Shared.Configuration.Instances
         private ApplicationInstanceRecord TryLoadDefaultInstance()
         {
             ApplicationInstanceRecord instance;
-            var instances = instanceStore.ListInstances(applicationName);
+            var instances = instanceStore.ListInstances();
             if (instances.Count == 1)
             {
                 instance = instances.First();

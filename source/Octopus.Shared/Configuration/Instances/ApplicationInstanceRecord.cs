@@ -4,31 +4,15 @@ namespace Octopus.Shared.Configuration.Instances
 {
     public class ApplicationInstanceRecord
     {
-        readonly string instanceName;
-        readonly ApplicationName applicationName;
-        readonly string configurationFilePath;
-
-        public ApplicationInstanceRecord(string instanceName, ApplicationName applicationName, string configurationFilePath)
+        public ApplicationInstanceRecord(string instanceName, string configurationFilePath)
         {
-            this.instanceName = instanceName;
-            this.applicationName = applicationName;
-            this.configurationFilePath = configurationFilePath;
+            InstanceName = instanceName;
+            ConfigurationFilePath = configurationFilePath;
         }
 
-        public string InstanceName
-        {
-            get { return instanceName; }
-        }
+        public string InstanceName { get; }
 
-        public ApplicationName ApplicationName
-        {
-            get { return applicationName; }
-        }
-
-        public string ConfigurationFilePath
-        {
-            get { return configurationFilePath; }
-        }
+        public string ConfigurationFilePath { get; }
 
         public static string GetDefaultInstance(ApplicationName application)
         {

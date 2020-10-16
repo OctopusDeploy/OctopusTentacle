@@ -4,19 +4,19 @@ using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Configuration
 {
-    public class NullRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
+    class NullRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
-        public ApplicationInstanceRecord? GetInstanceFromRegistry(ApplicationName name, string instanceName)
+        public ApplicationInstanceRecord? GetInstanceFromRegistry(string instanceName)
         {
             return null;
         }
 
-        public IEnumerable<ApplicationInstanceRecord> GetListFromRegistry(ApplicationName name)
+        public IEnumerable<ApplicationInstanceRecord> GetListFromRegistry()
         {
             return Enumerable.Empty<ApplicationInstanceRecord>();
         }
 
-        public void DeleteFromRegistry(ApplicationName name, string instanceName)
+        public void DeleteFromRegistry(string instanceName)
         {
         }
     }
