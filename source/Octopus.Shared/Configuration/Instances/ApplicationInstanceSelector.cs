@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
@@ -10,13 +11,13 @@ namespace Octopus.Shared.Configuration.Instances
 {
     public class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
-        readonly ApplicationName applicationName;
         string currentInstanceName;
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
         readonly ILog log;
-        private readonly ILogFileOnlyLogger logFileOnlyLogger;
+        readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
+        (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore WritableConfiguration)? current;
 
         public ApplicationInstanceSelector(ApplicationName applicationName,
             string currentInstanceName,
@@ -25,7 +26,7 @@ namespace Octopus.Shared.Configuration.Instances
             ILog log,
             ILogFileOnlyLogger logFileOnlyLogger)
         {
-            this.applicationName = applicationName;
+            ApplicationName = applicationName;
             this.currentInstanceName = currentInstanceName;
             this.fileSystem = fileSystem;
             this.instanceStore = instanceStore;
@@ -33,14 +34,13 @@ namespace Octopus.Shared.Configuration.Instances
             this.logFileOnlyLogger = logFileOnlyLogger;
         }
 
-        LoadedApplicationInstance? current;
+        public ApplicationName ApplicationName { get; }
 
-        public bool TryGetCurrentInstance([NotNullWhen(true)] out LoadedApplicationInstance? instance)
+        public bool CanLoadCurrentInstance()
         {
-            instance = null;
             try
             {
-                instance = GetCurrentInstance();
+                GetCurrentName();
                 return true;
             }
             catch
@@ -49,7 +49,7 @@ namespace Octopus.Shared.Configuration.Instances
             }
         }
 
-        public LoadedApplicationInstance GetCurrentInstance()
+        public bool IsCurrentInstanceDefault()
         {
             if (current == null)
             {
@@ -59,55 +59,87 @@ namespace Octopus.Shared.Configuration.Instances
                         current = LoadCurrentInstance();
                 }
             }
-            return current;
+            return current?.InstanceName == ApplicationName.ToString();
         }
 
-        LoadedApplicationInstance LoadCurrentInstance()
+        public string? GetCurrentName()
         {
-            var instance = LoadFrom(LoadInstance());
+            if (current == null)
+            {
+                lock (@lock)
+                {
+                    if (current == null)
+                        current = LoadCurrentInstance();
+                }
+            }
+            return current?.InstanceName;
+        }
+
+        public IKeyValueStore GetCurrentConfiguration()
+        {
+            if (current == null)
+            {
+                lock (@lock)
+                {
+                    if (current == null)
+                        current = LoadCurrentInstance();
+                }
+            }
+            return current.Value.Configuration;
+        }
+
+        public IWritableKeyValueStore GetWritableCurrentConfiguration()
+        {
+            if (current == null)
+            {
+                lock (@lock)
+                {
+                    if (current == null)
+                        current = LoadCurrentInstance();
+                }
+            }
+            return current.Value.WritableConfiguration;
+        }
+
+        (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore WritableConfiguration) LoadCurrentInstance()
+        {
+            var instance = LoadInstance();
 
             // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
             // back to here
-            var homeConfig = new HomeConfiguration(applicationName, instance.Configuration);
+            var homeConfig = new HomeConfiguration(ApplicationName, instance.Configuration);
             var logInit = new LogInitializer(new LoggingConfiguration(homeConfig), logFileOnlyLogger);
             logInit.Start();
 
             return instance;
         }
 
-        public void DeleteInstance()
-        {
-            var instance = LoadInstance();
-            if (instance == null) return;
-            instanceStore.DeleteInstance(instance);
-            log.Info($"Deleted instance: {instance.InstanceName}");
-        }
-
-        internal ApplicationInstanceRecord LoadInstance()
+        internal (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore WritableConfiguration) LoadInstance()
         {
             ApplicationInstanceRecord? instance = null;
-            var anyInstances = instanceStore.AnyInstancesConfigured(applicationName);
+            var anyInstances = instanceStore.AnyInstancesConfigured(ApplicationName);
             if (!anyInstances)
                 throw new ControlledFailureException(
-                    $"There are no instances of {applicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
+                    $"There are no instances of {ApplicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
 
             instance = string.IsNullOrEmpty(currentInstanceName) ? TryLoadDefaultInstance() : TryLoadInstanceByName();
 
             if (instance == null)
             {
-                var instances = instanceStore.ListInstances(applicationName);
+                var instances = instanceStore.ListInstances(ApplicationName);
                 throw new ControlledFailureException(
-                    $"Instance {currentInstanceName} of {applicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
+                    $"Instance {currentInstanceName} of {ApplicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
             }
 
             instanceStore.MigrateInstance(instance);
-            return instance;
+            var store = new XmlFileKeyValueStore(fileSystem, instance.ConfigurationFilePath);
+            return (instance.InstanceName, store, store);
         }
 
 
         public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
         {
-            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(applicationName), configurationFile, homeDirectory);
+            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(ApplicationName), configurationFile, homeDirectory);
         }
 
         public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
@@ -122,38 +154,28 @@ namespace Octopus.Shared.Configuration.Instances
             }
 
             log.Info("Saving instance: " + instanceName);
-            var instance = new ApplicationInstanceRecord(instanceName, applicationName, configurationFile);
+            var instance = new ApplicationInstanceRecord(instanceName, ApplicationName, configurationFile);
             instanceStore.SaveInstance(instance);
 
-            var homeConfig = new HomeConfiguration(applicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
+            var homeConfig = new WritableHomeConfiguration(ApplicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
             var home = !string.IsNullOrWhiteSpace(homeDirectory) ? homeDirectory : parentDirectory;
             log.Info($"Setting home directory to: {home}");
-            homeConfig.HomeDirectory = home;
+            homeConfig.SetHomeDirectory(home);
 
             currentInstanceName = instanceName;
             LoadCurrentInstance();
         }
 
-        LoadedApplicationInstance LoadFrom(ApplicationInstanceRecord record)
+        ApplicationInstanceRecord? TryLoadInstanceByName()
         {
-            if (record == null) throw new ArgumentNullException(nameof(record));
-            return new LoadedApplicationInstance(
-                applicationName,
-                record.InstanceName,
-                record.ConfigurationFilePath,
-                new XmlFileKeyValueStore(fileSystem, record.ConfigurationFilePath));
-        }
-
-        private ApplicationInstanceRecord? TryLoadInstanceByName()
-        {
-            var instance = instanceStore.GetInstance(applicationName, currentInstanceName);
+            var instance = instanceStore.GetInstance(ApplicationName, currentInstanceName);
             if (instance == null)
             {
-                var instances = instanceStore.ListInstances(applicationName);
+                var instances = instanceStore.ListInstances(ApplicationName);
                 var caseInsensitiveMatches = instances.Where(s => string.Equals(s.InstanceName, currentInstanceName, StringComparison.InvariantCultureIgnoreCase)).ToArray();
                 if (caseInsensitiveMatches.Length > 1)
                     throw new ControlledFailureException(
-                        $"Instance {currentInstanceName} of {applicationName} could not be matched to one of the existing instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
+                        $"Instance {currentInstanceName} of {ApplicationName} could not be matched to one of the existing instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
                 if (caseInsensitiveMatches.Length == 1)
                 {
                     instance = caseInsensitiveMatches.First();
@@ -163,17 +185,17 @@ namespace Octopus.Shared.Configuration.Instances
             return instance;
         }
 
-        private ApplicationInstanceRecord TryLoadDefaultInstance()
+        ApplicationInstanceRecord TryLoadDefaultInstance()
         {
             ApplicationInstanceRecord instance;
-            var instances = instanceStore.ListInstances(applicationName);
+            var instances = instanceStore.ListInstances(ApplicationName);
             if (instances.Count == 1)
             {
                 instance = instances.First();
             }
             else
             {
-                var defaultInstance = instances.FirstOrDefault(s => string.Equals(s.InstanceName, ApplicationInstanceRecord.GetDefaultInstance(applicationName), StringComparison.InvariantCultureIgnoreCase));
+                var defaultInstance = instances.FirstOrDefault(s => string.Equals(s.InstanceName, ApplicationInstanceRecord.GetDefaultInstance(ApplicationName), StringComparison.InvariantCultureIgnoreCase));
                 if (defaultInstance != null)
                 {
                     instance = defaultInstance;
@@ -181,7 +203,7 @@ namespace Octopus.Shared.Configuration.Instances
                 else
                 {
                     throw new ControlledFailureException(
-                        $"There is more than one instance of {applicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
+                        $"There is more than one instance of {ApplicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
                 }
             }
 

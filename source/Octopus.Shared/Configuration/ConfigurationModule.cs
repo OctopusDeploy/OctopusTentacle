@@ -32,7 +32,7 @@ namespace Octopus.Shared.Configuration
                 builder.RegisterType<NullRegistryApplicationInstanceStore>().As<IRegistryApplicationInstanceStore>();
                 builder.RegisterType<LinuxServiceConfigurator>().As<IServiceConfigurator>();
             }
-            
+
             builder.RegisterType<ApplicationInstanceStore>().As<IApplicationInstanceStore>();
             builder.RegisterType<ApplicationInstanceSelector>()
                 .WithParameter("applicationName", applicationName)
@@ -43,17 +43,28 @@ namespace Octopus.Shared.Configuration
             builder.Register(c =>
             {
                 var selector = c.Resolve<IApplicationInstanceSelector>();
-                return selector.GetCurrentInstance().Configuration;
+                return selector.GetCurrentConfiguration();
             }).As<IKeyValueStore>().SingleInstance();
+            builder.Register(c =>
+            {
+                var selector = c.Resolve<IApplicationInstanceSelector>();
+                return selector.GetWritableCurrentConfiguration();
+            }).As<IWritableKeyValueStore>().SingleInstance();
+
 
             builder.RegisterType<HomeConfiguration>()
                 .WithParameter("application", applicationName)
                 .As<IHomeConfiguration>()
                 .SingleInstance();
+            builder.RegisterType<WritableHomeConfiguration>()
+                .WithParameter("application", applicationName)
+                .As<IWritableHomeConfiguration>()
+                .SingleInstance();
 
             builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().SingleInstance();
             builder.RegisterType<ProxyConfigParser>().As<IProxyConfigParser>();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
+            builder.RegisterType<WritableProxyConfiguration>().As<IWritableProxyConfiguration>();
             builder.RegisterType<ProxyInitializer>().As<IProxyInitializer>().SingleInstance();
             RegisterWatchdog(builder);
         }

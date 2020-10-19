@@ -13,7 +13,6 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using Octopus.Diagnostics;
-using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
@@ -103,9 +102,10 @@ namespace Octopus.Shared.Startup
 
                 // Try to load the instance here so we can log into the instance's log file as soon as possible
                 // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on when we try to load the instance for real
-                if (container.Resolve<IApplicationInstanceSelector>().TryGetCurrentInstance(out var instance))
+                var applicationInstanceSelector = container.Resolve<IApplicationInstanceSelector>();
+                if (applicationInstanceSelector.CanLoadCurrentInstance())
                 {
-                    WriteDiagnosticsInfoToLogFile(instance.InstanceName);
+                    WriteDiagnosticsInfoToLogFile(applicationInstanceSelector.GetCurrentName());
                 }
 
                 // Now register extensions and their modules into the container
@@ -305,7 +305,7 @@ namespace Octopus.Shared.Startup
             LogFileOnlyLogger.AssertConfigurationIsCorrect();
         }
 
-        void WriteDiagnosticsInfoToLogFile(string instanceName)
+        void WriteDiagnosticsInfoToLogFile(string? instanceName)
         {
             var executable = PlatformDetection.IsRunningOnWindows
                 ? Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullProcessPath())

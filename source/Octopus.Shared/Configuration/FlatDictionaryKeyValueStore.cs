@@ -48,8 +48,8 @@ namespace Octopus.Shared.Configuration
                 throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
             }
         }
-        
-        public override void Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
+
+        public override bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -57,8 +57,8 @@ namespace Octopus.Shared.Configuration
             {
                 Write(name, null);
                 if (AutoSaveOnSet)
-                    Save();
-                return;
+                    return Save();
+                return true;
             }
 
             var valueAsObject = (object) value;
@@ -75,7 +75,8 @@ namespace Octopus.Shared.Configuration
 
             Write(name, valueAsObject);
             if (AutoSaveOnSet)
-                Save();
+                return Save();
+            return true;
         }
 
         protected virtual bool ValueNeedsToBeSerialized(ProtectionLevel protectionLevel, object valueAsObject)
@@ -83,7 +84,7 @@ namespace Octopus.Shared.Configuration
             //null would end up as "null" rather than empty
             if (valueAsObject == null)
                 return false;
-            
+
             //bool/int/string etc will work fine directly when used as ToString()
             //custom types will end up as the object type instead of anything useful
             if (valueAsObject.GetType().ToString() == valueAsObject.ToString())

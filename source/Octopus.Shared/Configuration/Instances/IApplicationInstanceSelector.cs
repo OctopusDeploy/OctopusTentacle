@@ -1,14 +1,18 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration.Instances
 {
     public interface IApplicationInstanceSelector
     {
-        LoadedApplicationInstance GetCurrentInstance();
-        void CreateDefaultInstance(string configurationFile, string? homeDirectory = null);
-        void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null);
-        void DeleteInstance();
-        bool TryGetCurrentInstance([NotNullWhen(true)] out LoadedApplicationInstance? instance);
+        ApplicationName ApplicationName { get; }
+
+        bool IsCurrentInstanceDefault();
+        string? GetCurrentName();
+        IKeyValueStore GetCurrentConfiguration();
+        IWritableKeyValueStore GetWritableCurrentConfiguration();
+
+        bool CanLoadCurrentInstance();
     }
 }

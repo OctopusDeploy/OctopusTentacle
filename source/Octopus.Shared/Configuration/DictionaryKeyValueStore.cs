@@ -28,7 +28,7 @@ namespace Octopus.Shared.Configuration
             settings.Value.Remove(key);
         }
 
-        public sealed override void Save()
+        public sealed override bool Save()
         {
             SaveSettings(settings.Value);
 
@@ -37,6 +37,7 @@ namespace Octopus.Shared.Configuration
             // Reads vastly outnumber writes so performance is not really a concern here.
             // Also, future plan is to move as much configuration to the database as possible.
             settings = new Lazy<IDictionary<string, object?>>(Load);
+            return true;
         }
 
         IDictionary<string, object?> Load()

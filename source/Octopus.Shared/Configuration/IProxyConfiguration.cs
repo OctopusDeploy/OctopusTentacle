@@ -7,30 +7,62 @@ namespace Octopus.Shared.Configuration
     public interface IProxyConfiguration
     {
         /// <summary>
-        /// Gets or sets a flag indicating whether to use the a proxy.
+        /// Gets a flag indicating whether to use the a proxy.
         /// </summary>
-        bool UseDefaultProxy { get; set; }
+        bool UseDefaultProxy { get; }
 
         /// <summary>
-        /// Gets or sets a custom username for the proxy. If empty, we should assume to use the default Windows network
+        /// Gets a custom username for the proxy. If empty, we should assume to use the default Windows network
         /// credentials if <see cref="UseDefaultProxy" /> is true.
         /// </summary>
-        string CustomProxyUsername { get; set; }
+        string? CustomProxyUsername { get; }
 
         /// <summary>
-        /// Gets or sets the password to go with <see cref="CustomProxyUsername" />.
+        /// Gets the password to go with <see cref="CustomProxyUsername" />.
         /// </summary>
-        string CustomProxyPassword { get; set; }
+        string? CustomProxyPassword { get; }
 
         /// <summary>
-        /// Gets or sets the host use when overriding the default proxy. Leave empty to use the default proxy configured in IE.
+        /// Gets the host use when overriding the default proxy. Leave empty to use the default proxy configured in IE.
         /// </summary>
-        string? CustomProxyHost { get; set; }
+        string? CustomProxyHost { get; }
 
         /// <summary>
-        /// Gets or sets the port use when overriding the default proxy configured in IE.
+        /// Gets the port use when overriding the default proxy configured in IE.
         /// </summary>
-        int CustomProxyPort { get; set; }
+        int CustomProxyPort { get; }
+    }
+
+    /// <summary>
+    /// Octopus and Tentacle machine-wide proxy settings (backed by the Windows Registry).
+    /// </summary>
+    public interface IWritableProxyConfiguration : IProxyConfiguration
+    {
+        /// <summary>
+        /// Sets a flag indicating whether to use the a proxy.
+        /// </summary>
+        bool SetUseDefaultProxy(bool useDefaultProxy);
+
+        /// <summary>
+        /// Sets a custom username for the proxy. If empty, we should assume to use the default Windows network
+        /// credentials if <see cref="UseDefaultProxy" /> is true.
+        /// </summary>
+        bool SetCustomProxyUsername(string? username);
+
+        /// <summary>
+        /// Sets the password to go with <see cref="CustomProxyUsername" />.
+        /// </summary>
+        bool SetCustomProxyPassword(string? password);
+
+        /// <summary>
+        /// Sets the host use when overriding the default proxy. Leave empty to use the default proxy configured in IE.
+        /// </summary>
+        bool SetCustomProxyHost(string? host);
+
+        /// <summary>
+        /// Sets the port use when overriding the default proxy configured in IE.
+        /// </summary>
+        bool SetCustomProxyPort(int port);
     }
 
     public static class ProxyConfigurationExtensions
