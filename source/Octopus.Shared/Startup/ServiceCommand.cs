@@ -73,11 +73,11 @@ namespace Octopus.Shared.Startup
 
                 var exceptions = new List<Exception>();
 
-                foreach (var instance in instanceStore.ListInstances(applicationName))
+                foreach (var instance in instanceStore.ListInstances())
                 {
                     try
                     {
-                        var thisServiceName = ServiceName.GetWindowsServiceName(instance.ApplicationName, instance.InstanceName);
+                        var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
                         serviceConfigurator.ConfigureService(thisServiceName, exePath, instance.InstanceName, serviceDescription, serviceConfigurationState);
                     }
                     catch (Exception ex)

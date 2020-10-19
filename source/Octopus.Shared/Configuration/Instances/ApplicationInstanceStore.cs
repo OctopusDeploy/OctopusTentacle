@@ -9,18 +9,20 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class ApplicationInstanceStore : IApplicationInstanceStore
+    class ApplicationInstanceStore : IApplicationInstanceStore
     {
-        private readonly ILog log;
-        private readonly IOctopusFileSystem fileSystem;
-        private readonly IRegistryApplicationInstanceStore registryApplicationInstanceStore;
-        private readonly string machineConfigurationHomeDirectory;
+        readonly ApplicationName applicationName;
+        readonly ILog log;
+        readonly IOctopusFileSystem fileSystem;
+        readonly IRegistryApplicationInstanceStore registryApplicationInstanceStore;
+        readonly string machineConfigurationHomeDirectory;
 
-        public ApplicationInstanceStore(
+        public ApplicationInstanceStore(ApplicationName applicationName,
             ILog log,
             IOctopusFileSystem fileSystem,
             IRegistryApplicationInstanceStore registryApplicationInstanceStore)
         {
+            this.applicationName = applicationName;
             this.log = log;
             this.fileSystem = fileSystem;
             this.registryApplicationInstanceStore = registryApplicationInstanceStore;
@@ -44,34 +46,34 @@ namespace Octopus.Shared.Configuration.Instances
             public string ConfigurationFilePath { get; set; }
         }
 
-        internal string InstancesFolder(ApplicationName name)
+        internal string InstancesFolder()
         {
-            return Path.Combine(machineConfigurationHomeDirectory, name.ToString(), "Instances");
+            return Path.Combine(machineConfigurationHomeDirectory, applicationName.ToString(), "Instances");
         }
 
-        public bool AnyInstancesConfigured(ApplicationName name)
+        public bool AnyInstancesConfigured()
         {
-            var instancesFolder = InstancesFolder(name);
+            var instancesFolder = InstancesFolder();
             if (fileSystem.DirectoryExists(instancesFolder))
             {
                 if (fileSystem.EnumerateFiles(instancesFolder).Any())
                     return true;
             }
-            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
+            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry();
             return listFromRegistry.Any();
         }
 
-        public IList<ApplicationInstanceRecord> ListInstances(ApplicationName name)
+        public IList<ApplicationInstanceRecord> ListInstances()
         {
-            var instancesFolder = InstancesFolder(name);
+            var instancesFolder = InstancesFolder();
 
-            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
+            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry();
             var listFromFileSystem = new List<ApplicationInstanceRecord>();
             if (fileSystem.DirectoryExists(instancesFolder))
             {
                 listFromFileSystem = fileSystem.EnumerateFiles(instancesFolder)
                     .Select(LoadInstanceConfiguration)
-                    .Select(instance => new ApplicationInstanceRecord(instance.Name, name, instance.ConfigurationFilePath))
+                    .Select(instance => new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath))
                     .ToList();
             }
 
@@ -107,22 +109,22 @@ namespace Octopus.Shared.Configuration.Instances
             fileSystem.OverwriteFile(path, data);
         }
 
-        public ApplicationInstanceRecord? GetInstance(ApplicationName name, string instanceName)
+        public ApplicationInstanceRecord? GetInstance(string instanceName)
         {
-            var instancesFolder = InstancesFolder(name);
+            var instancesFolder = InstancesFolder();
             if (fileSystem.DirectoryExists(instancesFolder))
             {
                 var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config");
                 var instance = TryLoadInstanceConfiguration(instanceConfiguration);
                 if (instance != null)
                 {
-                    return new ApplicationInstanceRecord(instance.Name, name, instance.ConfigurationFilePath);
+                    return new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath);
                 }
             }
 
             // for customers running multiple instances on a machine, they may have a version that only understood
             // using the registry. We need to fall back to there if it doesn't exist in the folder yet.
-            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry(name);
+            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry();
             return listFromRegistry.FirstOrDefault(x => x.InstanceName == instanceName);
         }
 
@@ -133,7 +135,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public void SaveInstance(ApplicationInstanceRecord instanceRecord)
         {
-            var instancesFolder = InstancesFolder(instanceRecord.ApplicationName);
+            var instancesFolder = InstancesFolder();
             if (!fileSystem.DirectoryExists(instancesFolder))
             {
                 fileSystem.CreateDirectory(instancesFolder);
@@ -148,7 +150,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public void DeleteInstance(ApplicationInstanceRecord instanceRecord)
         {
-            var instancesFolder = InstancesFolder(instanceRecord.ApplicationName);
+            var instancesFolder = InstancesFolder();
             var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceRecord.InstanceName) + ".config");
 
             fileSystem.DeleteFile(instanceConfiguration);
@@ -156,9 +158,8 @@ namespace Octopus.Shared.Configuration.Instances
 
         public void MigrateInstance(ApplicationInstanceRecord instanceRecord)
         {
-            var applicationName = instanceRecord.ApplicationName;
             var instanceName = instanceRecord.InstanceName;
-            var instancesFolder = InstancesFolder(instanceRecord.ApplicationName);
+            var instancesFolder = InstancesFolder();
             if (File.Exists(Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config")))
             {
                 return;
@@ -166,7 +167,7 @@ namespace Octopus.Shared.Configuration.Instances
 
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
-                var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(applicationName, instanceName);
+                var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(instanceName);
                 if (registryInstance != null )
                 {
                     log.Info($"Migrating {applicationName} instance from registry - {instanceName}");

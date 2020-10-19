@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -21,11 +20,11 @@ namespace Octopus.Shared.Tests.Configuration
         public void LoadInstanceThrowsWhenNoInstanceNamePassedAndNoInstancesConfigured()
         {
             var selector = GetApplicationInstanceSelector(new List<ApplicationInstanceRecord>(), string.Empty);
-            instanceStore.AnyInstancesConfigured(Arg.Any<ApplicationName>()).Returns(false);
+            instanceStore.AnyInstancesConfigured().Returns(false);
             ((Action)(() => selector.LoadInstance()))
                 .Should().Throw<ControlledFailureException>()
                 .WithMessage("There are no instances of OctopusServer configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
-            instanceStore.DidNotReceive().ListInstances(Arg.Any<ApplicationName>());
+            instanceStore.DidNotReceive().ListInstances();
         }
 
         [Test]
@@ -33,8 +32,8 @@ namespace Octopus.Shared.Tests.Configuration
         {
             var instanceRecords = new List<ApplicationInstanceRecord>
             {
-                new ApplicationInstanceRecord("My instance", ApplicationName.OctopusServer, "c:\\temp\\1.config"),
-                new ApplicationInstanceRecord("instance 2", ApplicationName.OctopusServer, "c:\\temp\\2.config")
+                new ApplicationInstanceRecord("My instance", "c:\\temp\\1.config"),
+                new ApplicationInstanceRecord("instance 2", "c:\\temp\\2.config")
             };
             var selector = GetApplicationInstanceSelector(instanceRecords, string.Empty);
             ((Action)(() => selector.LoadInstance()))
@@ -48,9 +47,9 @@ namespace Octopus.Shared.Tests.Configuration
             var defaultName = ApplicationInstanceRecord.GetDefaultInstance(ApplicationName.OctopusServer);
             var instanceRecords = new List<ApplicationInstanceRecord>
             {
-                new ApplicationInstanceRecord(ApplicationInstanceRecord.GetDefaultInstance(ApplicationName.OctopusServer), ApplicationName.OctopusServer, "c:\\temp\\0.config"),
-                new ApplicationInstanceRecord("My instance", ApplicationName.OctopusServer, "c:\\temp\\1.config"),
-                new ApplicationInstanceRecord("instance 2", ApplicationName.OctopusServer, "c:\\temp\\2.config")
+                new ApplicationInstanceRecord(ApplicationInstanceRecord.GetDefaultInstance(ApplicationName.OctopusServer), "c:\\temp\\0.config"),
+                new ApplicationInstanceRecord("My instance", "c:\\temp\\1.config"),
+                new ApplicationInstanceRecord("instance 2", "c:\\temp\\2.config")
             };
             var selector = GetApplicationInstanceSelector(instanceRecords, string.Empty);
             selector.LoadInstance().InstanceName.Should().Be(defaultName);
@@ -59,7 +58,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void LoadInstanceReturnsOnlyInstanceWhenNoInstanceNameIsPassedAndOnlyOneInstance()
         {
-            var instanceRecords = new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("instance 2", ApplicationName.OctopusServer, "c:\\temp\\2.config") };
+            var instanceRecords = new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("instance 2", "c:\\temp\\2.config") };
             var selector = GetApplicationInstanceSelector(instanceRecords, string.Empty);
 
             selector.LoadInstance().InstanceName.Should().Be("instance 2");
@@ -68,7 +67,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void LoadInstanceThrowsWhenInstanceNameNotFound()
         {
-            var instanceRecords = new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("instance 2", ApplicationName.OctopusServer, "c:\\temp\\2.config") };
+            var instanceRecords = new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("instance 2", "c:\\temp\\2.config") };
             var selector = GetApplicationInstanceSelector(instanceRecords, "instance 1");
 
             ((Action)(() => selector.LoadInstance()))
@@ -79,7 +78,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void LoadInstanceMatchesInstanceNameCaseInsensitively()
         {
-            var instanceRecords = new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("Instance 2", ApplicationName.OctopusServer, "c:\\temp\\2.config") };
+            var instanceRecords = new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("Instance 2", "c:\\temp\\2.config") };
             var selector = GetApplicationInstanceSelector(instanceRecords, "INSTANCE 2");
 
             selector.LoadInstance().InstanceName.Should().Be("Instance 2");
@@ -88,19 +87,19 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void LoadInstanceMatchesInstanceNameCaseSensitivelyWhenOneOfThemIsAnExactMatch()
         {
-            var applicationInstanceRecord = new ApplicationInstanceRecord("INSTANCE 2", ApplicationName.OctopusServer, "c:\\temp\\2b.config");
+            var applicationInstanceRecord = new ApplicationInstanceRecord("INSTANCE 2", "c:\\temp\\2b.config");
 
             var instanceRecords = new List<ApplicationInstanceRecord>
             {
-                new ApplicationInstanceRecord("Instance 2", ApplicationName.OctopusServer, "c:\\temp\\2a.config"),
+                new ApplicationInstanceRecord("Instance 2", "c:\\temp\\2a.config"),
                 applicationInstanceRecord
             };
             var selector = GetApplicationInstanceSelector(instanceRecords, "INSTANCE 2");
 
-            instanceStore.GetInstance(ApplicationName.OctopusServer, "INSTANCE 2").Returns(applicationInstanceRecord);
+            instanceStore.GetInstance("INSTANCE 2").Returns(applicationInstanceRecord);
 
             selector.LoadInstance().InstanceName.Should().Be("INSTANCE 2");
-            instanceStore.DidNotReceive().ListInstances(Arg.Any<ApplicationName>());
+            instanceStore.DidNotReceive().ListInstances();
         }
 
         [Test]
@@ -113,8 +112,8 @@ namespace Octopus.Shared.Tests.Configuration
 
             var instanceRecords = new List<ApplicationInstanceRecord>
             {
-                new ApplicationInstanceRecord("Instance 2", ApplicationName.OctopusServer, "c:\\temp\\2a.config"),
-                new ApplicationInstanceRecord("INSTANCE 2", ApplicationName.OctopusServer, "c:\\temp\\2b.config")
+                new ApplicationInstanceRecord("Instance 2", "c:\\temp\\2a.config"),
+                new ApplicationInstanceRecord("INSTANCE 2", "c:\\temp\\2b.config")
             };
             var selector = GetApplicationInstanceSelector(instanceRecords, "instance 2");
 
@@ -126,8 +125,8 @@ namespace Octopus.Shared.Tests.Configuration
         private static ApplicationInstanceSelector GetApplicationInstanceSelector(List<ApplicationInstanceRecord> instanceRecords, string currentInstanceName)
         {
             instanceStore = Substitute.For<IApplicationInstanceStore>();
-            instanceStore.ListInstances(Arg.Any<ApplicationName>()).Returns(instanceRecords);
-            instanceStore.AnyInstancesConfigured(Arg.Any<ApplicationName>()).Returns(true);
+            instanceStore.ListInstances().Returns(instanceRecords);
+            instanceStore.AnyInstancesConfigured().Returns(true);
             var selector = new ApplicationInstanceSelector(ApplicationName.OctopusServer, currentInstanceName, Substitute.For<IOctopusFileSystem>(), instanceStore, Substitute.For<ILog>(), Substitute.For<ILogFileOnlyLogger>());
             return selector;
         }
