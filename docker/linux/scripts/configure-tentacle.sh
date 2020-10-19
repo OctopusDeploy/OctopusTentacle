@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux
+set -eu
 
 # This is very much a work in progress. Please do not view this as production-ready. It's in Octopus-internal use at
 # the moment and will be made more robust in due course.
