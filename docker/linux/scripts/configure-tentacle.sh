@@ -190,5 +190,3 @@ registerTentacle
 
 echo "Configuration successful."
 echo ""
-
-#tentacle register-worker --instance "$instanceName" --server "$ServerUrl" --name "$HOSTNAME" --comms-style "$CommunicationsStype" --server-comms-port $ServerPort --apiKey $ServerApiKey --space "$Space" --workerpool="$TargetWorkerPool" --policy="$MachinePolicy" --force
