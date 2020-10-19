@@ -49,13 +49,13 @@ function validateVariables() {
 		exit 1
 	fi
   
-	if [[ -z "$TargetWorkerPool" ]]; then
-		if [[ -z "$TargetEnvironment" ]]; then
+	if [[ ! -z "$TargetWorkerPool" ]]; then
+		if [[ ! -z "$TargetEnvironment" ]]; then
 			echo "The 'TargetEnvironment' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
 			exit 1
 		fi
     
-		if [[ -z "$TargetRole" ]]; then
+		if [[ ! -z "$TargetRole" ]]; then
 			echo "The 'TargetRole' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
 			exit 1
 		fi
