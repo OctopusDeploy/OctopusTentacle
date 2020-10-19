@@ -1,23 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
-    <TargetFrameworks>net452</TargetFrameworks>
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-    <OutputType>WinExe</OutputType>
-    <OutputPath>bin</OutputPath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <IsPublishable>false</IsPublishable>
+    <OutputPath>bin</OutputPath>
+    <OutputType>WinExe</OutputType>
+    <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <TargetFrameworks>net452</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
-    <OutputPath>../../_build/$(AssemblyName)</OutputPath>
-    <IsPublishable>false</IsPublishable>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Framework)'=='net-452'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net452'">
     <IsPublishable>true</IsPublishable>
   </PropertyGroup>
 
