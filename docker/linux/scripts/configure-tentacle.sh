@@ -25,11 +25,11 @@ mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
 
 function getPublicHostName() {
-	if [[ $PublicHostNameConfiguration == 'PublicIp' ]]; then
+	if [[ "$PublicHostNameConfiguration" == "PublicIp" ]]; then
 		curl https://api.ipify.org/
-	elif [[ $PublicHostNameConfiguration == 'FQDN' ]]; then
+	elif [[ "$PublicHostNameConfiguration" == "FQDN" ]]; then
 		hostname --fqdn
-	elif [[ $PublicHostNameConfiguration == 'ComputerName' ]]; then
+	elif [[ "$PublicHostNameConfiguration" == "ComputerName" ]]; then
 		hostname
 	else
 		echo $CustomPublicHostName
@@ -37,35 +37,35 @@ function getPublicHostName() {
 }
 
 function validateVariables() {
-	if [[ -z $ServerApiKey ]]; then 
-		if [[ -z $ServerPassword || -z $ServerUsername ]]; then
+	if [[ -z "$ServerApiKey" ]]; then 
+		if [[ -z "$ServerPassword" || -z "$ServerUsername" ]]; then
 			echo "No 'ServerApiKey' or username/pasword environment variables are available" >&2
 			exit 1
 		fi
 	fi
 	
-	if [[ -z $ServerUrl ]]; then
+	if [[ -z "$ServerUrl" ]]; then
 		echo "Missing 'ServerUrl' environment variable" >&2
 		exit 1
 	fi
   
-	if [[ -z $TargetWorkerPool ]]; then
-		if [[ -z $TargetEnvironment ]]; then
+	if [[ -z "$TargetWorkerPool" ]]; then
+		if [[ -z "$TargetEnvironment" ]]; then
 			echo "The 'TargetEnvironment' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
 			exit 1
 		fi
     
-		if [[ -z $TargetRole ]]; then
+		if [[ -z "$TargetRole" ]]; then
 			echo "The 'TargetRole' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
 			exit 1
 		fi
 	else		
-		if [[ -z $TargetEnvironment ]]; then
+		if [[ -z "$TargetEnvironment" ]]; then
 			echo "Missing 'TargetEnvironment' environment variable" >&2
 			exit 1
 		fi
 		
-		if [[ -z $TargetRole ]]; then
+		if [[ -z "$TargetRole" ]]; then
 			echo "Missing 'TargetRole' environment variable" >&2
 			exit 1
 		fi
@@ -73,21 +73,21 @@ function validateVariables() {
   
     echo " - server endpoint '$ServerUrl'"
     echo " - api key '##########'"
-  if [[ ! -z $ServerPort ]]; then
+  if [[ ! -z "$ServerPort" ]]; then
     echo " - communication mode 'Polling' (Active)"
     echo " - server port $ServerPort"
   else
     echo " - communication mode 'Listening' (Passive)"
     echo " - registered port $ListeningPort"
   fi
-  if [[ ! -z $TargetWorkerPool ]]; then
+  if [[ ! -z "$TargetWorkerPool" ]]; then
     echo " - worker pool '$TargetWorkerPool'"
   else
     echo " - environment '$TargetEnvironment'"
     echo " - role '$TargetRole'"
   fi
   echo " - host '$PublicHostNameConfiguration'"
-  if [[ ! -z $TargetName ]]; then
+  if [[ ! -z "$TargetName" ]]; then
     echo " - name '$env:TargetName'"
   fi
 }
