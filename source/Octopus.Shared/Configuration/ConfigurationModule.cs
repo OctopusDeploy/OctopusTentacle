@@ -45,6 +45,11 @@ namespace Octopus.Shared.Configuration
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
 
+            builder.RegisterType<ApplicationInstanceManager>()
+                .WithParameter("applicationName", applicationName)
+                .As<IApplicationInstanceManager>()
+                .SingleInstance();
+
             builder.Register(c =>
             {
                 var selector = c.Resolve<IApplicationInstanceSelector>();

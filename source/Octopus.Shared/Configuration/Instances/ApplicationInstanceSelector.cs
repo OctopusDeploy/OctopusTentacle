@@ -1,8 +1,6 @@
 using System;
-using System.IO;
 using System.Linq;
 using Octopus.Configuration;
-using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 
@@ -10,10 +8,9 @@ namespace Octopus.Shared.Configuration.Instances
 {
     class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
-        string currentInstanceName;
+        readonly string currentInstanceName;
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
-        readonly ILog log;
         readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
         (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore WritableConfiguration)? current;
@@ -22,14 +19,12 @@ namespace Octopus.Shared.Configuration.Instances
             string currentInstanceName,
             IOctopusFileSystem fileSystem,
             IApplicationInstanceStore instanceStore,
-            ILog log,
             ILogFileOnlyLogger logFileOnlyLogger)
         {
             ApplicationName = applicationName;
             this.currentInstanceName = currentInstanceName;
             this.fileSystem = fileSystem;
             this.instanceStore = instanceStore;
-            this.log = log;
             this.logFileOnlyLogger = logFileOnlyLogger;
         }
 
@@ -133,36 +128,6 @@ namespace Octopus.Shared.Configuration.Instances
             instanceStore.MigrateInstance(instance);
             var store = new XmlFileKeyValueStore(fileSystem, instance.ConfigurationFilePath);
             return (instance.InstanceName, store, store);
-        }
-
-
-        public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
-        {
-            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(ApplicationName), configurationFile, homeDirectory);
-        }
-
-        public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
-        {
-            var parentDirectory = Path.GetDirectoryName(configurationFile);
-            fileSystem.EnsureDirectoryExists(parentDirectory);
-
-            if (!fileSystem.FileExists(configurationFile))
-            {
-                log.Info("Creating empty configuration file: " + configurationFile);
-                fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
-            }
-
-            log.Info("Saving instance: " + instanceName);
-            var instance = new ApplicationInstanceRecord(instanceName, configurationFile);
-            instanceStore.SaveInstance(instance);
-
-            var homeConfig = new WritableHomeConfiguration(ApplicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
-            var home = !string.IsNullOrWhiteSpace(homeDirectory) ? homeDirectory : parentDirectory;
-            log.Info($"Setting home directory to: {home}");
-            homeConfig.SetHomeDirectory(home);
-
-            currentInstanceName = instanceName;
-            LoadCurrentInstance();
         }
 
         ApplicationInstanceRecord? TryLoadInstanceByName()

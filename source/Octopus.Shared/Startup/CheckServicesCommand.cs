@@ -9,7 +9,7 @@ using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Startup
 {
-    public class CheckServicesCommand : AbstractCommand
+    class CheckServicesCommand : AbstractCommand
     {
         readonly ILog log;
         HashSet<string>? instances;

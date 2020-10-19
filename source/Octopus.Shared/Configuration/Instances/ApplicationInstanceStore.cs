@@ -148,12 +148,13 @@ namespace Octopus.Shared.Configuration.Instances
             WriteInstanceConfiguration(instance, instanceConfiguration);
         }
 
-        public void DeleteInstance(ApplicationInstanceRecord instanceRecord)
+        public void DeleteInstance(string instanceName)
         {
             var instancesFolder = InstancesFolder();
-            var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceRecord.InstanceName) + ".config");
+            var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config");
 
             fileSystem.DeleteFile(instanceConfiguration);
+            log.Info($"Deleted instance: {instanceName}");
         }
 
         public void MigrateInstance(ApplicationInstanceRecord instanceRecord)

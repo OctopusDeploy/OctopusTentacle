@@ -7,7 +7,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {
-    public class ServiceCommand : AbstractCommand
+    class ServiceCommand : AbstractCommand
     {
         readonly string serviceDescription;
         readonly Assembly assemblyContainingService;
