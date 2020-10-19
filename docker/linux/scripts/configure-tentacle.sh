@@ -88,7 +88,7 @@ function validateVariables() {
   fi
   echo " - host '$PublicHostNameConfiguration'"
   if [[ ! -z "$TargetName" ]]; then
-    echo " - name '$env:TargetName'"
+    echo " - name '$TargetName'"
   fi
 }
 
