@@ -24,7 +24,9 @@ namespace Octopus.Shared.Configuration
 
             if (PlatformDetection.IsRunningOnWindows)
             {
-                builder.RegisterType<RegistryApplicationInstanceStore>().As<IRegistryApplicationInstanceStore>();
+                builder.RegisterType<RegistryApplicationInstanceStore>()
+                    .WithParameter("applicationName", applicationName)
+                    .As<IRegistryApplicationInstanceStore>();
                 builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
             }
             else
@@ -33,7 +35,10 @@ namespace Octopus.Shared.Configuration
                 builder.RegisterType<LinuxServiceConfigurator>().As<IServiceConfigurator>();
             }
 
-            builder.RegisterType<ApplicationInstanceStore>().As<IApplicationInstanceStore>();
+            builder.RegisterType<ApplicationInstanceStore>()
+                .WithParameter("applicationName", applicationName)
+                .As<IApplicationInstanceStore>();
+
             builder.RegisterType<ApplicationInstanceSelector>()
                 .WithParameter("applicationName", applicationName)
                 .WithParameter("currentInstanceName", instanceName)

@@ -39,7 +39,7 @@ namespace Octopus.Shared.Startup
             var serviceControllers = ServiceController.GetServices();
             try
             {
-                foreach (var instance in applicationInstanceStore.ListInstances(applicationName))
+                foreach (var instance in applicationInstanceStore.ListInstances())
                 {
                     if (!startAll && instances.Contains(instance.InstanceName) == false)
                         continue;
