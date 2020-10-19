@@ -37,14 +37,14 @@ RUN rm -rf /tmp/*
 ENV Space="Default"
 ENV MachinePolicy="Default Machine Policy"
 ENV CommunicationsStype=TentacleActive
-ENV PublicHostNameConfiguration="PublicIp"
+ENV PublicHostNameConfiguration="ComputerName"
 ENV DISABLE_DIND=N
 ENV ACCEPT_EULA=N
 
 ENV ServerUrl=""
 ENV ServerPort=""
 ENV ServerApiKey=""
-ENV WorkerPool=""
+ENV TargetWorkerPool=""
 ENV ServerUsername=""
 ENV ServerPassword=""
 ENV TargetEnvironment=""

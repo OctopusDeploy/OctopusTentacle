@@ -36,6 +36,62 @@ function getPublicHostName() {
 	fi
 }
 
+function validateVariables() {
+	if [[ -z $ServerApiKey ]]; then 
+		if [[ -z $ServerPassword || -z $ServerUsername ]]; then
+			echo "No 'ServerApiKey' or username/pasword environment variables are available" >&2
+			exit 1
+		fi
+	fi
+	
+	if [[ -z $ServerUrl ]]; then
+		echo "Missing 'ServerUrl' environment variable" >&2
+		exit 1
+	fi
+  
+	if [[ -z $TargetWorkerPool ]]; then
+		if [[ -z $TargetEnvironment ]]; then
+			echo "The 'TargetEnvironment' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
+			exit 1
+		fi
+    
+		if [[ -z $TargetRole ]]; then
+			echo "The 'TargetRole' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
+			exit 1
+		fi
+	else		
+		if [[ -z $TargetEnvironment ]]; then
+			echo "Missing 'TargetEnvironment' environment variable" >&2
+			exit 1
+		fi
+		
+		if [[ -z $TargetRole ]]; then
+			echo "Missing 'TargetRole' environment variable" >&2
+			exit 1
+		fi
+    fi
+  
+    echo " - server endpoint '$ServerUrl'"
+    echo " - api key '##########'"
+  if [[ ! -z $ServerPort ]]; then
+    echo " - communication mode 'Polling' (Active)"
+    echo " - server port $ServerPort"
+  else
+    echo " - communication mode 'Listening' (Passive)"
+    echo " - registered port $ListeningPort"
+  fi
+  if [[ ! -z $TargetWorkerPool ]]; then
+    echo " - worker pool '$TargetWorkerPool'"
+  else
+    echo " - environment '$TargetEnvironment'"
+    echo " - role '$TargetRole'"
+  fi
+  echo " - host '$PublicHostNameConfiguration'"
+  if [[ ! -z $TargetName ]]; then
+    echo " - name '$env:TargetName'"
+  fi
+}
+
 function configureTentacle() {
 	tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config"
 	
@@ -57,12 +113,14 @@ function configureTentacle() {
 }
 
 function registerTentacle() {
+	echo "Registering with server ..."
+	
 	local ARGS=()
 	
-	if [[ ! -z "$WorkerPool" ]]; then
+	if [[ ! -z "$TargetWorkerPool" ]]; then
 		ARGS+=('register-worker')
 				
-		IFS=',' read -ra WORKER_POOLS <<< "$WorkerPool"
+		IFS=',' read -ra WORKER_POOLS <<< "$TargetWorkerPool"
 		for i in "${WORKER_POOLS[@]}"; do
 			ARGS+=('--workerpool' $i)
 		done
@@ -96,13 +154,18 @@ function registerTentacle() {
 	else
 		ARGS+=(
 			'--comms-style' 'TentaclePassive'
-			'--publicHostName' $(getPublicHostName)
-			'--tentacle-comms-port' $ListeningPort)
+			'--publicHostName' $(getPublicHostName))
+			
+		if [[ ! -z "$ListeningPort" && "$ListeningPort" != "10933" ]]; then	
+			ARGS+=('--tentacle-comms-port' $ListeningPort)
+		fi
 	fi
 	
 	if [[ ! -z "$ServerApiKey" ]]; then
+		echo "Registering Tentacle with api key"
 		ARGS+=('--apiKey' $ServerApiKey)
 	else
+		echo "Registering Tentacle with username/password"
 		ARGS+=(
 			'--username' $ServerUsername
 			'--password' $ServerPassword)
@@ -115,7 +178,17 @@ function registerTentacle() {
 	tentacle "${ARGS[@]}"
 }
 
+echo "==============================================="
+echo "Configuring Octopus Deploy Tentacle"
+
+validateVariables
+
+echo "==============================================="
+
 configureTentacle
 registerTentacle
 
-#tentacle register-worker --instance "$instanceName" --server "$ServerUrl" --name "$HOSTNAME" --comms-style "$CommunicationsStype" --server-comms-port $ServerPort --apiKey $ServerApiKey --space "$Space" --workerpool="$WorkerPool" --policy="$MachinePolicy" --force
+echo "Configuration successful."
+echo ""
+
+#tentacle register-worker --instance "$instanceName" --server "$ServerUrl" --name "$HOSTNAME" --comms-style "$CommunicationsStype" --server-comms-port $ServerPort --apiKey $ServerApiKey --space "$Space" --workerpool="$TargetWorkerPool" --policy="$MachinePolicy" --force
