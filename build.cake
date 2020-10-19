@@ -221,7 +221,7 @@ Task("Pack-WindowsZips")
                 var workingDir = $"{buildDir}/zip/{framework}/{runtimeId}";
                 CreateDirectory(workingDir);
                 CreateDirectory($"{workingDir}/tentacle");
-                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish/*", $"{workingDir}/tentacle/");
+                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/*", $"{workingDir}/tentacle/");
                 Zip($"{workingDir}", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.zip");
             }
         }
@@ -244,7 +244,7 @@ Task("Pack-LinuxTarballs")
                 CreateDirectory(workingDir);
                 CreateDirectory($"{workingDir}/tentacle");
                 CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
-                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish/*", $"{workingDir}/tentacle/");
+                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/*", $"{workingDir}/tentacle/");
                 GZipCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
@@ -267,7 +267,7 @@ Task("Pack-OSXTarballs")
                 CreateDirectory(workingDir);
                 CreateDirectory($"{workingDir}/tentacle");
                 CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
-                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/publish/*", $"{workingDir}/tentacle/");
+                CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/*", $"{workingDir}/tentacle/");
                 GZipCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
@@ -340,7 +340,7 @@ Task("Pack-WindowsInstallers")
         var installerDir = $"{buildDir}/Installer";
         CreateDirectory(installerDir);
 
-        CopyFiles($"{buildDir}/Tentacle/net452/win-x64/publish/*", installerDir);
+        CopyFiles($"{buildDir}/Tentacle/net452/win-x64/*", installerDir);
         CopyFiles($"{buildDir}/Octopus.Manager.Tentacle/net452/win-x64/*", installerDir);
 
         GenerateMsiInstallerContents(installerDir);
@@ -350,30 +350,37 @@ Task("Pack-WindowsInstallers")
 
 Task("Pack-CrossPlatformBundle")
     .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
-    .IsDependentOn("Pack-WindowsInstallers")
-    .IsDependentOn("Pack-LinuxTarballs")
-    .IsDependentOn("Pack-OSXTarballs")
+    .IsDependentOn("Build-Windows") // for the Octopus.Upgrader binary
+    .IsDependentOn("Pack-WindowsInstallers")    // for the .msi files (Windows)
+    .IsDependentOn("Pack-LinuxTarballs")    // for the .tar.gz bundles (Linux)
+    .IsDependentOn("Pack-OSXTarballs")  // for the .tar.gz bundle (OS X)
     .Does(() => {
         CreateDirectory($"{artifactsDir}/nuget");
 
         var workingDir = $"{buildDir}/tentacle-upgrader";
         CreateDirectory(workingDir);
 
-        // Rather than taking wildcards here, we expressly declare each file so that we can be confident that we have everything.
-        // The copy task will fail hard if a file does not exist.
         CopyFiles($"./source/Octopus.Upgrader/Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDir);
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi", $"{workingDir}/Octopus.Tentacle.msi");
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi", $"{workingDir}/Octopus.Tentacle-x64.msi");
+        CopyFiles($"{buildDir}/Octopus.Upgrader/netcoreapp3.1/win-x64/*", workingDir);
+
         foreach (var framework in frameworks)
         {
             foreach (var runtimeId in runtimeIds)
             {
-                if (framework == "net452" && runtimeId != "win-x64") continue;
+                if (framework == "net452" && runtimeId != "win-x64") continue;  // General exclusion of net452+(not Windows)
+                if (runtimeId.StartsWith("win-")) continue; // We don't include Windows zips in the bundle as we use MSIs instead.
 
                 var fileExtension = runtimeId.StartsWith("win-") ? "zip" : "tar.gz";
                 CopyFile($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}", $"{workingDir}/tentacle-{framework}-{runtimeId}.{fileExtension}");
             }
         }
+
+        // Assert that some key files exist.
+        AssertFileExists($"{workingDir}/Octopus.Tentacle.msi");
+        AssertFileExists($"{workingDir}/Octopus.Tentacle-x64.msi");
+        AssertFileExists($"{workingDir}/Octopus.Upgrader.exe");
 
         RunProcess("dotnet", $"tool run dotnet-octo pack --id=Octopus.Tentacle.CrossPlatformBundle --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
     });
@@ -475,8 +482,9 @@ private string DeriveGitBranch()
         Warning("Git branch not available from environment variable. Attempting to work it out for ourselves. DANGER: Don't rely on this on your build server!");
         if (TeamCity.IsRunningOnTeamCity)
         {
-            Console.WriteLine("##teamcity[message text='Git branch not available from environment variable' status='FAILURE']");
-            Console.WriteLine("##teamcity[buildStop comment='Git branch not available from environment variable' readdToQueue='false']");
+            var message = "Git branch not available from environment variable";
+            Console.WriteLine($"##teamcity[message text='{message}' status='FAILURE']");
+            throw new NotSupportedException(message);
         }
 
         branch = "refs/heads/" + RunProcessAndGetOutput("git", "rev-parse --abbrev-ref HEAD");
@@ -840,12 +848,24 @@ private void RunBuildFor(string framework, string runtimeId)
         Runtime = runtimeId
     });
 
-    if (runtimeId == "win-x64")
+    DotNetCorePublish("./source/Tentacle.sln",
+        new DotNetCorePublishSettings
+        {
+            ArgumentCustomization = args => args.Append($"/p:Version={versionInfo.FullSemVer}"),
+            Configuration = configuration,
+            Framework = framework,
+            NoBuild = true,
+            NoRestore = true,
+            Runtime = runtimeId
+        }
+    );
+
+    if (runtimeId.StartsWith("win-"))
     {
-        // check that any unsigned libraries, that Octopus Deploy authors, get signed to play nice with security scanning tools
-        // refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
-        // decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
-        var windowsOnlyBuiltFileSpec = $"{buildDir}/**/win-x64/**";
+        // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
+        // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
+        // Decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
+        var windowsOnlyBuiltFileSpec = $"{buildDir}/**/{framework}/{runtimeId}/**";
         var filesToSign =
             GetFiles(
                 $"{windowsOnlyBuiltFileSpec}/**/Octo*.exe",
@@ -861,18 +881,6 @@ private void RunBuildFor(string framework, string runtimeId)
 
         SignAndTimeStamp(filesToSign);
     }
-
-    DotNetCorePublish("./source/Tentacle.sln",
-        new DotNetCorePublishSettings
-        {
-            ArgumentCustomization = args => args.Append($"/p:Version={versionInfo.FullSemVer}"),
-            Configuration = configuration,
-            Framework = framework,
-            NoBuild = true,
-            NoRestore = true,
-            Runtime = runtimeId
-        }
-    );
 }
 
 private void RunTestSuiteFor(string framework, string runtimeId)
@@ -903,6 +911,13 @@ private void RunTestSuiteFor(string framework, string runtimeId)
         // We want Cake to continue running even if tests fail. It's the responsibility of the build system to inspect
         // the test results files and assert on whether a failed test should fail the build. E.g. muted, ignored tests.
     }
+}
+
+void AssertFileExists(string fileSpec)
+{
+	var files = GetFiles(fileSpec);
+	foreach (var file in files) Information($"Found file: {file}");
+	if (!files.Any()) throw new Exception($"No file(s) matching {fileSpec} were found.");
 }
 
 RunTarget(target);
