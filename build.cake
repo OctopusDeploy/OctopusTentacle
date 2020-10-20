@@ -363,7 +363,9 @@ Task("Pack-CrossPlatformBundle")
         CopyFiles($"./source/Octopus.Upgrader/Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDir);
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi", $"{workingDir}/Octopus.Tentacle.msi");
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi", $"{workingDir}/Octopus.Tentacle-x64.msi");
-        CopyFiles($"{buildDir}/Octopus.Upgrader/netcoreapp3.1/win-x64/*", workingDir);
+        CopyFiles($"{buildDir}/Octopus.Upgrader/netcoreapp3.1/win-x64/*", workingDir);  // NOTE: This is packaged as a self-contained binary. It doesn't require
+                                                                                        // .NET anything installed on the target, so it can happily upgrade any
+                                                                                        // version of Tentacle: net452, netcoreapp3.1 or other.
 
         foreach (var framework in frameworks)
         {
