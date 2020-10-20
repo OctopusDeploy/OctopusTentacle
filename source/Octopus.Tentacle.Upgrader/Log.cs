@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Octopus.Upgrader
+namespace Octopus.Tentacle.Upgrader
 {
     public class Log
     {
