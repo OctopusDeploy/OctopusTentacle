@@ -350,7 +350,7 @@ Task("Pack-WindowsInstallers")
 
 Task("Pack-CrossPlatformBundle")
     .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
-    .IsDependentOn("Build-Windows") // for the Octopus.Upgrader binary
+    .IsDependentOn("Build-Windows") // for the Octopus.Tentacle.Upgrader binary
     .IsDependentOn("Pack-WindowsInstallers")    // for the .msi files (Windows)
     .IsDependentOn("Pack-LinuxTarballs")    // for the .tar.gz bundles (Linux)
     .IsDependentOn("Pack-OSXTarballs")  // for the .tar.gz bundle (OS X)
@@ -360,12 +360,12 @@ Task("Pack-CrossPlatformBundle")
         var workingDir = $"{buildDir}/tentacle-upgrader";
         CreateDirectory(workingDir);
 
-        CopyFiles($"./source/Octopus.Upgrader/Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDir);
+        CopyFiles($"./source/Octopus.Tentacle.CrossPlatformBundle/Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDir);
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi", $"{workingDir}/Octopus.Tentacle.msi");
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi", $"{workingDir}/Octopus.Tentacle-x64.msi");
-        CopyFiles($"{buildDir}/Octopus.Upgrader/netcoreapp3.1/win-x64/*", workingDir);  // NOTE: This is packaged as a self-contained binary. It doesn't require
-                                                                                        // .NET anything installed on the target, so it can happily upgrade any
-                                                                                        // version of Tentacle: net452, netcoreapp3.1 or other.
+        CopyFiles($"{buildDir}/Octopus.Tentacle.Upgrader/netcoreapp3.1/win-x64/*", workingDir);     // NOTE: This is packaged as a self-contained binary. It doesn't require
+                                                                                                    // .NET anything installed on the target, so it can happily upgrade any
+                                                                                                    // version of Tentacle: net452, netcoreapp3.1 or other.
 
         foreach (var framework in frameworks)
         {
@@ -382,7 +382,7 @@ Task("Pack-CrossPlatformBundle")
         // Assert that some key files exist.
         AssertFileExists($"{workingDir}/Octopus.Tentacle.msi");
         AssertFileExists($"{workingDir}/Octopus.Tentacle-x64.msi");
-        AssertFileExists($"{workingDir}/Octopus.Upgrader.exe");
+        AssertFileExists($"{workingDir}/Octopus.Tentacle.Upgrader.exe");
 
         RunProcess("dotnet", $"tool run dotnet-octo pack --id=Octopus.Tentacle.CrossPlatformBundle --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
     });
@@ -910,6 +910,7 @@ private void RunTestSuiteFor(string framework, string runtimeId)
     }
     catch (Exception ex)
     {
+        Warning($"{ex.Message}: {ex}");
         // We want Cake to continue running even if tests fail. It's the responsibility of the build system to inspect
         // the test results files and assert on whether a failed test should fail the build. E.g. muted, ignored tests.
     }
