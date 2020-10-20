@@ -7,12 +7,12 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {
-    class ServiceCommand : AbstractCommand
+    public class ServiceCommand : AbstractCommand
     {
         readonly string serviceDescription;
         readonly Assembly assemblyContainingService;
         readonly ApplicationName applicationName;
-        readonly IApplicationInstanceStore instanceStore;
+        readonly IApplicationInstanceLocator instanceLocator;
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
@@ -22,14 +22,14 @@ namespace Octopus.Shared.Startup
         string? instanceName;
 
         public ServiceCommand(ApplicationName applicationName,
-            IApplicationInstanceStore instanceStore,
+            IApplicationInstanceLocator instanceLocator,
             IApplicationInstanceSelector instanceSelector,
             string serviceDescription,
             Assembly assemblyContainingService,
             IServiceConfigurator serviceConfigurator)
         {
             this.applicationName = applicationName;
-            this.instanceStore = instanceStore;
+            this.instanceLocator = instanceLocator;
             this.instanceSelector = instanceSelector;
             this.serviceDescription = serviceDescription;
             this.assemblyContainingService = assemblyContainingService;
@@ -73,7 +73,7 @@ namespace Octopus.Shared.Startup
 
                 var exceptions = new List<Exception>();
 
-                foreach (var instance in instanceStore.ListInstances())
+                foreach (var instance in instanceLocator.ListInstances())
                 {
                     try
                     {

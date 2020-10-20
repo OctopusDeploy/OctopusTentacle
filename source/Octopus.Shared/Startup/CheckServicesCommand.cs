@@ -9,19 +9,19 @@ using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Startup
 {
-    class CheckServicesCommand : AbstractCommand
+    public class CheckServicesCommand : AbstractCommand
     {
         readonly ILog log;
         HashSet<string>? instances;
-        readonly IApplicationInstanceStore applicationInstanceStore;
+        readonly IApplicationInstanceLocator instanceLocator;
         readonly ApplicationName applicationName;
 
         public CheckServicesCommand(ILog log,
-            IApplicationInstanceStore applicationInstanceStore,
+            IApplicationInstanceLocator instanceLocator,
             ApplicationName applicationName)
         {
             this.log = log;
-            this.applicationInstanceStore = applicationInstanceStore;
+            this.instanceLocator = instanceLocator;
             this.applicationName = applicationName;
 
             Options.Add("instances=", "Comma-separated list of instances to check, or * to check all instances", v =>
@@ -39,7 +39,7 @@ namespace Octopus.Shared.Startup
             var serviceControllers = ServiceController.GetServices();
             try
             {
-                foreach (var instance in applicationInstanceStore.ListInstances())
+                foreach (var instance in instanceLocator.ListInstances())
                 {
                     if (!startAll && instances.Contains(instance.InstanceName) == false)
                         continue;
