@@ -8,7 +8,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class ApplicationInstanceLocator : IApplicationInstanceLocator
+    class ApplicationInstanceLocator : IApplicationInstanceLocator
     {
         readonly string machineConfigurationHomeDirectory;
 

@@ -97,4 +97,40 @@ namespace Octopus.Shared.Configuration
             }
         }
     }
+
+    /// <summary>
+    /// This is for use in the Wpf applications
+    /// </summary>
+    public class ManagerConfigurationModule : Module
+    {
+        readonly ApplicationName applicationName;
+
+        public ManagerConfigurationModule(ApplicationName applicationName)
+        {
+            this.applicationName = applicationName;
+        }
+
+        protected override void Load(ContainerBuilder builder)
+        {
+            base.Load(builder);
+
+            // the Wpf apps only run on Windows
+            builder.RegisterType<RegistryApplicationInstanceStore>()
+                .WithParameter("applicationName", applicationName)
+                .As<IRegistryApplicationInstanceStore>();
+            builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
+
+            builder.RegisterType<ApplicationInstanceStore>()
+                .WithParameter("applicationName", applicationName)
+                .As<IApplicationInstanceStore>();
+
+            builder.RegisterType<ApplicationInstanceLocator>()
+                .WithParameter("applicationName", applicationName)
+                .As<IApplicationInstanceLocator>();
+
+            builder.RegisterType<ApplicationInstanceManager>()
+                .WithParameter("applicationName", applicationName)
+                .As<IApplicationInstanceManager>();
+        }
+    }
 }
