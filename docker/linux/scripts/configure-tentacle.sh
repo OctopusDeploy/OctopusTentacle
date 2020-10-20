@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -e
 
 # This is very much a work in progress. Please do not view this as production-ready. It's in Octopus-internal use at
 # the moment and will be made more robust in due course.
@@ -9,20 +9,23 @@ if [[ "$ACCEPT_EULA" != "Y" ]]; then
     exit 1
 fi
 
-if [ -f "/usr/bin/tentacle" ]; then
-    echo "Octopus Tentacle is already configured."
-    return
-fi
-
-ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
-
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
 instanceName=Tentacle
 configurationDirectory=/etc/octopus
 applicationsDirectory=/home/Octopus/Applications
+alreadyConfiguredSemaphore="$configurationDirectory/.configuredSemaphore"
 
 mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
+
+if [ -f "$alreadyConfiguredSemaphore" ]; then
+    echo "Octopus Tentacle is already configured."
+    exit 1
+fi
+
+if [ ! -f /usr/bin/tentacle ]; then
+	ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
+fi
 
 function getPublicHostName() {
 	if [[ "$PublicHostNameConfiguration" == "PublicIp" ]]; then
@@ -122,7 +125,7 @@ function registerTentacle() {
 
 		IFS=',' read -ra WORKER_POOLS <<< "$TargetWorkerPool"
 		for i in "${WORKER_POOLS[@]}"; do
-			ARGS+=('--workerpool' "'$i'")
+			ARGS+=('--workerpool' "$i")
 		done
 	else
 		ARGS+=('register-with')
@@ -130,21 +133,21 @@ function registerTentacle() {
 		if [[ ! -z "$TargetEnvironment" ]]; then
 			IFS=',' read -ra ENVIRONMENTS <<< "$TargetEnvironment"
 			for i in "${ENVIRONMENTS[@]}"; do
-				ARGS+=('--environment' "'$i'")
+				ARGS+=('--environment' "$i")
 			done
 		fi
 
 		if [[ ! -z "$TargetRole" ]]; then
 			IFS=',' read -ra ROLES <<< "$TargetRole"
 			for i in "${ROLES[@]}"; do
-				ARGS+=('--role' "'$i'")
+				ARGS+=('--role' "$i")
 			done
 		fi
 	fi
 
 	ARGS+=(
-		'--instance' $instanceName
-		'--server' $ServerUrl
+		'--instance' "$instanceName"
+		'--server' "$ServerUrl"
 		'--space' "$Space"
 		'--force')
 
@@ -168,12 +171,12 @@ function registerTentacle() {
 	else
 		echo "Registering Tentacle with username/password"
 		ARGS+=(
-			'--username' "'$ServerUsername'"
-			'--password' "'$ServerPassword'")
+			'--username' "$ServerUsername"
+			'--password' "$ServerPassword")
 	fi
 
 	if [[ ! -z "$TargetName" ]]; then
-		ARGS+=('--name' "'$TargetName'")
+		ARGS+=('--name' "$TargetName")
 	fi
 
 	tentacle "${ARGS[@]}"
@@ -188,6 +191,8 @@ echo "==============================================="
 
 configureTentacle
 registerTentacle
+
+touch $alreadyConfiguredSemaphore
 
 echo "Configuration successful."
 echo ""
