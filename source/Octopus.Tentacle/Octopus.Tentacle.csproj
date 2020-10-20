@@ -1,16 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<RootNamespace>Octopus.Tentacle</RootNamespace>
-		<AssemblyName>Tentacle</AssemblyName>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
-		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64;linux-arm64;linux-musl-x64</RuntimeIdentifiers>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<OutputType>Exe</OutputType>
-		<NoWin32Manifest>true</NoWin32Manifest>
-		<OutputPath>../../_build/$(AssemblyName)</OutputPath>
-		<ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
 		<AppConfig Condition="'$(TargetFramework)' == 'netcoreapp3.1'">app.netcore.config</AppConfig>
+		<ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
+		<AssemblyName>Tentacle</AssemblyName>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<IsPublishable>true</IsPublishable>
+		<NoWin32Manifest>true</NoWin32Manifest>
+		<OutputPath>bin</OutputPath>
+		<OutputType>Exe</OutputType>
+		<PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
+		<RootNamespace>Octopus.Tentacle</RootNamespace>
+		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64;linux-arm64;linux-musl-x64</RuntimeIdentifiers>
+		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
