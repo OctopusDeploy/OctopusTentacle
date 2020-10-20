@@ -14,7 +14,10 @@ changeBuildType(RelativeId("TestOnWindows")) {
             exists("system.Octopus.DotnetSdk3.1")
         }
         add {
-            doesNotContain("system.agent.name", "win2012r2")
+            doesNotContain("system.agent.name", "win2012r2", "RQ_4")
         }
     }
+
+    expectDisabledSettings()
+    updateDisabledSettings("RQ_4")
 }
