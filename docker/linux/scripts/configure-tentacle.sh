@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -e
 
 # This is very much a work in progress. Please do not view this as production-ready. It's in Octopus-internal use at
 # the moment and will be made more robust in due course.
@@ -9,20 +9,23 @@ if [[ "$ACCEPT_EULA" != "Y" ]]; then
     exit 1
 fi
 
-if [ -f "/usr/bin/tentacle" ]; then
-    echo "Octopus Tentacle is already configured."
-    return
-fi
-
-ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
-
 # Tentacle Docker images only support once instance per container. Running multiple instances can be achieved by running multiple containers.
 instanceName=Tentacle
 configurationDirectory=/etc/octopus
 applicationsDirectory=/home/Octopus/Applications
+alreadyConfiguredSemaphore="$configurationDirectory/.configuredSemaphore"
 
 mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
+
+if [ -f "$alreadyConfiguredSemaphore" ]; then
+    echo "Octopus Tentacle is already configured."
+    exit 1
+fi
+
+if [ ! -f /usr/bin/tentacle ]; then
+	ln -s /opt/octopus/tentacle/Tentacle /usr/bin/tentacle
+fi
 
 function getPublicHostName() {
 	if [[ "$PublicHostNameConfiguration" == "PublicIp" ]]; then
@@ -37,40 +40,40 @@ function getPublicHostName() {
 }
 
 function validateVariables() {
-	if [[ -z "$ServerApiKey" ]]; then 
+	if [[ -z "$ServerApiKey" ]]; then
 		if [[ -z "$ServerPassword" || -z "$ServerUsername" ]]; then
 			echo "No 'ServerApiKey' or username/pasword environment variables are available" >&2
 			exit 1
 		fi
 	fi
-	
+
 	if [[ -z "$ServerUrl" ]]; then
 		echo "Missing 'ServerUrl' environment variable" >&2
 		exit 1
 	fi
-  
+
 	if [[ ! -z "$TargetWorkerPool" ]]; then
 		if [[ ! -z "$TargetEnvironment" ]]; then
 			echo "The 'TargetEnvironment' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
 			exit 1
 		fi
-    
+
 		if [[ ! -z "$TargetRole" ]]; then
 			echo "The 'TargetRole' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
 			exit 1
 		fi
-	else		
+	else
 		if [[ -z "$TargetEnvironment" ]]; then
 			echo "Missing 'TargetEnvironment' environment variable" >&2
 			exit 1
 		fi
-		
+
 		if [[ -z "$TargetRole" ]]; then
 			echo "Missing 'TargetRole' environment variable" >&2
 			exit 1
 		fi
     fi
-  
+
     echo " - server endpoint '$ServerUrl'"
     echo " - api key '##########'"
   if [[ ! -z "$ServerPort" ]]; then
@@ -94,59 +97,60 @@ function validateVariables() {
 
 function configureTentacle() {
 	tentacle create-instance --instance "$instanceName" --config "$configurationDirectory/tentacle.config"
-	
+
 	echo "Setting directory paths ..."
 	tentacle configure --instance "$instanceName" --app "$applicationsDirectory"
-	
+
 	echo "Configuring communication type ..."
 	if [[ ! -z "$ServerPort" ]]; then
 		tentacle configure --instance "$instanceName" --noListen "True"
 	else
 		tentacle configure --instance "$instanceName" --port $ListeningPort --noListen "False"
 	fi
-	
+
 	echo "Updating trust ..."
 	tentacle configure --instance "$instanceName" --reset-trust
-	
+
 	echo "Creating certificate ..."
 	tentacle new-certificate --instance "$instanceName" --if-blank
 }
 
 function registerTentacle() {
 	echo "Registering with server ..."
-	
+
 	local ARGS=()
-	
+
 	if [[ ! -z "$TargetWorkerPool" ]]; then
 		ARGS+=('register-worker')
-				
+
 		IFS=',' read -ra WORKER_POOLS <<< "$TargetWorkerPool"
 		for i in "${WORKER_POOLS[@]}"; do
-			ARGS+=('--workerpool' $i)
+			ARGS+=('--workerpool' "$i")
 		done
 	else
 		ARGS+=('register-with')
-		  
+
 		if [[ ! -z "$TargetEnvironment" ]]; then
 			IFS=',' read -ra ENVIRONMENTS <<< "$TargetEnvironment"
 			for i in "${ENVIRONMENTS[@]}"; do
-				ARGS+=('--environment' $i)
+				ARGS+=('--environment' "$i")
 			done
 		fi
-		
+
 		if [[ ! -z "$TargetRole" ]]; then
 			IFS=',' read -ra ROLES <<< "$TargetRole"
 			for i in "${ROLES[@]}"; do
-				ARGS+=('--role' $i)
+				ARGS+=('--role' "$i")
 			done
 		fi
 	fi
-	
+
 	ARGS+=(
-		'--instance' $instanceName
-		'--server' $ServerUrl
+		'--instance' "$instanceName"
+		'--server' "$ServerUrl"
+		'--space' "$Space"
 		'--force')
-			
+
 	if [[ ! -z "$ServerPort" ]]; then
 		ARGS+=(
 			'--comms-style' 'TentacleActive'
@@ -155,26 +159,26 @@ function registerTentacle() {
 		ARGS+=(
 			'--comms-style' 'TentaclePassive'
 			'--publicHostName' $(getPublicHostName))
-			
-		if [[ ! -z "$ListeningPort" && "$ListeningPort" != "10933" ]]; then	
+
+		if [[ ! -z "$ListeningPort" && "$ListeningPort" != "10933" ]]; then
 			ARGS+=('--tentacle-comms-port' $ListeningPort)
 		fi
 	fi
-	
+
 	if [[ ! -z "$ServerApiKey" ]]; then
 		echo "Registering Tentacle with api key"
 		ARGS+=('--apiKey' $ServerApiKey)
 	else
 		echo "Registering Tentacle with username/password"
 		ARGS+=(
-			'--username' $ServerUsername
-			'--password' $ServerPassword)
+			'--username' "$ServerUsername"
+			'--password' "$ServerPassword")
 	fi
-	
+
 	if [[ ! -z "$TargetName" ]]; then
-		ARGS+=('--name' $TargetName)
+		ARGS+=('--name' "$TargetName")
 	fi
-	
+
 	tentacle "${ARGS[@]}"
 }
 
@@ -187,6 +191,8 @@ echo "==============================================="
 
 configureTentacle
 registerTentacle
+
+touch $alreadyConfiguredSemaphore
 
 echo "Configuration successful."
 echo ""
