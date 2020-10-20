@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>Octopus.Upgrader</AssemblyName>
+    <AssemblyName>Octopus.Tentacle.Upgrader</AssemblyName>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <IsPublishable>false</IsPublishable>
@@ -9,10 +9,10 @@
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <PublishReadyToRun>true</PublishReadyToRun>
     <PublishSingleFile>true</PublishSingleFile>
-    <RootNamespace>Octopus.Upgrader</RootNamespace>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <RootNamespace>Octopus.Tentacle.Upgrader</RootNamespace>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <SelfContained>true</SelfContained>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
