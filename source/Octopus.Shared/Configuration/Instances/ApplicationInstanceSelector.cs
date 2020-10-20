@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Octopus.Configuration;
+using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 
@@ -11,6 +12,7 @@ namespace Octopus.Shared.Configuration.Instances
         readonly string currentInstanceName;
         readonly IOctopusFileSystem fileSystem;
         readonly IApplicationInstanceStore instanceStore;
+        readonly ILog log;
         readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
         (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore WritableConfiguration)? current;
@@ -19,12 +21,14 @@ namespace Octopus.Shared.Configuration.Instances
             string currentInstanceName,
             IOctopusFileSystem fileSystem,
             IApplicationInstanceStore instanceStore,
+            ILog log,
             ILogFileOnlyLogger logFileOnlyLogger)
         {
             ApplicationName = applicationName;
             this.currentInstanceName = currentInstanceName;
             this.fileSystem = fileSystem;
             this.instanceStore = instanceStore;
+            this.log = log;
             this.logFileOnlyLogger = logFileOnlyLogger;
         }
 
@@ -127,6 +131,7 @@ namespace Octopus.Shared.Configuration.Instances
 
             instanceStore.MigrateInstance(instance);
             var store = new XmlFileKeyValueStore(fileSystem, instance.ConfigurationFilePath);
+            log.InfoFormat("Using config from {0}", instance.ConfigurationFilePath);
             return (instance.InstanceName, store, store);
         }
 
