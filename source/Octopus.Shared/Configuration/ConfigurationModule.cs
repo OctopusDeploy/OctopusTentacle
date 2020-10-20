@@ -37,7 +37,8 @@ namespace Octopus.Shared.Configuration
 
             builder.RegisterType<ApplicationInstanceStore>()
                 .WithParameter("applicationName", applicationName)
-                .As<IApplicationInstanceStore>();
+                .As<IApplicationInstanceStore>()
+                .As<IApplicationInstanceLocator>();
 
             builder.RegisterType<ApplicationInstanceSelector>()
                 .WithParameter("applicationName", applicationName)
