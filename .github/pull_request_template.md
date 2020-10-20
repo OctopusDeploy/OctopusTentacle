@@ -29,7 +29,7 @@ Firstly, thanks for reviewing this pull request! :tada:
 # Checks
 
 - [ ] :green_heart: All automated builds and tests are passing
-- [ ] Existing automation scripts will continue working after updating to this version of Tentacle
+- [ ] Scripts that automate Tentacle installation and configuration will continue working after updating to this version of Tentacle
 - [ ] Existing installations will continue working after updating to this version of Tentacle
 - [ ] I have considered the changes to public documentation needed to reflect this change
 - [ ] I have considered the changes to the project wiki needed to reflect this change
