@@ -7,12 +7,9 @@
     <OutputPath>bin</OutputPath>
     <OutputType>Exe</OutputType>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
-    <PublishReadyToRun>true</PublishReadyToRun>
-    <PublishSingleFile>true</PublishSingleFile>
     <RootNamespace>Octopus.Tentacle.Upgrader</RootNamespace>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-    <SelfContained>true</SelfContained>
-    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net452</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -20,7 +17,7 @@
     <Optimize>True</Optimize>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1' AND '$(RuntimeIdentifier)'=='win-x64'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net452' AND '$(RuntimeIdentifier)'=='win-x64'">
     <IsPublishable>true</IsPublishable>
   </PropertyGroup>
 
@@ -37,9 +34,12 @@
 		</Compile>
 	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.7.0" />
-    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-  </ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="System.ServiceProcess" />
+	</ItemGroup>
 
 </Project>
