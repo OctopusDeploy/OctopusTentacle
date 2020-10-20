@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Octopus.Upgrader
+namespace Octopus.Tentacle.Upgrader
 {
     class Program
     {
@@ -18,7 +18,8 @@ namespace Octopus.Upgrader
             //we log this as early as possible as a canary to make sure the upgrader launches
             //if the upgrade log file doesn't exist, we assume that we couldn't launch the upgrader
             //for some reason (ie, net framework not installed type issue)
-            Log.Upgrade.Info($"Octopus.Upgrader {Version} started...");
+            var appName = typeof(Program).Assembly.GetName().Name;
+            Log.Upgrade.Info($"{appName} {Version} started...");
 
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
