@@ -145,6 +145,7 @@ function registerTentacle() {
 	ARGS+=(
 		'--instance' $instanceName
 		'--server' $ServerUrl
+		'--space' "$Space"
 		'--force')
 
 	if [[ ! -z "$ServerPort" ]]; then
