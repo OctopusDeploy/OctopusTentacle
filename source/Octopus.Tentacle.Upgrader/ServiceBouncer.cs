@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -114,7 +112,7 @@ namespace Octopus.Tentacle.Upgrader
             }
         }
 
-        string? GetRegistryValue(string registryPath, string value)
+        string GetRegistryValue(string registryPath, string value)
         {
             var hklm = Registry.LocalMachine;
             var key = hklm.OpenSubKey(registryPath);
@@ -122,7 +120,7 @@ namespace Octopus.Tentacle.Upgrader
             if (key == null || regValue == null)
                 return null;
 
-            var keyValue = Environment.ExpandEnvironmentVariables(regValue.ToString()!);
+            var keyValue = Environment.ExpandEnvironmentVariables(regValue.ToString());
             key.Close();
 
             return keyValue;
