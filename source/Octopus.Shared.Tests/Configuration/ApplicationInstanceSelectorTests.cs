@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
@@ -126,7 +127,7 @@ namespace Octopus.Shared.Tests.Configuration
             instanceStore = Substitute.For<IApplicationInstanceStore>();
             instanceStore.ListInstances().Returns(instanceRecords);
             instanceStore.AnyInstancesConfigured().Returns(true);
-            var selector = new ApplicationInstanceSelector(ApplicationName.OctopusServer, currentInstanceName, Substitute.For<IOctopusFileSystem>(), instanceStore, Substitute.For<ILogFileOnlyLogger>());
+            var selector = new ApplicationInstanceSelector(ApplicationName.OctopusServer, currentInstanceName, Substitute.For<IOctopusFileSystem>(), instanceStore, Substitute.For<ILog>(), Substitute.For<ILogFileOnlyLogger>());
             return selector;
         }
     }
