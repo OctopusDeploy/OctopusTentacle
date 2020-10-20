@@ -34,24 +34,22 @@ WORKDIR /
 # We know this won't reduce the image size at all. It's just to make the filesystem a little tidier.
 RUN rm -rf /tmp/*
 
-ENV Space="Default"
-ENV MachinePolicy="Default Machine Policy"
-ENV CommunicationsStype=TentacleActive
-ENV PublicHostNameConfiguration="ComputerName"
-ENV DISABLE_DIND=N
 ENV ACCEPT_EULA=N
-
-ENV ServerUrl=""
-ENV ServerPort=""
-ENV ServerApiKey=""
-ENV TargetWorkerPool=""
-ENV ServerUsername=""
-ENV ServerPassword=""
-ENV TargetEnvironment=""
-ENV ListeningPort=""
-ENV TargetRole=""
-ENV TargetName=""
 ENV CustomPublicHostName=""
+ENV DISABLE_DIND=N
+ENV ListeningPort=""
+ENV MachinePolicy="Default Machine Policy"
+ENV PublicHostNameConfiguration="ComputerName"
+ENV ServerApiKey=""
+ENV ServerPassword=""
+ENV ServerPort=""
+ENV ServerUrl=""
+ENV ServerUsername=""
+ENV Space="Default"
+ENV TargetEnvironment=""
+ENV TargetName=""
+ENV TargetRole=""
+ENV TargetWorkerPool=""
 
 VOLUME /var/lib/docker
 
