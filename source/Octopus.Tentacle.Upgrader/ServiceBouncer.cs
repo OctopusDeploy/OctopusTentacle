@@ -9,7 +9,7 @@ using System.ServiceProcess;
 using System.Threading;
 using Microsoft.Win32;
 
-namespace Octopus.Upgrader
+namespace Octopus.Tentacle.Upgrader
 {
     public class ServiceBouncer
     {
