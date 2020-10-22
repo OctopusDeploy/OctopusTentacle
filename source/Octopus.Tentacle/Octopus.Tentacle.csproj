@@ -33,6 +33,9 @@
 		<PackageReference Include="Octopus.Client" Version="8.9.2" />
 		<PackageReference Include="Octopus.Configuration" Version="3.0.0" />
 		<PackageReference Include="Octopus.Shared" Version="6.0.0" />
+		<PackageReference Include="Octopus.Configuration" Version="2.1.1-enh-env-aggregat0003" />
+		<PackageReference Include="Octopus.Client" Version="7.1.1" />
+		<PackageReference Include="Octopus.Shared" Version="5.1.15-ref-writablestor0019" />
 	</ItemGroup>
 
 	<ItemGroup>
