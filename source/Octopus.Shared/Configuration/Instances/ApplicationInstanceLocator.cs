@@ -67,7 +67,7 @@ namespace Octopus.Shared.Configuration.Instances
                 var instance = TryLoadInstanceConfiguration(instanceConfiguration);
                 if (instance != null)
                 {
-                    return new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath, ApplicationInstanceRecord.GetDefaultInstance(ApplicationName) == instance.Name);
+                    return new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath);
                 }
             }
 
@@ -87,7 +87,7 @@ namespace Octopus.Shared.Configuration.Instances
             {
                 listFromFileSystem = FileSystem.EnumerateFiles(instancesFolder)
                     .Select(LoadInstanceConfiguration)
-                    .Select(instance => new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath, ApplicationInstanceRecord.GetDefaultInstance(ApplicationName) == instance.Name))
+                    .Select(instance => new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath))
                     .ToList();
             }
 

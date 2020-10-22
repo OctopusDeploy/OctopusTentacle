@@ -41,8 +41,8 @@ namespace Octopus.Shared.Tests.Configuration
             var instances = configurationStore.ListInstances();
             instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
             {
-                new ApplicationInstanceRecord("instance1", "configFilePath1", false),
-                new ApplicationInstanceRecord("instance2", "configFilePath2", false)
+                new ApplicationInstanceRecord("instance1", "configFilePath1"),
+                new ApplicationInstanceRecord("instance2", "configFilePath2")
             });
         }
 
@@ -51,16 +51,16 @@ namespace Octopus.Shared.Tests.Configuration
         {
             registryStore.GetListFromRegistry().Returns(new List<ApplicationInstanceRecord>
             {
-                new ApplicationInstanceRecord("instance1", "configFilePath1", false),
-                new ApplicationInstanceRecord("instance2", "configFilePath2", false)
+                new ApplicationInstanceRecord("instance1", "configFilePath1"),
+                new ApplicationInstanceRecord("instance2", "configFilePath2")
             });
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(false);
 
             var instances = configurationStore.ListInstances();
             instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
             {
-                new ApplicationInstanceRecord("instance1", "configFilePath1", false),
-                new ApplicationInstanceRecord("instance2", "configFilePath2", false)
+                new ApplicationInstanceRecord("instance1", "configFilePath1"),
+                new ApplicationInstanceRecord("instance2", "configFilePath2")
             });
         }
 
@@ -69,8 +69,8 @@ namespace Octopus.Shared.Tests.Configuration
         {
             registryStore.GetListFromRegistry().Returns(new List<ApplicationInstanceRecord>
             {
-                new ApplicationInstanceRecord("instance1", "registryFilePath1", false),
-                new ApplicationInstanceRecord("instance2", "registryFilePath2", false)
+                new ApplicationInstanceRecord("instance1", "registryFilePath1"),
+                new ApplicationInstanceRecord("instance2", "registryFilePath2")
             });
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
             fileSystem.EnumerateFiles(Arg.Any<string>()).Returns(new List<string> { "file1", "file2" });
@@ -81,9 +81,9 @@ namespace Octopus.Shared.Tests.Configuration
             var instances = configurationStore.ListInstances();
             instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
             {
-                new ApplicationInstanceRecord("instance1", "registryFilePath1", false),
-                new ApplicationInstanceRecord("instance2", "fileConfigFilePath2", false),
-                new ApplicationInstanceRecord("instance3", "fileConfigFilePath3", false)
+                new ApplicationInstanceRecord("instance1", "registryFilePath1"),
+                new ApplicationInstanceRecord("instance2", "fileConfigFilePath2"),
+                new ApplicationInstanceRecord("instance3", "fileConfigFilePath3")
             });
         }
 
@@ -106,8 +106,8 @@ namespace Octopus.Shared.Tests.Configuration
         {
             registryStore.GetListFromRegistry().Returns(new List<ApplicationInstanceRecord>
             {
-                new ApplicationInstanceRecord("instance1", "ServerPath1", false),
-                new ApplicationInstanceRecord("instance2", "ServerPath2", false)
+                new ApplicationInstanceRecord("instance1", "ServerPath1"),
+                new ApplicationInstanceRecord("instance2", "ServerPath2")
             });
 
             var instance = configurationStore.GetInstance("I AM FAKE");
@@ -117,7 +117,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void MigrateInstance()
         {
-            var sourceInstance = new ApplicationInstanceRecord("instance1", "configFilePath", false);
+            var sourceInstance = new ApplicationInstanceRecord("instance1", "configFilePath");
             registryStore.GetInstanceFromRegistry(Arg.Is("instance1")).Returns(sourceInstance);
 
             configurationStore.MigrateInstance(sourceInstance);

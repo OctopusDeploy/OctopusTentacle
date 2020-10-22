@@ -55,7 +55,7 @@ namespace Octopus.Shared.Configuration.Instances
                                     continue;
 
                                 var path = instanceKey.GetValue("ConfigurationFilePath");
-                                results.Add(new ApplicationInstanceRecord(instanceName, (string)path, instanceName == ApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName)));
+                                results.Add(new ApplicationInstanceRecord(instanceName, (string)path));
                             }
                         }
                     }

@@ -156,7 +156,7 @@ namespace Octopus.Shared.Configuration.Instances
                         else
                         {
                             // pick the default, if there is one
-                            var defaultInstance = persistedApplicationInstanceRecords.FirstOrDefault(i => i.IsDefaultInstance);
+                            var defaultInstance = persistedApplicationInstanceRecords.FirstOrDefault(i => i.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(ApplicationName));
                             if (defaultInstance != null)
                             {
                                 instanceName = defaultInstance.InstanceName;

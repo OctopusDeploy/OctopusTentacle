@@ -45,7 +45,7 @@ namespace Octopus.Shared.Configuration.Instances
                 fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
             }
 
-            var instance = new ApplicationInstanceRecord(instanceName, configurationFile, instanceName == ApplicationInstanceRecord.GetDefaultInstance(ApplicationName));
+            var instance = new ApplicationInstanceRecord(instanceName, configurationFile);
             instanceStore.SaveInstance(instance);
 
             var homeConfig = new WritableHomeConfiguration(ApplicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
