@@ -3,12 +3,17 @@ using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
-    public abstract class AbstractKeyValueStore : IWritableKeyValueStore
+    /// <summary>
+    /// See https://github.com/OctopusDeploy/Configuration/blob/master/source/Octopus.Configuration/IWritableKeyValueStore.cs
+    ///
+    /// The set methods in this class all return true, because Set is supported.
+    /// </summary>
+    public abstract class KeyValueStoreBase : IWritableKeyValueStore
     {
         protected readonly bool AutoSaveOnSet;
         protected abstract void Delete(string key);
 
-        protected AbstractKeyValueStore(bool autoSaveOnSet)
+        protected KeyValueStoreBase(bool autoSaveOnSet)
         {
             AutoSaveOnSet = autoSaveOnSet;
         }
