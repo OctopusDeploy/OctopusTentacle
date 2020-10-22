@@ -52,7 +52,7 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         static ProxyWizardModel LoadModel(ApplicationName application, IProxyConfiguration proxyConfiguration, string selectedInstance)
         {
-            var wizardModel = proxyConfiguration is PollingProxyConfiguration
+            var wizardModel = proxyConfiguration is IPollingProxyConfiguration
                 ? new PollingProxyWizardModel(selectedInstance, application) { ShowProxySettings = true, ToggleService = false }
                 : new ProxyWizardModel(selectedInstance, application) { ShowProxySettings = true, ToggleService = false };
 
