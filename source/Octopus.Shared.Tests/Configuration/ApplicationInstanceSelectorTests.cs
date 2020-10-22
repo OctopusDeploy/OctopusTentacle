@@ -127,7 +127,7 @@ namespace Octopus.Shared.Tests.Configuration
             instanceStore = Substitute.For<IApplicationInstanceStore>();
             instanceStore.ListInstances().Returns(instanceRecords);
             instanceStore.AnyInstancesConfigured().Returns(true);
-            var selector = new ApplicationInstanceSelector(ApplicationName.OctopusServer, currentInstanceName, Substitute.For<IOctopusFileSystem>(), instanceStore, Substitute.For<ILog>(), Substitute.For<ILogFileOnlyLogger>());
+            var selector = new ApplicationInstanceSelector(ApplicationName.OctopusServer, currentInstanceName, Substitute.For<IOctopusFileSystem>(), instanceStore, Substitute.For<ILogFileOnlyLogger>());
             return selector;
         }
     }

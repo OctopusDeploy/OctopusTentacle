@@ -6,12 +6,12 @@ namespace Octopus.Shared.Configuration
     public class ProxyConfiguration : IProxyConfiguration
     {
         // These are deliberately public so consumers like Octopus Server and Tentacle can use the configuration keys
-        public const string ProxyUseDefaultSettingName = "Octopus.Proxy.UseDefaultProxy";
-        public const string ProxyHostSettingName = "Octopus.Proxy.ProxyHost";
-        public const string ProxyPortSettingName = "Octopus.Proxy.ProxyPort";
-        public const string ProxyUsernameSettingName = "Octopus.Proxy.ProxyUsername";
-        public const string ProxyPasswordSettingName = "Octopus.Proxy.ProxyPassword";
-        
+        protected const string ProxyUseDefaultSettingName = "Octopus.Proxy.UseDefaultProxy";
+        protected const string ProxyHostSettingName = "Octopus.Proxy.ProxyHost";
+        protected const string ProxyPortSettingName = "Octopus.Proxy.ProxyPort";
+        protected const string ProxyUsernameSettingName = "Octopus.Proxy.ProxyUsername";
+        protected const string ProxyPasswordSettingName = "Octopus.Proxy.ProxyPassword";
+
         readonly IKeyValueStore settings;
 
         public ProxyConfiguration(IKeyValueStore settings)
@@ -19,34 +19,45 @@ namespace Octopus.Shared.Configuration
             this.settings = settings;
         }
 
-        public bool UseDefaultProxy
+        public bool UseDefaultProxy => settings.Get(ProxyUseDefaultSettingName, true);
+        public string? CustomProxyUsername => settings.Get(ProxyUsernameSettingName, (string?)null);
+        public string? CustomProxyPassword => settings.Get<string?>(ProxyPasswordSettingName, protectionLevel: ProtectionLevel.MachineKey);
+        public string? CustomProxyHost => settings.Get(ProxyHostSettingName);
+        public int CustomProxyPort => settings.Get(ProxyPortSettingName, 80);
+    }
+
+    public class WritableProxyConfiguration : ProxyConfiguration, IWritableProxyConfiguration
+    {
+        readonly IWritableKeyValueStore settings;
+
+        public WritableProxyConfiguration(IWritableKeyValueStore settings) : base(settings)
         {
-            get => settings.Get<bool>(ProxyUseDefaultSettingName, true);
-            set => settings.Set(ProxyUseDefaultSettingName, value);
+            this.settings = settings;
         }
 
-        public string CustomProxyUsername
+        public bool SetUseDefaultProxy(bool useDefaultProxy)
         {
-            get => settings.Get(ProxyUsernameSettingName, string.Empty);
-            set => settings.Set(ProxyUsernameSettingName, value);
+            return settings.Set(ProxyUseDefaultSettingName, useDefaultProxy);
         }
 
-        public string CustomProxyPassword
+        public bool SetCustomProxyUsername(string? username)
         {
-            get => settings.Get<string>(ProxyPasswordSettingName, protectionLevel: ProtectionLevel.MachineKey);
-            set => settings.Set(ProxyPasswordSettingName, value, ProtectionLevel.MachineKey);
+            return settings.Set(ProxyUsernameSettingName, username);
         }
 
-        public string? CustomProxyHost
+        public bool SetCustomProxyPassword(string? password)
         {
-            get => settings.Get(ProxyHostSettingName);
-            set => settings.Set(ProxyHostSettingName, value);
+            return settings.Set(ProxyPasswordSettingName, password, protectionLevel: ProtectionLevel.MachineKey);
         }
 
-        public int CustomProxyPort
+        public bool SetCustomProxyHost(string? host)
         {
-            get => settings.Get(ProxyPortSettingName, 80);
-            set => settings.Set(ProxyPortSettingName, value);
+            return settings.Set(ProxyHostSettingName, host);
+        }
+
+        public bool SetCustomProxyPort(int port)
+        {
+            return settings.Set(ProxyPortSettingName, port);
         }
     }
 }

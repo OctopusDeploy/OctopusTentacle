@@ -3,12 +3,17 @@ using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration
 {
-    public abstract class AbstractKeyValueStore : IKeyValueStore
+    /// <summary>
+    /// See https://github.com/OctopusDeploy/Configuration/blob/master/source/Octopus.Configuration/IWritableKeyValueStore.cs
+    ///
+    /// The set methods in this class all return true, because Set is supported.
+    /// </summary>
+    public abstract class KeyValueStoreBase : IWritableKeyValueStore
     {
         protected readonly bool AutoSaveOnSet;
         protected abstract void Delete(string key);
 
-        protected AbstractKeyValueStore(bool autoSaveOnSet)
+        protected KeyValueStoreBase(bool autoSaveOnSet)
         {
             AutoSaveOnSet = autoSaveOnSet;
         }
@@ -22,18 +27,20 @@ namespace Octopus.Shared.Configuration
         public abstract TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None);
 
         [Obsolete("Please use the generic overload instead")]
-        public void Set(string name, string? value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
+        public bool Set(string name, string? value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {
             Set<string?>(name, value, protectionLevel);
+            return true;
         }
 
-        public abstract void Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None);
+        public abstract bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None);
 
-        public void Remove(string name)
+        public bool Remove(string name)
         {
             Delete(name);
+            return true;
         }
 
-        public abstract void Save();
+        public abstract bool Save();
     }
 }

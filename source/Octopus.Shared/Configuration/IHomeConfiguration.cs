@@ -5,7 +5,13 @@ namespace Octopus.Shared.Configuration
     public interface IHomeConfiguration
     {
         string? ApplicationSpecificHomeDirectory { get; }
-        string? HomeDirectory { get; set; }
-        string? CacheDirectory { get; set; }
+        string? HomeDirectory { get; }
+        string? CacheDirectory { get; }
+    }
+
+    public interface IWritableHomeConfiguration : IHomeConfiguration
+    {
+        bool SetHomeDirectory(string? homeDirectory);
+        bool SetCacheDirectory(string? cacheDirectory);
     }
 }
