@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
@@ -15,7 +16,7 @@ namespace Octopus.Tentacle.Configuration
         /// Gets the Squid for this tentacle.
         /// </summary>
         [Obsolete("This configuration entry is obsolete as of 3.0. It is only used as a Subscription ID where one does not exist.")]
-        string TentacleSquid { get; }
+        string? TentacleSquid { get; }
 
         /// <summary>
         /// Gets the list of Octopus Servers that this Tentacle communicates with.
@@ -28,14 +29,14 @@ namespace Octopus.Tentacle.Configuration
         IEnumerable<string> TrustedOctopusThumbprints { get; }
 
         /// <summary>
-        /// Gets or sets the TCP port number used by the Tentacle distribution service (default is 10933).
+        /// Gets the TCP port number used by the Tentacle distribution service (default is 10933).
         /// </summary>
-        int ServicesPortNumber { get; set; }
+        int ServicesPortNumber { get; }
 
         /// <summary>
-        /// Gets or sets the directory in which NuGet packages will be installed on this machine.
+        /// Gets the directory in which NuGet packages will be installed on this machine.
         /// </summary>
-        string ApplicationDirectory { get; set; }
+        string ApplicationDirectory { get; }
 
         /// <summary>
         /// Gets the directory in which NuGet packages will be uploaded to on this machine.
@@ -50,23 +51,62 @@ namespace Octopus.Tentacle.Configuration
         /// <summary>
         /// Gets or sets the X509 certificate used by the Tentacle.
         /// </summary>
-        X509Certificate2 TentacleCertificate { get; }
+        X509Certificate2? TentacleCertificate { get; }
 
         /// <summary>
-        /// Gets or sets the IP address to listen on.
+        /// Gets the IP address to listen on.
         /// </summary>
-        string ListenIpAddress { get; set; }
+        string? ListenIpAddress { get; }
 
         /// <summary>
         /// Even in polling mode, by default Tentacle will listen on a TCP port for connections, just in case you
         /// also want it to be a listening Tentacle. Set this flag to true to stop Tentacle listening on a port.
         /// </summary>
-        bool NoListen { get; set; }
+        bool NoListen { get; }
 
         /// <summary>
         /// The details received in the most recent handshake request.
         /// </summary>
-        OctopusServerConfiguration LastReceivedHandshake { get; set; }
+        OctopusServerConfiguration? LastReceivedHandshake { get; }
+
+        /// <summary>
+        /// Gets the proxy used for communications.
+        /// </summary>
+        IProxyConfiguration ProxyConfiguration { get; }
+
+        /// <summary>
+        /// Gets the proxy used for halibut communications with the octopus server.
+        /// </summary>
+        IPollingProxyConfiguration PollingProxyConfiguration { get; }
+    }
+
+    public interface IWritableTentacleConfiguration : ITentacleConfiguration
+    {
+        /// <summary>
+        /// Sets the directory in which NuGet packages will be installed on this machine.
+        /// </summary>
+        bool SetApplicationDirectory(string directory);
+
+        /// <summary>
+        /// Sets the TCP port number used by the Tentacle distribution service (default is 10933).
+        /// </summary>
+        bool SetServicesPortNumber(int port);
+
+        /// <summary>
+        /// Sets the IP address to listen on.
+        /// </summary>
+        bool SetListenIpAddress(string? address);
+
+        /// <summary>
+        /// Even in polling mode, by default Tentacle will listen on a TCP port for connections, just in case you
+        /// also want it to be a listening Tentacle. Set this flag to true to stop Tentacle listening on a port.
+        /// </summary>
+        bool SetNoListen(bool noListen);
+
+        /// <summary>
+        /// The details received in the most recent handshake request.
+        /// </summary>
+        bool SetLastReceivedHandshake(OctopusServerConfiguration configuration);
 
         /// <summary>
         /// Adds a trusted Octopus Server.
@@ -94,16 +134,5 @@ namespace Octopus.Tentacle.Configuration
 
         X509Certificate2 GenerateNewCertificate();
         void ImportCertificate(X509Certificate2 certificate);
-
-        /// <summary>
-        /// Gets the proxy used for communications.
-        /// </summary>
-        IProxyConfiguration ProxyConfiguration { get; }
-
-        /// <summary>
-        /// Gets the proxy used for halibut communications with the octopus server.
-        /// </summary>
-        IPollingProxyConfiguration PollingProxyConfiguration { get; }
-
     }
 }

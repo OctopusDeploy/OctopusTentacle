@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Commands
 {
     public class PollCommand : AbstractStandardCommand
     {
-        readonly Lazy<ITentacleConfiguration> configuration;
+        readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly Lazy<IOctopusServerChecker> octopusServerChecker;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
@@ -26,10 +26,10 @@ namespace Octopus.Tentacle.Commands
         int commsPort = 10943;
         string serverWebSocketAddress;
 
-        public PollCommand(Lazy<ITentacleConfiguration> configuration, 
-                           ILog log, 
-                           IApplicationInstanceSelector selector, 
-                           Lazy<IOctopusServerChecker> octopusServerChecker, 
+        public PollCommand(Lazy<IWritableTentacleConfiguration> configuration,
+                           ILog log,
+                           IApplicationInstanceSelector selector,
+                           Lazy<IOctopusServerChecker> octopusServerChecker,
                            IProxyConfigParser proxyConfig,
                            IOctopusClientInitializer octopusClientInitializer)
             : base(selector)
@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Commands
         }
 
         async Task StartAsync()
-        { 
+        {
             var serverAddress = GetAddress();
 
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy

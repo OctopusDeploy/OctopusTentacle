@@ -13,6 +13,7 @@
 		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64;linux-arm64;linux-musl-x64</RuntimeIdentifiers>
 		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<LangVersion>8</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -29,9 +30,9 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Octopus.Configuration" Version="2.1.0" />
+		<PackageReference Include="Octopus.Configuration" Version="2.1.1-enh-env-aggregat0003" />
 		<PackageReference Include="Octopus.Client" Version="7.1.1" />
-		<PackageReference Include="Octopus.Shared" Version="5.1.14" />
+		<PackageReference Include="Octopus.Shared" Version="5.1.15-ref-writablestor0019" />
 	</ItemGroup>
 
 	<ItemGroup>

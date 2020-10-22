@@ -14,8 +14,8 @@ namespace Octopus.Tentacle.Commands
 {
     public class ConfigureCommand : AbstractStandardCommand
     {
-        readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
-        readonly Lazy<IHomeConfiguration> home;
+        readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
+        readonly Lazy<IWritableHomeConfiguration> home;
         readonly ILog log;
         readonly List<string> octopusToAdd = new List<string>();
         readonly List<string> octopusToRemove = new List<string>();
@@ -23,8 +23,8 @@ namespace Octopus.Tentacle.Commands
         bool resetTrust;
 
         public ConfigureCommand(
-            Lazy<ITentacleConfiguration> tentacleConfiguration,
-            Lazy<IHomeConfiguration> home,
+            Lazy<IWritableTentacleConfiguration> tentacleConfiguration,
+            Lazy<IWritableHomeConfiguration> home,
             IOctopusFileSystem fileSystem,
             ILog log,
             IApplicationInstanceSelector selector)
@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Commands
             {
                 var fullPath = fileSystem.GetFullPath(v);
                 fileSystem.EnsureDirectoryExists(fullPath);
-                home.Value.HomeDirectory = fullPath;
+                home.Value.SetHomeDirectory(fullPath);
                 log.Info("Home directory set to: " + fullPath);
                 VoteForRestart();
             }));
@@ -46,20 +46,20 @@ namespace Octopus.Tentacle.Commands
             {
                 var fullPath = fileSystem.GetFullPath(v);
                 fileSystem.EnsureDirectoryExists(fullPath);
-                tentacleConfiguration.Value.ApplicationDirectory = fullPath;
+                tentacleConfiguration.Value.SetApplicationDirectory(fullPath);
                 log.Info("Application directory set to: " + fullPath);
                 VoteForRestart();
             }));
             Options.Add("port=", "TCP port on which Tentacle should listen to connections", v => QueueOperation(delegate
             {
-                tentacleConfiguration.Value.ServicesPortNumber = int.Parse(v);
+                tentacleConfiguration.Value.SetServicesPortNumber(int.Parse(v));
                 log.Info("Services listen port: " + v);
                 VoteForRestart();
             }));
             Options.Add("noListen=", "Suppress listening on a TCP port (intended for polling Tentacles only)", v => QueueOperation(delegate
             {
                 var noListen = bool.Parse(v);
-                tentacleConfiguration.Value.NoListen = noListen;
+                tentacleConfiguration.Value.SetNoListen(noListen);
 
                 foreach (var server in this.tentacleConfiguration.Value.TrustedOctopusServers.Where(s => octopusToAdd.Contains(s.Thumbprint)))
                     server.CommunicationStyle = noListen ? CommunicationStyle.TentacleActive : CommunicationStyle.TentaclePassive;
@@ -71,13 +71,13 @@ namespace Octopus.Tentacle.Commands
             {
                 if (string.Equals("any", v, StringComparison.OrdinalIgnoreCase))
                 {
-                    tentacleConfiguration.Value.ListenIpAddress = null;
+                    tentacleConfiguration.Value.SetListenIpAddress(null);
                     log.Info("Listen on any IP address");
                 }
                 else
                 {
                     var parsed = IPAddress.Parse(v);
-                    tentacleConfiguration.Value.ListenIpAddress = v;
+                    tentacleConfiguration.Value.SetListenIpAddress(v);
                     log.Info("Listen on IP address: " + parsed);
                 }
                 VoteForRestart();
