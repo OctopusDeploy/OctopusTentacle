@@ -9,13 +9,13 @@ namespace Octopus.Tentacle.Commands
 {
     public class UpdateTrustCommand : AbstractStandardCommand
     {
-        readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
+        readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
         readonly ILog log;
         string oldThumbprint;
         string newThumbprint;
 
         public UpdateTrustCommand(
-            Lazy<ITentacleConfiguration> tentacleConfiguration,
+            Lazy<IWritableTentacleConfiguration> tentacleConfiguration,
             ILog log,
             IApplicationInstanceSelector selector)
             : base(selector)

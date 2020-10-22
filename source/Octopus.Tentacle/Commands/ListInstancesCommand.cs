@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using Octopus.Shared;
-using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
 
@@ -16,12 +15,12 @@ namespace Octopus.Tentacle.Commands
         static readonly string JsonFormat = "json";
         static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
 
-        readonly IApplicationInstanceStore instanceStore;
+        readonly IApplicationInstanceLocator instanceStore;
         public string Format { get; set; } = TextFormat;
 
         public override bool SuppressConsoleLogging => true;
 
-        public ListInstancesCommand(IApplicationInstanceStore instanceStore)
+        public ListInstancesCommand(IApplicationInstanceLocator instanceStore)
         {
             this.instanceStore = instanceStore;
 
@@ -33,7 +32,7 @@ namespace Octopus.Tentacle.Commands
             if (!SupportedFormats.Contains(Format, StringComparer.OrdinalIgnoreCase))
                 throw new ControlledFailureException($"The format '{Format}' is not supported. Try {string.Join(" or ", SupportedFormats)}.");
 
-            var instances = instanceStore.ListInstances(ApplicationName.Tentacle);
+            var instances = instanceStore.ListInstances();
             Console.Write(GetOutput(instances));
         }
 

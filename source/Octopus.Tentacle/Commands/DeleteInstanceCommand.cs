@@ -7,15 +7,17 @@ namespace Octopus.Tentacle.Commands
     public class DeleteInstanceCommand : AbstractStandardCommand
     {
         readonly IApplicationInstanceSelector instanceSelector;
+        readonly IApplicationInstanceManager instanceManager;
 
-        public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector) : base(instanceSelector)
+        public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector, IApplicationInstanceManager instanceManager) : base(instanceSelector)
         {
             this.instanceSelector = instanceSelector;
+            this.instanceManager = instanceManager;
         }
 
         protected override void Start()
         {
-            instanceSelector.DeleteInstance();
+            instanceManager.DeleteInstance(instanceSelector.GetCurrentName());
         }
     }
 }

@@ -23,16 +23,24 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
     public partial class TentacleManagerView
     {
         readonly InstanceSelectionModel instanceSelection;
-        readonly IApplicationInstanceStore instanceStore;
+        readonly IApplicationInstanceLocator instanceLocator;
+        readonly IApplicationInstanceManager instanceManager;
         readonly TentacleSetupWizardLauncher tentacleSetupWizardLauncher;
         readonly ProxyWizardLauncher proxyWizardLauncher;
         readonly DeleteWizardLauncher deleteWizardLaunchers;
         readonly TentacleManagerModel model;
 
-        public TentacleManagerView(TentacleManagerModel model, InstanceSelectionModel instanceSelection, IApplicationInstanceStore instanceStore, TentacleSetupWizardLauncher tentacleSetupWizardLauncher, ProxyWizardLauncher proxyWizardLauncher, DeleteWizardLauncher deleteWizardLaunchers)
+        public TentacleManagerView(TentacleManagerModel model,
+            InstanceSelectionModel instanceSelection,
+            IApplicationInstanceLocator instanceLocator,
+            IApplicationInstanceManager instanceManager,
+            TentacleSetupWizardLauncher tentacleSetupWizardLauncher,
+            ProxyWizardLauncher proxyWizardLauncher,
+            DeleteWizardLauncher deleteWizardLaunchers)
         {
             this.instanceSelection = instanceSelection;
-            this.instanceStore = instanceStore;
+            this.instanceLocator = instanceLocator;
+            this.instanceManager = instanceManager;
             this.tentacleSetupWizardLauncher = tentacleSetupWizardLauncher;
             this.proxyWizardLauncher = proxyWizardLauncher;
             this.deleteWizardLaunchers = deleteWizardLaunchers;
@@ -56,12 +64,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             Dispatcher.BeginInvoke(new Action(delegate
             {
-                var instances = instanceStore.ListInstances(ApplicationName.Tentacle);
+                var instances = instanceLocator.ListInstances();
                 var defaultInstall = instances.SingleOrDefault(s => s.InstanceName == instanceSelection.SelectedInstance);
                 if (defaultInstall != null && !File.Exists(defaultInstall.ConfigurationFilePath))
                 {
-                    Log.Octopus().WarnFormat("An instance of {0} named {1} was configured, but the associated configuration file {2} does not exist. Deleting the instance.", defaultInstall.ApplicationName, defaultInstall.InstanceName, defaultInstall.ConfigurationFilePath);
-                    instanceStore.DeleteInstance(defaultInstall);
+                    Log.Octopus().WarnFormat("An instance of {0} named {1} was configured, but the associated configuration file {2} does not exist. Deleting the instance.", ApplicationName.Tentacle, defaultInstall.InstanceName, defaultInstall.ConfigurationFilePath);
+                    instanceManager.DeleteInstance(defaultInstall.InstanceName);
                     defaultInstall = null;
                 }
 

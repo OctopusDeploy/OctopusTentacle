@@ -23,7 +23,7 @@ namespace Octopus.Manager.Tentacle
     public partial class App
     {
         const string EventLogSource = "Octopus Tentacle";
-        
+
         readonly OptionSet commonOptions = new OptionSet();
         bool reconfigure;
 
@@ -57,7 +57,7 @@ namespace Octopus.Manager.Tentacle
                 {
                     EventLog.CreateEventSource(EventLogSource, "Application");
                 }
-                
+
                 ReconfigureTentacleService(container);
             }
 
@@ -73,7 +73,7 @@ namespace Octopus.Manager.Tentacle
             builder.RegisterModule(new OctopusFileSystemModule());
             builder.RegisterType<CertificateGenerator>().As<ICertificateGenerator>();
             builder.RegisterType<CommandLineRunner>().As<ICommandLineRunner>();
-            builder.RegisterType<ApplicationInstanceStore>().As<IApplicationInstanceStore>();
+            builder.RegisterModule(new ManagerConfigurationModule(ApplicationName.Tentacle));
 
             if (!HasPrerequisites(new TentaclePrerequisiteProfile()))
                 Environment.Exit(0);
@@ -90,15 +90,15 @@ namespace Octopus.Manager.Tentacle
 
         void ReconfigureTentacleService(IComponentContext container)
         {
-            var applicationInstanceStore = container.Resolve<IApplicationInstanceStore>();
-            var instances = applicationInstanceStore.ListInstances(ApplicationName.Tentacle);
-            var defaultInstance = instances.Where(x => x.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(x.ApplicationName)).ToArray();
+            var applicationInstanceLocator = container.Resolve<IApplicationInstanceLocator>();
+            var instances = applicationInstanceLocator.ListInstances();
+            var defaultInstance = instances.Where(x => x.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(ApplicationName.Tentacle)).ToArray();
             var instancesWithDefaultFirst = defaultInstance.Concat(instances.Except(defaultInstance).OrderBy(x => x.InstanceName));
             foreach (var instance in instancesWithDefaultFirst)
             {
                 var model = container.Resolve<TentacleManagerModel>();
                 model.Load(instance);
-                var isDefaultInstance = instance.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(instance.ApplicationName);
+                var isDefaultInstance = instance.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(ApplicationName.Tentacle);
                 var title = isDefaultInstance ? "Reconfiguring Tentacle..." : $"Reconfiguring Tentacle {instance.InstanceName}...";
                 RunProcessDialog.ShowDialog(MainWindow, model.ServiceWatcher.GetReconfigureCommands(), title, model.LogsDirectory, showOutputLog: true);
             }

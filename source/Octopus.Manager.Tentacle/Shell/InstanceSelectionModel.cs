@@ -10,10 +10,10 @@ namespace Octopus.Manager.Tentacle.Shell
 {
     public class InstanceSelectionModel : ViewModel
     {
-        readonly IApplicationInstanceStore store;
+        readonly IApplicationInstanceLocator store;
         string selectedInstance;
 
-        public InstanceSelectionModel(ApplicationName applicationName, IApplicationInstanceStore store)
+        public InstanceSelectionModel(ApplicationName applicationName, IApplicationInstanceLocator store)
         {
             this.ApplicationName = applicationName;
             this.store = store;
@@ -45,7 +45,7 @@ namespace Octopus.Manager.Tentacle.Shell
         public void Refresh()
         {
             var currentlySelectedInstance = selectedInstance;
-            var existing = store.ListInstances(ApplicationName);
+            var existing = store.ListInstances();
 
             Instances.Clear();
             if (existing.Count > 0)

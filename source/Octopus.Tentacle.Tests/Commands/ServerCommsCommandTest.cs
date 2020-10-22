@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             configuration = new StubTentacleConfiguration();
             command = new ServerCommsCommand(
-                new Lazy<ITentacleConfiguration>(() => configuration),
+                new Lazy<IWritableTentacleConfiguration>(() => configuration),
                 new InMemoryLog(),
                 Substitute.For<IApplicationInstanceSelector>()
                 );

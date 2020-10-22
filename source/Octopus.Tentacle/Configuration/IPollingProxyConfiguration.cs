@@ -8,4 +8,7 @@ namespace Octopus.Tentacle.Configuration
     /// </summary>
     public interface IPollingProxyConfiguration : IProxyConfiguration
     { }
+
+    public interface IWritablePollingProxyConfiguration : IWritableProxyConfiguration
+    { }
 }

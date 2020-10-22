@@ -15,13 +15,13 @@ namespace Octopus.Tentacle.Commands
 {
     public class ImportCertificateCommand : AbstractStandardCommand
     {
-        readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
+        readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
         readonly ILog log;
         bool fromRegistry;
         string importFile;
         string importPfxPassword;
 
-        public ImportCertificateCommand(Lazy<ITentacleConfiguration> tentacleConfiguration, ILog log, IApplicationInstanceSelector selector)
+        public ImportCertificateCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ILog log, IApplicationInstanceSelector selector)
             : base(selector)
         {
             this.tentacleConfiguration = tentacleConfiguration;
@@ -57,7 +57,7 @@ namespace Octopus.Tentacle.Commands
             {
                 if (!File.Exists(importFile))
                     throw new ControlledFailureException($"Certificate '{importFile}' was not found.");
-                
+
                 var fileExtension = Path.GetExtension(importFile);
 
                 //We assume if the file does not end in .pfx that it is the legacy base64 encoded certificate, however if this fails we should still attempt to read as the PFX format.

@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class RegisterMachineCommandFixture : CommandFixture<RegisterMachineCommand>
     {
-        ITentacleConfiguration configuration;
+        IWritableTentacleConfiguration configuration;
         ILog log;
         X509Certificate2 certificate;
         IRegisterMachineOperation operation;
@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public void BeforeEachTest()
         {
             serverThumbprint = Guid.NewGuid().ToString();
-            configuration = Substitute.For<ITentacleConfiguration>();
+            configuration = Substitute.For<IWritableTentacleConfiguration>();
             operation = Substitute.For<IRegisterMachineOperation>();
             serverChecker = Substitute.For<IOctopusServerChecker>();
             log = Substitute.For<ILog>();
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 .Returns(Task.FromResult(octopusAsyncClient));
 
             Command = new RegisterMachineCommand(new Lazy<IRegisterMachineOperation>(() => operation),
-                                                 new Lazy<ITentacleConfiguration>(() => configuration),
+                                                 new Lazy<IWritableTentacleConfiguration>(() => configuration),
                                                  log,
                                                  Substitute.For<IApplicationInstanceSelector>(),
                                                  new Lazy<IOctopusServerChecker>(() => serverChecker),
@@ -74,11 +74,11 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterListeningTentacle()
         {
-            Start("--env=Development", 
-                  "--server=http://localhost", 
-                  "--name=MyMachine", 
+            Start("--env=Development",
+                  "--server=http://localhost",
+                  "--name=MyMachine",
                   "--publicHostName=mymachine.test",
-                  "--apiKey=ABC123", 
+                  "--apiKey=ABC123",
                   "--force",
                   "--proxy=Proxy",
                   "--role=app-server",
@@ -102,10 +102,10 @@ namespace Octopus.Tentacle.Tests.Commands
             Assert.That(operation.ProxyName, Is.EqualTo("Proxy"));
 
             configuration.Received().AddOrUpdateTrustedOctopusServer(
-                Arg.Is<OctopusServerConfiguration>(x => x.Address == null && 
+                Arg.Is<OctopusServerConfiguration>(x => x.Address == null &&
                                                         x.CommunicationStyle == CommunicationStyle.TentaclePassive &&
                                                         x.Thumbprint == serverThumbprint));
-            
+
             operation.Received().ExecuteAsync(repository);
         }
 

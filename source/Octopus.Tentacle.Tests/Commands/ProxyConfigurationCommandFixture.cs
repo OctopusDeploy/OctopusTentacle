@@ -39,31 +39,31 @@ namespace Octopus.Tentacle.Tests.Commands
                 File.Delete(configFile);
             }
         }
-        
-        
+
+
         [Test]
         public void ToggleTheProxy()
         {
-            var config = new Lazy<IProxyConfiguration>(() => new ProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
+            var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
             const string expectedProxyHost = "127.0.0.1";
             const string expectedUsername = "yoda";
             const string expectedPassword = "do or do not, there is no try";
             const int expectedProxyPort = 8888;
-            
+
             Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ILog>());
-            
+
             EnableACustomProxy();
             config.Value.UseDefaultProxy.Should().BeFalse(because: "we're using a custom proxy now");
             config.Value.CustomProxyHost.Should().Be(expectedProxyHost, because: "we've supplied a proxy host");
             config.Value.CustomProxyPort.Should().Be(expectedProxyPort, because: "we've supplied a proxy port");
             config.Value.CustomProxyUsername.Should().Be(expectedUsername, because: "we've supplied a proxy username");
             config.Value.CustomProxyPassword.Should().Be(expectedPassword, because: "we've supplied a proxy password");
-            
+
             DisableTheProxy();
             config.Value.UseDefaultProxy.Should().BeFalse(because: "we've disabled the proxy altogether");
             config.Value.CustomProxyHost.Should().BeNullOrEmpty(because: "the proxyHost setting should be cleared when we disable the proxy");
             config.Value.CustomProxyPort.Should().Be(expectedProxyPort, because: "the port is now ignored");
-            
+
             EnableTheDefaultProxy();
             config.Value.CustomProxyPort.Should().Be(expectedProxyPort, because: "the port is still ignored, even though we're enabling the default proxy");
 
@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void TurnOnDefaultProxy()
         {
-            var config = new Lazy<IProxyConfiguration>(() => new ProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
+            var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
             Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ILog>());
 
             EnableTheDefaultProxy();
@@ -94,7 +94,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void UseACustomHostAndIgnoreHttpAndPort()
         {
-            var config = new Lazy<IProxyConfiguration>(() => new ProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
+            var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
             Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ILog>());
 
             EnableAnIncorrectlySuppliedProxyHost();
@@ -108,7 +108,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 Start("--proxyEnable=true", "--proxyHost=http://127.0.0.1:8888");
             }
         }
-        
+
         void EnableTheDefaultProxy()
         {
             Start("--proxyEnable=true");

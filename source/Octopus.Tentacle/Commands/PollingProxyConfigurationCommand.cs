@@ -9,8 +9,8 @@ namespace Octopus.Tentacle.Commands
 {
     public class PollingProxyConfigurationCommand : ProxyConfigurationCommand
     {
-        public PollingProxyConfigurationCommand(Lazy<IPollingProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ILog log)
-            : base(new Lazy<IProxyConfiguration>(() => proxyConfiguration.Value), instanceSelector, log)
+        public PollingProxyConfigurationCommand(Lazy<IWritablePollingProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ILog log)
+            : base(new Lazy<IWritableProxyConfiguration>(() => proxyConfiguration.Value), instanceSelector, log)
         {
         }
     }

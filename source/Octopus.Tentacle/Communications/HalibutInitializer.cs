@@ -15,12 +15,12 @@ namespace Octopus.Tentacle.Communications
 {
     public class HalibutInitializer : IHalibutInitializer
     {
-        readonly ITentacleConfiguration configuration;
+        readonly IWritableTentacleConfiguration configuration;
         readonly HalibutRuntime halibut;
         readonly IProxyConfigParser proxyConfigParser;
         readonly ILog log = Log.Octopus();
 
-        public HalibutInitializer(ITentacleConfiguration configuration, HalibutRuntime halibut, IProxyConfigParser proxyConfigParser)
+        public HalibutInitializer(IWritableTentacleConfiguration configuration, HalibutRuntime halibut, IProxyConfigParser proxyConfigParser)
         {
             this.configuration = configuration;
             this.halibut = halibut;

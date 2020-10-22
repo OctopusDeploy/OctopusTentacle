@@ -9,7 +9,7 @@ using IPollingProxyConfiguration = Octopus.Tentacle.Configuration.IPollingProxyC
 
 namespace Octopus.Tentacle.Tests.Commands
 {
-    class StubTentacleConfiguration : ITentacleConfiguration
+    class StubTentacleConfiguration : IWritableTentacleConfiguration
     {
         IList<OctopusServerConfiguration> servers = new List<OctopusServerConfiguration>();
 
@@ -37,6 +37,36 @@ namespace Octopus.Tentacle.Tests.Commands
         public OctopusServerConfiguration LastReceivedHandshake { get; set; }
         public IProxyConfiguration ProxyConfiguration { get; set; }
         public IPollingProxyConfiguration PollingProxyConfiguration { get; set; }
+
+        public bool SetApplicationDirectory(string directory)
+        {
+            ApplicationDirectory = directory;
+            return true;
+        }
+
+        public bool SetServicesPortNumber(int port)
+        {
+            ServicesPortNumber = port;
+            return true;
+        }
+
+        public bool SetListenIpAddress(string address)
+        {
+            ListenIpAddress = address;
+            return true;
+        }
+
+        public bool SetNoListen(bool noListen)
+        {
+            NoListen = noListen;
+            return true;
+        }
+
+        public bool SetLastReceivedHandshake(OctopusServerConfiguration configuration)
+        {
+            LastReceivedHandshake = configuration;
+            return true;
+        }
 
         public bool AddOrUpdateTrustedOctopusServer(OctopusServerConfiguration machine)
         {

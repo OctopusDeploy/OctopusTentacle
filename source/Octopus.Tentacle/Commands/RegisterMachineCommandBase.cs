@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Commands
     public abstract class RegisterMachineCommandBase<TRegistrationOperationType> : AbstractStandardCommand where TRegistrationOperationType : IRegisterMachineOperationBase
     {
         readonly Lazy<TRegistrationOperationType> lazyRegisterMachineOperation;
-        readonly Lazy<ITentacleConfiguration> configuration;
+        readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly Lazy<IOctopusServerChecker> octopusServerChecker;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Commands
         int? tentacleCommsPort = null;
 
         public RegisterMachineCommandBase(Lazy<TRegistrationOperationType> lazyRegisterMachineOperation,
-            Lazy<ITentacleConfiguration> configuration,
+            Lazy<IWritableTentacleConfiguration> configuration,
             ILog log,
             IApplicationInstanceSelector selector,
             Lazy<IOctopusServerChecker> octopusServerChecker,

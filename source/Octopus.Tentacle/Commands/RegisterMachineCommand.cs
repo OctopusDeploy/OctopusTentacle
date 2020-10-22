@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Commands
         TenantedDeploymentMode tenantedDeploymentMode;
 
         public RegisterMachineCommand(Lazy<IRegisterMachineOperation> lazyRegisterMachineOperation,
-                                      Lazy<ITentacleConfiguration> configuration,
+                                      Lazy<IWritableTentacleConfiguration> configuration,
                                       ILog log,
                                       IApplicationInstanceSelector selector,
                                       Lazy<IOctopusServerChecker> octopusServerChecker,

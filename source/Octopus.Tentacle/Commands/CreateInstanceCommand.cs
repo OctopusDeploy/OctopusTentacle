@@ -9,15 +9,15 @@ namespace Octopus.Tentacle.Commands
     public class CreateInstanceCommand : AbstractCommand
     {
         readonly IOctopusFileSystem fileSystem;
-        readonly IApplicationInstanceSelector instanceSelector;
+        readonly IApplicationInstanceManager instanceManager;
         string instanceName;
         string config;
         string home;
 
-        public CreateInstanceCommand(IOctopusFileSystem fileSystem, IApplicationInstanceSelector instanceSelector)
+        public CreateInstanceCommand(IOctopusFileSystem fileSystem, IApplicationInstanceManager instanceManager)
         {
             this.fileSystem = fileSystem;
-            this.instanceSelector = instanceSelector;
+            this.instanceManager = instanceManager;
             Options.Add("instance=", "Name of the instance to create", v => instanceName = v);
             Options.Add("config=", "Path to configuration file to create", v => config = v);
             Options.Add("home=", "[Optional] Path to the home directory - defaults to the same directory as the config file", v => home = v);
@@ -31,11 +31,11 @@ namespace Octopus.Tentacle.Commands
 
             if (string.IsNullOrWhiteSpace(instanceName))
             {
-                instanceSelector.CreateDefaultInstance(config, home);
+                instanceManager.CreateDefaultInstance(config, home);
             }
             else
             {
-                instanceSelector.CreateInstance(instanceName, config, home);
+                instanceManager.CreateInstance(instanceName, config, home);
             }
         }
     }

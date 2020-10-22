@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class RegisterWorkerCommandFixture : CommandFixture<RegisterWorkerCommand>
     {
-        ITentacleConfiguration configuration;
+        IWritableTentacleConfiguration configuration;
         ILog log;
         X509Certificate2 certificate;
         IRegisterWorkerOperation operation;
@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public void BeforeEachTest()
         {
             serverThumbprint = Guid.NewGuid().ToString();
-            configuration = Substitute.For<ITentacleConfiguration>();
+            configuration = Substitute.For<IWritableTentacleConfiguration>();
             operation = Substitute.For<IRegisterWorkerOperation>();
             serverChecker = Substitute.For<IOctopusServerChecker>();
             log = Substitute.For<ILog>();
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 .Returns(Task.FromResult(octopusAsyncClient));
 
             Command = new RegisterWorkerCommand(new Lazy<IRegisterWorkerOperation>(() => operation),
-                new Lazy<ITentacleConfiguration>(() => configuration),
+                new Lazy<IWritableTentacleConfiguration>(() => configuration),
                 log,
                 Substitute.For<IApplicationInstanceSelector>(),
                 new Lazy<IOctopusServerChecker>(() => serverChecker),
@@ -74,11 +74,11 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterListeningWorker()
         {
-            Start("--workerpool=SomePool", 
-                "--server=http://localhost", 
-                "--name=MyMachine", 
+            Start("--workerpool=SomePool",
+                "--server=http://localhost",
+                "--name=MyMachine",
                 "--publicHostName=mymachine.test",
-                "--apiKey=ABC123", 
+                "--apiKey=ABC123",
                 "--force",
                 "--proxy=Proxy");
 
@@ -94,10 +94,10 @@ namespace Octopus.Tentacle.Tests.Commands
             Assert.That(operation.ProxyName, Is.EqualTo("Proxy"));
 
             configuration.Received().AddOrUpdateTrustedOctopusServer(
-                Arg.Is<OctopusServerConfiguration>(x => x.Address == null && 
+                Arg.Is<OctopusServerConfiguration>(x => x.Address == null &&
                     x.CommunicationStyle == CommunicationStyle.TentaclePassive &&
                     x.Thumbprint == serverThumbprint));
-            
+
             operation.Received().ExecuteAsync(repository);
         }
 

@@ -1,7 +1,6 @@
 using System;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
@@ -45,7 +44,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 new Lazy<IProxyInitializer>(() => Substitute.For<IProxyInitializer>()),
                 new AppVersion(GetType().Assembly));
 
-            selector.GetCurrentInstance().Returns(new LoadedApplicationInstance(ApplicationName.Tentacle, "MyTentacle", "", Substitute.For<IKeyValueStore>()));
+            selector.GetCurrentName().Returns("MyTentacle");
         }
 
         [Test]
