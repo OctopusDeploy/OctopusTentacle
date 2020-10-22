@@ -99,7 +99,9 @@ namespace Octopus.Shared.Configuration
     }
 
     /// <summary>
-    /// This is for use in the Wpf applications
+    /// This is for use in the Octopus Server Manager and Tentacle Manager WPF applications as a stop-gap
+    /// Long-term, we want these applications to stand alone without referencing Octopus.Shared or Octopus.Core and instead use the CLI API.
+    /// TODO: Remove this once the WPF applications no longer need runtime access to these classes.
     /// </summary>
     public class ManagerConfigurationModule : Module
     {
