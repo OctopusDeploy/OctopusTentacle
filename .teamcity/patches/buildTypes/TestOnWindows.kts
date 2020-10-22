@@ -13,5 +13,8 @@ changeBuildType(RelativeId("TestOnWindows")) {
         add {
             exists("system.Octopus.DotnetSdk3.1")
         }
+        add {
+            doesNotContain("system.agent.name", "win2012")
+        }
     }
 }

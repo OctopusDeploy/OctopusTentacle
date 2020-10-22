@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Octopus.Shared.Configuration
 {
-    public abstract class DictionaryKeyValueStore : AbstractKeyValueStore
+    public abstract class DictionaryKeyValueStore : KeyValueStoreBase
     {
         Lazy<IDictionary<string, object?>> settings;
 

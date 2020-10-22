@@ -36,9 +36,9 @@ namespace Octopus.Shared.Configuration
 
             builder.RegisterType<EnvironmentVariableReader>().As<IEnvironmentVariableReader>();
 
-            builder.RegisterType<PersistedApplicationConfigurationStore>()
+            builder.RegisterType<ApplicationInstanceStore>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
-                .As<IPersistedApplicationConfigurationStore>()
+                .As<IApplicationInstanceStore>()
                 .As<IApplicationConfigurationStrategy>();
 
             builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>().SingleInstance();
@@ -57,6 +57,16 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<ApplicationInstanceSelector>()
                 .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
                 .As<IApplicationInstanceSelector>()
+                .SingleInstance();
+
+            builder.RegisterType<ApplicationInstanceLocator>()
+                .WithParameter("applicationName", startUpInstanceRequest.ApplicationName)
+                .As<IApplicationInstanceLocator>()
+                .SingleInstance();
+
+            builder.RegisterType<ApplicationInstanceManager>()
+                .WithParameter("applicationName", startUpInstanceRequest.ApplicationName)
+                .As<IApplicationInstanceManager>()
                 .SingleInstance();
 
             builder.Register(c =>
@@ -99,6 +109,40 @@ namespace Octopus.Shared.Configuration
             {
                 builder.RegisterType<NullWatchdog>().As<IWatchdog>();
             }
+        }
+    }
+
+    /// <summary>
+    /// This is for use in the Octopus Server Manager and Tentacle Manager WPF applications as a stop-gap
+    /// Long-term, we want these applications to stand alone without referencing Octopus.Shared or Octopus.Core and instead use the CLI API.
+    /// TODO: Remove this once the WPF applications no longer need runtime access to these classes.
+    /// </summary>
+    public class ManagerConfigurationModule : Module
+    {
+        readonly ApplicationName applicationName;
+
+        public ManagerConfigurationModule(ApplicationName applicationName)
+        {
+            this.applicationName = applicationName;
+        }
+
+        protected override void Load(ContainerBuilder builder)
+        {
+            base.Load(builder);
+
+            // the Wpf apps only run on Windows
+            builder.RegisterType<RegistryApplicationInstanceStore>()
+                .WithParameter("applicationName", applicationName)
+                .As<IRegistryApplicationInstanceStore>();
+            builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
+
+            builder.RegisterType<ApplicationInstanceLocator>()
+                .WithParameter("applicationName", applicationName)
+                .As<IApplicationInstanceLocator>();
+
+            builder.RegisterType<ApplicationInstanceManager>()
+                .WithParameter("applicationName", applicationName)
+                .As<IApplicationInstanceManager>();
         }
     }
 }

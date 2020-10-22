@@ -26,7 +26,7 @@ namespace Octopus.Shared.Configuration
             {
                 Write(name, null);
                 if (AutoSaveOnSet)
-                    Save();
+                    return Save();
                 return true;
             }
 
@@ -41,7 +41,7 @@ namespace Octopus.Shared.Configuration
 
             Write(name, valueAsObject);
             if (AutoSaveOnSet)
-                Save();
+                return Save();
 
             return true;
         }

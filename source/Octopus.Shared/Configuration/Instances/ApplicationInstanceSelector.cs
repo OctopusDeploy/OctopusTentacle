@@ -6,7 +6,7 @@ using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class ApplicationInstanceSelector : IApplicationInstanceSelector
+    class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
         readonly ILog log;
         readonly StartUpInstanceRequest startUpInstanceRequest;

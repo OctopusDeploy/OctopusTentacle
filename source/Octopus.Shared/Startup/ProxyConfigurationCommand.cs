@@ -8,13 +8,13 @@ namespace Octopus.Shared.Startup
 {
     public class ProxyConfigurationCommand : AbstractStandardCommand
     {
-        readonly List<Action> operations = new List<Action>();
         readonly Lazy<IWritableProxyConfiguration> proxyConfiguration;
+        readonly List<Action> operations = new List<Action>();
         readonly ILog log;
         bool useAProxy;
         string? host;
 
-        public ProxyConfigurationCommand(IApplicationInstanceSelector instanceSelector, ILog log, Lazy<IWritableProxyConfiguration> proxyConfiguration) : base(instanceSelector)
+        public ProxyConfigurationCommand(Lazy<IWritableProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ILog log) : base(instanceSelector)
         {
             this.proxyConfiguration = proxyConfiguration;
             this.log = log;

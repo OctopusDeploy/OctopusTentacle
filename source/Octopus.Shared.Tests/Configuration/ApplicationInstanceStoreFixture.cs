@@ -17,7 +17,7 @@ namespace Octopus.Shared.Tests.Configuration
     {
         private IRegistryApplicationInstanceStore registryStore;
         private IOctopusFileSystem fileSystem;
-        private PersistedApplicationConfigurationStore configurationStore;
+        private ApplicationInstanceStore configurationStore;
 
         [SetUp]
         public void Setup()
@@ -25,7 +25,7 @@ namespace Octopus.Shared.Tests.Configuration
             registryStore = Substitute.For<IRegistryApplicationInstanceStore>();
             fileSystem = Substitute.For<IOctopusFileSystem>();
             ILog log = Substitute.For<ILog>();
-            configurationStore = new PersistedApplicationConfigurationStore(new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, "instance 1"),  log, fileSystem, registryStore);
+            configurationStore = new ApplicationInstanceStore(new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, "instance 1"),  log, fileSystem, registryStore);
         }
 
         [Test]
