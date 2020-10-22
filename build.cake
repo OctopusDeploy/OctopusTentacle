@@ -352,6 +352,7 @@ Task("Pack-CrossPlatformBundle")
     .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
     .IsDependentOn("Build-Windows") // for the Octopus.Tentacle.Upgrader binary
     .IsDependentOn("Pack-WindowsInstallers")    // for the .msi files (Windows)
+    .IsDependentOn("Pack-WindowsZips")  // for the .zip files (Windows)
     .IsDependentOn("Pack-LinuxTarballs")    // for the .tar.gz bundles (Linux)
     .IsDependentOn("Pack-OSXTarballs")  // for the .tar.gz bundle (OS X)
     .Does(() => {
@@ -370,7 +371,6 @@ Task("Pack-CrossPlatformBundle")
             foreach (var runtimeId in runtimeIds)
             {
                 if (framework == "net452" && runtimeId != "win-x64") continue;  // General exclusion of net452+(not Windows)
-                if (runtimeId.StartsWith("win-")) continue; // We don't include Windows zips in the bundle as we use MSIs instead.
 
                 var fileExtension = runtimeId.StartsWith("win-") ? "zip" : "tar.gz";
                 CopyFile($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}", $"{workingDir}/tentacle-{framework}-{runtimeId}.{fileExtension}");
