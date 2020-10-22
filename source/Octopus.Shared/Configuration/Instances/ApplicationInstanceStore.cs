@@ -35,6 +35,7 @@ namespace Octopus.Shared.Configuration.Instances
             instance.ConfigurationFilePath = instanceRecord.ConfigurationFilePath;
 
             WriteInstanceConfiguration(instance, instanceConfiguration);
+            Log.Info("Saving instance: " + instance.Name);
         }
 
         public void DeleteInstance(string instanceName)

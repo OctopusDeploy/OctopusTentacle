@@ -45,7 +45,6 @@ namespace Octopus.Shared.Configuration.Instances
                 fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
             }
 
-            log.Info("Saving instance: " + instanceName);
             var instance = new ApplicationInstanceRecord(instanceName, configurationFile);
             instanceStore.SaveInstance(instance);
 
