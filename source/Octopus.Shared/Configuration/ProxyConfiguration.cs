@@ -6,11 +6,11 @@ namespace Octopus.Shared.Configuration
     public class ProxyConfiguration : IProxyConfiguration
     {
         // These are deliberately public so consumers like Octopus Server and Tentacle can use the configuration keys
-        public const string ProxyUseDefaultSettingName = "Octopus.Proxy.UseDefaultProxy";
-        public const string ProxyHostSettingName = "Octopus.Proxy.ProxyHost";
-        public const string ProxyPortSettingName = "Octopus.Proxy.ProxyPort";
-        public const string ProxyUsernameSettingName = "Octopus.Proxy.ProxyUsername";
-        public const string ProxyPasswordSettingName = "Octopus.Proxy.ProxyPassword";
+        protected const string ProxyUseDefaultSettingName = "Octopus.Proxy.UseDefaultProxy";
+        protected const string ProxyHostSettingName = "Octopus.Proxy.ProxyHost";
+        protected const string ProxyPortSettingName = "Octopus.Proxy.ProxyPort";
+        protected const string ProxyUsernameSettingName = "Octopus.Proxy.ProxyUsername";
+        protected const string ProxyPasswordSettingName = "Octopus.Proxy.ProxyPassword";
 
         readonly IKeyValueStore settings;
 
@@ -47,17 +47,17 @@ namespace Octopus.Shared.Configuration
 
         public bool SetCustomProxyPassword(string? password)
         {
-            return settings.Set(ProxyPasswordSettingName, password);
+            return settings.Set(ProxyPasswordSettingName, password, protectionLevel: ProtectionLevel.MachineKey);
         }
 
         public bool SetCustomProxyHost(string? host)
         {
-            return settings.Set(ProxyConfiguration.ProxyHostSettingName, host);
+            return settings.Set(ProxyHostSettingName, host);
         }
 
         public bool SetCustomProxyPort(int port)
         {
-            return settings.Set(ProxyConfiguration.ProxyPortSettingName, port);
+            return settings.Set(ProxyPortSettingName, port);
         }
     }
 }
