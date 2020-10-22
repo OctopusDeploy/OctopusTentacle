@@ -117,7 +117,7 @@ namespace Octopus.Shared.Configuration.Instances
                 .OrderBy(x => x.Priority)
                 .Select(s =>
                 {
-                    ApplicationInstanceRecord? record = null;
+                    ApplicationRecord? record = null;
 
                     if (s is IApplicationConfigurationWithMultipleInstances multipleInstances)
                     {
@@ -179,7 +179,7 @@ namespace Octopus.Shared.Configuration.Instances
                         }
                     }
                     else
-                        record = new ApplicationInstanceRecord();
+                        record = new ApplicationRecord();
 
                     var keyValueStore = s.LoadedConfiguration(record);
                     if (writableConfiguration == null && keyValueStore is IWritableKeyValueStore writableKeyValueStore)
@@ -187,7 +187,7 @@ namespace Octopus.Shared.Configuration.Instances
                         writableConfiguration = writableKeyValueStore;
                     }
 
-                    if (record is PersistedApplicationInstanceRecord persistedRecord)
+                    if (record is ApplicationInstanceRecord persistedRecord)
                         log.InfoFormat("Using config from {0}", persistedRecord.ConfigurationFilePath);
 
                     return keyValueStore;

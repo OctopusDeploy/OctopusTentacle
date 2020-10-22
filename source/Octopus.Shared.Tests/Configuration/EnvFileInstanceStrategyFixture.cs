@@ -76,7 +76,7 @@ namespace Octopus.Shared.Tests.Configuration
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
 
             var subject = new EnvFileConfigurationStrategy(new StartUpConfigFileInstanceRequest(ApplicationName.OctopusServer, "test.config"), fileSystem, fileLocator, mapper);
-            subject.LoadedConfiguration(new ApplicationInstanceRecord()).Should().BeNull(because: "there isn't an instance when the startup request isn't 'dynamic'");
+            subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull(because: "there isn't an instance when the startup request isn't 'dynamic'");
         }
 
         [Test]
@@ -88,7 +88,7 @@ namespace Octopus.Shared.Tests.Configuration
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
 
             var subject = new EnvFileConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);
-            subject.LoadedConfiguration(new ApplicationInstanceRecord()).Should().BeNull(because: "there isn't an instance when there is no envFile");
+            subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull(because: "there isn't an instance when there is no envFile");
         }
 
         [Test]
@@ -103,7 +103,7 @@ namespace Octopus.Shared.Tests.Configuration
             mapper.SupportedEnvironmentVariables.Returns(hashSet);
 
             var subject = new EnvFileConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);
-            subject.LoadedConfiguration(new ApplicationInstanceRecord()).Should().NotBeNull(because: "there is an instance when there is a file");
+            subject.LoadedConfiguration(new ApplicationRecord()).Should().NotBeNull(because: "there is an instance when there is a file");
         }
     }
 }

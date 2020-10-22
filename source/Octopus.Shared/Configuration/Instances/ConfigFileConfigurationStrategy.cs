@@ -17,7 +17,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public int Priority => 500;
 
-        public IKeyValueStore? LoadedConfiguration(ApplicationInstanceRecord applicationInstance)
+        public IKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
         {
             var request = startUpInstanceRequest as StartUpConfigFileInstanceRequest;
             if (request == null)

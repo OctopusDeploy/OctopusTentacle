@@ -2,13 +2,13 @@ using System;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class ApplicationInstanceRecord
+    public class ApplicationRecord
     {
     }
 
-    public class PersistedApplicationInstanceRecord : ApplicationInstanceRecord
+    public class ApplicationInstanceRecord : ApplicationRecord
     {
-        public PersistedApplicationInstanceRecord(string instanceName, string configurationFilePath, bool isDefaultInstance)
+        public ApplicationInstanceRecord(string instanceName, string configurationFilePath, bool isDefaultInstance)
         {
             InstanceName = instanceName;
             ConfigurationFilePath = configurationFilePath;

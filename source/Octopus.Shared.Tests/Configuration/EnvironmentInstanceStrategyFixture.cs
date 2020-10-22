@@ -37,7 +37,7 @@ namespace Octopus.Shared.Tests.Configuration
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new[] { "OCTOPUS_HOME " }));
 
             var subject = new EnvironmentConfigurationStrategy(new StartUpConfigFileInstanceRequest(ApplicationName.OctopusServer, "test.config"), mapper, reader);
-            subject.LoadedConfiguration(new ApplicationInstanceRecord()).Should().BeNull(because: "there isn't an instance when the startup request isn't 'dynamic'");
+            subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull(because: "there isn't an instance when the startup request isn't 'dynamic'");
         }
 
         [Test]
@@ -48,7 +48,7 @@ namespace Octopus.Shared.Tests.Configuration
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>());
 
             var subject = new EnvironmentConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), mapper, reader);
-            subject.LoadedConfiguration(new ApplicationInstanceRecord()).Should().BeNull(because: "there isn't an instance when there is no config");
+            subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull(because: "there isn't an instance when there is no config");
         }
 
         [Test]
@@ -60,7 +60,7 @@ namespace Octopus.Shared.Tests.Configuration
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new[] { "OCTOPUS_HOME" }));
 
             var subject = new EnvironmentConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), mapper, reader);
-            subject.LoadedConfiguration(new ApplicationInstanceRecord()).Should().NotBeNull(because: "there is an instance when there is a complete config");
+            subject.LoadedConfiguration(new ApplicationRecord()).Should().NotBeNull(because: "there is an instance when there is a complete config");
             mapper.Received(1).SetEnvironmentValues(Arg.Is<Dictionary<string, string?>>(v => v.Count() == 1 && v["OCTOPUS_HOME"] == "."));
         }
     }

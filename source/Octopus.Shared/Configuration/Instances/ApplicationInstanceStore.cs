@@ -25,9 +25,9 @@ namespace Octopus.Shared.Configuration.Instances
 
         public int Priority => 1000;
 
-        public IKeyValueStore LoadedConfiguration(ApplicationInstanceRecord applicationInstance)
+        public IKeyValueStore LoadedConfiguration(ApplicationRecord applicationInstance)
         {
-            var instance = applicationInstance as PersistedApplicationInstanceRecord;
+            var instance = applicationInstance as ApplicationInstanceRecord;
             if (instance == null)
                 throw new ArgumentException("Incorrect application instance record type", nameof(applicationInstance));
 
@@ -45,7 +45,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
         {
-            CreateInstance(PersistedApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName), configurationFile, homeDirectory);
+            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName), configurationFile, homeDirectory);
         }
 
         public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
@@ -59,7 +59,7 @@ namespace Octopus.Shared.Configuration.Instances
                 FileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
             }
 
-            var instance = new PersistedApplicationInstanceRecord(instanceName, configurationFile, instanceName == PersistedApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName));
+            var instance = new ApplicationInstanceRecord(instanceName, configurationFile, instanceName == ApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName));
             SaveInstance(instance);
 
             var homeConfig = new WritableHomeConfiguration(startUpInstanceRequest.ApplicationName, new XmlFileKeyValueStore(FileSystem, configurationFile));
@@ -68,7 +68,7 @@ namespace Octopus.Shared.Configuration.Instances
             homeConfig.SetHomeDirectory(home);
         }
 
-        public void SaveInstance(PersistedApplicationInstanceRecord instanceRecord)
+        public void SaveInstance(ApplicationInstanceRecord instanceRecord)
         {
             var instancesFolder = InstancesFolder();
             if (!FileSystem.DirectoryExists(instancesFolder))
@@ -93,7 +93,7 @@ namespace Octopus.Shared.Configuration.Instances
             Log.Info($"Deleted instance: {instanceName}");
         }
 
-        public void MigrateInstance(PersistedApplicationInstanceRecord instanceRecord)
+        public void MigrateInstance(ApplicationInstanceRecord instanceRecord)
         {
             var instanceName = instanceRecord.InstanceName;
             var instancesFolder = InstancesFolder();

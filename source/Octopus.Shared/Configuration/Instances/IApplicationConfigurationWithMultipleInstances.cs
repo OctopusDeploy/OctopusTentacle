@@ -5,6 +5,6 @@ namespace Octopus.Shared.Configuration.Instances
 {
     public interface IApplicationConfigurationWithMultipleInstances
     {
-        IList<PersistedApplicationInstanceRecord> ListInstances();
+        IList<ApplicationInstanceRecord> ListInstances();
     }
 }

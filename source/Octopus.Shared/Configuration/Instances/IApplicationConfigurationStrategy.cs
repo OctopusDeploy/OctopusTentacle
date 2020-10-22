@@ -7,6 +7,6 @@ namespace Octopus.Shared.Configuration.Instances
     {
         int Priority { get; }
 
-        IKeyValueStore? LoadedConfiguration(ApplicationInstanceRecord applicationInstance);
+        IKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance);
     }
 }

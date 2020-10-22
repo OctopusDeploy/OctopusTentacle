@@ -23,7 +23,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public int Priority => 200;
 
-        public IKeyValueStore? LoadedConfiguration(ApplicationInstanceRecord applicationInstance)
+        public IKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
         {
             if (!(startUpInstanceRequest is StartUpDynamicInstanceRequest))
                 return null;

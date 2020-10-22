@@ -31,7 +31,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void ListInstance_NoRegistryEntries_ShouldListFromFileSystem()
         {
-            registryStore.GetListFromRegistry().Returns(Enumerable.Empty<PersistedApplicationInstanceRecord>());
+            registryStore.GetListFromRegistry().Returns(Enumerable.Empty<ApplicationInstanceRecord>());
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
             fileSystem.EnumerateFiles(Arg.Any<string>()).Returns(new List<string> {"file1", "file2"});
             fileSystem.FileExists(Arg.Any<string>()).Returns(true);
@@ -39,38 +39,38 @@ namespace Octopus.Shared.Tests.Configuration
             fileSystem.ReadFile(Arg.Is("file2")).Returns("{\"Name\": \"instance2\",\"ConfigurationFilePath\": \"configFilePath2\"}");
 
             var instances = configurationStore.ListInstances();
-            instances.Should().BeEquivalentTo(new List<PersistedApplicationInstanceRecord>
+            instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
             {
-                new PersistedApplicationInstanceRecord("instance1", "configFilePath1", false),
-                new PersistedApplicationInstanceRecord("instance2", "configFilePath2", false)
+                new ApplicationInstanceRecord("instance1", "configFilePath1", false),
+                new ApplicationInstanceRecord("instance2", "configFilePath2", false)
             });
         }
 
         [Test]
         public void ListInstance_NoFileSystem_ShouldListRegistry()
         {
-            registryStore.GetListFromRegistry().Returns(new List<PersistedApplicationInstanceRecord>
+            registryStore.GetListFromRegistry().Returns(new List<ApplicationInstanceRecord>
             {
-                new PersistedApplicationInstanceRecord("instance1", "configFilePath1", false),
-                new PersistedApplicationInstanceRecord("instance2", "configFilePath2", false)
+                new ApplicationInstanceRecord("instance1", "configFilePath1", false),
+                new ApplicationInstanceRecord("instance2", "configFilePath2", false)
             });
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(false);
 
             var instances = configurationStore.ListInstances();
-            instances.Should().BeEquivalentTo(new List<PersistedApplicationInstanceRecord>
+            instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
             {
-                new PersistedApplicationInstanceRecord("instance1", "configFilePath1", false),
-                new PersistedApplicationInstanceRecord("instance2", "configFilePath2", false)
+                new ApplicationInstanceRecord("instance1", "configFilePath1", false),
+                new ApplicationInstanceRecord("instance2", "configFilePath2", false)
             });
         }
 
         [Test]
         public void ListInstance_ShouldPreferFileSystemEntries()
         {
-            registryStore.GetListFromRegistry().Returns(new List<PersistedApplicationInstanceRecord>
+            registryStore.GetListFromRegistry().Returns(new List<ApplicationInstanceRecord>
             {
-                new PersistedApplicationInstanceRecord("instance1", "registryFilePath1", false),
-                new PersistedApplicationInstanceRecord("instance2", "registryFilePath2", false)
+                new ApplicationInstanceRecord("instance1", "registryFilePath1", false),
+                new ApplicationInstanceRecord("instance2", "registryFilePath2", false)
             });
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
             fileSystem.EnumerateFiles(Arg.Any<string>()).Returns(new List<string> { "file1", "file2" });
@@ -79,11 +79,11 @@ namespace Octopus.Shared.Tests.Configuration
             fileSystem.ReadFile(Arg.Is("file2")).Returns("{\"Name\": \"instance3\",\"ConfigurationFilePath\": \"fileConfigFilePath3\"}");
 
             var instances = configurationStore.ListInstances();
-            instances.Should().BeEquivalentTo(new List<PersistedApplicationInstanceRecord>
+            instances.Should().BeEquivalentTo(new List<ApplicationInstanceRecord>
             {
-                new PersistedApplicationInstanceRecord("instance1", "registryFilePath1", false),
-                new PersistedApplicationInstanceRecord("instance2", "fileConfigFilePath2", false),
-                new PersistedApplicationInstanceRecord("instance3", "fileConfigFilePath3", false)
+                new ApplicationInstanceRecord("instance1", "registryFilePath1", false),
+                new ApplicationInstanceRecord("instance2", "fileConfigFilePath2", false),
+                new ApplicationInstanceRecord("instance3", "fileConfigFilePath3", false)
             });
         }
 
@@ -104,10 +104,10 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void GetInstance_ShouldReturnNullIfNoneFound()
         {
-            registryStore.GetListFromRegistry().Returns(new List<PersistedApplicationInstanceRecord>
+            registryStore.GetListFromRegistry().Returns(new List<ApplicationInstanceRecord>
             {
-                new PersistedApplicationInstanceRecord("instance1", "ServerPath1", false),
-                new PersistedApplicationInstanceRecord("instance2", "ServerPath2", false)
+                new ApplicationInstanceRecord("instance1", "ServerPath1", false),
+                new ApplicationInstanceRecord("instance2", "ServerPath2", false)
             });
 
             var instance = configurationStore.GetInstance("I AM FAKE");
@@ -117,7 +117,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void MigrateInstance()
         {
-            var sourceInstance = new PersistedApplicationInstanceRecord("instance1", "configFilePath", false);
+            var sourceInstance = new ApplicationInstanceRecord("instance1", "configFilePath", false);
             registryStore.GetInstanceFromRegistry(Arg.Is("instance1")).Returns(sourceInstance);
 
             configurationStore.MigrateInstance(sourceInstance);

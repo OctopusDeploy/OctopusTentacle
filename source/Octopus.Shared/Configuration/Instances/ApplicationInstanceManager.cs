@@ -24,14 +24,14 @@ namespace Octopus.Shared.Configuration.Instances
 
         public ApplicationName ApplicationName { get; }
 
-        public ApplicationInstanceRecord? GetInstance(string instanceName)
+        public ApplicationRecord? GetInstance(string instanceName)
         {
             return instanceStore.GetInstance(instanceName);
         }
 
         public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
         {
-            CreateInstance(PersistedApplicationInstanceRecord.GetDefaultInstance(ApplicationName), configurationFile, homeDirectory);
+            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(ApplicationName), configurationFile, homeDirectory);
         }
 
         public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
@@ -45,7 +45,7 @@ namespace Octopus.Shared.Configuration.Instances
                 fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
             }
 
-            var instance = new PersistedApplicationInstanceRecord(instanceName, configurationFile, instanceName == PersistedApplicationInstanceRecord.GetDefaultInstance(ApplicationName));
+            var instance = new ApplicationInstanceRecord(instanceName, configurationFile, instanceName == ApplicationInstanceRecord.GetDefaultInstance(ApplicationName));
             instanceStore.SaveInstance(instance);
 
             var homeConfig = new WritableHomeConfiguration(ApplicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));

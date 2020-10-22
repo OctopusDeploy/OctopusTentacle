@@ -6,14 +6,14 @@ namespace Octopus.Shared.Configuration.Instances
 {
     public class NullRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
-        public PersistedApplicationInstanceRecord? GetInstanceFromRegistry(string instanceName)
+        public ApplicationInstanceRecord? GetInstanceFromRegistry(string instanceName)
         {
             return null;
         }
 
-        public IEnumerable<PersistedApplicationInstanceRecord> GetListFromRegistry()
+        public IEnumerable<ApplicationInstanceRecord> GetListFromRegistry()
         {
-            return Enumerable.Empty<PersistedApplicationInstanceRecord>();
+            return Enumerable.Empty<ApplicationInstanceRecord>();
         }
 
         public void DeleteFromRegistry(string instanceName)

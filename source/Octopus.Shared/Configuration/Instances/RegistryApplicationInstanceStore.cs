@@ -22,15 +22,15 @@ namespace Octopus.Shared.Configuration.Instances
             this.startUpInstanceRequest = startUpInstanceRequest;
         }
 
-        public PersistedApplicationInstanceRecord GetInstanceFromRegistry(string instanceName)
+        public ApplicationInstanceRecord GetInstanceFromRegistry(string instanceName)
         {
             var allInstances = GetListFromRegistry();
             return allInstances.SingleOrDefault(i => i.InstanceName.Equals(instanceName, StringComparison.CurrentCultureIgnoreCase));
         }
 
-        public IEnumerable<PersistedApplicationInstanceRecord> GetListFromRegistry()
+        public IEnumerable<ApplicationInstanceRecord> GetListFromRegistry()
         {
-            var results = new List<PersistedApplicationInstanceRecord>();
+            var results = new List<ApplicationInstanceRecord>();
 
             if (PlatformDetection.IsRunningOnWindows)
             {
@@ -55,7 +55,7 @@ namespace Octopus.Shared.Configuration.Instances
                                     continue;
 
                                 var path = instanceKey.GetValue("ConfigurationFilePath");
-                                results.Add(new PersistedApplicationInstanceRecord(instanceName, (string)path, instanceName == PersistedApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName)));
+                                results.Add(new ApplicationInstanceRecord(instanceName, (string)path, instanceName == ApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName)));
                             }
                         }
                     }

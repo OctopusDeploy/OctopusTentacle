@@ -58,7 +58,7 @@ namespace Octopus.Shared.Configuration.Instances
             return listFromRegistry.Any();
         }
 
-        public PersistedApplicationInstanceRecord? GetInstance(string instanceName)
+        public ApplicationInstanceRecord? GetInstance(string instanceName)
         {
             var instancesFolder = InstancesFolder();
             if (FileSystem.DirectoryExists(instancesFolder))
@@ -67,7 +67,7 @@ namespace Octopus.Shared.Configuration.Instances
                 var instance = TryLoadInstanceConfiguration(instanceConfiguration);
                 if (instance != null)
                 {
-                    return new PersistedApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath, PersistedApplicationInstanceRecord.GetDefaultInstance(ApplicationName) == instance.Name);
+                    return new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath, ApplicationInstanceRecord.GetDefaultInstance(ApplicationName) == instance.Name);
                 }
             }
 
@@ -77,17 +77,17 @@ namespace Octopus.Shared.Configuration.Instances
             return listFromRegistry.FirstOrDefault(x => x.InstanceName == instanceName);
         }
 
-        public IList<PersistedApplicationInstanceRecord> ListInstances()
+        public IList<ApplicationInstanceRecord> ListInstances()
         {
             var instancesFolder = InstancesFolder();
 
             var listFromRegistry = RegistryApplicationInstanceStore.GetListFromRegistry();
-            var listFromFileSystem = new List<PersistedApplicationInstanceRecord>();
+            var listFromFileSystem = new List<ApplicationInstanceRecord>();
             if (FileSystem.DirectoryExists(instancesFolder))
             {
                 listFromFileSystem = FileSystem.EnumerateFiles(instancesFolder)
                     .Select(LoadInstanceConfiguration)
-                    .Select(instance => new PersistedApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath, PersistedApplicationInstanceRecord.GetDefaultInstance(ApplicationName) == instance.Name))
+                    .Select(instance => new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath, ApplicationInstanceRecord.GetDefaultInstance(ApplicationName) == instance.Name))
                     .ToList();
             }
 

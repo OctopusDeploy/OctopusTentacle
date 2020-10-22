@@ -7,8 +7,8 @@ namespace Octopus.Shared.Configuration.Instances
     {
         bool AnyInstancesConfigured();
 
-        PersistedApplicationInstanceRecord? GetInstance(string instanceName);
+        ApplicationInstanceRecord? GetInstance(string instanceName);
 
-        IList<PersistedApplicationInstanceRecord> ListInstances();
+        IList<ApplicationInstanceRecord> ListInstances();
     }
 }
