@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Commands
 {
     public class ServerCommsCommand : AbstractStandardCommand
     {
-        readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
+        readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
         readonly ILog log;
         string serverThumbprint;
         string style;
@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Commands
         int serverPort = 10943;
         string webSocket;
 
-        public ServerCommsCommand(Lazy<ITentacleConfiguration> tentacleConfiguration, ILog log, IApplicationInstanceSelector selector)
+        public ServerCommsCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ILog log, IApplicationInstanceSelector selector)
             : base(selector)
         {
             this.tentacleConfiguration = tentacleConfiguration;
