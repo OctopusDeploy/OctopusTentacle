@@ -30,9 +30,9 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Octopus.Configuration" Version="2.1.1-enh-env-aggregat0003" />
+		<PackageReference Include="Octopus.Configuration" Version="3.0.0" />
 		<PackageReference Include="Octopus.Client" Version="7.1.1" />
-		<PackageReference Include="Octopus.Shared" Version="5.1.15-ref-writablestor0019" />
+		<PackageReference Include="Octopus.Shared" Version="6.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
