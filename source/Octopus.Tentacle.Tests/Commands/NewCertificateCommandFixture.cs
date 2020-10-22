@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             log = Substitute.For<ILog>();
             configuration = new StubTentacleConfiguration();
-            Command = new NewCertificateCommand(new Lazy<ITentacleConfiguration>(() => configuration), log, Substitute.For<IApplicationInstanceSelector>(), new Lazy<ICertificateGenerator>(() => Substitute.For<ICertificateGenerator>()));
+            Command = new NewCertificateCommand(new Lazy<IWritableTentacleConfiguration>(() => configuration), log, Substitute.For<IApplicationInstanceSelector>(), new Lazy<ICertificateGenerator>(() => Substitute.For<ICertificateGenerator>()));
         }
 
         [Test]

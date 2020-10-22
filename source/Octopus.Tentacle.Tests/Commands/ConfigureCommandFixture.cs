@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Commands
             tentacleConfiguration = new StubTentacleConfiguration();
             fileSystem = Substitute.For<IOctopusFileSystem>();
             log = Substitute.For<ILog>();
-            Command = new ConfigureCommand(new Lazy<ITentacleConfiguration>(() => tentacleConfiguration), new Lazy<IHomeConfiguration>(() => new StubHomeConfiguration()), fileSystem, log, Substitute.For<IApplicationInstanceSelector>());
+            Command = new ConfigureCommand(new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration), new Lazy<IWritableHomeConfiguration>(() => new StubHomeConfiguration()), fileSystem, log, Substitute.For<IApplicationInstanceSelector>());
         }
 
         [Test]

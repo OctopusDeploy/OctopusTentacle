@@ -87,23 +87,23 @@ namespace Octopus.Tentacle.Commands
 
         internal async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
         {
-            var configStore = new XmlFileKeyValueStore(fileSystem, instanceSelector.GetCurrentInstance().ConfigurationPath);
+            var configStore = instanceSelector.GetCurrentConfiguration();
 
             var oldHomeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, configStore);
-            var homeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, outputStore)
-            {
-                HomeDirectory = oldHomeConfiguration.HomeDirectory
-            };
+            var homeConfiguration = new WritableHomeConfiguration(ApplicationName.Tentacle, outputStore);
+            homeConfiguration.SetHomeDirectory(oldHomeConfiguration.HomeDirectory);
 
             var certificateGenerator = new CertificateGenerator();
-            var newTentacleConfiguration = new TentacleConfiguration(outputStore, homeConfiguration, certificateGenerator, tentacleConfiguration.Value.ProxyConfiguration, tentacleConfiguration.Value.PollingProxyConfiguration, new NullLog())
+            var newTentacleConfiguration = new WritableTentacleConfiguration(outputStore, homeConfiguration, certificateGenerator, tentacleConfiguration.Value.ProxyConfiguration, tentacleConfiguration.Value.PollingProxyConfiguration, new NullLog());
+
+            newTentacleConfiguration.SetApplicationDirectory(tentacleConfiguration.Value.ApplicationDirectory);
+            newTentacleConfiguration.SetListenIpAddress(tentacleConfiguration.Value.ListenIpAddress);
+            newTentacleConfiguration.SetNoListen(tentacleConfiguration.Value.NoListen);
+            newTentacleConfiguration.SetServicesPortNumber(tentacleConfiguration.Value.ServicesPortNumber);
+            foreach (var octopusServerConfiguration in tentacleConfiguration.Value.TrustedOctopusServers)
             {
-                ApplicationDirectory = tentacleConfiguration.Value.ApplicationDirectory,
-                ListenIpAddress = tentacleConfiguration.Value.ListenIpAddress,
-                NoListen = tentacleConfiguration.Value.NoListen,
-                ServicesPortNumber = tentacleConfiguration.Value.ServicesPortNumber,
-                TrustedOctopusServers = tentacleConfiguration.Value.TrustedOctopusServers
-            };
+                newTentacleConfiguration.AddOrUpdateTrustedOctopusServer(octopusServerConfiguration);
+            }
 
             //we dont want the actual certificate, as its encrypted, and we get a different output everytime
             outputStore.Set<string>("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate?.Thumbprint);
@@ -118,7 +118,7 @@ namespace Octopus.Tentacle.Commands
             }
         }
 
-        async Task CollectServerSideConfiguration(IKeyValueStore outputStore)
+        async Task CollectServerSideConfiguration(IWritableKeyValueStore outputStore)
         {
             var proxyOverride = proxyConfig.ParseToWebProxy(tentacleConfiguration.Value.PollingProxyConfiguration);
             try
@@ -157,7 +157,7 @@ namespace Octopus.Tentacle.Commands
             }
         }
 
-        async Task CollectionServerSideConfigurationFromMachine(IKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, MachineResource machine)
+        async Task CollectionServerSideConfigurationFromMachine(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, MachineResource machine)
         {
             var environments = await repository.Environments.FindAll();
             outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
@@ -175,7 +175,7 @@ namespace Octopus.Tentacle.Commands
                 var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
                 outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
             }
-            
+
             outputStore.Set<string>("Tentacle.DisplayName", machine.Name);
             if (machine.Endpoint is ListeningTentacleEndpointResource)
                 outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
