@@ -137,7 +137,7 @@ namespace Octopus.Shared.Startup
             }
             catch (DependencyResolutionException ex) when (ex.InnerException is ControlledFailureException)
             {
-                exitCode = HandleException(ex.InnerException);
+                exitCode = HandleException((ControlledFailureException)(ex.InnerException));
             }
             catch (ControlledFailureException ex)
             {
