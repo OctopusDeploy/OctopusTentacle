@@ -4,7 +4,6 @@ using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Configuration;
-using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Configuration.Instances;
@@ -153,8 +152,7 @@ namespace Octopus.Shared.Tests.Configuration
             else
                 startupRequest = new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, currentInstanceName);
 
-            var selector = new ApplicationInstanceSelector(Substitute.For<ILog>(),
-                startupRequest,
+            var selector = new ApplicationInstanceSelector(startupRequest,
                 new [] { (IApplicationConfigurationStrategy)ConfigurationStore, OtherStrategy },
                 Substitute.For<ILogFileOnlyLogger>());
             return selector;

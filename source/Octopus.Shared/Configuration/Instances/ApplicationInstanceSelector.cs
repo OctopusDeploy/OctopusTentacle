@@ -1,26 +1,22 @@
 using System;
 using System.Linq;
 using Octopus.Configuration;
-using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration.Instances
 {
     class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
-        readonly ILog log;
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IApplicationConfigurationStrategy[] instanceStrategies;
         readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
         (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore WritableConfiguration)? current;
 
-        public ApplicationInstanceSelector(ILog log,
-            StartUpInstanceRequest startUpInstanceRequest,
+        public ApplicationInstanceSelector(StartUpInstanceRequest startUpInstanceRequest,
             IApplicationConfigurationStrategy[] instanceStrategies,
             ILogFileOnlyLogger logFileOnlyLogger)
         {
-            this.log = log;
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.instanceStrategies = instanceStrategies;
             this.logFileOnlyLogger = logFileOnlyLogger;
@@ -188,7 +184,7 @@ namespace Octopus.Shared.Configuration.Instances
                     }
 
                     if (record is ApplicationInstanceRecord persistedRecord)
-                        log.InfoFormat("Using config from {0}", persistedRecord.ConfigurationFilePath);
+                        logFileOnlyLogger.Info($"Using config from {persistedRecord.ConfigurationFilePath}");
 
                     return keyValueStore;
                 })
@@ -200,7 +196,7 @@ namespace Octopus.Shared.Configuration.Instances
                 throw new ControlledFailureException(
                     $"There are no instances of {startUpInstanceRequest.ApplicationName} configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file, or set the required environment variables.");
 
-            var aggregatedKeyValueStore = new AggregatedKeyValueStore(log, keyValueStores);
+            var aggregatedKeyValueStore = new AggregatedKeyValueStore(keyValueStores);
 
             if (writableConfiguration == null)
                 writableConfiguration = new DoNotAllowWritesInThisModeKeyValueStore(aggregatedKeyValueStore);

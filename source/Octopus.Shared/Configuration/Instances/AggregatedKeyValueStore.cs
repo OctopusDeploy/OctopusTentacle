@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Linq;
 using Octopus.Configuration;
-using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Configuration.Instances
 {
     class AggregatedKeyValueStore : IKeyValueStore
     {
-        readonly ILog log;
         readonly IKeyValueStore[] configurations;
 
-        public AggregatedKeyValueStore(ILog log, IKeyValueStore[] configurations)
+        public AggregatedKeyValueStore(IKeyValueStore[] configurations)
         {
-            this.log = log;
             this.configurations = configurations;
         }
 
