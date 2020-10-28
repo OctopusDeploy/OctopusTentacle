@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Diagnostics;
+using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
 {
-    public abstract class MapEnvironmentVariablesToConfigItems : IMapEnvironmentVariablesToConfigItems
+    public abstract class MapsEnvironmentVariablesToConfigItems : IMapEnvironmentVariablesToConfigItems
     {
-        readonly ILog log;
+        readonly ILogFileOnlyLogger log;
         readonly Dictionary<string, string?> environmentVariableValues;
         bool valuesHaveBeenSet;
 
         // These are the settings that calling code can ask for a value for
-        string[] sharedConfigurationSettingNames =
+        readonly string[] sharedConfigurationSettingNames =
         {
             HomeConfiguration.OctopusHomeSettingName,
             HomeConfiguration.OctopusNodeCacheSettingName,
@@ -26,7 +26,7 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
         // There are no required settings/variables in Shared. The
         // following are the name of the environment variables that
         // align with the above settings.
-        string[] sharedOptionalEnvironmentVariableNames =
+        readonly string[] sharedOptionalEnvironmentVariableNames =
         {
             "OCTOPUS_HOME",
             "OCTOPUS_NODE_CACHE",
@@ -37,7 +37,7 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             "OCTOPUS_PROXY_PASSWORD"
         };
 
-        protected MapEnvironmentVariablesToConfigItems(ILog log, string[] supportedConfigurationKeys, string[] requiredEnvironmentVariables, string[] optionalEnvironmentVariables)
+        protected MapsEnvironmentVariablesToConfigItems(ILogFileOnlyLogger log, string[] supportedConfigurationKeys, string[] requiredEnvironmentVariables, string[] optionalEnvironmentVariables)
         {
             this.log = log;
             SupportedConfigurationKeys = new HashSet<string>(sharedConfigurationSettingNames.Union(supportedConfigurationKeys).OrderBy(x => x));
@@ -106,11 +106,21 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
                 case ProxyConfiguration.ProxyUsernameSettingName:
                     return environmentVariableValues["OCTOPUS_PROXY_USERNAME"];
                 case ProxyConfiguration.ProxyPasswordSettingName:
-                    return environmentVariableValues["OCTOPUS_PROXY_PASSWORD"];
+                    return environmentVariableValues["OCTOPUS_PROXY_PASSWORD"].WithSensitiveValueWarning(log, "proxy password");
             }
             return MapConfigurationValue(configurationSettingName);
         }
 
         protected abstract string? MapConfigurationValue(string configurationSettingName);
+    }
+
+    public static class Foo
+    {
+        public static string? WithSensitiveValueWarning(this string? value, ILogFileOnlyLogger log, string sensitiveVariableDescription)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                log.Warn($"We noticed that you're picking up the {sensitiveVariableDescription} from an environment variable. This is OK for development/test environments but we do not recommend it in a production environment as the key can be comprised quite easily in a number of scenarios.");
+            return value;
+        }
     }
 }
