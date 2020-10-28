@@ -245,7 +245,7 @@ Task("Pack-LinuxTarballs")
                 CreateDirectory($"{workingDir}/tentacle");
                 CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
                 CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/*", $"{workingDir}/tentacle/");
-                GZipCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                TGZCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -268,7 +268,7 @@ Task("Pack-OSXTarballs")
                 CreateDirectory($"{workingDir}/tentacle");
                 CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
                 CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/*", $"{workingDir}/tentacle/");
-                GZipCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                TGZCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -473,6 +473,11 @@ Task("Default")
 //////////////////////////////////////////////////////////////////////
 // IMPLEMENTATION DETAILS
 //////////////////////////////////////////////////////////////////////
+
+
+private void TGZCompress(string workingDirectory, string outputFile) {
+    RunProcess("tar", $"czvfp {outputFile} -C {workingDir}");
+}
 
 private string DeriveGitBranch()
 {
