@@ -23,7 +23,7 @@ namespace Octopus.Shared.Tests.Configuration
             fileLocator.LocateEnvFile().Returns("test");
             fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "", "# some comment to test", "OCTOPUS_HOME=." }));
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
-            mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new [] { "OCTOPUS_HOME" }));
+            mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new [] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") }));
 
             var results = EnvFileConfigurationStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);
             results.Should().NotBeNull(because: "the envFile exists");
@@ -38,7 +38,7 @@ namespace Octopus.Shared.Tests.Configuration
             fileLocator.LocateEnvFile().Returns("test");
             fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "OCTOPUS_HOME=.", "Broken" }));
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
-            mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new [] { "OCTOPUS_HOME" }));
+            mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new [] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") }));
 
             Action testAction = () => EnvFileConfigurationStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);
             testAction.Should().Throw<ArgumentException>().WithMessage("Line 2 is not formatted correctly");
@@ -52,7 +52,7 @@ namespace Octopus.Shared.Tests.Configuration
             fileLocator.LocateEnvFile().Returns("test");
             fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "OCTOPUS_HOME=.", "Foo=Bar==" }));
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
-            mapper.SupportedEnvironmentVariables.Returns(new HashSet<string>(new [] { "OCTOPUS_HOME", "Foo" }));
+            mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new [] { EnvironmentVariable.PlaintText("OCTOPUS_HOME"), EnvironmentVariable.PlaintText("Foo") }));
 
             var results = EnvFileConfigurationStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);
             results.Should().NotBeNull(because: "the envFile exists");
@@ -99,7 +99,7 @@ namespace Octopus.Shared.Tests.Configuration
             fileLocator.LocateEnvFile().Returns("test");
             fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "OCTOPUS_HOME=." }));
             var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
-            var hashSet = new HashSet<string>(new[] { "OCTOPUS_HOME" });
+            var hashSet = new HashSet<EnvironmentVariable>(new[] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") });
             mapper.SupportedEnvironmentVariables.Returns(hashSet);
 
             var subject = new EnvFileConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);

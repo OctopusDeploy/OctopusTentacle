@@ -3,19 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
+using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration.Instances
 {
     public class EnvironmentConfigurationStrategy : IApplicationConfigurationStrategy
     {
+        readonly ILogFileOnlyLogger log;
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IMapEnvironmentVariablesToConfigItems mapper;
         readonly IEnvironmentVariableReader reader;
         bool loaded;
         bool foundValues;
 
-        public EnvironmentConfigurationStrategy(StartUpInstanceRequest startUpInstanceRequest, IMapEnvironmentVariablesToConfigItems mapper, IEnvironmentVariableReader reader)
+        public EnvironmentConfigurationStrategy(ILogFileOnlyLogger log,
+            StartUpInstanceRequest startUpInstanceRequest, IMapEnvironmentVariablesToConfigItems mapper, IEnvironmentVariableReader reader)
         {
+            this.log = log;
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.mapper = mapper;
             this.reader = reader;
@@ -37,7 +41,7 @@ namespace Octopus.Shared.Configuration.Instances
         {
             if (!loaded)
             {
-                var results = LoadFromEnvironment(reader, mapper);
+                var results = LoadFromEnvironment(log, reader, mapper);
                 if (results.Values.Any(x => x != null))
                 {
                     mapper.SetEnvironmentValues(results);
@@ -47,12 +51,18 @@ namespace Octopus.Shared.Configuration.Instances
             loaded = true;
         }
 
-        internal static Dictionary<string, string?> LoadFromEnvironment(IEnvironmentVariableReader reader, IMapEnvironmentVariablesToConfigItems mapper)
+        internal static Dictionary<string, string?> LoadFromEnvironment(ILogFileOnlyLogger log, IEnvironmentVariableReader reader, IMapEnvironmentVariablesToConfigItems mapper)
         {
             var results = new Dictionary<string, string?>();
-            foreach (var variableName in mapper.SupportedEnvironmentVariables)
+            foreach (var variable in mapper.SupportedEnvironmentVariables)
             {
-                results.Add(variableName, reader.Get(variableName));
+                var value = reader.Get(variable.Name);
+
+                // if we actually get a value for a sensitive variable from an environment variable, let's recommend not doing that in Prod
+                if (variable is SensitiveEnvironmentVariable sensitive && !string.IsNullOrWhiteSpace(value))
+                    log.Warn($"We noticed that you're picking up {sensitive.WarningDescription} from an environment variable. This is OK for development/test environments but we do not recommend it in a production environment as the key can be comprised quite easily in a number of scenarios.");
+
+                results.Add(variable.Name, value);
             }
 
             return results;

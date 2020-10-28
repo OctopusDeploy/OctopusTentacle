@@ -76,7 +76,7 @@ namespace Octopus.Shared.Configuration.Instances
                 var key = line.Substring(0, splitIndex).Trim();
                 var value = line.Substring(splitIndex + 1).Trim();
 
-                if (mapper.SupportedEnvironmentVariables.Contains(key))
+                if (mapper.SupportedEnvironmentVariables.Any(v => v.Name == key))
                     results.Add(key, value);
             }
 

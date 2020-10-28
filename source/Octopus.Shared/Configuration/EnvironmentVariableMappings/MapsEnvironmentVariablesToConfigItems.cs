@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
 {
     public abstract class MapsEnvironmentVariablesToConfigItems : IMapEnvironmentVariablesToConfigItems
     {
-        readonly ILogFileOnlyLogger log;
         readonly Dictionary<string, string?> environmentVariableValues;
         bool valuesHaveBeenSet;
 
@@ -23,61 +21,75 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             ProxyConfiguration.ProxyPasswordSettingName
         };
 
+        static readonly EnvironmentVariable Home = EnvironmentVariable.PlaintText("OCTOPUS_HOME");
+        static readonly EnvironmentVariable NodeCache = EnvironmentVariable.PlaintText("OCTOPUS_NODE_CACHE");
+        static readonly EnvironmentVariable UseDefaultProxy = EnvironmentVariable.PlaintText("OCTOPUS_HOME");
+        static readonly EnvironmentVariable ProxyHost = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_HOST");
+        static readonly EnvironmentVariable ProxyPort = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_PORT");
+        static readonly EnvironmentVariable ProxyUser = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_USER");
+        static readonly SensitiveEnvironmentVariable ProxyPassword = EnvironmentVariable.Sensitive("OCTOPUS_PROXY_PASSWORD", "proxy password");
+
         // There are no required settings/variables in Shared. The
         // following are the name of the environment variables that
         // align with the above settings.
-        readonly string[] sharedOptionalEnvironmentVariableNames =
+        static readonly EnvironmentVariable[] SharedOptionalEnvironmentVariables =
         {
-            "OCTOPUS_HOME",
-            "OCTOPUS_NODE_CACHE",
-            "OCTOPUS_PROXY_USE_DEFAULT",
-            "OCTOPUS_PROXY_HOST",
-            "OCTOPUS_PROXY_PORT",
-            "OCTOPUS_PROXY_USERNAME",
-            "OCTOPUS_PROXY_PASSWORD"
+            Home,
+            NodeCache,
+            UseDefaultProxy,
+            ProxyHost,
+            ProxyPort,
+            ProxyUser,
+            ProxyPassword
         };
 
-        protected MapsEnvironmentVariablesToConfigItems(ILogFileOnlyLogger log, string[] supportedConfigurationKeys, string[] requiredEnvironmentVariables, string[] optionalEnvironmentVariables)
+        protected MapsEnvironmentVariablesToConfigItems(string[] supportedConfigurationKeys,
+            EnvironmentVariable[] requiredEnvironmentVariables,
+            EnvironmentVariable[] optionalEnvironmentVariables)
         {
-            this.log = log;
             SupportedConfigurationKeys = new HashSet<string>(sharedConfigurationSettingNames.Union(supportedConfigurationKeys).OrderBy(x => x));
-            RequiredEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.OrderBy(x => x));
-            SupportedEnvironmentVariables = new HashSet<string>(requiredEnvironmentVariables.Union(sharedOptionalEnvironmentVariableNames.Union(optionalEnvironmentVariables)).OrderBy(x => x));
+            RequiredEnvironmentVariables = new HashSet<EnvironmentVariable>(requiredEnvironmentVariables.OrderBy(x => x.Name));
+            SupportedEnvironmentVariables = new HashSet<EnvironmentVariable>(requiredEnvironmentVariables.Union(SharedOptionalEnvironmentVariables.Union(optionalEnvironmentVariables)).OrderBy(x => x));
             environmentVariableValues = new Dictionary<string, string?>();
 
             // initialise the dictionary to contain a value for every supported variable, then we don't need ContainsKey all over the place
             foreach (var variable in SupportedEnvironmentVariables)
             {
-                environmentVariableValues.Add(variable, null);
+                environmentVariableValues.Add(variable.Name, null);
             }
         }
 
         HashSet<string> SupportedConfigurationKeys { get; }
 
-        HashSet<string> RequiredEnvironmentVariables { get; }
-        public HashSet<string> SupportedEnvironmentVariables { get; }
+        HashSet<EnvironmentVariable> RequiredEnvironmentVariables { get; }
+        public HashSet<EnvironmentVariable> SupportedEnvironmentVariables { get; }
 
         protected IReadOnlyDictionary<string, string?> EnvironmentValues => environmentVariableValues;
 
         public void SetEnvironmentValues(Dictionary<string, string?> variableNamesToValues)
         {
-            var unsupportedVariables = variableNamesToValues.Keys.OrderBy(x => x).Where(x => !SupportedEnvironmentVariables.Contains(x)).ToArray();
+            var unsupportedVariables = variableNamesToValues.Keys.OrderBy(x => x).Where(x => SupportedEnvironmentVariables.All(v => v.Name != x)).ToArray();
             if (unsupportedVariables.Any())
             {
                 var pluralString = unsupportedVariables.Length == 1 ? " was" : "s were";
                 throw new ArgumentException($"Unsupported environment variable{pluralString} provided. '{string.Join(", ", unsupportedVariables)}'");
             }
 
-            var missingRequiredVariables = RequiredEnvironmentVariables.Where(x => !variableNamesToValues.ContainsKey(x) || string.IsNullOrWhiteSpace(variableNamesToValues[x])).ToArray();
-            if (missingRequiredVariables.Any())
+            var missingRequiredVariableNames = RequiredEnvironmentVariables
+                .Where(x => !variableNamesToValues.ContainsKey(x.Name) || string.IsNullOrWhiteSpace(variableNamesToValues[x.Name]))
+                .Select(x => x.Name)
+                .ToArray();
+            if (missingRequiredVariableNames.Any())
             {
-                var pluralString = missingRequiredVariables.Length == 1 ? " was" : "s were";
-                throw new ArgumentException($"Required environment variable{pluralString} not provided. '{string.Join(", ", missingRequiredVariables)}'");
+                var pluralString = missingRequiredVariableNames.Length == 1 ? " was" : "s were";
+                throw new ArgumentException($"Required environment variable{pluralString} not provided. '{string.Join(", ", missingRequiredVariableNames)}'");
             }
 
             foreach (var nameToValue in variableNamesToValues)
             {
-                environmentVariableValues[nameToValue.Key] = nameToValue.Value;
+                // Only try to set a value if a higher priority strategy hasn't already set it.
+                if (string.IsNullOrWhiteSpace(environmentVariableValues[nameToValue.Key]) && !string.IsNullOrWhiteSpace(nameToValue.Value))
+                    environmentVariableValues[nameToValue.Key] = nameToValue.Value;
             }
 
             valuesHaveBeenSet = true;
@@ -94,33 +106,23 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             switch (configurationSettingName)
             {
                 case HomeConfiguration.OctopusHomeSettingName:
-                    return environmentVariableValues["OCTOPUS_HOME"];
+                    return environmentVariableValues[Home.Name];
                 case HomeConfiguration.OctopusNodeCacheSettingName:
-                    return environmentVariableValues["OCTOPUS_NODE_CACHE"];
+                    return environmentVariableValues[NodeCache.Name];
                 case ProxyConfiguration.ProxyUseDefaultSettingName:
-                    return environmentVariableValues["OCTOPUS_PROXY_USE_DEFAULT"];
+                    return environmentVariableValues[UseDefaultProxy.Name];
                 case ProxyConfiguration.ProxyHostSettingName:
-                    return environmentVariableValues["OCTOPUS_PROXY_HOST"];
+                    return environmentVariableValues[ProxyHost.Name];
                 case ProxyConfiguration.ProxyPortSettingName:
-                    return environmentVariableValues["OCTOPUS_PROXY_PORT"];
+                    return environmentVariableValues[ProxyPort.Name];
                 case ProxyConfiguration.ProxyUsernameSettingName:
-                    return environmentVariableValues["OCTOPUS_PROXY_USERNAME"];
+                    return environmentVariableValues[ProxyUser.Name];
                 case ProxyConfiguration.ProxyPasswordSettingName:
-                    return environmentVariableValues["OCTOPUS_PROXY_PASSWORD"].WithSensitiveValueWarning(log, "proxy password");
+                    return environmentVariableValues[ProxyPassword.Name];
             }
             return MapConfigurationValue(configurationSettingName);
         }
 
         protected abstract string? MapConfigurationValue(string configurationSettingName);
-    }
-
-    public static class MapsEnvironmentVariablesToConfigItemsExtensionMethods
-    {
-        public static string? WithSensitiveValueWarning(this string? value, ILogFileOnlyLogger log, string sensitiveVariableDescription)
-        {
-            if (!string.IsNullOrWhiteSpace(value))
-                log.Warn($"We noticed that you're picking up the {sensitiveVariableDescription} from an environment variable. This is OK for development/test environments but we do not recommend it in a production environment as the key can be comprised quite easily in a number of scenarios.");
-            return value;
-        }
     }
 }
