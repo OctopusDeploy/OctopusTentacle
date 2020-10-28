@@ -9,7 +9,6 @@
 
 #tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
 #tool "nuget:?package=WiX&version=3.11.2"
-#addin "nuget:?package=Cake.Compression&version=0.2.4"
 #addin "nuget:?package=Cake.Docker&version=0.10.0"
 #addin "nuget:?package=Cake.FileHelpers&version=3.2.1"
 #addin "nuget:?package=Cake.Incubator&version=5.0.1"
