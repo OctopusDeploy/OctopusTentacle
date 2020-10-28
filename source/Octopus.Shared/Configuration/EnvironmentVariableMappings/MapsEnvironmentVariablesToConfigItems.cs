@@ -114,7 +114,7 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
         protected abstract string? MapConfigurationValue(string configurationSettingName);
     }
 
-    public static class Foo
+    public static class MapsEnvironmentVariablesToConfigItemsExtensionMethods
     {
         public static string? WithSensitiveValueWarning(this string? value, ILogFileOnlyLogger log, string sensitiveVariableDescription)
         {
