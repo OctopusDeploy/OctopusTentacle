@@ -476,7 +476,7 @@ Task("Default")
 
 
 private void TGZCompress(string workingDirectory, string outputFile) {
-    RunProcess("tar", $"czvfp {outputFile} -C {workingDirectory}");
+    RunProcess("tar", $"czvfp {outputFile} {workingDirectory}");
 }
 
 private string DeriveGitBranch()
