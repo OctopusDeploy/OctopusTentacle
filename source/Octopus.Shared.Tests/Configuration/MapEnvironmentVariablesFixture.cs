@@ -6,6 +6,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
+using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Tests.Configuration
 {
@@ -14,7 +15,7 @@ namespace Octopus.Shared.Tests.Configuration
     {
         class TestMapper : MapsEnvironmentVariablesToConfigItems
         {
-            public TestMapper(string[] supportedConfigurationKeys, string[] requiredEnvironmentVariables, string[] optionalEnvironmentVariables) : base(Substitute.For<ILog>(), supportedConfigurationKeys, requiredEnvironmentVariables, optionalEnvironmentVariables)
+            public TestMapper(string[] supportedConfigurationKeys, string[] requiredEnvironmentVariables, string[] optionalEnvironmentVariables) : base(Substitute.For<ILogFileOnlyLogger>(), supportedConfigurationKeys, requiredEnvironmentVariables, optionalEnvironmentVariables)
             {
             }
 
