@@ -245,7 +245,7 @@ Task("Pack-LinuxTarballs")
                 CreateDirectory($"{workingDir}/tentacle");
                 CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
                 CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/*", $"{workingDir}/tentacle/");
-                TGZCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                TarGZipCompress(workingDir, "tentacle", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -268,7 +268,7 @@ Task("Pack-OSXTarballs")
                 CreateDirectory($"{workingDir}/tentacle");
                 CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
                 CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/*", $"{workingDir}/tentacle/");
-                TGZCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                TarGZipCompress(workingDir, "tentacle", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -473,11 +473,6 @@ Task("Default")
 //////////////////////////////////////////////////////////////////////
 // IMPLEMENTATION DETAILS
 //////////////////////////////////////////////////////////////////////
-
-
-private void TGZCompress(string workingDirectory, string outputFile) {
-    RunProcess("tar", $"czvfp {outputFile} {workingDirectory}");
-}
 
 private string DeriveGitBranch()
 {
@@ -725,6 +720,12 @@ private void RunLinuxPackageTestsFor(string framework, string runtimeId, string 
             }
         }, dockerImage, $"bash /test-scripts/test-linux-package.sh /artifacts/{packageType}/{packageFile.Name}");
     });
+}
+
+// We need to use tar directly, because .NET utilities aren't able to preserve the file permissions
+// Importantly, the Tentacle executable needs to be +x in the tar.gz file
+private void TarGZipCompress(string workingDirectory, string contentDirectory, string outputFile) {
+    RunProcess("tar", $"-C {workingDirectory} -czvf {outputFile} {contentDirectory} --preserve-permissions");
 }
 
 // note: Doesn't check if existing signatures are valid, only that one exists
