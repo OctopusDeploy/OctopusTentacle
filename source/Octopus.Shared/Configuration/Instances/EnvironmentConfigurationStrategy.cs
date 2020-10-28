@@ -11,13 +11,13 @@ namespace Octopus.Shared.Configuration.Instances
     {
         readonly ILogFileOnlyLogger log;
         readonly StartUpInstanceRequest startUpInstanceRequest;
-        readonly IMapEnvironmentVariablesToConfigItems mapper;
+        readonly IMapEnvironmentValuesToConfigItems mapper;
         readonly IEnvironmentVariableReader reader;
         bool loaded;
         bool foundValues;
 
         public EnvironmentConfigurationStrategy(ILogFileOnlyLogger log,
-            StartUpInstanceRequest startUpInstanceRequest, IMapEnvironmentVariablesToConfigItems mapper, IEnvironmentVariableReader reader)
+            StartUpInstanceRequest startUpInstanceRequest, IMapEnvironmentValuesToConfigItems mapper, IEnvironmentVariableReader reader)
         {
             this.log = log;
             this.startUpInstanceRequest = startUpInstanceRequest;
@@ -51,7 +51,7 @@ namespace Octopus.Shared.Configuration.Instances
             loaded = true;
         }
 
-        internal static Dictionary<string, string?> LoadFromEnvironment(ILogFileOnlyLogger log, IEnvironmentVariableReader reader, IMapEnvironmentVariablesToConfigItems mapper)
+        internal static Dictionary<string, string?> LoadFromEnvironment(ILogFileOnlyLogger log, IEnvironmentVariableReader reader, IMapEnvironmentValuesToConfigItems mapper)
         {
             var results = new Dictionary<string, string?>();
             foreach (var variable in mapper.SupportedEnvironmentVariables)

@@ -10,7 +10,7 @@ namespace Octopus.Shared.Tests.Configuration
     [TestFixture]
     public class MapEnvironmentVariablesFixture
     {
-        class TestMapper : MapsEnvironmentVariablesToConfigItems
+        class TestMapper : MapsEnvironmentValuesToConfigItems
         {
             public TestMapper(string[] supportedConfigurationKeys, EnvironmentVariable[] requiredEnvironmentVariables, EnvironmentVariable[] optionalEnvironmentVariables) : base(supportedConfigurationKeys, requiredEnvironmentVariables, optionalEnvironmentVariables)
             {

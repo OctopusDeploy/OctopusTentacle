@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
 {
-    public abstract class MapsEnvironmentVariablesToConfigItems : IMapEnvironmentVariablesToConfigItems
+    public abstract class MapsEnvironmentValuesToConfigItems : IMapEnvironmentValuesToConfigItems
     {
+        readonly ILogFileOnlyLogger log;
         readonly Dictionary<string, string?> environmentVariableValues;
         bool valuesHaveBeenSet;
 
@@ -23,7 +25,7 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
 
         static readonly EnvironmentVariable Home = EnvironmentVariable.PlaintText("OCTOPUS_HOME");
         static readonly EnvironmentVariable NodeCache = EnvironmentVariable.PlaintText("OCTOPUS_NODE_CACHE");
-        static readonly EnvironmentVariable UseDefaultProxy = EnvironmentVariable.PlaintText("OCTOPUS_HOME");
+        static readonly EnvironmentVariable UseDefaultProxy = EnvironmentVariable.PlaintText("OCTOPUS_USE_DEFAULT_PROXY");
         static readonly EnvironmentVariable ProxyHost = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_HOST");
         static readonly EnvironmentVariable ProxyPort = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_PORT");
         static readonly EnvironmentVariable ProxyUser = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_USER");
@@ -43,10 +45,12 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             ProxyPassword
         };
 
-        protected MapsEnvironmentVariablesToConfigItems(string[] supportedConfigurationKeys,
+        protected MapsEnvironmentValuesToConfigItems(ILogFileOnlyLogger log,
+            string[] supportedConfigurationKeys,
             EnvironmentVariable[] requiredEnvironmentVariables,
             EnvironmentVariable[] optionalEnvironmentVariables)
         {
+            this.log = log;
             SupportedConfigurationKeys = new HashSet<string>(sharedConfigurationSettingNames.Union(supportedConfigurationKeys).OrderBy(x => x));
             RequiredEnvironmentVariables = new HashSet<EnvironmentVariable>(requiredEnvironmentVariables.OrderBy(x => x.Name));
             SupportedEnvironmentVariables = new HashSet<EnvironmentVariable>(requiredEnvironmentVariables.Union(SharedOptionalEnvironmentVariables.Union(optionalEnvironmentVariables)).OrderBy(x => x));
@@ -90,6 +94,8 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
                 // Only try to set a value if a higher priority strategy hasn't already set it.
                 if (string.IsNullOrWhiteSpace(environmentVariableValues[nameToValue.Key]) && !string.IsNullOrWhiteSpace(nameToValue.Value))
                     environmentVariableValues[nameToValue.Key] = nameToValue.Value;
+                else if (!string.IsNullOrWhiteSpace(environmentVariableValues[nameToValue.Key]) && !string.IsNullOrWhiteSpace(nameToValue.Value))
+                    log.Warn($"A value for '{nameToValue.Key}' has been provided more than once. This can happen, for example, if an environment variable is set but a higher priority provider like a secrets file has already provided the value.");
             }
 
             valuesHaveBeenSet = true;

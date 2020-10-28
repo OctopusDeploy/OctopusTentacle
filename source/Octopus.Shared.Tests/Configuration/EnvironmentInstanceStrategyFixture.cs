@@ -21,7 +21,7 @@ namespace Octopus.Shared.Tests.Configuration
             var reader = Substitute.For<IEnvironmentVariableReader>();
             reader.Get("OCTOPUS_HOME").Returns(".");
             reader.Get("Foo").Returns((string?)null);
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new [] { EnvironmentVariable.PlaintText("OCTOPUS_HOME"), EnvironmentVariable.PlaintText("Foo") }));
 
             var results = EnvironmentConfigurationStrategy.LoadFromEnvironment(Substitute.For<ILogFileOnlyLogger>(), reader, mapper);
@@ -34,7 +34,7 @@ namespace Octopus.Shared.Tests.Configuration
         public void IsNotConfiguredWhenNonDynamicStartupType()
         {
             var reader = Substitute.For<IEnvironmentVariableReader>();
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new[] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") }));
 
             var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(), new StartUpConfigFileInstanceRequest(ApplicationName.OctopusServer, "test.config"), mapper, reader);
@@ -45,7 +45,7 @@ namespace Octopus.Shared.Tests.Configuration
         public void IsNotConfiguredWhenEnvFileIsEmpty()
         {
             var reader = Substitute.For<IEnvironmentVariableReader>();
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>());
 
             var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(), new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), mapper, reader);
@@ -57,7 +57,7 @@ namespace Octopus.Shared.Tests.Configuration
         {
             var reader = Substitute.For<IEnvironmentVariableReader>();
             reader.Get("OCTOPUS_HOME").Returns(".");
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new[] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") }));
 
             var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(), new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), mapper, reader);

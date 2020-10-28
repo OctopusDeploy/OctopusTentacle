@@ -2,7 +2,7 @@
 
 namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
 {
-    public interface IMapEnvironmentVariablesToConfigItems
+    public interface IMapEnvironmentValuesToConfigItems
     {
         HashSet<EnvironmentVariable> SupportedEnvironmentVariables { get; }
 

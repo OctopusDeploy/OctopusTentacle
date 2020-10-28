@@ -35,7 +35,7 @@ namespace Octopus.Shared.Tests.Configuration
             var selector = GetApplicationInstanceSelector(new List<ApplicationInstanceRecord>(), string.Empty);
             ((IApplicationConfigurationStrategy)ConfigurationStore).LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IKeyValueStore)null);
 
-            OtherStrategy.LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns(new InMemoryKeyValueStore(Substitute.For<IMapEnvironmentVariablesToConfigItems>()));
+            OtherStrategy.LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns(new InMemoryKeyValueStore(Substitute.For<IMapEnvironmentValuesToConfigItems>()));
 
             selector.CanLoadCurrentInstance().Should().BeTrue("because the in memory config should be used");
             selector.GetCurrentName().Should().BeNull("in memory config should have no instance name");

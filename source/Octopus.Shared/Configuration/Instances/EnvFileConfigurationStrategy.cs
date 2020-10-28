@@ -12,11 +12,11 @@ namespace Octopus.Shared.Configuration.Instances
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IOctopusFileSystem fileSystem;
         readonly IEnvFileLocator envFileLocator;
-        readonly IMapEnvironmentVariablesToConfigItems mapper;
+        readonly IMapEnvironmentValuesToConfigItems mapper;
         bool loaded;
         bool foundValues;
 
-        public EnvFileConfigurationStrategy(StartUpInstanceRequest startUpInstanceRequest, IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentVariablesToConfigItems mapper)
+        public EnvFileConfigurationStrategy(StartUpInstanceRequest startUpInstanceRequest, IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentValuesToConfigItems mapper)
         {
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.fileSystem = fileSystem;
@@ -51,7 +51,7 @@ namespace Octopus.Shared.Configuration.Instances
             loaded = true;
         }
 
-        internal static Dictionary<string, string?>? LoadFromEnvFile(IEnvFileLocator envFileLocator, IOctopusFileSystem fileSystem, IMapEnvironmentVariablesToConfigItems mapper)
+        internal static Dictionary<string, string?>? LoadFromEnvFile(IEnvFileLocator envFileLocator, IOctopusFileSystem fileSystem, IMapEnvironmentValuesToConfigItems mapper)
         {
             var envFile = envFileLocator.LocateEnvFile();
             if (envFile == null)

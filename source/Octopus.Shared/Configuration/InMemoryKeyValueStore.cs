@@ -7,9 +7,9 @@ namespace Octopus.Shared.Configuration
 {
     public class InMemoryKeyValueStore : IKeyValueStore
     {
-        readonly IMapEnvironmentVariablesToConfigItems mapper;
+        readonly IMapEnvironmentValuesToConfigItems mapper;
 
-        public InMemoryKeyValueStore(IMapEnvironmentVariablesToConfigItems mapper)
+        public InMemoryKeyValueStore(IMapEnvironmentValuesToConfigItems mapper)
         {
             this.mapper = mapper;
         }

@@ -22,7 +22,7 @@ namespace Octopus.Shared.Tests.Configuration
             var fileLocator = Substitute.For<IEnvFileLocator>();
             fileLocator.LocateEnvFile().Returns("test");
             fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "", "# some comment to test", "OCTOPUS_HOME=." }));
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new [] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") }));
 
             var results = EnvFileConfigurationStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);
@@ -37,7 +37,7 @@ namespace Octopus.Shared.Tests.Configuration
             var fileLocator = Substitute.For<IEnvFileLocator>();
             fileLocator.LocateEnvFile().Returns("test");
             fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "OCTOPUS_HOME=.", "Broken" }));
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new [] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") }));
 
             Action testAction = () => EnvFileConfigurationStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);
@@ -51,7 +51,7 @@ namespace Octopus.Shared.Tests.Configuration
             var fileLocator = Substitute.For<IEnvFileLocator>();
             fileLocator.LocateEnvFile().Returns("test");
             fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "OCTOPUS_HOME=.", "Foo=Bar==" }));
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new [] { EnvironmentVariable.PlaintText("OCTOPUS_HOME"), EnvironmentVariable.PlaintText("Foo") }));
 
             var results = EnvFileConfigurationStrategy.LoadFromEnvFile(fileLocator, fileSystem, mapper);
@@ -73,7 +73,7 @@ namespace Octopus.Shared.Tests.Configuration
             var fileSystem = Substitute.For<IOctopusFileSystem>();
             var fileLocator = Substitute.For<IEnvFileLocator>();
             fileLocator.LocateEnvFile().Returns((string?)null);
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
 
             var subject = new EnvFileConfigurationStrategy(new StartUpConfigFileInstanceRequest(ApplicationName.OctopusServer, "test.config"), fileSystem, fileLocator, mapper);
             subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull(because: "there isn't an instance when the startup request isn't 'dynamic'");
@@ -85,7 +85,7 @@ namespace Octopus.Shared.Tests.Configuration
             var fileSystem = Substitute.For<IOctopusFileSystem>();
             var fileLocator = Substitute.For<IEnvFileLocator>();
             fileLocator.LocateEnvFile().Returns((string?)null);
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
 
             var subject = new EnvFileConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);
             subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull(because: "there isn't an instance when there is no envFile");
@@ -98,7 +98,7 @@ namespace Octopus.Shared.Tests.Configuration
             var fileLocator = Substitute.For<IEnvFileLocator>();
             fileLocator.LocateEnvFile().Returns("test");
             fileSystem.ReadAllText("test").Returns(TestFileContent(new []{ "OCTOPUS_HOME=." }));
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             var hashSet = new HashSet<EnvironmentVariable>(new[] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") });
             mapper.SupportedEnvironmentVariables.Returns(hashSet);
 

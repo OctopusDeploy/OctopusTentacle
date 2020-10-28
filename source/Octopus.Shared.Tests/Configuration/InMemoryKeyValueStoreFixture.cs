@@ -20,7 +20,7 @@ namespace Octopus.Shared.Tests.Configuration
         {
             var value = "TestValue";
 
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.GetConfigurationValue("Test").Returns(value);
             var store = new InMemoryKeyValueStore(mapper);
 
@@ -33,7 +33,7 @@ namespace Octopus.Shared.Tests.Configuration
         {
             var value = "10";
 
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.GetConfigurationValue("Test").Returns(value);
             var store = new InMemoryKeyValueStore(mapper);
 
@@ -46,7 +46,7 @@ namespace Octopus.Shared.Tests.Configuration
         {
             var value = Convert.ToBase64String(GenerateValue());
 
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.GetConfigurationValue("Test").Returns(value);
             var store = new InMemoryKeyValueStore(mapper);
 
@@ -59,7 +59,7 @@ namespace Octopus.Shared.Tests.Configuration
         {
             var value = Convert.ToBase64String(GenerateValue());
 
-            var mapper = Substitute.For<IMapEnvironmentVariablesToConfigItems>();
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.GetConfigurationValue("Test").Returns(value);
             var store = new InMemoryKeyValueStore(mapper);
 
