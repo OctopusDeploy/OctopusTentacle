@@ -9,7 +9,6 @@
 
 #tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
 #tool "nuget:?package=WiX&version=3.11.2"
-#addin "nuget:?package=Cake.Compression&version=0.2.4"
 #addin "nuget:?package=Cake.Docker&version=0.10.0"
 #addin "nuget:?package=Cake.FileHelpers&version=3.2.1"
 #addin "nuget:?package=Cake.Incubator&version=5.0.1"
@@ -245,7 +244,7 @@ Task("Pack-LinuxTarballs")
                 CreateDirectory($"{workingDir}/tentacle");
                 CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
                 CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/*", $"{workingDir}/tentacle/");
-                GZipCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                TarGZipCompress(workingDir, "tentacle", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -268,7 +267,7 @@ Task("Pack-OSXTarballs")
                 CreateDirectory($"{workingDir}/tentacle");
                 CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
                 CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/*", $"{workingDir}/tentacle/");
-                GZipCompress(workingDir, $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                TarGZipCompress(workingDir, "tentacle", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -720,6 +719,12 @@ private void RunLinuxPackageTestsFor(string framework, string runtimeId, string 
             }
         }, dockerImage, $"bash /test-scripts/test-linux-package.sh /artifacts/{packageType}/{packageFile.Name}");
     });
+}
+
+// We need to use tar directly, because .NET utilities aren't able to preserve the file permissions
+// Importantly, the Tentacle executable needs to be +x in the tar.gz file
+private void TarGZipCompress(string workingDirectory, string contentDirectory, string outputFile) {
+    RunProcess("tar", $"-C {workingDirectory} -czvf {outputFile} {contentDirectory} --preserve-permissions");
 }
 
 // note: Doesn't check if existing signatures are valid, only that one exists
