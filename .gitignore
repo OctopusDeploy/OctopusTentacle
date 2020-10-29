@@ -31,7 +31,6 @@ source/packages
 *.ncrunchproject
 *.ncrunchsolution
 source/Octopus.v2.ncrunchsolution
-source/_ReSharper**
 source/_ReSharper*
 
 *.sublime-project
