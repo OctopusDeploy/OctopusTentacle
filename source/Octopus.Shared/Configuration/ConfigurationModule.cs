@@ -131,6 +131,9 @@ namespace Octopus.Shared.Configuration
                 .As<IRegistryApplicationInstanceStore>();
             builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
 
+            builder.RegisterType<ApplicationInstanceStore>()
+                .As<IApplicationInstanceStore>();
+
             builder.RegisterType<ApplicationInstanceLocator>()
                 .As<IApplicationInstanceLocator>();
 
