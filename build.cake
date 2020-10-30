@@ -351,19 +351,30 @@ Task("Pack-CrossPlatformBundle")
     .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
     .IsDependentOn("Build-Windows") // for the Octopus.Tentacle.Upgrader binary
     .IsDependentOn("Pack-WindowsInstallers")    // for the .msi files (Windows)
+    .IsDependentOn("Pack-DebianPackage")    // for the .deb
+    .IsDependentOn("Pack-RedHatPackage")    // for the .rpm
     .IsDependentOn("Pack-WindowsZips")  // for the .zip files (Windows)
     .IsDependentOn("Pack-LinuxTarballs")    // for the .tar.gz bundles (Linux)
     .IsDependentOn("Pack-OSXTarballs")  // for the .tar.gz bundle (OS X)
     .Does(() => {
         CreateDirectory($"{artifactsDir}/nuget");
 
-        var workingDir = $"{buildDir}/tentacle-upgrader";
+        var workingDir = $"{buildDir}/Octopus.Tentacle.CrossPlatformBundle";
         CreateDirectory(workingDir);
+
+        var debAMD64PackageFilename = ConstructDebianPackageFilename("tentacle", versionInfo, "amd64");
+        var debARM64PackageFilename = ConstructDebianPackageFilename("tentacle", versionInfo, "arm64");
+        var rpmARM64PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "arm64");
+        var rpmx64PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "x86_64");
 
         CopyFiles($"./source/Octopus.Tentacle.CrossPlatformBundle/Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDir);
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi", $"{workingDir}/Octopus.Tentacle.msi");
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi", $"{workingDir}/Octopus.Tentacle-x64.msi");
         CopyFiles($"{buildDir}/Octopus.Tentacle.Upgrader/net452/win-x64/*", workingDir);
+        CopyFile($"{artifactsDir}/deb/{debAMD64PackageFilename}", $"{workingDir}/{debAMD64PackageFilename}");
+        CopyFile($"{artifactsDir}/deb/{debARM64PackageFilename}", $"{workingDir}/{debARM64PackageFilename}");
+        CopyFile($"{artifactsDir}/rpm/{rpmARM64PackageFilename}", $"{workingDir}/{rpmARM64PackageFilename}");
+        CopyFile($"{artifactsDir}/rpm/{rpmx64PackageFilename}", $"{workingDir}/{rpmx64PackageFilename}");
 
         foreach (var framework in frameworks)
         {
@@ -380,6 +391,10 @@ Task("Pack-CrossPlatformBundle")
         AssertFileExists($"{workingDir}/Octopus.Tentacle.msi");
         AssertFileExists($"{workingDir}/Octopus.Tentacle-x64.msi");
         AssertFileExists($"{workingDir}/Octopus.Tentacle.Upgrader.exe");
+        AssertFileExists($"{workingDir}/{debAMD64PackageFilename}");
+        AssertFileExists($"{workingDir}/{debARM64PackageFilename}");
+        AssertFileExists($"{workingDir}/{rpmARM64PackageFilename}");
+        AssertFileExists($"{workingDir}/{rpmx64PackageFilename}");
 
         RunProcess("dotnet", $"tool run dotnet-octo pack --id=Octopus.Tentacle.CrossPlatformBundle --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
     });
@@ -928,6 +943,17 @@ private void RunTestSuiteFor(string framework, string runtimeId)
         // We want Cake to continue running even if tests fail. It's the responsibility of the build system to inspect
         // the test results files and assert on whether a failed test should fail the build. E.g. muted, ignored tests.
     }
+}
+
+private string ConstructDebianPackageFilename(string packageName, VersionInfo versionInfo, string architecture) {
+    var filename = $"{packageName}_{versionInfo.FullSemVer}_{architecture}.deb";
+    return filename;
+}
+
+private string ConstructRedHatPackageFilename(string packageName, VersionInfo versionInfo, string architecture) {
+    var transformedVersion = versionInfo.FullSemVer.Replace("-", "_");
+    var filename = $"{packageName}-{transformedVersion}-1.{architecture}.rpm";
+    return filename;
 }
 
 void AssertFileExists(string fileSpec)
