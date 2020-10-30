@@ -1,5 +1,6 @@
 using System;
 using Autofac;
+using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 
 namespace Octopus.Tentacle.Configuration
 {
@@ -8,6 +9,8 @@ namespace Octopus.Tentacle.Configuration
         protected override void Load(ContainerBuilder builder)
         {
             base.Load(builder);
+
+            builder.RegisterType<MapsTentacleEnvironmentVariablesToConfigItems>().As<IMapEnvironmentValuesToConfigItems>();
 
             builder.RegisterType<TentacleConfiguration>().As<ITentacleConfiguration>().SingleInstance();
             builder.RegisterType<WritableTentacleConfiguration>().As<IWritableTentacleConfiguration>().SingleInstance();
