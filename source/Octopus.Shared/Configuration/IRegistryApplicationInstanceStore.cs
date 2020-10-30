@@ -3,7 +3,7 @@ using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Configuration
 {
-    public interface IRegistryApplicationInstanceStore
+    interface IRegistryApplicationInstanceStore
     {
         ApplicationInstanceRecord? GetInstanceFromRegistry(string instanceName);
 

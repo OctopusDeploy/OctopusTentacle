@@ -9,7 +9,7 @@ namespace Octopus.Shared.Configuration.Instances
     /// <summary>
     /// This is here for legacy purposes, we need it to read the old entries in order to migrate them to the new file based index.
     /// </summary>
-    public class RegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
+    class RegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
         const RegistryHive Hive = RegistryHive.LocalMachine;
         const RegistryView View = RegistryView.Registry64;

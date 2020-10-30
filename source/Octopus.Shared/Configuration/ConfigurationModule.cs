@@ -24,7 +24,7 @@ namespace Octopus.Shared.Configuration
             if (PlatformDetection.IsRunningOnWindows)
             {
                 builder.RegisterType<RegistryApplicationInstanceStore>()
-                    .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
+                    .WithParameter(new TypedParameter(typeof(StartUpInstanceRequest), startUpInstanceRequest))
                     .As<IRegistryApplicationInstanceStore>();
                 builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
             }
@@ -37,35 +37,35 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<EnvironmentVariableReader>().As<IEnvironmentVariableReader>();
 
             builder.RegisterType<ApplicationInstanceStore>()
-                .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
+                .WithParameter(new TypedParameter(typeof(StartUpInstanceRequest), startUpInstanceRequest))
                 .As<IApplicationInstanceStore>()
                 .As<IApplicationConfigurationStrategy>();
 
             builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>().SingleInstance();
             builder.RegisterType<EnvFileConfigurationStrategy>()
-                .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
+                .WithParameter(new TypedParameter(typeof(StartUpInstanceRequest), startUpInstanceRequest))
                 .As<IApplicationConfigurationStrategy>();
 
             builder.RegisterType<EnvironmentConfigurationStrategy>()
-                .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
+                .WithParameter(new TypedParameter(typeof(StartUpInstanceRequest), startUpInstanceRequest))
                 .As<IApplicationConfigurationStrategy>();
 
             builder.RegisterType<ConfigFileConfigurationStrategy>()
-                .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
+                .WithParameter(new TypedParameter(typeof(StartUpInstanceRequest), startUpInstanceRequest))
                 .As<IApplicationConfigurationStrategy>();
 
             builder.RegisterType<ApplicationInstanceSelector>()
-                .WithParameter("startUpInstanceRequest", startUpInstanceRequest)
+                .WithParameter(new TypedParameter(typeof(StartUpInstanceRequest), startUpInstanceRequest))
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
 
             builder.RegisterType<ApplicationInstanceLocator>()
-                .WithParameter("applicationName", startUpInstanceRequest.ApplicationName)
+                .WithParameter(new TypedParameter(typeof(ApplicationName), startUpInstanceRequest.ApplicationName))
                 .As<IApplicationInstanceLocator>()
                 .SingleInstance();
 
             builder.RegisterType<ApplicationInstanceManager>()
-                .WithParameter("applicationName", startUpInstanceRequest.ApplicationName)
+                .WithParameter(new TypedParameter(typeof(ApplicationName), startUpInstanceRequest.ApplicationName))
                 .As<IApplicationInstanceManager>()
                 .SingleInstance();
 
@@ -82,11 +82,11 @@ namespace Octopus.Shared.Configuration
             }).As<IWritableKeyValueStore>().SingleInstance();
 
             builder.RegisterType<HomeConfiguration>()
-                .WithParameter("application", startUpInstanceRequest.ApplicationName)
+                .WithParameter(new TypedParameter(typeof(ApplicationName), startUpInstanceRequest.ApplicationName))
                 .As<IHomeConfiguration>()
                 .SingleInstance();
             builder.RegisterType<WritableHomeConfiguration>()
-                .WithParameter("application", startUpInstanceRequest.ApplicationName)
+                .WithParameter(new TypedParameter(typeof(ApplicationName), startUpInstanceRequest.ApplicationName))
                 .As<IWritableHomeConfiguration>()
                 .SingleInstance();
 
@@ -132,16 +132,16 @@ namespace Octopus.Shared.Configuration
 
             // the Wpf apps only run on Windows
             builder.RegisterType<RegistryApplicationInstanceStore>()
-                .WithParameter("applicationName", applicationName)
+                .WithParameter(new TypedParameter(typeof(ApplicationName), applicationName))
                 .As<IRegistryApplicationInstanceStore>();
             builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
 
             builder.RegisterType<ApplicationInstanceLocator>()
-                .WithParameter("applicationName", applicationName)
+                .WithParameter(new TypedParameter(typeof(ApplicationName), applicationName))
                 .As<IApplicationInstanceLocator>();
 
             builder.RegisterType<ApplicationInstanceManager>()
-                .WithParameter("applicationName", applicationName)
+                .WithParameter(new TypedParameter(typeof(ApplicationName), applicationName))
                 .As<IApplicationInstanceManager>();
         }
     }
