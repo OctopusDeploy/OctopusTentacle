@@ -67,7 +67,7 @@ namespace Octopus.Manager.Tentacle
         static IContainer ConfigureContainer()
         {
             var builder = new ContainerBuilder();
-            builder.RegisterModule(new ConfigurationModule(ApplicationName.Tentacle, ""));
+
             builder.RegisterModule(new CertificatesModule());
             builder.RegisterModule(new LoggingModule());
             builder.RegisterModule(new OctopusFileSystemModule());
