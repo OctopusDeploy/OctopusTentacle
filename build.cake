@@ -244,7 +244,7 @@ Task("Pack-LinuxTarballs")
                 CreateDirectory($"{workingDir}/tentacle");
                 CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
                 CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/*", $"{workingDir}/tentacle/");
-                TarGZipCompress(workingDir, "tentacle", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                TarGZipCompress(workingDir, "tentacle", $"{artifactsDir}/zip", $"tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -267,7 +267,7 @@ Task("Pack-OSXTarballs")
                 CreateDirectory($"{workingDir}/tentacle");
                 CopyFiles($"./linux-packages/content/*", $"{workingDir}/tentacle/");
                 CopyFiles($"{buildDir}/Tentacle/{framework}/{runtimeId}/*", $"{workingDir}/tentacle/");
-                TarGZipCompress(workingDir, "tentacle", $"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
+                TarGZipCompress(workingDir, "tentacle", $"{artifactsDir}/zip", $"tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.tar.gz");
             }
         }
     });
@@ -723,8 +723,19 @@ private void RunLinuxPackageTestsFor(string framework, string runtimeId, string 
 
 // We need to use tar directly, because .NET utilities aren't able to preserve the file permissions
 // Importantly, the Tentacle executable needs to be +x in the tar.gz file
-private void TarGZipCompress(string workingDirectory, string contentDirectory, string outputFile) {
-    RunProcess("tar", $"-C {workingDirectory} -czvf {outputFile} {contentDirectory} --preserve-permissions");
+private void TarGZipCompress(string inputDirectory, string filespec, string outputDirectory, string outputFile) {
+
+    var inputMountPoint = new System.IO.DirectoryInfo(inputDirectory).FullName;
+    var outputMountPoint = new System.IO.DirectoryInfo(outputDirectory).FullName;
+
+    DockerRunWithoutResult(new DockerContainerRunSettings {
+        Rm = true,
+        Tty = true,
+        Volume = new string[] {
+            $"{inputMountPoint}:/input",
+            $"{outputMountPoint}:/output",
+        }
+    }, "debian", $"tar -C /input -czvf /output/{outputFile} {filespec} --preserve-permissions");
 }
 
 // note: Doesn't check if existing signatures are valid, only that one exists
