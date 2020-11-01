@@ -42,6 +42,7 @@ namespace Octopus.Shared.Configuration
             Write(name, valueAsObject);
             if (AutoSaveOnSet)
                 return Save();
+
             return true;
         }
     }

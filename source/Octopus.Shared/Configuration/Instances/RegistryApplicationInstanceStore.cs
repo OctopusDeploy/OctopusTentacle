@@ -2,21 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Win32;
-using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Configuration
+namespace Octopus.Shared.Configuration.Instances
 {
-    public class RegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
+    /// <summary>
+    /// This is here for legacy purposes, we need it to read the old entries in order to migrate them to the new file based index.
+    /// </summary>
+    class RegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
-        readonly ApplicationName applicationName;
         const RegistryHive Hive = RegistryHive.LocalMachine;
         const RegistryView View = RegistryView.Registry64;
         const string KeyName = "Software\\Octopus";
 
-        public RegistryApplicationInstanceStore(ApplicationName applicationName)
+        readonly StartUpInstanceRequest startUpInstanceRequest;
+
+        public RegistryApplicationInstanceStore(StartUpInstanceRequest startUpInstanceRequest)
         {
-            this.applicationName = applicationName;
+            this.startUpInstanceRequest = startUpInstanceRequest;
         }
 
         public ApplicationInstanceRecord GetInstanceFromRegistry(string instanceName)
@@ -37,7 +40,7 @@ namespace Octopus.Shared.Configuration
                     if (subKey == null)
                         return results;
 
-                    using (var applicationNameKey = subKey.OpenSubKey(applicationName.ToString(), false))
+                    using (var applicationNameKey = subKey.OpenSubKey(startUpInstanceRequest.ApplicationName.ToString(), false))
                     {
                         if (applicationNameKey == null)
                             return results;
@@ -72,7 +75,7 @@ namespace Octopus.Shared.Configuration
                     if (subKey == null)
                         return;
 
-                    using (var applicationNameKey = subKey.OpenSubKey(applicationName.ToString(), true))
+                    using (var applicationNameKey = subKey.OpenSubKey(startUpInstanceRequest.ApplicationName.ToString(), true))
                     {
                         if (applicationNameKey == null)
                             return;

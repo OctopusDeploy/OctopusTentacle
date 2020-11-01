@@ -1,10 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Shared.Configuration.Instances;
 
-namespace Octopus.Shared.Configuration
+namespace Octopus.Shared.Configuration.Instances
 {
-    class NullRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
+    public class NullRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
         public ApplicationInstanceRecord? GetInstanceFromRegistry(string instanceName)
         {

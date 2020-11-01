@@ -13,6 +13,7 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using Octopus.Diagnostics;
+using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
@@ -64,6 +65,8 @@ namespace Octopus.Shared.Startup
             commonOptions.Add("help", "Show detailed help for this command", v => { helpSwitchProvidedInCommandArguments = true; });
         }
 
+        protected abstract ApplicationName ApplicationName { get; }
+
         public int Run()
         {
             var delayedLog = new DelayedLog();
@@ -94,18 +97,17 @@ namespace Octopus.Shared.Startup
                 // Write diagnostics information early as possible - note this will target the global log file since we haven't loaded the instance yet.
                 // This is nice because the global log file will always have a history of every application invocation, regardless of instance
                 // See: OctopusLogsDirectoryRenderer.DefaultLogsDirectory
-                var instanceName = TryLoadInstanceNameFromCommandLineArguments(commandLineArguments);
-                WriteDiagnosticsInfoToLogFile(instanceName);
+                var startupRequest = TryLoadInstanceNameFromCommandLineArguments(commandLineArguments);
+                WriteDiagnosticsInfoToLogFile(startupRequest);
 
                 log.Trace("Creating and configuring the Autofac container");
-                container = BuildContainer(instanceName);
+                container = BuildContainer(startupRequest);
 
                 // Try to load the instance here so we can log into the instance's log file as soon as possible
                 // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on when we try to load the instance for real
-                var applicationInstanceSelector = container.Resolve<IApplicationInstanceSelector>();
-                if (applicationInstanceSelector.CanLoadCurrentInstance())
+                if (container.Resolve<IApplicationInstanceSelector>().CanLoadCurrentInstance())
                 {
-                    WriteDiagnosticsInfoToLogFile(applicationInstanceSelector.GetCurrentName());
+                    WriteDiagnosticsInfoToLogFile(startupRequest);
                 }
 
                 // Now register extensions and their modules into the container
@@ -305,12 +307,13 @@ namespace Octopus.Shared.Startup
             LogFileOnlyLogger.AssertConfigurationIsCorrect();
         }
 
-        void WriteDiagnosticsInfoToLogFile(string? instanceName)
+        void WriteDiagnosticsInfoToLogFile(StartUpInstanceRequest startupRequest)
         {
+            var persistedRequest = startupRequest as StartUpPersistedInstanceRequest;
             var executable = PlatformDetection.IsRunningOnWindows
                 ? Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullProcessPath())
                 : Path.GetFileName(Assembly.GetEntryAssembly().FullProcessPath());
-            LogFileOnlyLogger.Current.Info($"{executable} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(instanceName) ? "Default" : instanceName)}");
+            LogFileOnlyLogger.Current.Info($"{executable} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(persistedRequest?.InstanceName) ? "Default" : persistedRequest?.InstanceName)}");
             LogFileOnlyLogger.Current.Info($"Environment Information:{Environment.NewLine}" +
                                            $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
         }
@@ -329,15 +332,22 @@ namespace Octopus.Shared.Startup
             LogManager.Configuration = c;
         }
 
-        static string TryLoadInstanceNameFromCommandLineArguments(string[] commandLineArguments)
+        StartUpInstanceRequest TryLoadInstanceNameFromCommandLineArguments(string[] commandLineArguments)
         {
             var instanceName = string.Empty;
-            var options = AbstractStandardCommand.AddInstanceOption(new OptionSet(), v => instanceName = v);
+            var configFile = string.Empty;
+
+            var options = AbstractStandardCommand.AddInstanceOption(new OptionSet(), v => instanceName = v, v => configFile = v);
 
             // Ignore the return parameter here, we want to leave the instance option for the responsible command
             // We're just peeking to see if we can load the instance as early as possible
             options.Parse(commandLineArguments);
-            return instanceName;
+
+            if (!string.IsNullOrWhiteSpace(instanceName))
+                return new StartUpPersistedInstanceRequest(ApplicationName, instanceName);
+            if (!string.IsNullOrWhiteSpace(configFile))
+                return new StartUpConfigFileInstanceRequest(ApplicationName, configFile);
+            return new StartUpDynamicInstanceRequest(ApplicationName);
         }
 
         public static string[] ParseCommandHostArgumentsFromCommandLineArguments(
@@ -545,7 +555,7 @@ namespace Octopus.Shared.Startup
             return commandLineArguments.Skip(1).ToArray();
         }
 
-        protected abstract IContainer BuildContainer(string instanceName);
+        protected abstract IContainer BuildContainer(StartUpInstanceRequest startUpInstanceRequest);
 
         protected virtual void RegisterAdditionalModules(IContainer builtContainer)
         {

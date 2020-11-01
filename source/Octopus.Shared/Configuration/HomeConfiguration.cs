@@ -50,12 +50,10 @@ namespace Octopus.Shared.Configuration
 
     public class WritableHomeConfiguration : HomeConfiguration, IWritableHomeConfiguration
     {
-        readonly ApplicationName application;
         readonly IWritableKeyValueStore settings;
 
         public WritableHomeConfiguration(ApplicationName application, IWritableKeyValueStore writableConfiguration) : base(application, writableConfiguration)
         {
-            this.application = application;
             settings = writableConfiguration;
         }
 

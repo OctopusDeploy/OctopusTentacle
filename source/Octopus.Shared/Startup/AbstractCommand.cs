@@ -85,11 +85,11 @@ namespace Octopus.Shared.Startup
                     //Ideally, we'd ensure that no logging anywhere would log these values, but its way harder than it sounds.
                     //The LogContext is immutable, and designed so that is a tree structure - usually, you only care about
                     //sensitive values for the scope of a deployment, not after that. Changing it to be not immutable
-                    //is very bad from a perf pespective, as the AhoCorasick masking algoritm is pretty perf intensive.
+                    //is very bad from a perf perspective, as the AhoCorasick masking algorithm is pretty perf intensive.
                     //Also, due to timing issues of when loggers are created, it gets very difficult to ensure that the logger
-                    //will have the sensitive values set. Its all rather complicated, and its preventing a theoritcal problem
+                    //will have the sensitive values set. Its all rather complicated, and its preventing a theoretical problem
                     //whereas this LogFileOnlyLogger is definitely logging sensitive values, so we need to mask there
-                    LogFileOnlyLogger.Current.AddSensitiveValues(option.Values);
+                    LogFileOnlyLogger.Current.AddSensitiveValues(option.Values.Where(x => x != null).ToArray()!);
                 }
             }
         }

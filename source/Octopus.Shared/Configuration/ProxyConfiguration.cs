@@ -6,11 +6,11 @@ namespace Octopus.Shared.Configuration
     public class ProxyConfiguration : IProxyConfiguration
     {
         // These are deliberately public so consumers like Octopus Server and Tentacle can use the configuration keys
-        protected const string ProxyUseDefaultSettingName = "Octopus.Proxy.UseDefaultProxy";
-        protected const string ProxyHostSettingName = "Octopus.Proxy.ProxyHost";
-        protected const string ProxyPortSettingName = "Octopus.Proxy.ProxyPort";
-        protected const string ProxyUsernameSettingName = "Octopus.Proxy.ProxyUsername";
-        protected const string ProxyPasswordSettingName = "Octopus.Proxy.ProxyPassword";
+        public const string ProxyUseDefaultSettingName = "Octopus.Proxy.UseDefaultProxy";
+        public const string ProxyHostSettingName = "Octopus.Proxy.ProxyHost";
+        public const string ProxyPortSettingName = "Octopus.Proxy.ProxyPort";
+        public const string ProxyUsernameSettingName = "Octopus.Proxy.ProxyUsername";
+        public const string ProxyPasswordSettingName = "Octopus.Proxy.ProxyPassword";
 
         readonly IKeyValueStore settings;
 

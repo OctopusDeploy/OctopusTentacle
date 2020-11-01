@@ -2,33 +2,27 @@ using System;
 using System.Linq;
 using Octopus.Configuration;
 using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
     class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
-        readonly string currentInstanceName;
-        readonly IOctopusFileSystem fileSystem;
-        readonly IApplicationInstanceStore instanceStore;
+        readonly StartUpInstanceRequest startUpInstanceRequest;
+        readonly IApplicationConfigurationStrategy[] instanceStrategies;
         readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly object @lock = new object();
         (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore WritableConfiguration)? current;
 
-        public ApplicationInstanceSelector(ApplicationName applicationName,
-            string currentInstanceName,
-            IOctopusFileSystem fileSystem,
-            IApplicationInstanceStore instanceStore,
+        public ApplicationInstanceSelector(StartUpInstanceRequest startUpInstanceRequest,
+            IApplicationConfigurationStrategy[] instanceStrategies,
             ILogFileOnlyLogger logFileOnlyLogger)
         {
-            ApplicationName = applicationName;
-            this.currentInstanceName = currentInstanceName;
-            this.fileSystem = fileSystem;
-            this.instanceStore = instanceStore;
+            this.startUpInstanceRequest = startUpInstanceRequest;
+            this.instanceStrategies = instanceStrategies;
             this.logFileOnlyLogger = logFileOnlyLogger;
         }
 
-        public ApplicationName ApplicationName { get; }
+        public ApplicationName ApplicationName => startUpInstanceRequest.ApplicationName;
 
         public bool CanLoadCurrentInstance()
         {
@@ -99,9 +93,10 @@ namespace Octopus.Shared.Configuration.Instances
         {
             var instance = LoadInstance();
 
+            var homeConfig = new HomeConfiguration(startUpInstanceRequest.ApplicationName, instance.Configuration);
+
             // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
             // back to here
-            var homeConfig = new HomeConfiguration(ApplicationName, instance.Configuration);
             var logInit = new LogInitializer(new LoggingConfiguration(homeConfig), logFileOnlyLogger);
             logInit.Start();
 
@@ -110,68 +105,110 @@ namespace Octopus.Shared.Configuration.Instances
 
         internal (string? InstanceName, IKeyValueStore Configuration, IWritableKeyValueStore WritableConfiguration) LoadInstance()
         {
-            ApplicationInstanceRecord? instance = null;
-            var anyInstances = instanceStore.AnyInstancesConfigured();
-            if (!anyInstances)
+            string? instanceName = null;
+            IWritableKeyValueStore? writableConfiguration = null;
+
+            // build a composite configuration
+            var keyValueStores = instanceStrategies
+                .OrderBy(x => x.Priority)
+                .Select(s =>
+                {
+                    ApplicationRecord? record = null;
+
+                    if (s is IApplicationConfigurationWithMultipleInstances multipleInstances)
+                    {
+                        var persistedApplicationInstanceRecords = multipleInstances.ListInstances();
+
+                        if (startUpInstanceRequest is StartUpPersistedInstanceRequest persistedRequest)
+                        {
+                            instanceName = persistedRequest.InstanceName;
+
+                            var possibleNamedInstances = persistedApplicationInstanceRecords
+                                .Where(i => string.Equals(i.InstanceName, persistedRequest.InstanceName, StringComparison.InvariantCultureIgnoreCase))
+                                .ToArray();
+
+                            if (possibleNamedInstances.Length == 0)
+                                throw new ControlledFailureException($"Instance {persistedRequest.InstanceName} of {persistedRequest.ApplicationName} has not been configured on this machine. Available instances: {AvailableInstances(multipleInstances)}.");
+
+                            if (possibleNamedInstances.Length == 1 && possibleNamedInstances.Count() == 1)
+                            {
+                                var applicationInstanceRecord = possibleNamedInstances.First();
+                                instanceName = applicationInstanceRecord.InstanceName;
+                                record = applicationInstanceRecord;
+                            }
+                            else
+                            {
+                                // to get more than 1, there must have been a match on differing case, try an exact case match
+                                var exactMatch = possibleNamedInstances.FirstOrDefault(x => x.InstanceName == persistedRequest.InstanceName);
+                                if (exactMatch == null) // null here means all matches were different case
+                                    throw new ControlledFailureException($"Instance {persistedRequest.InstanceName} of {persistedRequest.ApplicationName} could not be matched to one of the existing instances: {AvailableInstances(multipleInstances)}.");
+                                instanceName = exactMatch.InstanceName;
+                                record = exactMatch;
+                            }
+
+                            if (record == null)
+                                throw new ControlledFailureException($"Instance {persistedRequest.InstanceName} of {startUpInstanceRequest.ApplicationName} has not been configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {AvailableInstances(multipleInstances)}.");
+                        }
+                        else
+                        {
+                            // pick the default, if there is one
+                            var defaultInstance = persistedApplicationInstanceRecords.FirstOrDefault(i => i.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(ApplicationName));
+                            if (defaultInstance != null)
+                            {
+                                instanceName = defaultInstance.InstanceName;
+                                record = defaultInstance;
+                            }
+
+                            // if there is only a single instance, then pick it
+                            if (persistedApplicationInstanceRecords.Count == 1)
+                            {
+                                var singleInstance = persistedApplicationInstanceRecords.Single();
+                                instanceName = singleInstance.InstanceName;
+                                record = singleInstance;
+                            }
+
+                            if (record == null && persistedApplicationInstanceRecords.Count > 1)
+                                throw new ControlledFailureException($"There is more than one instance of {startUpInstanceRequest.ApplicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {AvailableInstances(multipleInstances)}.");
+
+                            if (record == null)
+                                return null;
+                        }
+                    }
+                    else
+                        record = new ApplicationRecord();
+
+                    var keyValueStore = s.LoadedConfiguration(record);
+                    if (writableConfiguration == null && keyValueStore is IWritableKeyValueStore writableKeyValueStore)
+                    {
+                        writableConfiguration = writableKeyValueStore;
+                    }
+
+                    if (record is ApplicationInstanceRecord persistedRecord)
+                        logFileOnlyLogger.Info($"Using config from {persistedRecord.ConfigurationFilePath}");
+
+                    return keyValueStore;
+                })
+                .Where(x => x != null)
+                .Cast<IKeyValueStore>()
+                .ToArray();
+
+            if (!keyValueStores.Any())
                 throw new ControlledFailureException(
-                    $"There are no instances of {ApplicationName} configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
+                    $"There are no instances of {startUpInstanceRequest.ApplicationName} configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file, or set the required environment variables.");
 
-            instance = string.IsNullOrEmpty(currentInstanceName) ? TryLoadDefaultInstance() : TryLoadInstanceByName();
+            var aggregatedKeyValueStore = new AggregatedKeyValueStore(keyValueStores);
 
-            if (instance == null)
-            {
-                var instances = instanceStore.ListInstances();
-                throw new ControlledFailureException(
-                    $"Instance {currentInstanceName} of {ApplicationName} has not been configured on this machine. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
-            }
+            if (writableConfiguration == null)
+                writableConfiguration = new DoNotAllowWritesInThisModeKeyValueStore(aggregatedKeyValueStore);
 
-            instanceStore.MigrateInstance(instance);
-            var store = new XmlFileKeyValueStore(fileSystem, instance.ConfigurationFilePath);
-            return (instance.InstanceName, store, store);
+            return (instanceName, aggregatedKeyValueStore, writableConfiguration);
         }
 
-        ApplicationInstanceRecord? TryLoadInstanceByName()
+        string AvailableInstances(IApplicationConfigurationWithMultipleInstances multipleInstances)
         {
-            var instance = instanceStore.GetInstance(currentInstanceName);
-            if (instance == null)
-            {
-                var instances = instanceStore.ListInstances();
-                var caseInsensitiveMatches = instances.Where(s => string.Equals(s.InstanceName, currentInstanceName, StringComparison.InvariantCultureIgnoreCase)).ToArray();
-                if (caseInsensitiveMatches.Length > 1)
-                    throw new ControlledFailureException(
-                        $"Instance {currentInstanceName} of {ApplicationName} could not be matched to one of the existing instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
-                if (caseInsensitiveMatches.Length == 1)
-                {
-                    instance = caseInsensitiveMatches.First();
-                }
-            }
-
-            return instance;
-        }
-
-        ApplicationInstanceRecord TryLoadDefaultInstance()
-        {
-            ApplicationInstanceRecord instance;
-            var instances = instanceStore.ListInstances();
-            if (instances.Count == 1)
-            {
-                instance = instances.First();
-            }
-            else
-            {
-                var defaultInstance = instances.FirstOrDefault(s => string.Equals(s.InstanceName, ApplicationInstanceRecord.GetDefaultInstance(ApplicationName), StringComparison.InvariantCultureIgnoreCase));
-                if (defaultInstance != null)
-                {
-                    instance = defaultInstance;
-                }
-                else
-                {
-                    throw new ControlledFailureException(
-                        $"There is more than one instance of {ApplicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {string.Join(", ", instances.Select(i => i.InstanceName))}.");
-                }
-            }
-
-            return instance;
+            return string.Join(", ", multipleInstances.ListInstances()
+                    .OrderBy(x => x.InstanceName, StringComparer.InvariantCultureIgnoreCase)
+                    .Select(x => x.InstanceName));
         }
     }
 }

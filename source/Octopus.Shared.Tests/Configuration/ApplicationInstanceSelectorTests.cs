@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Diagnostics;
+using Octopus.Configuration;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
@@ -14,17 +15,32 @@ namespace Octopus.Shared.Tests.Configuration
     [TestFixture]
     public class ApplicationInstanceSelectorTests
     {
-        private static IApplicationInstanceStore instanceStore;
+        static readonly object ConfigurationStore = Substitute.For<IApplicationConfigurationStrategy, IApplicationConfigurationWithMultipleInstances>();
+        static readonly IApplicationConfigurationStrategy OtherStrategy = Substitute.For<IApplicationConfigurationStrategy>();
 
         [Test]
         public void LoadInstanceThrowsWhenNoInstanceNamePassedAndNoInstancesConfigured()
         {
             var selector = GetApplicationInstanceSelector(new List<ApplicationInstanceRecord>(), string.Empty);
-            instanceStore.AnyInstancesConfigured().Returns(false);
+            ((IApplicationConfigurationStrategy)ConfigurationStore).LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IKeyValueStore)null);
+            OtherStrategy.LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IKeyValueStore)null);
             ((Action)(() => selector.LoadInstance()))
                 .Should().Throw<ControlledFailureException>()
-                .WithMessage("There are no instances of OctopusServer configured on this machine. Please run the setup wizard or configure an instance using the command-line interface.");
-            instanceStore.DidNotReceive().ListInstances();
+                .WithMessage("There are no instances of OctopusServer configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file, or set the required environment variables.");
+        }
+
+        [Test]
+        public void LoadInstanceDoesNotThrowsWhenNoInstanceNamePassedAndNoInstancesConfiguredButAnotherStrategyCanBeLoaded()
+        {
+            var selector = GetApplicationInstanceSelector(new List<ApplicationInstanceRecord>(), string.Empty);
+            ((IApplicationConfigurationStrategy)ConfigurationStore).LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IKeyValueStore)null);
+
+            OtherStrategy.LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns(new InMemoryKeyValueStore(Substitute.For<IMapEnvironmentValuesToConfigItems>()));
+
+            selector.CanLoadCurrentInstance().Should().BeTrue("because the in memory config should be used");
+            selector.GetCurrentName().Should().BeNull("in memory config should have no instance name");
+            selector.GetCurrentConfiguration().Should().NotBeNull("in memory config should available");
+            selector.GetWritableCurrentConfiguration().Should().BeAssignableTo<DoNotAllowWritesInThisModeKeyValueStore>("in memory config means no writes");
         }
 
         [Test]
@@ -38,7 +54,7 @@ namespace Octopus.Shared.Tests.Configuration
             var selector = GetApplicationInstanceSelector(instanceRecords, string.Empty);
             ((Action)(() => selector.LoadInstance()))
                 .Should().Throw<ControlledFailureException>()
-                .WithMessage("There is more than one instance of OctopusServer configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: My instance, instance 2.");
+                .WithMessage("There is more than one instance of OctopusServer configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: instance 2, My instance.");
         }
 
         [Test]
@@ -96,10 +112,7 @@ namespace Octopus.Shared.Tests.Configuration
             };
             var selector = GetApplicationInstanceSelector(instanceRecords, "INSTANCE 2");
 
-            instanceStore.GetInstance("INSTANCE 2").Returns(applicationInstanceRecord);
-
             selector.LoadInstance().InstanceName.Should().Be("INSTANCE 2");
-            instanceStore.DidNotReceive().ListInstances();
         }
 
         [Test]
@@ -122,12 +135,26 @@ namespace Octopus.Shared.Tests.Configuration
                 .WithMessage("Instance instance 2 of OctopusServer could not be matched to one of the existing instances: Instance 2, INSTANCE 2.");
         }
 
-        private static ApplicationInstanceSelector GetApplicationInstanceSelector(List<ApplicationInstanceRecord> instanceRecords, string currentInstanceName)
+        static ApplicationInstanceSelector GetApplicationInstanceSelector(List<ApplicationInstanceRecord> instanceRecords, string currentInstanceName)
         {
-            instanceStore = Substitute.For<IApplicationInstanceStore>();
-            instanceStore.ListInstances().Returns(instanceRecords);
-            instanceStore.AnyInstancesConfigured().Returns(true);
-            var selector = new ApplicationInstanceSelector(ApplicationName.OctopusServer, currentInstanceName, Substitute.For<IOctopusFileSystem>(), instanceStore, Substitute.For<ILogFileOnlyLogger>());
+            ((IApplicationConfigurationWithMultipleInstances)ConfigurationStore).ListInstances().Returns(instanceRecords);
+
+            ((IApplicationConfigurationStrategy)ConfigurationStore).LoadedConfiguration(Arg.Any<ApplicationRecord>())
+                .Returns(c =>
+                {
+                    var record = (ApplicationInstanceRecord)c.Args()[0];
+                    return new XmlFileKeyValueStore(Substitute.For<IOctopusFileSystem>(), record.ConfigurationFilePath);
+                });
+
+            StartUpInstanceRequest startupRequest;
+            if (string.IsNullOrWhiteSpace(currentInstanceName))
+                startupRequest = new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer);
+            else
+                startupRequest = new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, currentInstanceName);
+
+            var selector = new ApplicationInstanceSelector(startupRequest,
+                new [] { (IApplicationConfigurationStrategy)ConfigurationStore, OtherStrategy },
+                Substitute.For<ILogFileOnlyLogger>());
             return selector;
         }
     }

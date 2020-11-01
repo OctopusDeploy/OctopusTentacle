@@ -25,7 +25,7 @@ namespace Octopus.Shared.Tests.Configuration
             registryStore = Substitute.For<IRegistryApplicationInstanceStore>();
             fileSystem = Substitute.For<IOctopusFileSystem>();
             ILog log = Substitute.For<ILog>();
-            instanceStore = new ApplicationInstanceStore(ApplicationName.OctopusServer, log, fileSystem, registryStore);
+            instanceStore = new ApplicationInstanceStore(new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, "instance 1"),  log, fileSystem, registryStore);
         }
 
         [Test]
@@ -102,23 +102,6 @@ namespace Octopus.Shared.Tests.Configuration
         }
 
         [Test]
-        public void GetInstance_ShouldFilterCorrectInstance()
-        {
-            registryStore.GetListFromRegistry().Returns(new List<ApplicationInstanceRecord>
-            {
-                new ApplicationInstanceRecord("instance1", "TentaclePath"),
-            });
-            registryStore.GetListFromRegistry().Returns(new List<ApplicationInstanceRecord>
-            {
-                new ApplicationInstanceRecord("instance1", "ServerPath1"),
-                new ApplicationInstanceRecord("instance2", "ServerPath2")
-            });
-
-            var instance = instanceStore.GetInstance("instance1");
-            instance.InstanceName.Should().Be("instance1");
-        }
-
-        [Test]
         public void GetInstance_ShouldReturnNullIfNoneFound()
         {
             registryStore.GetListFromRegistry().Returns(new List<ApplicationInstanceRecord>
@@ -135,7 +118,7 @@ namespace Octopus.Shared.Tests.Configuration
         public void MigrateInstance()
         {
             var sourceInstance = new ApplicationInstanceRecord("instance1", "configFilePath");
-            registryStore.GetInstanceFromRegistry(Arg.Is<string>("instance1")).Returns(sourceInstance);
+            registryStore.GetInstanceFromRegistry(Arg.Is("instance1")).Returns(sourceInstance);
 
             instanceStore.MigrateInstance(sourceInstance);
             fileSystem.Received().CreateDirectory(Arg.Any<string>());

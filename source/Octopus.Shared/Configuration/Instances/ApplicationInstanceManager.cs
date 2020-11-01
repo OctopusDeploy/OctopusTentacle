@@ -24,7 +24,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public ApplicationName ApplicationName { get; }
 
-        public ApplicationInstanceRecord? GetInstance(string instanceName)
+        public ApplicationRecord? GetInstance(string instanceName)
         {
             return instanceStore.GetInstance(instanceName);
         }
