@@ -21,22 +21,24 @@ namespace Octopus.Shared.Configuration
 
         public TData Get<TData>(string name, TData defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
-            var data = mapper.GetConfigurationValue(name);
+            object? data = mapper.GetConfigurationValue(name);
 
             if (data == null)
                 return defaultValue;
+            if (typeof(TData) == typeof(string))
+                return (TData) data;
             if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
                 return (TData) (object) bool.Parse((string) data);
             if (typeof(TData).IsEnum)
                 return (TData) Enum.Parse(typeof(TData), ((string) data).Trim('"'));
-            
+
             // See FlatDictionaryKeyValueStore.ValueNeedsToBeSerialized, some of the types are serialized, and will therefore expect to be
             // double quote delimited
             var dataType = typeof(TData);
             if (protectionLevel == ProtectionLevel.MachineKey || dataType.IsClass)
                 return JsonConvert.DeserializeObject<TData>("\"" + data + "\"");
-            
-            return JsonConvert.DeserializeObject<TData>(data);
+
+            return JsonConvert.DeserializeObject<TData>((string)data);
         }
 
         public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
