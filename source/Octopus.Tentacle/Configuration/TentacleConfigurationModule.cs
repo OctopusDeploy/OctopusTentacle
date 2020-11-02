@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Configuration
         {
             base.Load(builder);
 
-            builder.RegisterType<MapsTentacleEnvironmentVariablesToConfigItems>().As<IMapEnvironmentValuesToConfigItems>();
+            builder.RegisterType<MapsTentacleEnvironmentValuesToConfigItems>().As<IMapEnvironmentValuesToConfigItems>();
 
             builder.RegisterType<TentacleConfiguration>().As<ITentacleConfiguration>().SingleInstance();
             builder.RegisterType<WritableTentacleConfiguration>().As<IWritableTentacleConfiguration>().SingleInstance();

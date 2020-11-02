@@ -1,0 +1,8 @@
+===================================================================================
+This list contains the supported environment value names, which is a public contract.
+===================================================================================
+OCTOPUS_POLLING_CUSTOM_PROXY_HOST
+OCTOPUS_POLLING_CUSTOM_PROXY_PASSWORD (sensitive)
+OCTOPUS_POLLING_CUSTOM_PROXY_PORT
+OCTOPUS_POLLING_CUSTOM_PROXY_USER
+OCTOPUS_POLLING_USE_DEFAULT_PROXY
