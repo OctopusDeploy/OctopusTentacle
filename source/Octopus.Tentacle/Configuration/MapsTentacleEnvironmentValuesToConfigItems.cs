@@ -5,7 +5,7 @@ using Octopus.Shared.Startup;
 
 namespace Octopus.Tentacle.Configuration
 {
-    public class MapsTentacleEnvironmentVariablesToConfigItems : MapsEnvironmentValuesToConfigItems
+    public class MapsTentacleEnvironmentValuesToConfigItems : MapsEnvironmentValuesToConfigItems
     {
         static readonly string[] SupportedConfigurationKeys =
             {
@@ -19,10 +19,10 @@ namespace Octopus.Tentacle.Configuration
         static readonly EnvironmentVariable UseDefaultProxy = EnvironmentVariable.PlaintText("OCTOPUS_POLLING_USE_DEFAULT_PROXY");
         static readonly EnvironmentVariable ProxyUser = EnvironmentVariable.PlaintText("OCTOPUS_POLLING_CUSTOM_PROXY_USER");
         static readonly EnvironmentVariable ProxyPassword = EnvironmentVariable.Sensitive("OCTOPUS_POLLING_CUSTOM_PROXY_PASSWORD", "polling proxy's password");
-        static readonly EnvironmentVariable ProxyHost = EnvironmentVariable.PlaintText("OCTOPUS_POLLING_CUSTOM_PROXY_HOST");
+        internal static readonly EnvironmentVariable ProxyHost = EnvironmentVariable.PlaintText("OCTOPUS_POLLING_CUSTOM_PROXY_HOST");
         static readonly EnvironmentVariable ProxyPort = EnvironmentVariable.PlaintText("OCTOPUS_POLLING_CUSTOM_PROXY_PORT");
 
-        static readonly EnvironmentVariable[] OptionalEnvironmentVariables =
+        internal static readonly EnvironmentVariable[] SupportedEnvironmentValues =
         {
             UseDefaultProxy,
             ProxyUser,
@@ -31,8 +31,8 @@ namespace Octopus.Tentacle.Configuration
             ProxyPort
         };
 
-        public MapsTentacleEnvironmentVariablesToConfigItems(ILogFileOnlyLogger log) :
-            base(log, SupportedConfigurationKeys, new EnvironmentVariable[0], OptionalEnvironmentVariables)
+        public MapsTentacleEnvironmentValuesToConfigItems(ILogFileOnlyLogger log) :
+            base(log, SupportedConfigurationKeys, new EnvironmentVariable[0], SupportedEnvironmentValues)
         {
         }
 
