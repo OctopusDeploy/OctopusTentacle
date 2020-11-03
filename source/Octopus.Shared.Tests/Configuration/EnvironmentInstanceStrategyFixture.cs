@@ -5,7 +5,6 @@ using System.Linq;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
@@ -31,14 +30,14 @@ namespace Octopus.Shared.Tests.Configuration
         }
 
         [Test]
-        public void IsNotConfiguredWhenNonDynamicStartupType()
+        public void IsConfiguredWhenNonDynamicStartupType()
         {
             var reader = Substitute.For<IEnvironmentVariableReader>();
             var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new[] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") }));
 
-            var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(), new StartUpConfigFileInstanceRequest(ApplicationName.OctopusServer, "test.config"), mapper, reader);
-            subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull(because: "there isn't an instance when the startup request isn't 'dynamic'");
+            var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(), mapper, reader);
+            subject.LoadedConfiguration(new ApplicationRecord()).Should().NotBeNull(because: "there is an instance if there are any environment variables");
         }
 
         [Test]
@@ -48,7 +47,7 @@ namespace Octopus.Shared.Tests.Configuration
             var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>());
 
-            var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(), new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), mapper, reader);
+            var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(),  mapper, reader);
             subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull(because: "there isn't an instance when there is no config");
         }
 
@@ -60,7 +59,7 @@ namespace Octopus.Shared.Tests.Configuration
             var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new[] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") }));
 
-            var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(), new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), mapper, reader);
+            var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(), mapper, reader);
             subject.LoadedConfiguration(new ApplicationRecord()).Should().NotBeNull(because: "there is an instance when there is a complete config");
             mapper.Received(1).SetEnvironmentValues(Arg.Is<Dictionary<string, string?>>(v => v.Count() == 1 && v["OCTOPUS_HOME"] == "."));
         }

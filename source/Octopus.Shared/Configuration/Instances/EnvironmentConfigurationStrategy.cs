@@ -10,17 +10,15 @@ namespace Octopus.Shared.Configuration.Instances
     public class EnvironmentConfigurationStrategy : IApplicationConfigurationStrategy
     {
         readonly ILogFileOnlyLogger log;
-        readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IMapEnvironmentValuesToConfigItems mapper;
         readonly IEnvironmentVariableReader reader;
         bool loaded;
         bool foundValues;
 
         public EnvironmentConfigurationStrategy(ILogFileOnlyLogger log,
-            StartUpInstanceRequest startUpInstanceRequest, IMapEnvironmentValuesToConfigItems mapper, IEnvironmentVariableReader reader)
+            IMapEnvironmentValuesToConfigItems mapper, IEnvironmentVariableReader reader)
         {
             this.log = log;
-            this.startUpInstanceRequest = startUpInstanceRequest;
             this.mapper = mapper;
             this.reader = reader;
         }
@@ -29,9 +27,6 @@ namespace Octopus.Shared.Configuration.Instances
 
         public IKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
         {
-            if (!(startUpInstanceRequest is StartUpDynamicInstanceRequest))
-                return null;
-
             EnsureLoaded();
 
             return !foundValues ? null : new InMemoryKeyValueStore(mapper);

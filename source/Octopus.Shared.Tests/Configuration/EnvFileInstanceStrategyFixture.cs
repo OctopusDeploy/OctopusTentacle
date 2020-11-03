@@ -5,7 +5,6 @@ using System.Linq;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
@@ -68,15 +67,16 @@ namespace Octopus.Shared.Tests.Configuration
         }
 
         [Test]
-        public void IsNotConfiguredWhenNonDynamicStartupType()
+        public void IsNotConfiguredWhenEmptyFile()
         {
             var fileSystem = Substitute.For<IOctopusFileSystem>();
             var fileLocator = Substitute.For<IEnvFileLocator>();
-            fileLocator.LocateEnvFile().Returns((string?)null);
+            fileLocator.LocateEnvFile().Returns("test");
+            fileSystem.ReadAllText("test").Returns(TestFileContent(new string[0]));
             var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
 
-            var subject = new EnvFileConfigurationStrategy(new StartUpConfigFileInstanceRequest(ApplicationName.OctopusServer, "test.config"), fileSystem, fileLocator, mapper);
-            subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull(because: "there isn't an instance when the startup request isn't 'dynamic'");
+            var subject = new EnvFileConfigurationStrategy(fileSystem, fileLocator, mapper);
+            subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull(because: "there isn't an instance when the file contains no values");
         }
 
         [Test]
@@ -87,7 +87,7 @@ namespace Octopus.Shared.Tests.Configuration
             fileLocator.LocateEnvFile().Returns((string?)null);
             var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
 
-            var subject = new EnvFileConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);
+            var subject = new EnvFileConfigurationStrategy(fileSystem, fileLocator, mapper);
             subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull(because: "there isn't an instance when there is no envFile");
         }
 
@@ -102,7 +102,7 @@ namespace Octopus.Shared.Tests.Configuration
             var hashSet = new HashSet<EnvironmentVariable>(new[] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") });
             mapper.SupportedEnvironmentVariables.Returns(hashSet);
 
-            var subject = new EnvFileConfigurationStrategy(new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer), fileSystem, fileLocator, mapper);
+            var subject = new EnvFileConfigurationStrategy(fileSystem, fileLocator, mapper);
             subject.LoadedConfiguration(new ApplicationRecord()).Should().NotBeNull(because: "there is an instance when there is a file");
         }
     }

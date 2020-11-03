@@ -9,16 +9,14 @@ namespace Octopus.Shared.Configuration.Instances
 {
     public class EnvFileConfigurationStrategy : IApplicationConfigurationStrategy
     {
-        readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IOctopusFileSystem fileSystem;
         readonly IEnvFileLocator envFileLocator;
         readonly IMapEnvironmentValuesToConfigItems mapper;
         bool loaded;
         bool foundValues;
 
-        public EnvFileConfigurationStrategy(StartUpInstanceRequest startUpInstanceRequest, IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentValuesToConfigItems mapper)
+        public EnvFileConfigurationStrategy(IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentValuesToConfigItems mapper)
         {
-            this.startUpInstanceRequest = startUpInstanceRequest;
             this.fileSystem = fileSystem;
             this.envFileLocator = envFileLocator;
             this.mapper = mapper;
@@ -28,9 +26,6 @@ namespace Octopus.Shared.Configuration.Instances
 
         public IKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
         {
-            if (!(startUpInstanceRequest is StartUpDynamicInstanceRequest))
-                return null;
-
             EnsureLoaded();
 
             return !foundValues ? null : new InMemoryKeyValueStore(mapper);
