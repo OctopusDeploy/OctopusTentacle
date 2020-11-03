@@ -104,7 +104,7 @@ function setupPollingTentacle {
     read -p "Where would you like Tentacle to store log files? ($logpath):" inputlogpath
     logpath=$(assignNonEmptyValue "$inputlogpath" $logpath)
     
-    read -p "Where would you like Tentacle to install appications to? ($applicationpath):" inputapplicationpath
+    read -p "Where would you like Tentacle to install applications to? ($applicationpath):" inputapplicationpath
     applicationpath=$(assignNonEmptyValue "$inputapplicationpath" $applicationpath)
 
     while [ -z "$octopusserverurl" ] 
