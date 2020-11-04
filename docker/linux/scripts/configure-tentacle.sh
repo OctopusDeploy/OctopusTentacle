@@ -149,6 +149,7 @@ function registerTentacle() {
 		'--instance' "$instanceName"
 		'--server' "$ServerUrl"
 		'--space' "$Space"
+		'--policy' "$MachinePolicy"
 		'--force')
 
 	if [[ ! -z "$ServerPort" ]]; then
