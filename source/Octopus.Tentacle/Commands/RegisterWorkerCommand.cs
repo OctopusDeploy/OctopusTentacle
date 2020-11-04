@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Commands
         readonly List<string> workerpoolNames = new List<string>();
 
         public RegisterWorkerCommand(Lazy<IRegisterWorkerOperation> lazyRegisterMachineOperation,
-            Lazy<ITentacleConfiguration> configuration,
+            Lazy<IWritableTentacleConfiguration> configuration,
             ILog log,
             IApplicationInstanceSelector selector,
             Lazy<IOctopusServerChecker> octopusServerChecker,
