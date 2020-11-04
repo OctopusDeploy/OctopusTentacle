@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Tentacle.Commands;
 
@@ -17,14 +16,14 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             base.SetUp();
 
-            Command = new ListInstancesCommand(Substitute.For<IApplicationInstanceStore>());
+            Command = new ListInstancesCommand(Substitute.For<IApplicationInstanceLocator>());
         }
 
         [Test]
         public void CommandShouldReturnJsonIfRequested()
         {
             Command.Format = "json";
-            var json = Command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", ApplicationName.Tentacle, "MyConfigPath") });
+            var json = Command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", "MyConfigPath") });
             var definition = new[] { new { InstanceName = "", ConfigurationFilePath = "" } };
             var reconstituted = JsonConvert.DeserializeAnonymousType(json, definition);
             Assert.That(reconstituted.Length, Is.EqualTo(1));
@@ -36,7 +35,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public void CommandShouldReturnTextIfRequested()
         {
             Command.Format = "text";
-            var result = Command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", ApplicationName.Tentacle, "MyConfigPath") });
+            var result = Command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", "MyConfigPath") });
             Assert.That(result, Is.EqualTo("Instance 'MyInstance' uses configuration 'MyConfigPath'." + Environment.NewLine));
         }
     }

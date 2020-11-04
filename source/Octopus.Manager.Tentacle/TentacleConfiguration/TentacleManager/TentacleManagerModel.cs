@@ -15,7 +15,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 {
     public class TentacleManagerModel : ViewModel
     {
-        static readonly OctopusPhysicalFileSystem FileSystem = new OctopusPhysicalFileSystem();
         string configurationFilePath;
         string homeDirectory;
         string logsDirectory;
@@ -138,7 +137,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             var keyStore = LoadConfiguration();
 
-            var home = new HomeConfiguration(applicationInstance.ApplicationName, keyStore);
+            var home = new HomeConfiguration(ApplicationName.Tentacle, keyStore);
 
             HomeDirectory = home.HomeDirectory;
 
@@ -147,15 +146,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             serviceWatcher?.Dispose();
 
             var commandLinePath = CommandLine.PathToTentacleExe();
-            ServiceWatcher = new ServiceWatcher(applicationInstance.ApplicationName, applicationInstance.InstanceName, commandLinePath);
+            ServiceWatcher = new ServiceWatcher(ApplicationName.Tentacle, applicationInstance.InstanceName, commandLinePath);
 
             var tencon = new Octopus.Tentacle.Configuration.TentacleConfiguration(
                 keyStore,
-                new HomeConfiguration(applicationInstance.ApplicationName, keyStore),
-                new CertificateGenerator(),
+                new HomeConfiguration(ApplicationName.Tentacle, keyStore),
                 new ProxyConfiguration(keyStore),
-                new PollingProxyConfiguration(keyStore),
-                Shared.Diagnostics.Log.Octopus()
+                new PollingProxyConfiguration(keyStore)
             );
 
             pollsServers = false;
@@ -213,7 +210,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                     : $"{start} is using the default proxy server" + (string.IsNullOrWhiteSpace(config.CustomProxyUsername) ? "" : " with custom credentials");
         }
 
-        IKeyValueStore LoadConfiguration()
+        IWritableKeyValueStore LoadConfiguration()
         {
             return new XmlFileKeyValueStore(fileSystem, ConfigurationFilePath);
         }
