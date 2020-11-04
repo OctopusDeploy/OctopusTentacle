@@ -154,15 +154,15 @@ namespace Octopus.Tentacle.Configuration
             return settings.Set("Tentacle.Communication.LastReceivedHandshake", setting);
         }
 
-        void SetTrustedOctopusServers(IEnumerable<OctopusServerConfiguration>? servers)
+        bool SetTrustedOctopusServers(IEnumerable<OctopusServerConfiguration>? servers)
         {
-            settings.Set("Tentacle.Communication.TrustedOctopusServers", servers ?? new OctopusServerConfiguration[0]);
+            return settings.Set("Tentacle.Communication.TrustedOctopusServers", servers ?? new OctopusServerConfiguration[0]);
         }
 
-        void SetTentacleCertificate(X509Certificate2 certificate)
+        bool SetTentacleCertificate(X509Certificate2 certificate)
         {
-            settings.Set("Tentacle.Certificate", CertificateEncoder.ToBase64String(certificate), ProtectionLevel.MachineKey);
-            settings.Set("Tentacle.CertificateThumbprint", certificate.Thumbprint);
+            return settings.Set("Tentacle.Certificate", CertificateEncoder.ToBase64String(certificate), ProtectionLevel.MachineKey) &&
+                settings.Set("Tentacle.CertificateThumbprint", certificate.Thumbprint);
         }
 
         public bool AddOrUpdateTrustedOctopusServer(OctopusServerConfiguration machine)
