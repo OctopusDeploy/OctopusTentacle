@@ -35,10 +35,6 @@ namespace Octopus.Shared.Diagnostics
         {
         }
 
-        public override void Flush(string correlationId)
-        {
-        }
-
         public class NullDisposable : IDisposable
         {
             public void Dispose()

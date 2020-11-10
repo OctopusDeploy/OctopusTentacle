@@ -17,8 +17,10 @@ namespace Octopus.Shared.Diagnostics
 
         public void WriteEvent(LogEvent logEvent)
         {
-            if (ShouldHandle(logEvent.CorrelationId))
-                logger.WriteEvent(LogCategoryToLogLevel(logEvent.Category), logEvent.Error, logEvent.MessageText);
+            if (!logEvent.CorrelationId.StartsWith("system/"))
+                return;
+
+            logger.WriteEvent(LogCategoryToLogLevel(logEvent.Category), logEvent.Error, logEvent.MessageText);
         }
 
         public void WriteEvents(IList<LogEvent> logEvents)
@@ -31,22 +33,13 @@ namespace Octopus.Shared.Diagnostics
 
         public void Flush()
         {
-            if (LogManager.Configuration != null)
+            foreach (var target in LogManager.Configuration.AllTargets)
             {
-                foreach (var target in LogManager.Configuration.AllTargets)
+                target.Flush(e =>
                 {
-                    target.Flush(e => { });
-                }
+                });
             }
         }
-
-        public void Flush(string correlationId)
-        {
-            if (ShouldHandle(correlationId))
-                Flush();
-        }
-
-        static bool ShouldHandle(string logEventCorrelationId) => logEventCorrelationId.StartsWith("system/");
 
         static LogLevel LogCategoryToLogLevel(LogCategory category)
         {

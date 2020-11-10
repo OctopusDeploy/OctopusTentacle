@@ -71,14 +71,6 @@ namespace Octopus.Shared.Diagnostics
             }
         }
 
-        public override void Flush(string correlationId)
-        {
-            foreach (var appender in appenders)
-            {
-                appender.Flush(correlationId);
-            }
-        }
-
         class RevertLogContext : IDisposable
         {
             readonly ILogWithContext activityLog;
