@@ -19,7 +19,7 @@ namespace Octopus.Shared.Configuration
             this.settings = settings;
         }
 
-        public bool UseDefaultProxy => settings.Get(ProxyUseDefaultSettingName, true);
+        public bool UseDefaultProxy => (bool)settings.Get<bool?>(ProxyUseDefaultSettingName, true)!;
         public string? CustomProxyUsername => settings.Get(ProxyUsernameSettingName, (string?)null);
         public string? CustomProxyPassword => settings.Get<string?>(ProxyPasswordSettingName, protectionLevel: ProtectionLevel.MachineKey);
         public string? CustomProxyHost => settings.Get<string?>(ProxyHostSettingName);
