@@ -8,5 +8,6 @@ namespace Octopus.Shared.Diagnostics
         void WriteEvent(LogEvent logEvent);
         void WriteEvents(IList<LogEvent> logEvents);
         void Flush();
+        void Flush(string correlationId);
     }
 }

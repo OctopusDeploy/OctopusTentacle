@@ -6,7 +6,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Diagnostics
 {
-    public abstract class AbstractLog : ILogWithContext
+    public abstract class  AbstractLog : ILogWithContext
     {
         public abstract ILogContext CurrentContext { get; }
 
@@ -83,7 +83,10 @@ namespace Octopus.Shared.Diagnostics
         {
             Write(LogCategory.Finished, "Finished");
             CurrentContext.Flush();
+            this.Flush(this.CurrentContext.CorrelationId);
         }
+
+        public abstract void Flush(string correlationId);
 
         public virtual bool IsEnabled(LogCategory category)
         {
@@ -113,7 +116,7 @@ namespace Octopus.Shared.Diagnostics
         {
             if (IsEnabled(category))
             {
-                CurrentContext.SafeSanitize(messageText, 
+                CurrentContext.SafeSanitize(messageText,
                     sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitized, error?.UnpackFromContainers())));
             }
         }
@@ -128,7 +131,7 @@ namespace Octopus.Shared.Diagnostics
             if (!IsEnabled(category))
                 return;
 
-            CurrentContext.SafeSanitize(SafeFormat(messageFormat, args), 
+            CurrentContext.SafeSanitize(SafeFormat(messageFormat, args),
                 sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitized, error?.UnpackFromContainers())));
         }
 
@@ -296,7 +299,7 @@ namespace Octopus.Shared.Diagnostics
 
         public void UpdateProgress(int progressPercentage, string messageText)
         {
-            CurrentContext.SafeSanitize(messageText, 
+            CurrentContext.SafeSanitize(messageText,
                 sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId, LogCategory.Progress, sanitized, null, progressPercentage)));
         }
 

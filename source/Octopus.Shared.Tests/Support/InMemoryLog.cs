@@ -45,6 +45,10 @@ namespace Octopus.Shared.Tests.Support
         {
         }
 
+        public override void Flush(string correlationId)
+        {
+        }
+
         public override bool IsEnabled(LogCategory category)
         {
             return true;
