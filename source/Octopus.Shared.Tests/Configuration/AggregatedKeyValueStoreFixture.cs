@@ -22,8 +22,20 @@ namespace Octopus.Shared.Tests.Configuration
             mapper2.GetConfigurationValue("Test").Returns("a value");
             var memStore2 = new InMemoryKeyValueStore(mapper2);
 
-            var aggregatedStore = new AggregatedKeyValueStore(new IKeyValueStore[] { memStore1, memStore2 });
+            var aggregatedStore = new AggregatedKeyValueStore(new IAggregatableKeyValueStore[] { memStore1, memStore2 });
             var result = aggregatedStore.Get("Test", string.Empty);
+            result.Should().Be("a value", because: "A null from an aggregated store should be treated as null, not the default");
+        }
+
+        [Test]
+        public void NullableStringIsHandledCorrectly()
+        {
+            var mapper1 = Substitute.For<IMapEnvironmentValuesToConfigItems>();
+            mapper1.GetConfigurationValue("Test").Returns((string?)null);
+            var memStore1 = new InMemoryKeyValueStore(mapper1);
+
+            var aggregatedStore = new AggregatedKeyValueStore(new IAggregatableKeyValueStore[] { memStore1 });
+            var result = aggregatedStore.Get("Test", "a value");
             result.Should().Be("a value", because: "A null from an aggregated store should be treated as null, not the default");
         }
 
@@ -34,8 +46,8 @@ namespace Octopus.Shared.Tests.Configuration
             mapper1.GetConfigurationValue("Test").Returns((string?)null);
             var memStore1 = new InMemoryKeyValueStore(mapper1);
 
-            var aggregatedStore = new AggregatedKeyValueStore(new IKeyValueStore[] { memStore1 });
-            var result = aggregatedStore.Get<int?>("Test", 80);
+            var aggregatedStore = new AggregatedKeyValueStore(new IAggregatableKeyValueStore[] { memStore1 });
+            var result = aggregatedStore.Get("Test", 80);
             result.Should().Be(80, because: "default should be applied correctly for ints");
         }
 
@@ -49,8 +61,8 @@ namespace Octopus.Shared.Tests.Configuration
             mapper2.GetConfigurationValue("Test").Returns("50");
             var memStore2 = new InMemoryKeyValueStore(mapper2);
 
-            var aggregatedStore = new AggregatedKeyValueStore(new IKeyValueStore[] { memStore1, memStore2 });
-            var result = aggregatedStore.Get<int?>("Test", 80);
+            var aggregatedStore = new AggregatedKeyValueStore(new IAggregatableKeyValueStore[] { memStore1, memStore2 });
+            var result = aggregatedStore.Get("Test", 80);
             result.Should().Be(50, because: "A null from an aggregated store should be treated as null, not the default");
         }
     }

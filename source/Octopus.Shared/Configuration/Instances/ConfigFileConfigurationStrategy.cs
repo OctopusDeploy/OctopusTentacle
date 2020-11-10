@@ -1,10 +1,9 @@
 ﻿using System;
-using Octopus.Configuration;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class ConfigFileConfigurationStrategy : IApplicationConfigurationStrategy
+    class ConfigFileConfigurationStrategy : IApplicationConfigurationStrategy
     {
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IOctopusFileSystem fileSystem;
@@ -17,7 +16,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public int Priority => 500;
 
-        public IKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
+        public IAggregatableKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
         {
             var request = startUpInstanceRequest as StartUpConfigFileInstanceRequest;
             if (request == null)

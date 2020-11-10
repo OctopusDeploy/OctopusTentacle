@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Configuration;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Configuration.Instances;
@@ -22,8 +21,8 @@ namespace Octopus.Shared.Tests.Configuration
         public void LoadInstanceThrowsWhenNoInstanceNamePassedAndNoInstancesConfigured()
         {
             var selector = GetApplicationInstanceSelector(new List<ApplicationInstanceRecord>(), string.Empty);
-            ((IApplicationConfigurationStrategy)ConfigurationStore).LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IKeyValueStore)null);
-            OtherStrategy.LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IKeyValueStore)null);
+            ((IApplicationConfigurationStrategy)ConfigurationStore).LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IAggregatableKeyValueStore)null);
+            OtherStrategy.LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IAggregatableKeyValueStore)null);
             ((Action)(() => selector.LoadInstance()))
                 .Should().Throw<ControlledFailureException>()
                 .WithMessage("There are no instances of OctopusServer configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file, or set the required environment variables.");
@@ -33,7 +32,7 @@ namespace Octopus.Shared.Tests.Configuration
         public void LoadInstanceDoesNotThrowsWhenNoInstanceNamePassedAndNoInstancesConfiguredButAnotherStrategyCanBeLoaded()
         {
             var selector = GetApplicationInstanceSelector(new List<ApplicationInstanceRecord>(), string.Empty);
-            ((IApplicationConfigurationStrategy)ConfigurationStore).LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IKeyValueStore)null);
+            ((IApplicationConfigurationStrategy)ConfigurationStore).LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IAggregatableKeyValueStore)null);
 
             OtherStrategy.LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns(new InMemoryKeyValueStore(Substitute.For<IMapEnvironmentValuesToConfigItems>()));
 

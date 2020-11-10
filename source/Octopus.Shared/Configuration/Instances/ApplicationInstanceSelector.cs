@@ -189,7 +189,7 @@ namespace Octopus.Shared.Configuration.Instances
                     return keyValueStore;
                 })
                 .Where(x => x != null)
-                .Cast<IKeyValueStore>()
+                .Cast<IAggregatableKeyValueStore>()
                 .ToArray();
 
             if (!keyValueStores.Any())

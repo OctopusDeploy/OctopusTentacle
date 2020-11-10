@@ -1,10 +1,11 @@
 using System;
 using Newtonsoft.Json;
 using Octopus.Configuration;
+using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Configuration
 {
-    public abstract class FlatDictionaryKeyValueStore : DictionaryKeyValueStore
+    public abstract class FlatDictionaryKeyValueStore : DictionaryKeyValueStore, IAggregatableKeyValueStore
     {
         protected readonly JsonSerializerSettings JsonSerializerSettings;
 
@@ -48,6 +49,43 @@ namespace Octopus.Shared.Configuration
                 throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
             }
         }
+
+        public (bool foundResult, TData value) TryGet<TData>(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        {
+            if (name == null) throw new ArgumentNullException(nameof(name));
+
+            string? valueAsString = null;
+            try
+            {
+                var data = Read(name);
+                if (data == null)
+                    return (false, default(TData)!);
+                valueAsString = data as string;
+                if (valueAsString == null || string.IsNullOrWhiteSpace(valueAsString))
+                    return (false, default(TData)!);
+
+                if (protectionLevel == ProtectionLevel.MachineKey)
+                {
+                    data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
+                }
+
+                if (typeof(TData) == typeof(string))
+                    return (true, (TData) data);
+                if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
+                    return (true, (TData) (object) bool.Parse((string) data));
+                if (typeof(TData).IsEnum)
+                    return (true, (TData) Enum.Parse(typeof(TData), ((string) data).Trim('"')));
+
+                return (true, JsonConvert.DeserializeObject<TData>((string) data, JsonSerializerSettings));
+            }
+            catch (Exception e)
+            {
+                if (protectionLevel == ProtectionLevel.None)
+                    throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'. Value was '{valueAsString}'.", e);
+                throw new FormatException($"Unable to parse configuration key '{name}' as a '{typeof(TData).Name}'.", e);
+            }
+        }
+
 
         public override bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
         {

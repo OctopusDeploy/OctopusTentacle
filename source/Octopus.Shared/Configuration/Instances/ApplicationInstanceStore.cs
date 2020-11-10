@@ -25,7 +25,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public int Priority => 1000;
 
-        public IKeyValueStore LoadedConfiguration(ApplicationRecord applicationInstance)
+        public IAggregatableKeyValueStore LoadedConfiguration(ApplicationRecord applicationInstance)
         {
             var instance = applicationInstance as ApplicationInstanceRecord;
             if (instance == null)

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class EnvironmentConfigurationStrategy : IApplicationConfigurationStrategy
+    class EnvironmentConfigurationStrategy : IApplicationConfigurationStrategy
     {
         readonly ILogFileOnlyLogger log;
         readonly IMapEnvironmentValuesToConfigItems mapper;
@@ -25,7 +24,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public int Priority => 200;
 
-        public IKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
+        public IAggregatableKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
         {
             EnsureLoaded();
 

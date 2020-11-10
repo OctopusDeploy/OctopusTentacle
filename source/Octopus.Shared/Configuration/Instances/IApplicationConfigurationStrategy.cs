@@ -1,5 +1,4 @@
 ﻿using System;
-using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration.Instances
 {
@@ -7,6 +6,6 @@ namespace Octopus.Shared.Configuration.Instances
     {
         int Priority { get; }
 
-        IKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance);
+        IAggregatableKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance);
     }
 }

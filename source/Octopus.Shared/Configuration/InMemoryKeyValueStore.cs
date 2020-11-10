@@ -2,10 +2,11 @@
 using Newtonsoft.Json;
 using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
+using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Configuration
 {
-    public class InMemoryKeyValueStore : IKeyValueStore
+    public class InMemoryKeyValueStore : IAggregatableKeyValueStore
     {
         readonly IMapEnvironmentValuesToConfigItems mapper;
 
@@ -19,26 +20,26 @@ namespace Octopus.Shared.Configuration
             return mapper.GetConfigurationValue(name);
         }
 
-        public TData Get<TData>(string name, TData defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        public (bool foundResult, TData value) TryGet<TData>(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             object? data = mapper.GetConfigurationValue(name);
 
             if (data == null)
-                return defaultValue;
+                return (false, default(TData)!);
             if (typeof(TData) == typeof(string))
-                return (TData) data;
+                return (true, (TData) data);
             if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
-                return (TData) (object) bool.Parse((string) data);
+                return (true, (TData) (object) bool.Parse((string) data));
             if (typeof(TData).IsEnum)
-                return (TData) Enum.Parse(typeof(TData), ((string) data).Trim('"'));
+                return (true, (TData) Enum.Parse(typeof(TData), ((string) data).Trim('"')));
 
             // See FlatDictionaryKeyValueStore.ValueNeedsToBeSerialized, some of the types are serialized, and will therefore expect to be
             // double quote delimited
             var dataType = typeof(TData);
             if (protectionLevel == ProtectionLevel.MachineKey || dataType.IsClass)
-                return JsonConvert.DeserializeObject<TData>("\"" + data + "\"");
+                return (true, JsonConvert.DeserializeObject<TData>("\"" + data + "\""));
 
-            return JsonConvert.DeserializeObject<TData>((string)data);
+            return (true, JsonConvert.DeserializeObject<TData>((string)data));
         }
 
         public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)

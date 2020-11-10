@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class EnvFileConfigurationStrategy : IApplicationConfigurationStrategy
+    class EnvFileConfigurationStrategy : IApplicationConfigurationStrategy
     {
         readonly IOctopusFileSystem fileSystem;
         readonly IEnvFileLocator envFileLocator;
@@ -24,7 +23,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public int Priority => 300;
 
-        public IKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
+        public IAggregatableKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
         {
             EnsureLoaded();
 
