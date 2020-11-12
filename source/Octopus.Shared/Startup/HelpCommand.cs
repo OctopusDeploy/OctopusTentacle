@@ -38,7 +38,7 @@ namespace Octopus.Shared.Startup
         {
             base.Start(commandLineArguments, commandRuntime, commonOptions);
 
-            var processPath = Assembly.GetEntryAssembly().FullProcessPath();
+            var processPath = Assembly.GetEntryAssembly()?.FullProcessPath() ?? throw new Exception("Could not get path of the current process");
             var executable = PlatformDetection.IsRunningOnWindows
                 ? Path.GetFileNameWithoutExtension(processPath)
                 : Path.GetFileName(processPath);

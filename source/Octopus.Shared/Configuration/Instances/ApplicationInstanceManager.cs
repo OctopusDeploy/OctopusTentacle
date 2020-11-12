@@ -36,7 +36,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
         {
-            var parentDirectory = Path.GetDirectoryName(configurationFile);
+            var parentDirectory = Path.GetDirectoryName(configurationFile) ?? throw new ArgumentException("Configuration file location must include directory information", nameof(configurationFile));
             fileSystem.EnsureDirectoryExists(parentDirectory);
 
             if (!fileSystem.FileExists(configurationFile))

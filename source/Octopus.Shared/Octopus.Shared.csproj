@@ -18,16 +18,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
-    <TargetFrameworks>net452;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
     <NoWarn>8601</NoWarn>
     <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
     <DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
@@ -55,7 +55,7 @@
     <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58692" />
     <PackageReference Include="Octopus.Configuration" Version="4.0.0" />
-    <PackageReference Include="Octopus.Diagnostics" Version="1.3.0" />
+    <PackageReference Include="Octopus.Diagnostics" Version="1.3.5" />
     <PackageReference Include="Octopus.Time" Version="1.1.5" />
     <PackageReference Include="Polly" Version="5.3.1" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.8.4" />
@@ -63,7 +63,7 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="TaskScheduler" Version="2.7.2" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETStandard' ">
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
     <PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

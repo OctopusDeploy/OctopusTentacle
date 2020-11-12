@@ -14,12 +14,10 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
 
         static ExceptionKnowledgeBase()
         {
-
-
             AddRule(r => r.ExceptionIs<FileNotFoundException>(
-                ex => ex.Message.Contains("Could not load file or assembly") &&
-                    ex.Message.Contains("XmlSerializers") &&
-                    ex.StackTrace.Contains("System.DirectoryServices.AccountManagement"))
+                    ex => ex.Message.Contains("Could not load file or assembly") &&
+                        ex.Message.Contains("XmlSerializers") &&
+                        (ex.StackTrace?.Contains("System.DirectoryServices.AccountManagement") ?? false))
                 .EntrySummaryIs("Active Directory integration failed because of a bug in this Windows version.")
                 .EntryHelpTextIs("Windows 7 and Windows Server 2008 R2 cause the .NET directory services provider to throw random exceptions. " +
                     "The error detected here is commonly associated with that bug. " +
@@ -27,25 +25,25 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
                 .EntryHelpLinkIs("http://g.octopushq.com/WhyADSetupFails"));
 
             AddRule(r => r.ExceptionIs<HttpListenerException>(
-                ex => // ex.ErrorCode == 0x80004005 && // Not sure now where this value came from, comparison always false because unsigned is too big for an int, value is -2147467259
-                    ex.Message.StartsWith("The process cannot access the file because it is being used by another process") &&
-                        ex.StackTrace.Contains("System.Net.HttpListener.Start()"))
+                    ex => // ex.ErrorCode == 0x80004005 && // Not sure now where this value came from, comparison always false because unsigned is too big for an int, value is -2147467259
+                        ex.Message.StartsWith("The process cannot access the file because it is being used by another process") &&
+                        (ex.StackTrace?.Contains("System.Net.HttpListener.Start()") == true))
                 .EntrySummaryIs("The HTTP server failed to start because the port is in use.")
                 .EntryHelpTextIs("The required port or URL prefix is being used by another process. The Windows `netstat -o -n -a` command " +
                     "can be used to show which process this is (compare PIDs with those shown in Task Manager).")
                 .EntryHelpLinkIs("http://g.octopushq.com/HttpPortInUse"));
 
             AddRule(r => r.ExceptionIs<SocketException>(
-                ex => ex.Message.Contains("Only one usage of each socket address (protocol/network address/port) is normally permitted"))
+                    ex => ex.Message.Contains("Only one usage of each socket address (protocol/network address/port) is normally permitted"))
                 .EntrySummaryIs("A required communications port is already in use.")
                 .EntryHelpTextIs("The required port is being used by another process. The Windows `netstat -o -n -a` command " +
                     "can be used to show which process this is (compare PIDs with those shown in Task Manager).")
                 .EntryHelpLinkIs("http://g.octopushq.com/HttpPortInUse"));
 
             AddRule(r => r.ExceptionIs<FileNotFoundException>(
-                ex => ex.Message.Contains("Could not load file or assembly") &&
-                    ex.Message.Contains("XmlSerializers") &&
-                    ex.StackTrace.Contains(".CertificateGeneration.CryptContext.Open()"))
+                    ex => ex.Message.Contains("Could not load file or assembly") &&
+                        ex.Message.Contains("XmlSerializers") &&
+                        (ex.StackTrace?.Contains(".CertificateGeneration.CryptContext.Open()") == true))
                 .EntrySummaryIs("Crypto functions require the Windows User Profile")
                 .EntryHelpTextIs("Various cryptographic functions used by Octopus Deploy require the Windows " +
                     "user profile to have been loaded. Some remote administration scenarios run commmands " +
@@ -54,7 +52,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
                 .EntryHelpLinkIs("http://g.octopushq.com/CryptoRequiresUserProfile"));
 
             AddRule(r => r.ExceptionIs<UnauthorizedAccessException>(
-                ex => ex.StackTrace.Contains(".CertificateGenerator.Generate("))
+                    ex => (ex.StackTrace?.Contains(".CertificateGenerator.Generate(") == true))
                 .EntrySummaryIs("Crypto functions require the Windows User Profile")
                 .EntryHelpTextIs("Various cryptographic functions used by Octopus Deploy require the Windows " +
                     "user profile to have been loaded. Some remote administration scenarios run commmands " +
@@ -63,7 +61,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
                 .EntryHelpLinkIs("http://g.octopushq.com/CryptoRequiresUserProfile"));
 
             AddRule(r => r.ExceptionIs<ArgumentException>(
-                ex => ex.Message.Contains("The user name (UPN) could not be determined for principal: Administrator"))
+                    ex => ex.Message.Contains("The user name (UPN) could not be determined for principal: Administrator"))
                 .EntrySummaryIs("Some systems fail to correctly identify the 'Administrator' account")
                 .EntryHelpTextIs("Using a domain account called 'Administrator' can resolve to the wrong principal " +
                     "on some systems; first, try qualifying the username with DOMAIN\\Administrator. If this " +
@@ -71,8 +69,8 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
                 .EntryHelpLinkIs("http://g.octopushq.com/AdministratorAccountName"));
 
             AddRule(r => r.ExceptionIs<InvalidDataException>(
-                ex => ex.Message.Contains("Central Directory corrupt") &&
-                    ex.StackTrace.Contains(".SynchronizeBuiltInPackageRepositoryIndexTaskController.AddFileToIndex("))
+                    ex => ex.Message.Contains("Central Directory corrupt") &&
+                        (ex.StackTrace?.Contains(".SynchronizeBuiltInPackageRepositoryIndexTaskController.AddFileToIndex(") == true))
                 .HasInnerException<IOException>(
                     iex => iex.Message.Contains("An attempt was made to move the file pointer before the beginning of the file"))
                 .EntrySummaryIs("The re-index built-in package repository task was unable to index package {0}.")
@@ -87,7 +85,9 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             Rules.Add(builder.Build());
         }
 
-        public static bool TryInterpret(Exception exception, [NotNullWhen(true)] out ExceptionKnowledgeBaseEntry? entry)
+        public static bool TryInterpret(Exception exception,
+            [NotNullWhen(true)]
+            out ExceptionKnowledgeBaseEntry? entry)
         {
             var unpacked = exception.UnpackFromContainers();
             try

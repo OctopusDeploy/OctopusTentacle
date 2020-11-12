@@ -50,7 +50,7 @@ namespace Octopus.Shared.Util
         public static string ConstructAngularFriendlyQueryString(this System.Collections.Specialized.NameValueCollection @params)
         {
             var items = new List<string>();
-            foreach (string key in @params)
+            foreach (string? key in @params)
             {
                 // Needs to be angular friendly (eg. "?projects=Project-01&projects=Project-02" ... not "?projects=Project-01,Projects-02").
                 var values = @params[key].Split(',');

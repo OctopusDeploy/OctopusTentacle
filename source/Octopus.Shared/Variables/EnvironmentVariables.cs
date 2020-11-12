@@ -20,6 +20,6 @@ namespace Octopus.Shared.Variables
         public const string AgentProgramDirectoryPath = "AgentProgramDirectoryPath";
 
         public static readonly string[] AllWellKnownEnvironmentVariables
-            = typeof(EnvironmentVariables).GetFields().Select(f => (string)f.GetValue(null)).ToArray();
+            = typeof(EnvironmentVariables).GetFields().Select(f => (string)f.GetValue(null)!).ToArray();
     }
 }

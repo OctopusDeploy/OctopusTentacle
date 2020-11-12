@@ -14,7 +14,7 @@ namespace Octopus.Shared.Contracts
 
         public string TaskId { get; }
 
-        public bool Equals(ScriptTicket other)
+        public bool Equals(ScriptTicket? other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -27,7 +27,7 @@ namespace Octopus.Shared.Contracts
             return string.Equals(TaskId, other.TaskId);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
             {

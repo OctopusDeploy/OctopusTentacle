@@ -10,10 +10,10 @@ namespace Octopus.Shared.Util
         {
             if (!Path.IsPathRooted(path))
             {
-                var codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                var codeBase = Assembly.GetExecutingAssembly().CodeBase ?? throw new Exception("CodeBase not found for executing assembly");
                 var uri = new UriBuilder(codeBase);
                 var root = Uri.UnescapeDataString(uri.Path);
-                root = Path.GetDirectoryName(root);
+                root = Path.GetDirectoryName(root) ?? throw new Exception("Directory for executing assembly not found");
                 path = Path.Combine(root, path);
             }
 
@@ -31,10 +31,10 @@ namespace Octopus.Shared.Util
         {
             if (!Path.IsPathRooted(path))
             {
-                var codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                var codeBase = Assembly.GetExecutingAssembly().CodeBase ?? throw new Exception("CodeBase not found for executing assembly");
                 var uri = new UriBuilder(codeBase);
                 var root = Uri.UnescapeDataString(uri.Path);
-                root = Path.GetDirectoryName(root);
+                root = Path.GetDirectoryName(root) ?? throw new Exception("Directory for executing assembly not found");;
                 path = Path.Combine(root, path);
             }
 
@@ -42,7 +42,7 @@ namespace Octopus.Shared.Util
 
             return path;
         }
-        
+
         public static string GetPathWithoutExtension(string path)
         {
             var containingFolder = Path.GetDirectoryName(path);

@@ -49,7 +49,11 @@ namespace Octopus.Shared.Startup
         string[] commandLineArguments;
         bool helpSwitchProvidedInCommandArguments;
 
-        protected OctopusProgram(string displayName, string version, string informationalVersion, string[] environmentInformation, string[] commandLineArguments)
+        protected OctopusProgram(string displayName,
+            string version,
+            string informationalVersion,
+            string[] environmentInformation,
+            string[] commandLineArguments)
         {
             this.commandLineArguments = commandLineArguments;
             this.displayName = displayName;
@@ -57,11 +61,14 @@ namespace Octopus.Shared.Startup
             this.informationalVersion = informationalVersion;
             this.environmentInformation = environmentInformation;
             commonOptions = new OptionSet();
-            commonOptions.Add("nologo", "DEPRECATED: Don't print title or version information. This switch is no longer required, but we want to leave it around so automation scripts don't break.", v => {}, hide: true);
-            commonOptions.Add("noconsolelogging", "DEPRECATED: Don't log informational messages to the console (stdout) - errors are still logged to stderr. This switch has been deprecated since it is no longer required. We want to leave it around so automation scripts don't break.", v =>
-            {
-                DisableConsoleLogging();
-            }, hide: true);
+            commonOptions.Add("nologo", "DEPRECATED: Don't print title or version information. This switch is no longer required, but we want to leave it around so automation scripts don't break.", v => { }, hide: true);
+            commonOptions.Add("noconsolelogging",
+                "DEPRECATED: Don't log informational messages to the console (stdout) - errors are still logged to stderr. This switch has been deprecated since it is no longer required. We want to leave it around so automation scripts don't break.",
+                v =>
+                {
+                    DisableConsoleLogging();
+                },
+                hide: true);
             commonOptions.Add("help", "Show detailed help for this command", v => { helpSwitchProvidedInCommandArguments = true; });
         }
 
@@ -80,7 +87,10 @@ namespace Octopus.Shared.Startup
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 if (Debugger.IsAttached) Debugger.Break();
-                log.WarnFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.PrettyPrint(false));
+                if (args.Exception == null)
+                    log.WarnFormat("Unhandled task exception occurred but no exception was supplied");
+                else
+                    log.WarnFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.PrettyPrint(false));
                 args.SetObserved();
             };
 
@@ -131,7 +141,12 @@ namespace Octopus.Shared.Startup
                     out var forceNoninteractiveHost,
                     out var monitorMutexHost);
 
-                host = SelectMostAppropriateHost(responsibleCommand, displayName, log, forceConsoleHost, forceNoninteractiveHost, monitorMutexHost);
+                host = SelectMostAppropriateHost(responsibleCommand,
+                    displayName,
+                    log,
+                    forceConsoleHost,
+                    forceNoninteractiveHost,
+                    monitorMutexHost);
 
                 RunHost(host);
                 // If we make it to here we can set the error code as either an UnknownCommand for which you got some help, or Success!
@@ -189,7 +204,7 @@ namespace Octopus.Shared.Startup
             Console.CancelKeyPress += (s, e) =>
             {
                 //SIGINT (ControlC) and SIGQUIT (ControlBreak)
-                log.Trace("CancelKeyPress signal received: "+ e.SpecialKey);
+                log.Trace("CancelKeyPress signal received: " + e.SpecialKey);
                 host.Stop(Shutdown);
             };
             AppDomain.CurrentDomain.ProcessExit += (s, e) =>
@@ -235,18 +250,20 @@ namespace Octopus.Shared.Startup
         {
             log.Fatal(ex);
 
-            foreach (var loaderException in ex.LoaderExceptions)
-            {
-                log.Error(loaderException);
-
-                if (!(loaderException is FileNotFoundException))
-                    continue;
-
-                if (loaderException is FileNotFoundException exFileNotFound && !string.IsNullOrEmpty(exFileNotFound.FusionLog))
+            if (ex.LoaderExceptions != null)
+                foreach (var loaderException in ex.LoaderExceptions)
                 {
-                    log.ErrorFormat("Fusion log: {0}", exFileNotFound.FusionLog);
+                    if (loaderException != null)
+                        log.Error(loaderException);
+
+                    if (!(loaderException is FileNotFoundException))
+                        continue;
+
+                    if (loaderException is FileNotFoundException exFileNotFound && !string.IsNullOrEmpty(exFileNotFound.FusionLog))
+                    {
+                        log.ErrorFormat("Fusion log: {0}", exFileNotFound.FusionLog);
+                    }
                 }
-            }
 
             return (int)ExitCode.ReflectionTypeLoadException;
         }
@@ -273,12 +290,13 @@ namespace Octopus.Shared.Startup
 
         void InitializeLogging()
         {
-
-
 #if !NLOG_HAS_EVENT_LOG_TARGET
-            if(PlatformDetection.IsRunningOnWindows) {
+            if (PlatformDetection.IsRunningOnWindows)
+            {
                 Target.Register<EventLogTarget>("EventLog");
-            } else {
+            }
+            else
+            {
                 Target.Register<NullLogTarget>("EventLog");
             }
 #endif
@@ -310,12 +328,13 @@ namespace Octopus.Shared.Startup
         void WriteDiagnosticsInfoToLogFile(StartUpInstanceRequest startupRequest)
         {
             var persistedRequest = startupRequest as StartUpPersistedInstanceRequest;
+            var fullProcessPath = Assembly.GetEntryAssembly()?.FullProcessPath() ?? throw new Exception("Could not get path of the entry assembly");
             var executable = PlatformDetection.IsRunningOnWindows
-                ? Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullProcessPath())
-                : Path.GetFileName(Assembly.GetEntryAssembly().FullProcessPath());
+                ? Path.GetFileNameWithoutExtension(fullProcessPath)
+                : Path.GetFileName(fullProcessPath);
             LogFileOnlyLogger.Current.Info($"{executable} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(persistedRequest?.InstanceName) ? "Default" : persistedRequest?.InstanceName)}");
             LogFileOnlyLogger.Current.Info($"Environment Information:{Environment.NewLine}" +
-                                           $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
+                $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
         }
 
         static void DisableConsoleLogging()
@@ -329,6 +348,7 @@ namespace Octopus.Shared.Startup
             {
                 rule.Targets.Remove(stdoutTarget);
             }
+
             LogManager.Configuration = c;
         }
 
@@ -378,11 +398,13 @@ namespace Octopus.Shared.Startup
             {
                 if (Debugger.IsAttached) Debugger.Break();
                 var exception = args.ExceptionObject as Exception; // May not actually be one.
-                log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception?.PrettyPrint() ?? args.ExceptionObject);
+                if (exception == null)
+                    log.FatalFormat("Unhandled AppDomain exception occurred: {0}", args.ExceptionObject);
+                else
+                    log.FatalFormat(exception, "Unhandled AppDomain exception occurred: {0}", exception.PrettyPrint());
             }
             catch (Exception ex)
             {
-
                 try
                 {
                     log.Fatal(ex, "Exception logging unhandled exception: ");
@@ -486,15 +508,13 @@ namespace Octopus.Shared.Startup
                 {
                     if (child.Id == processInfo.th32ProcessID)
                         parentPid = (int)processInfo.th32ParentProcessID;
-                }
-                while (parentPid == 0 && Kernel32.Process32Next(hnd, ref processInfo));
+                } while (parentPid == 0 && Kernel32.Process32Next(hnd, ref processInfo));
 
                 if (parentPid <= 0)
                     return false;
 
-                var parent =  Process.GetProcessById(parentPid);
+                var parent = Process.GetProcessById(parentPid);
                 return parent.ProcessName.ToLower() == "services";
-
             }
             catch (Exception ex)
             {
@@ -573,6 +593,7 @@ namespace Octopus.Shared.Startup
         }
 
         private readonly object singleShutdownLock = new object();
+
         void Shutdown()
         {
             if (!Monitor.TryEnter(singleShutdownLock)) return;
@@ -604,7 +625,9 @@ namespace Octopus.Shared.Startup
                 public uint th32ParentProcessID;
                 public int pcPriClassBase;
                 public uint dwFlags;
-                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string szExeFile;
+
+                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+                public string szExeFile;
             };
 
             [DllImport("kernel32.dll", SetLastError = true)]

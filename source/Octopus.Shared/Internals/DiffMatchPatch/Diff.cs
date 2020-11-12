@@ -39,7 +39,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          * @return true or false.
          */
 
-        public override bool Equals(Object obj)
+        public override bool Equals(Object? obj)
         {
             // If parameter is null return false.
             if (obj == null)

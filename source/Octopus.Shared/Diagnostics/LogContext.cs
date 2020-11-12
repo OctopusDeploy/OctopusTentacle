@@ -10,7 +10,7 @@ namespace Octopus.Shared.Diagnostics
     [DebuggerDisplay("{CorrelationId}")]
     public class LogContext : ILogContext
     {
-        readonly string? correlationId;
+        readonly string correlationId;
         readonly object sensitiveDataMaskLock = new object();
         string[] sensitiveValues;
         Lazy<AhoCorasick?> trie;
@@ -31,7 +31,7 @@ namespace Octopus.Shared.Diagnostics
             this.trie = trie;
         }
 
-        public string? CorrelationId => correlationId;
+        public string CorrelationId => correlationId;
 
         public string[] SensitiveValues => sensitiveValues;
 
