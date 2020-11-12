@@ -5,6 +5,7 @@ namespace Octopus.Shared.Diagnostics.Formatters
 {
     public class PluralStringFormatter : IFormatProvider, ICustomFormatter
     {
+        [return: NotNullIfNotNull("formatType")]
         public object? GetFormat(Type? formatType)
         {
             return formatType == typeof(ICustomFormatter) ? this : null;
