@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Diagnostics.Formatters
