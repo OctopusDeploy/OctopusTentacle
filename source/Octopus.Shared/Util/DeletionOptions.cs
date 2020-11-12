@@ -23,14 +23,14 @@ namespace Octopus.Shared.Util
         public int SleepBetweenAttemptsMilliseconds { get; private set; }
         public bool ThrowOnFailure { get; private set; }
 
-        public bool Equals(DeletionOptions other)
+        public bool Equals(DeletionOptions? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return RetryAttempts == other.RetryAttempts && SleepBetweenAttemptsMilliseconds == other.SleepBetweenAttemptsMilliseconds && ThrowOnFailure.Equals(other.ThrowOnFailure);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;

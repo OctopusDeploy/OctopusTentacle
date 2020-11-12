@@ -130,7 +130,7 @@ namespace Octopus.Shared.Startup
             var result = new List<string>();
             foreach (var specialLocation in Enum.GetValues(typeof(Environment.SpecialFolder)))
             {
-                var location = Environment.GetFolderPath((Environment.SpecialFolder)specialLocation, Environment.SpecialFolderOption.None);
+                var location = Environment.GetFolderPath((Environment.SpecialFolder)specialLocation!, Environment.SpecialFolderOption.None);
                 result.Add(location);
             }
             result.Add("C:");

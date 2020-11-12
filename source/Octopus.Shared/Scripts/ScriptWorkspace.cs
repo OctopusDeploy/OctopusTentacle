@@ -59,7 +59,8 @@ namespace Octopus.Shared.Scripts
         {
             var path = Path.Combine(WorkingDirectory, fileName);
             var directory = Path.GetDirectoryName(path);
-            FileSystem.EnsureDirectoryExists(directory);
+            if(directory != null)
+                FileSystem.EnsureDirectoryExists(directory);
             return path;
         }
 

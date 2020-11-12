@@ -32,7 +32,7 @@ namespace Octopus.Shared.Scripts
 
         string FindWorkingDirectory(ScriptTicket ticket)
         {
-            var work = fileSystem.GetFullPath(Path.Combine(home.HomeDirectory, "Work", ticket.TaskId));
+            var work = fileSystem.GetFullPath(Path.Combine(home.HomeDirectory ?? "", "Work", ticket.TaskId));
             fileSystem.EnsureDirectoryExists(work);
             return work;
         }

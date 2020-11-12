@@ -26,9 +26,15 @@ namespace Octopus.Shared.Startup
         static readonly string LoggerName = nameof(LogFileOnlyLogger);
         static readonly ILogger Log = LogManager.GetLogger(LoggerName);
 
-        private static readonly string EntryExecutable = PlatformDetection.IsRunningOnWindows
-            ? Path.GetFileName(Assembly.GetEntryAssembly()?.FullProcessPath())
-            : $"{Path.GetFileName(Assembly.GetEntryAssembly()?.FullProcessPath())}.exe";
+        static LogFileOnlyLogger()
+        {
+            var fullProcessPath = Assembly.GetEntryAssembly()?.FullProcessPath()!;
+            EntryExecutable = PlatformDetection.IsRunningOnWindows
+                ? Path.GetFileName(fullProcessPath)
+                : $"{Path.GetFileName(fullProcessPath)}.exe";
+        }
+        private static readonly string EntryExecutable;
+
         static readonly string HelpMessage = $"The {EntryExecutable}.nlog file should have a rule matching the name {LoggerName} where log messages are restricted to the log file, never written to stdout or stderr.";
 
         public static void AssertConfigurationIsCorrect()

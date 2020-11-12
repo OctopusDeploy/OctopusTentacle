@@ -48,7 +48,7 @@ namespace Octopus.Shared.Util
         {
             if (ex.Data.Contains("AsyncStackTrace"))
             {
-                ((Queue<ExceptionLog>)(ex.Data["AsyncStackTrace"])).Enqueue(log);
+                ((Queue<ExceptionLog>)(ex.Data["AsyncStackTrace"])!).Enqueue(log);
             }
             else
             {
@@ -60,12 +60,12 @@ namespace Octopus.Shared.Util
 
         public static string StackTraceEx(this Exception ex)
         {
-            var logs = (ex.Data.Contains("AsyncStackTrace")) ? ((Queue<ExceptionLog>)(ex.Data["AsyncStackTrace"])) : EmptyLog;
+            var logs = (ex.Data.Contains("AsyncStackTrace")) ? ((Queue<ExceptionLog>)(ex.Data["AsyncStackTrace"])!) : EmptyLog;
             logs = new Queue<ExceptionLog>(logs);
 
             var sb = new StringBuilder();
 
-            foreach (var stackTrace in ex.StackTrace.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var stackTrace in ex.StackTrace!.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var s = stackTrace;
 
@@ -182,7 +182,7 @@ namespace Octopus.Shared.Util
             }
             catch (Exception ex)
             {
-                LogInternal(ex, new ExceptionLog { Label = label, Arg = (arg != null ? (arg.ToString()) : ""), Member = member, Line = line, Path = path });
+                LogInternal(ex, new ExceptionLog { Label = label, Arg = (arg != null ? (arg.ToString()!) : ""), Member = member, Line = line, Path = path });
                 throw;
             }
         }
@@ -195,7 +195,7 @@ namespace Octopus.Shared.Util
             }
             catch (Exception ex)
             {
-                LogInternal(ex, new ExceptionLog { Label = label, Arg = (arg != null ? (arg.ToString()) : ""), Member = member, Line = line, Path = path });
+                LogInternal(ex, new ExceptionLog { Label = label, Arg = (arg != null ? (arg.ToString()!) : ""), Member = member, Line = line, Path = path });
                 throw;
             }
         }

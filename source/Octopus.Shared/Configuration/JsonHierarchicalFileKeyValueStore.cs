@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
@@ -37,7 +38,7 @@ namespace Octopus.Shared.Configuration
 
         protected override void WriteSerializedData(string serializedData)
         {
-            var parentDirectory = Path.GetDirectoryName(configurationFile);
+            var parentDirectory = Path.GetDirectoryName(configurationFile) ?? throw new Exception("Configuration file location must include directory information");
             fileSystem.EnsureDirectoryExists(parentDirectory);
             fileSystem.EnsureDiskHasEnoughFreeSpace(configurationFile, 1024 * 1024);
             using (var writer = new StreamWriter(fileSystem.OpenFile(configurationFile, FileMode.Create)))

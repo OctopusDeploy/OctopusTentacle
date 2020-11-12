@@ -120,7 +120,7 @@ namespace Octopus.Shared.Util
             else if (argValue != null)
                 sval = argValue.ToString();
 
-            return string.Format("{0}", Escape(sval));
+            return string.Format("{0}", Escape(sval ?? ""));
         }
 
         static string MakeArg(string argName, object argValue, bool unescaped = false)
@@ -132,7 +132,7 @@ namespace Octopus.Shared.Util
             else if (argValue != null)
                 sval = argValue.ToString();
 
-            return string.Format("--{0} {1}", Normalize(argName), unescaped ? sval : Escape(sval));
+            return string.Format("--{0} {1}", Normalize(argName), unescaped ? sval : Escape(sval ?? ""));
         }
 
         public static string Escape(string argValue)

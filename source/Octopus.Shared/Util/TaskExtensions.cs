@@ -17,7 +17,7 @@ namespace Octopus.Shared.Util
                 task.Wait(cancellationToken);
                 return task.Result;
             }
-            catch (AggregateException ex)
+            catch (AggregateException ex) when (ex.InnerException != null)
             {
                 throw PrepareForRethrow(ex.InnerException);
             }
@@ -31,7 +31,7 @@ namespace Octopus.Shared.Util
             {
                 task.Wait(cancellationToken);
             }
-            catch (AggregateException ex)
+            catch (AggregateException ex) when (ex.InnerException != null)
             {
                 throw PrepareForRethrow(ex.InnerException);
             }

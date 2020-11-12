@@ -108,27 +108,27 @@ namespace Octopus.Shared.Internals.Options
 
         #region IList
 
-        int IList.Add(object value)
+        int IList.Add(object? value)
         {
             return (values as IList).Add(value);
         }
 
-        bool IList.Contains(object value)
+        bool IList.Contains(object? value)
         {
             return (values as IList).Contains(value);
         }
 
-        int IList.IndexOf(object value)
+        int IList.IndexOf(object? value)
         {
             return (values as IList).IndexOf(value);
         }
 
-        void IList.Insert(int index, object value)
+        void IList.Insert(int index, object? value)
         {
             (values as IList).Insert(index, value);
         }
 
-        void IList.Remove(object value)
+        void IList.Remove(object? value)
         {
             (values as IList).Remove(value);
         }

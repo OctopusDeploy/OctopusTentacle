@@ -31,7 +31,7 @@ namespace Octopus.Shared.Util
 
         public static string FullLocalPath(this Assembly assembly)
         {
-            var codeBase = assembly.CodeBase;
+            var codeBase = assembly.CodeBase ?? throw new Exception($"Could not get code base for {assembly.FullName}");
             var uri = new UriBuilder(codeBase);
             var root = Uri.UnescapeDataString(uri.Path);
             if(PlatformDetection.IsRunningOnWindows)

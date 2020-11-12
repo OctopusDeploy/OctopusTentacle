@@ -27,7 +27,7 @@ namespace Octopus.Shared.Diagnostics
 
         public override ILogContext CurrentContext
         {
-            get { return threadLocalLogContext.Value; }
+            get { return threadLocalLogContext.Value!; }
         }
 
         public static ILogWithContext Octopus()
@@ -58,7 +58,7 @@ namespace Octopus.Shared.Diagnostics
 
         public override IDisposable WithinBlock(ILogContext logContext)
         {
-            var oldValue = threadLocalLogContext.Value;
+            var oldValue = threadLocalLogContext.Value!;
             threadLocalLogContext.Value = logContext;
             return new RevertLogContext(this, oldValue);
         }

@@ -80,7 +80,7 @@ namespace Octopus.Shared.Startup
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 if (Debugger.IsAttached) Debugger.Break();
-                log.WarnFormat(args.Exception.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception.PrettyPrint(false));
+                log.WarnFormat(args.Exception?.UnpackFromContainers(), "Unhandled task exception occurred: {0}", args.Exception?.PrettyPrint(false));
                 args.SetObserved();
             };
 
@@ -235,18 +235,19 @@ namespace Octopus.Shared.Startup
         {
             log.Fatal(ex);
 
-            foreach (var loaderException in ex.LoaderExceptions)
-            {
-                log.Error(loaderException);
-
-                if (!(loaderException is FileNotFoundException))
-                    continue;
-
-                if (loaderException is FileNotFoundException exFileNotFound && !string.IsNullOrEmpty(exFileNotFound.FusionLog))
+            if(ex.LoaderExceptions != null)
+                foreach (var loaderException in ex.LoaderExceptions)
                 {
-                    log.ErrorFormat("Fusion log: {0}", exFileNotFound.FusionLog);
+                    log.Error(loaderException);
+
+                    if (!(loaderException is FileNotFoundException))
+                        continue;
+
+                    if (loaderException is FileNotFoundException exFileNotFound && !string.IsNullOrEmpty(exFileNotFound.FusionLog))
+                    {
+                        log.ErrorFormat("Fusion log: {0}", exFileNotFound.FusionLog);
+                    }
                 }
-            }
 
             return (int)ExitCode.ReflectionTypeLoadException;
         }
@@ -310,9 +311,10 @@ namespace Octopus.Shared.Startup
         void WriteDiagnosticsInfoToLogFile(StartUpInstanceRequest startupRequest)
         {
             var persistedRequest = startupRequest as StartUpPersistedInstanceRequest;
+            var fullProcessPath = Assembly.GetEntryAssembly()?.FullProcessPath() ?? throw new Exception("Could not get path of the entry assembly");
             var executable = PlatformDetection.IsRunningOnWindows
-                ? Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().FullProcessPath())
-                : Path.GetFileName(Assembly.GetEntryAssembly().FullProcessPath());
+                ? Path.GetFileNameWithoutExtension(fullProcessPath)
+                : Path.GetFileName(fullProcessPath);
             LogFileOnlyLogger.Current.Info($"{executable} version {version} ({informationalVersion}) instance {(string.IsNullOrWhiteSpace(persistedRequest?.InstanceName) ? "Default" : persistedRequest?.InstanceName)}");
             LogFileOnlyLogger.Current.Info($"Environment Information:{Environment.NewLine}" +
                                            $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");

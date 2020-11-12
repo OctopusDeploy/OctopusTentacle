@@ -31,15 +31,15 @@ namespace Octopus.Shared.Startup
         {
             var assembly = typeof(FileSystemCleaner).Assembly;
 
-            return assembly.GetManifestResourceStream(resource);
+            return assembly.GetManifestResourceStream(resource) ?? throw new Exception($"Resource {resource} not found");
         }
 
         void AttemptToDeleteEachEntryInStream(Stream stream)
         {
-            var root = Path.GetDirectoryName(typeof(FileSystemCleaner).Assembly.FullLocalPath());
+            var root = Path.GetDirectoryName(typeof(FileSystemCleaner).Assembly.FullLocalPath()) ?? throw new Exception("Could not get directory");
             using (var reader = new StreamReader(stream))
             {
-                string line;
+                string? line;
 
                 while ((line = reader.ReadLine()) != null)
                 {

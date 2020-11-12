@@ -50,7 +50,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
         {
-            var parentDirectory = Path.GetDirectoryName(configurationFile);
+            var parentDirectory = Path.GetDirectoryName(configurationFile) ?? throw new ArgumentException("Directory required", nameof(configurationFile));
             FileSystem.EnsureDirectoryExists(parentDirectory);
 
             if (!FileSystem.FileExists(configurationFile))

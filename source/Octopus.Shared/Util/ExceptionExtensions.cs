@@ -67,7 +67,7 @@ namespace Octopus.Shared.Util
 
         static void AppendAggregateException(StringBuilder sb, bool printStackTrace, AggregateException aex)
         {
-            if (!printStackTrace && aex.InnerExceptions.Count == 1)
+            if (!printStackTrace && aex.InnerException != null)
             {
                 PrettyPrint(sb, aex.InnerException, printStackTrace);
             }
@@ -102,22 +102,25 @@ namespace Octopus.Shared.Util
 
         static void AddReflectionTypeLoadExceptionDetails(ReflectionTypeLoadException rtle, StringBuilder sb)
         {
-            foreach (var loaderException in rtle.LoaderExceptions)
-            {
-                sb.AppendLine();
-                sb.AppendLine("--Loader Exception--");
-                PrettyPrint(sb, loaderException, true);
+            if(rtle.LoaderExceptions != null)
+                foreach (var loaderException in rtle.LoaderExceptions)
+                {
+                    if(loaderException == null)
+                        continue;
 
-                var fusionLog = (loaderException as FileNotFoundException)?.FusionLog;
-                if (!string.IsNullOrEmpty(fusionLog))
-                    sb.Append("Fusion log: ").AppendLine(fusionLog);
-            }
+                    sb.AppendLine();
+                    sb.AppendLine("--Loader Exception--");
+                    PrettyPrint(sb, loaderException, true);
+
+                    var fusionLog = (loaderException as FileNotFoundException)?.FusionLog;
+                    if (!string.IsNullOrEmpty(fusionLog))
+                        sb.Append("Fusion log: ").AppendLine(fusionLog);
+                }
         }
 
         public static Exception UnpackFromContainers(this Exception error)
         {
-            var aggregateException = error as AggregateException;
-            if (aggregateException != null && aggregateException.InnerExceptions.Count == 1)
+            if (error is AggregateException aggregateException && aggregateException.InnerExceptions.Count == 1)
             {
                 return UnpackFromContainers(aggregateException.InnerExceptions[0]);
             }

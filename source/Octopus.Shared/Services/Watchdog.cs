@@ -83,7 +83,7 @@ namespace Octopus.Shared.Services
                     log.Info($"Updating scheduled task {taskName}");
                 }
 
-                var entryAssembly = Assembly.GetEntryAssembly();
+                var entryAssembly = Assembly.GetEntryAssembly() ?? throw new Exception("Could not get entry assembly");
                 var fileName = entryAssembly.GetName().Name;
                 var processFileName = Process.GetCurrentProcess().MainModule?.FileName;
 
@@ -91,7 +91,7 @@ namespace Octopus.Shared.Services
                 {
                     processFileName = Path.Combine(Path.GetDirectoryName(entryAssembly.Location) ?? ".", $"{Path.GetFileNameWithoutExtension(entryAssembly.Location)}.exe");
                 }
-   
+
                 taskDefinition.Actions.Clear();
                 taskDefinition.Actions.Add(new ExecAction(processFileName, argsPrefix + instanceNames));
 

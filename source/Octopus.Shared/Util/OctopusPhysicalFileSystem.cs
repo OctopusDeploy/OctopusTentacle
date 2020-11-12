@@ -279,7 +279,7 @@ namespace Octopus.Shared.Util
         public Stream CreateTemporaryFile(string filename, out string path)
         {
             path = Path.Combine(GetTempBasePath(), filename);
-            var dir = Path.GetDirectoryName(path);
+            var dir = Path.GetDirectoryName(path) ?? throw new ArgumentException("Directory required");
             EnsureDirectoryExists(dir);
 
             DeleteFile(path);
@@ -291,7 +291,7 @@ namespace Octopus.Shared.Util
             var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
             EnsureDirectoryExists(path);
 
-            path = Path.Combine(path, Assembly.GetEntryAssembly() != null ? Assembly.GetEntryAssembly().GetName().Name : "Octopus");
+            path = Path.Combine(path, Assembly.GetEntryAssembly() != null ? Assembly.GetEntryAssembly()!.GetName().Name! : "Octopus");
             return Path.Combine(path, "Temp");
         }
 
@@ -550,8 +550,8 @@ namespace Octopus.Shared.Util
             {
                 try
                 {
-                    var oldDirectory = Path.GetDirectoryName(oldFilePath);
-                    if (!DirectoryExists(Path.GetDirectoryName(oldFilePath)))
+                    var oldDirectory = Path.GetDirectoryName(oldFilePath) ?? throw new ArgumentException("directoryRequired", nameof(oldFilePath));
+                    if (!DirectoryExists(oldDirectory))
                     {
                         Directory.CreateDirectory(oldDirectory);
                     }
@@ -646,7 +646,7 @@ namespace Octopus.Shared.Util
 
         private static bool IsUncPath(string directoryPath)
         {
-            return Uri.TryCreate(directoryPath, UriKind.Absolute, out Uri uri) && uri.IsUnc;
+            return Uri.TryCreate(directoryPath, UriKind.Absolute, out Uri? uri) && uri.IsUnc;
         }
     }
 }

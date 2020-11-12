@@ -9,7 +9,7 @@ namespace Octopus.Shared.Configuration.Instances
     {
         string? LocateEnvFile();
     }
-    
+
     public class EnvFileLocator : IEnvFileLocator
     {
         readonly IOctopusFileSystem fileSystem;
@@ -26,8 +26,8 @@ namespace Octopus.Shared.Configuration.Instances
         {
             if (envFile != null)
                 return envFile;
-            
-            var directoryToCheck = Path.GetDirectoryName(typeof(InMemoryKeyValueStore).Assembly.Location);
+
+            var directoryToCheck = Path.GetDirectoryName(typeof(InMemoryKeyValueStore).Assembly.Location) ?? throw new Exception("Could not get assembly location");
 
             log.Info($"Search for .env file, starting from {directoryToCheck}");
 
@@ -45,9 +45,9 @@ namespace Octopus.Shared.Configuration.Instances
 
                 if (rootDirectoryReached)
                     directoryToCheck += Path.DirectorySeparatorChar; // for root path when need to tack the separator back on
-                
+
                 envPathToCheck = Path.Combine(directoryToCheck, ".env");
-                
+
                 envFileExists = fileSystem.FileExists(envPathToCheck);
             }
 
