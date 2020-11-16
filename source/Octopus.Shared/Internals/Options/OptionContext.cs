@@ -1,3 +1,5 @@
+using System;
+
 namespace Octopus.Shared.Internals.Options
 {
     public class OptionContext

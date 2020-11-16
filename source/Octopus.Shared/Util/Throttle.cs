@@ -61,9 +61,7 @@ namespace Octopus.Shared.Util
         }
 
         public override string ToString()
-        {
-            return $"{name}:{size-semaphore.CurrentCount}/{size}";
-        }
+            => $"{name}:{size - semaphore.CurrentCount}/{size}";
 
         class ThrottleReleaser : IDisposable
         {
@@ -93,9 +91,7 @@ namespace Octopus.Shared.Util
             }
 
             public override string ToString()
-            {
-                return $"{name}:{semaphore.CurrentCount}/{size}";
-            }
+                => $"{name}:{semaphore.CurrentCount}/{size}";
         }
     }
 }

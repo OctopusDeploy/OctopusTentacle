@@ -24,7 +24,8 @@ namespace Octopus.Shared.Tests.Configuration
             ((IApplicationConfigurationStrategy)ConfigurationStore).LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IAggregatableKeyValueStore)null);
             OtherStrategy.LoadedConfiguration(Arg.Any<ApplicationRecord>()).Returns((IAggregatableKeyValueStore)null);
             ((Action)(() => selector.LoadInstance()))
-                .Should().Throw<ControlledFailureException>()
+                .Should()
+                .Throw<ControlledFailureException>()
                 .WithMessage("There are no instances of OctopusServer configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file, or set the required environment variables.");
         }
 
@@ -52,7 +53,8 @@ namespace Octopus.Shared.Tests.Configuration
             };
             var selector = GetApplicationInstanceSelector(instanceRecords, string.Empty);
             ((Action)(() => selector.LoadInstance()))
-                .Should().Throw<ControlledFailureException>()
+                .Should()
+                .Throw<ControlledFailureException>()
                 .WithMessage("There is more than one instance of OctopusServer configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: instance 2, My instance.");
         }
 
@@ -86,7 +88,8 @@ namespace Octopus.Shared.Tests.Configuration
             var selector = GetApplicationInstanceSelector(instanceRecords, "instance 1");
 
             ((Action)(() => selector.LoadInstance()))
-                .Should().Throw<ControlledFailureException>()
+                .Should()
+                .Throw<ControlledFailureException>()
                 .WithMessage("Instance instance 1 of OctopusServer has not been configured on this machine. Available instances: instance 2.");
         }
 
@@ -130,7 +133,8 @@ namespace Octopus.Shared.Tests.Configuration
             var selector = GetApplicationInstanceSelector(instanceRecords, "instance 2");
 
             ((Action)(() => selector.LoadInstance()))
-                .Should().Throw<ControlledFailureException>()
+                .Should()
+                .Throw<ControlledFailureException>()
                 .WithMessage("Instance instance 2 of OctopusServer could not be matched to one of the existing instances: Instance 2, INSTANCE 2.");
         }
 
@@ -152,7 +156,7 @@ namespace Octopus.Shared.Tests.Configuration
                 startupRequest = new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, currentInstanceName);
 
             var selector = new ApplicationInstanceSelector(startupRequest,
-                new [] { (IApplicationConfigurationStrategy)ConfigurationStore, OtherStrategy },
+                new[] { (IApplicationConfigurationStrategy)ConfigurationStore, OtherStrategy },
                 Substitute.For<ILogFileOnlyLogger>());
             return selector;
         }

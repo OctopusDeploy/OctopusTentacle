@@ -21,10 +21,12 @@ namespace Octopus.Shared.Tests.Security
 
             var sdm = new SensitiveDataMask();
             var trie = CreateTrie(verysensitive, sensitive, prettysensitive);
-            sdm.ApplyTo(trie, raw, result =>
-            {
-                Assert.AreEqual(expected, result);
-            });
+            sdm.ApplyTo(trie,
+                raw,
+                result =>
+                {
+                    Assert.AreEqual(expected, result);
+                });
         }
 
         [Test]
@@ -117,9 +119,7 @@ namespace Octopus.Shared.Tests.Security
             var watch = new Stopwatch();
 
             for (var i = 0; i < sensitiveValues.Length; i++)
-            {
                 sensitiveValues[i] = RandomStringGenerator.Generate(rng.Next(8, 50));
-            }
 
             watch.Start();
             var sdm = new SensitiveDataMask();
@@ -137,6 +137,7 @@ namespace Octopus.Shared.Tests.Security
 
                 sdm.ApplyTo(trie, raw, sensitive => { });
             }
+
             watch.Stop();
             var processingTime = watch.ElapsedMilliseconds;
 
@@ -192,7 +193,7 @@ namespace Octopus.Shared.Tests.Security
             Assert.That(count, Is.GreaterThan(1000));
         }
 
-        private AhoCorasick CreateTrie(params string[] args)
+        AhoCorasick CreateTrie(params string[] args)
         {
             var trie = new AhoCorasick();
             foreach (var instance in args)

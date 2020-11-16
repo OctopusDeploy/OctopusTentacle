@@ -1,6 +1,4 @@
 ﻿using System;
-using Octopus.Shared.Contracts;
-using Octopus.Shared.Scripts;
 
 namespace Octopus.Shared.Util
 {

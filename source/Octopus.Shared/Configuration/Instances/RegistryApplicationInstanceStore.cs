@@ -33,7 +33,6 @@ namespace Octopus.Shared.Configuration.Instances
             var results = new List<ApplicationInstanceRecord>();
 
             if (PlatformDetection.IsRunningOnWindows)
-            {
                 using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
                 using (var subKey = rootKey.OpenSubKey(KeyName, false))
                 {
@@ -48,7 +47,6 @@ namespace Octopus.Shared.Configuration.Instances
                         var instanceNames = applicationNameKey.GetSubKeyNames();
 
                         foreach (var instanceName in instanceNames)
-                        {
                             using (var instanceKey = applicationNameKey.OpenSubKey(instanceName, false))
                             {
                                 if (instanceKey == null)
@@ -57,10 +55,8 @@ namespace Octopus.Shared.Configuration.Instances
                                 var path = instanceKey.GetValue("ConfigurationFilePath");
                                 results.Add(new ApplicationInstanceRecord(instanceName, (string)path));
                             }
-                        }
                     }
                 }
-            }
 
             return results;
         }
@@ -68,7 +64,6 @@ namespace Octopus.Shared.Configuration.Instances
         public void DeleteFromRegistry(string instanceName)
         {
             if (PlatformDetection.IsRunningOnWindows)
-            {
                 using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
                 using (var subKey = rootKey.OpenSubKey(KeyName, true))
                 {
@@ -84,7 +79,6 @@ namespace Octopus.Shared.Configuration.Instances
                         applicationNameKey.Flush();
                     }
                 }
-            }
         }
     }
 }

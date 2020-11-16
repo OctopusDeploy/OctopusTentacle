@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -11,6 +12,7 @@ namespace Octopus.Shared.Security
         static readonly byte[] IvPrefix = Encoding.UTF8.GetBytes("IV__");
 
         readonly byte[] key;
+
         public AesEncryption(string password)
         {
             key = GetEncryptionKey(password);
@@ -39,7 +41,7 @@ namespace Octopus.Shared.Security
             var plainTextBytes = Encoding.UTF8.GetBytes(plaintext);
             using (var algorithm = GetCryptoProvider())
             using (var cryptoTransform = algorithm.CreateEncryptor())
-            using(var stream = new MemoryStream())
+            using (var stream = new MemoryStream())
             {
                 // The IV is randomly generated each time so safe to append
                 stream.Write(IvPrefix, 0, IvPrefix.Length);
@@ -71,12 +73,10 @@ namespace Octopus.Shared.Security
                 Key = key
             };
             if (iv != null)
-            {
                 provider.IV = iv;
-            }
             return provider;
         }
-        
+
         public static byte[] GetEncryptionKey(string encryptionPassword)
         {
             using (var passwordGenerator = new Rfc2898DeriveBytes(encryptionPassword, PasswordPaddingSalt, PasswordSaltIterations))

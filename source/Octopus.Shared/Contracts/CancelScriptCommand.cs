@@ -4,23 +4,14 @@ namespace Octopus.Shared.Contracts
 {
     public class CancelScriptCommand
     {
-        readonly ScriptTicket ticket;
-        readonly long lastLogSequence;
-
         public CancelScriptCommand(ScriptTicket ticket, long lastLogSequence)
         {
-            this.ticket = ticket;
-            this.lastLogSequence = lastLogSequence;
+            Ticket = ticket;
+            LastLogSequence = lastLogSequence;
         }
 
-        public ScriptTicket Ticket
-        {
-            get { return ticket; }
-        }
+        public ScriptTicket Ticket { get; }
 
-        public long LastLogSequence
-        {
-            get { return lastLogSequence; }
-        }
+        public long LastLogSequence { get; }
     }
 }

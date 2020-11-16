@@ -8,7 +8,6 @@ namespace Octopus.Shared.Diagnostics
     public class Log : AbstractLog
     {
         static readonly Log Instance = new Log();
-        static readonly List<ILogAppender> appenders = new List<ILogAppender>();
         readonly ThreadLocal<ILogContext> threadLocalLogContext;
 
         static Log()
@@ -20,40 +19,26 @@ namespace Octopus.Shared.Diagnostics
             threadLocalLogContext = new ThreadLocal<ILogContext>(() => new LogContext("system/" + Environment.MachineName));
         }
 
-        public static List<ILogAppender> Appenders
-        {
-            get { return appenders; }
-        }
+        public static List<ILogAppender> Appenders { get; } = new List<ILogAppender>();
 
-        public override ILogContext CurrentContext
-        {
-            get { return threadLocalLogContext.Value!; }
-        }
+        public override ILogContext CurrentContext => threadLocalLogContext.Value!;
 
         public static ILogWithContext Octopus()
-        {
-            return Instance;
-        }
+            => Instance;
 
         public static ILogWithContext System()
-        {
-            return new Log();
-        }
+            => new Log();
 
         protected override void WriteEvent(LogEvent logEvent)
         {
-            foreach (var appender in appenders)
-            {
+            foreach (var appender in Appenders)
                 appender.WriteEvent(logEvent);
-            }
         }
 
         protected override void WriteEvents(IList<LogEvent> logEvents)
         {
-            foreach (var appender in appenders)
-            {
+            foreach (var appender in Appenders)
                 appender.WriteEvents(logEvents);
-            }
         }
 
         public override IDisposable WithinBlock(ILogContext logContext)
@@ -65,18 +50,14 @@ namespace Octopus.Shared.Diagnostics
 
         public override void Flush()
         {
-            foreach (var appender in appenders)
-            {
+            foreach (var appender in Appenders)
                 appender.Flush();
-            }
         }
 
         public override void Flush(string correlationId)
         {
-            foreach (var appender in appenders)
-            {
+            foreach (var appender in Appenders)
                 appender.Flush(correlationId);
-            }
         }
 
         class RevertLogContext : IDisposable

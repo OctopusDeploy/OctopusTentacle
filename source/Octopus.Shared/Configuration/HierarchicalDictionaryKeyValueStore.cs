@@ -13,12 +13,10 @@ namespace Octopus.Shared.Configuration
             this.jsonSerializerSettings = jsonSerializerSettings;
         }
 
-        public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel  = ProtectionLevel.None)
-        {
-            throw new NotImplementedException("This ");
-        }
+        public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None)
+            => throw new NotImplementedException("This ");
 
-        public override bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
+        public override bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -30,7 +28,7 @@ namespace Octopus.Shared.Configuration
                 return true;
             }
 
-            var valueAsObject = (object) value;
+            var valueAsObject = (object)value;
 
             if (protectionLevel == ProtectionLevel.MachineKey)
             {

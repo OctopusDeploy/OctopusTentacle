@@ -7,15 +7,14 @@ namespace Octopus.Shared.Contracts
 {
     public class StartScriptCommandBuilder
     {
-        StringBuilder scriptBody = new StringBuilder(string.Empty);
-
-        ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
-
         readonly List<ScriptFile> files = new List<ScriptFile>();
 
         readonly List<string> arguments = new List<string>();
 
         readonly Dictionary<ScriptType, string> additionalScripts = new Dictionary<ScriptType, string>();
+        StringBuilder scriptBody = new StringBuilder(string.Empty);
+
+        ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
 
         TimeSpan scriptIsolationMutexTimeout = ScriptIsolationMutex.NoTimeout;
         string? taskId;
@@ -35,9 +34,7 @@ namespace Octopus.Shared.Contracts
         public StartScriptCommandBuilder WithReplacementInAdditionalScriptBody(ScriptType scriptType, string oldValue, string newValue)
         {
             if (additionalScripts.ContainsKey(scriptType))
-            {
                 additionalScripts[scriptType] = additionalScripts[scriptType].Replace(oldValue, newValue);
-            }
             return this;
         }
 
@@ -56,19 +53,15 @@ namespace Octopus.Shared.Contracts
         public StartScriptCommandBuilder WithFiles(params ScriptFile[] files)
         {
             if (files != null)
-            {
                 this.files.AddRange(files);
-            }
-            
+
             return this;
         }
 
         public StartScriptCommandBuilder WithArguments(params string[] arguments)
         {
             if (arguments != null)
-            {
                 this.arguments.AddRange(arguments);
-            }
 
             return this;
         }
@@ -86,8 +79,12 @@ namespace Octopus.Shared.Contracts
         }
 
         public StartScriptCommand Build()
-        {
-            return new StartScriptCommand(scriptBody.ToString(), isolation, scriptIsolationMutexTimeout, arguments.ToArray(), taskId, additionalScripts, files.ToArray());
-        }
+            => new StartScriptCommand(scriptBody.ToString(),
+                isolation,
+                scriptIsolationMutexTimeout,
+                arguments.ToArray(),
+                taskId,
+                additionalScripts,
+                files.ToArray());
     }
 }

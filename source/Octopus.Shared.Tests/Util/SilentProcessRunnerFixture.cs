@@ -12,11 +12,12 @@ namespace Octopus.Shared.Tests.Util
     [TestFixture]
     public class SilentProcessRunnerFixture
     {
-        private TestUserPrincipal user;
-        private string command;
-        private string commandParam;
-        private const int SIG_TERM = 143;
-        private const int SIG_KILL = 137;
+        const int SIG_TERM = 143;
+        const int SIG_KILL = 137;
+        TestUserPrincipal user;
+        string command;
+        string commandParam;
+
         [SetUp]
         public void SetUp()
         {
@@ -43,7 +44,15 @@ namespace Octopus.Shared.Tests.Util
                 var networkCredential = default(NetworkCredential);
                 IDictionary<string, string> customEnvironmentVariables = null;
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 exitCode.Should().Be(99, "our custom exit code should be reflected");
                 debugMessages.ToString().Should().ContainEquivalentOf($"Starting {command} in working directory '' using '{SilentProcessRunner.EncodingDetector.GetOEMEncoding().EncodingName}' encoding running as '{ProcessIdentity.CurrentUserName}'");
@@ -62,10 +71,20 @@ namespace Octopus.Shared.Tests.Util
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
-                debugMessages.ToString().Should().ContainEquivalentOf(command, "the command should be logged")
+                debugMessages.ToString()
+                    .Should()
+                    .ContainEquivalentOf(command, "the command should be logged")
                     .And.ContainEquivalentOf(ProcessIdentity.CurrentUserName, "the current user details should be logged");
                 infoMessages.ToString().Should().ContainEquivalentOf("hello");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
@@ -82,10 +101,18 @@ namespace Octopus.Shared.Tests.Util
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>
                 {
-                    {"customenvironmentvariable", "customvalue"}
+                    { "customenvironmentvariable", "customvalue" }
                 };
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 infoMessages.ToString().Should().ContainEquivalentOf("customvalue", "the environment variable should have been copied to the child process");
@@ -105,10 +132,20 @@ namespace Octopus.Shared.Tests.Util
                 var networkCredential = user.GetCredential();
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
-                debugMessages.ToString().Should().ContainEquivalentOf(command, "the command should be logged")
+                debugMessages.ToString()
+                    .Should()
+                    .ContainEquivalentOf(command, "the command should be logged")
                     .And.ContainEquivalentOf($@"{user.DomainName}\{user.UserName}", "the custom user details should be logged")
                     .And.ContainEquivalentOf(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "the working directory should be logged");
                 infoMessages.ToString().Should().ContainEquivalentOf($@"{user.DomainName}\{user.UserName}");
@@ -128,10 +165,18 @@ namespace Octopus.Shared.Tests.Util
                 var networkCredential = user.GetCredential();
                 var customEnvironmentVariables = new Dictionary<string, string>
                 {
-                    {"customenvironmentvariable", "customvalue"}
+                    { "customenvironmentvariable", "customvalue" }
                 };
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 infoMessages.ToString().Should().ContainEquivalentOf("customvalue", "the environment variable should have been copied to the child process");
@@ -144,25 +189,35 @@ namespace Octopus.Shared.Tests.Util
         public void RunningAsDifferentUser_ShouldWorkLotsOfTimes()
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120)))
-            for (int i = 0; i < 20; i++)
             {
-                var arguments = $"{commandParam} \"echo {EchoEnvironmentVariable("customenvironmentvariable")}%\"";
-                // Target the CommonApplicationData folder since this is a place the particular user can get to
-                var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-                var networkCredential = user.GetCredential();
-                var customEnvironmentVariables = new Dictionary<string, string>
+                for (var i = 0; i < 20; i++)
                 {
-                    {"customenvironmentvariable", $"customvalue-{i}"}
-                };
+                    var arguments = $"{commandParam} \"echo {EchoEnvironmentVariable("customenvironmentvariable")}%\"";
+                    // Target the CommonApplicationData folder since this is a place the particular user can get to
+                    var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+                    var networkCredential = user.GetCredential();
+                    var customEnvironmentVariables = new Dictionary<string, string>
+                    {
+                        { "customenvironmentvariable", $"customvalue-{i}" }
+                    };
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                    var exitCode = Execute(command,
+                        arguments,
+                        workingDirectory,
+                        out var debugMessages,
+                        out var infoMessages,
+                        out var errorMessages,
+                        networkCredential,
+                        customEnvironmentVariables,
+                        cts.Token);
 
-                exitCode.Should().Be(0, "the process should have run to completion");
-                infoMessages.ToString().Should().ContainEquivalentOf($"customvalue-{i}", "the environment variable should have been copied to the child process");
-                errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
+                    exitCode.Should().Be(0, "the process should have run to completion");
+                    infoMessages.ToString().Should().ContainEquivalentOf($"customvalue-{i}", "the environment variable should have been copied to the child process");
+                    errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
+                }
             }
         }
-        
+
         [Test]
         [WindowsTest]
         public void RunningAsDifferentUser_CanWriteToItsOwnTempPath()
@@ -175,7 +230,15 @@ namespace Octopus.Shared.Tests.Util
                 var networkCredential = user.GetCredential();
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion after writing to the temp folder for the other user");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
@@ -195,7 +258,15 @@ namespace Octopus.Shared.Tests.Util
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 if (PlatformDetection.IsRunningOnWindows)
                 {
@@ -206,6 +277,7 @@ namespace Octopus.Shared.Tests.Util
                 {
                     exitCode.Should().BeOneOf(SIG_KILL, SIG_TERM, 0);
                 }
+
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
             }
         }
@@ -220,7 +292,15 @@ namespace Octopus.Shared.Tests.Util
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
@@ -238,7 +318,15 @@ namespace Octopus.Shared.Tests.Util
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 infoMessages.ToString().Should().BeEmpty("no messages should be written to stdout");
@@ -251,15 +339,22 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
-
-                var arguments = PlatformDetection.IsRunningOnWindows 
+                var arguments = PlatformDetection.IsRunningOnWindows
                     ? $"{commandParam} \"echo {EchoEnvironmentVariable("username")}\""
                     : $"{commandParam} \"whoami\"";
                 var workingDirectory = "";
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
@@ -278,7 +373,15 @@ namespace Octopus.Shared.Tests.Util
                 var networkCredential = default(NetworkCredential);
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
@@ -299,7 +402,15 @@ namespace Octopus.Shared.Tests.Util
                 var networkCredential = user.GetCredential();
                 var customEnvironmentVariables = new Dictionary<string, string>();
 
-                var exitCode = Execute(command, arguments, workingDirectory, out var debugMessages, out var infoMessages, out var errorMessages, networkCredential, customEnvironmentVariables, cts.Token);
+                var exitCode = Execute(command,
+                    arguments,
+                    workingDirectory,
+                    out var debugMessages,
+                    out var infoMessages,
+                    out var errorMessages,
+                    networkCredential,
+                    customEnvironmentVariables,
+                    cts.Token);
 
                 exitCode.Should().Be(0, "the process should have run to completion");
                 errorMessages.ToString().Should().BeEmpty("no messages should be written to stderr");
@@ -307,18 +418,16 @@ namespace Octopus.Shared.Tests.Util
             }
         }
 
-        private static string EchoEnvironmentVariable(string varName)
+        static string EchoEnvironmentVariable(string varName)
         {
             if (PlatformDetection.IsRunningOnWindows)
-            {
                 return $"%{varName}%";
-            }
 
             return $"${varName}";
         }
 
-        private static int Execute(
-            string command, 
+        static int Execute(
+            string command,
             string arguments,
             string workingDirectory,
             out StringBuilder debugMessages,

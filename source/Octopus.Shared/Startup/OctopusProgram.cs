@@ -61,14 +61,14 @@ namespace Octopus.Shared.Startup
             this.informationalVersion = informationalVersion;
             this.environmentInformation = environmentInformation;
             commonOptions = new OptionSet();
-            commonOptions.Add("nologo", "DEPRECATED: Don't print title or version information. This switch is no longer required, but we want to leave it around so automation scripts don't break.", v => { }, hide: true);
+            commonOptions.Add("nologo", "DEPRECATED: Don't print title or version information. This switch is no longer required, but we want to leave it around so automation scripts don't break.", v => { }, true);
             commonOptions.Add("noconsolelogging",
                 "DEPRECATED: Don't log informational messages to the console (stdout) - errors are still logged to stderr. This switch has been deprecated since it is no longer required. We want to leave it around so automation scripts don't break.",
                 v =>
                 {
                     DisableConsoleLogging();
                 },
-                hide: true);
+                true);
             commonOptions.Add("help", "Show detailed help for this command", v => { helpSwitchProvidedInCommandArguments = true; });
         }
 
@@ -116,9 +116,7 @@ namespace Octopus.Shared.Startup
                 // Try to load the instance here so we can log into the instance's log file as soon as possible
                 // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on when we try to load the instance for real
                 if (container.Resolve<IApplicationInstanceSelector>().CanLoadCurrentInstance())
-                {
                     WriteDiagnosticsInfoToLogFile(startupRequest);
-                }
 
                 // Now register extensions and their modules into the container
                 RegisterAdditionalModules(container);
@@ -154,7 +152,7 @@ namespace Octopus.Shared.Startup
             }
             catch (DependencyResolutionException ex) when (ex.InnerException is ControlledFailureException)
             {
-                exitCode = HandleException((ControlledFailureException)(ex.InnerException));
+                exitCode = HandleException((ControlledFailureException)ex.InnerException);
             }
             catch (ControlledFailureException ex)
             {
@@ -182,7 +180,7 @@ namespace Octopus.Shared.Startup
             return exitCode;
         }
 
-        private void RunHost(ICommandHost host)
+        void RunHost(ICommandHost host)
         {
 #if FULL_FRAMEWORK
             /*
@@ -193,7 +191,7 @@ namespace Octopus.Shared.Startup
              */
             var hr = new CtrlSignaling.HandlerRoutine(type =>
             {
-                log.Trace("Shutdown signal received: "+ type);
+                log.Trace("Shutdown signal received: " + type);
                 host.Stop(Shutdown);
                 return true;
             });
@@ -218,7 +216,7 @@ namespace Octopus.Shared.Startup
 #endif
         }
 
-        private int HandleException(Exception ex)
+        int HandleException(Exception ex)
         {
             var unpacked = ex.UnpackFromContainers();
             log.Error(new string('=', 79));
@@ -232,21 +230,17 @@ namespace Octopus.Shared.Startup
                 {
                     log.Error(new string('-', 79));
                     if (entry.HelpText != null)
-                    {
                         log.Error(entry.HelpText);
-                    }
 
                     if (entry.HelpLink != null)
-                    {
                         log.Error($"See: {entry.HelpLink}");
-                    }
                 }
             }
 
             return (int)ExitCode.GeneralException;
         }
 
-        private int HandleException(ReflectionTypeLoadException ex)
+        int HandleException(ReflectionTypeLoadException ex)
         {
             log.Fatal(ex);
 
@@ -260,22 +254,20 @@ namespace Octopus.Shared.Startup
                         continue;
 
                     if (loaderException is FileNotFoundException exFileNotFound && !string.IsNullOrEmpty(exFileNotFound.FusionLog))
-                    {
                         log.ErrorFormat("Fusion log: {0}", exFileNotFound.FusionLog);
-                    }
                 }
 
             return (int)ExitCode.ReflectionTypeLoadException;
         }
 
-        private int HandleException(SecurityException ex)
+        int HandleException(SecurityException ex)
         {
             log.Fatal(ex, "A security exception was encountered. Please try re-running the command as an Administrator from an elevated command prompt.");
             log.Fatal(ex);
             return (int)ExitCode.SecurityException;
         }
 
-        private int HandleException(ControlledFailureException ex)
+        int HandleException(ControlledFailureException ex)
         {
             log.Fatal(ex.Message);
             return (int)ExitCode.ControlledFailureException;
@@ -292,13 +284,9 @@ namespace Octopus.Shared.Startup
         {
 #if !NLOG_HAS_EVENT_LOG_TARGET
             if (PlatformDetection.IsRunningOnWindows)
-            {
                 Target.Register<EventLogTarget>("EventLog");
-            }
             else
-            {
                 Target.Register<NullLogTarget>("EventLog");
-            }
 #endif
 #if REQUIRES_EXPLICIT_LOG_CONFIG
             var nLogFile = Path.ChangeExtension(GetType().Assembly.Location, "exe.nlog");
@@ -345,9 +333,7 @@ namespace Octopus.Shared.Startup
             // Note: this matches the target name in *.nlog
             var stdoutTarget = c.FindTargetByName(StdOutTargetName);
             foreach (var rule in c.LoggingRules)
-            {
                 rule.Targets.Remove(stdoutTarget);
-            }
 
             LogManager.Configuration = c;
         }
@@ -453,7 +439,7 @@ namespace Octopus.Shared.Startup
 
             if (forceNoninteractiveHost && commandSupportsConsoleSwitch)
             {
-                log.Trace($"The --noninteractive switch was provided for a supported command");
+                log.Trace("The --noninteractive switch was provided for a supported command");
                 return new NoninteractiveHost();
             }
 
@@ -479,7 +465,7 @@ namespace Octopus.Shared.Startup
             return new ConsoleHost(displayName);
         }
 
-        private static bool IsRunningAsAWindowsService(ILog log)
+        static bool IsRunningAsAWindowsService(ILog log)
         {
             if (PlatformDetection.IsRunningOnMac || PlatformDetection.IsRunningOnNix)
                 return false;
@@ -592,7 +578,7 @@ namespace Octopus.Shared.Startup
             return first;
         }
 
-        private readonly object singleShutdownLock = new object();
+        readonly object singleShutdownLock = new object();
 
         void Shutdown()
         {
@@ -611,24 +597,7 @@ namespace Octopus.Shared.Startup
 #if USER_INTERACTIVE_DOES_NOT_WORK
         static class Kernel32
         {
-            public static uint TH32CS_SNAPPROCESS = 2;
-
-            [StructLayout(LayoutKind.Sequential)]
-            public struct PROCESSENTRY32
-            {
-                public uint dwSize;
-                public uint cntUsage;
-                public uint th32ProcessID;
-                public IntPtr th32DefaultHeapID;
-                public uint th32ModuleID;
-                public uint cntThreads;
-                public uint th32ParentProcessID;
-                public int pcPriClassBase;
-                public uint dwFlags;
-
-                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
-                public string szExeFile;
-            };
+            public static readonly uint TH32CS_SNAPPROCESS = 2;
 
             [DllImport("kernel32.dll", SetLastError = true)]
             public static extern IntPtr CreateToolhelp32Snapshot(uint dwFlags, uint th32ProcessID);
@@ -638,27 +607,44 @@ namespace Octopus.Shared.Startup
 
             [DllImport("kernel32.dll")]
             public static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+
+            [StructLayout(LayoutKind.Sequential)]
+            public struct PROCESSENTRY32
+            {
+                public uint dwSize;
+                public readonly uint cntUsage;
+                public readonly uint th32ProcessID;
+                public readonly IntPtr th32DefaultHeapID;
+                public readonly uint th32ModuleID;
+                public readonly uint cntThreads;
+                public readonly uint th32ParentProcessID;
+                public readonly int pcPriClassBase;
+                public readonly uint dwFlags;
+
+                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+                public readonly string szExeFile;
+            }
         }
 #endif
 #pragma warning restore PC003 // Native API not available in UWP
 
 #if FULL_FRAMEWORK
-    public static class CtrlSignaling
-    {
-        [DllImport("Kernel32.dll")]
-        public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
-
-        public delegate bool HandlerRoutine(CtrlTypes CtrlType);
-
-        public enum CtrlTypes
+        public static class CtrlSignaling
         {
-            CTRL_C_EVENT = 0,
-            CTRL_BREAK_EVENT = 1,
-            CTRL_CLOSE_EVENT = 2,
-            CTRL_LOGOFF_EVENT = 5,
-            CTRL_SHUTDOWN_EVENT = 6
+            public delegate bool HandlerRoutine(CtrlTypes CtrlType);
+
+            public enum CtrlTypes
+            {
+                CTRL_C_EVENT = 0,
+                CTRL_BREAK_EVENT = 1,
+                CTRL_CLOSE_EVENT = 2,
+                CTRL_LOGOFF_EVENT = 5,
+                CTRL_SHUTDOWN_EVENT = 6
+            }
+
+            [DllImport("Kernel32.dll")]
+            public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
         }
-    }
 #endif
     }
 }

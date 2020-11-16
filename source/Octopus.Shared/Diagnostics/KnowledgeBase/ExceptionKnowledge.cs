@@ -13,7 +13,9 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             this.tryMatch = tryMatch;
         }
 
-        public bool TryMatch(Exception exception, [NotNullWhen(true)] out ExceptionKnowledgeBaseEntry? entry)
+        public bool TryMatch(Exception exception,
+            [NotNullWhen(true)]
+            out ExceptionKnowledgeBaseEntry? entry)
         {
             var m = tryMatch(exception);
             if (m == null)

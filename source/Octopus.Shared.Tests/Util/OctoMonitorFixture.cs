@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using FluentAssertions;
 using NUnit.Framework;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Tests.Support;
 using Octopus.Shared.Util;
 
@@ -25,8 +26,8 @@ namespace Octopus.Shared.Tests.Util
         [TearDown]
         public void TearDown()
         {
-            OctoMonitor.Log = global::Octopus.Shared.Diagnostics.Log.Octopus();
-            OctoMonitor.SystemLog = global::Octopus.Shared.Diagnostics.Log.System();
+            OctoMonitor.Log = Log.Octopus();
+            OctoMonitor.SystemLog = Log.System();
             OctoMonitor.InitialAcquisitionAttemptTimeout = OctoMonitor.DefaultInitialAcquisitionAttemptTimeout;
             OctoMonitor.WaitBetweenAcquisitionAttempts = OctoMonitor.DefaultWaitBetweenAcquisitionAttempts;
         }
@@ -52,6 +53,7 @@ namespace Octopus.Shared.Tests.Util
                 {
                     letMeIn.Should().NotBeNull();
                 }
+
                 using (var letMeInAgain = OctoMonitor.Enter(this, "waiting", cts.Token))
                 {
                     letMeInAgain.Should().NotBeNull();

@@ -25,7 +25,7 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var value = settings.Get<string?>(OctopusHomeSettingName, null);
+                var value = settings.Get<string?>(OctopusHomeSettingName);
                 if (value != null && !Path.IsPathRooted(value))
                     value = PathHelper.ResolveRelativeDirectoryPath(value);
                 return value;
@@ -36,7 +36,7 @@ namespace Octopus.Shared.Configuration
         {
             get
             {
-                var value = settings.Get<string?>(OctopusNodeCacheSettingName, null);
+                var value = settings.Get<string?>(OctopusNodeCacheSettingName);
                 if (value == null)
                     return ApplicationSpecificHomeDirectory;
 
@@ -58,13 +58,9 @@ namespace Octopus.Shared.Configuration
         }
 
         public bool SetHomeDirectory(string? homeDirectory)
-        {
-            return settings.Set(OctopusHomeSettingName, homeDirectory);
-        }
+            => settings.Set(OctopusHomeSettingName, homeDirectory);
 
         public bool SetCacheDirectory(string? cacheDirectory)
-        {
-            return settings.Set(OctopusNodeCacheSettingName, cacheDirectory);
-        }
+            => settings.Set(OctopusNodeCacheSettingName, cacheDirectory);
     }
 }

@@ -11,31 +11,27 @@ namespace Octopus.Shared.Configuration
 {
     public class XmlConsoleKeyValueStore : FlatDictionaryKeyValueStore
     {
-        private readonly Action<string> writer;
+        readonly Action<string> writer;
 
-        public XmlConsoleKeyValueStore() 
+        public XmlConsoleKeyValueStore()
             : this(Console.WriteLine)
         {
         }
 
         public XmlConsoleKeyValueStore(Action<string> writer)
-            : base(JsonSerialization.GetDefaultSerializerSettings(), autoSaveOnSet:false, isWriteOnly:true)
+            : base(JsonSerialization.GetDefaultSerializerSettings(), false, true)
         {
             this.writer = writer;
         }
 
         public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None)
-        {
-            throw new NotSupportedException($"This store is a write-only store, because it is only intended for displaying formatted content to the console. Please use {nameof(XmlFileKeyValueStore)} if you need a readable store.");
-        }
-        
+            => throw new NotSupportedException($"This store is a write-only store, because it is only intended for displaying formatted content to the console. Please use {nameof(XmlFileKeyValueStore)} if you need a readable store.");
+
         protected override void SaveSettings(IDictionary<string, object?> settingsToSave)
         {
             var settings = new XmlSettingsRoot();
             foreach (var key in settingsToSave.Keys.OrderBy(k => k))
-            {
                 settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key]?.ToString() });
-            }
 
             var serializer = new XmlSerializer(typeof(XmlSettingsRoot));
             using (var stream = new MemoryStream())

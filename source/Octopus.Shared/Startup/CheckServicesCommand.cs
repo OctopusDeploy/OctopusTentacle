@@ -12,9 +12,9 @@ namespace Octopus.Shared.Startup
     public class CheckServicesCommand : AbstractCommand
     {
         readonly ILog log;
-        HashSet<string>? instances;
         readonly IApplicationInstanceLocator instanceLocator;
         readonly ApplicationName applicationName;
+        HashSet<string>? instances;
 
         public CheckServicesCommand(ILog log,
             IApplicationInstanceLocator instanceLocator,
@@ -24,10 +24,12 @@ namespace Octopus.Shared.Startup
             this.instanceLocator = instanceLocator;
             this.applicationName = applicationName;
 
-            Options.Add("instances=", "Comma-separated list of instances to check, or * to check all instances", v =>
-            {
-                instances = new HashSet<string>(v.Split(',', ';'));
-            });
+            Options.Add("instances=",
+                "Comma-separated list of instances to check, or * to check all instances",
+                v =>
+                {
+                    instances = new HashSet<string>(v.Split(',', ';'));
+                });
         }
 
         protected override void Start()
@@ -51,7 +53,6 @@ namespace Octopus.Shared.Startup
                     if (controller != null &&
                         controller.Status != ServiceControllerStatus.Running &&
                         controller.Status != ServiceControllerStatus.StartPending)
-                    {
                         try
                         {
                             controller.Start();
@@ -75,7 +76,6 @@ namespace Octopus.Shared.Startup
                         {
                             log.Error($"Service {serviceName} could not be started - {ex}");
                         }
-                    }
                 }
             }
             finally

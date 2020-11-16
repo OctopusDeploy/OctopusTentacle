@@ -17,7 +17,11 @@ namespace Octopus.Shared.Scripts
         readonly string taskId;
         readonly CancellationToken token;
 
-        public RunningScript(IShell shell, IScriptWorkspace workspace, IScriptLog log, string taskId, CancellationToken token)
+        public RunningScript(IShell shell,
+            IScriptWorkspace workspace,
+            IScriptLog log,
+            string taskId,
+            CancellationToken token)
         {
             this.shell = shell;
             this.workspace = workspace;
@@ -42,8 +46,15 @@ namespace Octopus.Shared.Scripts
                 {
                     try
                     {
-                        using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel, workspace.ScriptMutexAcquireTimeout, GetType().Name, message => writer.WriteOutput(ProcessOutputSource.StdOut, message), taskId, token))
+                        using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
+                            workspace.ScriptMutexAcquireTimeout,
+                            GetType().Name,
+                            message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
+                            taskId,
+                            token))
+                        {
                             RunScript(shellPath, writer);
+                        }
                     }
                     catch (OperationCanceledException)
                     {
@@ -67,7 +78,7 @@ namespace Octopus.Shared.Scripts
             }
         }
 
-        private void RunScript(string shellPath, IScriptLogWriter writer)
+        void RunScript(string shellPath, IScriptLogWriter writer)
         {
             try
             {

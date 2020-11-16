@@ -40,8 +40,6 @@ namespace Octopus.Shared.Diagnostics
         public void Fatal(Exception error) => Add(l => l.Fatal(error));
         public void Fatal(Exception error, string messageText) => Add(l => l.Fatal(error, messageText));
 
-
-
         public void Write(LogCategory category, string messageText) => Add(l => l.Write(category, messageText));
 
         public void Write(LogCategory category, Exception error) => Add(l => l.Write(category, error));
@@ -67,10 +65,8 @@ namespace Octopus.Shared.Diagnostics
         public void ErrorFormat(string messageFormat, params object[] args) => Add(l => l.ErrorFormat(messageFormat, args));
         public void ErrorFormat(Exception error, string format, params object[] args) => Add(l => l.ErrorFormat(error, format, args));
 
-
         public void FatalFormat(string messageFormat, params object[] args) => Add(l => l.FatalFormat(messageFormat, args));
         public void FatalFormat(Exception error, string format, params object[] args) => Add(l => l.FatalFormat(error, format, args));
-
 
         public void Flush() => Add(l => l.Flush());
     }

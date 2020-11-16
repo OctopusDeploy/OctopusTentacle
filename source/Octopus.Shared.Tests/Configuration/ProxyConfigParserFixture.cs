@@ -16,12 +16,17 @@ namespace Octopus.Shared.Tests.Configuration
         {
             var log = new InMemoryLog();
             var parser = new ProxyConfigParser();
-            var config = new StubProxyConfiguration(true, null, null, null, 0);
+            var config = new StubProxyConfiguration(true,
+                null,
+                null,
+                null,
+                0);
             var result = parser.ParseToHalibutProxy(config, new Uri(Destination), log);
 #if DEFAULT_PROXY_IS_NOT_AVAILABLE
             result.Should().BeNull();
 #else
-            log.GetLog().Should()
+            log.GetLog()
+                .Should()
                 .Contain(string.Format(ProxyConfigParser.ProxyNotConfiguredForDestination, Destination));
 #endif
         }
@@ -31,14 +36,22 @@ namespace Octopus.Shared.Tests.Configuration
         public void ShouldParseToHalibutProxyOnLinux()
         {
             var parser = new ProxyConfigParser();
-            var config = new StubProxyConfiguration(true, null, null, null, 0);
+            var config = new StubProxyConfiguration(true,
+                null,
+                null,
+                null,
+                0);
             var result = parser.ParseToHalibutProxy(config, new Uri("https://localhost"), new InMemoryLog());
             result.Should().BeNull();
         }
 
         class StubProxyConfiguration : IProxyConfiguration
         {
-            public StubProxyConfiguration(bool useDefaultProxy, string customProxyUsername, string customProxyPassword, string customProxyHost, int customProxyPort)
+            public StubProxyConfiguration(bool useDefaultProxy,
+                string customProxyUsername,
+                string customProxyPassword,
+                string customProxyHost,
+                int customProxyPort)
             {
                 UseDefaultProxy = useDefaultProxy;
                 CustomProxyUsername = customProxyUsername;
@@ -47,11 +60,11 @@ namespace Octopus.Shared.Tests.Configuration
                 CustomProxyPort = customProxyPort;
             }
 
-            public bool UseDefaultProxy { get; set; }
-            public string CustomProxyUsername { get; set; }
-            public string CustomProxyPassword { get; set; }
-            public string CustomProxyHost { get; set; }
-            public int CustomProxyPort { get; set; }
+            public bool UseDefaultProxy { get; }
+            public string CustomProxyUsername { get; }
+            public string CustomProxyPassword { get; }
+            public string CustomProxyHost { get; }
+            public int CustomProxyPort { get; }
         }
     }
 }

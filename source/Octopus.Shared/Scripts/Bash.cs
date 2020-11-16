@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 
 namespace Octopus.Shared.Scripts
@@ -5,14 +6,10 @@ namespace Octopus.Shared.Scripts
     public class Bash : IShell
     {
         public string GetFullPath()
-        {
-            return GetFullBashPath();
-        }
+            => GetFullBashPath();
 
         public static string GetFullBashPath()
-        {
-            return "/bin/bash";
-        }
+            => "/bin/bash";
 
         public string FormatCommandArguments(string bootstrapFile, string[]? scriptArguments, bool allowInteractive)
         {

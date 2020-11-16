@@ -21,11 +21,22 @@ namespace Octopus.Shared.Scripts
 
         public static readonly TimeSpan NoTimeout = TimeSpan.FromMilliseconds(int.MaxValue);
 
-        public static IDisposable Acquire(ScriptIsolationLevel isolation, TimeSpan mutexAcquireTimeout, string lockName, Action<string> taskLog, string taskId, CancellationToken token)
+        public static IDisposable Acquire(ScriptIsolationLevel isolation,
+            TimeSpan mutexAcquireTimeout,
+            string lockName,
+            Action<string> taskLog,
+            string taskId,
+            CancellationToken token)
         {
             var taskLock = ReaderWriterLocks.GetOrAdd(lockName, _ => new TaskLock());
 
-            return new ScriptIsolationMutexReleaser(isolation, taskLog, taskLock, token, mutexAcquireTimeout, lockName, taskId).EnterLock();
+            return new ScriptIsolationMutexReleaser(isolation,
+                taskLog,
+                taskLock,
+                token,
+                mutexAcquireTimeout,
+                lockName,
+                taskId).EnterLock();
         }
 
         class ScriptIsolationMutexReleaser : IDisposable
@@ -41,7 +52,13 @@ namespace Octopus.Shared.Scripts
             readonly string lockType;
             IDisposable? lockReleaser;
 
-            public ScriptIsolationMutexReleaser(ScriptIsolationLevel isolationLevel, Action<string> taskLog, TaskLock taskLock, CancellationToken cancellationToken, TimeSpan mutexAcquireTimeout, string lockName, string taskId)
+            public ScriptIsolationMutexReleaser(ScriptIsolationLevel isolationLevel,
+                Action<string> taskLog,
+                TaskLock taskLock,
+                CancellationToken cancellationToken,
+                TimeSpan mutexAcquireTimeout,
+                string lockName,
+                string taskId)
             {
                 systemLog = Log.System();
 
@@ -238,34 +255,26 @@ namespace Octopus.Shared.Scripts
                     var ids = readersTaskIds.Keys.ToArray();
 
                     if (ids.Length == 0)
-                    {
                         return "no locks";
-                    }
 
-                    var readerTaskIds = String.Join(", ", ids);
+                    var readerTaskIds = string.Join(", ", ids);
 
                     result = $"\"{readerTaskIds}\"";
 
                     if (ids.Length > 1)
-                    {
                         result += " (have read locks)";
-                    }
                     else
-                    {
                         result += " (has a read lock)";
-                    }
                 }
 
                 return result;
             }
 
-            private (string message, bool multiple, bool thisTaskAlreadyHasLock) ListTasksWithMarkdownLinks(string taskId)
+            (string message, bool multiple, bool thisTaskAlreadyHasLock) ListTasksWithMarkdownLinks(string taskId)
             {
                 var localWriterTaskId = writerTaskId; // This could change during the execution of the method
                 if (localWriterTaskId != null)
-                {
                     return ($"[{localWriterTaskId}](~/app#/tasks/{localWriterTaskId})", false, localWriterTaskId == taskId);
-                }
 
                 var ids = readersTaskIds.Keys.OrderBy(x => x).ToArray();
 

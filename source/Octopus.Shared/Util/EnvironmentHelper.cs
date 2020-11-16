@@ -10,6 +10,9 @@ namespace Octopus.Shared.Util
 {
     public static class EnvironmentHelper
     {
+#pragma warning disable PC001 // API not supported on all platforms
+        static string CurrentUserName => PlatformDetection.IsRunningOnWindows ? WindowsIdentity.GetCurrent().Name : Environment.UserName;
+#pragma warning restore PC001 // API not supported on all platforms
         public static string[] SafelyGetEnvironmentInformation()
         {
             var envVars = GetEnvironmentVars()
@@ -29,10 +32,6 @@ namespace Octopus.Shared.Util
                 return "Unable to retrieve environment information.";
             }
         }
-
-#pragma warning disable PC001 // API not supported on all platforms
-        static string CurrentUserName => PlatformDetection.IsRunningOnWindows ? WindowsIdentity.GetCurrent().Name : Environment.UserName;
-#pragma warning restore PC001 // API not supported on all platforms
 
         static IEnumerable<string> GetEnvironmentVars()
         {

@@ -42,14 +42,10 @@ namespace Octopus.Shared.Util
             {
                 values[index] = value;
                 if (index < keys.Length - 1)
-                {
                     foreach (var array in Permutations(keys, index + 1, selector, values))
                         yield return array;
-                }
                 else
-                {
                     yield return values.ToArray(); // Clone the array;
-                }
             }
         }
 
@@ -61,9 +57,7 @@ namespace Octopus.Shared.Util
         }
 
         public static bool IsNullOrEmpty<T>(this IEnumerable<T> source)
-        {
-            return source == null || !source.Any();
-        }
+            => source == null || !source.Any();
 
         public static bool None<T>(this IEnumerable<T> items) => !items.Any();
 
@@ -71,7 +65,7 @@ namespace Octopus.Shared.Util
 
         public static IEnumerable<T> TakeUntilIncluding<T>(this IEnumerable<T> list, Func<T, bool> predicate)
         {
-            foreach (T el in list)
+            foreach (var el in list)
             {
                 yield return el;
                 if (predicate(el))
@@ -96,5 +90,10 @@ namespace Octopus.Shared.Util
                 return result;
             }
         }
+
+        // TODO: move this to CoreUtils
+        public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> items)
+            where T : class
+            => items.Where(i => i != null)!;
     }
 }

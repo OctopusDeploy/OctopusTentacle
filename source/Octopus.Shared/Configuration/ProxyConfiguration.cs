@@ -36,28 +36,18 @@ namespace Octopus.Shared.Configuration
         }
 
         public bool SetUseDefaultProxy(bool useDefaultProxy)
-        {
-            return settings.Set(ProxyUseDefaultSettingName, useDefaultProxy);
-        }
+            => settings.Set(ProxyUseDefaultSettingName, useDefaultProxy);
 
         public bool SetCustomProxyUsername(string? username)
-        {
-            return settings.Set(ProxyUsernameSettingName, username);
-        }
+            => settings.Set(ProxyUsernameSettingName, username);
 
         public bool SetCustomProxyPassword(string? password)
-        {
-            return settings.Set(ProxyPasswordSettingName, password, protectionLevel: ProtectionLevel.MachineKey);
-        }
+            => settings.Set(ProxyPasswordSettingName, password, ProtectionLevel.MachineKey);
 
         public bool SetCustomProxyHost(string? host)
-        {
-            return settings.Set(ProxyHostSettingName, host);
-        }
+            => settings.Set(ProxyHostSettingName, host);
 
         public bool SetCustomProxyPort(int port)
-        {
-            return settings.Set(ProxyPortSettingName, port);
-        }
+            => settings.Set(ProxyPortSettingName, port);
     }
 }

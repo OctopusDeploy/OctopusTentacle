@@ -26,8 +26,6 @@ namespace Octopus.Shared.Security.Masking
         }
 
         public override string ToString()
-        {
-            return originalException ?? string.Empty;
-        }
+            => originalException ?? string.Empty;
     }
 }

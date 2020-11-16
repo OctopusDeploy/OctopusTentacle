@@ -13,10 +13,6 @@ namespace Octopus.Shared.Security.Masking
         readonly Queue<DeferredAction> deferred = new Queue<DeferredAction>();
         string? lastSearchPath;
 
-        public SensitiveDataMask()
-        {
-        }
-
         /// <summary>
         /// Masks instances of sensitive values and invokes the supplied action with the sanitized string.
         /// The reason this is implemented as a callback rather than directly returning the sanitized value is
@@ -73,9 +69,7 @@ namespace Octopus.Shared.Security.Masking
             {
                 // If we are not at the start of the masked section, then progress to it
                 while (i < maskedSection.Item1)
-                {
                     builder.Append(raw[i++]);
-                }
 
                 // Apply the mask
                 builder.Append(Mask);
@@ -84,9 +78,7 @@ namespace Octopus.Shared.Security.Masking
 
             // Write any remaining raw text
             while (i < raw.Length)
-            {
                 builder.Append(raw[i++]);
-            }
 
             action(builder.ToString());
         }
@@ -109,9 +101,7 @@ namespace Octopus.Shared.Security.Masking
             builder.EnsureCapacity(deferred.Sum(x => x.Text.Length));
 
             foreach (var text in deferred.Select(x => x.Text))
-            {
                 builder.Append(text);
-            }
 
             var matches = trie.Find(builder.ToString());
             var maskedSections = new Queue<Tuple<int, int>>(GetMaskedSections(matches.Found));
@@ -196,7 +186,9 @@ namespace Octopus.Shared.Security.Masking
         public void Flush(AhoCorasick trie)
         {
             lock (sync)
+            {
                 ProcessDeferred(trie);
+            }
         }
 
         class DeferredAction

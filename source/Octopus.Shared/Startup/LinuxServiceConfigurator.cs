@@ -19,7 +19,11 @@ namespace Octopus.Shared.Startup
             systemCtlHelper = new SystemCtlHelper(log);
         }
 
-        public void ConfigureService(string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
+        public void ConfigureService(string thisServiceName,
+            string exePath,
+            string instance,
+            string serviceDescription,
+            ServiceConfigurationState serviceConfigurationState)
         {
             //Check if system has bash and systemd
             CheckSystemPrerequisites();
@@ -28,83 +32,65 @@ namespace Octopus.Shared.Startup
             var systemdUnitFilePath = $"/etc/systemd/system/{cleanedInstanceName}.service";
 
             if (serviceConfigurationState.Restart)
-            {
                 RestartService(cleanedInstanceName);
-            }
 
             if (serviceConfigurationState.Stop)
-            {
                 StopService(cleanedInstanceName);
-            }
 
             if (serviceConfigurationState.Uninstall)
-            {
                 UninstallService(cleanedInstanceName, systemdUnitFilePath);
-            }
 
             var serviceDependencies = new List<string>();
             serviceDependencies.AddRange(new[] { "network.target" });
 
             if (!string.IsNullOrWhiteSpace(serviceConfigurationState.DependOn))
-            {
                 serviceDependencies.Add(serviceConfigurationState.DependOn);
-            }
 
             if (serviceConfigurationState.Install)
-            {
-                InstallService(cleanedInstanceName, exePath, serviceDescription, systemdUnitFilePath, serviceDependencies);
-            }
+                InstallService(cleanedInstanceName,
+                    exePath,
+                    serviceDescription,
+                    systemdUnitFilePath,
+                    serviceDependencies);
 
             if (serviceConfigurationState.Reconfigure)
-            {
-                ReconfigureService(cleanedInstanceName, exePath, serviceDescription, systemdUnitFilePath, serviceDependencies);
-            }
+                ReconfigureService(cleanedInstanceName,
+                    exePath,
+                    serviceDescription,
+                    systemdUnitFilePath,
+                    serviceDependencies);
 
             if (serviceConfigurationState.Start)
-            {
                 StartService(cleanedInstanceName);
-            }
         }
 
-        private void RestartService(string instance)
+        void RestartService(string instance)
         {
             log.Info($"Restarting service: {instance}");
             if (systemCtlHelper.RestartService(instance))
-            {
                 log.Info("Service has been restarted");
-            }
             else
-            {
                 log.Error("The service could not be restarted");
-            }
         }
 
-        private void StopService(string instance)
+        void StopService(string instance)
         {
             log.Info($"Stopping service: {instance}");
             if (systemCtlHelper.StopService(instance))
-            {
                 log.Info("Service stopped");
-            }
             else
-            {
                 log.Error("The service could not be stopped");
-            }
         }
 
-        private void StartService(string instance)
+        void StartService(string instance)
         {
             if (systemCtlHelper.StartService(instance, true))
-            {
                 log.Info($"Service started: {instance}");
-            }
             else
-            {
                 log.Error($"Could not start the systemd service: {instance}");
-            }
         }
 
-        private void UninstallService(string instance, string systemdUnitFilePath)
+        void UninstallService(string instance, string systemdUnitFilePath)
         {
             log.Info($"Removing systemd service: {instance}");
             try
@@ -121,7 +107,11 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        private void InstallService(string instance, string exePath, string serviceDescription, string systemdUnitFilePath, IEnumerable<string> serviceDependencies)
+        void InstallService(string instance,
+            string exePath,
+            string serviceDescription,
+            string systemdUnitFilePath,
+            IEnumerable<string> serviceDependencies)
         {
             try
             {
@@ -136,7 +126,11 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        private void ReconfigureService(string instance, string exePath, string serviceDescription, string systemdUnitFilePath, IEnumerable<string> serviceDependencies)
+        void ReconfigureService(string instance,
+            string exePath,
+            string serviceDescription,
+            string systemdUnitFilePath,
+            IEnumerable<string> serviceDependencies)
         {
             try
             {
@@ -158,7 +152,7 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        private void WriteUnitFile(string path, string contents)
+        void WriteUnitFile(string path, string contents)
         {
             File.WriteAllText(path, contents);
 
@@ -170,42 +164,36 @@ namespace Octopus.Shared.Startup
             result.Validate();
         }
 
-        private void CheckSystemPrerequisites()
+        void CheckSystemPrerequisites()
         {
             if (!File.Exists("/bin/bash"))
-            {
                 throw new ControlledFailureException(
-                    $"Could not detect bash. bash is required to run tentacle.");
-            }
+                    "Could not detect bash. bash is required to run tentacle.");
 
             if (!HaveSudoPrivileges())
-            {
                 throw new ControlledFailureException(
-                    $"Requires elevated privileges. Please run command as sudo.");
-            }
+                    "Requires elevated privileges. Please run command as sudo.");
 
             if (!IsSystemdInstalled())
-            {
                 throw new ControlledFailureException(
-                    $"Could not detect systemd. systemd is required to run Tentacle as a service");
-            }
+                    "Could not detect systemd. systemd is required to run Tentacle as a service");
         }
 
-        private bool IsSystemdInstalled()
+        bool IsSystemdInstalled()
         {
-            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"command -v systemctl >/dev/null\"");
+            var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"command -v systemctl >/dev/null\"");
             var result = commandLineInvocation.ExecuteCommand();
             return result.ExitCode == 0;
         }
 
-        private bool HaveSudoPrivileges()
+        bool HaveSudoPrivileges()
         {
-            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"sudo -vn 2> /dev/null\"");
+            var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"sudo -vn 2> /dev/null\"");
             var result = commandLineInvocation.ExecuteCommand();
             return result.ExitCode == 0;
         }
 
-        private string GenerateSystemdUnitFile(string instance, string serviceDescription, string exePath, IEnumerable<string> serviceDependencies)
+        string GenerateSystemdUnitFile(string instance, string serviceDescription, string exePath, IEnumerable<string> serviceDependencies)
         {
             var stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("[Unit]");
@@ -224,9 +212,7 @@ namespace Octopus.Shared.Startup
             return stringBuilder.ToString();
         }
 
-        private static string SanitizeString(string str)
-        {
-            return Regex.Replace(str.Replace("/", ""), @"\s+", "-");
-        }
+        static string SanitizeString(string str)
+            => Regex.Replace(str.Replace("/", ""), @"\s+", "-");
     }
 }

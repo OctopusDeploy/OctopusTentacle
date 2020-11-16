@@ -42,7 +42,11 @@ namespace Octopus.Shared.Tests
 
             try
             {
-                configureServiceHelper.ConfigureService(serviceName, exePath, instance, serviceDescription, serviceConfigurationState);
+                configureServiceHelper.ConfigureService(serviceName,
+                    exePath,
+                    instance,
+                    serviceDescription,
+                    serviceConfigurationState);
 
                 using (var installedService = GetInstalledService(serviceName))
                 {
@@ -78,7 +82,11 @@ namespace Octopus.Shared.Tests
             };
             var configureServiceHelper = new WindowsServiceConfigurator(new InMemoryLog(), Substitute.For<ILogFileOnlyLogger>());
 
-            var ex = Assert.Throws<ControlledFailureException>(() => configureServiceHelper.ConfigureService(serviceName, exePath, instance, serviceDescription, serviceConfigurationState));
+            var ex = Assert.Throws<ControlledFailureException>(() => configureServiceHelper.ConfigureService(serviceName,
+                exePath,
+                instance,
+                serviceDescription,
+                serviceConfigurationState));
             ex.Message.Should().Be("Unable to set dependency on service 'ServiceThatDoesNotExist' as no service was found with that name.");
         }
 

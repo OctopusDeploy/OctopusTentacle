@@ -7,14 +7,10 @@ namespace Octopus.Shared.Configuration.Instances
     public class NullRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
         public ApplicationInstanceRecord? GetInstanceFromRegistry(string instanceName)
-        {
-            return null;
-        }
+            => null;
 
         public IEnumerable<ApplicationInstanceRecord> GetListFromRegistry()
-        {
-            return Enumerable.Empty<ApplicationInstanceRecord>();
-        }
+            => Enumerable.Empty<ApplicationInstanceRecord>();
 
         public void DeleteFromRegistry(string instanceName)
         {

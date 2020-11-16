@@ -8,31 +8,23 @@ namespace Octopus.Shared.Diagnostics.Formatters
     {
         [return: NotNullIfNotNull("formatType")]
         public object? GetFormat(Type? formatType)
-        {
-            return formatType == typeof(ICustomFormatter) ? this : null;
-        }
+            => formatType == typeof(ICustomFormatter) ? this : null;
 
 #pragma warning disable 8766 // Though the signature says not to return null, if an empty string is returned it changes the behaviour
         public string? Format(string? format, object? arg, IFormatProvider? formatProvider)
 #pragma warning restore 8766
         {
             if (!(arg is int) || string.IsNullOrWhiteSpace(format))
-            {
                 return null;
-            }
 
             var formatParts = format.Split(':');
             if (formatParts.Length != 2)
-            {
                 return null;
-            }
 
             if (!string.Equals(formatParts[0], "p", StringComparison.OrdinalIgnoreCase))
-            {
                 return null;
-            }
 
-            var count = (int) arg;
+            var count = (int)arg;
             return formatParts[1].Plural(count);
         }
     }

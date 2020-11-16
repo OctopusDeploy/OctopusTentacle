@@ -5,7 +5,7 @@ namespace Octopus.Shared.Util
 {
     public class FileInfoAdapter : IFileInfo
     {
-        private readonly FileInfo info;
+        readonly FileInfo info;
 
         public FileInfoAdapter(FileInfo info)
         {

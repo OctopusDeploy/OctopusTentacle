@@ -1,13 +1,15 @@
-#if HAS_SYSTEM_IDENTITYMODEL_TOKENS
-using System.IdentityModel.Tokens;
-#else
-using SecurityTokenValidationException = System.Exception;
-#endif
+using System;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
+#if HAS_SYSTEM_IDENTITYMODEL_TOKENS
+using System.IdentityModel.Tokens;
+
+#else
+using SecurityTokenValidationException = System.Exception;
+#endif
 
 namespace Octopus.Shared.Tests.Integration
 {
@@ -21,7 +23,7 @@ namespace Octopus.Shared.Tests.Integration
         {
             var expected = generator.GenerateNew("CN=expected", new NullLog());
 
-            var validator = new CertificateValidator(() => new[] {expected.Thumbprint}, CertificateValidationDirection.TheyCalledUs, Substitute.For<ILog>());
+            var validator = new CertificateValidator(() => new[] { expected.Thumbprint }, CertificateValidationDirection.TheyCalledUs, Substitute.For<ILog>());
 
             validator.Validate(expected);
         }
@@ -33,11 +35,11 @@ namespace Octopus.Shared.Tests.Integration
             var expected = generator.GenerateNew("CN=expected", new NullLog());
             var evil = generator.GenerateNew("CN=evil", new NullLog());
 
-            var validator1 = new CertificateValidator(() => new[] {expected.Thumbprint}, CertificateValidationDirection.TheyCalledUs, Substitute.For<ILog>());
+            var validator1 = new CertificateValidator(() => new[] { expected.Thumbprint }, CertificateValidationDirection.TheyCalledUs, Substitute.For<ILog>());
 
             Assert.Throws<SecurityTokenValidationException>(() => validator1.Validate(evil));
 
-            var validator2 = new CertificateValidator(() => new[] {expected.Thumbprint}, CertificateValidationDirection.WeCalledThem, Substitute.For<ILog>());
+            var validator2 = new CertificateValidator(() => new[] { expected.Thumbprint }, CertificateValidationDirection.WeCalledThem, Substitute.For<ILog>());
 
             Assert.Throws<SecurityTokenValidationException>(() => validator2.Validate(evil));
         }

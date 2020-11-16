@@ -18,35 +18,25 @@ namespace Octopus.Shared.Internals.Options
         #region IEnumerable
 
         IEnumerator IEnumerable.GetEnumerator()
-        {
-            return values.GetEnumerator();
-        }
+            => values.GetEnumerator();
 
         #endregion
 
         #region IEnumerable<T>
 
         public IEnumerator<string> GetEnumerator()
-        {
-            return values.GetEnumerator();
-        }
+            => values.GetEnumerator();
 
         #endregion
 
         public List<string?> ToList()
-        {
-            return new List<string?>(values);
-        }
+            => new List<string?>(values);
 
         public string?[] ToArray()
-        {
-            return values.ToArray();
-        }
+            => values.ToArray();
 
         public override string ToString()
-        {
-            return string.Join(", ", values.ToArray());
-        }
+            => string.Join(", ", values.ToArray());
 
         #region ICollection
 
@@ -55,15 +45,9 @@ namespace Octopus.Shared.Internals.Options
             (values as ICollection).CopyTo(array, index);
         }
 
-        bool ICollection.IsSynchronized
-        {
-            get { return (values as ICollection).IsSynchronized; }
-        }
+        bool ICollection.IsSynchronized => (values as ICollection).IsSynchronized;
 
-        object ICollection.SyncRoot
-        {
-            get { return (values as ICollection).SyncRoot; }
-        }
+        object ICollection.SyncRoot => (values as ICollection).SyncRoot;
 
         #endregion
 
@@ -80,9 +64,7 @@ namespace Octopus.Shared.Internals.Options
         }
 
         public bool Contains(string? item)
-        {
-            return values.Contains(item);
-        }
+            => values.Contains(item);
 
         public void CopyTo(string?[] array, int arrayIndex)
         {
@@ -90,38 +72,24 @@ namespace Octopus.Shared.Internals.Options
         }
 
         public bool Remove(string? item)
-        {
-            return values.Remove(item);
-        }
+            => values.Remove(item);
 
-        public int Count
-        {
-            get { return values.Count; }
-        }
+        public int Count => values.Count;
 
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        public bool IsReadOnly => false;
 
         #endregion
 
         #region IList
 
         int IList.Add(object? value)
-        {
-            return (values as IList).Add(value);
-        }
+            => (values as IList).Add(value);
 
         bool IList.Contains(object? value)
-        {
-            return (values as IList).Contains(value);
-        }
+            => (values as IList).Contains(value);
 
         int IList.IndexOf(object? value)
-        {
-            return (values as IList).IndexOf(value);
-        }
+            => (values as IList).IndexOf(value);
 
         void IList.Insert(int index, object? value)
         {
@@ -138,15 +106,12 @@ namespace Octopus.Shared.Internals.Options
             (values as IList).RemoveAt(index);
         }
 
-        bool IList.IsFixedSize
-        {
-            get { return false; }
-        }
+        bool IList.IsFixedSize => false;
 
         object? IList.this[int index]
         {
-            get { return this[index]; }
-            set { (values as IList)[index] = value; }
+            get => this[index];
+            set => (values as IList)[index] = value;
         }
 
         #endregion
@@ -154,9 +119,7 @@ namespace Octopus.Shared.Internals.Options
         #region IList<T>
 
         public int IndexOf(string? item)
-        {
-            return values.IndexOf(item);
-        }
+            => values.IndexOf(item);
 
         public void Insert(int index, string? item)
         {
@@ -177,7 +140,8 @@ namespace Octopus.Shared.Internals.Options
             if (c.Option.OptionValueType == OptionValueType.Required &&
                 index >= values.Count)
                 throw new OptionException(string.Format(
-                    c.OptionSet.MessageLocalizer("Missing required value for option '{0}'."), c.OptionName),
+                        c.OptionSet.MessageLocalizer("Missing required value for option '{0}'."),
+                        c.OptionName),
                     c.OptionName);
         }
 

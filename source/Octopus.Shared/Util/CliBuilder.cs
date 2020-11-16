@@ -19,24 +19,16 @@ namespace Octopus.Shared.Util
         }
 
         public static CliBuilder ForTool(string executable, string action, string instance)
-        {
-            return new CliBuilder(executable).Action(action).Console().NoLogo().Instance(instance);
-        }
+            => new CliBuilder(executable).Action(action).Console().NoLogo().Instance(instance);
 
         public static CliBuilder StopService(string executable, string instance)
-        {
-            return ForTool(executable, "service", instance).Flag("stop");
-        }
+            => ForTool(executable, "service", instance).Flag("stop");
 
         public static CliBuilder StartService(string executable, string instance)
-        {
-            return ForTool(executable, "service", instance).Flag("start");
-        }
+            => ForTool(executable, "service", instance).Flag("start");
 
         public static CliBuilder RestartService(string executable, string instance)
-        {
-            return StopService(executable, instance).Flag("start");
-        }
+            => StopService(executable, instance).Flag("start");
 
         public CliBuilder Action(string actionName)
         {
@@ -72,26 +64,18 @@ namespace Octopus.Shared.Util
         }
 
         public CliBuilder Console()
-        {
             // Omitting this breaks remote script runs, so we may want to include it in exported scripts;
             // adding it does make a lot of clutter though.
-            return SystemFlag("console");
-        }
+            => SystemFlag("console");
 
         public CliBuilder NoLogo()
-        {
-            return SystemFlag("nologo");
-        }
+            => SystemFlag("nologo");
 
         public CliBuilder Instance(string instance)
-        {
-            return Argument("instance", instance);
-        }
+            => Argument("instance", instance);
 
         string MakeFlag(string flagName)
-        {
-            return "--" + Normalize(flagName);
-        }
+            => "--" + Normalize(flagName);
 
         public CliBuilder PositionalArgument(object argValue)
         {
@@ -151,17 +135,11 @@ namespace Octopus.Shared.Util
 
                 var cur = argValue[last];
                 if (cur == '\\' && preq)
-                {
                     argValue = argValue.Insert(last, "\\");
-                }
                 else if (cur == '"')
-                {
                     preq = true;
-                }
                 else
-                {
                     preq = false;
-                }
                 last -= 1;
             }
 

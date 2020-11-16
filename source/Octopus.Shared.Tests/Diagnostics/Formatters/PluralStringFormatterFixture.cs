@@ -1,3 +1,4 @@
+using System;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Shared.Diagnostics.Formatters;

@@ -12,7 +12,7 @@ namespace Octopus.Shared.Diagnostics
 
         public NLogAppender()
         {
-            logger = (OctopusNLogger)LogManager.GetLogger("Octopus", typeof (OctopusNLogger));
+            logger = (OctopusNLogger)LogManager.GetLogger("Octopus", typeof(OctopusNLogger));
         }
 
         public void WriteEvent(LogEvent logEvent)
@@ -24,20 +24,14 @@ namespace Octopus.Shared.Diagnostics
         public void WriteEvents(IList<LogEvent> logEvents)
         {
             foreach (var l in logEvents)
-            {
                 WriteEvent(l);
-            }
         }
 
         public void Flush()
         {
             if (LogManager.Configuration != null)
-            {
                 foreach (var target in LogManager.Configuration.AllTargets)
-                {
                     target.Flush(e => { });
-                }
-            }
         }
 
         public void Flush(string correlationId)
@@ -73,13 +67,15 @@ namespace Octopus.Shared.Diagnostics
         {
             public void WriteEvent(LogLevel category, Exception? error, string messageText)
             {
-                Log(typeof (OctopusNLogger), GetLogEvent(category, error, messageText));
+                Log(typeof(OctopusNLogger), GetLogEvent(category, error, messageText));
             }
 
             LogEventInfo GetLogEvent(LogLevel level, Exception? exception, string message)
-            {
-                return LogEventInfo.Create(level, Name, exception, CultureInfo.InvariantCulture, message);
-            }
+                => LogEventInfo.Create(level,
+                    Name,
+                    exception,
+                    CultureInfo.InvariantCulture,
+                    message);
         }
     }
 }

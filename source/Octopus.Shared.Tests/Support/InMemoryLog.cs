@@ -37,9 +37,7 @@ namespace Octopus.Shared.Tests.Support
         }
 
         public override IDisposable WithinBlock(ILogContext logContext)
-        {
-            return null;
-        }
+            => null;
 
         public override void Flush()
         {
@@ -50,9 +48,7 @@ namespace Octopus.Shared.Tests.Support
         }
 
         public override bool IsEnabled(LogCategory category)
-        {
-            return true;
-        }
+            => true;
 
         public IReadOnlyCollection<LogEvent> GetLogEvents() => events.ToArray();
 

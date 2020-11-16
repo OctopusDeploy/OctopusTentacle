@@ -16,30 +16,18 @@ namespace Octopus.Shared.Util
             this.dependenciesInDisposalOrder = dependenciesInDisposalOrder;
         }
 
-        public override bool CanRead
-        {
-            get { return wrappedStream.CanRead; }
-        }
+        public override bool CanRead => wrappedStream.CanRead;
 
-        public override bool CanSeek
-        {
-            get { return wrappedStream.CanSeek; }
-        }
+        public override bool CanSeek => wrappedStream.CanSeek;
 
-        public override bool CanWrite
-        {
-            get { return wrappedStream.CanWrite; }
-        }
+        public override bool CanWrite => wrappedStream.CanWrite;
 
-        public override long Length
-        {
-            get { return wrappedStream.Length; }
-        }
+        public override long Length => wrappedStream.Length;
 
         public override long Position
         {
-            get { return wrappedStream.Position; }
-            set { wrappedStream.Position = value; }
+            get => wrappedStream.Position;
+            set => wrappedStream.Position = value;
         }
 
         protected override void Dispose(bool disposing)
@@ -53,6 +41,7 @@ namespace Octopus.Shared.Util
                 catch (Exception)
                 {
                 }
+
                 foreach (var disposable in dependenciesInDisposalOrder)
                     disposable.Dispose();
             }
@@ -66,9 +55,7 @@ namespace Octopus.Shared.Util
         }
 
         public override long Seek(long offset, SeekOrigin origin)
-        {
-            return wrappedStream.Seek(offset, origin);
-        }
+            => wrappedStream.Seek(offset, origin);
 
         public override void SetLength(long value)
         {
@@ -76,9 +63,7 @@ namespace Octopus.Shared.Util
         }
 
         public override int Read(byte[] buffer, int offset, int count)
-        {
-            return wrappedStream.Read(buffer, offset, count);
-        }
+            => wrappedStream.Read(buffer, offset, count);
 
         public override void Write(byte[] buffer, int offset, int count)
         {

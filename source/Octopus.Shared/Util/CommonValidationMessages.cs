@@ -1,4 +1,6 @@
-﻿namespace Octopus.Shared.Util
+﻿using System;
+
+namespace Octopus.Shared.Util
 {
     public static class CommonValidationMessages
     {

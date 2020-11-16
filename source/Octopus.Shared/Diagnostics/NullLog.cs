@@ -13,10 +13,7 @@ namespace Octopus.Shared.Diagnostics
             currentContext = new LogContext("Null");
         }
 
-        public override ILogContext CurrentContext
-        {
-            get { return currentContext; }
-        }
+        public override ILogContext CurrentContext => currentContext;
 
         protected override void WriteEvent(LogEvent logEvent)
         {
@@ -27,9 +24,7 @@ namespace Octopus.Shared.Diagnostics
         }
 
         public override IDisposable WithinBlock(ILogContext logContext)
-        {
-            return new NullDisposable();
-        }
+            => new NullDisposable();
 
         public override void Flush()
         {

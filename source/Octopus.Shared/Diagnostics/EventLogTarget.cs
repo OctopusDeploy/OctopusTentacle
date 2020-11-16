@@ -13,7 +13,6 @@ using NLog.Targets;
 
 namespace Octopus.Shared.Diagnostics
 {
-
     /// <summary>
     /// Action that should be taken if the message is greater than
     /// the max message size allowed by the Event Log.
@@ -41,27 +40,30 @@ namespace Octopus.Shared.Diagnostics
     /// </summary>
     /// <seealso href="https://github.com/nlog/nlog/wiki/EventLog-target">Documentation on NLog Wiki</seealso>
     /// <example>
-    /// <p>
-    /// To set up the target in the <a href="config.html">configuration file</a>, 
+    ///     <p>
+    /// To set up the target in the <a href="config.html">configuration file</a>,
     /// use the following syntax:
-    /// </p>
-    /// <code lang="XML" source="examples/targets/Configuration File/EventLog/NLog.config" />
-    /// <p>
+    ///     </p>
+    ///     <code lang="XML" source="examples/targets/Configuration File/EventLog/NLog.config" />
+    ///     <p>
     /// This assumes just one target and a single rule. More configuration
     /// options are described <a href="config.html">here</a>.
-    /// </p>
-    /// <p>
+    ///     </p>
+    ///     <p>
     /// To set up the log target programmatically use code like this:
-    /// </p>
-    /// <code lang="C#" source="examples/targets/Configuration API/EventLog/Simple/Example.cs" />
+    ///     </p>
+    ///     <code lang="C#" source="examples/targets/Configuration API/EventLog/Simple/Example.cs" />
     /// </example>
-    
     public class EventLogTarget : TargetWithLayout, IInstallable
     {
-        private EventLog eventLogInstance;
+        EventLog eventLogInstance;
+
+        int maxMessageLength;
+
+        long? maxKilobytes;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EventLogTarget"/> class.
+        /// Initializes a new instance of the <see cref="EventLogTarget" /> class.
         /// </summary>
         public EventLogTarget()
             : this(LogFactory.CurrentAppDomain)
@@ -69,7 +71,7 @@ namespace Octopus.Shared.Diagnostics
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EventLogTarget"/> class.
+        /// Initializes a new instance of the <see cref="EventLogTarget" /> class.
         /// </summary>
         public EventLogTarget(IAppDomain appDomain)
         {
@@ -81,7 +83,7 @@ namespace Octopus.Shared.Diagnostics
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EventLogTarget"/> class.
+        /// Initializes a new instance of the <see cref="EventLogTarget" /> class.
         /// </summary>
         /// <param name="name">Name of the target.</param>
         public EventLogTarget(string name)
@@ -110,7 +112,7 @@ namespace Octopus.Shared.Diagnostics
         public Layout Category { get; set; }
 
         /// <summary>
-        /// Optional entrytype. When not set, or when not convertable to <see cref="EventLogEntryType"/> then determined by <see cref="NLog.LogLevel"/>
+        /// Optional entrytype. When not set, or when not convertable to <see cref="EventLogEntryType" /> then determined by <see cref="NLog.LogLevel" />
         /// </summary>
         public Layout EntryType { get; set; }
 
@@ -124,19 +126,19 @@ namespace Octopus.Shared.Diagnostics
         public Layout Source { get; set; }
 
         /// <summary>
-        /// Gets or sets the name of the Event Log to write to. This can be System, Application or 
+        /// Gets or sets the name of the Event Log to write to. This can be System, Application or
         /// any user-defined name.
         /// </summary>
         /// <docgen category='Event Log Options' order='10' />
         [DefaultValue("Application")]
         public string Log { get; set; }
 
-        private int maxMessageLength;
-
         /// <summary>
         /// Gets or sets the message length limit to write to the Event Log.
         /// </summary>
-        /// <remarks><value>MaxMessageLength</value> cannot be zero or negative</remarks>
+        /// <remarks>
+        /// <value>MaxMessageLength</value>
+        /// cannot be zero or negative</remarks>
         [DefaultValue(16384)]
         public int MaxMessageLength
         {
@@ -150,17 +152,16 @@ namespace Octopus.Shared.Diagnostics
             }
         }
 
-
-        private long? maxKilobytes;
-
         /// <summary>
         /// Gets or sets the maximum Event log size in kilobytes.
         /// 
-        /// If <c>null</c>, the value won't be set. 
+        /// If <c>null</c>, the value won't be set.
         /// 
         /// Default is 512 Kilobytes as specified by Eventlog API
         /// </summary>
-        /// <remarks><value>MaxKilobytes</value> cannot be less than 64 or greater than 4194240 or not a multiple of 64. If <c>null</c>, use the default value</remarks>
+        /// <remarks>
+        /// <value>MaxKilobytes</value>
+        /// cannot be less than 64 or greater than 4194240 or not a multiple of 64. If <c>null</c>, use the default value</remarks>
         [DefaultValue(null)]
         public long? MaxKilobytes
         {
@@ -168,14 +169,14 @@ namespace Octopus.Shared.Diagnostics
             set
             {
                 //Event log API restriction
-                if (value != null && (value < 64 || value > 4194240 || (value % 64 != 0)))
+                if (value != null && (value < 64 || value > 4194240 || value % 64 != 0))
                     throw new ArgumentException("MaxKilobytes must be a multitude of 64, and between 64 and 4194240");
                 maxKilobytes = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the action to take if the message is larger than the <see cref="MaxMessageLength"/> option.
+        /// Gets or sets the action to take if the message is larger than the <see cref="MaxMessageLength" /> option.
         /// </summary>
         /// <docgen category='Event Log Overflow Action' order='10' />
         [DefaultValue(EventLogTargetOverflowAction.Truncate)]
@@ -202,13 +203,9 @@ namespace Octopus.Shared.Diagnostics
             var fixedSource = GetFixedSource();
 
             if (string.IsNullOrEmpty(fixedSource))
-            {
                 InternalLogger.Debug("Skipping removing of event source because it contains layout renderers");
-            }
             else
-            {
                 EventLog.DeleteEventSource(fixedSource, MachineName);
-            }
         }
 
         /// <summary>
@@ -223,12 +220,10 @@ namespace Octopus.Shared.Diagnostics
             var fixedSource = GetFixedSource();
 
             if (!string.IsNullOrEmpty(fixedSource))
-            {
                 return EventLog.SourceExists(fixedSource, MachineName);
-            }
 
             InternalLogger.Debug("Unclear if event source exists because it contains layout renderers");
-            return null; //unclear! 
+            return null; //unclear!
         }
 
         /// <summary>
@@ -248,27 +243,23 @@ namespace Octopus.Shared.Diagnostics
             {
                 var currentSourceName = EventLog.LogNameFromSourceName(fixedSource, MachineName);
                 if (!currentSourceName.Equals(Log, StringComparison.CurrentCultureIgnoreCase))
-                {
                     CreateEventSourceIfNeeded(fixedSource, false);
-                }
             }
         }
 
         /// <summary>
-        /// Writes the specified logging event to the event log. 
+        /// Writes the specified logging event to the event log.
         /// </summary>
         /// <param name="logEvent">The logging event.</param>
         protected override void Write(LogEventInfo logEvent)
         {
-            string message = RenderLogEvent(Layout, logEvent);
+            var message = RenderLogEvent(Layout, logEvent);
 
-            EventLogEntryType entryType = GetEntryType(logEvent);
+            var entryType = GetEntryType(logEvent);
 
-            int eventId = EventId.RenderInt(logEvent, 0, "EventLogTarget.EventId");
+            var eventId = EventId.RenderInt(logEvent, 0, "EventLogTarget.EventId");
 
-            short category = Category.RenderShort(logEvent, 0, "EventLogTarget.Category");
-
-
+            var category = Category.RenderShort(logEvent, 0, "EventLogTarget.Category");
 
             // limitation of EventLog API
             if (message.Length > MaxMessageLength)
@@ -276,29 +267,44 @@ namespace Octopus.Shared.Diagnostics
                 if (OnOverflow == EventLogTargetOverflowAction.Truncate)
                 {
                     message = message.Substring(0, MaxMessageLength);
-                    WriteEntry(logEvent, message, entryType, eventId, category);
+                    WriteEntry(logEvent,
+                        message,
+                        entryType,
+                        eventId,
+                        category);
                 }
                 else if (OnOverflow == EventLogTargetOverflowAction.Split)
                 {
-                    for (int offset = 0; offset < message.Length; offset += MaxMessageLength)
+                    for (var offset = 0; offset < message.Length; offset += MaxMessageLength)
                     {
-                        string chunk = message.Substring(offset, Math.Min(MaxMessageLength, (message.Length - offset)));
-                        WriteEntry(logEvent, chunk, entryType, eventId, category);
+                        var chunk = message.Substring(offset, Math.Min(MaxMessageLength, message.Length - offset));
+                        WriteEntry(logEvent,
+                            chunk,
+                            entryType,
+                            eventId,
+                            category);
                     }
                 }
                 else if (OnOverflow == EventLogTargetOverflowAction.Discard)
                 {
                     //message will not be written
-                    return;
                 }
             }
             else
             {
-                WriteEntry(logEvent, message, entryType, eventId, category);
+                WriteEntry(logEvent,
+                    message,
+                    entryType,
+                    eventId,
+                    category);
             }
         }
 
-        internal virtual void WriteEntry(LogEventInfo logEventInfo, string message, EventLogEntryType entryType, int eventId, short category)
+        internal virtual void WriteEntry(LogEventInfo logEventInfo,
+            string message,
+            EventLogEntryType entryType,
+            int eventId,
+            short category)
         {
             var eventLog = GetEventLog(logEventInfo);
             eventLog.WriteEntry(message, entryType, eventId, category);
@@ -307,9 +313,9 @@ namespace Octopus.Shared.Diagnostics
         /// <summary>
         /// Get the entry type for logging the message.
         /// </summary>
-        /// <param name="logEvent">The logging event - for rendering the <see cref="EntryType"/></param>
+        /// <param name="logEvent">The logging event - for rendering the <see cref="EntryType" /></param>
         /// <returns></returns>
-        private EventLogEntryType GetEntryType(LogEventInfo logEvent)
+        EventLogEntryType GetEntryType(LogEventInfo logEvent)
         {
             if (EntryType != null)
             {
@@ -318,43 +324,32 @@ namespace Octopus.Shared.Diagnostics
                 var value = RenderLogEvent(EntryType, logEvent);
 
                 if (Enum.TryParse(value, true, out EventLogEntryType eventLogEntryType))
-                {
                     return eventLogEntryType;
-                }
             }
 
             // determine auto
             if (logEvent.Level >= LogLevel.Error)
-            {
                 return EventLogEntryType.Error;
-            }
 
             if (logEvent.Level >= LogLevel.Warn)
-            {
                 return EventLogEntryType.Warning;
-            }
 
             return EventLogEntryType.Information;
         }
 
-
         /// <summary>
-        /// Get the source, if and only if the source is fixed. 
+        /// Get the source, if and only if the source is fixed.
         /// </summary>
-        /// <returns><c>null</c> when not <see cref="SimpleLayout.IsFixedText"/></returns>
+        /// <returns><c>null</c> when not <see cref="SimpleLayout.IsFixedText" /></returns>
         /// <remarks>Internal for unit tests</remarks>
         string GetFixedSource()
         {
             if (Source == null)
-            {
                 return null;
-            }
 
             var simpleLayout = Source as SimpleLayout;
             if (simpleLayout != null && simpleLayout.IsFixedText)
-            {
                 return simpleLayout.FixedText;
-            }
 
             return null;
         }
@@ -364,45 +359,37 @@ namespace Octopus.Shared.Diagnostics
         /// </summary>
         /// <param name="logEvent">Event if the source needs to be rendered.</param>
         /// <returns></returns>
-        private EventLog GetEventLog(LogEventInfo logEvent)
+        EventLog GetEventLog(LogEventInfo logEvent)
         {
             var renderedSource = RenderSource(logEvent);
             var isCacheUpToDate = eventLogInstance != null && renderedSource == eventLogInstance.Source &&
                 eventLogInstance.Log == Log && eventLogInstance.MachineName == MachineName;
 
             if (!isCacheUpToDate)
-            {
                 eventLogInstance = new EventLog(Log, MachineName, renderedSource);
-            }
 
             if (MaxKilobytes.HasValue)
-            {
                 //you need more permissions to set, so don't set by default
                 eventLogInstance.MaximumKilobytes = MaxKilobytes.Value;
-            }
 
             return eventLogInstance;
         }
 
         internal string RenderSource(LogEventInfo logEvent)
-        {
-            return Source != null ? RenderLogEvent(Source, logEvent) : null;
-        }
+            => Source != null ? RenderLogEvent(Source, logEvent) : null;
 
         /// <summary>
         /// (re-)create a event source, if it isn't there. Works only with fixed sourcenames.
         /// </summary>
-        /// <param name="fixedSource">sourcenaam. If source is not fixed (see <see cref="SimpleLayout.IsFixedText"/>, then pass <c>null</c> or emptystring.</param>
+        /// <param name="fixedSource">sourcenaam. If source is not fixed (see <see cref="SimpleLayout.IsFixedText" />, then pass <c>null</c> or emptystring.</param>
         /// <param name="alwaysThrowError">always throw an Exception when there is an error</param>
-        private void CreateEventSourceIfNeeded(string fixedSource, bool alwaysThrowError)
+        void CreateEventSourceIfNeeded(string fixedSource, bool alwaysThrowError)
         {
-
             if (string.IsNullOrEmpty(fixedSource))
             {
                 InternalLogger.Debug("Skipping creation of event source because it contains layout renderers");
                 //we can only create event sources if the source is fixed (no layout)
                 return;
-
             }
 
             // if we throw anywhere, we remain non-operational
@@ -410,7 +397,7 @@ namespace Octopus.Shared.Diagnostics
             {
                 if (EventLog.SourceExists(fixedSource, MachineName))
                 {
-                    string currentLogName = EventLog.LogNameFromSourceName(fixedSource, MachineName);
+                    var currentLogName = EventLog.LogNameFromSourceName(fixedSource, MachineName);
                     if (!currentLogName.Equals(Log, StringComparison.CurrentCultureIgnoreCase))
                     {
                         // re-create the association between Log and Source
@@ -437,13 +424,11 @@ namespace Octopus.Shared.Diagnostics
             {
                 InternalLogger.Error(exception, "Error when connecting to EventLog.");
                 if (alwaysThrowError)
-                {
                     throw;
-                }
-
             }
         }
     }
+
     static class LayoutHelpers
     {
         /// <summary>
@@ -461,6 +446,7 @@ namespace Octopus.Shared.Diagnostics
                 InternalLogger.Debug(layoutName + " is null so default value of " + defaultValue);
                 return defaultValue;
             }
+
             if (logEvent == null)
             {
                 InternalLogger.Debug(layoutName + ": logEvent is null so default value of " + defaultValue);
@@ -477,6 +463,7 @@ namespace Octopus.Shared.Diagnostics
                 InternalLogger.Warn(layoutName + ": parse of value '" + rendered + "' failed, return " + defaultValue);
                 return defaultValue;
             }
+
             return result;
         }
 
@@ -495,6 +482,7 @@ namespace Octopus.Shared.Diagnostics
                 InternalLogger.Debug(layoutName + " is null so default value of " + defaultValue);
                 return defaultValue;
             }
+
             if (logEvent == null)
             {
                 InternalLogger.Debug(layoutName + ": logEvent is null so default value of " + defaultValue);
@@ -511,6 +499,7 @@ namespace Octopus.Shared.Diagnostics
                 InternalLogger.Warn(layoutName + ": parse of value '" + rendered + "' failed, return " + defaultValue);
                 return defaultValue;
             }
+
             return result;
         }
     }

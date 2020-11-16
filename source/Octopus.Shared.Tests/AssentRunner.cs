@@ -15,8 +15,10 @@ namespace Octopus.Shared.Tests
 
         public void Assent(object testFixture,
             string recieved,
-            [CallerMemberName] string testName = null,
-            [CallerFilePath] string filePath = null)
+            [CallerMemberName]
+            string testName = null,
+            [CallerFilePath]
+            string filePath = null)
         {
             try
             {
@@ -47,6 +49,5 @@ namespace Octopus.Shared.Tests
 
             Console.WriteLine($"##teamcity[{type} {value}]");
         }
-
     }
 }

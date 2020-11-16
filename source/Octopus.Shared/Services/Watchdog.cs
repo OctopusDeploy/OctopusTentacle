@@ -36,16 +36,13 @@ namespace Octopus.Shared.Services
                     enabled = true;
                     var trigger = taskDefinition.Triggers.FirstOrDefault(x => x is TimeTrigger);
                     if (trigger?.Repetition != null)
-                    {
                         interval = (int)trigger.Repetition.Interval.TotalMinutes;
-                    }
                     var action = taskDefinition.Actions.FirstOrDefault(x => x is ExecAction);
                     if (action != null)
-                    {
                         instances = ((ExecAction)action).Arguments.Replace(argsPrefix, "");
-                    }
                 }
             }
+
             return new WatchdogConfiguration(enabled, interval, instances);
         }
 
@@ -88,9 +85,7 @@ namespace Octopus.Shared.Services
                 var processFileName = Process.GetCurrentProcess().MainModule?.FileName;
 
                 if (processFileName == null || !Path.GetFileNameWithoutExtension(processFileName).Equals(fileName, StringComparison.OrdinalIgnoreCase))
-                {
                     processFileName = Path.Combine(Path.GetDirectoryName(entryAssembly.Location) ?? ".", $"{Path.GetFileNameWithoutExtension(entryAssembly.Location)}.exe");
-                }
 
                 taskDefinition.Actions.Clear();
                 taskDefinition.Actions.Add(new ExecAction(processFileName, argsPrefix + instanceNames));

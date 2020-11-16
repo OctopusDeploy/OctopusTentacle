@@ -22,9 +22,7 @@ namespace Octopus.Shared.Startup
         protected override void OnStart(string[] args)
         {
             if (args.Length > 0 && args[0].ToLowerInvariant().Contains("debug"))
-            {
                 Debugger.Launch();
-            }
 
             // Sometimes a server might be under load after rebooting, or virus scanners might be busy.
             // A service will usually fail to start after 30 seconds, so by requesting additional time
@@ -49,7 +47,7 @@ namespace Octopus.Shared.Startup
                 {
                     var message = entry.ToString();
                     Log.Octopus().Error(ex, message);
-                    throw new Exception(message, ex) {HelpLink = entry.HelpLink};
+                    throw new Exception(message, ex) { HelpLink = entry.HelpLink };
                 }
 
                 Log.Octopus().Fatal(ex);

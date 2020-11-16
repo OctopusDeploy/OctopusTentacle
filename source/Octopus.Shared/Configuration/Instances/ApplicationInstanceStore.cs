@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Threading;
 using Newtonsoft.Json;
-using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
@@ -72,9 +71,7 @@ namespace Octopus.Shared.Configuration.Instances
         {
             var instancesFolder = InstancesFolder();
             if (!FileSystem.DirectoryExists(instancesFolder))
-            {
                 FileSystem.CreateDirectory(instancesFolder);
-            }
             var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceRecord.InstanceName) + ".config");
             var instance = TryLoadInstanceConfiguration(instanceConfiguration) ?? new Instance(instanceRecord.InstanceName, instanceRecord.ConfigurationFilePath);
 
@@ -98,14 +95,12 @@ namespace Octopus.Shared.Configuration.Instances
             var instanceName = instanceRecord.InstanceName;
             var instancesFolder = InstancesFolder();
             if (File.Exists(Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config")))
-            {
                 return;
-            }
 
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
                 var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(instanceName);
-                if (registryInstance != null )
+                if (registryInstance != null)
                 {
                     Log.Info($"Migrating {ApplicationName} instance from registry - {instanceName}");
                     try

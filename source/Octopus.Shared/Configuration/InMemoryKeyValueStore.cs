@@ -16,22 +16,20 @@ namespace Octopus.Shared.Configuration
         }
 
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
-        {
-            return mapper.GetConfigurationValue(name);
-        }
+            => mapper.GetConfigurationValue(name);
 
         public (bool foundResult, TData value) TryGet<TData>(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             object? data = mapper.GetConfigurationValue(name);
 
             if (data == null)
-                return (false, default(TData)!);
+                return (false, default!);
             if (typeof(TData) == typeof(string))
-                return (true, (TData) data);
+                return (true, (TData)data);
             if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
-                return (true, (TData) (object) bool.Parse((string) data));
+                return (true, (TData)(object)bool.Parse((string)data));
             if (typeof(TData).IsEnum)
-                return (true, (TData) Enum.Parse(typeof(TData), ((string) data).Trim('"')));
+                return (true, (TData)Enum.Parse(typeof(TData), ((string)data).Trim('"')));
 
             // See FlatDictionaryKeyValueStore.ValueNeedsToBeSerialized, some of the types are serialized, and will therefore expect to be
             // double quote delimited
@@ -43,23 +41,15 @@ namespace Octopus.Shared.Configuration
         }
 
         public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
-        {
-            return false;
-        }
+            => false;
 
         public bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None)
-        {
-            return false;
-        }
+            => false;
 
         public bool Remove(string name)
-        {
-            return false;
-        }
+            => false;
 
         public bool Save()
-        {
-            return false;
-        }
+            => false;
     }
 }

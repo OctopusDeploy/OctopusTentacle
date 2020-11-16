@@ -27,13 +27,9 @@ namespace Octopus.Shared.Util
         }
 
         public bool Equals(ReplaceStatus other)
-        {
-            return Description == other.Description;
-        }
+            => Description == other.Description;
 
         public override string ToString()
-        {
-            return Description;
-        }
+            => Description;
     }
 }

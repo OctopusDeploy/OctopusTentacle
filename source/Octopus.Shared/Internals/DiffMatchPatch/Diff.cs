@@ -5,6 +5,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
     public class Diff
     {
         public Operation operation;
+
         // One of: INSERT, DELETE or EQUAL.
         public string text;
         // The text associated with this diff operation.
@@ -14,7 +15,6 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          * @param operation One of INSERT, DELETE or EQUAL.
          * @param text The text being applied.
          */
-
         public Diff(Operation operation, string text)
         {
             // Construct a diff with the specified operation and text.
@@ -26,7 +26,6 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          * Display a human-readable version of this Diff.
          * @return text version.
          */
-
         public override string ToString()
         {
             var prettyText = text.Replace('\n', '\u00b6');
@@ -38,21 +37,16 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
          * @param d Another Diff to compare against.
          * @return true or false.
          */
-
-        public override bool Equals(Object? obj)
+        public override bool Equals(object? obj)
         {
             // If parameter is null return false.
             if (obj == null)
-            {
                 return false;
-            }
 
             // If parameter cannot be cast to Diff return false.
             var p = obj as Diff;
             if (p == null)
-            {
                 return false;
-            }
 
             // Return true if the fields match.
             return p.operation == operation && p.text == text;
@@ -62,17 +56,13 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
         {
             // If parameter is null return false.
             if (obj == null)
-            {
                 return false;
-            }
 
             // Return true if the fields match.
             return obj.operation == operation && obj.text == text;
         }
 
         public override int GetHashCode()
-        {
-            return text.GetHashCode() ^ operation.GetHashCode();
-        }
+            => text.GetHashCode() ^ operation.GetHashCode();
     }
 }

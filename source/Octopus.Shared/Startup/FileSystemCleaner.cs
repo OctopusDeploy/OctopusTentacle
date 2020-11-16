@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
-using Octopus.Shared.Util;
 using Octopus.Diagnostics;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {
@@ -24,7 +24,9 @@ namespace Octopus.Shared.Startup
         public void Clean(string resource)
         {
             using (var stream = LoadStreamFromAssembly(resource))
+            {
                 AttemptToDeleteEachEntryInStream(stream);
+            }
         }
 
         static Stream LoadStreamFromAssembly(string resource)

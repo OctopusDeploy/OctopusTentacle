@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Shared.Configuration;
 using Octopus.Diagnostics;
+using Octopus.Shared.Configuration;
 using Octopus.Shared.Services;
 
 namespace Octopus.Shared.Startup
@@ -17,7 +17,7 @@ namespace Octopus.Shared.Startup
         HashSet<string> instances = new HashSet<string> { "*" };
 
         public WatchdogCommand(
-            ILog log, 
+            ILog log,
             ApplicationName applicationName,
             Lazy<IWatchdog> watchdog)
         {
@@ -25,25 +25,33 @@ namespace Octopus.Shared.Startup
             this.applicationName = applicationName;
             this.watchdog = watchdog;
 
-            Options.Add("create", "Create the watchdog task for the given instances", v =>
-            {
-                createTask = true;
-                log.Info("Creating watchdog task");
-            });
-            Options.Add("delete", "Delete the watchdog task for the given instances", v =>
-            {
-                deleteTask = true;
-                log.Info("Removing watchdog task"); 
-            });
-            Options.Add("interval=", "The interval, in minutes, at which that the service(s) should be checked (default: 5)", v =>
-            {
-                log.Info($"Setting watchdog task interval to {v} minutes");
-                interval = int.Parse(v);
-            });
-            Options.Add("instances=", "Comma separated list of instances to be checked, or * to check all instances (default: *)", v =>
-            {
-                instances = new HashSet<string>(v.Split(',', ';'));
-            });
+            Options.Add("create",
+                "Create the watchdog task for the given instances",
+                v =>
+                {
+                    createTask = true;
+                    log.Info("Creating watchdog task");
+                });
+            Options.Add("delete",
+                "Delete the watchdog task for the given instances",
+                v =>
+                {
+                    deleteTask = true;
+                    log.Info("Removing watchdog task");
+                });
+            Options.Add("interval=",
+                "The interval, in minutes, at which that the service(s) should be checked (default: 5)",
+                v =>
+                {
+                    log.Info($"Setting watchdog task interval to {v} minutes");
+                    interval = int.Parse(v);
+                });
+            Options.Add("instances=",
+                "Comma separated list of instances to be checked, or * to check all instances (default: *)",
+                v =>
+                {
+                    instances = new HashSet<string>(v.Split(',', ';'));
+                });
         }
 
         protected override void Start()
@@ -53,13 +61,9 @@ namespace Octopus.Shared.Startup
             log.Info("Instances: " + instanceNames);
 
             if (deleteTask)
-            {
                 watchdog.Value.Delete();
-            }
             if (createTask)
-            {
                 watchdog.Value.Create(instanceNames, interval);
-            }
         }
     }
 }

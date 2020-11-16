@@ -7,22 +7,6 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
 {
     public abstract class MapsEnvironmentValuesToConfigItems : IMapEnvironmentValuesToConfigItems
     {
-        readonly ILogFileOnlyLogger log;
-        readonly Dictionary<string, string?> environmentVariableValues;
-        bool valuesHaveBeenSet;
-
-        // These are the settings that calling code can ask for a value for
-        readonly string[] sharedConfigurationSettingNames =
-        {
-            HomeConfiguration.OctopusHomeSettingName,
-            HomeConfiguration.OctopusNodeCacheSettingName,
-            ProxyConfiguration.ProxyUseDefaultSettingName,
-            ProxyConfiguration.ProxyHostSettingName,
-            ProxyConfiguration.ProxyPortSettingName,
-            ProxyConfiguration.ProxyUsernameSettingName,
-            ProxyConfiguration.ProxyPasswordSettingName
-        };
-
         static readonly EnvironmentVariable Home = EnvironmentVariable.PlaintText("OCTOPUS_HOME");
         static readonly EnvironmentVariable NodeCache = EnvironmentVariable.PlaintText("OCTOPUS_NODE_CACHE");
         static readonly EnvironmentVariable UseDefaultProxy = EnvironmentVariable.PlaintText("OCTOPUS_USE_DEFAULT_PROXY");
@@ -45,6 +29,23 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             ProxyPassword
         };
 
+        readonly ILogFileOnlyLogger log;
+        readonly Dictionary<string, string?> environmentVariableValues;
+
+        // These are the settings that calling code can ask for a value for
+        readonly string[] sharedConfigurationSettingNames =
+        {
+            HomeConfiguration.OctopusHomeSettingName,
+            HomeConfiguration.OctopusNodeCacheSettingName,
+            ProxyConfiguration.ProxyUseDefaultSettingName,
+            ProxyConfiguration.ProxyHostSettingName,
+            ProxyConfiguration.ProxyPortSettingName,
+            ProxyConfiguration.ProxyUsernameSettingName,
+            ProxyConfiguration.ProxyPasswordSettingName
+        };
+
+        bool valuesHaveBeenSet;
+
         protected MapsEnvironmentValuesToConfigItems(ILogFileOnlyLogger log,
             string[] supportedConfigurationKeys,
             EnvironmentVariable[] requiredEnvironmentVariables,
@@ -58,9 +59,7 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
 
             // initialise the dictionary to contain a value for every supported variable, then we don't need ContainsKey all over the place
             foreach (var variable in SupportedEnvironmentVariables)
-            {
                 environmentVariableValues.Add(variable.Name, null);
-            }
         }
 
         HashSet<string> SupportedConfigurationKeys { get; }
@@ -90,13 +89,11 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
             }
 
             foreach (var nameToValue in variableNamesToValues)
-            {
                 // Only try to set a value if a higher priority strategy hasn't already set it.
                 if (string.IsNullOrWhiteSpace(environmentVariableValues[nameToValue.Key]) && !string.IsNullOrWhiteSpace(nameToValue.Value))
                     environmentVariableValues[nameToValue.Key] = nameToValue.Value;
                 else if (!string.IsNullOrWhiteSpace(environmentVariableValues[nameToValue.Key]) && !string.IsNullOrWhiteSpace(nameToValue.Value))
                     log.Warn($"A value for '{nameToValue.Key}' has been provided more than once. This can happen, for example, if an environment variable is set but a higher priority provider like a secrets file has already provided the value.");
-            }
 
             valuesHaveBeenSet = true;
         }
@@ -126,6 +123,7 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
                 case ProxyConfiguration.ProxyPasswordSettingName:
                     return environmentVariableValues[ProxyPassword.Name];
             }
+
             return MapConfigurationValue(configurationSettingName);
         }
 

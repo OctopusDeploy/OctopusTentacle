@@ -15,7 +15,8 @@ namespace Octopus.Shared.Configuration.Instances
         bool foundValues;
 
         public EnvironmentConfigurationStrategy(ILogFileOnlyLogger log,
-            IMapEnvironmentValuesToConfigItems mapper, IEnvironmentVariableReader reader)
+            IMapEnvironmentValuesToConfigItems mapper,
+            IEnvironmentVariableReader reader)
         {
             this.log = log;
             this.mapper = mapper;
@@ -42,6 +43,7 @@ namespace Octopus.Shared.Configuration.Instances
                     foundValues = true;
                 }
             }
+
             loaded = true;
         }
 

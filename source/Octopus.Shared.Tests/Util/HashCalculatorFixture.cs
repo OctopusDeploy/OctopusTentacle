@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using NUnit.Framework;
 using Octopus.Shared.Util;
@@ -37,8 +38,6 @@ namespace Octopus.Shared.Tests.Util
         }
 
         Stream Stream(string input)
-        {
-            return new MemoryStream(Encoding.UTF8.GetBytes(input), false);
-        }
+            => new MemoryStream(Encoding.UTF8.GetBytes(input), false);
     }
 }

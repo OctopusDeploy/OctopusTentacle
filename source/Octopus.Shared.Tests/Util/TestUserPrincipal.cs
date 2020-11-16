@@ -50,6 +50,13 @@ namespace Octopus.Shared.Tests.Util
             }
         }
 
+        public SecurityIdentifier Sid { get; }
+        public string NTAccountName => Sid.Translate(typeof(NTAccount)).ToString();
+        public string DomainName => NTAccountName.Split(new[] { '\\' }, 2)[0];
+        public string UserName => NTAccountName.Split(new[] { '\\' }, 2)[1];
+        public string SamAccountName { get; }
+        public string Password { get; }
+
         public TestUserPrincipal EnsureIsMemberOfGroup(string groupName)
         {
             Console.WriteLine($"Ensuring the Windows User Account called '{UserName}' is a member of the '{groupName}' group...");
@@ -70,7 +77,7 @@ namespace Octopus.Shared.Tests.Util
 
             return this;
         }
-        
+
         public void Delete()
         {
             using (var principalContext = new PrincipalContext(ContextType.Machine))
@@ -85,6 +92,7 @@ namespace Octopus.Shared.Tests.Util
                         Console.WriteLine($"The Windows User Account named {UserName} doesn't exist, nothing to do...");
                         return;
                     }
+
                     Console.WriteLine($"The Windows User Account named {UserName} exists, deleting...");
                     principal.Delete();
                 }
@@ -95,18 +103,9 @@ namespace Octopus.Shared.Tests.Util
             }
         }
 
-        public SecurityIdentifier Sid { get; }
-        public string NTAccountName => Sid.Translate(typeof(NTAccount)).ToString();
-        public string DomainName => NTAccountName.Split(new[] {'\\'}, 2)[0];
-        public string UserName => NTAccountName.Split(new[] {'\\'}, 2)[1];
-        public string SamAccountName { get; }
-        public string Password { get; }
-
         public NetworkCredential GetCredential() => new NetworkCredential(UserName, Password, DomainName);
 
         public override string ToString()
-        {
-            return NTAccountName;
-        }
+            => NTAccountName;
     }
 }

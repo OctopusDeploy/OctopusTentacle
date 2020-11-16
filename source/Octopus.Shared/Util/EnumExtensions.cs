@@ -6,9 +6,7 @@ namespace Octopus.Shared.Util
     public static class EnumExtensions
     {
         public static string GetDescription(this Enum enumVal)
-        {
-            return enumVal.GetAttributeOfType<DescriptionAttribute>()?.Description ?? enumVal.ToString();
-        }
+            => enumVal.GetAttributeOfType<DescriptionAttribute>()?.Description ?? enumVal.ToString();
 
         public static T? GetAttributeOfType<T>(this Enum enumVal) where T : Attribute
         {

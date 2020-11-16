@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NLog;
+using NLog.Targets;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
@@ -25,6 +26,9 @@ namespace Octopus.Shared.Startup
     {
         static readonly string LoggerName = nameof(LogFileOnlyLogger);
         static readonly ILogger Log = LogManager.GetLogger(LoggerName);
+        static readonly string EntryExecutable;
+
+        static readonly string HelpMessage = $"The {EntryExecutable}.nlog file should have a rule matching the name {LoggerName} where log messages are restricted to the log file, never written to stdout or stderr.";
 
         static LogFileOnlyLogger()
         {
@@ -33,9 +37,9 @@ namespace Octopus.Shared.Startup
                 ? Path.GetFileName(fullProcessPath)
                 : $"{Path.GetFileName(fullProcessPath)}.exe";
         }
-        private static readonly string EntryExecutable;
 
-        static readonly string HelpMessage = $"The {EntryExecutable}.nlog file should have a rule matching the name {LoggerName} where log messages are restricted to the log file, never written to stdout or stderr.";
+        public ILogContext Context { get; set; } = new LogContext();
+        public static ILogFileOnlyLogger Current { get; } = new LogFileOnlyLogger();
 
         public static void AssertConfigurationIsCorrect()
         {
@@ -46,13 +50,10 @@ namespace Octopus.Shared.Startup
             if (rule.Targets.Count != 1)
                 throw new Exception($"The {LoggerName} rule should only have a single target. {HelpMessage}");
 
-            var fileTarget = rule.Targets.Single() as NLog.Targets.FileTarget;
+            var fileTarget = rule.Targets.Single() as FileTarget;
             if (fileTarget == null)
                 throw new Exception($"The {LoggerName} rule should write to a file target. {HelpMessage}");
         }
-
-        public ILogContext Context { get; set; } = new LogContext();
-        public static ILogFileOnlyLogger Current { get; }= new LogFileOnlyLogger();
 
         public void Info(string message) => Context.SafeSanitize(message, s => Log.Info(s));
         public void Warn(string message) => Context.SafeSanitize(message, s => Log.Warn(s));

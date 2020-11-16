@@ -12,18 +12,13 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
         public string Name { get; }
 
         public static EnvironmentVariable PlaintText(string name)
-        {
-            return new EnvironmentVariable(name);
-        }
+            => new EnvironmentVariable(name);
+
         public static SensitiveEnvironmentVariable Sensitive(string name, string sensitiveWarningDescription)
-        {
-            return new SensitiveEnvironmentVariable(name, sensitiveWarningDescription);
-        }
+            => new SensitiveEnvironmentVariable(name, sensitiveWarningDescription);
 
         protected bool Equals(EnvironmentVariable other)
-        {
-            return Name == other.Name;
-        }
+            => Name == other.Name;
 
         public override bool Equals(object? obj)
         {
@@ -31,15 +26,13 @@ namespace Octopus.Shared.Configuration.EnvironmentVariableMappings
                 return false;
             if (ReferenceEquals(this, obj))
                 return true;
-            if (obj.GetType() != this.GetType())
+            if (obj.GetType() != GetType())
                 return false;
             return Equals((EnvironmentVariable)obj);
         }
 
         public override int GetHashCode()
-        {
-            return Name.GetHashCode();
-        }
+            => Name.GetHashCode();
 
         public int CompareTo(object? obj)
         {

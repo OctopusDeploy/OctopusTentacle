@@ -10,13 +10,12 @@ namespace Octopus.Shared.Tests.Util
     {
         [Test]
         public void EnsureDiskHasEnoughFreeSpaceShouldWorkForStandardPath()
-         => new OctopusPhysicalFileSystem().EnsureDiskHasEnoughFreeSpace(Path.GetTempPath(), 0);
-        
+            => new OctopusPhysicalFileSystem().EnsureDiskHasEnoughFreeSpace(Path.GetTempPath(), 0);
+
         [Test]
         public void EnsureDiskHasEnoughFreeSpaceShouldWorkButNotCheckForUncPaths()
             => new OctopusPhysicalFileSystem().EnsureDiskHasEnoughFreeSpace(@"\\does\not\exist", long.MaxValue);
 
-        
         [Test]
         public void EnsureDiskHasEnoughFreeSpaceThrowsAndExceptionIfThereIsNotEnoughSpace()
         {
@@ -24,17 +23,17 @@ namespace Octopus.Shared.Tests.Util
             exec.Should().Throw<IOException>().WithMessage("*does not have enough free disk space*");
         }
 
-        [Test] 
+        [Test]
         public void DiskHasEnoughFreeSpace_UncPath_ShouldReturnTrue()
         {
-            var actual =  new OctopusPhysicalFileSystem().DiskHasEnoughFreeSpace(@"\\does\not\exist");
+            var actual = new OctopusPhysicalFileSystem().DiskHasEnoughFreeSpace(@"\\does\not\exist");
             Assert.AreEqual(true, actual);
         }
-        
-        [Test] 
+
+        [Test]
         public void DiskHasEnoughFreeSpace_MaxValue_ShouldReturnFalse()
         {
-            var actual =  new OctopusPhysicalFileSystem().DiskHasEnoughFreeSpace(Path.GetTempPath(), long.MaxValue);
+            var actual = new OctopusPhysicalFileSystem().DiskHasEnoughFreeSpace(Path.GetTempPath(), long.MaxValue);
             Assert.AreEqual(false, actual);
         }
     }

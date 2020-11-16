@@ -18,9 +18,9 @@ namespace Octopus.Shared.Util
         // This even applies to long file names https://stackoverflow.com/a/265782/10784
         public const int MaxComponentLength = 255;
 
-        const long FiveHundredMegabytes = 500*1024*1024;
+        const long FiveHundredMegabytes = 500 * 1024 * 1024;
 
-        private static readonly char[] InvalidFileNameChars = new char[41]
+        static readonly char[] InvalidFileNameChars = new char[41]
         {
             // From Path.InvalidPathChars which covers Windows and Linux
             '"',
@@ -67,14 +67,10 @@ namespace Octopus.Shared.Util
         };
 
         public bool FileExists(string path)
-        {
-            return File.Exists(path);
-        }
+            => File.Exists(path);
 
         public bool DirectoryExists(string path)
-        {
-            return Directory.Exists(path);
-        }
+            => Directory.Exists(path);
 
         public bool DirectoryIsEmpty(string path)
         {
@@ -103,15 +99,12 @@ namespace Octopus.Shared.Util
 
             var firstAttemptFailed = false;
             for (var i = 0; i < options.RetryAttempts; i++)
-            {
                 try
                 {
                     if (File.Exists(path))
                     {
                         if (firstAttemptFailed)
-                        {
                             File.SetAttributes(path, FileAttributes.Normal);
-                        }
                         File.Delete(path);
                         return;
                     }
@@ -123,14 +116,11 @@ namespace Octopus.Shared.Util
                     if (i == options.RetryAttempts - 1)
                     {
                         if (options.ThrowOnFailure)
-                        {
                             throw;
-                        }
 
                         break;
                     }
                 }
-            }
         }
 
         public void DeleteDirectory(string path)
@@ -146,7 +136,6 @@ namespace Octopus.Shared.Util
                 return;
 
             for (var i = 0; i < options.RetryAttempts; i++)
-            {
                 try
                 {
                     var dir = new DirectoryInfo(path);
@@ -164,13 +153,10 @@ namespace Octopus.Shared.Util
                     if (i == options.RetryAttempts - 1)
                     {
                         if (options.ThrowOnFailure)
-                        {
                             throw;
-                        }
                         break;
                     }
                 }
-            }
         }
 
         public IEnumerable<string> EnumerateFiles(string parentDirectoryPath, params string[] searchPatterns)
@@ -220,14 +206,10 @@ namespace Octopus.Shared.Util
         }
 
         public long GetFileSize(string path)
-        {
-            return new FileInfo(path).Length;
-        }
+            => new FileInfo(path).Length;
 
         public DateTimeOffset GetFileLastWriteTimeUtc(string path)
-        {
-            return File.GetLastWriteTimeUtc(path);
-        }
+            => File.GetLastWriteTimeUtc(path);
 
         public string ReadFile(string path)
         {
@@ -247,15 +229,14 @@ namespace Octopus.Shared.Util
         {
             File.WriteAllText(path, contents);
         }
+
         public void OverwriteFile(string path, string contents, Encoding encoding)
         {
             File.WriteAllText(path, contents, encoding);
         }
 
         public Stream OpenFile(string path, FileAccess access, FileShare share)
-        {
-            return OpenFile(path, FileMode.OpenOrCreate, access, share);
-        }
+            => OpenFile(path, FileMode.OpenOrCreate, access, share);
 
         public Stream OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
         {
@@ -267,11 +248,9 @@ namespace Octopus.Shared.Util
             {
                 var fileInfo = new FileInfo(path);
                 if (fileInfo.Exists && (fileInfo.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
-                {
                     // Throw a more helpful message than .NET's
                     // System.UnauthorizedAccessException: Access to the path ... is denied.
                     throw new IOException(path + " is a directory not a file");
-                }
                 throw;
             }
         }
@@ -326,17 +305,24 @@ namespace Octopus.Shared.Util
 
         public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, DeletionOptions options, Func<string, IEnumerable<string>> fileEnumerator)
         {
-            PurgeDirectory(targetDirectory, include, options, CancellationToken.None, fileEnumerationFunc: fileEnumerator);
+            PurgeDirectory(targetDirectory,
+                include,
+                options,
+                CancellationToken.None,
+                fileEnumerationFunc: fileEnumerator);
         }
 
-        void PurgeDirectory(string targetDirectory, Predicate<IFileInfo>? include, DeletionOptions options, CancellationToken cancel, bool includeTarget = false, Func<string, IEnumerable<string>>? fileEnumerationFunc = null)
+        void PurgeDirectory(string targetDirectory,
+            Predicate<IFileInfo>? include,
+            DeletionOptions options,
+            CancellationToken cancel,
+            bool includeTarget = false,
+            Func<string, IEnumerable<string>>? fileEnumerationFunc = null)
         {
             if (!DirectoryExists(targetDirectory))
-            {
                 return;
-            }
 
-            Func<string, IEnumerable<string>> fileEnumerator = fileEnumerationFunc ?? ((target) => EnumerateFiles(target));
+            Func<string, IEnumerable<string>> fileEnumerator = fileEnumerationFunc ?? (target => EnumerateFiles(target));
 
             foreach (var file in fileEnumerator(targetDirectory))
             {
@@ -346,9 +332,7 @@ namespace Octopus.Shared.Util
                 {
                     var info = new FileInfoAdapter(new FileInfo(file));
                     if (!include(info))
-                    {
                         continue;
-                    }
                 }
 
                 DeleteFile(file, options);
@@ -360,13 +344,13 @@ namespace Octopus.Shared.Util
 
                 var info = new DirectoryInfo(directory);
                 if ((info.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
-                {
                     Directory.Delete(directory);
-                }
                 else
-                {
-                    PurgeDirectory(directory, include, options, cancel, true);
-                }
+                    PurgeDirectory(directory,
+                        include,
+                        options,
+                        cancel,
+                        true);
             }
 
             if (includeTarget && DirectoryIsEmpty(targetDirectory))
@@ -411,12 +395,8 @@ namespace Octopus.Shared.Util
         public void EnsureDirectoryExists(string directoryPath)
         {
             if (!DirectoryExists(directoryPath))
-            {
                 Directory.CreateDirectory(directoryPath);
-            }
-        }
-
-        // ReSharper disable AssignNullToNotNullAttribute
+        } // ReSharper disable AssignNullToNotNullAttribute
 
         public void CopyDirectory(string sourceDirectory, string targetDirectory, int overwriteFileRetryAttempts = 3)
         {
@@ -429,9 +409,7 @@ namespace Octopus.Shared.Util
                 return;
 
             if (!DirectoryExists(targetDirectory))
-            {
                 Directory.CreateDirectory(targetDirectory);
-            }
 
             var files = Directory.GetFiles(sourceDirectory, "*");
             foreach (var sourceFile in files)
@@ -454,33 +432,29 @@ namespace Octopus.Shared.Util
         {
             var result = ReplaceStatus.Updated;
             for (var i = 0; i < overwriteFileRetryAttempts; i++)
-            {
                 try
                 {
                     FileInfo fi = new FileInfo(targetFile);
                     if (fi.Exists)
                     {
                         if ((fi.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-                        {
                             fi.Attributes = fi.Attributes & ~FileAttributes.ReadOnly;
-                        }
                     }
                     else
                     {
                         result = ReplaceStatus.Created;
                     }
+
                     File.Copy(sourceFile, targetFile, true);
                     return result;
                 }
                 catch
                 {
                     if (i == overwriteFileRetryAttempts - 1)
-                    {
                         throw;
-                    }
-                    Thread.Sleep(1000 + (2000 * i));
+                    Thread.Sleep(1000 + 2000 * i);
                 }
-            }
+
             throw new Exception("Internal error, cannot get here");
         }
 
@@ -500,15 +474,11 @@ namespace Octopus.Shared.Util
             // Make sure there is 10% (and a bit extra) more than we need
             required += required / 10 + 1024 * 1024;
             if ((ulong)driveInfo.AvailableFreeSpace < required)
-            {
                 throw new IOException($"The drive containing the directory '{directoryPath}' on machine '{Environment.MachineName}' does not have enough free disk space available for this operation to proceed. The disk only has {driveInfo.AvailableFreeSpace.ToFileSizeString()} available; please free up at least {required.ToFileSizeString()}.");
-            }
         }
 
         public bool DiskHasEnoughFreeSpace(string directoryPath)
-        {
-            return DiskHasEnoughFreeSpace(directoryPath, FiveHundredMegabytes);
-        }
+            => DiskHasEnoughFreeSpace(directoryPath, FiveHundredMegabytes);
 
         public bool DiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes)
         {
@@ -524,9 +494,7 @@ namespace Octopus.Shared.Util
             try
             {
                 if (!Path.IsPathRooted(relativeOrAbsoluteFilePath))
-                {
                     relativeOrAbsoluteFilePath = Path.Combine(Environment.CurrentDirectory, relativeOrAbsoluteFilePath);
-                }
 
                 relativeOrAbsoluteFilePath = Path.GetFullPath(relativeOrAbsoluteFilePath);
                 return relativeOrAbsoluteFilePath;
@@ -547,14 +515,11 @@ namespace Octopus.Shared.Util
         public ReplaceStatus Replace(string oldFilePath, Stream newStream, int overwriteFileRetryAttempts = 3)
         {
             for (var i = 0; i < overwriteFileRetryAttempts; i++)
-            {
                 try
                 {
                     var oldDirectory = Path.GetDirectoryName(oldFilePath) ?? throw new ArgumentException("directoryRequired", nameof(oldFilePath));
                     if (!DirectoryExists(oldDirectory))
-                    {
                         Directory.CreateDirectory(oldDirectory);
-                    }
 
                     var fi = new FileInfo(oldFilePath);
                     if (!fi.Exists)
@@ -565,20 +530,17 @@ namespace Octopus.Shared.Util
                             newStream.CopyTo(fileStream);
                             fileStream.Flush();
                         }
+
                         return ReplaceStatus.Created;
                     }
 
                     if ((fi.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
-                    {
                         // Throw a more helpful message than .NET's
                         // System.UnauthorizedAccessException: Access to the path ... is denied.
                         throw new IOException("Cannot overwrite a directory with a file " + oldFilePath);
-                    }
 
                     if ((fi.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-                    {
                         fi.Attributes = fi.Attributes & ~FileAttributes.ReadOnly;
-                    }
 
                     bool equal;
                     using (var oldStream = File.OpenRead(oldFilePath))
@@ -587,45 +549,36 @@ namespace Octopus.Shared.Util
                     }
 
                     if (equal)
-                    {
                         return ReplaceStatus.Unchanged;
-                    }
                     newStream.Seek(0, SeekOrigin.Begin);
                     using (var oldStream = File.Create(oldFilePath))
                     {
                         newStream.CopyTo(oldStream);
                         newStream.Flush();
                     }
+
                     return ReplaceStatus.Updated;
                 }
                 catch
                 {
                     if (i == overwriteFileRetryAttempts - 1)
-                    {
                         throw;
-                    }
-                    Thread.Sleep(1000 + (2000*i));
+                    Thread.Sleep(1000 + 2000 * i);
                 }
-            }
+
             throw new Exception("Internal error, cannot get here");
         }
 
         public string ReadAllText(string scriptFile)
-        {
-            return File.ReadAllText(scriptFile);
-        }
+            => File.ReadAllText(scriptFile);
 
         public string GetFileVersion(string file)
-        {
-            return FileVersionInfo.GetVersionInfo(file).FileVersion;
-        }
+            => FileVersionInfo.GetVersionInfo(file).FileVersion;
 
         public bool EqualHash(Stream first, Stream second)
         {
             if (first == null || second == null)
-            {
                 return false;
-            }
 
             first.Seek(0, SeekOrigin.Begin);
             second.Seek(0, SeekOrigin.Begin);
@@ -636,17 +589,13 @@ namespace Octopus.Shared.Util
                 var secondHash = cryptoProvider.ComputeHash(second);
 
                 for (var i = 0; i < firstHash.Length; i++)
-                {
                     if (firstHash[i] != secondHash[i])
                         return false;
-                }
                 return true;
             }
         }
 
-        private static bool IsUncPath(string directoryPath)
-        {
-            return Uri.TryCreate(directoryPath, UriKind.Absolute, out Uri? uri) && uri.IsUnc;
-        }
+        static bool IsUncPath(string directoryPath)
+            => Uri.TryCreate(directoryPath, UriKind.Absolute, out var uri) && uri.IsUnc;
     }
 }

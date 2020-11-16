@@ -8,12 +8,7 @@ namespace Octopus.Shared.Internals.Options
 {
     public abstract class Option
     {
-        static readonly char[] NameTerminator = {'=', ':'};
-        readonly string prototype;
-        readonly string? description;
-        readonly string[] names;
-        readonly OptionValueType type;
-        readonly int count;
+        static readonly char[] NameTerminator = { '=', ':' };
 
         protected Option(string prototype, string? description)
             : this(prototype, description, 1)
@@ -29,62 +24,47 @@ namespace Octopus.Shared.Internals.Options
             if (maxValueCount < 0)
                 throw new ArgumentOutOfRangeException("maxValueCount");
 
-            this.prototype = prototype;
-            names = prototype.Split('|');
-            this.description = description;
-            count = maxValueCount;
-            type = ParsePrototype();
+            Prototype = prototype;
+            Names = prototype.Split('|');
+            Description = description;
+            MaxValueCount = maxValueCount;
+            OptionValueType = ParsePrototype();
 
-            if (count == 0 && type != OptionValueType.None)
+            if (MaxValueCount == 0 && OptionValueType != OptionValueType.None)
                 throw new ArgumentException(
                     "Cannot provide maxValueCount of 0 for OptionValueType.Required or " +
-                        "OptionValueType.Optional.",
+                    "OptionValueType.Optional.",
                     "maxValueCount");
-            if (type == OptionValueType.None && maxValueCount > 1)
+            if (OptionValueType == OptionValueType.None && maxValueCount > 1)
                 throw new ArgumentException(
                     string.Format("Cannot provide maxValueCount of {0} for OptionValueType.None.", maxValueCount),
                     "maxValueCount");
-            if (Array.IndexOf(names, "<>") >= 0 &&
-                ((names.Length == 1 && type != OptionValueType.None) ||
-                    (names.Length > 1 && MaxValueCount > 1)))
+            if (Array.IndexOf(Names, "<>") >= 0 &&
+                (Names.Length == 1 && OptionValueType != OptionValueType.None ||
+                    Names.Length > 1 && MaxValueCount > 1))
                 throw new ArgumentException(
                     "The default option handler '<>' cannot require values.",
                     "prototype");
         }
 
-        public string Prototype
-        {
-            get { return prototype; }
-        }
+        public string Prototype { get; }
 
-        public string? Description
-        {
-            get { return description; }
-        }
+        public string? Description { get; }
 
-        public OptionValueType OptionValueType
-        {
-            get { return type; }
-        }
+        public OptionValueType OptionValueType { get; }
 
-        public int MaxValueCount
-        {
-            get { return count; }
-        }
+        public int MaxValueCount { get; }
 
-        internal string[] Names
-        {
-            get { return names; }
-        }
+        internal string[] Names { get; }
 
         internal string[]? ValueSeparators { get; set; }
         public bool Hide { get; set; }
         public bool Sensitive { get; set; }
 
+        public string?[] Values { get; private set; } = new string?[0];
+
         public string[] GetNames()
-        {
-            return (string[])names.Clone();
-        }
+            => (string[])Names.Clone();
 
         public string[] GetValueSeparators()
         {
@@ -93,10 +73,11 @@ namespace Octopus.Shared.Internals.Options
             return (string[])ValueSeparators.Clone();
         }
 
-        [return: NotNullIfNotNull("value"), MaybeNull]
+        [return: NotNullIfNotNull("value")]
+        [return: MaybeNull]
         protected static T Parse<T>(string? value, OptionContext c)
         {
-            var conv = TypeDescriptor.GetConverter(typeof (T));
+            var conv = TypeDescriptor.GetConverter(typeof(T));
             var t = default(T);
             try
             {
@@ -108,9 +89,13 @@ namespace Octopus.Shared.Internals.Options
                 throw new OptionException(
                     string.Format(
                         c.OptionSet.MessageLocalizer("Could not convert string `{0}' to type {1} for option `{2}'."),
-                        value, typeof (T).Name, c.OptionName),
-                    c.OptionName, e);
+                        value,
+                        typeof(T).Name,
+                        c.OptionName),
+                    c.OptionName,
+                    e);
             }
+
             return t;
         }
 
@@ -118,16 +103,16 @@ namespace Octopus.Shared.Internals.Options
         {
             var type = '\0';
             var seps = new List<string>();
-            for (var i = 0; i < names.Length; ++i)
+            for (var i = 0; i < Names.Length; ++i)
             {
-                var name = names[i];
+                var name = Names[i];
                 if (name.Length == 0)
                     throw new ArgumentException("Empty option names are not supported.", "prototype");
 
                 var end = name.IndexOfAny(NameTerminator);
                 if (end == -1)
                     continue;
-                names[i] = name.Substring(0, end);
+                Names[i] = name.Substring(0, end);
                 if (type == '\0' || type == name[end])
                     type = name[end];
                 else
@@ -140,14 +125,14 @@ namespace Octopus.Shared.Internals.Options
             if (type == '\0')
                 return OptionValueType.None;
 
-            if (count <= 1 && seps.Count != 0)
+            if (MaxValueCount <= 1 && seps.Count != 0)
                 throw new ArgumentException(
-                    string.Format("Cannot provide key/value separators for Options taking {0} value(s).", count),
+                    string.Format("Cannot provide key/value separators for Options taking {0} value(s).", MaxValueCount),
                     "prototype");
-            if (count > 1)
+            if (MaxValueCount > 1)
             {
                 if (seps.Count == 0)
-                    ValueSeparators = new[] {":", "="};
+                    ValueSeparators = new[] { ":", "=" };
                 else if (seps.Count == 1 && seps[0].Length == 0)
                     ValueSeparators = null;
                 else
@@ -161,7 +146,6 @@ namespace Octopus.Shared.Internals.Options
         {
             var start = -1;
             for (var i = end + 1; i < name.Length; ++i)
-            {
                 switch (name[i])
                 {
                     case '{':
@@ -184,7 +168,7 @@ namespace Octopus.Shared.Internals.Options
                             seps.Add(name[i].ToString(CultureInfo.InvariantCulture));
                         break;
                 }
-            }
+
             if (start != -1)
                 throw new ArgumentException(
                     string.Format("Ill-formed name/value separator found in \"{0}\".", name),
@@ -200,13 +184,9 @@ namespace Octopus.Shared.Internals.Options
             c.OptionValues.Clear();
         }
 
-        public string?[] Values { get; private set; } = new string?[0];
-
         protected abstract void OnParseComplete(OptionContext c);
 
         public override string ToString()
-        {
-            return Prototype;
-        }
+            => Prototype;
     }
 }

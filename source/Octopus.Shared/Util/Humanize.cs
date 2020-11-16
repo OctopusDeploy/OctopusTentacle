@@ -64,6 +64,7 @@ namespace Octopus.Shared.Util
                     separator = ", ";
                     final = " " + junction + " ";
                 }
+
                 prev = enumerator.Current;
             }
 
@@ -77,8 +78,6 @@ namespace Octopus.Shared.Util
         }
 
         public static string SplitPascalCase(string name)
-        {
-            return Regex.Replace(name, "([a-z])([A-Z])", "$1 $2");
-        }
+            => Regex.Replace(name, "([a-z])([A-Z])", "$1 $2");
     }
 }

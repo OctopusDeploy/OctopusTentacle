@@ -6,18 +6,14 @@ namespace Octopus.Shared.Internals.CertificateGeneration
     public abstract class CryptKey : FinalizableObject
     {
         readonly CryptContext ctx;
-        readonly IntPtr handle;
 
         internal CryptKey(CryptContext ctx, IntPtr handle)
         {
             this.ctx = ctx;
-            this.handle = handle;
+            this.Handle = handle;
         }
 
-        internal IntPtr Handle
-        {
-            get { return handle; }
-        }
+        internal IntPtr Handle { get; }
 
         public abstract KeyType Type { get; }
 

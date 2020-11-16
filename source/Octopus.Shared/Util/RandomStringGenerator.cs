@@ -17,9 +17,7 @@ namespace Octopus.Shared.Util
                 using (var random = new RNGCryptoServiceProvider())
                 {
                     for (var i = 0; i < length; i++)
-                    {
                         password.Append(allowedCharacters[Next(random, allowedCharacters.Length - 1)]);
-                    }
 
                     return password.ToString();
                 }
@@ -36,13 +34,14 @@ namespace Octopus.Shared.Util
             {
                 rngCsp.GetBytes(randomNumber);
             } while (!IsFairRoll(randomNumber[0], numberSides));
-            return (byte)((randomNumber[0]%numberSides) + 1);
+
+            return (byte)(randomNumber[0] % numberSides + 1);
         }
 
         static bool IsFairRoll(byte roll, int numSides)
         {
-            var fullSetsOfValues = Byte.MaxValue/numSides;
-            return roll < numSides*fullSetsOfValues;
+            var fullSetsOfValues = byte.MaxValue / numSides;
+            return roll < numSides * fullSetsOfValues;
         }
     }
 }

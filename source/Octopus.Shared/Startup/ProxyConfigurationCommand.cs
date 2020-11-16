@@ -19,39 +19,46 @@ namespace Octopus.Shared.Startup
             this.proxyConfiguration = proxyConfiguration;
             this.log = log;
 
-            Options.Add("proxyEnable=", "Whether to use a proxy", v => QueueOperation(delegate
-            {
-                useAProxy = bool.Parse(v);
-            }));
-
-            Options.Add("proxyUsername=", "Username to use when authenticating with the proxy", v => QueueOperation(delegate
-            {
-                proxyConfiguration.Value.SetCustomProxyUsername(v);
-                log.Info(string.IsNullOrWhiteSpace(v) ? "Proxy username cleared" : "Proxy username set to: " + v);
-            }));
-
-            Options.Add("proxyPassword=", "Password to use when authenticating with the proxy", v => QueueOperation(delegate
-            {
-                proxyConfiguration.Value.SetCustomProxyPassword(v);
-                log.Info(string.IsNullOrWhiteSpace(v) ? "Proxy password cleared" : "Proxy password set to: *******");
-            }), sensitive: true);
-
-            Options.Add("proxyHost=", "The proxy host to use. Leave empty to use the default Internet Explorer proxy", v => QueueOperation(delegate
-            {
-                if (!string.IsNullOrWhiteSpace(v))
+            Options.Add("proxyEnable=",
+                "Whether to use a proxy",
+                v => QueueOperation(delegate
                 {
-                    host = new UriBuilder(v).Host;
-                }
-            }));
+                    useAProxy = bool.Parse(v);
+                }));
 
-            Options.Add("proxyPort=", "The proxy port to use in conjunction with the Host set with proxyHost", v => QueueOperation(delegate
-            {
-                proxyConfiguration.Value.SetCustomProxyPort(string.IsNullOrWhiteSpace(v) ? 80 : int.Parse(v));
-                if (host != null)
+            Options.Add("proxyUsername=",
+                "Username to use when authenticating with the proxy",
+                v => QueueOperation(delegate
                 {
-                    log.Info("Proxy port set to: " + proxyConfiguration.Value.CustomProxyPort);
-                }
-            }));
+                    proxyConfiguration.Value.SetCustomProxyUsername(v);
+                    log.Info(string.IsNullOrWhiteSpace(v) ? "Proxy username cleared" : "Proxy username set to: " + v);
+                }));
+
+            Options.Add("proxyPassword=",
+                "Password to use when authenticating with the proxy",
+                v => QueueOperation(delegate
+                {
+                    proxyConfiguration.Value.SetCustomProxyPassword(v);
+                    log.Info(string.IsNullOrWhiteSpace(v) ? "Proxy password cleared" : "Proxy password set to: *******");
+                }),
+                sensitive: true);
+
+            Options.Add("proxyHost=",
+                "The proxy host to use. Leave empty to use the default Internet Explorer proxy",
+                v => QueueOperation(delegate
+                {
+                    if (!string.IsNullOrWhiteSpace(v))
+                        host = new UriBuilder(v).Host;
+                }));
+
+            Options.Add("proxyPort=",
+                "The proxy port to use in conjunction with the Host set with proxyHost",
+                v => QueueOperation(delegate
+                {
+                    proxyConfiguration.Value.SetCustomProxyPort(string.IsNullOrWhiteSpace(v) ? 80 : int.Parse(v));
+                    if (host != null)
+                        log.Info("Proxy port set to: " + proxyConfiguration.Value.CustomProxyPort);
+                }));
         }
 
         protected override void Start()

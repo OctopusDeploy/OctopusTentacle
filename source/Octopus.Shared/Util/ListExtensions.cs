@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-
 namespace Octopus.Shared.Util
 {
     public static class ListExtensions
@@ -34,9 +33,7 @@ namespace Octopus.Shared.Util
                 return;
 
             foreach (var item in itemsToAdd)
-            {
                 source.Add(item);
-            }
         }
 
         public static void AddRangeUnique<TElement>(this ICollection<TElement> source, IEnumerable<TElement> itemsToAdd)
@@ -45,10 +42,8 @@ namespace Octopus.Shared.Util
                 return;
 
             foreach (var item in itemsToAdd.Where(item => !source.Contains(item)))
-            {
                 source.Add(item);
-            }
-        }     
+        }
 
         public static void ReplaceAll<TElement>(this ICollection<TElement> source, IEnumerable<TElement> itemsToAdd)
         {

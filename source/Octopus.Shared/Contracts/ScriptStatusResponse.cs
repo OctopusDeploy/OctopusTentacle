@@ -20,10 +20,6 @@ namespace Octopus.Shared.Contracts
 
     public class ProcessOutput
     {
-        readonly ProcessOutputSource source;
-        readonly string text;
-        readonly DateTimeOffset occurred;
-
         public ProcessOutput(ProcessOutputSource source, string text) : this(source, text, DateTimeOffset.UtcNow)
         {
         }
@@ -31,67 +27,41 @@ namespace Octopus.Shared.Contracts
         [JsonConstructor]
         public ProcessOutput(ProcessOutputSource source, string text, DateTimeOffset occurred)
         {
-            this.source = source;
-            this.text = text;
-            this.occurred = occurred;
+            Source = source;
+            Text = text;
+            Occurred = occurred;
         }
 
-        public ProcessOutputSource Source
-        {
-            get { return source; }
-        }
+        public ProcessOutputSource Source { get; }
 
-        public DateTimeOffset Occurred
-        {
-            get { return occurred; }
-        }
+        public DateTimeOffset Occurred { get; }
 
-        public string Text
-        {
-            get { return text; }
-        }
+        public string Text { get; }
     }
 
     public class ScriptStatusResponse
     {
-        readonly ScriptTicket ticket;
-        readonly ProcessState state;
-        readonly int exitCode;
-        readonly List<ProcessOutput> logs;
-        readonly long nextLogSequence;
-
-        public ScriptStatusResponse(ScriptTicket ticket, ProcessState state, int exitCode, List<ProcessOutput> logs, long nextLogSequence)
+        public ScriptStatusResponse(ScriptTicket ticket,
+            ProcessState state,
+            int exitCode,
+            List<ProcessOutput> logs,
+            long nextLogSequence)
         {
-            this.ticket = ticket;
-            this.state = state;
-            this.exitCode = exitCode;
-            this.logs = logs;
-            this.nextLogSequence = nextLogSequence;
+            Ticket = ticket;
+            State = state;
+            ExitCode = exitCode;
+            Logs = logs;
+            NextLogSequence = nextLogSequence;
         }
 
-        public ScriptTicket Ticket
-        {
-            get { return ticket; }
-        }
+        public ScriptTicket Ticket { get; }
 
-        public List<ProcessOutput> Logs
-        {
-            get { return logs; }
-        }
+        public List<ProcessOutput> Logs { get; }
 
-        public long NextLogSequence
-        {
-            get { return nextLogSequence; }
-        }
+        public long NextLogSequence { get; }
 
-        public ProcessState State
-        {
-            get { return state; }
-        }
+        public ProcessState State { get; }
 
-        public int ExitCode
-        {
-            get { return exitCode; }
-        }
+        public int ExitCode { get; }
     }
 }

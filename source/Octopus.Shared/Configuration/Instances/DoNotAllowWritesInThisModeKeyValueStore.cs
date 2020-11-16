@@ -13,33 +13,21 @@ namespace Octopus.Shared.Configuration.Instances
         }
 
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
-        {
-            return readonlyStore.Get(name, protectionLevel);
-        }
+            => readonlyStore.Get(name, protectionLevel);
 
-        public TData Get<TData>(string name, TData defaultValue = default(TData), ProtectionLevel protectionLevel = ProtectionLevel.None)
-        {
-            return readonlyStore.Get(name, defaultValue, protectionLevel);
-        }
+        public TData Get<TData>(string name, TData defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None)
+            => readonlyStore.Get(name, defaultValue, protectionLevel);
 
         public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
-        {
-            throw new InvalidOperationException($"The setting {name} cannot be written in this startup mode, you must specify an instance name or a config file");
-        }
+            => throw new InvalidOperationException($"The setting {name} cannot be written in this startup mode, you must specify an instance name or a config file");
 
         public bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None)
-        {
-            throw new InvalidOperationException($"The setting {name} cannot be written in this startup mode, you must specify an instance name or a config file");
-        }
+            => throw new InvalidOperationException($"The setting {name} cannot be written in this startup mode, you must specify an instance name or a config file");
 
         public bool Remove(string name)
-        {
-            throw new InvalidOperationException($"The setting {name} cannot be removed in this startup mode, you must specify an instance name or a config file");
-        }
+            => throw new InvalidOperationException($"The setting {name} cannot be removed in this startup mode, you must specify an instance name or a config file");
 
         public bool Save()
-        {
-            throw new InvalidOperationException($"The settings cannot be saved in this startup mode, you must specify an instance name or a config file");
-        }
+            => throw new InvalidOperationException("The settings cannot be saved in this startup mode, you must specify an instance name or a config file");
     }
 }

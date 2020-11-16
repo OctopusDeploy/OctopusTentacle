@@ -23,9 +23,7 @@ namespace Octopus.Shared.Configuration
 
             var defaultInstanceName = ApplicationInstanceRecord.GetDefaultInstance(application);
             if (defaultInstanceName == instanceName)
-            {
                 return name;
-            }
 
             return name + ": " + instanceName;
         }

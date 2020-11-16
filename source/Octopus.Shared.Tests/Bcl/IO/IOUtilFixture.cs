@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using NUnit.Framework;
 using Octopus.Shared.Util;
@@ -12,7 +13,7 @@ namespace Octopus.Shared.Tests.Bcl.IO
         static Encoding Sniff(string filename)
         {
             var path = Path.Combine(
-                Path.GetDirectoryName(typeof (IOUtilFixture).Assembly.Location) ?? ".",
+                Path.GetDirectoryName(typeof(IOUtilFixture).Assembly.Location) ?? ".",
                 "Bcl",
                 "IO",
                 filename);

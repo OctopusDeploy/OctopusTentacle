@@ -26,15 +26,12 @@ namespace Octopus.Shared.Util
                         var threeBytes = new byte[3];
                         file.Position = 0;
                         if (file.Read(threeBytes, 0, 3) == 3)
-                        {
                             if (threeBytes[0] == 0xEF &&
                                 threeBytes[1] == 0xBB &&
                                 threeBytes[2] == 0xBF)
-                            {
                                 return encoding;
-                            }
-                        }
                     }
+
                     return new UTF8Encoding(false);
                 }
             }

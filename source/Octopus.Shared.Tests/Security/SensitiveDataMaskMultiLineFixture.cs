@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using Octopus.Shared.Security.Masking;
 
 namespace Octopus.Shared.Tests.Security
@@ -15,15 +16,15 @@ namespace Octopus.Shared.Tests.Security
 
             var sdm = new SensitiveDataMask();
             var trie = CreateTrie(sensitive);
-            string result = "";
+            var result = "";
 
             foreach (var line in raw)
-            {
-                sdm.ApplyTo(trie, line, sanitized =>
-                {
-                    result += sanitized;
-                });
-            }
+                sdm.ApplyTo(trie,
+                    line,
+                    sanitized =>
+                    {
+                        result += sanitized;
+                    });
 
             Assert.AreEqual(SensitiveDataMask.Mask, result);
         }
@@ -37,15 +38,15 @@ namespace Octopus.Shared.Tests.Security
 
             var sdm = new SensitiveDataMask();
             var trie = CreateTrie(sensitive);
-            string result = "";
+            var result = "";
 
             foreach (var line in raw)
-            {
-                sdm.ApplyTo(trie, line, sanitized =>
-                {
-                    result += sanitized;
-                });
-            }
+                sdm.ApplyTo(trie,
+                    line,
+                    sanitized =>
+                    {
+                        result += sanitized;
+                    });
 
             Assert.AreEqual(string.Concat(raw), result);
         }
@@ -59,15 +60,15 @@ namespace Octopus.Shared.Tests.Security
 
             var sdm = new SensitiveDataMask();
             var trie = CreateTrie(sensitive);
-            string result = "";
+            var result = "";
 
             foreach (var line in raw)
-            {
-                sdm.ApplyTo(trie, line, sanitized =>
-                {
-                    result += sanitized;
-                });
-            }
+                sdm.ApplyTo(trie,
+                    line,
+                    sanitized =>
+                    {
+                        result += sanitized;
+                    });
 
             // There are two instances of the Mask because these will be output by different actions.
             // i.e. logged to different lines
@@ -84,15 +85,15 @@ namespace Octopus.Shared.Tests.Security
 
             var sdm = new SensitiveDataMask();
             var trie = CreateTrie(singleLineSensitive, multiLineSensitive);
-            string result = "";
+            var result = "";
 
             foreach (var line in raw)
-            {
-                sdm.ApplyTo(trie, line, sanitized =>
-                {
-                    result += sanitized;
-                });
-            }
+                sdm.ApplyTo(trie,
+                    line,
+                    sanitized =>
+                    {
+                        result += sanitized;
+                    });
 
             Assert.AreEqual("Single Line Secret: " + SensitiveDataMask.Mask + " Multi-line Secret: " + SensitiveDataMask.Mask, result);
         }
@@ -106,20 +107,20 @@ namespace Octopus.Shared.Tests.Security
 
             var sdm = new SensitiveDataMask();
             var trie = CreateTrie(multiLineSensitive);
-            string result = "";
+            var result = "";
 
             foreach (var line in raw)
-            {
-                sdm.ApplyTo(trie, line, sanitized =>
-                {
-                    result += sanitized;
-                });
-            }
+                sdm.ApplyTo(trie,
+                    line,
+                    sanitized =>
+                    {
+                        result += sanitized;
+                    });
 
             Assert.AreEqual("multi" + SensitiveDataMask.Mask + "secret", result);
         }
 
-        private AhoCorasick CreateTrie(params string[] args)
+        AhoCorasick CreateTrie(params string[] args)
         {
             var trie = new AhoCorasick();
             foreach (var instance in args)

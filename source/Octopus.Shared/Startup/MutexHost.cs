@@ -16,12 +16,13 @@ namespace Octopus.Shared.Startup
             (int)OctopusProgram.ExitCode.UnknownCommand,
             (int)OctopusProgram.ExitCode.ControlledFailureException
         };
+
         readonly ILog log = Log.Octopus();
 
-        private readonly string monitorMutexHost;
-        private readonly CancellationTokenSource sourceToken = new CancellationTokenSource();
-        private readonly ManualResetEventSlim shutdownTrigger = new ManualResetEventSlim(false);
-        private Task? task;
+        readonly string monitorMutexHost;
+        readonly CancellationTokenSource sourceToken = new CancellationTokenSource();
+        readonly ManualResetEventSlim shutdownTrigger = new ManualResetEventSlim(false);
+        Task? task;
 
         public MutexHost(string monitorMutexHost)
         {
@@ -31,20 +32,16 @@ namespace Octopus.Shared.Startup
         public void Run(Action<ICommandRuntime> start, Action shutdown)
         {
             if (Mutex.TryOpenExisting(monitorMutexHost, out var m))
-            {
                 task = Task.Run(() =>
                 {
                     while (!sourceToken.IsCancellationRequested)
-                    {
                         if (m.WaitOne(500))
                         {
                             shutdown();
                             shutdownTrigger.Set();
                             break;
                         }
-                    }
                 });
-            }
 
             start(this);
         }
@@ -55,9 +52,7 @@ namespace Octopus.Shared.Startup
             task?.Wait();
 
             if (shutdownTrigger.IsSet)
-            {
                 return;
-            }
 
             shutdown();
             shutdownTrigger.Set();
@@ -72,9 +67,7 @@ namespace Octopus.Shared.Startup
                 .AppendLine($"Terminating process with exit code {exitCode}")
                 .AppendLine("Full error details are available in the log files at:");
             foreach (var logDirectory in OctopusLogsDirectoryRenderer.LogsDirectoryHistory)
-            {
                 sb.AppendLine(logDirectory);
-            }
             sb.AppendLine("If you need help, please send these log files to https://octopus.com/support");
             sb.AppendLine(new string('-', 79));
             log.Fatal(sb.ToString());

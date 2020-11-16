@@ -5,10 +5,10 @@ using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration
 {
-    internal class LogInitializer
+    class LogInitializer
     {
         readonly ILoggingConfiguration configuration;
-        private readonly ILogFileOnlyLogger logFileOnlyLogger;
+        readonly ILogFileOnlyLogger logFileOnlyLogger;
 
         public LogInitializer(ILoggingConfiguration configuration, ILogFileOnlyLogger logFileOnlyLogger)
         {
@@ -36,9 +36,7 @@ namespace Octopus.Shared.Configuration
                 if (string.IsNullOrEmpty(logDirectory)) throw new ArgumentException("Value cannot be null or empty.", nameof(logDirectory));
 
                 if (!Directory.Exists(logDirectory))
-                {
                     Directory.CreateDirectory(logDirectory);
-                }
 
                 OctopusLogsDirectoryRenderer.History.Add(logDirectory);
                 OctopusLogsDirectoryRenderer.LogsDirectory = logDirectory;

@@ -20,9 +20,7 @@ namespace Octopus.Shared.Configuration
         protected override void LoadSettings(IDictionary<string, object?> settingsToFill)
         {
             if (!fileSystem.FileExists(configurationFile))
-            {
                 return;
-            }
 
             Dictionary<string, string> deserializedData;
             using (var reader = new StreamReader(fileSystem.OpenFile(configurationFile, FileMode.Open)))
@@ -30,10 +28,9 @@ namespace Octopus.Shared.Configuration
                 var serializedData = reader.ReadToEnd();
                 deserializedData = JsonConvert.DeserializeObject<Dictionary<string, string>>(serializedData, JsonSerializerSettings);
             }
+
             foreach (var kvp in deserializedData)
-            {
                 settingsToFill.Add(kvp.Key, kvp.Value);
-            }
         }
 
         protected override void WriteSerializedData(string serializedData)

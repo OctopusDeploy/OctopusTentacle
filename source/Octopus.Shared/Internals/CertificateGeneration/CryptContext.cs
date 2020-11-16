@@ -1,4 +1,5 @@
-﻿#nullable disable
+﻿
+#nullable disable
 #if NETFRAMEWORK
 using System;
 using System.Runtime.InteropServices;
@@ -25,10 +26,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
             Flags = 8; // create new keyset
         }
 
-        public IntPtr Handle
-        {
-            get { return handle; }
-        }
+        public IntPtr Handle => handle;
 
         public string ContainerName { get; set; }
         public string ProviderName { get; set; }
@@ -38,7 +36,11 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         public void Open()
         {
             ThrowIfDisposed();
-            if (!Win32Native.CryptAcquireContext(out handle, ContainerName, ProviderName, ProviderType, Flags))
+            if (!Win32Native.CryptAcquireContext(out handle,
+                ContainerName,
+                ProviderName,
+                ProviderType,
+                Flags))
                 Win32ErrorHelper.ThrowExceptionIfGetLastErrorIsNotZero();
         }
 
@@ -55,6 +57,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
                     log.Warn("Falling back to SHA1 certificate, as SHA256 certificates are not supported on this 32 bit Windows 2008 install");
                     return CreateSha1SelfSignedCertificate(properties);
                 }
+
                 throw;
             }
         }
@@ -85,7 +88,9 @@ namespace Octopus.Shared.Internals.CertificateGeneration
             var certContext = Win32Native.CertCreateSelfSignCertificate(
                 handle,
                 new Win32Native.CryptoApiBlob(asnName.Length, asnNameHandle.AddrOfPinnedObject()),
-                0, kpi, signatureAlgorithm,
+                0,
+                kpi,
+                signatureAlgorithm,
                 ToSystemTime(properties.ValidFrom),
                 ToSystemTime(properties.ValidTo),
                 IntPtr.Zero);
@@ -120,12 +125,14 @@ namespace Octopus.Shared.Internals.CertificateGeneration
             };
 
             var certContext = Win32Native.CertCreateSelfSignCertificate_2008(
-                    handle,
-                    new Win32Native.CryptoApiBlob(asnName.Length, asnNameHandle.AddrOfPinnedObject()),
-                    0, kpi, IntPtr.Zero,
-                    ToSystemTime(properties.ValidFrom),
-                    ToSystemTime(properties.ValidTo),
-                    IntPtr.Zero);
+                handle,
+                new Win32Native.CryptoApiBlob(asnName.Length, asnNameHandle.AddrOfPinnedObject()),
+                0,
+                kpi,
+                IntPtr.Zero,
+                ToSystemTime(properties.ValidFrom),
+                ToSystemTime(properties.ValidTo),
+                IntPtr.Zero);
 
             asnNameHandle.Free();
 
@@ -141,12 +148,10 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         }
 
         static bool Is32BitWindows2008()
-        {
-            return Environment.OSVersion.Platform == PlatformID.Win32NT &&
+            => Environment.OSVersion.Platform == PlatformID.Win32NT &&
                 Environment.OSVersion.Version.Major == 6 &&
                 Environment.OSVersion.Version.Minor == 0 &&
                 !Environment.Is64BitOperatingSystem;
-        }
 
         Win32Native.SystemTime ToSystemTime(DateTime dateTime)
         {
@@ -161,7 +166,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         {
             ThrowIfDisposedOrNotOpen();
 
-            var flags = (exportable ? 1U : 0U) | ((uint)keyBitLength) << 16;
+            var flags = (exportable ? 1U : 0U) | ((uint)keyBitLength << 16);
 
             IntPtr keyHandle;
             var result = Win32Native.CryptGenKey(handle, (int)KeyType.Exchange, flags, out keyHandle);
@@ -175,7 +180,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         {
             ThrowIfDisposedOrNotOpen();
 
-            var flags = (exportable ? 1U : 0U) | ((uint)keyBitLength) << 16;
+            var flags = (exportable ? 1U : 0U) | ((uint)keyBitLength << 16);
 
             IntPtr keyHandle;
             var result = Win32Native.CryptGenKey(handle, (int)KeyType.Signature, flags, out keyHandle);
@@ -195,14 +200,10 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         protected override void CleanUp(bool viaDispose)
         {
             if (handle != IntPtr.Zero)
-            {
                 if (!Win32Native.CryptReleaseContext(handle, 0))
-                {
                     // only throw exceptions if we're NOT in a finalizer
                     if (viaDispose)
                         Win32ErrorHelper.ThrowExceptionIfGetLastErrorIsNotZero();
-                }
-            }
         }
 
         void ThrowIfDisposedOrNotOpen()

@@ -3,27 +3,23 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
 {
-    public class MachineKeyEncrypter: IMachineKeyEncryptor
+    public class MachineKeyEncrypter : IMachineKeyEncryptor
     {
-        static MachineKeyEncrypter()
-        {
-            Current = PlatformDetection.IsRunningOnWindows ?
-                (IMachineKeyEncryptor)new WindowsMachineKeyEncryptor() :
-                new LinuxMachineKeyEncryptor();
-        }
-
         public static readonly IMachineKeyEncryptor Current;
 
-        private MachineKeyEncrypter() { }
-        
-        public string Encrypt(string raw)
+        static MachineKeyEncrypter()
         {
-            return Current.Encrypt(raw);
+            Current = PlatformDetection.IsRunningOnWindows ? (IMachineKeyEncryptor)new WindowsMachineKeyEncryptor() : new LinuxMachineKeyEncryptor();
         }
 
-        public string Decrypt(string encrypted)
+        MachineKeyEncrypter()
         {
-            return Current.Decrypt(encrypted);
         }
+
+        public string Encrypt(string raw)
+            => Current.Encrypt(raw);
+
+        public string Decrypt(string encrypted)
+            => Current.Decrypt(encrypted);
     }
 }
