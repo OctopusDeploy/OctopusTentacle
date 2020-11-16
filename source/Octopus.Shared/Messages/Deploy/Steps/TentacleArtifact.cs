@@ -10,7 +10,7 @@ namespace Octopus.Shared.Messages.Deploy.Steps
             OriginalFilename = originalFilename;
         }
 
-        public string Path { get; private set; }
-        public string OriginalFilename { get; private set; }
+        public string Path { get; }
+        public string OriginalFilename { get; }
     }
 }

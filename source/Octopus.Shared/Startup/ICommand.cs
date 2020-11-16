@@ -19,8 +19,11 @@ namespace Octopus.Shared.Startup
         /// Most commands should always run interactively.
         /// </summary>
         bool CanRunAsService { get; }
-        void WriteHelp(TextWriter writer);
+
         OptionSet Options { get; }
+
+        void WriteHelp(TextWriter writer);
+
         // Common options are provided so that the Help command can inspect them
         void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions);
         void Stop();

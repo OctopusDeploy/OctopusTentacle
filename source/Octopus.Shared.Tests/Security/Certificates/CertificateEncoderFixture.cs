@@ -3,7 +3,6 @@ using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using FluentAssertions;
-using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Shared.Security.Certificates;
 
@@ -41,7 +40,7 @@ namespace Octopus.Shared.Tests.Security.Certificates
             Action action = () => CertificateEncoder.FromPfxFile(pfxFilePath, "");
 
             try
-            { 
+            {
                 action.Should().Throw<CryptographicException>().WithMessage("The specified network password is not correct*");
             }
             finally
@@ -80,7 +79,8 @@ namespace Octopus.Shared.Tests.Security.Certificates
 
             try
             {
-                action.Should().Throw<CryptographicException>()
+                action.Should()
+                    .Throw<CryptographicException>()
                     .WithMessage("Unable to load X509 Certificate file. The X509 certificate file you provided does not include the private key. Please make sure the private key is included in your X509 certificate file and try again.");
             }
             finally
@@ -102,7 +102,7 @@ namespace Octopus.Shared.Tests.Security.Certificates
 
         public static byte[] GetBytesFromStream(Stream input)
         {
-            using (MemoryStream ms = new MemoryStream())
+            using (var ms = new MemoryStream())
             {
                 input.CopyTo(ms);
                 return ms.ToArray();

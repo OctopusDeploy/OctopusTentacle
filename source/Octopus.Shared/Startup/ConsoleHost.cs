@@ -9,6 +9,15 @@ namespace Octopus.Shared.Startup
 {
     public class ConsoleHost : ICommandHost, ICommandRuntime
     {
+        static readonly int[] FriendlyExitCodes =
+        {
+            (int)OctopusProgram.ExitCode.Success,
+            (int)OctopusProgram.ExitCode.UnknownCommand,
+            (int)OctopusProgram.ExitCode.ControlledFailureException
+        };
+
+        public static readonly string ConsoleSwitchPrototype = "console";
+        public static readonly string ConsoleSwitchExample = $"--{ConsoleSwitchPrototype}";
         readonly ILog log = Log.Octopus();
         readonly string displayName;
 
@@ -32,15 +41,8 @@ namespace Octopus.Shared.Startup
             Console.ResetColor();
         }
 
-        static readonly int[] FriendlyExitCodes =
-        {
-            (int)OctopusProgram.ExitCode.Success,
-            (int)OctopusProgram.ExitCode.UnknownCommand,
-            (int)OctopusProgram.ExitCode.ControlledFailureException
-        };
-
         public void OnExit(int exitCode)
-        {    
+        {
             if (FriendlyExitCodes.Contains(exitCode)) return;
 
             var sb = new StringBuilder()
@@ -48,9 +50,7 @@ namespace Octopus.Shared.Startup
                 .AppendLine($"Terminating process with exit code {exitCode}")
                 .AppendLine("Full error details are available in the log files at:");
             foreach (var logDirectory in OctopusLogsDirectoryRenderer.LogsDirectoryHistory)
-            {
                 sb.AppendLine(logDirectory);
-            }
             sb.AppendLine("If you need help, please send these log files to https://octopus.com/support");
             sb.AppendLine(new string('-', 79));
             log.Fatal(sb.ToString());
@@ -68,13 +68,9 @@ namespace Octopus.Shared.Startup
             {
                 var line = (Console.ReadLine() ?? string.Empty).ToLowerInvariant();
                 if (line == "cls" || line == "clear")
-                {
                     Console.Clear();
-                }
                 if (string.IsNullOrWhiteSpace(line))
-                {
                     break;
-                }
             }
 
             Console.ResetColor();
@@ -82,9 +78,6 @@ namespace Octopus.Shared.Startup
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine();
         }
-
-        public static readonly string ConsoleSwitchPrototype = "console";
-        public static readonly string ConsoleSwitchExample = $"--{ConsoleSwitchPrototype}";
 
         /// <summary>
         /// Use this method to reliably add the --console switch to commands that want to provide an option to run as a service, or interactively.
@@ -94,11 +87,13 @@ namespace Octopus.Shared.Startup
         /// <returns>The resulting OptionSet after adding the --console switch. Can be used as a convenience for method chaining.</returns>
         public static OptionSet AddConsoleSwitch(OptionSet options, Action<string>? action = null)
         {
-            return options.Add(ConsoleSwitchPrototype, "Don't attempt to run as a service, even if the user is non-interactive", action ?? (v =>
-            {
-                // There's actually nothing to do here. The CommandHost should have already been determined at startup.
-                // This option is added to show help and provide a hook for determining the appropriate CommandHost.
-            }));
+            return options.Add(ConsoleSwitchPrototype,
+                "Don't attempt to run as a service, even if the user is non-interactive",
+                action ?? (v =>
+                {
+                    // There's actually nothing to do here. The CommandHost should have already been determined at startup.
+                    // This option is added to show help and provide a hook for determining the appropriate CommandHost.
+                }));
         }
 
         /// <summary>
@@ -113,7 +108,7 @@ namespace Octopus.Shared.Startup
 
         static void SafelySetConsoleTitle(string title)
         {
-            if(Environment.UserInteractive)
+            if (Environment.UserInteractive)
                 Console.Title = title;
         }
     }

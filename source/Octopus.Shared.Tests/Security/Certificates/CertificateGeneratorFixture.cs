@@ -6,7 +6,6 @@ using NUnit.Framework;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
 using Octopus.Shared.Tests.Support;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Security.Certificates
 {
@@ -24,13 +23,9 @@ namespace Octopus.Shared.Tests.Security.Certificates
             Assert.That(cert.PrivateKey.KeySize, Is.EqualTo(2048));
             Assert.That(cert.PublicKey.Key.KeySize, Is.EqualTo(2048));
             if (cert.SignatureAlgorithm.FriendlyName == "sha1RSA")
-            {
                 log.GetLog().Should().Contain("WARN: Falling back to SHA1 certificate");
-            }
             else
-            {
                 log.GetLog().Should().NotContain("Falling back to SHA1 certificate");
-            }
             Assert.That(cert.SubjectName.Name, Is.EqualTo("CN=test"));
             Assert.That(cert.Issuer, Is.EqualTo("CN=test"));
         }

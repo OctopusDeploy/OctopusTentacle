@@ -5,7 +5,6 @@ using System.Management;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using NLog.Fluent;
 using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
@@ -14,7 +13,7 @@ namespace Octopus.Shared.Startup
     public class WindowsServiceConfigurator : IServiceConfigurator
     {
         readonly ILog log;
-        private readonly ILogFileOnlyLogger logFileOnlyLogger;
+        readonly ILogFileOnlyLogger logFileOnlyLogger;
 
         public WindowsServiceConfigurator(ILog log, ILogFileOnlyLogger logFileOnlyLogger)
         {
@@ -22,7 +21,11 @@ namespace Octopus.Shared.Startup
             this.logFileOnlyLogger = logFileOnlyLogger;
         }
 
-        public void ConfigureService(string thisServiceName, string exePath, string instance, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
+        public void ConfigureService(string thisServiceName,
+            string exePath,
+            string instance,
+            string serviceDescription,
+            ServiceConfigurationState serviceConfigurationState)
         {
             var services = ServiceController.GetServices();
             var controller = services.FirstOrDefault(s => s.ServiceName == thisServiceName);
@@ -37,26 +40,18 @@ namespace Octopus.Shared.Startup
                 {
                     log.Info($"Restarting service {thisServiceName}");
                     if (TryStopService(controller))
-                    {
                         StartService(controller);
-                    }
                     else
-                    {
                         log.Info($"Service {thisServiceName} wasn't restarted as it is not running.");
-                    }
                 }
             }
 
             if (serviceConfigurationState.Stop)
             {
                 if (controller == null)
-                {
                     logFileOnlyLogger.Info($"Stop requested for service {thisServiceName}, but service controller was not found. Skipping.");
-                }
                 else
-                {
                     TryStopService(controller);
-                }
             }
 
             if (serviceConfigurationState.Uninstall)
@@ -147,9 +142,7 @@ namespace Octopus.Shared.Startup
             if (serviceConfigurationState.Start)
             {
                 if (controller == null)
-                {
                     throw new ControlledFailureException($"Start requested for service {thisServiceName}, but no service with this name was found.");
-                }
 
                 StartService(controller);
             }
@@ -157,11 +150,9 @@ namespace Octopus.Shared.Startup
 
         bool TryStopService(ServiceController controller)
         {
-
             if (controller.Status != ServiceControllerStatus.Stopped && controller.Status != ServiceControllerStatus.StopPending)
             {
                 if (!controller.CanStop)
-                {
                     try
                     {
                         WaitForControllerToBeReadyToStop(controller);
@@ -171,7 +162,6 @@ namespace Octopus.Shared.Startup
                         log.Error("The service is not able to stop");
                         throw;
                     }
-                }
 
                 log.Info("Stopping service...");
                 Thread.Sleep(300);
@@ -202,9 +192,7 @@ namespace Octopus.Shared.Startup
             if (controller.Status != ServiceControllerStatus.Running)
             {
                 if (controller.Status != ServiceControllerStatus.StartPending)
-                {
                     controller.Start();
-                }
 
                 WaitForControllerStatus(controller, ServiceControllerStatus.Running);
 
@@ -215,23 +203,25 @@ namespace Octopus.Shared.Startup
         void WaitForControllerToBeReadyToStop(ServiceController controller)
         {
             Retry(() =>
-            {
-                controller.Refresh();
-                log.Info("Waiting for the service to be ready to stop...");
-                Thread.Sleep(300);
-                return controller.CanStop;
-            }, 150);
+                {
+                    controller.Refresh();
+                    log.Info("Waiting for the service to be ready to stop...");
+                    Thread.Sleep(300);
+                    return controller.CanStop;
+                },
+                150);
         }
 
         void WaitForControllerStatus(ServiceController controller, ServiceControllerStatus status)
         {
             Retry(() =>
-            {
-                controller.Refresh();
-                log.Info($"Waiting for service to become {status}. Current status: {controller.Status}");
-                Thread.Sleep(300);
-                return controller.Status == status;
-            }, 150);
+                {
+                    controller.Refresh();
+                    log.Info($"Waiting for service to become {status}. Current status: {controller.Status}");
+                    Thread.Sleep(300);
+                    return controller.Status == status;
+                },
+                150);
         }
 
         void Sc(string arguments)
@@ -240,27 +230,23 @@ namespace Octopus.Shared.Startup
             var argumentsToLog = string.Join(" ", arguments);
 
             logFileOnlyLogger.Info($"Executing sc.exe {argumentsToLog}");
-            var exitCode = SilentProcessRunner.ExecuteCommand("sc.exe", arguments, Environment.CurrentDirectory, output => outputBuilder.AppendLine(output), error => outputBuilder.AppendLine("Error: " + error));
+            var exitCode = SilentProcessRunner.ExecuteCommand("sc.exe",
+                arguments,
+                Environment.CurrentDirectory,
+                output => outputBuilder.AppendLine(output),
+                error => outputBuilder.AppendLine("Error: " + error));
             if (exitCode == 0)
-            {
                 logFileOnlyLogger.Info(outputBuilder.ToString());
-            }
             else
-            {
                 log.Error(outputBuilder.ToString());
-            }
         }
 
         void Retry(Func<bool> func, int maxRetries)
         {
             var currentRetry = 0;
             while (!func())
-            {
                 if (currentRetry++ > maxRetries)
-                {
                     throw new Exception("Exceeded max retries");
-                }
-            }
         }
     }
 }

@@ -8,10 +8,12 @@ namespace Octopus.Shared.Configuration
 {
     public class XmlFileKeyValueStore : XmlKeyValueStore
     {
-        private readonly IOctopusFileSystem fileSystem;
+        readonly IOctopusFileSystem fileSystem;
         readonly string configurationFile;
 
-        public XmlFileKeyValueStore(IOctopusFileSystem fileSystem, string configurationFile, bool autoSaveOnSet = true,
+        public XmlFileKeyValueStore(IOctopusFileSystem fileSystem,
+            string configurationFile,
+            bool autoSaveOnSet = true,
             bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
             this.fileSystem = fileSystem;
@@ -27,14 +29,10 @@ namespace Octopus.Shared.Configuration
         }
 
         protected override bool ExistsForReading()
-        {
-            return File.Exists(configurationFile);
-        }
+            => File.Exists(configurationFile);
 
         protected override Stream OpenForReading()
-        {
-            return new FileStream(configurationFile, FileMode.Open, FileAccess.Read, FileShare.Read);
-        }
+            => new FileStream(configurationFile, FileMode.Open, FileAccess.Read, FileShare.Read);
 
         protected override Stream OpenForWriting()
         {

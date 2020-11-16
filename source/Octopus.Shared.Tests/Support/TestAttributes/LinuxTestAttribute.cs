@@ -10,9 +10,7 @@ public class LinuxTestAttribute : NUnitAttribute, IApplyToTest
     public void ApplyToTest(Test test)
     {
         if (test.RunState == RunState.NotRunnable || test.RunState == RunState.Ignored)
-        {
             return;
-        }
 
         if (!PlatformDetection.IsRunningOnNix)
         {

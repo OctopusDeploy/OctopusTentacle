@@ -31,7 +31,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void WritesSortedXmlUsingCorrectTypes()
         {
-            XDocument result = new XDocument();
+            var result = new XDocument();
             var settings = new XmlConsoleKeyValueStore(s =>
             {
                 Console.WriteLine(s);
@@ -40,18 +40,19 @@ namespace Octopus.Shared.Tests.Configuration
             settings.Set("group1.setting2", 123);
             settings.Set("group1.setting1", true);
             settings.Set<string>("group2.setting3", "a string");
-            settings.Set("group3.setting4", new MyObject
-            {
-                IntField = 10,
-                BooleanField = true,
-                EnumField = SomeEnum.SomeOtherEnumValue,
-                ArrayField = new[]
+            settings.Set("group3.setting4",
+                new MyObject
                 {
-                    new MyNestedObject {Id = 1},
-                    new MyNestedObject {Id = 2},
-                    new MyNestedObject {Id = 3}
-                }
-            });
+                    IntField = 10,
+                    BooleanField = true,
+                    EnumField = SomeEnum.SomeOtherEnumValue,
+                    ArrayField = new[]
+                    {
+                        new MyNestedObject { Id = 1 },
+                        new MyNestedObject { Id = 2 },
+                        new MyNestedObject { Id = 3 }
+                    }
+                });
             settings.Set<string>("group4.setting5", null);
             settings.Set<MyObject>("group4.setting6", null);
             settings.Set("group4.setting7", SomeEnum.SomeOtherEnumValue);

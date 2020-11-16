@@ -10,9 +10,7 @@ namespace Octopus.Shared.Util
         public static string FullProcessPath(this Assembly assembly)
         {
             string GetProcessFileName(string path)
-            {
-                return PlatformDetection.IsRunningOnWindows ? Path.GetFileNameWithoutExtension(path) : Path.GetFileName(path);
-            }
+                => PlatformDetection.IsRunningOnWindows ? Path.GetFileNameWithoutExtension(path) : Path.GetFileName(path);
 
             var fileName = assembly.GetName().Name;
             string processFileName;
@@ -22,9 +20,7 @@ namespace Octopus.Shared.Util
             }
 
             if (processFileName == null || !GetProcessFileName(processFileName).Equals(fileName, StringComparison.OrdinalIgnoreCase))
-            {
-                processFileName = Path.Combine(Path.GetDirectoryName(assembly.Location) ?? ".", $"{Path.GetFileNameWithoutExtension(assembly.Location)}{(PlatformDetection.IsRunningOnWindows ? ".exe" : String.Empty)}");
-            }
+                processFileName = Path.Combine(Path.GetDirectoryName(assembly.Location) ?? ".", $"{Path.GetFileNameWithoutExtension(assembly.Location)}{(PlatformDetection.IsRunningOnWindows ? ".exe" : string.Empty)}");
 
             return processFileName;
         }
@@ -34,7 +30,7 @@ namespace Octopus.Shared.Util
             var codeBase = assembly.CodeBase ?? throw new Exception($"Could not get code base for {assembly.FullName}");
             var uri = new UriBuilder(codeBase);
             var root = Uri.UnescapeDataString(uri.Path);
-            if(PlatformDetection.IsRunningOnWindows)
+            if (PlatformDetection.IsRunningOnWindows)
                 root = root.Replace("/", "\\");
             return root;
         }

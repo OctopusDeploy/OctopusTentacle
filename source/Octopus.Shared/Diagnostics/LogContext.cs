@@ -10,43 +10,39 @@ namespace Octopus.Shared.Diagnostics
     [DebuggerDisplay("{CorrelationId}")]
     public class LogContext : ILogContext
     {
-        readonly string correlationId;
         readonly object sensitiveDataMaskLock = new object();
-        string[] sensitiveValues;
         Lazy<AhoCorasick?> trie;
         SensitiveDataMask? sensitiveDataMask;
 
         [JsonConstructor]
         public LogContext(string? correlationId = null, string[]? sensitiveValues = null)
         {
-            this.correlationId = correlationId ?? GenerateId();
-            this.sensitiveValues = sensitiveValues ?? new string[0];
+            CorrelationId = correlationId ?? GenerateId();
+            SensitiveValues = sensitiveValues ?? new string[0];
             trie = new Lazy<AhoCorasick?>(CreateTrie);
         }
 
         LogContext(string correlationId, string[] sensitiveValues, Lazy<AhoCorasick?> trie)
         {
-            this.correlationId = correlationId;
-            this.sensitiveValues = sensitiveValues;
+            CorrelationId = correlationId;
+            SensitiveValues = sensitiveValues;
             this.trie = trie;
         }
 
-        public string CorrelationId => correlationId;
+        public string CorrelationId { get; }
 
-        public string[] SensitiveValues => sensitiveValues;
+        public string[] SensitiveValues { get; set; }
 
         public void SafeSanitize(string raw, Action<string> action)
         {
             try
             {
                 // JIT creation of sensitiveDataMask
-                if (sensitiveDataMask == null && sensitiveValues != null && sensitiveValues.Length > 0)
+                if (sensitiveDataMask == null && SensitiveValues != null && SensitiveValues.Length > 0)
                     lock (sensitiveDataMaskLock)
                     {
-                        if (sensitiveDataMask == null && sensitiveValues.Length > 0)
-                        {
+                        if (sensitiveDataMask == null && SensitiveValues.Length > 0)
                             sensitiveDataMask = new SensitiveDataMask();
-                        }
                     }
 
                 if (sensitiveDataMask != null && trie.Value != null)
@@ -62,15 +58,13 @@ namespace Octopus.Shared.Diagnostics
 
         public ILogContext CreateChild(string[]? sensitiveValues = null)
         {
-            var id = correlationId + '/' + GenerateId();
+            var id = CorrelationId + '/' + GenerateId();
 
             if (sensitiveValues == null || sensitiveValues.Length == 0)
-            {
                 // Reuse parent trie
-                return new LogContext(id, this.sensitiveValues, trie);
-            }
+                return new LogContext(id, SensitiveValues, trie);
 
-            return new LogContext(id, this.sensitiveValues.Union(sensitiveValues).ToArray());
+            return new LogContext(id, SensitiveValues.Union(sensitiveValues).ToArray());
         }
 
         /// <summary>
@@ -82,17 +76,17 @@ namespace Octopus.Shared.Diagnostics
             if (sensitiveValues == null || sensitiveValues.Length == 0)
                 return this;
 
-            var initialSensitiveValuesCount = this.sensitiveValues?.Length ?? 0;
+            var initialSensitiveValuesCount = SensitiveValues?.Length ?? 0;
             // ReSharper disable once RedundantEnumerableCastCall
-            var sensitiveValuesUnion = this.sensitiveValues.Union(sensitiveValues.Where(x => x != null).Cast<string>()).ToArray();
+            var sensitiveValuesUnion = SensitiveValues.Union(sensitiveValues.Where(x => x != null).Cast<string>()).ToArray();
 
             // If no new sensitive-values were added, avoid the cost of rebuilding the trie
             if (initialSensitiveValuesCount == sensitiveValuesUnion.Length)
                 return this;
 
             // New sensitive-values were added, so reset.
-            this.sensitiveValues = sensitiveValuesUnion;
-            this.trie = new Lazy<AhoCorasick?>(CreateTrie);
+            SensitiveValues = sensitiveValuesUnion;
+            trie = new Lazy<AhoCorasick?>(CreateTrie);
             return this;
         }
 
@@ -102,7 +96,7 @@ namespace Octopus.Shared.Diagnostics
         /// <returns>The existing LogContext</returns>
         public ILogContext WithSensitiveValue(string sensitiveValue)
         {
-            return WithSensitiveValues(new[] {sensitiveValue});
+            return WithSensitiveValues(new[] { sensitiveValue });
         }
 
         public void Flush()
@@ -115,11 +109,11 @@ namespace Octopus.Shared.Diagnostics
 
         AhoCorasick? CreateTrie()
         {
-            if (sensitiveValues == null || sensitiveValues.Length == 0)
+            if (SensitiveValues == null || SensitiveValues.Length == 0)
                 return null;
 
             var trie = new AhoCorasick();
-            foreach (var instance in sensitiveValues)
+            foreach (var instance in SensitiveValues)
             {
                 if (string.IsNullOrWhiteSpace(instance) || instance.Length < 4)
                     continue;
@@ -128,6 +122,7 @@ namespace Octopus.Shared.Diagnostics
 
                 trie.Add(normalized);
             }
+
             trie.Build();
             return trie;
         }

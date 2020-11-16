@@ -9,10 +9,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         {
         }
 
-        public override KeyType Type
-        {
-            get { return KeyType.Exchange; }
-        }
+        public override KeyType Type => KeyType.Exchange;
     }
 }
 #endif

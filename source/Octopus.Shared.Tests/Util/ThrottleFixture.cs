@@ -21,7 +21,7 @@ namespace Octopus.Shared.Tests.Util
         [Test]
         public void CanEnterThrottle()
         {
-            var throttle = new Throttle("test-throttle", size: 10);
+            var throttle = new Throttle("test-throttle", 10);
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
             using (var letMeIn = throttle.Wait(cts.Token))
             {
@@ -32,7 +32,7 @@ namespace Octopus.Shared.Tests.Util
         [Test]
         public void ShouldProvideSensibleDebugInfo()
         {
-            var throttle = new Throttle("test-throttle", size: 10);
+            var throttle = new Throttle("test-throttle", 10);
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
             using (var letMeIn = throttle.Wait(cts.Token))
             {
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Tests.Util
         [Test]
         public void ShouldPreventGoingOverCapacity_EvenOnTheSameThread()
         {
-            var throttle = new Throttle("test-throttle", size: 1);
+            var throttle = new Throttle("test-throttle", 1);
             using (var letMeIn = throttle.Wait(CancellationToken.None))
             {
                 letMeIn.Should().NotBeNull();

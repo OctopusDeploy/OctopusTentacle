@@ -1,3 +1,4 @@
+using System;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Configuration;
@@ -5,7 +6,7 @@ using Octopus.Configuration;
 namespace Octopus.Shared.Tests.Configuration
 {
     /// <summary>
-    /// Adds tests for property types that were not supported by the old implementation (c.f. <see cref="XmlFileKeyValueStoreFixture.BackwardsCompatFixture"/>)
+    /// Adds tests for property types that were not supported by the old implementation (c.f. <see cref="XmlFileKeyValueStoreFixture.BackwardsCompatFixture" />)
     /// </summary>
     abstract class CurrentRoundTripTestBase : RoundTripTestBaseFixture
     {
@@ -14,7 +15,7 @@ namespace Octopus.Shared.Tests.Configuration
         {
             ReloadedSettings.Get<SomeEnum>("group4.setting7").Should().Be(SomeEnum.SomeOtherEnumValue);
         }
-        
+
         [Test]
         public void ReadsNullableEnumValue()
         {

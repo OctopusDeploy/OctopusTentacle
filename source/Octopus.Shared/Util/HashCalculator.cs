@@ -32,8 +32,6 @@ namespace Octopus.Shared.Util
         }
 
         static string Sanitize(byte[] hash)
-        {
-            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-        }
+            => BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
     }
 }

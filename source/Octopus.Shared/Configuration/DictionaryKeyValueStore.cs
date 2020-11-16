@@ -19,9 +19,7 @@ namespace Octopus.Shared.Configuration
         }
 
         protected object? Read(string key)
-        {
-            return settings.Value.TryGetValue(key, out var result) ? result : null;
-        }
+            => settings.Value.TryGetValue(key, out var result) ? result : null;
 
         protected override void Delete(string key)
         {

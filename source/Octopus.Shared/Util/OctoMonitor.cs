@@ -17,9 +17,7 @@ namespace Octopus.Shared.Util
         public static ILog SystemLog = Diagnostics.Log.System();
 
         public static IDisposable Enter(object obj, CancellationToken cancellationToken)
-        {
-            return Enter(obj, null, cancellationToken);
-        }
+            => Enter(obj, null, cancellationToken);
 
         public static IDisposable Enter(object obj, string? waitMessage, CancellationToken cancellationToken)
         {
@@ -46,7 +44,10 @@ namespace Octopus.Shared.Util
             }
         }
 
-        static bool TryAcquire(object obj, TimeSpan timeout, [NotNullWhen(true)] out IDisposable? mutexReleaser)
+        static bool TryAcquire(object obj,
+            TimeSpan timeout,
+            [NotNullWhen(true)]
+            out IDisposable? mutexReleaser)
         {
             mutexReleaser = null;
             var lockTaken = false;
@@ -65,6 +66,7 @@ namespace Octopus.Shared.Util
                 if (lockTaken) Monitor.Exit(obj);
                 SystemLog.Warn(ex, $"Exception thrown while entering monitor {obj}");
             }
+
             return false;
         }
 

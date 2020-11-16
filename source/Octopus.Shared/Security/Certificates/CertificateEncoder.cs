@@ -39,9 +39,7 @@ namespace Octopus.Shared.Security.Certificates
             var x509Certificate = certificates[0];
 
             if (CheckThatCertificateWasLoadedWithPrivateKey(x509Certificate) == false)
-            {
                 throw new CryptographicException("Unable to load X509 Certificate file. The X509 certificate file you provided does not include the private key. Please make sure the private key is included in your X509 certificate file and try again.");
-            }
 
             return x509Certificate;
         }
@@ -62,9 +60,7 @@ namespace Octopus.Shared.Security.Certificates
         }
 
         public static byte[] Export(X509Certificate2 certificate)
-        {
-            return certificate.Export(X509ContentType.Pfx);
-        }
+            => certificate.Export(X509ContentType.Pfx);
 
         public static string ToBase64String(X509Certificate2 certificate)
         {
@@ -74,13 +70,10 @@ namespace Octopus.Shared.Security.Certificates
         }
 
         public static X509Certificate2 FromBase64String(string certificateString)
-        {
-            return FromBase64String(null, certificateString, null);
-        }
+            => FromBase64String(null, certificateString, null);
+
         public static X509Certificate2 FromBase64String(string thumbprint, string certificateString)
-        {
-            return FromBase64String(thumbprint, certificateString, null);
-        }
+            => FromBase64String(thumbprint, certificateString, null);
 
         public static X509Certificate2 FromBase64String(string? thumbprint, string certificateString, string? password)
         {
@@ -112,14 +105,10 @@ namespace Octopus.Shared.Security.Certificates
 
                     var certificate = LoadCertificateWithPrivateKey(file, password);
                     if (CheckThatCertificateWasLoadedWithPrivateKey(certificate) == false)
-                    {
                         certificate = LoadCertificateWithPrivateKey(file, password);
-                    }
 
                     if (certificate == null)
-                    {
                         throw new CryptographicException("Unable to load X509 Certificate file. The provided certificate or password may be invalid.");
-                    }
 
                     store.Add(certificate);
 
@@ -137,15 +126,13 @@ namespace Octopus.Shared.Security.Certificates
         }
 
         static X509Certificate2 LoadCertificateWithPrivateKey(string file, string? password)
-        {
-            return TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, true)
+            => TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, true)
                 ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, true)
                 ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, true)
                 ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, false)
                 ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, false)
                 ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, false)
                 ?? throw new InvalidOperationException($"Unable to load certificate from file {file}");
-        }
 
         static bool CheckThatCertificateWasLoadedWithPrivateKey(X509Certificate2 certificate)
         {
@@ -161,9 +148,7 @@ namespace Octopus.Shared.Security.Certificates
                         var privateKeyPath = CryptUtils.GetKeyFilePath(certificate);
                         message.AppendLine("The private key file should be located at: " + privateKeyPath);
                         if (!File.Exists(privateKeyPath))
-                        {
                             message.AppendLine("However, the current user does not appear to be able to access the private key file, or it does not exist.");
-                        }
 
                         message.AppendLine("Attempting to grant the user " + Environment.UserDomainName + "\\" + Environment.UserName + " access to the certificate private key directory.");
 
@@ -238,11 +223,15 @@ namespace Octopus.Shared.Security.Certificates
 
             var directory = new DirectoryInfo(folderPath);
             var security = directory.GetAccessControl();
-            security.AddAccessRule(new FileSystemAccessRule(current.User, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+            security.AddAccessRule(new FileSystemAccessRule(current.User,
+                FileSystemRights.FullControl,
+                InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+                PropagationFlags.None,
+                AccessControlType.Allow));
             directory.SetAccessControl(security);
         }
-
 #nullable disable
+
         #region Nested type: CryptUtils
 
         // This code is from a Microsoft sample that resolves the path to a certificate's private key
@@ -263,16 +252,29 @@ namespace Octopus.Shared.Security.Certificates
                 var dwFlags = 0u;
                 var num = 0;
                 string text = null;
-                if (CryptAcquireCertificatePrivateKey(cert.Handle, dwFlags, IntPtr.Zero, ref zero, ref num, ref flag))
+                if (CryptAcquireCertificatePrivateKey(cert.Handle,
+                    dwFlags,
+                    IntPtr.Zero,
+                    ref zero,
+                    ref num,
+                    ref flag))
                 {
                     var intPtr = IntPtr.Zero;
                     var num2 = 0;
                     try
                     {
-                        if (CryptGetProvParam(zero, CryptGetProvParamType.PP_UNIQUE_CONTAINER, IntPtr.Zero, ref num2, 0u))
+                        if (CryptGetProvParam(zero,
+                            CryptGetProvParamType.PP_UNIQUE_CONTAINER,
+                            IntPtr.Zero,
+                            ref num2,
+                            0u))
                         {
                             intPtr = Marshal.AllocHGlobal(num2);
-                            if (CryptGetProvParam(zero, CryptGetProvParamType.PP_UNIQUE_CONTAINER, intPtr, ref num2, 0u))
+                            if (CryptGetProvParam(zero,
+                                CryptGetProvParamType.PP_UNIQUE_CONTAINER,
+                                intPtr,
+                                ref num2,
+                                0u))
                             {
                                 var array = new byte[num2];
                                 Marshal.Copy(intPtr, array, 0, num2);
@@ -283,19 +285,14 @@ namespace Octopus.Shared.Security.Certificates
                     finally
                     {
                         if (flag)
-                        {
                             CryptReleaseContext(zero, 0u);
-                        }
                         if (intPtr != IntPtr.Zero)
-                        {
                             Marshal.FreeHGlobal(intPtr);
-                        }
                     }
                 }
+
                 if (text == null)
-                {
                     throw new InvalidOperationException("Unable to obtain private key file name");
-                }
                 return text;
             }
 
@@ -324,22 +321,13 @@ namespace Octopus.Shared.Security.Certificates
                             }
                         }
                     }
+
                     throw new InvalidOperationException("Unable to locate private key file directory");
                 }
+
                 result = text;
                 return result;
             }
-
-#pragma warning disable PC003 // Native API not available in UWP
-            [DllImport("crypt32", CharSet = CharSet.Unicode, SetLastError = true)]
-            internal static extern bool CryptAcquireCertificatePrivateKey(IntPtr pCert, uint dwFlags, IntPtr pvReserved, ref IntPtr phCryptProv, ref int pdwKeySpec, ref bool pfCallerFreeProv);
-
-            [DllImport("advapi32", CharSet = CharSet.Unicode, SetLastError = true)]
-            internal static extern bool CryptGetProvParam(IntPtr hCryptProv, CryptGetProvParamType dwParam, IntPtr pvData, ref int pcbData, uint dwFlags);
-
-            [DllImport("advapi32", SetLastError = true)]
-            internal static extern bool CryptReleaseContext(IntPtr hProv, uint dwFlags);
-#pragma warning restore PC003 // Native API not available in UWP
 
             #region Nested type: CryptGetProvParamType
 
@@ -379,6 +367,26 @@ namespace Octopus.Shared.Security.Certificates
             }
 
             #endregion
+
+#pragma warning disable PC003 // Native API not available in UWP
+            [DllImport("crypt32", CharSet = CharSet.Unicode, SetLastError = true)]
+            internal static extern bool CryptAcquireCertificatePrivateKey(IntPtr pCert,
+                uint dwFlags,
+                IntPtr pvReserved,
+                ref IntPtr phCryptProv,
+                ref int pdwKeySpec,
+                ref bool pfCallerFreeProv);
+
+            [DllImport("advapi32", CharSet = CharSet.Unicode, SetLastError = true)]
+            internal static extern bool CryptGetProvParam(IntPtr hCryptProv,
+                CryptGetProvParamType dwParam,
+                IntPtr pvData,
+                ref int pcbData,
+                uint dwFlags);
+
+            [DllImport("advapi32", SetLastError = true)]
+            internal static extern bool CryptReleaseContext(IntPtr hProv, uint dwFlags);
+#pragma warning restore PC003 // Native API not available in UWP
         }
 
         #endregion

@@ -35,8 +35,6 @@ namespace Octopus.Shared.Configuration
         }
 
         public IWebProxy GetProxy()
-        {
-            return WebRequest.DefaultWebProxy;
-        }
+            => WebRequest.DefaultWebProxy;
     }
 }

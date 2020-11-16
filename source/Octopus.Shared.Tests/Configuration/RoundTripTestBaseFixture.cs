@@ -1,25 +1,26 @@
+using System;
+using System.IO;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Configuration;
-using Octopus.Shared.Security.Masking;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Configuration
 {
-    internal abstract class RoundTripTestBaseFixture
+    abstract class RoundTripTestBaseFixture
     {
-        protected abstract IKeyValueStore SetupKeyValueStore();
-        protected IKeyValueStore ReloadedSettings;
         protected readonly string ConfigurationFile;
         protected readonly OctopusPhysicalFileSystem FileSystem;
-
-        protected byte[] EncryptedValue { get; set; }
+        protected IKeyValueStore ReloadedSettings;
 
         protected RoundTripTestBaseFixture()
         {
-            ConfigurationFile = System.IO.Path.GetTempFileName();
+            ConfigurationFile = Path.GetTempFileName();
             FileSystem = new OctopusPhysicalFileSystem();
         }
+
+        protected byte[] EncryptedValue { get; set; }
+        protected abstract IKeyValueStore SetupKeyValueStore();
 
         [OneTimeSetUp]
         public void Setup()
@@ -48,7 +49,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void ReadsNestedObjectValue()
         {
-            var nestedObject = ReloadedSettings.Get<MyObject>("group3.setting4", null);
+            var nestedObject = ReloadedSettings.Get<MyObject>("group3.setting4");
             nestedObject.IntField.Should().Be(10);
             nestedObject.BooleanField.Should().BeTrue();
             nestedObject.EnumField.Should().Be(SomeEnum.SomeOtherEnumValue);
@@ -61,13 +62,13 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void ReadsNullStringValue()
         {
-            ReloadedSettings.Get<string>("group4.setting5", null).Should().Be(null);
+            ReloadedSettings.Get<string>("group4.setting5").Should().Be(null);
         }
 
         [Test]
         public void ReadsNullObjectValue()
         {
-            ReloadedSettings.Get<MyObject>("group4.setting6", null).Should().Be(null);
+            ReloadedSettings.Get<MyObject>("group4.setting6").Should().Be(null);
         }
 
         [Test]
@@ -116,7 +117,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void ReadsEncryptedByteArrayValue()
         {
-            ReloadedSettings.Get<byte[]>("secretthing", null).Should().BeEquivalentTo(EncryptedValue);
+            ReloadedSettings.Get<byte[]>("secretthing").Should().BeEquivalentTo(EncryptedValue);
         }
 
         [Test]

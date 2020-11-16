@@ -12,7 +12,6 @@ namespace Octopus.Shared.Startup
         readonly IApplicationInstanceSelector instanceSelector;
 
         bool voteForRestart;
-        protected void VoteForRestart() => voteForRestart = true;
 
         protected AbstractStandardCommand(IApplicationInstanceSelector instanceSelector)
         {
@@ -28,6 +27,8 @@ namespace Octopus.Shared.Startup
             // NOTE: Don't throw any exception in the constructor, otherwise we can't show help
             instanceSelector.CanLoadCurrentInstance();
         }
+
+        protected void VoteForRestart() => voteForRestart = true;
 
         protected override void Start()
         {
@@ -50,8 +51,8 @@ namespace Octopus.Shared.Startup
 
         public static OptionSet AddInstanceOption(OptionSet options, Action<string>? instanceAction = null, Action<string>? configFileAction = null)
         {
-            return options.Add("instance=", "Name of the instance to use", instanceAction ?? (v => {}))
-                .Add("config=", "Configuration file to use", configFileAction ?? (v => {}));
+            return options.Add("instance=", "Name of the instance to use", instanceAction ?? (v => { }))
+                .Add("config=", "Configuration file to use", configFileAction ?? (v => { }));
         }
     }
 }

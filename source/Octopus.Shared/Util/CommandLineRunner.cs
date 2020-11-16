@@ -10,24 +10,29 @@ namespace Octopus.Shared.Util
         public bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations, ILog log)
         {
             foreach (var invocation in commandLineInvocations)
-            {
                 if (!Execute(invocation, log))
                     return false;
-            }
 
             return true;
         }
 
         public bool Execute(CommandLineInvocation invocation, ILog log)
-        {
-            return Execute(invocation, Log.System().Info, log.Info, log.Error, log.Error);
-        }
+            => Execute(invocation,
+                Log.System().Info,
+                log.Info,
+                log.Error,
+                log.Error);
 
-        public bool Execute(CommandLineInvocation invocation, Action<string> debug, Action<string> info, Action<string> error, Action<Exception, string> exception)
+        public bool Execute(CommandLineInvocation invocation,
+            Action<string> debug,
+            Action<string> info,
+            Action<string> error,
+            Action<Exception, string> exception)
         {
             try
             {
-                var exitCode = SilentProcessRunner.ExecuteCommand(invocation.Executable, (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? ""),
+                var exitCode = SilentProcessRunner.ExecuteCommand(invocation.Executable,
+                    (invocation.Arguments ?? "") + " " + (invocation.SystemArguments ?? ""),
                     Environment.CurrentDirectory,
                     debug,
                     info,
@@ -54,6 +59,7 @@ namespace Octopus.Shared.Util
                 exception(ex, "Exception calling command: " + invocation);
                 return false;
             }
+
             return true;
         }
     }

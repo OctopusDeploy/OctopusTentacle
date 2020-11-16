@@ -4,30 +4,17 @@ namespace Octopus.Shared.Contracts
 {
     public class UploadResult
     {
-        readonly string fullPath;
-        readonly string hash;
-        readonly long length;
-
         public UploadResult(string fullPath, string hash, long length)
         {
-            this.fullPath = fullPath;
-            this.hash = hash;
-            this.length = length;
+            FullPath = fullPath;
+            Hash = hash;
+            Length = length;
         }
 
-        public string FullPath
-        {
-            get { return fullPath; }
-        }
+        public string FullPath { get; }
 
-        public string Hash
-        {
-            get { return hash; }
-        }
+        public string Hash { get; }
 
-        public long Length
-        {
-            get { return length; }
-        }
+        public long Length { get; }
     }
 }

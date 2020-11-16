@@ -16,10 +16,7 @@ namespace Octopus.Shared.Util
             this.value = string.IsNullOrWhiteSpace(clean) ? null : clean.ToLowerInvariant();
         }
 
-        public bool HasValue
-        {
-            get { return value != null; }
-        }
+        public bool HasValue => value != null;
 
         public string Value
         {
@@ -31,8 +28,6 @@ namespace Octopus.Shared.Util
         }
 
         public static implicit operator string?(CleanId @this)
-        {
-            return @this.value;
-        }
+            => @this.value;
     }
 }

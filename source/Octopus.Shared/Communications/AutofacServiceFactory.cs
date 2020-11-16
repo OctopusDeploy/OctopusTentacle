@@ -28,25 +28,18 @@ namespace Octopus.Shared.Communications
 
         class Lease : IServiceLease
         {
-            readonly object service;
-
             public Lease(object service)
             {
-                this.service = service;
+                Service = service;
             }
 
-            public object Service
-            {
-                get { return service; }
-            }
+            public object Service { get; }
 
             public void Dispose()
             {
-                var disposable = service as IDisposable;
+                var disposable = Service as IDisposable;
                 if (disposable != null)
-                {
                     disposable.Dispose();
-                }
             }
         }
     }

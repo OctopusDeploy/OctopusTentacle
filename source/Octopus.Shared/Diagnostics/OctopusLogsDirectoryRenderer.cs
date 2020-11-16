@@ -12,7 +12,9 @@ namespace Octopus.Shared.Diagnostics
     public class OctopusLogsDirectoryRenderer : LayoutRenderer
     {
         public static readonly string DefaultLogsDirectory =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Path.Combine("Octopus","Logs"));
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Path.Combine("Octopus", "Logs"));
+
+        public static readonly HashSet<string> History = new HashSet<string>();
 
         static OctopusLogsDirectoryRenderer()
         {
@@ -24,9 +26,7 @@ namespace Octopus.Shared.Diagnostics
                 if (string.IsNullOrEmpty(DefaultLogsDirectory)) throw new ArgumentException("Value cannot be null or empty.", nameof(DefaultLogsDirectory));
 
                 if (!Directory.Exists(DefaultLogsDirectory))
-                {
                     Directory.CreateDirectory(DefaultLogsDirectory);
-                }
 
                 History.Add(DefaultLogsDirectory);
             }
@@ -34,10 +34,10 @@ namespace Octopus.Shared.Diagnostics
             {
                 // ignored
             }
+
             LogsDirectory = DefaultLogsDirectory;
         }
 
-        public static readonly HashSet<string> History = new HashSet<string>();
         public static string[] LogsDirectoryHistory => History.OrderBy(x => x).ToArray();
         public static string LogsDirectory { get; internal set; }
 

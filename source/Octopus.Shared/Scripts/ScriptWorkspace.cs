@@ -10,9 +10,9 @@ namespace Octopus.Shared.Scripts
 {
     public class ScriptWorkspace : IScriptWorkspace
     {
-        protected virtual string BootstrapScriptName => "Bootstrap.ps1";
-
         protected readonly IOctopusFileSystem FileSystem;
+
+        TimeSpan scriptMutexAcquireTimeout = ScriptIsolationMutex.NoTimeout;
 
         public ScriptWorkspace(string workingDirectory, IOctopusFileSystem fileSystem)
         {
@@ -22,14 +22,16 @@ namespace Octopus.Shared.Scripts
             BootstrapScriptFilePath = Path.Combine(workingDirectory, BootstrapScriptName);
         }
 
+        protected virtual string BootstrapScriptName => "Bootstrap.ps1";
+
         public NetworkCredential? RunAs { get; set; }
 
         public IDictionary<string, string> CustomEnvironmentVariables { get; set; } = new Dictionary<string, string>();
 
         public ScriptIsolationLevel IsolationLevel { get; set; }
 
-        TimeSpan scriptMutexAcquireTimeout = ScriptIsolationMutex.NoTimeout;
-        public TimeSpan ScriptMutexAcquireTimeout {
+        public TimeSpan ScriptMutexAcquireTimeout
+        {
             get => scriptMutexAcquireTimeout;
             set
             {
@@ -59,7 +61,7 @@ namespace Octopus.Shared.Scripts
         {
             var path = Path.Combine(WorkingDirectory, fileName);
             var directory = Path.GetDirectoryName(path);
-            if(directory != null)
+            if (directory != null)
                 FileSystem.EnsureDirectoryExists(directory);
             return path;
         }

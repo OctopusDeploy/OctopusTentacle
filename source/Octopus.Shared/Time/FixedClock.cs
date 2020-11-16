@@ -23,18 +23,12 @@ namespace Octopus.Shared.Time
         }
 
         public DateTimeOffset GetUtcTime()
-        {
-            return Clone().now.ToUniversalTime();
-        }
+            => Clone().now.ToUniversalTime();
 
         public DateTimeOffset GetLocalTime()
-        {
-            return Clone().now.ToLocalTime();
-        }
+            => Clone().now.ToLocalTime();
 
         FixedClock Clone()
-        {
-            return (FixedClock) this.MemberwiseClone();
-        }
+            => (FixedClock)MemberwiseClone();
     }
 }

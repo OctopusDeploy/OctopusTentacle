@@ -1,3 +1,5 @@
+using System;
+
 namespace Octopus.Shared.Scripts
 {
     public interface IShell

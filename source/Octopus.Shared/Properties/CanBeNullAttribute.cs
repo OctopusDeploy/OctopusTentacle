@@ -25,8 +25,8 @@ namespace Octopus.Shared.Properties
     /// </example>
     [AttributeUsage(
         AttributeTargets.Method | AttributeTargets.Parameter |
-            AttributeTargets.Property | AttributeTargets.Delegate |
-            AttributeTargets.Field)]
+        AttributeTargets.Property | AttributeTargets.Delegate |
+        AttributeTargets.Field)]
     public sealed class CanBeNullAttribute : Attribute
     {
     }

@@ -20,7 +20,7 @@ namespace Octopus.Shared.Tests.Util
     {
         TemporaryDirectory temporaryDirectory;
         CancellationTokenSource cancellationTokenSource;
-        private string taskId;
+        string taskId;
         IScriptWorkspace workspace;
         TestScriptLog scriptLog;
         RunningScript runningScript;
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Tests.Util
                 testRootPath = Path.Combine(Path.GetTempPath(), $"OctopusTest-{nameof(RunningScriptFixture)}");
                 shell = new Bash();
             }
-            
+
             temporaryDirectory = new TemporaryDirectory(testRootPath);
             var homeConfiguration = Substitute.For<IHomeConfiguration>();
             homeConfiguration.HomeDirectory.Returns(temporaryDirectory.DirectoryPath);
@@ -54,7 +54,11 @@ namespace Octopus.Shared.Tests.Util
             Console.WriteLine($"Working directory: {workspace.WorkingDirectory}");
             scriptLog = new TestScriptLog();
             cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            runningScript = new RunningScript(shell, workspace, scriptLog, taskId, cancellationTokenSource.Token);
+            runningScript = new RunningScript(shell,
+                workspace,
+                scriptLog,
+                taskId,
+                cancellationTokenSource.Token);
         }
 
         [TearDown]
@@ -71,14 +75,13 @@ namespace Octopus.Shared.Tests.Util
             workspace.BootstrapScript("exit 99");
             runningScript.Execute();
             runningScript.ExitCode.Should().Be(99, "the exit code of the script should be returned");
-
         }
 
         [Test]
         [Retry(3)]
         public void WriteHost_WritesToStdOut_AndIsReturned()
         {
-            workspace.BootstrapScript($"echo Hello");
+            workspace.BootstrapScript("echo Hello");
             runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
             scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
@@ -117,14 +120,9 @@ namespace Octopus.Shared.Tests.Util
 
             runningScript.Execute();
             if (PlatformDetection.IsRunningOnWindows)
-            {
                 runningScript.ExitCode.Should().Be(1, "Write-Error causes the exit code to be 1");
-            }
             else
-            {
                 runningScript.ExitCode.Should().Be(2, "&2 echo causes the exit code to be 1");
-
-            }
 
             scriptLog.StdOut.Length.Should().Be(0, "the script shouldn't have written to stdout");
             scriptLog.StdErr.ToString().Should().ContainEquivalentOf("EpicFail", "the message should have been written to stderr");
@@ -176,11 +174,15 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
-                var (shell, sleepCommand) = PlatformDetection.IsRunningOnWindows 
-                    ? (new PowerShell(), "Start-Sleep -seconds") 
+                var (shell, sleepCommand) = PlatformDetection.IsRunningOnWindows
+                    ? (new PowerShell(), "Start-Sleep -seconds")
                     : (new Bash() as IShell, "sleep");
-                
-                var script = new RunningScript(shell, workspace, scriptLog, taskId, cts.Token);
+
+                var script = new RunningScript(shell,
+                    workspace,
+                    scriptLog,
+                    taskId,
+                    cts.Token);
 
                 workspace.BootstrapScript($"echo Starting\n{sleepCommand} 10\necho Finito");
                 script.Execute();
@@ -217,12 +219,10 @@ namespace Octopus.Shared.Tests.Util
             scriptLog.StdOut.ToString().Should().ContainEquivalentOf("customvalue");
         }
 
-        private static string EchoEnvironmentVariable(string varName)
+        static string EchoEnvironmentVariable(string varName)
         {
             if (PlatformDetection.IsRunningOnWindows)
-            {
                 return $"$env:{varName}";
-            }
 
             return $"${varName}";
         }

@@ -21,7 +21,7 @@ namespace Octopus.Shared.Tests.Configuration
             fileSystem = Substitute.For<IOctopusFileSystem>();
             log = Substitute.For<ILogFileOnlyLogger>();
         }
-        
+
         [Test]
         public void ReturnsNullWhenFileCannotBeFound()
         {
@@ -42,10 +42,9 @@ namespace Octopus.Shared.Tests.Configuration
             var subject = new EnvFileLocator(fileSystem, log);
 
             var envFile = subject.LocateEnvFile();
-            envFile.Should().Be(envPath, because: "the .env file is discoverable from the working directory");
+            envFile.Should().Be(envPath, "the .env file is discoverable from the working directory");
         }
 
-        
         [Test]
         public void FindsInParentDirectory()
         {
@@ -53,11 +52,11 @@ namespace Octopus.Shared.Tests.Configuration
             var testAssemblyLocation = Path.GetDirectoryName(typeof(EnvFileInstanceStrategyFixture).Assembly.Location);
             var envPath = Path.Combine(GetParentPath(testAssemblyLocation), ".env");
             fileSystem.FileExists(Arg.Any<string>()).Returns(c => (string)c.Args()[0] == envPath);
-            
+
             var subject = new EnvFileLocator(fileSystem, log);
 
             var envFile = subject.LocateEnvFile();
-            envFile.Should().Be(envPath, because: "the .env file is discoverable up the directory tree");
+            envFile.Should().Be(envPath, "the .env file is discoverable up the directory tree");
         }
 
         [Test]
@@ -67,11 +66,11 @@ namespace Octopus.Shared.Tests.Configuration
             var testAssemblyLocation = Path.GetDirectoryName(typeof(EnvFileInstanceStrategyFixture).Assembly.Location);
             var envPath = Path.Combine(Directory.GetDirectoryRoot(testAssemblyLocation), ".env");
             fileSystem.FileExists(Arg.Any<string>()).Returns(c => (string)c.Args()[0] == envPath);
-            
+
             var subject = new EnvFileLocator(fileSystem, log);
 
             var envFile = subject.LocateEnvFile();
-            envFile.Should().Be(envPath, because: "the .env file is discoverable at the root of the directory tree");
+            envFile.Should().Be(envPath, "the .env file is discoverable at the root of the directory tree");
         }
 
         string GetParentPath(string path)

@@ -19,8 +19,6 @@ namespace Octopus.Shared.Configuration.Instances
         public string ConfigurationFilePath { get; }
 
         public static string GetDefaultInstance(ApplicationName application)
-        {
-            return application.ToString();
-        }
+            => application.ToString();
     }
 }

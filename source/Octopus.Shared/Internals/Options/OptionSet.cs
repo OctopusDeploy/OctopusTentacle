@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,7 +11,6 @@ namespace Octopus.Shared.Internals.Options
     public class OptionSet : KeyedCollection<string, Option>
     {
         const int OptionWidth = 29;
-        readonly Converter<string, string> localizer;
 
         readonly Regex ValueOption = new Regex(
             @"^(?<flag>--|-|/)(?<name>[^:=]+)((?<sep>[:=])(?<value>.*))?$");
@@ -30,13 +28,10 @@ namespace Octopus.Shared.Internals.Options
         public OptionSet(Converter<string, string> localizer)
             : base(StringComparer.OrdinalIgnoreCase)
         {
-            this.localizer = localizer;
+            MessageLocalizer = localizer;
         }
 
-        public Converter<string, string> MessageLocalizer
-        {
-            get { return localizer; }
-        }
+        public Converter<string, string> MessageLocalizer { get; }
 
         protected override string GetKeyForItem(Option item)
         {
@@ -72,9 +67,7 @@ namespace Octopus.Shared.Internals.Options
             var p = Items[index];
             // KeyedCollection.RemoveItem() handles the 0th item
             for (var i = 1; i < p.Names.Length; ++i)
-            {
                 Dictionary.Remove(p.Names[i]);
-            }
         }
 
         protected override void SetItem(int index, Option item)
@@ -113,15 +106,19 @@ namespace Octopus.Shared.Internals.Options
         }
 
         public OptionSet Add(string prototype, Action<string?> action)
-        {
-            return Add(prototype, null, action);
-        }
+            => Add(prototype, null, action);
 
-        public OptionSet Add(string prototype, string? description, Action<string> action, bool hide = false, bool sensitive = false)
+        public OptionSet Add(string prototype,
+            string? description,
+            Action<string> action,
+            bool hide = false,
+            bool sensitive = false)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
-            Option p = new ActionOption(prototype, description, 1,
+            Option p = new ActionOption(prototype,
+                description,
+                1,
                 delegate(OptionValueCollection v)
                 {
                     action(v[0] ?? string.Empty);
@@ -133,15 +130,15 @@ namespace Octopus.Shared.Internals.Options
         }
 
         public OptionSet Add(string prototype, OptionAction<string?, string?> action)
-        {
-            return Add(prototype, null, action);
-        }
+            => Add(prototype, null, action);
 
         public OptionSet Add(string prototype, string? description, OptionAction<string?, string?> action)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
-            Option p = new ActionOption(prototype, description, 2,
+            Option p = new ActionOption(prototype,
+                description,
+                2,
                 delegate(OptionValueCollection v)
                 {
                     action(v[0], v[1]);
@@ -151,29 +148,19 @@ namespace Octopus.Shared.Internals.Options
         }
 
         public OptionSet Add<T>(string prototype, Action<T> action)
-        {
-            return Add(prototype, null, action);
-        }
+            => Add(prototype, null, action);
 
         public OptionSet Add<T>(string prototype, string? description, Action<T> action)
-        {
-            return Add(new ActionOption<T>(prototype, description, action));
-        }
+            => Add(new ActionOption<T>(prototype, description, action));
 
         public OptionSet Add<TKey, TValue>(string prototype, OptionAction<TKey, TValue> action)
-        {
-            return Add(prototype, null, action);
-        }
+            => Add(prototype, null, action);
 
         public OptionSet Add<TKey, TValue>(string prototype, string? description, OptionAction<TKey, TValue> action)
-        {
-            return Add(new ActionOption<TKey, TValue>(prototype, description, action));
-        }
+            => Add(new ActionOption<TKey, TValue>(prototype, description, action));
 
         protected virtual OptionContext CreateOptionContext()
-        {
-            return new OptionContext(this);
-        }
+            => new OptionContext(this);
 
         public OptionSet WithExtras(Action<string[]> leftovers)
         {
@@ -192,7 +179,7 @@ namespace Octopus.Shared.Internals.Options
                 where ++c.OptionIndex >= 0 && (process || def != null)
                     ? process
                         ? argument == "--"
-                            ? (process = false)
+                            ? process = false
                             : !Parse(argument, c)
                                 ? def != null
                                     ? Unprocessed(def, c, argument)
@@ -208,9 +195,7 @@ namespace Octopus.Shared.Internals.Options
             c.Option?.Invoke(c);
 
             if (leftovers != null && r.Count > 0)
-            {
                 leftovers(r.ToArray());
-            }
 
             return r;
         }
@@ -225,20 +210,6 @@ namespace Octopus.Shared.Internals.Options
             return false;
         }
 
-        protected class OptionParts
-        {
-            public OptionParts(string flag, string name)
-            {
-                this.Flag = flag;
-                this.Name = name;
-            }
-
-            public string Flag { get; }
-            public string Name { get; }
-            public string? Separator { get; set; }
-            public string? Value { get; set; }
-        }
-
         protected bool GetOptionParts(string argument,
             out OptionParts? parts)
         {
@@ -248,15 +219,14 @@ namespace Octopus.Shared.Internals.Options
             parts = null;
             var m = ValueOption.Match(argument);
             if (!m.Success)
-            {
                 return false;
-            }
             parts = new OptionParts(m.Groups["flag"].Value, m.Groups["name"].Value);
             if (m.Groups["sep"].Success && m.Groups["value"].Success)
             {
                 parts.Separator = m.Groups["sep"].Value;
                 parts.Value = m.Groups["value"].Value;
             }
+
             return true;
         }
 
@@ -290,8 +260,10 @@ namespace Octopus.Shared.Internals.Options
                         ParseValue(parts.Value, c);
                         break;
                 }
+
                 return true;
             }
+
             // no match; is it a bool option?
             if (ParseBool(argument, parts.Name, c))
                 return true;
@@ -307,27 +279,24 @@ namespace Octopus.Shared.Internals.Options
             if (option != null)
                 foreach (var o in c.Option?.ValueSeparators != null
                     ? option.Split(c.Option.ValueSeparators, StringSplitOptions.None)
-                    : new[] {option})
-                {
+                    : new[] { option })
                     c.OptionValues.Add(o);
-                }
             if (c.OptionValues.Count == c.Option?.MaxValueCount ||
                 c.Option?.OptionValueType == OptionValueType.Optional)
                 c.Option.Invoke(c);
             else if (c.OptionValues.Count > c.Option?.MaxValueCount)
-            {
-                throw new OptionException(localizer(string.Format(
-                    "Error: Found {0} option values when expecting {1}.",
-                    c.OptionValues.Count, c.Option.MaxValueCount)),
+                throw new OptionException(MessageLocalizer(string.Format(
+                        "Error: Found {0} option values when expecting {1}.",
+                        c.OptionValues.Count,
+                        c.Option.MaxValueCount)),
                     c.OptionName ?? string.Empty);
-            }
         }
 
         bool ParseBool(string option, string n, OptionContext c)
         {
             string rn;
             if (n.Length >= 1 && (n[n.Length - 1] == '+' || n[n.Length - 1] == '-') &&
-                Contains((rn = n.Substring(0, n.Length - 1))))
+                Contains(rn = n.Substring(0, n.Length - 1)))
             {
                 var p = this[rn];
                 var v = n[n.Length - 1] == '+' ? option : null;
@@ -337,6 +306,7 @@ namespace Octopus.Shared.Internals.Options
                 p.Invoke(c);
                 return true;
             }
+
             return false;
         }
 
@@ -353,9 +323,12 @@ namespace Octopus.Shared.Internals.Options
                 {
                     if (i == 0)
                         return false;
-                    throw new OptionException(string.Format(localizer(
-                        "Cannot bundle unregistered option '{0}'."), opt), opt);
+                    throw new OptionException(string.Format(MessageLocalizer(
+                                "Cannot bundle unregistered option '{0}'."),
+                            opt),
+                        opt);
                 }
+
                 p = this[rn];
                 switch (p.OptionValueType)
                 {
@@ -375,6 +348,7 @@ namespace Octopus.Shared.Internals.Options
                         throw new InvalidOperationException("Unknown OptionValueType: " + p.OptionValueType);
                 }
             }
+
             return true;
         }
 
@@ -395,14 +369,16 @@ namespace Octopus.Shared.Internals.Options
                     continue;
 
                 if (written < OptionWidth)
+                {
                     o.Write(new string(' ', OptionWidth - written));
+                }
                 else
                 {
                     o.WriteLine();
                     o.Write(new string(' ', OptionWidth));
                 }
 
-                var lines = GetLines(localizer(GetDescription(p.Description)));
+                var lines = GetLines(MessageLocalizer(GetDescription(p.Description)));
                 o.WriteLine(lines[0]);
                 var prefix = new string(' ', OptionWidth + 2);
                 for (var i = 1; i < lines.Count; ++i)
@@ -445,31 +421,24 @@ namespace Octopus.Shared.Internals.Options
                 p.OptionValueType == OptionValueType.Required)
             {
                 if (p.OptionValueType == OptionValueType.Optional)
-                {
-                    Write(o, ref written, localizer("["));
-                }
-                Write(o, ref written, localizer("=" + GetArgumentName(0, p.MaxValueCount, p.Description)));
+                    Write(o, ref written, MessageLocalizer("["));
+                Write(o, ref written, MessageLocalizer("=" + GetArgumentName(0, p.MaxValueCount, p.Description)));
                 var sep = p.ValueSeparators != null && p.ValueSeparators.Length > 0
                     ? p.ValueSeparators[0]
                     : " ";
                 for (var c = 1; c < p.MaxValueCount; ++c)
-                {
-                    Write(o, ref written, localizer(sep + GetArgumentName(c, p.MaxValueCount, p.Description)));
-                }
+                    Write(o, ref written, MessageLocalizer(sep + GetArgumentName(c, p.MaxValueCount, p.Description)));
                 if (p.OptionValueType == OptionValueType.Optional)
-                {
-                    Write(o, ref written, localizer("]"));
-                }
+                    Write(o, ref written, MessageLocalizer("]"));
             }
+
             return true;
         }
 
         static int GetNextOptionIndex(string[] names, int i)
         {
             while (i < names.Length && names[i] == "<>")
-            {
                 ++i;
-            }
             return i;
         }
 
@@ -485,9 +454,9 @@ namespace Octopus.Shared.Internals.Options
                 return maxIndex == 1 ? "VALUE" : "VALUE" + (index + 1);
             string[] nameStart;
             if (maxIndex == 1)
-                nameStart = new[] {"{0:", "{"};
+                nameStart = new[] { "{0:", "{" };
             else
-                nameStart = new[] {"{" + index + ":"};
+                nameStart = new[] { "{" + index + ":" };
             for (var i = 0; i < nameStart.Length; ++i)
             {
                 int start, j = 0;
@@ -495,6 +464,7 @@ namespace Octopus.Shared.Internals.Options
                 {
                     start = description.IndexOf(nameStart[i], j);
                 } while (start >= 0 && j != 0 ? description[j++ - 1] == '{' : false);
+
                 if (start == -1)
                     continue;
                 var end = description.IndexOf("}", start);
@@ -502,6 +472,7 @@ namespace Octopus.Shared.Internals.Options
                     continue;
                 return description.Substring(start + nameStart[i].Length, end - start - nameStart[i].Length);
             }
+
             return maxIndex == 1 ? "VALUE" : "VALUE" + (index + 1);
         }
 
@@ -512,7 +483,6 @@ namespace Octopus.Shared.Internals.Options
             var sb = new StringBuilder(description.Length);
             var start = -1;
             for (var i = 0; i < description.Length; ++i)
-            {
                 switch (description[i])
                 {
                     case '{':
@@ -522,12 +492,15 @@ namespace Octopus.Shared.Internals.Options
                             start = -1;
                         }
                         else if (start < 0)
+                        {
                             start = i + 1;
+                        }
+
                         break;
                     case '}':
                         if (start < 0)
                         {
-                            if ((i + 1) == description.Length || description[i + 1] != '}')
+                            if (i + 1 == description.Length || description[i + 1] != '}')
                                 throw new InvalidOperationException("Invalid option description: " + description);
                             ++i;
                             sb.Append("}");
@@ -537,6 +510,7 @@ namespace Octopus.Shared.Internals.Options
                             sb.Append(description.Substring(start, i - start));
                             start = -1;
                         }
+
                         break;
                     case ':':
                         if (start < 0)
@@ -548,7 +522,7 @@ namespace Octopus.Shared.Internals.Options
                             sb.Append(description[i]);
                         break;
                 }
-            }
+
             return sb.ToString();
         }
 
@@ -560,6 +534,7 @@ namespace Octopus.Shared.Internals.Options
                 lines.Add(string.Empty);
                 return lines;
             }
+
             var length = 80 - OptionWidth - 2;
             int start = 0, end;
             do
@@ -569,23 +544,25 @@ namespace Octopus.Shared.Internals.Options
                 if (end < description.Length)
                 {
                     var c = description[end];
-                    if (c == '-' || (char.IsWhiteSpace(c) && c != '\n'))
+                    if (c == '-' || char.IsWhiteSpace(c) && c != '\n')
+                    {
                         ++end;
+                    }
                     else if (c != '\n')
                     {
                         cont = true;
                         --end;
                     }
                 }
+
                 lines.Add(description.Substring(start, end - start));
                 if (cont)
-                {
                     lines[lines.Count - 1] += "-";
-                }
                 start = end;
                 if (start < description.Length && description[start] == '\n')
                     ++start;
             } while (end < description.Length);
+
             return lines;
         }
 
@@ -594,7 +571,6 @@ namespace Octopus.Shared.Internals.Options
             var end = Math.Min(start + length, description.Length);
             var sep = -1;
             for (var i = start; i < end; ++i)
-            {
                 switch (description[i])
                 {
                     case ' ':
@@ -609,10 +585,24 @@ namespace Octopus.Shared.Internals.Options
                     case '\n':
                         return i;
                 }
-            }
+
             if (sep == -1 || end == description.Length)
                 return end;
             return sep;
+        }
+
+        protected class OptionParts
+        {
+            public OptionParts(string flag, string name)
+            {
+                Flag = flag;
+                Name = name;
+            }
+
+            public string Flag { get; }
+            public string Name { get; }
+            public string? Separator { get; set; }
+            public string? Value { get; set; }
         }
 
         sealed class ActionOption : Option

@@ -27,7 +27,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             AddRule(r => r.ExceptionIs<HttpListenerException>(
                     ex => // ex.ErrorCode == 0x80004005 && // Not sure now where this value came from, comparison always false because unsigned is too big for an int, value is -2147467259
                         ex.Message.StartsWith("The process cannot access the file because it is being used by another process") &&
-                        (ex.StackTrace?.Contains("System.Net.HttpListener.Start()") == true))
+                        ex.StackTrace?.Contains("System.Net.HttpListener.Start()") == true)
                 .EntrySummaryIs("The HTTP server failed to start because the port is in use.")
                 .EntryHelpTextIs("The required port or URL prefix is being used by another process. The Windows `netstat -o -n -a` command " +
                     "can be used to show which process this is (compare PIDs with those shown in Task Manager).")
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             AddRule(r => r.ExceptionIs<FileNotFoundException>(
                     ex => ex.Message.Contains("Could not load file or assembly") &&
                         ex.Message.Contains("XmlSerializers") &&
-                        (ex.StackTrace?.Contains(".CertificateGeneration.CryptContext.Open()") == true))
+                        ex.StackTrace?.Contains(".CertificateGeneration.CryptContext.Open()") == true)
                 .EntrySummaryIs("Crypto functions require the Windows User Profile")
                 .EntryHelpTextIs("Various cryptographic functions used by Octopus Deploy require the Windows " +
                     "user profile to have been loaded. Some remote administration scenarios run commmands " +
@@ -52,7 +52,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
                 .EntryHelpLinkIs("http://g.octopushq.com/CryptoRequiresUserProfile"));
 
             AddRule(r => r.ExceptionIs<UnauthorizedAccessException>(
-                    ex => (ex.StackTrace?.Contains(".CertificateGenerator.Generate(") == true))
+                    ex => ex.StackTrace?.Contains(".CertificateGenerator.Generate(") == true)
                 .EntrySummaryIs("Crypto functions require the Windows User Profile")
                 .EntryHelpTextIs("Various cryptographic functions used by Octopus Deploy require the Windows " +
                     "user profile to have been loaded. Some remote administration scenarios run commmands " +
@@ -70,7 +70,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
 
             AddRule(r => r.ExceptionIs<InvalidDataException>(
                     ex => ex.Message.Contains("Central Directory corrupt") &&
-                        (ex.StackTrace?.Contains(".SynchronizeBuiltInPackageRepositoryIndexTaskController.AddFileToIndex(") == true))
+                        ex.StackTrace?.Contains(".SynchronizeBuiltInPackageRepositoryIndexTaskController.AddFileToIndex(") == true)
                 .HasInnerException<IOException>(
                     iex => iex.Message.Contains("An attempt was made to move the file pointer before the beginning of the file"))
                 .EntrySummaryIs("The re-index built-in package repository task was unable to index package {0}.")
@@ -93,10 +93,8 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             try
             {
                 foreach (var rule in Rules)
-                {
                     if (rule.TryMatch(unpacked, out entry))
                         return true;
-                }
             }
             // ReSharper disable once EmptyGeneralCatchClause
             catch

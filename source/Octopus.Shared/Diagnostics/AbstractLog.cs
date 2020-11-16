@@ -6,7 +6,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Diagnostics
 {
-    public abstract class  AbstractLog : ILogWithContext
+    public abstract class AbstractLog : ILogWithContext
     {
         public abstract ILogContext CurrentContext { get; }
 
@@ -36,9 +36,7 @@ namespace Octopus.Shared.Diagnostics
         }
 
         public IDisposable OpenBlock(string messageFormat, params object[] args)
-        {
-            return OpenBlock(string.Format(messageFormat, args));
-        }
+            => OpenBlock(string.Format(messageFormat, args));
 
         public ILogContext PlanGroupedBlock(string messageText)
         {
@@ -48,6 +46,7 @@ namespace Octopus.Shared.Diagnostics
                 Write(LogCategory.Info, messageText);
                 CurrentContext.Flush();
             }
+
             return child;
         }
 
@@ -59,13 +58,12 @@ namespace Octopus.Shared.Diagnostics
                 Write(LogCategory.Planned, messageText);
                 CurrentContext.Flush();
             }
+
             return child;
         }
 
         public ILogContext PlanFutureBlock(string messageFormat, params object[] args)
-        {
-            return PlanFutureBlock(string.Format(messageFormat, args));
-        }
+            => PlanFutureBlock(string.Format(messageFormat, args));
 
         public void Abandon()
         {
@@ -83,22 +81,18 @@ namespace Octopus.Shared.Diagnostics
         {
             Write(LogCategory.Finished, "Finished");
             CurrentContext.Flush();
-            this.Flush(this.CurrentContext.CorrelationId);
+            Flush(CurrentContext.CorrelationId);
         }
 
         public abstract void Flush(string correlationId);
 
         public virtual bool IsEnabled(LogCategory category)
-        {
-            return true;
-        }
+            => true;
 
         public void Write(LogCategory category, string messageText)
         {
             if (IsEnabled(category))
-            {
                 Write(category, null, messageText);
-            }
         }
 
         public void Write(LogCategory category, Exception error)
@@ -107,18 +101,14 @@ namespace Octopus.Shared.Diagnostics
                 return;
 
             if (IsEnabled(category))
-            {
                 Write(category, error, error.PrettyPrint(false));
-            }
         }
 
         public void Write(LogCategory category, Exception? error, string messageText)
         {
             if (IsEnabled(category))
-            {
                 CurrentContext.SafeSanitize(messageText,
                     sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitized, error?.UnpackFromContainers())));
-            }
         }
 
         public void WriteFormat(LogCategory category, string messageFormat, params object[] args)
@@ -300,7 +290,11 @@ namespace Octopus.Shared.Diagnostics
         public void UpdateProgress(int progressPercentage, string messageText)
         {
             CurrentContext.SafeSanitize(messageText,
-                sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId, LogCategory.Progress, sanitized, null, progressPercentage)));
+                sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId,
+                    LogCategory.Progress,
+                    sanitized,
+                    null,
+                    progressPercentage)));
         }
 
         public void UpdateProgressFormat(int progressPercentage, string messageFormat, params object[] args)

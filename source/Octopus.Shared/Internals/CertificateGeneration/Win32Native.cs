@@ -11,7 +11,11 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool CryptReleaseContext(IntPtr ctx, int flags);
 
-        [DllImport("AdvApi32.dll", EntryPoint = "CryptAcquireContextW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        [DllImport("AdvApi32.dll",
+            EntryPoint = "CryptAcquireContextW",
+            ExactSpelling = true,
+            CharSet = CharSet.Unicode,
+            SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool CryptAcquireContext(
             out IntPtr providerContext,
@@ -35,23 +39,32 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         [DllImport("Crypt32.dll", ExactSpelling = true, SetLastError = true)]
         internal static extern IntPtr CertCreateSelfSignCertificate(
             IntPtr providerHandle,
-            [In] CryptoApiBlob subjectIssuerBlob,
+            [In]
+            CryptoApiBlob subjectIssuerBlob,
             int flags,
-            [In] CryptKeyProviderInformation keyProviderInfo,
-            [In] CryptoAlgorithmIdentifier signatureAlgorithm,
-            [In] SystemTime startTime,
-            [In] SystemTime endTime,
+            [In]
+            CryptKeyProviderInformation keyProviderInfo,
+            [In]
+            CryptoAlgorithmIdentifier signatureAlgorithm,
+            [In]
+            SystemTime startTime,
+            [In]
+            SystemTime endTime,
             IntPtr extensions);
 
         [DllImport("Crypt32.dll", ExactSpelling = true, SetLastError = true, EntryPoint = "CertCreateSelfSignCertificate")]
         internal static extern IntPtr CertCreateSelfSignCertificate_2008(
             IntPtr providerHandle,
-            [In] CryptoApiBlob subjectIssuerBlob,
+            [In]
+            CryptoApiBlob subjectIssuerBlob,
             int flags,
-            [In] CryptKeyProviderInformation keyProviderInfo,
+            [In]
+            CryptKeyProviderInformation keyProviderInfo,
             IntPtr signatureAlgorithm,
-            [In] SystemTime startTime,
-            [In] SystemTime endTime,
+            [In]
+            SystemTime startTime,
+            [In]
+            SystemTime endTime,
             IntPtr extensions);
 
         [DllImport("Crypt32.dll", ExactSpelling = true, SetLastError = true)]
@@ -61,8 +74,10 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool FileTimeToSystemTime(
-            [In] ref long fileTime,
-            [Out] SystemTime systemTime);
+            [In]
+            ref long fileTime,
+            [Out]
+            SystemTime systemTime);
 
         #region Nested type: CryptKeyProviderInformation
 
@@ -85,6 +100,7 @@ namespace Octopus.Shared.Internals.CertificateGeneration
         {
             [MarshalAs(UnmanagedType.LPStr)]
             public string pszObjId;
+
             public CryptoApiBlob parameters;
         }
 

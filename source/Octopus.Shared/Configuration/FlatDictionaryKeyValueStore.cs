@@ -11,10 +11,10 @@ namespace Octopus.Shared.Configuration
 
         protected FlatDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
-            this.JsonSerializerSettings = jsonSerializerSettings;
+            JsonSerializerSettings = jsonSerializerSettings;
         }
 
-        public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel  = ProtectionLevel.None)
+        public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -29,18 +29,16 @@ namespace Octopus.Shared.Configuration
                     return defaultValue;
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                {
                     data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
-                }
 
                 if (typeof(TData) == typeof(string))
-                    return (TData) data;
+                    return (TData)data;
                 if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
-                    return (TData) (object) bool.Parse((string) data);
+                    return (TData)(object)bool.Parse((string)data);
                 if (typeof(TData).IsEnum)
-                    return (TData) Enum.Parse(typeof(TData), ((string) data).Trim('"'));
+                    return (TData)Enum.Parse(typeof(TData), ((string)data).Trim('"'));
 
-                return JsonConvert.DeserializeObject<TData>((string) data, JsonSerializerSettings);
+                return JsonConvert.DeserializeObject<TData>((string)data, JsonSerializerSettings);
             }
             catch (Exception e)
             {
@@ -59,24 +57,22 @@ namespace Octopus.Shared.Configuration
             {
                 var data = Read(name);
                 if (data == null)
-                    return (false, default(TData)!);
+                    return (false, default!);
                 valueAsString = data as string;
                 if (valueAsString == null || string.IsNullOrWhiteSpace(valueAsString))
-                    return (false, default(TData)!);
+                    return (false, default!);
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                {
                     data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
-                }
 
                 if (typeof(TData) == typeof(string))
-                    return (true, (TData) data);
+                    return (true, (TData)data);
                 if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
-                    return (true, (TData) (object) bool.Parse((string) data));
+                    return (true, (TData)(object)bool.Parse((string)data));
                 if (typeof(TData).IsEnum)
-                    return (true, (TData) Enum.Parse(typeof(TData), ((string) data).Trim('"')));
+                    return (true, (TData)Enum.Parse(typeof(TData), ((string)data).Trim('"')));
 
-                return (true, JsonConvert.DeserializeObject<TData>((string) data, JsonSerializerSettings));
+                return (true, JsonConvert.DeserializeObject<TData>((string)data, JsonSerializerSettings));
             }
             catch (Exception e)
             {
@@ -86,12 +82,11 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-
-        public override bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel  = ProtectionLevel.None)
+        public override bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
-            if (value == null || (value is string s && string.IsNullOrWhiteSpace(s)))
+            if (value == null || value is string s && string.IsNullOrWhiteSpace(s))
             {
                 Write(name, null);
                 if (AutoSaveOnSet)
@@ -99,17 +94,13 @@ namespace Octopus.Shared.Configuration
                 return true;
             }
 
-            var valueAsObject = (object) value;
+            var valueAsObject = (object)value;
 
             if (ValueNeedsToBeSerialized(protectionLevel, valueAsObject))
-            {
                 valueAsObject = JsonConvert.SerializeObject(value, JsonSerializerSettings);
-            }
 
             if (protectionLevel == ProtectionLevel.MachineKey && valueAsObject != null)
-            {
                 valueAsObject = MachineKeyEncrypter.Current.Encrypt((string)valueAsObject);
-            }
 
             Write(name, valueAsObject);
             if (AutoSaveOnSet)

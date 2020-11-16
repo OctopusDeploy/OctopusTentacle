@@ -7,6 +7,7 @@ namespace Octopus.Shared.Configuration
     {
         [Description("Octopus Server")]
         OctopusServer,
+
         [Description("Tentacle")]
         Tentacle
     }

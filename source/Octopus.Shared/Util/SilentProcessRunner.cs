@@ -1,29 +1,31 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Net;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using Octopus.Diagnostics;
-using Octopus.Shared.Startup;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using System.Net;
-using System.ComponentModel;
+using System.Text;
+using System.Threading;
 using Microsoft.Win32.SafeHandles;
-using System.Collections;
+using Octopus.Diagnostics;
+using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Util
 {
     public static class SilentProcessRunner
     {
+        static readonly object EnvironmentVariablesCacheLock = new object();
+        static IDictionary mostRecentMachineEnvironmentVariables = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
+        static readonly Dictionary<string, Dictionary<string, string>> EnvironmentVariablesForUserCache = new Dictionary<string, Dictionary<string, string>>();
+
         public static int ExecuteCommand(this CommandLineInvocation invocation, ILog log)
-        {
-            return ExecuteCommand(invocation, Environment.CurrentDirectory, log);
-        }
+            => ExecuteCommand(invocation, Environment.CurrentDirectory, log);
 
         public static int ExecuteCommand(this CommandLineInvocation invocation, string workingDirectory, ILog log)
         {
@@ -35,15 +37,13 @@ namespace Octopus.Shared.Util
                 workingDirectory,
                 log.Info,
                 log.Error
-                );
+            );
 
             return exitCode;
         }
 
         public static CmdResult ExecuteCommand(this CommandLineInvocation invocation)
-        {
-            return ExecuteCommand(invocation, Environment.CurrentDirectory);
-        }
+            => ExecuteCommand(invocation, Environment.CurrentDirectory);
 
         public static CmdResult ExecuteCommand(this CommandLineInvocation invocation, string workingDirectory)
         {
@@ -60,7 +60,7 @@ namespace Octopus.Shared.Util
                 workingDirectory,
                 infos.Add,
                 errors.Add
-                );
+            );
 
             return new CmdResult(exitCode, infos, errors);
         }
@@ -74,9 +74,15 @@ namespace Octopus.Shared.Util
             NetworkCredential? runAs = null,
             IDictionary<string, string>? customEnvironmentVariables = null,
             CancellationToken cancel = default)
-        {
-            return ExecuteCommand(executable, arguments, workingDirectory, LogFileOnlyLogger.Current.Info, info, error, runAs, customEnvironmentVariables, cancel);
-        }
+            => ExecuteCommand(executable,
+                arguments,
+                workingDirectory,
+                LogFileOnlyLogger.Current.Info,
+                info,
+                error,
+                runAs,
+                customEnvironmentVariables,
+                cancel);
 
         public static int ExecuteCommand(
             string executable,
@@ -178,17 +184,11 @@ namespace Octopus.Shared.Util
                     process.StartInfo.CreateNoWindow = true;
 
                     if (runAs == null)
-                    {
                         RunAsSameUser(process.StartInfo, customEnvironmentVariables);
-                    }
-                    else if(PlatformDetection.IsRunningOnWindows)
-                    {
+                    else if (PlatformDetection.IsRunningOnWindows)
                         RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
-                    }
                     else
-                    {
                         throw new PlatformNotSupportedException("NetCore on Linux or Mac does not support running a process as a different user.");
-                    }
 
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
@@ -212,7 +212,10 @@ namespace Octopus.Shared.Util
 
                     var running = true;
 
-                    using (cancel.Register(() => { if (running) DoOurBestToCleanUp(process, error); }))
+                    using (cancel.Register(() =>
+                    {
+                        if (running) DoOurBestToCleanUp(process, error);
+                    }))
                     {
                         if (cancel.IsCancellationRequested)
                             DoOurBestToCleanUp(process, error);
@@ -242,7 +245,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        private static int SafelyGetExitCode(Process process)
+        static int SafelyGetExitCode(Process process)
         {
             try
             {
@@ -254,7 +257,8 @@ namespace Octopus.Shared.Util
             }
         }
 
-        private static void SafelyWaitForAllOutput(ManualResetEventSlim outputResetEvent, CancellationToken cancel,
+        static void SafelyWaitForAllOutput(ManualResetEventSlim outputResetEvent,
+            CancellationToken cancel,
             Action<string> debug)
         {
             try
@@ -268,7 +272,7 @@ namespace Octopus.Shared.Util
             }
         }
 
-        private static void SafelyCancelRead(Action action, Action<string> debug)
+        static void SafelyCancelRead(Action action, Action<string> debug)
         {
             try
             {
@@ -298,17 +302,11 @@ namespace Octopus.Shared.Util
                     process.StartInfo.CreateNoWindow = true;
 
                     if (runAs == null)
-                    {
                         RunAsSameUser(process.StartInfo, customEnvironmentVariables);
-                    }
                     else if (PlatformDetection.IsRunningOnWindows)
-                    {
                         RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
-                    }
                     else
-                    {
                         throw new PlatformNotSupportedException("NetCore on linux or Mac does not support running a process as a different user.");
-                    }
 
                     process.Start();
                 }
@@ -319,20 +317,16 @@ namespace Octopus.Shared.Util
             }
         }
 
-        private static void RunAsSameUser(ProcessStartInfo processStartInfo, IDictionary<string, string>? customEnvironmentVariables)
+        static void RunAsSameUser(ProcessStartInfo processStartInfo, IDictionary<string, string>? customEnvironmentVariables)
         {
             // Accessing the ProcessStartInfo.EnvironmentVariables dictionary will pre-load the environment variables for the current process
             // Then we'll add/overwrite with the customEnvironmentVariables
             if (customEnvironmentVariables != null && customEnvironmentVariables.Any())
-            {
                 foreach (var variable in customEnvironmentVariables)
-                {
                     processStartInfo.EnvironmentVariables[variable.Key] = variable.Value;
-                }
-            }
         }
 
-        private static void RunAsDifferentUser(ProcessStartInfo startInfo, NetworkCredential runAs, IDictionary<string, string>? customEnvironmentVariables)
+        static void RunAsDifferentUser(ProcessStartInfo startInfo, NetworkCredential runAs, IDictionary<string, string>? customEnvironmentVariables)
         {
 #pragma warning disable PC001 // API not supported on all platforms
             startInfo.UserName = runAs.UserName;
@@ -344,12 +338,10 @@ namespace Octopus.Shared.Util
             WindowStationAndDesktopAccess.GrantAccessToWindowStationAndDesktop(runAs.UserName, runAs.Domain);
 
             if (customEnvironmentVariables != null && customEnvironmentVariables.Any())
-            {
                 SetEnvironmentVariablesForTargetUser(startInfo, runAs, customEnvironmentVariables);
-            }
         }
 
-        private static void SetEnvironmentVariablesForTargetUser(ProcessStartInfo startInfo, NetworkCredential runAs, IDictionary<string, string> customEnvironmentVariables)
+        static void SetEnvironmentVariablesForTargetUser(ProcessStartInfo startInfo, NetworkCredential runAs, IDictionary<string, string> customEnvironmentVariables)
         {
             // Double check before we go doing p/invoke gymnastics
             if (customEnvironmentVariables == null || !customEnvironmentVariables.Any()) return;
@@ -369,25 +361,15 @@ namespace Octopus.Shared.Util
 
             // Now copy in the extra environment variables we want to propagate from this process
             foreach (var variable in customEnvironmentVariables)
-            {
                 targetUserEnvironmentVariables[variable.Key] = variable.Value;
-            }
 
             // Starting from a clean slate, copy the resulting environment variables into the ProcessStartInfo
             startInfo.EnvironmentVariables.Clear();
             foreach (var variable in targetUserEnvironmentVariables)
-            {
                 startInfo.EnvironmentVariables[variable.Key] = variable.Value;
-            }
         }
 
-
-
-        private static readonly object EnvironmentVariablesCacheLock = new object();
-        private static IDictionary mostRecentMachineEnvironmentVariables = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
-        private static readonly Dictionary<string, Dictionary<string, string>> EnvironmentVariablesForUserCache = new Dictionary<string, Dictionary<string, string>>();
-
-        private static Dictionary<string, string> GetTargetUserEnvironmentVariables(NetworkCredential runAs)
+        static Dictionary<string, string> GetTargetUserEnvironmentVariables(NetworkCredential runAs)
         {
             var cacheKey = $"{runAs.Domain}\\{runAs.UserName}";
 
@@ -417,12 +399,13 @@ namespace Octopus.Shared.Util
             }
         }
 
-        private static void InvalidateEnvironmentVariablesForUserCacheIfMachineEnvironmentVariablesHaveChanged()
+        static void InvalidateEnvironmentVariablesForUserCacheIfMachineEnvironmentVariablesHaveChanged()
         {
             var currentMachineEnvironmentVariables = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
             var machineEnvironmentVariablesHaveChanged =
 #pragma warning disable DE0006 // API is deprecated
-                !currentMachineEnvironmentVariables.Cast<DictionaryEntry>().OrderBy(e => e.Key)
+                !currentMachineEnvironmentVariables.Cast<DictionaryEntry>()
+                    .OrderBy(e => e.Key)
                     .SequenceEqual(mostRecentMachineEnvironmentVariables.Cast<DictionaryEntry>().OrderBy(e => e.Key));
 #pragma warning restore DE0006 // API is deprecated
 
@@ -453,36 +436,39 @@ namespace Octopus.Shared.Util
             }
         }
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+#pragma warning disable PC003 // Native API not available in UWP
+        static extern bool GetCPInfoEx([MarshalAs(UnmanagedType.U4)]
+            int codePage,
+            [MarshalAs(UnmanagedType.U4)]
+            int dwFlags,
+            out CPINFOEX lpCPInfoEx);
+#pragma warning restore PC003 // Native API not available in UWP
+
         class Hitman
         {
             public static void TryKillProcessAndChildrenRecursively(Process process)
             {
                 if (PlatformDetection.IsRunningOnNix)
-                {
                     TryKillLinuxProcessAndChildrenRecursively(process);
-                }
                 else if (PlatformDetection.IsRunningOnWindows)
-                {
                     TryKillWindowsProcessAndChildrenRecursively(process.Id);
-                }
                 else
-                {
                     throw new Exception("Unknown platform, unable to kill process");
-                }
             }
 
-            private static void TryKillLinuxProcessAndChildrenRecursively(Process process)
+            static void TryKillLinuxProcessAndChildrenRecursively(Process process)
             {
                 var result = ExecuteCommand(new CommandLineInvocation("/bin/bash", $"-c \"kill -TERM {process.Id}\""));
                 result.Validate();
                 //process.Kill() doesnt seem to work in netcore 2.2 there have been some improvments in netcore 3.0 as well as also allowing to kill child processes
                 //https://github.com/dotnet/corefx/pull/34147
                 //In netcore 2.2 if the process is terminated we still get stuck on process.WaitForExit(); we need to manually check to see if the process has exited and then close it.
-                if(process.HasExited)
+                if (process.HasExited)
                     process.Close();
             }
 
-            private static void TryKillWindowsProcessAndChildrenRecursively(int pid)
+            static void TryKillWindowsProcessAndChildrenRecursively(int pid)
             {
                 try
                 {
@@ -491,9 +477,7 @@ namespace Octopus.Shared.Util
                         using (var moc = searcher.Get())
                         {
                             foreach (var mo in moc.OfType<ManagementObject>())
-                            {
                                 TryKillWindowsProcessAndChildrenRecursively(Convert.ToInt32(mo["ProcessID"]));
-                            }
                         }
                     }
                 }
@@ -539,7 +523,7 @@ namespace Octopus.Shared.Util
                         var codepage = GetCPInfoEx(CP_OEMCP, dwFlags, out var info) ? info.CodePage : CodePage850;
 
 #if REQUIRES_CODE_PAGE_PROVIDER
-                        var encoding = CodePagesEncodingProvider.Instance.GetEncoding(codepage);    // When it says that this can return null, it *really can* return null.
+                        var encoding = CodePagesEncodingProvider.Instance.GetEncoding(codepage); // When it says that this can return null, it *really can* return null.
                         return encoding ?? defaultEncoding;
 #else
                         var encoding = Encoding.GetEncoding(codepage);
@@ -555,43 +539,6 @@ namespace Octopus.Shared.Util
                 return defaultEncoding;
             }
         }
-
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-#pragma warning disable PC003 // Native API not available in UWP
-        static extern bool GetCPInfoEx([MarshalAs(UnmanagedType.U4)] int codePage, [MarshalAs(UnmanagedType.U4)] int dwFlags, out CPINFOEX lpCPInfoEx);
-#pragma warning restore PC003 // Native API not available in UWP
-
-        // ReSharper disable InconsistentNaming
-        const int MAX_DEFAULTCHAR = 2;
-        const int MAX_LEADBYTES = 12;
-        const int MAX_PATH = 260;
-
-        // ReSharper disable MemberCanBePrivate.Local
-        // ReSharper disable once StructCanBeMadeReadOnly
-        [StructLayout(LayoutKind.Sequential)]
-        struct CPINFOEX
-        {
-            [MarshalAs(UnmanagedType.U4)]
-            public readonly int MaxCharSize;
-
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_DEFAULTCHAR)]
-            public readonly byte[] DefaultChar;
-
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_LEADBYTES)]
-            public readonly byte[] LeadBytes;
-
-            public readonly char UnicodeDefaultChar;
-
-            [MarshalAs(UnmanagedType.U4)]
-            public readonly int CodePage;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MAX_PATH)]
-            public readonly string CodePageName;
-        }
-        // ReSharper restore MemberCanBePrivate.Local
-        // ReSharper restore InconsistentNaming
-
 
         // Required to allow a service to run a process as another user
         // See http://stackoverflow.com/questions/677874/starting-a-process-with-credentials-from-a-windows-service/30687230#30687230
@@ -612,7 +559,10 @@ namespace Octopus.Shared.Util
                 SafeHandle safeHandle = new NoopSafeHandle(handle);
                 var security =
                     new GenericSecurity(
-                        false, ResourceType.WindowObject, safeHandle, AccessControlSections.Access);
+                        false,
+                        ResourceType.WindowObject,
+                        safeHandle,
+                        AccessControlSections.Access);
 
                 var account = string.IsNullOrEmpty(domainName)
 #pragma warning disable PC001 // API not supported on all platforms
@@ -622,20 +572,11 @@ namespace Octopus.Shared.Util
 
                 security.AddAccessRule(
                     new GenericAccessRule(
-                        account, accessMask, AccessControlType.Allow));
+                        account,
+                        accessMask,
+                        AccessControlType.Allow));
                 security.Persist(safeHandle, AccessControlSections.Access);
             }
-
-#pragma warning disable PC003 // Native API not available in UWP
-            [DllImport("user32.dll", SetLastError = true)]
-            private static extern IntPtr GetProcessWindowStation();
-
-            [DllImport("user32.dll", SetLastError = true)]
-            private static extern IntPtr GetThreadDesktop(int dwThreadId);
-
-            [DllImport("kernel32.dll", SetLastError = true)]
-            private static extern int GetCurrentThreadId();
-#pragma warning restore PC003
 
             // Native API not available in UWP
             // All the code to manipulate a security object is available in .NET framework,
@@ -647,24 +588,38 @@ namespace Octopus.Shared.Util
             // This is the simplest possible implementation that yet allows us to make use
             // of the existing .NET implementation, sparing necessity to
             // P/Invoke the underlying WinAPI.
-            private class GenericAccessRule : AccessRule
+            class GenericAccessRule : AccessRule
             {
                 public GenericAccessRule(
-                    IdentityReference identity, int accessMask, AccessControlType type) :
-                    base(identity, accessMask, false, InheritanceFlags.None,
-                        PropagationFlags.None, type)
+                    IdentityReference identity,
+                    int accessMask,
+                    AccessControlType type) :
+                    base(identity,
+                        accessMask,
+                        false,
+                        InheritanceFlags.None,
+                        PropagationFlags.None,
+                        type)
                 {
                 }
             }
 
-            private class GenericSecurity : NativeObjectSecurity
+            class GenericSecurity : NativeObjectSecurity
             {
                 public GenericSecurity(
-                    bool isContainer, ResourceType resType, SafeHandle objectHandle,
+                    bool isContainer,
+                    ResourceType resType,
+                    SafeHandle objectHandle,
                     AccessControlSections sectionsRequested)
                     : base(isContainer, resType, objectHandle, sectionsRequested)
                 {
                 }
+
+                public override Type AccessRightType => throw new NotImplementedException();
+
+                public override Type AccessRuleType => typeof(AccessRule);
+
+                public override Type AuditRuleType => typeof(AuditRule);
 
                 public new void Persist(SafeHandle handle, AccessControlSections includeSections)
                 {
@@ -680,27 +635,27 @@ namespace Octopus.Shared.Util
 #pragma warning restore PC001 // API not supported on all platforms
                 }
 
-                public override Type AccessRightType => throw new NotImplementedException();
-
                 public override AccessRule AccessRuleFactory(
                     IdentityReference identityReference,
-                    int accessMask, bool isInherited, InheritanceFlags inheritanceFlags,
-                    PropagationFlags propagationFlags, AccessControlType type)
+                    int accessMask,
+                    bool isInherited,
+                    InheritanceFlags inheritanceFlags,
+                    PropagationFlags propagationFlags,
+                    AccessControlType type)
                     => throw new NotImplementedException();
-
-                public override Type AccessRuleType => typeof(AccessRule);
 
                 public override AuditRule AuditRuleFactory(
-                    IdentityReference identityReference, int accessMask,
-                    bool isInherited, InheritanceFlags inheritanceFlags,
-                    PropagationFlags propagationFlags, AuditFlags flags)
+                    IdentityReference identityReference,
+                    int accessMask,
+                    bool isInherited,
+                    InheritanceFlags inheritanceFlags,
+                    PropagationFlags propagationFlags,
+                    AuditFlags flags)
                     => throw new NotImplementedException();
-
-                public override Type AuditRuleType => typeof(AuditRule);
             }
 
             // Handles returned by GetProcessWindowStation and GetThreadDesktop should not be closed
-            private class NoopSafeHandle : SafeHandle
+            class NoopSafeHandle : SafeHandle
             {
                 public NoopSafeHandle(IntPtr handle) :
                     base(handle, false)
@@ -710,36 +665,28 @@ namespace Octopus.Shared.Util
                 public override bool IsInvalid => false;
 
                 protected override bool ReleaseHandle()
-                {
-                    return true;
-                }
+                    => true;
             }
+
+#pragma warning disable PC003 // Native API not available in UWP
+            [DllImport("user32.dll", SetLastError = true)]
+            static extern IntPtr GetProcessWindowStation();
+
+            [DllImport("user32.dll", SetLastError = true)]
+            static extern IntPtr GetThreadDesktop(int dwThreadId);
+
+            [DllImport("kernel32.dll", SetLastError = true)]
+            static extern int GetCurrentThreadId();
+#pragma warning restore PC003
         }
 
         internal class AccessToken : IDisposable
         {
-            public string Username { get; }
-            public SafeAccessTokenHandle Handle { get; }
-
-            private AccessToken(string username, SafeAccessTokenHandle handle)
+            public enum LogonProvider
             {
-                Username = username;
-                Handle = handle;
-            }
-
-            public static AccessToken Logon(string username, string password, string domain = ".", LogonType logonType = LogonType.Network, LogonProvider logonProvider = LogonProvider.Default)
-            {
-                // See https://msdn.microsoft.com/en-us/library/windows/desktop/aa378184(v=vs.85).aspx
-                var hToken = IntPtr.Zero;
-                Win32Helper.Invoke(() => LogonUser(username, domain, password, LogonType.Network, LogonProvider.Default, out hToken),
-                    $"Logon failed for the user '{username}'");
-
-                return new AccessToken(username, new SafeAccessTokenHandle(hToken));
-            }
-
-            public void Dispose()
-            {
-                Handle?.Dispose();
+                Default = 0,
+                WinNT40 = 2,
+                WinNT50 = 3
             }
 
             public enum LogonType
@@ -753,16 +700,47 @@ namespace Octopus.Shared.Util
                 NewCredentials = 9
             }
 
-            public enum LogonProvider
+            AccessToken(string username, SafeAccessTokenHandle handle)
             {
-                Default = 0,
-                WinNT40 = 2,
-                WinNT50 = 3,
+                Username = username;
+                Handle = handle;
+            }
+
+            public string Username { get; }
+            public SafeAccessTokenHandle Handle { get; }
+
+            public static AccessToken Logon(string username,
+                string password,
+                string domain = ".",
+                LogonType logonType = LogonType.Network,
+                LogonProvider logonProvider = LogonProvider.Default)
+            {
+                // See https://msdn.microsoft.com/en-us/library/windows/desktop/aa378184(v=vs.85).aspx
+                var hToken = IntPtr.Zero;
+                Win32Helper.Invoke(() => LogonUser(username,
+                        domain,
+                        password,
+                        LogonType.Network,
+                        LogonProvider.Default,
+                        out hToken),
+                    $"Logon failed for the user '{username}'");
+
+                return new AccessToken(username, new SafeAccessTokenHandle(hToken));
+            }
+
+            public void Dispose()
+            {
+                Handle?.Dispose();
             }
 
             [DllImport("advapi32.dll", SetLastError = true)]
 #pragma warning disable PC003 // Native API not available in UWP
-            private static extern bool LogonUser(string username, string domain, string password, LogonType logonType, LogonProvider logonProvider, out IntPtr hToken);
+            static extern bool LogonUser(string username,
+                string domain,
+                string password,
+                LogonType logonType,
+                LogonProvider logonProvider,
+                out IntPtr hToken);
 #pragma warning restore PC003 // Native API not available in UWP
         }
 
@@ -771,7 +749,7 @@ namespace Octopus.Shared.Util
             readonly AccessToken token;
             readonly SafeRegistryHandle userProfile;
 
-            private UserProfile(AccessToken token, SafeRegistryHandle userProfile)
+            UserProfile(AccessToken token, SafeRegistryHandle userProfile)
             {
                 this.token = token;
                 this.userProfile = userProfile;
@@ -802,7 +780,6 @@ namespace Octopus.Shared.Util
 
             public void Dispose()
             {
-
                 if (userProfile != null && !userProfile.IsClosed)
                 {
                     try
@@ -818,6 +795,19 @@ namespace Octopus.Shared.Util
                 }
             }
 
+            [StructLayout(LayoutKind.Sequential)]
+            struct PROFILEINFO
+            {
+                public int dwSize;
+                public readonly int dwFlags;
+                public string lpUserName;
+                public readonly string lpProfilePath;
+                public readonly string lpDefaultPath;
+                public readonly string lpServerName;
+                public readonly string lpPolicyPath;
+                public readonly IntPtr hProfile;
+            }
+
 #pragma warning disable PC003 // Native API not available in UWP
             [DllImport("userenv.dll", SetLastError = true)]
             static extern bool LoadUserProfile(SafeAccessTokenHandle hToken, ref PROFILEINFO lpProfileInfo);
@@ -825,19 +815,6 @@ namespace Octopus.Shared.Util
             [DllImport("userenv.dll", SetLastError = true)]
             static extern bool UnloadUserProfile(SafeAccessTokenHandle hToken, SafeRegistryHandle hProfile);
 #pragma warning restore PC003 // Native API not available in UWP
-
-            [StructLayout(LayoutKind.Sequential)]
-            struct PROFILEINFO
-            {
-                public int dwSize;
-                public int dwFlags;
-                public string lpUserName;
-                public string lpProfilePath;
-                public string lpDefaultPath;
-                public string lpServerName;
-                public string lpPolicyPath;
-                public IntPtr hProfile;
-            }
         }
 
         class Win32Helper
@@ -910,27 +887,18 @@ namespace Octopus.Shared.Util
                                 var data = testData.ToString();
                                 var index = data.IndexOf('=');
                                 if (index == -1)
-                                {
                                     userEnvironment.Add(data, "");
-                                }
                                 else if (index == data.Length - 1)
-                                {
                                     userEnvironment.Add(data.Substring(0, index), "");
-                                }
                                 else
-                                {
                                     userEnvironment.Add(data.Substring(0, index), data.Substring(index + 1));
-                                }
                                 testData.Length = 0;
                             }
+
                             if (*current == 0 && current != start && *(current - 1) == 0)
-                            {
                                 done = true;
-                            }
                             if (*current != 0)
-                            {
                                 testData.Append((char)*current);
-                            }
                             current++;
                         }
                     }
@@ -947,29 +915,59 @@ namespace Octopus.Shared.Util
 
 #pragma warning disable PC003 // Native API not available in UWP
             [DllImport("userenv.dll", SetLastError = true)]
-            private static extern bool CreateEnvironmentBlock(out IntPtr lpEnvironment, SafeAccessTokenHandle hToken, bool inheritFromCurrentProcess);
+            static extern bool CreateEnvironmentBlock(out IntPtr lpEnvironment, SafeAccessTokenHandle hToken, bool inheritFromCurrentProcess);
 
             [DllImport("userenv.dll", SetLastError = true)]
-            private static extern bool DestroyEnvironmentBlock(IntPtr lpEnvironment);
+            static extern bool DestroyEnvironmentBlock(IntPtr lpEnvironment);
 #pragma warning restore PC003 // Native API not available in UWP
         }
 
         internal sealed class SafeAccessTokenHandle : SafeHandle
         {
             // 0 is an Invalid Handle
-            public SafeAccessTokenHandle(IntPtr handle) : base(handle, true) { }
+            public SafeAccessTokenHandle(IntPtr handle) : base(handle, true)
+            {
+            }
 
             public static SafeAccessTokenHandle InvalidHandle => new SafeAccessTokenHandle(IntPtr.Zero);
 
             public override bool IsInvalid => handle == IntPtr.Zero || handle == new IntPtr(-1);
 
             protected override bool ReleaseHandle()
-            {
-                return CloseHandle(handle);
-            }
+                => CloseHandle(handle);
 
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool CloseHandle(IntPtr hHandle);
         }
+
+        // ReSharper disable InconsistentNaming
+        const int MAX_DEFAULTCHAR = 2;
+        const int MAX_LEADBYTES = 12;
+        const int MAX_PATH = 260;
+
+        // ReSharper disable MemberCanBePrivate.Local
+        // ReSharper disable once StructCanBeMadeReadOnly
+        [StructLayout(LayoutKind.Sequential)]
+        struct CPINFOEX
+        {
+            [MarshalAs(UnmanagedType.U4)]
+            public readonly int MaxCharSize;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_DEFAULTCHAR)]
+            public readonly byte[] DefaultChar;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_LEADBYTES)]
+            public readonly byte[] LeadBytes;
+
+            public readonly char UnicodeDefaultChar;
+
+            [MarshalAs(UnmanagedType.U4)]
+            public readonly int CodePage;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MAX_PATH)]
+            public readonly string CodePageName;
+        }
+        // ReSharper restore MemberCanBePrivate.Local
+        // ReSharper restore InconsistentNaming
     }
 }

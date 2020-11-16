@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Tests.Diagnostics
@@ -41,11 +42,11 @@ namespace Octopus.Shared.Tests.Diagnostics
             const string sensitive = "multiline\nsensitive",
                 expected = "This contains a **************** value";
 
-            string[] raw = new[] { "This contains a multiline", "sensitive value" };
+            string[] raw = { "This contains a multiline", "sensitive value" };
 
             var logContext = new LogContext();
             var childContext = logContext.CreateChild(new[] { sensitive });
-            string result = "";
+            var result = "";
             foreach (var line in raw)
                 childContext.SafeSanitize(line, sanitized => result += sanitized);
 
@@ -112,7 +113,7 @@ namespace Octopus.Shared.Tests.Diagnostics
             Assert.AreEqual("This has a **************** agent with a **************** agent", result1);
             Assert.AreEqual("This has a **************** agent with a **************** agent", result2);
         }
-        
+
         [Test]
         public void CanAddSensitiveValueToExistingContext()
         {
@@ -123,11 +124,11 @@ namespace Octopus.Shared.Tests.Diagnostics
 
             var logContext = new LogContext(sensitiveValues: new[] { sensitive });
             string result = null;
-            logContext.SafeSanitize(raw, sanitized => {});
-            
+            logContext.SafeSanitize(raw, sanitized => { });
+
             logContext.WithSensitiveValue(anotherSensitive);
-            logContext.SafeSanitize(raw, sanitized => result = sanitized );
-            
+            logContext.SafeSanitize(raw, sanitized => result = sanitized);
+
             Assert.AreEqual(expected, result);
         }
     }

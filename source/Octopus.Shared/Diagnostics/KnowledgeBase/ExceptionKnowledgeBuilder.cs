@@ -19,10 +19,8 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
 
                 var s = new Dictionary<string, object>();
                 foreach (var clause in clauses)
-                {
                     if (!clause(ex, s))
                         return null;
-                }
 
                 var summary = entrySummary(s);
                 if (summary == null)
@@ -35,17 +33,19 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
         public ExceptionKnowledgeBuilder ExceptionIs<T>()
             where T : Exception
         {
-            return ExceptionIs<T>(ex => true, delegate
-            {
-            });
+            return ExceptionIs<T>(ex => true,
+                delegate
+                {
+                });
         }
 
         public ExceptionKnowledgeBuilder ExceptionIs<T>(Func<T, bool> predicate)
             where T : Exception
         {
-            return ExceptionIs(predicate, delegate
-            {
-            });
+            return ExceptionIs(predicate,
+                delegate
+                {
+                });
         }
 
         public ExceptionKnowledgeBuilder ExceptionIs<T>(Action<T, IDictionary<string, object>> getState)
@@ -77,17 +77,19 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
         public ExceptionKnowledgeBuilder HasInnerException<T>()
             where T : Exception
         {
-            return HasInnerException<T>(ex => true, delegate
-            {
-            });
+            return HasInnerException<T>(ex => true,
+                delegate
+                {
+                });
         }
 
         public ExceptionKnowledgeBuilder HasInnerException<T>(Func<T, bool> predicate)
             where T : Exception
         {
-            return HasInnerException(predicate, delegate
-            {
-            });
+            return HasInnerException(predicate,
+                delegate
+                {
+                });
         }
 
         public ExceptionKnowledgeBuilder HasInnerException<T>(Action<T, IDictionary<string, object>> getState)
@@ -132,22 +134,14 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             if (ag != null)
             {
                 foreach (var innerException in ag.InnerExceptions)
-                {
-                    foreach (var ex in Enumerate(innerException))
-                    {
-                        yield return ex;
-                    }
-                }
+                foreach (var ex in Enumerate(innerException))
+                    yield return ex;
             }
             else
             {
                 if (exception.InnerException != null)
-                {
                     foreach (var ex in Enumerate(exception.InnerException))
-                    {
                         yield return ex;
-                    }
-                }
             }
         }
 

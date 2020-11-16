@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Diagnostics.KnowledgeBase
@@ -12,13 +13,13 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             Summary = summary;
         }
 
-        public string Summary { get; private set; }
-        public string? HelpText { get; private set; }
-        public string? HelpLink { get; private set; }
+        public string Summary { get; }
+        public string? HelpText { get; }
+        public string? HelpLink { get; }
 
         public override string ToString()
         {
-            var parts = new[] {Summary, HelpText ?? string.Empty}.NotNullOrWhiteSpace().ToList();
+            var parts = new[] { Summary, HelpText ?? string.Empty }.NotNullOrWhiteSpace().ToList();
             if (HelpLink != null)
                 parts.Add("See: " + HelpLink);
 

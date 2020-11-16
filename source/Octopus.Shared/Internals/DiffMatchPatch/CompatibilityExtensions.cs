@@ -6,7 +6,9 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
     static class CompatibilityExtensions
     {
         // JScript splice function
-        public static List<T> Splice<T>(this List<T> input, int start, int count,
+        public static List<T> Splice<T>(this List<T> input,
+            int start,
+            int count,
             params T[] objects)
         {
             var deletedRange = input.GetRange(start, count);
@@ -18,9 +20,7 @@ namespace Octopus.Shared.Internals.DiffMatchPatch
 
         // Java substring function
         public static string JavaSubstring(this string s, int begin, int end)
-        {
-            return s.Substring(begin, end - begin);
-        }
+            => s.Substring(begin, end - begin);
     }
 
     /**-

@@ -25,9 +25,7 @@ namespace Octopus.Shared.Configuration.Instances
         public ApplicationName ApplicationName { get; }
 
         public ApplicationRecord? GetInstance(string instanceName)
-        {
-            return instanceStore.GetInstance(instanceName);
-        }
+            => instanceStore.GetInstance(instanceName);
 
         public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
         {

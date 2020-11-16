@@ -7,6 +7,8 @@ namespace Octopus.Shared.Time
     {
         readonly Stopwatch stopWatch = new Stopwatch();
 
+        public double ElapsedTotalMinutes => stopWatch.Elapsed.TotalMinutes;
+
         public void Start()
         {
             stopWatch.Start();
@@ -16,7 +18,5 @@ namespace Octopus.Shared.Time
         {
             stopWatch.Restart();
         }
-
-        public double ElapsedTotalMinutes => stopWatch.Elapsed.TotalMinutes;
     }
 }

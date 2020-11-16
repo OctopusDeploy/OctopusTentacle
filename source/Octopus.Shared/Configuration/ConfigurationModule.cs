@@ -1,3 +1,4 @@
+using System;
 using Autofac;
 using Octopus.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
@@ -65,16 +66,20 @@ namespace Octopus.Shared.Configuration
                 .SingleInstance();
 
             builder.Register(c =>
-            {
-                var selector = c.Resolve<IApplicationInstanceSelector>();
-                return selector.GetCurrentConfiguration();
-            }).As<IKeyValueStore>().SingleInstance();
+                {
+                    var selector = c.Resolve<IApplicationInstanceSelector>();
+                    return selector.GetCurrentConfiguration();
+                })
+                .As<IKeyValueStore>()
+                .SingleInstance();
 
             builder.Register(c =>
-            {
-                var selector = c.Resolve<IApplicationInstanceSelector>();
-                return selector.GetWritableCurrentConfiguration();
-            }).As<IWritableKeyValueStore>().SingleInstance();
+                {
+                    var selector = c.Resolve<IApplicationInstanceSelector>();
+                    return selector.GetWritableCurrentConfiguration();
+                })
+                .As<IWritableKeyValueStore>()
+                .SingleInstance();
 
             builder.RegisterType<HomeConfiguration>()
                 .As<IHomeConfiguration>()
@@ -91,16 +96,12 @@ namespace Octopus.Shared.Configuration
             RegisterWatchdog(builder);
         }
 
-        private void RegisterWatchdog(ContainerBuilder builder)
+        void RegisterWatchdog(ContainerBuilder builder)
         {
             if (PlatformDetection.IsRunningOnWindows)
-            {
                 builder.RegisterType<Watchdog>().As<IWatchdog>();
-            }
             else
-            {
                 builder.RegisterType<NullWatchdog>().As<IWatchdog>();
-            }
         }
     }
 

@@ -7,15 +7,13 @@ namespace Octopus.Shared.Configuration
     {
         readonly Stream s;
 
-        public XmlStreamReadOnlyKeyValueStore(Stream s) : base(autoSaveOnSet:false)
+        public XmlStreamReadOnlyKeyValueStore(Stream s) : base(false)
         {
             this.s = s;
         }
 
         protected override bool ExistsForReading()
-        {
-            return true;
-        }
+            => true;
 
         protected override Stream OpenForReading()
         {
@@ -24,8 +22,6 @@ namespace Octopus.Shared.Configuration
         }
 
         protected override Stream OpenForWriting()
-        {
-            throw new NotSupportedException("Cannot write to these settings.");
-        }
+            => throw new NotSupportedException("Cannot write to these settings.");
     }
 }

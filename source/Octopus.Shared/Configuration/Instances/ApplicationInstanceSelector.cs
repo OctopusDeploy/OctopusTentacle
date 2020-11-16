@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Octopus.Configuration;
 using Octopus.Shared.Startup;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
@@ -40,52 +41,48 @@ namespace Octopus.Shared.Configuration.Instances
         public bool IsCurrentInstanceDefault()
         {
             if (current == null)
-            {
                 lock (@lock)
                 {
                     if (current == null)
                         current = LoadCurrentInstance();
                 }
-            }
+
             return current?.InstanceName == ApplicationName.ToString();
         }
 
         public string? GetCurrentName()
         {
             if (current == null)
-            {
                 lock (@lock)
                 {
                     if (current == null)
                         current = LoadCurrentInstance();
                 }
-            }
+
             return current?.InstanceName;
         }
 
         public IKeyValueStore GetCurrentConfiguration()
         {
             if (current == null)
-            {
                 lock (@lock)
                 {
                     if (current == null)
                         current = LoadCurrentInstance();
                 }
-            }
+
             return current.Value.Configuration;
         }
 
         public IWritableKeyValueStore GetWritableCurrentConfiguration()
         {
             if (current == null)
-            {
                 lock (@lock)
                 {
                     if (current == null)
                         current = LoadCurrentInstance();
                 }
-            }
+
             return current.Value.WritableConfiguration;
         }
 
@@ -175,21 +172,20 @@ namespace Octopus.Shared.Configuration.Instances
                         }
                     }
                     else
+                    {
                         record = new ApplicationRecord();
+                    }
 
                     var keyValueStore = s.LoadedConfiguration(record);
                     if (writableConfiguration == null && keyValueStore is IWritableKeyValueStore writableKeyValueStore)
-                    {
                         writableConfiguration = writableKeyValueStore;
-                    }
 
                     if (record is ApplicationInstanceRecord persistedRecord)
                         logFileOnlyLogger.Info($"Using config from {persistedRecord.ConfigurationFilePath}");
 
                     return keyValueStore;
                 })
-                .Where(x => x != null)
-                .Cast<IAggregatableKeyValueStore>()
+                .WhereNotNull()
                 .ToArray();
 
             if (!keyValueStores.Any())
@@ -206,7 +202,8 @@ namespace Octopus.Shared.Configuration.Instances
 
         string AvailableInstances(IApplicationConfigurationWithMultipleInstances multipleInstances)
         {
-            return string.Join(", ", multipleInstances.ListInstances()
+            return string.Join(", ",
+                multipleInstances.ListInstances()
                     .OrderBy(x => x.InstanceName, StringComparer.InvariantCultureIgnoreCase)
                     .Select(x => x.InstanceName));
         }

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using NuGet.Common;
@@ -21,13 +22,16 @@ namespace Octopus.Shared.Packages
         public int Install(string packageFile, string directory, ILog log, bool suppressNestedScriptWarning)
         {
             using (var packageStream = fileSystem.OpenFile(packageFile, FileMode.Open, FileAccess.Read))
+            {
                 return Install(packageStream, directory, log, suppressNestedScriptWarning);
+            }
         }
 
         public int Install(Stream packageStream, string directory, ILog log, bool suppressNestedScriptWarning)
         {
-            var extracted = PackageExtractor.ExtractPackage(packageStream, new SuppliedDirectoryPackagePathResolver(directory),
-                new PackageExtractionContext(NullLogger.Instance) {PackageSaveMode = PackageSaveMode.Files, XmlDocFileSaveMode = XmlDocFileSaveMode.None, CopySatelliteFiles = false},
+            var extracted = PackageExtractor.ExtractPackage(packageStream,
+                new SuppliedDirectoryPackagePathResolver(directory),
+                new PackageExtractionContext(NullLogger.Instance) { PackageSaveMode = PackageSaveMode.Files, XmlDocFileSaveMode = XmlDocFileSaveMode.None, CopySatelliteFiles = false },
                 CancellationToken.None);
 
             return extracted.Count();
@@ -40,9 +44,7 @@ namespace Octopus.Shared.Packages
             }
 
             public override string GetInstallPath(PackageIdentity packageIdentity)
-            {
-                return Root;
-            }
+                => Root;
         }
     }
 }

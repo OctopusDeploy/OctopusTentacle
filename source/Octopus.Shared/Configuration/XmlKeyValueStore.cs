@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,32 +17,26 @@ namespace Octopus.Shared.Configuration
         protected override void LoadSettings(IDictionary<string, object?> settingsToFill)
         {
             if (!ExistsForReading())
-            {
                 return;
-            }
 
             XmlSettingsRoot settings;
-            var serializer = new XmlSerializer(typeof (XmlSettingsRoot));
+            var serializer = new XmlSerializer(typeof(XmlSettingsRoot));
             using (var xmlReader = new XmlTextReader(new StreamReader(OpenForReading(), Encoding.UTF8)))
             {
                 settings = (XmlSettingsRoot)serializer.Deserialize(xmlReader);
             }
 
             foreach (var setting in settings.Settings)
-            {
                 settingsToFill[setting.Key] = setting.Value;
-            }
         }
 
         protected override void SaveSettings(IDictionary<string, object?> settingsToSave)
         {
             var settings = new XmlSettingsRoot();
             foreach (var key in settingsToSave.Keys.OrderBy(k => k))
-            {
                 settings.Settings.Add(new XmlSetting { Key = key, Value = settingsToSave[key]?.ToString() });
-            }
 
-            var serializer = new XmlSerializer(typeof (XmlSettingsRoot));
+            var serializer = new XmlSerializer(typeof(XmlSettingsRoot));
             using (var stream = OpenForWriting())
             {
                 stream.SetLength(0);

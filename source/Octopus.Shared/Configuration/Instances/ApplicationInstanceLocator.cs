@@ -25,9 +25,7 @@ namespace Octopus.Shared.Configuration.Instances
             machineConfigurationHomeDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus");
 
             if (!PlatformDetection.IsRunningOnWindows)
-            {
                 machineConfigurationHomeDirectory = "/etc/octopus";
-            }
         }
 
         protected ApplicationName ApplicationName { get; }
@@ -36,24 +34,17 @@ namespace Octopus.Shared.Configuration.Instances
         protected IRegistryApplicationInstanceStore RegistryApplicationInstanceStore { get; }
 
         internal string InstancesFolder()
-        {
-            return Path.Combine(machineConfigurationHomeDirectory, ApplicationName.ToString(), "Instances");
-        }
+            => Path.Combine(machineConfigurationHomeDirectory, ApplicationName.ToString(), "Instances");
 
         protected string InstanceFileName(string instanceName)
-        {
-            return instanceName.Replace(' ', '-').ToLower();
-        }
-
+            => instanceName.Replace(' ', '-').ToLower();
 
         public bool AnyInstancesConfigured()
         {
             var instancesFolder = InstancesFolder();
             if (FileSystem.DirectoryExists(instancesFolder))
-            {
                 if (FileSystem.EnumerateFiles(instancesFolder).Any())
                     return true;
-            }
             var listFromRegistry = RegistryApplicationInstanceStore.GetListFromRegistry();
             return listFromRegistry.Any();
         }
@@ -66,9 +57,7 @@ namespace Octopus.Shared.Configuration.Instances
                 var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config");
                 var instance = TryLoadInstanceConfiguration(instanceConfiguration);
                 if (instance != null)
-                {
                     return new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath);
-                }
             }
 
             // for customers running multiple instances on a machine, they may have a version that only understood
@@ -84,12 +73,10 @@ namespace Octopus.Shared.Configuration.Instances
             var listFromRegistry = RegistryApplicationInstanceStore.GetListFromRegistry();
             var listFromFileSystem = new List<ApplicationInstanceRecord>();
             if (FileSystem.DirectoryExists(instancesFolder))
-            {
                 listFromFileSystem = FileSystem.EnumerateFiles(instancesFolder)
                     .Select(LoadInstanceConfiguration)
                     .Select(instance => new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath))
                     .ToList();
-            }
 
             // for customers running multiple instances on a machine, they may have a version that only understood
             // using the registry. We need to list those too.
@@ -97,18 +84,6 @@ namespace Octopus.Shared.Configuration.Instances
                 .Concat(listFromRegistry.Where(x => listFromFileSystem.All(y => y.InstanceName != x.InstanceName)))
                 .OrderBy(i => i.InstanceName);
             return combinedInstanceList.ToList();
-        }
-
-        public class Instance
-        {
-            public Instance(string name, string configurationFilePath)
-            {
-                Name = name;
-                ConfigurationFilePath = configurationFilePath;
-            }
-
-            public string Name { get; }
-            public string ConfigurationFilePath { get; set; }
         }
 
         Instance LoadInstanceConfiguration(string path)
@@ -127,6 +102,18 @@ namespace Octopus.Shared.Configuration.Instances
             var data = FileSystem.ReadFile(path);
             var instance = JsonConvert.DeserializeObject<Instance>(data);
             return instance;
+        }
+
+        public class Instance
+        {
+            public Instance(string name, string configurationFilePath)
+            {
+                Name = name;
+                ConfigurationFilePath = configurationFilePath;
+            }
+
+            public string Name { get; }
+            public string ConfigurationFilePath { get; set; }
         }
     }
 }

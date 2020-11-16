@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Diagnostics;
 #if NETFRAMEWORK
@@ -13,6 +14,7 @@ using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
+
 #endif
 
 namespace Octopus.Shared.Security
@@ -22,14 +24,10 @@ namespace Octopus.Shared.Security
         public const int RecommendedKeyBitLength = 2048;
 
         public X509Certificate2 GenerateNew(string fullName, ILog log)
-        {
-            return Generate(fullName, true, log);
-        }
+            => Generate(fullName, true, log);
 
         public X509Certificate2 GenerateNewNonExportable(string fullName, ILog log)
-        {
-            return Generate(fullName, false, log);
-        }
+            => Generate(fullName, false, log);
 
 #if NETFRAMEWORK
         static X509Certificate2 Generate(string fullName, bool exportable, ILog log)
@@ -81,11 +79,11 @@ namespace Octopus.Shared.Security
             store.SetKeyEntry(string.Empty, new AsymmetricKeyEntry(subjectKeyPair.Private), new[] { new X509CertificateEntry(bouncyCert) });
             var exportpw = Guid.NewGuid().ToString();
 
-            using (var ms = new System.IO.MemoryStream())
+            using (var ms = new MemoryStream())
             {
                 store.Save(ms, exportpw.ToCharArray(), random);
-                certificate = exportable 
-                    ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable | (X509KeyStorageFlags)32) 
+                certificate = exportable
+                    ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable | (X509KeyStorageFlags)32)
                     : new X509Certificate2(ms.ToArray(), exportpw, (X509KeyStorageFlags)32);
             }
 

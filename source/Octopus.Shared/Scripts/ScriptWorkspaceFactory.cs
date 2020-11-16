@@ -23,9 +23,7 @@ namespace Octopus.Shared.Scripts
         public IScriptWorkspace GetWorkspace(ScriptTicket ticket)
         {
             if (!PlatformDetection.IsRunningOnWindows)
-            {
                 return new BashScriptWorkspace(FindWorkingDirectory(ticket), fileSystem);
-            }
 
             return new ScriptWorkspace(FindWorkingDirectory(ticket), fileSystem);
         }

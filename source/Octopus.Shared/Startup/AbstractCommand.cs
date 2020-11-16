@@ -8,6 +8,20 @@ namespace Octopus.Shared.Startup
 {
     public abstract class AbstractCommand : ICommand
     {
+        static readonly Lazy<List<string>> SpecialLocations = new Lazy<List<string>>(() =>
+        {
+            var result = new List<string>();
+            foreach (var specialLocation in Enum.GetValues(typeof(Environment.SpecialFolder)))
+            {
+                var location = Environment.GetFolderPath((Environment.SpecialFolder)specialLocation!, Environment.SpecialFolderOption.None);
+                result.Add(location);
+            }
+
+            result.Add("C:");
+            result.Add("C:\\");
+            return result;
+        });
+
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
         ICommandRuntime? runtime;
 
@@ -37,13 +51,14 @@ namespace Octopus.Shared.Startup
         protected virtual void UnrecognizedArguments(IList<string> arguments)
         {
             if (arguments.Count > 0)
-            {
                 throw new ControlledFailureException("Unrecognized command line arguments: " + string.Join(" ", arguments));
-            }
         }
 
         protected abstract void Start();
-        protected virtual void Completed() { }
+
+        protected virtual void Completed()
+        {
+        }
 
         protected virtual void Stop()
         {
@@ -73,24 +88,22 @@ namespace Octopus.Shared.Startup
             Completed();
         }
 
-        private void EnsureSensitiveParametersAreNotLoggedToLogFileOnlyLogger()
+        void EnsureSensitiveParametersAreNotLoggedToLogFileOnlyLogger()
         {
             foreach (var sensitiveOption in Options.Where(x => x.Sensitive))
+            foreach (var name in sensitiveOption.GetNames())
             {
-                foreach (var name in sensitiveOption.GetNames())
-                {
-                    var option = Options.GetOptionForName(name);
-                    if (option == null)
-                        throw new ArgumentException($"Unable to locate options for command named {name}");
-                    //Ideally, we'd ensure that no logging anywhere would log these values, but its way harder than it sounds.
-                    //The LogContext is immutable, and designed so that is a tree structure - usually, you only care about
-                    //sensitive values for the scope of a deployment, not after that. Changing it to be not immutable
-                    //is very bad from a perf perspective, as the AhoCorasick masking algorithm is pretty perf intensive.
-                    //Also, due to timing issues of when loggers are created, it gets very difficult to ensure that the logger
-                    //will have the sensitive values set. Its all rather complicated, and its preventing a theoretical problem
-                    //whereas this LogFileOnlyLogger is definitely logging sensitive values, so we need to mask there
-                    LogFileOnlyLogger.Current.AddSensitiveValues(option.Values.Where(x => x != null).ToArray()!);
-                }
+                var option = Options.GetOptionForName(name);
+                if (option == null)
+                    throw new ArgumentException($"Unable to locate options for command named {name}");
+                //Ideally, we'd ensure that no logging anywhere would log these values, but its way harder than it sounds.
+                //The LogContext is immutable, and designed so that is a tree structure - usually, you only care about
+                //sensitive values for the scope of a deployment, not after that. Changing it to be not immutable
+                //is very bad from a perf perspective, as the AhoCorasick masking algorithm is pretty perf intensive.
+                //Also, due to timing issues of when loggers are created, it gets very difficult to ensure that the logger
+                //will have the sensitive values set. Its all rather complicated, and its preventing a theoretical problem
+                //whereas this LogFileOnlyLogger is definitely logging sensitive values, so we need to mask there
+                LogFileOnlyLogger.Current.AddSensitiveValues(option.Values.Where(x => x != null).ToArray()!);
             }
         }
 
@@ -114,9 +127,7 @@ namespace Octopus.Shared.Startup
         protected void AssertFileDoesNotExist(string path, string? errorMessage = null)
         {
             if (File.Exists(path))
-            {
                 throw new ControlledFailureException(errorMessage ?? $"A file already exists at '{path}'");
-            }
         }
 
         protected void AssertDirectoryExists(string path, string? errorMessage = null)
@@ -125,26 +136,11 @@ namespace Octopus.Shared.Startup
                 throw new ControlledFailureException(errorMessage ?? $"Directory '{path}' cannot be found");
         }
 
-        static readonly Lazy<List<string>> SpecialLocations = new Lazy<List<string>>(() =>
-        {
-            var result = new List<string>();
-            foreach (var specialLocation in Enum.GetValues(typeof(Environment.SpecialFolder)))
-            {
-                var location = Environment.GetFolderPath((Environment.SpecialFolder)specialLocation!, Environment.SpecialFolderOption.None);
-                result.Add(location);
-            }
-            result.Add("C:");
-            result.Add("C:\\");
-            return result;
-        });
-
         protected void AssertNotSpecialLocation(string path)
         {
             foreach (var specialLocation in SpecialLocations.Value)
-            {
                 if (string.Equals(path, specialLocation, StringComparison.OrdinalIgnoreCase))
                     throw new ControlledFailureException($"Directory '{path}' is not a good place, pick a safe subdirectory");
-            }
         }
     }
 }

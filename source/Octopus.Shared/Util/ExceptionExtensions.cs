@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-#if NETFX
-using System.Data.SqlClient;
-#else
-using Microsoft.Data.SqlClient;
-#endif
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+#if NETFX
+using System.Data.SqlClient;
+#else
+using Microsoft.Data.SqlClient;
+
+#endif
 
 namespace Octopus.Shared.Util
 {
@@ -31,7 +32,7 @@ namespace Octopus.Shared.Util
                 return;
             }
 
-            if(ex is OperationCanceledException)
+            if (ex is OperationCanceledException)
             {
                 sb.AppendLine("The task was canceled");
                 return;
@@ -39,22 +40,15 @@ namespace Octopus.Shared.Util
 
             var sqlEx = ex as SqlException;
             if (sqlEx != null)
-            {
                 sb.AppendLine($"SQL Error {sqlEx.Number} - {ex.Message}");
-            }
             else
-            {
                 sb.AppendLine(ex.Message);
-            }
-
 
             if (ex is ControlledFailureException)
                 return;
 
             if (printStackTrace)
-            {
                 AddStackTrace(sb, ex);
-            }
 
             if (ex.InnerException == null)
                 return;
@@ -74,11 +68,11 @@ namespace Octopus.Shared.Util
             else
             {
                 sb.AppendLine("Aggregate Exception");
-                if(printStackTrace)
+                if (printStackTrace)
                     AddStackTrace(sb, aex);
                 for (var x = 0; x < aex.InnerExceptions.Count; x++)
                 {
-                    sb.AppendLine($"--Inner Exception {x+1}--");
+                    sb.AppendLine($"--Inner Exception {x + 1}--");
                     PrettyPrint(sb, aex.InnerExceptions[x], printStackTrace);
                 }
             }
@@ -102,10 +96,10 @@ namespace Octopus.Shared.Util
 
         static void AddReflectionTypeLoadExceptionDetails(ReflectionTypeLoadException rtle, StringBuilder sb)
         {
-            if(rtle.LoaderExceptions != null)
+            if (rtle.LoaderExceptions != null)
                 foreach (var loaderException in rtle.LoaderExceptions)
                 {
-                    if(loaderException == null)
+                    if (loaderException == null)
                         continue;
 
                     sb.AppendLine();
@@ -121,14 +115,10 @@ namespace Octopus.Shared.Util
         public static Exception UnpackFromContainers(this Exception error)
         {
             if (error is AggregateException aggregateException && aggregateException.InnerExceptions.Count == 1)
-            {
                 return UnpackFromContainers(aggregateException.InnerExceptions[0]);
-            }
 
             if (error is TargetInvocationException && error.InnerException != null)
-            {
                 return UnpackFromContainers(error.InnerException);
-            }
 
             return error;
         }
@@ -139,16 +129,14 @@ namespace Octopus.Shared.Util
             message.Append("The HTTP server could not start because namespace reservations have not been made. ");
             message.AppendLine("Ensure that the current user has access to listen on these prefixes by running the following command(s):");
             foreach (var prefix in prefixes)
-            {
                 message.AppendFormat("  netsh http add urlacl url={0}://{5}:{1}{2} user={3}\\{4}",
-                    prefix.Scheme,
-                    prefix.Port,
-                    prefix.PathAndQuery,
-                    Environment.UserDomainName,
-                    Environment.UserName,
-                    prefix.Host == "localhost" ? "+" : prefix.Host)
+                        prefix.Scheme,
+                        prefix.Port,
+                        prefix.PathAndQuery,
+                        Environment.UserDomainName,
+                        Environment.UserName,
+                        prefix.Host == "localhost" ? "+" : prefix.Host)
                     .AppendLine();
-            }
 
             return message.ToString();
         }
@@ -162,21 +150,18 @@ namespace Octopus.Shared.Util
             message.AppendFormat("The service was unable to start because the HttpListener returned an error: {0}", error.Message).AppendLine();
             message.AppendLine("This could occur for one of two reasons. First, ensure that the current user has access to listen on these prefixes by running the following command(s):");
             foreach (var prefix in prefixes)
-            {
                 message.AppendFormat("  netsh http add urlacl url={0}://+:{1}{2} user={3}\\{4}",
-                    prefix.Scheme,
-                    prefix.Port,
-                    prefix.PathAndQuery,
-                    Environment.UserDomainName,
-                    Environment.UserName)
+                        prefix.Scheme,
+                        prefix.Port,
+                        prefix.PathAndQuery,
+                        Environment.UserDomainName,
+                        Environment.UserName)
                     .AppendLine();
-            }
 
             message.Append("Alternatively, this error might have been caused by one of the ports being in use by another process. Ensure that no other processes are listening on the TCP port(s): ")
                 .Append(string.Join(", ", prefixes.Select(p => p.Port)));
 
             return message.ToString();
         }
-
     }
 }

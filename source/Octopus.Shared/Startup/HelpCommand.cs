@@ -13,15 +13,12 @@ namespace Octopus.Shared.Startup
 {
     public class HelpCommand : AbstractCommand
     {
-        readonly ILog log = Log.Octopus();
-
         static readonly string TextFormat = "text";
         static readonly string JsonFormat = "json";
         static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
+        readonly ILog log = Log.Octopus();
 
         readonly ICommandLocator commands;
-
-        public string Format { get; set; } = TextFormat;
 
         public HelpCommand(ICommandLocator commands)
         {
@@ -29,6 +26,8 @@ namespace Octopus.Shared.Startup
 
             Options.Add("format=", $"The format of the output ({string.Join(",", SupportedFormats)}). Defaults to {Format}.", v => Format = v);
         }
+
+        public string Format { get; set; } = TextFormat;
 
         public void WriteHelp(TextWriter writer)
         {
@@ -67,9 +66,7 @@ namespace Octopus.Shared.Startup
         }
 
         bool LooksLikeCommand(string candidate)
-        {
-            return candidate.Length > 0 && char.IsLetter(candidate.First());
-        }
+            => candidate.Length > 0 && char.IsLetter(candidate.First());
 
         protected override void UnrecognizedArguments(IList<string> arguments)
         {
@@ -83,33 +80,34 @@ namespace Octopus.Shared.Startup
         void PrintCommandHelp(string executable, ICommand command, CommandMetadata metadata, OptionSet commonOptions)
         {
             if (string.Equals(Format, JsonFormat, StringComparison.OrdinalIgnoreCase))
-            {
                 PrintCommandHelpAsJson(command, metadata, commonOptions);
-            }
             else
-            {
                 PrintCommandHelpAsText(executable, command, metadata, commonOptions);
-            }
         }
 
         void PrintCommandHelpAsJson(ICommand command, CommandMetadata metadata, OptionSet commonOptions)
         {
             Console.Write(JsonConvert.SerializeObject(new
-            {
-                Name = metadata.Name,
-                Description = metadata.Description,
-                Aliases = metadata.Aliases,
-                Options = command.Options.Where(o => !o.Hide).Select(o => new
                 {
-                    Name = o.Names.First(),
-                    Description = o.Description
-                }).ToArray(),
-                CommonOptions = commonOptions.Where(o => !o.Hide).Select(o => new
-                {
-                    Name = o.Names.First(),
-                    Description = o.Description
-                }).ToArray()
-            }, Formatting.Indented));
+                    metadata.Name,
+                    metadata.Description,
+                    metadata.Aliases,
+                    Options = command.Options.Where(o => !o.Hide)
+                        .Select(o => new
+                        {
+                            Name = o.Names.First(),
+                            o.Description
+                        })
+                        .ToArray(),
+                    CommonOptions = commonOptions.Where(o => !o.Hide)
+                        .Select(o => new
+                        {
+                            Name = o.Names.First(),
+                            o.Description
+                        })
+                        .ToArray()
+                },
+                Formatting.Indented));
         }
 
         static void PrintCommandHelpAsText(string executable, ICommand command, CommandMetadata metadata, OptionSet commonOptions)
@@ -138,26 +136,25 @@ namespace Octopus.Shared.Startup
         void PrintGeneralHelp(string executable)
         {
             if (string.Equals(Format, JsonFormat, StringComparison.OrdinalIgnoreCase))
-            {
                 PrintGeneralHelpAsJson();
-            }
             else
-            {
                 PrintGeneralHelpAsText(executable);
-            }
         }
 
         void PrintGeneralHelpAsJson()
         {
             Console.Write(JsonConvert.SerializeObject(new
-            {
-                Commands = commands.List().OrderBy(x => x.Name).Select(x => new
                 {
-                    Name = x.Name,
-                    Description = x.Description,
-                    Aliases = x.Aliases
-                })
-            }, Formatting.Indented));
+                    Commands = commands.List()
+                        .OrderBy(x => x.Name)
+                        .Select(x => new
+                        {
+                            x.Name,
+                            x.Description,
+                            x.Aliases
+                        })
+                },
+                Formatting.Indented));
         }
 
         void PrintGeneralHelpAsText(string executable)

@@ -12,8 +12,6 @@ namespace Octopus.Shared.Security
         public const string TentacleCertificateFullName = "cn=" + TentacleCertificateName;
 
         public static string BuildOctopusAzureCertificateFullName(string azureAccountName)
-        {
-            return OctopusAzureCertificateFullName + " - " + azureAccountName;
-        }
+            => OctopusAzureCertificateFullName + " - " + azureAccountName;
     }
 }

@@ -40,8 +40,8 @@ namespace Octopus.Shared.Configuration.Instances
                     mapper.SetEnvironmentValues(results);
                     foundValues = true;
                 }
-
             }
+
             loaded = true;
         }
 
@@ -52,7 +52,7 @@ namespace Octopus.Shared.Configuration.Instances
                 return null;
 
             var content = fileSystem.ReadAllText(envFile);
-            var lines = content.Split(new [] {  Environment.NewLine }, StringSplitOptions.None);
+            var lines = content.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             var results = new Dictionary<string, string?>();
             var lineNumber = 0;
 

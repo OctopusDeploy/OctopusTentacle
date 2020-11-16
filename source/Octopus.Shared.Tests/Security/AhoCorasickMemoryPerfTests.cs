@@ -12,10 +12,10 @@ namespace Octopus.Shared.Tests.Security
         const int wordLength = 2000;
         const int searchCount = 20;
 
-        string[] words;
-        Random random;
-        string[] toSearch;
-        bool[] result;
+        readonly string[] words;
+        readonly Random random;
+        readonly string[] toSearch;
+        readonly bool[] result;
 
         public AhoCorasickMemoryPerfTests()
         {
@@ -38,7 +38,8 @@ namespace Octopus.Shared.Tests.Security
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
             return new string(Enumerable.Repeat(chars, length)
-              .Select(s => s[random.Next(s.Length)]).ToArray());
+                .Select(s => s[random.Next(s.Length)])
+                .ToArray());
         }
 
         [Test]
@@ -47,13 +48,11 @@ namespace Octopus.Shared.Tests.Security
             var before = GC.GetTotalMemory(true);
 
             var trie = new AhoCorasick();
-            for (int i = 0; i < words.Length; i++)
-            {
+            for (var i = 0; i < words.Length; i++)
                 trie.Add(words[i]);
-            }
             trie.Build();
 
-            for (int i = 0; i < toSearch.Length; i++)
+            for (var i = 0; i < toSearch.Length; i++)
             {
                 var found = trie.Find(toSearch[i]);
                 if (!found.IsPartial && found.Found.Any() != result[i])

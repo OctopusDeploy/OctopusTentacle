@@ -8,7 +8,11 @@ namespace Octopus.Shared.Contracts
     public class StartScriptCommand
     {
         [JsonConstructor]
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string? taskId)
+        public StartScriptCommand(string scriptBody,
+            ScriptIsolationLevel isolation,
+            TimeSpan scriptIsolationMutexTimeout,
+            string[] arguments,
+            string? taskId)
         {
             Arguments = arguments;
             TaskId = taskId;
@@ -17,22 +21,38 @@ namespace Octopus.Shared.Contracts
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
         }
 
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string? taskId, params ScriptFile[] additionalFiles)
-            : this(scriptBody, isolation, scriptIsolationMutexTimeout, arguments, taskId)
+        public StartScriptCommand(string scriptBody,
+            ScriptIsolationLevel isolation,
+            TimeSpan scriptIsolationMutexTimeout,
+            string[] arguments,
+            string? taskId,
+            params ScriptFile[] additionalFiles)
+            : this(scriptBody,
+                isolation,
+                scriptIsolationMutexTimeout,
+                arguments,
+                taskId)
         {
             if (additionalFiles != null)
-            {
                 Files.AddRange(additionalFiles);
-            }
         }
 
-        public StartScriptCommand(string scriptBody, ScriptIsolationLevel isolation, TimeSpan scriptIsolationMutexTimeout, string[] arguments, string? taskId, Dictionary<ScriptType, string> additionalScripts, params ScriptFile[] additionalFiles)
-            : this(scriptBody, isolation, scriptIsolationMutexTimeout, arguments, taskId, additionalFiles)
+        public StartScriptCommand(string scriptBody,
+            ScriptIsolationLevel isolation,
+            TimeSpan scriptIsolationMutexTimeout,
+            string[] arguments,
+            string? taskId,
+            Dictionary<ScriptType, string> additionalScripts,
+            params ScriptFile[] additionalFiles)
+            : this(scriptBody,
+                isolation,
+                scriptIsolationMutexTimeout,
+                arguments,
+                taskId,
+                additionalFiles)
         {
             if (!additionalScripts.IsNullOrEmpty())
-            {
                 Scripts.AddRange(additionalScripts);
-            }
         }
 
         public string ScriptBody { get; }

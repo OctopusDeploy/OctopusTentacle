@@ -1,3 +1,4 @@
+using System;
 
 namespace Octopus.Shared.Configuration
 {
@@ -68,23 +69,15 @@ namespace Octopus.Shared.Configuration
     public static class ProxyConfigurationExtensions
     {
         public static bool ProxyEnabled(this IProxyConfiguration config)
-        {
-            return config.UseDefaultProxy || config.UsingCustomProxy();
-        }
+            => config.UseDefaultProxy || config.UsingCustomProxy();
 
         public static bool ProxyDisabled(this IProxyConfiguration config)
-        {
-            return !config.ProxyEnabled();
-        }
+            => !config.ProxyEnabled();
 
         public static bool UsingCustomProxy(this IProxyConfiguration config)
-        {
-            return !string.IsNullOrWhiteSpace(config.CustomProxyHost);
-        }
+            => !string.IsNullOrWhiteSpace(config.CustomProxyHost);
 
         public static bool UsingDefaultCredentials(this IProxyConfiguration config)
-        {
-            return string.IsNullOrWhiteSpace(config.CustomProxyUsername);
-        }
+            => string.IsNullOrWhiteSpace(config.CustomProxyUsername);
     }
 }

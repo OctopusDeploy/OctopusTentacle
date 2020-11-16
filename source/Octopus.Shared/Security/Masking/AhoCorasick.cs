@@ -1,4 +1,5 @@
 ﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -85,20 +86,18 @@ namespace Octopus.Shared.Security.Masking
             }
 
             if (result.IsPartial)
-            {
                 result.PartialPath = node.Path;
-            }
 
             return result;
         }
 
         [DebuggerDisplay("{Prefix} | Children: {ChildCount}")]
         [DebuggerTypeProxy(typeof(NodeDebugView))]
-        private class Node : IEnumerable<Node>
+        class Node : IEnumerable<Node>
         {
-            private Dictionary<char, Node> children;
-            private char singleKey;
-            private Node singleNode;
+            Dictionary<char, Node> children;
+            char singleKey;
+            Node singleNode;
 
             public Node()
             {
@@ -106,8 +105,8 @@ namespace Octopus.Shared.Security.Masking
 
             public Node(char prefix, Node parent)
             {
-                this.Prefix = prefix;
-                this.Parent = parent;
+                Prefix = prefix;
+                Parent = parent;
             }
 
             public char Prefix { get; }
@@ -123,6 +122,7 @@ namespace Octopus.Shared.Security.Masking
                         chars.Add(node.Prefix);
                         node = node.Parent;
                     }
+
                     return new string(chars.Reverse().ToArray());
                 }
             }
@@ -140,13 +140,9 @@ namespace Octopus.Shared.Security.Masking
                 get
                 {
                     if (children != null && children.TryGetValue(c, out var node))
-                    {
                         return node;
-                    }
                     if (singleNode != null && c == singleKey)
-                    {
                         return singleNode;
-                    }
                     return null;
                 }
                 set
@@ -157,10 +153,9 @@ namespace Octopus.Shared.Security.Masking
                         singleNode = value;
                         return;
                     }
+
                     if (children == null)
-                    {
                         children = new Dictionary<char, Node> { { singleKey, singleNode } };
-                    }
                     children[c] = value;
                 }
             }
@@ -178,9 +173,9 @@ namespace Octopus.Shared.Security.Masking
 
             public override string ToString() => Prefix.ToString();
 
-            private sealed class NodeDebugView
+            sealed class NodeDebugView
             {
-                private Node node;
+                readonly Node node;
 
                 public NodeDebugView(Node node)
                 {

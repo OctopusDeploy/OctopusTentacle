@@ -4,7 +4,6 @@ namespace Octopus.Shared.Diagnostics
 {
     public class CorrelationId
     {
-
         public CorrelationId()
         {
             Id = Guid.NewGuid().ToString("N");
@@ -18,8 +17,6 @@ namespace Octopus.Shared.Diagnostics
         public string Id { get; }
 
         public override string ToString()
-        {
-            return Id;
-        }
+            => Id;
     }
 }

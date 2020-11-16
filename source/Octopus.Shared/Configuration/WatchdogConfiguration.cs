@@ -1,3 +1,5 @@
+using System;
+
 namespace Octopus.Shared.Configuration
 {
     public class WatchdogConfiguration

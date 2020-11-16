@@ -1,8 +1,7 @@
-using FluentAssertions;
+using System;
 using NUnit.Framework;
 using Octopus.Configuration;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Configuration
 {
@@ -21,13 +20,13 @@ namespace Octopus.Shared.Tests.Configuration
                 EnumField = SomeEnum.SomeOtherEnumValue,
                 ArrayField = new[]
                 {
-                    new MyNestedObject {Id = 1},
-                    new MyNestedObject {Id = 2},
-                    new MyNestedObject {Id = 3}
+                    new MyNestedObject { Id = 1 },
+                    new MyNestedObject { Id = 2 },
+                    new MyNestedObject { Id = 3 }
                 }
             };
-            
-            var settings = new JsonFileKeyValueStore(ConfigurationFile, FileSystem, autoSaveOnSet: false, isWriteOnly: true);
+
+            var settings = new JsonFileKeyValueStore(ConfigurationFile, FileSystem, false, true);
             settings.Set("group1.setting2", 123);
             settings.Set("group1.setting1", true);
             settings.Set<string>("group2.setting3", "a string");
@@ -54,9 +53,7 @@ namespace Octopus.Shared.Tests.Configuration
     class JsonRoundTripTestsWithoutReReadFromFile : JsonRoundTripTestBase
     {
         protected override IKeyValueStore SetupKeyValueStore()
-        {
-            return SetupData();
-        }
+            => SetupData();
     }
 
     [TestFixture]
@@ -65,7 +62,7 @@ namespace Octopus.Shared.Tests.Configuration
         protected override IKeyValueStore SetupKeyValueStore()
         {
             SetupData();
-            return new JsonFileKeyValueStore(ConfigurationFile, FileSystem, autoSaveOnSet: false, isWriteOnly: false);
+            return new JsonFileKeyValueStore(ConfigurationFile, FileSystem, false);
         }
     }
 }

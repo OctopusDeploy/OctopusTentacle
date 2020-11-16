@@ -13,14 +13,10 @@ namespace Octopus.Shared.Tests.Util
         public readonly StringBuilder StdErr = new StringBuilder();
 
         public IScriptLogWriter CreateWriter()
-        {
-            return this;
-        }
+            => this;
 
         public List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
 
         public void Dispose()
         {
@@ -34,7 +30,7 @@ namespace Octopus.Shared.Tests.Util
                 case ProcessOutputSource.Debug:
                     Debug.AppendLine(message);
                     break;
-                    
+
                 case ProcessOutputSource.StdOut:
                     StdOut.AppendLine(message);
                     break;

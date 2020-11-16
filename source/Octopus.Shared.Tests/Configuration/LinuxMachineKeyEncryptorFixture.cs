@@ -8,9 +8,9 @@ namespace Octopus.Shared.Tests.Configuration
     [TestFixture]
     public class LinuxMachineKeyEncryptorFixture
     {
-        private static readonly string OriginalKeyFileName = LinuxMachineKeyEncryptor.LinuxMachineKey.FileName;
-        private string tempKeyFileName;
-        
+        static readonly string OriginalKeyFileName = LinuxMachineKeyEncryptor.LinuxMachineKey.FileName;
+        string tempKeyFileName;
+
         [SetUp]
         public void Setup()
         {
@@ -24,11 +24,9 @@ namespace Octopus.Shared.Tests.Configuration
         {
             LinuxMachineKeyEncryptor.LinuxMachineKey.FileName = OriginalKeyFileName;
             if (File.Exists(tempKeyFileName))
-            {
                 File.Delete(tempKeyFileName);
-            }
         }
-        
+
         [Test]
         public void EncryptsAndDecrypts()
         {
@@ -38,7 +36,7 @@ namespace Octopus.Shared.Tests.Configuration
             Assert.AreNotEqual(encrypted, "FooBar");
             Assert.AreEqual(decrypted, "FooBar");
         }
-        
+
         [Test]
         public void CorruptKeyThrowsException()
         {
@@ -46,6 +44,5 @@ namespace Octopus.Shared.Tests.Configuration
             var lme = new LinuxMachineKeyEncryptor();
             Assert.Throws<InvalidOperationException>(() => lme.Encrypt("FooBar"));
         }
-        
     }
 }

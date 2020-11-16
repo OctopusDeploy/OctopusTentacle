@@ -6,35 +6,30 @@ namespace Octopus.Shared.Internals.Options
     [Serializable]
     public class OptionException : Exception
     {
-        readonly string? option;
-
         public OptionException(string message, string? optionName)
             : base(message)
         {
-            option = optionName;
+            OptionName = optionName;
         }
 
         public OptionException(string message, string? optionName, Exception innerException)
             : base(message, innerException)
         {
-            option = optionName;
+            OptionName = optionName;
         }
 
         protected OptionException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            option = info.GetString("OptionName");
+            OptionName = info.GetString("OptionName");
         }
 
-        public string? OptionName
-        {
-            get { return option; }
-        }
+        public string? OptionName { get; }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
-            info.AddValue("OptionName", option);
+            info.AddValue("OptionName", OptionName);
         }
     }
 }

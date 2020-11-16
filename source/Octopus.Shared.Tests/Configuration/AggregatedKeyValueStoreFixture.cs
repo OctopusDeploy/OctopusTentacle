@@ -1,8 +1,8 @@
-#nullable  enable
+#nullable enable
+using System;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Configuration;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Configuration.Instances;
@@ -24,7 +24,7 @@ namespace Octopus.Shared.Tests.Configuration
 
             var aggregatedStore = new AggregatedKeyValueStore(new IAggregatableKeyValueStore[] { memStore1, memStore2 });
             var result = aggregatedStore.Get("Test", string.Empty);
-            result.Should().Be("a value", because: "A null from an aggregated store should be treated as null, not the default");
+            result.Should().Be("a value", "A null from an aggregated store should be treated as null, not the default");
         }
 
         [Test]
@@ -36,7 +36,7 @@ namespace Octopus.Shared.Tests.Configuration
 
             var aggregatedStore = new AggregatedKeyValueStore(new IAggregatableKeyValueStore[] { memStore1 });
             var result = aggregatedStore.Get("Test", "a value");
-            result.Should().Be("a value", because: "A null from an aggregated store should be treated as null, not the default");
+            result.Should().Be("a value", "A null from an aggregated store should be treated as null, not the default");
         }
 
         [Test]
@@ -48,7 +48,7 @@ namespace Octopus.Shared.Tests.Configuration
 
             var aggregatedStore = new AggregatedKeyValueStore(new IAggregatableKeyValueStore[] { memStore1 });
             var result = aggregatedStore.Get("Test", 80);
-            result.Should().Be(80, because: "default should be applied correctly for ints");
+            result.Should().Be(80, "default should be applied correctly for ints");
         }
 
         [Test]
@@ -63,7 +63,7 @@ namespace Octopus.Shared.Tests.Configuration
 
             var aggregatedStore = new AggregatedKeyValueStore(new IAggregatableKeyValueStore[] { memStore1, memStore2 });
             var result = aggregatedStore.Get("Test", 80);
-            result.Should().Be(50, because: "A null from an aggregated store should be treated as null, not the default");
+            result.Should().Be(50, "A null from an aggregated store should be treated as null, not the default");
         }
     }
 }

@@ -25,9 +25,7 @@ namespace Octopus.Shared.Configuration
         }
 
         public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None)
-        {
-            throw new NotSupportedException($"This store is a write-only store, because it is only intended for displaying formatted content to the console. Please use {nameof(JsonHierarchicalFileKeyValueStore)} if you need a readable store.");
-        }
+            => throw new NotSupportedException($"This store is a write-only store, because it is only intended for displaying formatted content to the console. Please use {nameof(JsonHierarchicalFileKeyValueStore)} if you need a readable store.");
 
         protected override void LoadSettings(IDictionary<string, object?> settingsToFill)
         {

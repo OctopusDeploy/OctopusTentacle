@@ -10,16 +10,12 @@ namespace Octopus.Shared.Scripts
         static string? powerShellPath;
 
         public string GetFullPath()
-        {
-            return GetFullPowerShellPath();
-        }
+            => GetFullPowerShellPath();
 
         public static string GetFullPowerShellPath()
         {
             if (powerShellPath != null)
-            {
                 return powerShellPath;
-            }
 
             try
             {
@@ -27,9 +23,7 @@ namespace Octopus.Shared.Scripts
                 powerShellPath = Path.Combine(systemFolder, @"WindowsPowershell\v1.0\", EnvPowerShellPath);
 
                 if (!File.Exists(powerShellPath))
-                {
                     powerShellPath = EnvPowerShellPath;
-                }
             }
             catch (Exception)
             {

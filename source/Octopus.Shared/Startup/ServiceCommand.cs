@@ -52,10 +52,13 @@ namespace Octopus.Shared.Startup
             Options.Add("install", $"Install the {serviceType}", v => serviceConfigurationState.Install = true);
             Options.Add("username=|user=", $"Username to run the service under (DOMAIN\\Username format). Only used when --install or --reconfigure are used.  Can also be passed via an environment variable {ServiceUsernameEnvVar}.", v => serviceConfigurationState.Username = v);
             Options.Add("uninstall", $"Uninstall the {serviceType}", v => serviceConfigurationState.Uninstall = true);
-            Options.Add("password=", $"Password for the username specified with --username. Only used when --install or --reconfigure are used. Can also be passed via an environment variable {ServicePasswordEnvVar}.", v =>
-            {
-                serviceConfigurationState.Password = v;
-            }, sensitive: true);
+            Options.Add("password=",
+                $"Password for the username specified with --username. Only used when --install or --reconfigure are used. Can also be passed via an environment variable {ServicePasswordEnvVar}.",
+                v =>
+                {
+                    serviceConfigurationState.Password = v;
+                },
+                sensitive: true);
             Options.Add("dependOn=", "", v => serviceConfigurationState.DependOn = v);
             Options.Add("instance=", "Name of the instance to use, or * to use all instances", v => instanceName = v);
         }
@@ -67,29 +70,27 @@ namespace Octopus.Shared.Startup
             if (instanceName == "*")
             {
                 if (serviceConfigurationState.Reconfigure || serviceConfigurationState.Install || serviceConfigurationState.Uninstall)
-                {
                     throw new ControlledFailureException("--instance=* can only be used for --start, --stop, and --restart flags");
-                }
 
                 var exceptions = new List<Exception>();
 
                 foreach (var instance in instanceLocator.ListInstances())
-                {
                     try
                     {
                         var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
-                        serviceConfigurator.ConfigureService(thisServiceName, exePath, instance.InstanceName, serviceDescription, serviceConfigurationState);
+                        serviceConfigurator.ConfigureService(thisServiceName,
+                            exePath,
+                            instance.InstanceName,
+                            serviceDescription,
+                            serviceConfigurationState);
                     }
                     catch (Exception ex)
                     {
                         exceptions.Add(ex);
                     }
-                }
 
                 if (exceptions.Count > 0)
-                {
                     throw new AggregateException(exceptions);
-                }
             }
             else
             {
@@ -97,7 +98,11 @@ namespace Octopus.Shared.Startup
                 if (currentName == null)
                     throw new ArgumentException("Unable to locate instance configuration");
                 var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, currentName);
-                serviceConfigurator.ConfigureService(thisServiceName, exePath, currentName, serviceDescription, serviceConfigurationState);
+                serviceConfigurator.ConfigureService(thisServiceName,
+                    exePath,
+                    currentName,
+                    serviceDescription,
+                    serviceConfigurationState);
             }
         }
     }

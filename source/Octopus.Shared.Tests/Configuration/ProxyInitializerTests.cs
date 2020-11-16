@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Net;
 using NUnit.Framework;
 using Octopus.Shared.Configuration;
@@ -15,7 +14,11 @@ namespace Octopus.Shared.Tests.Configuration
         {
             WebRequest.DefaultWebProxy = null;
 
-            var initializer = BuildProxyInitializer(true, null, null, null, 0);
+            var initializer = BuildProxyInitializer(true,
+                null,
+                null,
+                null,
+                0);
 
             initializer.InitializeProxy();
 
@@ -27,7 +30,11 @@ namespace Octopus.Shared.Tests.Configuration
         {
             WebRequest.DefaultWebProxy = new WebProxy();
 
-            var initializer = BuildProxyInitializer(false, null, null, null, 0);
+            var initializer = BuildProxyInitializer(false,
+                null,
+                null,
+                null,
+                0);
 
             initializer.InitializeProxy();
 
@@ -39,7 +46,11 @@ namespace Octopus.Shared.Tests.Configuration
         {
             WebRequest.DefaultWebProxy = null;
 
-            var initializer = BuildProxyInitializer(true, "username", "password", null, 0);
+            var initializer = BuildProxyInitializer(true,
+                "username",
+                "password",
+                null,
+                0);
 
             initializer.InitializeProxy();
 
@@ -54,7 +65,11 @@ namespace Octopus.Shared.Tests.Configuration
         {
             WebRequest.DefaultWebProxy = null;
 
-            var initializer = BuildProxyInitializer(false, null, null, "127.0.0.1", 8888);
+            var initializer = BuildProxyInitializer(false,
+                null,
+                null,
+                "127.0.0.1",
+                8888);
 
             initializer.InitializeProxy();
 
@@ -69,7 +84,11 @@ namespace Octopus.Shared.Tests.Configuration
         {
             WebRequest.DefaultWebProxy = null;
 
-            var initializer = BuildProxyInitializer(false, null, null, "127.0.0.1", 8888);
+            var initializer = BuildProxyInitializer(false,
+                null,
+                null,
+                "127.0.0.1",
+                8888);
 
             initializer.InitializeProxy();
 
@@ -78,17 +97,29 @@ namespace Octopus.Shared.Tests.Configuration
             Assert.AreEqual("", credentials.Password);
             Assert.AreEqual("", credentials.UserName);
         }
-        
-        ProxyInitializer BuildProxyInitializer(bool useDefaultProxy, string username, string password, string host, int port)
+
+        ProxyInitializer BuildProxyInitializer(bool useDefaultProxy,
+            string username,
+            string password,
+            string host,
+            int port)
         {
-            var config = new StubProxyConfiguration(useDefaultProxy, username, password, host, port);
+            var config = new StubProxyConfiguration(useDefaultProxy,
+                username,
+                password,
+                host,
+                port);
             var parser = new ProxyConfigParser();
             return new ProxyInitializer(config, parser);
         }
 
         class StubProxyConfiguration : IProxyConfiguration
         {
-            public StubProxyConfiguration(bool useDefaultProxy, string customProxyUsername, string customProxyPassword, string customProxyHost, int customProxyPort)
+            public StubProxyConfiguration(bool useDefaultProxy,
+                string customProxyUsername,
+                string customProxyPassword,
+                string customProxyHost,
+                int customProxyPort)
             {
                 UseDefaultProxy = useDefaultProxy;
                 CustomProxyUsername = customProxyUsername;
@@ -97,16 +128,16 @@ namespace Octopus.Shared.Tests.Configuration
                 CustomProxyPort = customProxyPort;
             }
 
+            public bool UseDefaultProxy { get; }
+            public string CustomProxyUsername { get; }
+            public string CustomProxyPassword { get; }
+            public string CustomProxyHost { get; }
+            public int CustomProxyPort { get; }
+
             public void Save()
             {
                 throw new NotImplementedException();
             }
-
-            public bool UseDefaultProxy { get; set; }
-            public string CustomProxyUsername { get; set; }
-            public string CustomProxyPassword { get; set; }
-            public string CustomProxyHost { get; set; }
-            public int CustomProxyPort { get; set; }
         }
     }
 }
