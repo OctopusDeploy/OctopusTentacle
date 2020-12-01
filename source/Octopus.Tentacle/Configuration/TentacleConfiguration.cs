@@ -154,7 +154,7 @@ namespace Octopus.Tentacle.Configuration
             return settings.Set("Tentacle.Communication.LastReceivedHandshake", setting);
         }
 
-        bool SetTrustedOctopusServers(IEnumerable<OctopusServerConfiguration>? servers)
+        public bool SetTrustedOctopusServers(IEnumerable<OctopusServerConfiguration>? servers)
         {
             return settings.Set("Tentacle.Communication.TrustedOctopusServers", servers ?? new OctopusServerConfiguration[0]);
         }
