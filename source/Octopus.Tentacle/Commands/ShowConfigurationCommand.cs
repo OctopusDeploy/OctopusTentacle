@@ -100,10 +100,7 @@ namespace Octopus.Tentacle.Commands
             newTentacleConfiguration.SetListenIpAddress(tentacleConfiguration.Value.ListenIpAddress);
             newTentacleConfiguration.SetNoListen(tentacleConfiguration.Value.NoListen);
             newTentacleConfiguration.SetServicesPortNumber(tentacleConfiguration.Value.ServicesPortNumber);
-            foreach (var octopusServerConfiguration in tentacleConfiguration.Value.TrustedOctopusServers)
-            {
-                newTentacleConfiguration.AddOrUpdateTrustedOctopusServer(octopusServerConfiguration);
-            }
+            newTentacleConfiguration.SetTrustedOctopusServers(tentacleConfiguration.Value.TrustedOctopusServers);
 
             //we dont want the actual certificate, as its encrypted, and we get a different output everytime
             outputStore.Set<string>("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate?.Thumbprint);
