@@ -17,10 +17,23 @@ namespace Octopus.Tentacle.Configuration
 {
     internal class TentacleConfiguration : ITentacleConfiguration
     {
+        internal const string ServicesPortSettingName = "Tentacle.Services.PortNumber";
+        internal const string ServicesListenIPSettingName = "Tentacle.Services.ListenIP";
+        internal const string ServicesNoListenSettingName = "Tentacle.Services.NoListen";
+        internal const string TrustedServersSettingName = "Tentacle.Communication.TrustedOctopusServers";
+        internal const string DeploymentApplicationDirectorySettingName = "Tentacle.Deployment.ApplicationDirectory";
+        internal const string CertificateSettingName = "Tentacle.Certificate";
+        internal const string CertificateThumbprintSettingName = "Tentacle.CertificateThumprint";
+        internal const string LastReceivedHandshakeSettingName = "Tentacle.Communication.LastReceivedHandshake";
+
         readonly IKeyValueStore settings;
         readonly IHomeConfiguration home;
         readonly IProxyConfiguration proxyConfiguration;
         readonly IPollingProxyConfiguration pollingProxyConfiguration;
+
+        // these are held in memory for when running without a config file.
+        protected static X509Certificate2? CachedCertificate;
+        protected static OctopusServerConfiguration? OctopusServerConfiguration;
 
         public TentacleConfiguration(
             IKeyValueStore settings,
@@ -37,7 +50,7 @@ namespace Octopus.Tentacle.Configuration
         [Obsolete("This configuration entry is obsolete as of 3.0. It is only used as a Subscription ID where one does not exist.")]
         public string? TentacleSquid => settings.Get("Octopus.Communications.Squid", (string?)null);
 
-        public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers => settings.Get("Tentacle.Communication.TrustedOctopusServers", new OctopusServerConfiguration[0]);
+        public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers => settings.Get(TrustedServersSettingName, new OctopusServerConfiguration[0]);
 
         public IEnumerable<string> TrustedOctopusThumbprints
         {
@@ -48,13 +61,13 @@ namespace Octopus.Tentacle.Configuration
 
         public IPollingProxyConfiguration PollingProxyConfiguration => pollingProxyConfiguration;
 
-        public int ServicesPortNumber => settings.Get("Tentacle.Services.PortNumber", 10933);
+        public int ServicesPortNumber => settings.Get(ServicesPortSettingName, 10933);
 
         public string ApplicationDirectory
         {
             get
             {
-                var path = settings.Get<string>("Tentacle.Deployment.ApplicationDirectory");
+                var path = settings.Get<string>(DeploymentApplicationDirectorySettingName);
                 if (string.IsNullOrWhiteSpace(path))
                 {
                     if (PlatformDetection.IsRunningOnWindows)
@@ -89,21 +102,27 @@ namespace Octopus.Tentacle.Configuration
         {
             get
             {
-                var thumbprint = settings.Get<string>("Tentacle.CertificateThumbprint");
-                var encoded = settings.Get<string>("Tentacle.Certificate", protectionLevel: ProtectionLevel.MachineKey);
+                if (CachedCertificate != null)
+                    return CachedCertificate;
+
+                var thumbprint = settings.Get<string>(CertificateThumbprintSettingName);
+                var encoded = settings.Get<string>(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
                 return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint, encoded);
             }
         }
 
-        public string? ListenIpAddress => settings.Get("Tentacle.Services.ListenIP", string.Empty);
+        public string? ListenIpAddress => settings.Get(ServicesListenIPSettingName, string.Empty);
 
-        public bool NoListen => settings.Get("Tentacle.Services.NoListen", false);
+        public bool NoListen => settings.Get(ServicesNoListenSettingName, false);
 
         public OctopusServerConfiguration? LastReceivedHandshake
         {
             get
             {
-                var setting = settings.Get<string>("Tentacle.Communication.LastReceivedHandshake");
+                if (OctopusServerConfiguration != null)
+                    return OctopusServerConfiguration;
+
+                var setting = settings.Get<string>(LastReceivedHandshakeSettingName);
                 if (string.IsNullOrWhiteSpace(setting)) return null;
                 return JsonConvert.DeserializeObject<OctopusServerConfiguration>(setting);
             }
@@ -116,7 +135,8 @@ namespace Octopus.Tentacle.Configuration
         readonly ICertificateGenerator certificateGenerator;
         readonly ILog log;
 
-        public WritableTentacleConfiguration(IWritableKeyValueStore settings,
+        public WritableTentacleConfiguration(
+            IWritableKeyValueStore settings,
             IHomeConfiguration home,
             ICertificateGenerator certificateGenerator,
             IProxyConfiguration proxyConfiguration,
@@ -130,39 +150,40 @@ namespace Octopus.Tentacle.Configuration
 
         public bool SetApplicationDirectory(string directory)
         {
-            return settings.Set("Tentacle.Deployment.ApplicationDirectory", directory);
+            return settings.Set(DeploymentApplicationDirectorySettingName, directory);
         }
 
         public bool SetServicesPortNumber(int port)
         {
-            return settings.Set("Tentacle.Services.PortNumber", port);
+            return settings.Set(ServicesPortSettingName, port);
         }
 
         public bool SetListenIpAddress(string? address)
         {
-            return settings.Set("Tentacle.Services.ListenIP", address);
+            return settings.Set(ServicesListenIPSettingName, address);
         }
 
         public bool SetNoListen(bool noListen)
         {
-            return settings.Set("Tentacle.Services.NoListen", noListen);
+            return settings.Set(ServicesNoListenSettingName, noListen);
         }
 
         public bool SetLastReceivedHandshake(OctopusServerConfiguration configuration)
         {
+            OctopusServerConfiguration = configuration;
             var setting = JsonConvert.SerializeObject(configuration);
-            return settings.Set("Tentacle.Communication.LastReceivedHandshake", setting);
+            return settings.Set(LastReceivedHandshakeSettingName, setting);
         }
 
         bool SetTrustedOctopusServers(IEnumerable<OctopusServerConfiguration>? servers)
         {
-            return settings.Set("Tentacle.Communication.TrustedOctopusServers", servers ?? new OctopusServerConfiguration[0]);
+            return settings.Set(TrustedServersSettingName, servers ?? new OctopusServerConfiguration[0]);
         }
 
         bool SetTentacleCertificate(X509Certificate2 certificate)
         {
-            return settings.Set("Tentacle.Certificate", CertificateEncoder.ToBase64String(certificate), ProtectionLevel.MachineKey) &&
-                settings.Set("Tentacle.CertificateThumbprint", certificate.Thumbprint);
+            return settings.Set(CertificateSettingName, CertificateEncoder.ToBase64String(certificate), ProtectionLevel.MachineKey) &&
+                settings.Set(CertificateThumbprintSettingName, certificate.Thumbprint);
         }
 
         public bool AddOrUpdateTrustedOctopusServer(OctopusServerConfiguration machine)
@@ -240,10 +261,14 @@ namespace Octopus.Tentacle.Configuration
             return string.Empty;
         }
 
-        public X509Certificate2 GenerateNewCertificate()
+        public X509Certificate2 GenerateNewCertificate(bool writeToConfig = true)
         {
             var certificate = certificateGenerator.GenerateNew(CertificateExpectations.TentacleCertificateFullName, log);
-            SetTentacleCertificate(certificate);
+            // we write to the config, if there is one, else just hold in memory for the transient tentacles/workers
+            if (writeToConfig)
+                SetTentacleCertificate(certificate);
+            else
+                CachedCertificate = certificate;
             return certificate;
         }
 

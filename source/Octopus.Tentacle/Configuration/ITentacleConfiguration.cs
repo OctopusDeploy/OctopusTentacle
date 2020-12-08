@@ -132,7 +132,7 @@ namespace Octopus.Tentacle.Configuration
         /// <param name="new">The new one.</param>
         void UpdateTrustedServerThumbprint(string old, string @new);
 
-        X509Certificate2 GenerateNewCertificate();
+        X509Certificate2 GenerateNewCertificate(bool writeToConfig = true);
         void ImportCertificate(X509Certificate2 certificate);
     }
 }
