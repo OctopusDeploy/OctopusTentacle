@@ -105,7 +105,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 s.Thumbprint = @new;
         }
 
-        public X509Certificate2 GenerateNewCertificate()
+        public X509Certificate2 GenerateNewCertificate(bool writeToConfig = true)
         {
             var cert = new CertificateGenerator().GenerateNew("cn=foo", new Shared.Diagnostics.NullLog());
             TentacleCertificate = cert;
