@@ -16,8 +16,9 @@ namespace Octopus.Tentacle.Commands
 {
     public class RunAgentCommand : AbstractStandardCommand
     {
+        readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly Lazy<IHalibutInitializer> halibut;
-        readonly Lazy<ITentacleConfiguration> configuration;
+        readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly Lazy<IHomeConfiguration> home;
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly ISleep sleep;
@@ -31,8 +32,9 @@ namespace Octopus.Tentacle.Commands
         public override bool CanRunAsService => true;
 
         public RunAgentCommand(
+            StartUpInstanceRequest startUpInstanceRequest,
             Lazy<IHalibutInitializer> halibut,
-            Lazy<ITentacleConfiguration> configuration,
+            Lazy<IWritableTentacleConfiguration> configuration,
             Lazy<IHomeConfiguration> home,
             Lazy<IProxyConfiguration> proxyConfiguration,
             ISleep sleep,
@@ -41,6 +43,7 @@ namespace Octopus.Tentacle.Commands
             Lazy<IProxyInitializer> proxyInitializer,
             AppVersion appVersion) : base(selector)
         {
+            this.startUpInstanceRequest = startUpInstanceRequest;
             this.halibut = halibut;
             this.configuration = configuration;
             this.home = home;
@@ -75,7 +78,14 @@ namespace Octopus.Tentacle.Commands
             try
             {
                 if (configuration.Value.TentacleCertificate == null)
-                    throw new InvalidOperationException("No certificate has been generated for this Tentacle. Please run the new-certificate command before starting.");
+                {
+                    if (startUpInstanceRequest is StartUpDynamicInstanceRequest)
+                    {
+                        configuration.Value.GenerateNewCertificate(writeToConfig: false);
+                    }
+                    else
+                        throw new InvalidOperationException("No certificate has been generated for this Tentacle. Please run the new-certificate command before starting.");
+                }
             }
             catch (CryptographicException cx)
             {
