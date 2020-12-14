@@ -68,7 +68,6 @@ Global
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release-netcoreapp3.1-osx-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release-netcoreapp3.1-win-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release-netcoreapp3.1-linux-arm|Any CPU.ActiveCfg = Release-netcoreapp3.1-linux-arm|Any CPU
-		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release-netcoreapp3.1-linux-arm|Any CPU.Build.0 = Release-netcoreapp3.1-linux-arm|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -99,7 +98,6 @@ Global
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-netcoreapp3.1-osx-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-netcoreapp3.1-win-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-netcoreapp3.1-linux-arm|Any CPU.ActiveCfg = Release-netcoreapp3.1-linux-arm|Any CPU
-		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-netcoreapp3.1-linux-arm|Any CPU.Build.0 = Release-netcoreapp3.1-linux-arm|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
