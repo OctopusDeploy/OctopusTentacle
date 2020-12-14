@@ -28,6 +28,8 @@ set +ex
 architecture=$1
 if [ $architecture == "linux-arm64" ] ; then
   PACKAGE_ARCHITECTURE="arm64";
+elif [ $architecture == "linux-arm" ] ; then
+  PACKAGE_ARCHITECTURE="armhf"
 elif [ $architecture == "linux-x64" ] ; then
   PACKAGE_ARCHITECTURE="x86_64";
 elif [ $architecture == "linux-musl-x64" ] ; then
