@@ -376,9 +376,9 @@ Task("Pack-CrossPlatformBundle")
         CopyFiles($"{buildDir}/Octopus.Tentacle.Upgrader/net452/win-x64/*", workingDir);
         CopyFile($"{artifactsDir}/deb/{debAMD64PackageFilename}", $"{workingDir}/{debAMD64PackageFilename}");
         CopyFile($"{artifactsDir}/deb/{debARM64PackageFilename}", $"{workingDir}/{debARM64PackageFilename}");
-        CopyFile($"{artifactsDir}/deb/{debARM632PackageFilename}", $"{workingDir}/{debARM32PackageFilename}");
+        CopyFile($"{artifactsDir}/deb/{debARM32PackageFilename}", $"{workingDir}/{debARM32PackageFilename}");
         CopyFile($"{artifactsDir}/rpm/{rpmARM64PackageFilename}", $"{workingDir}/{rpmARM64PackageFilename}");
-        CopyFile($"{artifactsDir}/rpm/{rpmARM632ackageFilename}", $"{workingDir}/{rpmARM32PackageFilename}");
+        CopyFile($"{artifactsDir}/rpm/{rpmARM32PackageFilename}", $"{workingDir}/{rpmARM32PackageFilename}");
         CopyFile($"{artifactsDir}/rpm/{rpmx64PackageFilename}", $"{workingDir}/{rpmx64PackageFilename}");
 
         foreach (var framework in frameworks)
