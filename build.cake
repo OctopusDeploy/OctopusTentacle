@@ -29,7 +29,7 @@ using System.Security.Cryptography.X509Certificates;
 var target = Argument("target", "Default");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
 var frameworks = new [] { "net452", "netcoreapp3.1" };
-var runtimeIds =  new [] { "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "osx-x64" };
+var runtimeIds =  new [] { "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
 var testOnLinuxDistributions = new string[][] {
     new [] { "netcoreapp3.1", "linux-x64", "debian:buster", "deb" },
     new [] { "netcoreapp3.1", "linux-x64", "debian:oldoldstable-slim", "deb" },
@@ -364,7 +364,10 @@ Task("Pack-CrossPlatformBundle")
 
         var debAMD64PackageFilename = ConstructDebianPackageFilename("tentacle", versionInfo, "amd64");
         var debARM64PackageFilename = ConstructDebianPackageFilename("tentacle", versionInfo, "arm64");
+        var debARM32PackageFilename = ConstructDebianPackageFilename("tentacle", versionInfo, "armhf");
+
         var rpmARM64PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "arm64");
+        var rpmARM32PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "armv7hl");
         var rpmx64PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "x86_64");
 
         CopyFiles($"./source/Octopus.Tentacle.CrossPlatformBundle/Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDir);
@@ -373,7 +376,9 @@ Task("Pack-CrossPlatformBundle")
         CopyFiles($"{buildDir}/Octopus.Tentacle.Upgrader/net452/win-x64/*", workingDir);
         CopyFile($"{artifactsDir}/deb/{debAMD64PackageFilename}", $"{workingDir}/{debAMD64PackageFilename}");
         CopyFile($"{artifactsDir}/deb/{debARM64PackageFilename}", $"{workingDir}/{debARM64PackageFilename}");
+        CopyFile($"{artifactsDir}/deb/{debARM32PackageFilename}", $"{workingDir}/{debARM32PackageFilename}");
         CopyFile($"{artifactsDir}/rpm/{rpmARM64PackageFilename}", $"{workingDir}/{rpmARM64PackageFilename}");
+        CopyFile($"{artifactsDir}/rpm/{rpmARM32PackageFilename}", $"{workingDir}/{rpmARM32PackageFilename}");
         CopyFile($"{artifactsDir}/rpm/{rpmx64PackageFilename}", $"{workingDir}/{rpmx64PackageFilename}");
 
         foreach (var framework in frameworks)
@@ -393,7 +398,9 @@ Task("Pack-CrossPlatformBundle")
         AssertFileExists($"{workingDir}/Octopus.Tentacle.Upgrader.exe");
         AssertFileExists($"{workingDir}/{debAMD64PackageFilename}");
         AssertFileExists($"{workingDir}/{debARM64PackageFilename}");
+        AssertFileExists($"{workingDir}/{debARM32PackageFilename}");
         AssertFileExists($"{workingDir}/{rpmARM64PackageFilename}");
+        AssertFileExists($"{workingDir}/{rpmARM32PackageFilename}");
         AssertFileExists($"{workingDir}/{rpmx64PackageFilename}");
 
         RunProcess("dotnet", $"tool run dotnet-octo pack --id=Octopus.Tentacle.CrossPlatformBundle --version={versionInfo.FullSemVer} --basePath={workingDir} --outFolder={artifactsDir}/nuget");
