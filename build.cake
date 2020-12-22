@@ -482,7 +482,7 @@ Task("Copy-ToLocalPackages")
     .Does(() =>
     {
         CreateDirectory(localPackagesDir);
-        CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.{versionInfo.FullSemVer}.nupkg"), localPackagesDir);
+        CopyFileToDirectory(Path.Combine(artifactsDir, $"nuget/Octopus.Tentacle.CrossPlatformBundle.{versionInfo.FullSemVer}.nupkg"), localPackagesDir);
     });
 
 Task("Default")
