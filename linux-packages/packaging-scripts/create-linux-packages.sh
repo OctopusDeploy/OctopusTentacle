@@ -78,7 +78,14 @@ if [[ -e "$HOME/.rpmmacros" ]]; then
   echo 'To provide an isolated clean environment, it is recommended to run this inside a fresh docker container.' >&2
   exit 1
 fi
-GPG_OUT="$(gpg1 --import <(echo "$SIGN_PRIVATE_KEY") 2>&1)" # Checking output instead of exit code because it may already be imported
+
+if [[ -f $SIGN_PRIVATE_KEY ]]; then
+  echo "Found private key file"
+  GPG_OUT="$(gpg1 --import <(cat "$SIGN_PRIVATE_KEY") 2>&1)" # Checking output instead of exit code because it may already be imported  
+else
+  GPG_OUT="$(gpg1 --import <(echo "$SIGN_PRIVATE_KEY") 2>&1)" # Checking output instead of exit code because it may already be imported
+fi
+
 echo "$GPG_OUT"
 GPG_NAME="$(echo "$GPG_OUT" | grep --perl --only-matching --no-messages --max-count=1 '^gpg: key \K\w+')" \
   || { echo 'Unable to identify imported private key.' >&2; exit 1; }

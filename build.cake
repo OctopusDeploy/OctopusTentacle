@@ -661,10 +661,11 @@ private void BuildMsiInstallerForPlatform(PlatformTarget platformTarget)
 
 private void CreateLinuxPackages(string runtimeId)
 {
-    if (string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY")) )
+    var sign_private_key = System.Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY");
+    if (string.IsNullOrEmpty(sign_private_key))
     {
         throw new Exception("This build requires environment variables `SIGN_PRIVATE_KEY` (in a format gpg1 can import)"
-            + " and `SIGN_PASSPHRASE`, which are used to sign the .rpm.");
+            + " and `SIGN_PASSPHRASE`, which are used to sign the .rpm. This can be the certificate text or a file path to the certificate on disk.");
     }
 
     //TODO It's probable that the .deb and .rpm package layouts will be different - and potentially _should already_ be different.
@@ -681,7 +682,17 @@ private void CreateLinuxPackages(string runtimeId)
     var inputBindMountPoint = new System.IO.DirectoryInfo($"{buildDir}/zip/netcoreapp3.1/{runtimeId}/tentacle").FullName;
     var outputBindMountPoint = new System.IO.DirectoryInfo($"{debBuildDir}/output").FullName;
 
-    DockerPull("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest");
+    if (System.IO.File.Exists(sign_private_key)) {
+        CopyFileToDirectory(sign_private_key, scriptsBindMountPoint);
+        sign_private_key = new System.IO.FileInfo(sign_private_key).Name;
+    }
+    else {
+        System.IO.File.WriteAllText($"{scriptsBindMountPoint}/key.txt", sign_private_key);
+        sign_private_key = "key.txt";
+    }
+
+    var dockerImageName = "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest";
+    DockerPull(dockerImageName);
     DockerRunWithoutResult(new DockerContainerRunSettings {
         Rm = true,
         Tty = true,
@@ -689,7 +700,7 @@ private void CreateLinuxPackages(string runtimeId)
             $"VERSION={versionInfo.FullSemVer}",
             "INPUT_PATH=/input",
             "OUTPUT_PATH=/output",
-            "SIGN_PRIVATE_KEY",
+            $"SIGN_PRIVATE_KEY=/scripts/{sign_private_key}",
             "SIGN_PASSPHRASE"
         },
         Volume = new string[] {
@@ -697,7 +708,7 @@ private void CreateLinuxPackages(string runtimeId)
             $"{inputBindMountPoint}:/input",
             $"{outputBindMountPoint}:/output"
         }
-    }, "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest", $"bash /scripts/package.sh {runtimeId}");
+    }, dockerImageName, $"bash /scripts/package.sh {runtimeId}");
 }
 
 private void RunLinuxPackageTestsFor(string framework, string runtimeId, string dockerImage, string packageType)
