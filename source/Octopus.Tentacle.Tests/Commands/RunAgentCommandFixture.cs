@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Commands
     public class RunAgentCommandFixture : CommandFixture<RunAgentCommand>
     {
         IHalibutInitializer halibut;
-        ITentacleConfiguration tentacleConfiguration;
+        IWritableTentacleConfiguration tentacleConfiguration;
         ISleep sleep;
         IHomeConfiguration home;
         IApplicationInstanceSelector selector;
@@ -28,14 +28,15 @@ namespace Octopus.Tentacle.Tests.Commands
             base.SetUp();
 
             halibut = Substitute.For<IHalibutInitializer>();
-            tentacleConfiguration = Substitute.For<ITentacleConfiguration>();
+            tentacleConfiguration = Substitute.For<IWritableTentacleConfiguration>();
             var certificate = new CertificateGenerator().GenerateNew("cn=Test.Cert.For.Octopus.Tests", new Shared.Diagnostics.NullLog());
             tentacleConfiguration.TentacleCertificate.Returns(certificate);
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
             Command = new RunAgentCommand(
+                new StartUpPersistedInstanceRequest(ApplicationName.Tentacle, "MyTentacle"),
                 new Lazy<IHalibutInitializer>(() => halibut),
-                new Lazy<ITentacleConfiguration>(() => tentacleConfiguration),
+                new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration),
                 new Lazy<IHomeConfiguration>(() => home),
                 new Lazy<IProxyConfiguration>(() => Substitute.For<IProxyConfiguration>()),
                 sleep,
