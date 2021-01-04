@@ -23,7 +23,7 @@ namespace Octopus.Shared.Configuration
             object? data = mapper.GetConfigurationValue(name);
 
             if (data == null)
-                return (false, default!)!;
+                return (false, default!);
             if (typeof(TData) == typeof(string))
                 return (true, (TData)data);
             if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
