@@ -84,7 +84,7 @@ namespace Octopus.Shared.Tests.Configuration
         }
 
         [Test]
-        public void ShouldHandleComplexTypes()
+        public void ComplexTypeGetsHandledCorrectly()
         {
             var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
             mapper.GetConfigurationValue("Test").Returns("[{\"SettingA\":\"some value\", \"SomethingElse\":12}]");
