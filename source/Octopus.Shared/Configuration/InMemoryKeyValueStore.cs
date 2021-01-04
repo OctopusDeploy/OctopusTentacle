@@ -23,7 +23,7 @@ namespace Octopus.Shared.Configuration
             object? data = mapper.GetConfigurationValue(name);
 
             if (data == null)
-                return (false, default!);
+                return (false, default!)!;
             if (typeof(TData) == typeof(string))
                 return (true, (TData)data);
             if (typeof(TData) == typeof(bool)) //bool is tricky - .NET uses 'True', whereas JSON uses 'true' - need to allow both, because UX/legacy
@@ -34,7 +34,7 @@ namespace Octopus.Shared.Configuration
             // See FlatDictionaryKeyValueStore.ValueNeedsToBeSerialized, some of the types are serialized, and will therefore expect to be
             // double quote delimited
             var dataType = typeof(TData);
-            if (protectionLevel == ProtectionLevel.MachineKey || dataType.IsClass)
+            if (protectionLevel == ProtectionLevel.MachineKey || dataType == typeof(byte[]))
                 return (true, JsonConvert.DeserializeObject<TData>("\"" + data + "\""));
 
             return (true, JsonConvert.DeserializeObject<TData>((string)data));
