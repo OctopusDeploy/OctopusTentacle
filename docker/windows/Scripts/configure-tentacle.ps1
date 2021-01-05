@@ -251,7 +251,7 @@ function Register-Tentacle(){
 
   if($null -ne $Space) {
     $arg += "--space";
-    $arg += $Space;
+    $arg += "`"$Space`"";
   }
 
   Execute-Command $TentacleExe $arg;
