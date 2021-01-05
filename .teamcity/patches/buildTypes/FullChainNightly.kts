@@ -17,5 +17,12 @@ create(DslContext.projectId, BuildType({
     params {
         param("RepositoryName", "OctopusShared")
     }
+
+    dependencies {
+        snapshot(RelativeId("Publish")) {
+            onDependencyFailure = FailureAction.CANCEL
+            onDependencyCancel = FailureAction.CANCEL
+        }
+    }
 }))
 
