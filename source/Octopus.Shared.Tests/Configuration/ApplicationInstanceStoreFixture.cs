@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using FluentAssertions;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
@@ -129,6 +130,27 @@ namespace Octopus.Shared.Tests.Configuration
             instanceStore.MigrateInstance(sourceInstance);
             fileSystem.Received().CreateDirectory(Arg.Any<string>());
             fileSystem.Received().OverwriteFile(Arg.Is<string>(x => x.Contains(sourceInstance.InstanceName)), Arg.Is<string>(x => x.Contains(sourceInstance.ConfigurationFilePath)));
+        }
+
+        [Test]
+        public void SaveInstance_WhenUnauthorizedAccessException_ShowsNiceErrorMessage()
+        {
+            fileSystem
+                .When(x => x.OverwriteFile(Arg.Any<string>(), Arg.Any<string>()))
+                .Do(x => throw new UnauthorizedAccessException("fake exception"));
+            var sourceInstance = new ApplicationInstanceRecord("instance1", "configFilePath");
+            var ex = Assert.Throws<ControlledFailureException>(() => instanceStore.SaveInstance(sourceInstance));
+            ex.Message.Should().Match("Unable to write file '*' as user '*'. Please check file permissions.");
+        }
+
+        [Test]
+        public void DeleteInstance_WhenUnauthorizedAccessException_ShowsNiceErrorMessage()
+        {
+            fileSystem
+                .When(x => x.DeleteFile(Arg.Any<string>()))
+                .Do(x => throw new UnauthorizedAccessException("fake exception"));
+            var ex = Assert.Throws<ControlledFailureException>(() => instanceStore.DeleteInstance("instance1"));
+            ex.Message.Should().Match("Unable to delete file '*' as user '*'. Please check file permissions.");
         }
     }
 }

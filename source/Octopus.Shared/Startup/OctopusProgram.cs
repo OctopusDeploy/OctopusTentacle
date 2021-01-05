@@ -219,11 +219,19 @@ namespace Octopus.Shared.Startup
         int HandleException(Exception ex)
         {
             var unpacked = ex.UnpackFromContainers();
-            log.Error(new string('=', 79));
-            log.Fatal(unpacked.PrettyPrint());
 
             if (ExceptionKnowledgeBase.TryInterpret(unpacked, out var entry))
             {
+                if (entry.LogException)
+                {
+                    log.Error(new string('=', 79));
+                    log.Fatal(unpacked.PrettyPrint());
+                }
+                else
+                {
+                    LogFileOnlyLogger.Current.Fatal(unpacked.PrettyPrint());
+                }
+
                 log.Error(new string('=', 79));
                 log.Error(entry.Summary);
                 if (entry.HelpText != null || entry.HelpLink != null)
@@ -235,6 +243,11 @@ namespace Octopus.Shared.Startup
                     if (entry.HelpLink != null)
                         log.Error($"See: {entry.HelpLink}");
                 }
+            }
+            else
+            {
+                log.Error(new string('=', 79));
+                log.Fatal(unpacked.PrettyPrint());
             }
 
             return (int)ExitCode.GeneralException;

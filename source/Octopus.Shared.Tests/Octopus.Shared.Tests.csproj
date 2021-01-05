@@ -14,7 +14,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
-    <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS</DefineConstants>
+    <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;FULL_FRAMEWORK</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
     <DefineConstants>$(DefineConstants);DEFAULT_PROXY_IS_NOT_AVAILABLE</DefineConstants>

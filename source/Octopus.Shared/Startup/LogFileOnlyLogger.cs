@@ -16,6 +16,7 @@ namespace Octopus.Shared.Startup
         void Warn(string message);
         void Error(string message);
         void Error(Exception ex, string message);
+        void Fatal(string message);
         void AddSensitiveValues(string[] values);
     }
 
@@ -59,6 +60,7 @@ namespace Octopus.Shared.Startup
         public void Warn(string message) => Context.SafeSanitize(message, s => Log.Warn(s));
         public void Error(string message) => Context.SafeSanitize(message, s => Log.Error(s));
         public void Error(Exception ex, string message) => Context.SafeSanitize(message, s => Log.Error(ex, s));
+        public void Fatal(string message) => Context.SafeSanitize(message, s => Log.Fatal(s));
 
         public void AddSensitiveValues(string[] values)
         {

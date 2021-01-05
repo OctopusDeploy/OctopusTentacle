@@ -6,9 +6,10 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
 {
     public class ExceptionKnowledgeBaseEntry
     {
-        public ExceptionKnowledgeBaseEntry(string summary, string? helpText, string? helpLink)
+        public ExceptionKnowledgeBaseEntry(string summary, string? helpText, string? helpLink, bool logException)
         {
             HelpLink = helpLink;
+            LogException = logException;
             HelpText = helpText;
             Summary = summary;
         }
@@ -16,6 +17,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
         public string Summary { get; }
         public string? HelpText { get; }
         public string? HelpLink { get; }
+        public bool LogException { get; }
 
         public override string ToString()
         {

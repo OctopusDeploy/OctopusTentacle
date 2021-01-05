@@ -57,6 +57,10 @@ namespace Octopus.Shared.Configuration
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
 
+            builder.RegisterType<WindowsLocalAdminRightsChecker>()
+                .As<IWindowsLocalAdminRightsChecker>()
+                .SingleInstance();
+
             builder.RegisterType<ApplicationInstanceLocator>()
                 .As<IApplicationInstanceLocator>()
                 .SingleInstance();

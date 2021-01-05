@@ -75,6 +75,7 @@ namespace Octopus.Shared.Startup
                 var exceptions = new List<Exception>();
 
                 foreach (var instance in instanceLocator.ListInstances())
+                {
                     try
                     {
                         var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
@@ -88,6 +89,7 @@ namespace Octopus.Shared.Startup
                     {
                         exceptions.Add(ex);
                     }
+                }
 
                 if (exceptions.Count > 0)
                     throw new AggregateException(exceptions);

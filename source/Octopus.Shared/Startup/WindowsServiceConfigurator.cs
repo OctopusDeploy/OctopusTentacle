@@ -14,11 +14,16 @@ namespace Octopus.Shared.Startup
     {
         readonly ILog log;
         readonly ILogFileOnlyLogger logFileOnlyLogger;
+        readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
 
-        public WindowsServiceConfigurator(ILog log, ILogFileOnlyLogger logFileOnlyLogger)
+        public WindowsServiceConfigurator(
+            ILog log,
+            ILogFileOnlyLogger logFileOnlyLogger,
+            IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker)
         {
             this.log = log;
             this.logFileOnlyLogger = logFileOnlyLogger;
+            this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
         }
 
         public void ConfigureService(string thisServiceName,
@@ -27,6 +32,7 @@ namespace Octopus.Shared.Startup
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState)
         {
+            windowsLocalAdminRightsChecker.AssertIsRunningElevated();
             var services = ServiceController.GetServices();
             var controller = services.FirstOrDefault(s => s.ServiceName == thisServiceName);
 

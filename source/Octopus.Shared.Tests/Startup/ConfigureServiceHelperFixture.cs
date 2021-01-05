@@ -38,7 +38,8 @@ namespace Octopus.Shared.Tests
                 Username = user.NTAccountName,
                 Start = true
             };
-            var configureServiceHelper = new WindowsServiceConfigurator(log, Substitute.For<ILogFileOnlyLogger>());
+            var localAdminRightsChecker = Substitute.For<IWindowsLocalAdminRightsChecker>();
+            var configureServiceHelper = new WindowsServiceConfigurator(log, Substitute.For<ILogFileOnlyLogger>(), localAdminRightsChecker);
 
             try
             {
@@ -53,6 +54,7 @@ namespace Octopus.Shared.Tests
                     Assert.NotNull(installedService, "Service is installed");
                     Assert.AreEqual(ServiceControllerStatus.Running, installedService.Status);
                 }
+                localAdminRightsChecker.Received(1).AssertIsRunningElevated();
             }
             finally
             {
@@ -80,7 +82,7 @@ namespace Octopus.Shared.Tests
                 Start = false,
                 DependOn = "ServiceThatDoesNotExist"
             };
-            var configureServiceHelper = new WindowsServiceConfigurator(new InMemoryLog(), Substitute.For<ILogFileOnlyLogger>());
+            var configureServiceHelper = new WindowsServiceConfigurator(new InMemoryLog(), Substitute.For<ILogFileOnlyLogger>(), new WindowsLocalAdminRightsChecker());
 
             var ex = Assert.Throws<ControlledFailureException>(() => configureServiceHelper.ConfigureService(serviceName,
                 exePath,

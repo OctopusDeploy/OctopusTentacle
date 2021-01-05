@@ -6,6 +6,7 @@ using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {
@@ -14,15 +15,18 @@ namespace Octopus.Shared.Startup
         readonly ILog log;
         readonly IApplicationInstanceLocator instanceLocator;
         readonly ApplicationName applicationName;
-        HashSet<string>? instances;
+        internal HashSet<string>? instances;
+        readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
 
         public CheckServicesCommand(ILog log,
             IApplicationInstanceLocator instanceLocator,
-            ApplicationName applicationName)
+            ApplicationName applicationName,
+            IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker)
         {
             this.log = log;
             this.instanceLocator = instanceLocator;
             this.applicationName = applicationName;
+            this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
 
             Options.Add("instances=",
                 "Comma-separated list of instances to check, or * to check all instances",
@@ -36,6 +40,10 @@ namespace Octopus.Shared.Startup
         {
             if (instances == null)
                 throw new ControlledFailureException("Use --instances argument to specify which instances to check. Use --instances=* to check all instances.");
+            if (!PlatformDetection.IsRunningOnWindows)
+                throw new ControlledFailureException("This command is only supported on Windows.");
+
+            windowsLocalAdminRightsChecker.AssertIsRunningElevated();
 
             var startAll = instances.Count == 1 && instances.First() == "*";
             var serviceControllers = ServiceController.GetServices();

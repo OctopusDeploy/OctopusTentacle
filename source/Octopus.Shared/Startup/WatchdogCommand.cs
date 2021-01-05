@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Services;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Startup
 {
@@ -11,6 +12,7 @@ namespace Octopus.Shared.Startup
         readonly ILog log;
         readonly ApplicationName applicationName;
         readonly Lazy<IWatchdog> watchdog;
+        readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
         int interval = 5;
         bool createTask;
         bool deleteTask;
@@ -19,11 +21,13 @@ namespace Octopus.Shared.Startup
         public WatchdogCommand(
             ILog log,
             ApplicationName applicationName,
-            Lazy<IWatchdog> watchdog)
+            Lazy<IWatchdog> watchdog,
+            IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker)
         {
             this.log = log;
             this.applicationName = applicationName;
             this.watchdog = watchdog;
+            this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
 
             Options.Add("create",
                 "Create the watchdog task for the given instances",
@@ -56,14 +60,20 @@ namespace Octopus.Shared.Startup
 
         protected override void Start()
         {
+            if (!PlatformDetection.IsRunningOnWindows)
+                throw new ControlledFailureException("This command is only supported on Windows.");
+            windowsLocalAdminRightsChecker.AssertIsRunningElevated();
+
             log.Info("ApplicationName: " + applicationName);
             var instanceNames = string.Join(",", instances);
             log.Info("Instances: " + instanceNames);
 
             if (deleteTask)
                 watchdog.Value.Delete();
-            if (createTask)
+            else if (createTask)
                 watchdog.Value.Create(instanceNames, interval);
+            else
+                throw new ControlledFailureException("Invalid arguments. Please specify either --create or --delete.");
         }
     }
 }

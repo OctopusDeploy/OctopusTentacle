@@ -10,6 +10,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
         Func<IDictionary<string, object>, string?> entrySummary = s => null;
         Func<IDictionary<string, object>, string?> entryHelpText = s => null;
         Func<IDictionary<string, object>, string?> entryHelpLink = s => null;
+        bool logException = true;
 
         public ExceptionKnowledge Build()
         {
@@ -26,7 +27,7 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
                 if (summary == null)
                     return null;
 
-                return new ExceptionKnowledgeBaseEntry(summary, entryHelpText(s), entryHelpLink(s));
+                return new ExceptionKnowledgeBaseEntry(summary, entryHelpText(s), entryHelpLink(s), logException);
             });
         }
 
@@ -159,6 +160,12 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
         public ExceptionKnowledgeBuilder EntryHelpTextIs(string help)
         {
             return EntryHelpTextIs(s => help);
+        }
+
+        public ExceptionKnowledgeBuilder SuppressException()
+        {
+            logException = false;
+            return this;
         }
 
         public ExceptionKnowledgeBuilder EntryHelpTextIs(Func<IDictionary<string, object>, string> getHelp)

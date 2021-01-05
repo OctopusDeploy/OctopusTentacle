@@ -39,7 +39,15 @@ namespace Octopus.Shared.Configuration.Instances
         void WriteInstanceConfiguration(Instance instance, string path)
         {
             var data = JsonConvert.SerializeObject(instance, Formatting.Indented);
-            FileSystem.OverwriteFile(path, data);
+            try
+            {
+                FileSystem.OverwriteFile(path, data);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Log.Warn(ex.Message);
+                throw new ControlledFailureException($"Unable to write file '{path}' as user '{Environment.UserName}'. Please check file permissions.");
+            }
         }
 
         public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
@@ -86,7 +94,16 @@ namespace Octopus.Shared.Configuration.Instances
             var instancesFolder = InstancesFolder();
             var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config");
 
-            FileSystem.DeleteFile(instanceConfiguration);
+            try
+            {
+                FileSystem.DeleteFile(instanceConfiguration);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Log.Warn(ex.Message);
+                throw new ControlledFailureException($"Unable to delete file '{instanceConfiguration}' as user '{Environment.UserName}'. Please check file permissions.");
+            }
+
             Log.Info($"Deleted instance: {instanceName}");
         }
 
