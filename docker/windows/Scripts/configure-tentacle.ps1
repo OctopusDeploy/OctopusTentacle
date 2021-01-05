@@ -17,6 +17,7 @@ $PublicHostNameConfiguration=$env:PublicHostNameConfiguration;
 $CustomPublicHostName=$env:CustomPublicHostName;
 $InternalListeningPort=10933;
 $ServerPort=$env:ServerPort;
+$Space=$env:Space;
 
 $TentacleExe=$Exe
 function Configure-Tentacle
@@ -168,6 +169,9 @@ function Validate-Variables() {
   if($TargetName -ne $null) {
     Write-Log " - name '$env:TargetName'"
   }
+  if($null -ne $Space) {
+    Write-Log " - space '$Space'"
+  }
 }
 
 function Register-Tentacle(){
@@ -243,6 +247,11 @@ function Register-Tentacle(){
       $arg += '--workerpool';
       $arg += $_.Trim();
      };
+  }
+
+  if($null -ne $Space) {
+    $arg += "--space";
+    $arg += $Space;
   }
 
   Execute-Command $TentacleExe $arg;
