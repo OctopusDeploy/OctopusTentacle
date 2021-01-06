@@ -1,12 +1,12 @@
 ﻿using System;
 using System.IO;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Packages;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared;
+using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Commands
 {

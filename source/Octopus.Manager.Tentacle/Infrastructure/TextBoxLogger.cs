@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows.Controls;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
+using AbstractLog = Octopus.Tentacle.Diagnostics.AbstractLog;
+using LogEvent = Octopus.Tentacle.Diagnostics.LogEvent;
 
 namespace Octopus.Manager.Tentacle.Infrastructure
 {
@@ -43,16 +44,6 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             {
                 WriteLine(logEvent.Error.ToString());
             }
-        }
-
-        protected override void WriteEvents(IList<LogEvent> logEvents)
-        {
-            foreach (var log in logEvents) WriteEvent(log);
-        }
-
-        public override IDisposable WithinBlock(ILogContext logContext)
-        {
-            return null;
         }
 
         public override void Flush()
