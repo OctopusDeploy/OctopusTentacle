@@ -34,7 +34,7 @@ namespace Octopus.Shared.Configuration
             // See FlatDictionaryKeyValueStore.ValueNeedsToBeSerialized, some of the types are serialized, and will therefore expect to be
             // double quote delimited
             var dataType = typeof(TData);
-            if (protectionLevel == ProtectionLevel.MachineKey || dataType.IsClass)
+            if (protectionLevel == ProtectionLevel.MachineKey || dataType == typeof(byte[]))
                 return (true, JsonConvert.DeserializeObject<TData>("\"" + data + "\""));
 
             return (true, JsonConvert.DeserializeObject<TData>((string)data));

@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System;
+using System.Linq;
 using System.Security.Cryptography;
 using FluentAssertions;
 using Newtonsoft.Json;
@@ -81,6 +82,25 @@ namespace Octopus.Shared.Tests.Configuration
             bytes.foundResult.Should().BeTrue("provided value should be 'found'");
             bytes.value.Should().BeEquivalentTo(JsonConvert.DeserializeObject<byte[]>($"\"{value}\""), "encrypted non-intrinsic types should be handled as though they'd been JSON serialized");
         }
+
+        [Test]
+        public void ComplexTypeGetsHandledCorrectly()
+        {
+            var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
+            mapper.GetConfigurationValue("Test").Returns("[{\"SettingA\":\"some value\", \"SomethingElse\":12}]");
+            var store = new InMemoryKeyValueStore(mapper);
+
+            var settings = store.TryGet<TestConfig[]>("Test");
+            settings.value.Single().SettingA.Should().Be("some value", "strings should get parsed");
+            settings.value.Single().SomethingElse.Should().Be(12, "ints should get parsed");
+        }
+
+        class TestConfig
+        {
+            public string SettingA { get; set; } = string.Empty;
+            public int SomethingElse { get; set; }
+        }
+
 
         static byte[] GenerateValue()
         {
