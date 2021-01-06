@@ -80,8 +80,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 logs.Should().ContainSingle().Subject.Text.Should().Be("hello ********123");
             }
         }
-        
-        //We currently don't mask the first message if a secret spans 2 messages. 
+
+        //We currently don't mask the first message if a secret spans 2 messages.
         //This shouldn't happen in practice since even when Calamari logs a really long line (10K chars), it won't get split
         //
         //Sample PowerShell script step:

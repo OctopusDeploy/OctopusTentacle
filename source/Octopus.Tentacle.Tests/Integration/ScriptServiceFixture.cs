@@ -25,8 +25,8 @@ namespace Octopus.Tentacle.Tests.Integration
             var homeConfiguration = Substitute.For<IHomeConfiguration>();
             homeConfiguration.HomeDirectory.Returns(Environment.CurrentDirectory);
 
-            service = new ScriptService(PlatformDetection.IsRunningOnWindows 
-                ? (IShell) new PowerShell() 
+            service = new ScriptService(PlatformDetection.IsRunningOnWindows
+                ? (IShell) new PowerShell()
                 : new Bash()
                 , new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration), new OctopusPhysicalFileSystem(), new SensitiveValueMasker(new LogContext()));
         }
@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             var bashPing = "ping localhost -c 1";
             var cmdPing = "& ping.exe localhost -n 1";
-            
+
             var startScriptCommand = new StartScriptCommandBuilder()
                 .WithScriptBody(PlatformDetection.IsRunningOnWindows ? cmdPing : bashPing)
                 .Build();
@@ -59,10 +59,10 @@ namespace Octopus.Tentacle.Tests.Integration
         public void ShouldPingRandomUnsuccessfully()
         {
             var guid = Guid.NewGuid();
-            
+
             var bashPing = $"ping {guid} -c 1";
             var cmdPing = $"& ping.exe {guid} -n 1";
-            
+
             var startScriptCommand = new StartScriptCommandBuilder()
                 .WithScriptBody(PlatformDetection.IsRunningOnWindows ? cmdPing : bashPing)
                 .Build();
@@ -91,7 +91,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 var pollInterval = TimeSpan.FromSeconds(1);
                 var safetyLimit = TimeSpan.FromSeconds(120);
                 var sw = Stopwatch.StartNew();
-                
+
                 var bashPing = "ping 127.0.0.1 -c 100";
                 var cmdPing = "& ping.exe 127.0.0.1 -n 100";
 

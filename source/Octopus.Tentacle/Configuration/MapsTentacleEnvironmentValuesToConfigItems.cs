@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Configuration
                 case TentacleConfiguration.ServicesNoListenSettingName:
                     return EnvironmentValues[NoListen.Name];
                 case TentacleConfiguration.TrustedServersSettingName:
-                    return EnvironmentValues[TrustedServers.Name]?.Replace("\"", "\\\"");
+                    return EnvironmentValues[TrustedServers.Name];
                 case TentacleConfiguration.DeploymentApplicationDirectorySettingName:
                     return EnvironmentValues[DeploymentApplicationDirectory.Name];
                 case TentacleConfiguration.CertificateSettingName:

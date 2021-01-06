@@ -1,8 +1,6 @@
 using System;
 using System.Linq;
-using System.Net;
 using Autofac;
-using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Tentacle.Configuration.Proxy;
 
@@ -17,7 +15,7 @@ namespace Octopus.Tentacle.Configuration
             {
                 var proxyPassword = b.Resolve<ITentacleConfiguration>().ProxyConfiguration.CustomProxyPassword;
                 var sensitiveValues = b.Resolve<IProxyPasswordMaskValuesProvider>().GetProxyPasswordMaskValues(proxyPassword).ToArray();
-                
+
                 //Wrap the log context in another class so we don't register it on the container (ILogContext isn't usually global)
                 return new SensitiveValueMasker(new LogContext(null, sensitiveValues));
             }).As<ISensitiveValueMasker>();

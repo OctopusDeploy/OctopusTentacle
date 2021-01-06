@@ -4,7 +4,8 @@ using Halibut;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Contracts;
-using Octopus.Shared.Diagnostics;
+using Octopus.Tentacle.Diagnostics;
+
 using Octopus.Shared.Util;
 
 namespace Octopus.Tentacle.Services.FileTransfer
@@ -36,7 +37,7 @@ namespace Octopus.Tentacle.Services.FileTransfer
 
             var fileSize = fileSystem.GetFileSize(fullPath);
 
-            // Check we can open the file, because if this throws in the 
+            // Check we can open the file, because if this throws in the
             // DataStream lambda below it causes Halibut issues. Yes there
             // is a race condition doing it here. We could open here and
             // close in the DataStream lambda, but that risks leaving
@@ -90,7 +91,7 @@ namespace Octopus.Tentacle.Services.FileTransfer
             {
                 path = path.Replace('\\', Path.DirectorySeparatorChar);
             }
-            
+
             if (Path.IsPathRooted(path))
                 return fileSystem.GetFullPath(path);
 
