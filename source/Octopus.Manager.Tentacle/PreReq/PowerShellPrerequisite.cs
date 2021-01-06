@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Octopus.Shared.Diagnostics;
+using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Manager.Tentacle.PreReq
 {
@@ -26,7 +26,7 @@ namespace Octopus.Manager.Tentacle.PreReq
             const string powerShellExe = "powershell.exe";
             const string arguments = "-NonInteractive -NoProfile -Command \"Write-Output $PSVersionTable.PSVersion\"";
             commandLineOutput = $"{powerShellExe} {arguments}";
-        
+
             // Despite our old check conforming to Microsoft's recommendations
             // for PS version checking around the 1.0/2.0 era, and extending
             // to detect 3.0, it failed to detect 4. Going the direct route:

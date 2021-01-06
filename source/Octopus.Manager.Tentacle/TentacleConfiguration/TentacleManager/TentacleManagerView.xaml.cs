@@ -13,7 +13,8 @@ using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Diagnostics;
+using Octopus.Tentacle.Diagnostics;
+
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 {

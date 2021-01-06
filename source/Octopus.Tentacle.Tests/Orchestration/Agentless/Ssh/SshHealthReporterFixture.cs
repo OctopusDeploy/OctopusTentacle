@@ -2,8 +2,8 @@
 // using System;
 // using NUnit.Framework;
 // using Octopus.Agent.Orchestration.Agentless.Ssh.Health;
-// using Octopus.Shared.Diagnostics;
-   
+//
+
 // namespace Octopus.Tests.Octopus.Tentacle.Orchestration.Agentless.Ssh
 // {
 //     [TestFixture]
@@ -17,9 +17,9 @@
 // devtmpfs          287060      12    287048   1% /dev
 // tmpfs             303460       0    303460   0% /dev/shm
 // ";
-   
+
 //             var driveInfo = SshHealthReporter.ParseDriveInfo(output, new NullLog());
-   
+
 //             Assert.AreEqual(3, driveInfo.Count);
 //             Assert.AreEqual(287048 * 1024, driveInfo["devtmpfs"]);
 //         }

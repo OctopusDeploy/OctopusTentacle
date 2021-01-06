@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Text;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
+using AbstractLog = Octopus.Tentacle.Diagnostics.AbstractLog;
+using Log = Octopus.Tentacle.Diagnostics.Log;
+using LogEvent = Octopus.Tentacle.Diagnostics.LogEvent;
 
 namespace Octopus.Tentacle.Tests.Support
 {
@@ -28,16 +28,6 @@ namespace Octopus.Tentacle.Tests.Support
         {
             logText.AppendLine(logEvent.Category + " " + logEvent.MessageText + " " + logEvent.Error);
             log.Write(logEvent.Category, logEvent.Error, logEvent.MessageText);
-        }
-
-        protected override void WriteEvents(IList<LogEvent> logEvents)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IDisposable WithinBlock(ILogContext logContext)
-        {
-            return null;
         }
 
         public override void Flush()
