@@ -1,7 +1,9 @@
 using System;
 using System.Threading;
 using FluentAssertions;
+using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Tests.Support;
 using Octopus.Shared.Util;
@@ -11,7 +13,6 @@ namespace Octopus.Shared.Tests.Util
     [TestFixture]
     public class OctoMonitorFixture
     {
-        InMemoryLog log;
         InMemoryLog systemLog;
 
         public override string ToString() => nameof(OctoMonitorFixture);
@@ -19,14 +20,12 @@ namespace Octopus.Shared.Tests.Util
         [SetUp]
         public void SetUp()
         {
-            OctoMonitor.Log = log = new InMemoryLog();
             OctoMonitor.SystemLog = systemLog = new InMemoryLog();
         }
 
         [TearDown]
         public void TearDown()
         {
-            OctoMonitor.Log = Log.Octopus();
             OctoMonitor.SystemLog = Log.System();
             OctoMonitor.InitialAcquisitionAttemptTimeout = OctoMonitor.DefaultInitialAcquisitionAttemptTimeout;
             OctoMonitor.WaitBetweenAcquisitionAttempts = OctoMonitor.DefaultWaitBetweenAcquisitionAttempts;
@@ -37,7 +36,7 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
             {
-                using (var letMeIn = OctoMonitor.Enter(this, "waiting", cts.Token))
+                using (var letMeIn = OctoMonitor.Enter(this, "waiting", cts.Token, Substitute.For<ILog>()))
                 {
                     letMeIn.Should().NotBeNull();
                 }
@@ -49,12 +48,12 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
             {
-                using (var letMeIn = OctoMonitor.Enter(this, "waiting", cts.Token))
+                using (var letMeIn = OctoMonitor.Enter(this, "waiting", cts.Token, Substitute.For<ILog>()))
                 {
                     letMeIn.Should().NotBeNull();
                 }
 
-                using (var letMeInAgain = OctoMonitor.Enter(this, "waiting", cts.Token))
+                using (var letMeInAgain = OctoMonitor.Enter(this, "waiting", cts.Token, Substitute.For<ILog>()))
                 {
                     letMeInAgain.Should().NotBeNull();
                 }
@@ -66,10 +65,10 @@ namespace Octopus.Shared.Tests.Util
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
             {
-                using (var letMeIn = OctoMonitor.Enter(this, "waiting", cts.Token))
+                using (var letMeIn = OctoMonitor.Enter(this, "waiting", cts.Token, Substitute.For<ILog>()))
                 {
                     letMeIn.Should().NotBeNull();
-                    using (var letMeInAgain = OctoMonitor.Enter(this, "waiting", cts.Token))
+                    using (var letMeInAgain = OctoMonitor.Enter(this, "waiting", cts.Token, Substitute.For<ILog>()))
                     {
                         letMeInAgain.Should().NotBeNull();
                     }
@@ -84,9 +83,9 @@ namespace Octopus.Shared.Tests.Util
             {
                 var first = new object();
                 var second = new object();
-                using (var letMeIn = OctoMonitor.Enter(first, "waiting", cts.Token))
+                using (var letMeIn = OctoMonitor.Enter(first, "waiting", cts.Token, Substitute.For<ILog>()))
                 {
-                    using (var meToo = OctoMonitor.Enter(second, "waiting", cts.Token))
+                    using (var meToo = OctoMonitor.Enter(second, "waiting", cts.Token, Substitute.For<ILog>()))
                     {
                         // Both tasks should be allowed in their own mutex
                         letMeIn.Should().NotBeNull();
@@ -104,11 +103,11 @@ namespace Octopus.Shared.Tests.Util
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
             {
                 var wait = new AutoResetEvent(false);
-                using (letMeIn = OctoMonitor.Enter(this, "waiting1", cts.Token))
+                using (letMeIn = OctoMonitor.Enter(this, "waiting1", cts.Token, Substitute.For<ILog>()))
                 {
                     var thread = new Thread(() =>
                     {
-                        Assert.Throws<OperationCanceledException>(() => meToo = OctoMonitor.Enter(this, "waiting2", cts.Token), "time should have expired before we entered the monitor");
+                        Assert.Throws<OperationCanceledException>(() => meToo = OctoMonitor.Enter(this, "waiting2", cts.Token, Substitute.For<ILog>()), "time should have expired before we entered the monitor");
                         wait.Set();
                     });
 
@@ -131,14 +130,16 @@ namespace Octopus.Shared.Tests.Util
             OctoMonitor.InitialAcquisitionAttemptTimeout = TimeSpan.Zero;
             OctoMonitor.WaitBetweenAcquisitionAttempts = TimeSpan.FromMilliseconds(100);
 
+            var log = new InMemoryLog();
+
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
             {
                 var wait = new AutoResetEvent(false);
-                using (OctoMonitor.Enter(this, "waiting1", cts.Token))
+                using (OctoMonitor.Enter(this, "waiting1", cts.Token, log))
                 {
                     var thread = new Thread(() =>
                     {
-                        Assert.Throws<OperationCanceledException>(() => OctoMonitor.Enter(this, expectedWaitMessage, cts.Token), "time should have expired before we entered the monitor");
+                        Assert.Throws<OperationCanceledException>(() => OctoMonitor.Enter(this, expectedWaitMessage, cts.Token, log), "time should have expired before we entered the monitor");
                         wait.Set();
                     });
 

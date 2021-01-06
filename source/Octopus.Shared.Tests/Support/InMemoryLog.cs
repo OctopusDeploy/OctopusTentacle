@@ -18,37 +18,18 @@ namespace Octopus.Shared.Tests.Support
         {
         }
 
-        public InMemoryLog(ILog log)
+        public InMemoryLog(ILog log) : base(new SensitiveValueMasker())
         {
-            this.log = log ?? new TestConsoleLog();
+            this.log = log ?? new TestConsoleLog(new SensitiveValueMasker());
         }
 
-        public override ILogContext CurrentContext => new LogContext();
+        protected override string CorrelationId => "system/" + Environment.MachineName;
 
         protected override void WriteEvent(LogEvent logEvent)
         {
             events.Add(logEvent);
             log.Write(logEvent.Category, logEvent.Error, logEvent.MessageText);
         }
-
-        protected override void WriteEvents(IList<LogEvent> logEvents)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IDisposable WithinBlock(ILogContext logContext)
-            => null;
-
-        public override void Flush()
-        {
-        }
-
-        public override void Flush(string correlationId)
-        {
-        }
-
-        public override bool IsEnabled(LogCategory category)
-            => true;
 
         public IReadOnlyCollection<LogEvent> GetLogEvents() => events.ToArray();
 
@@ -67,6 +48,10 @@ namespace Octopus.Shared.Tests.Support
         {
             var match = events.FirstOrDefault(e => CultureInfo.CurrentCulture.CompareInfo.IndexOf(e.MessageText, partialString, CompareOptions.IgnoreCase) >= 0);
             if (match == null) throw new Exception($"The log does not contain any entry containing the substring {partialString}.");
+        }
+
+        public override void Flush()
+        {
         }
     }
 }

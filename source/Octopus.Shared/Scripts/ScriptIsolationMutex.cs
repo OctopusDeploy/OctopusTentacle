@@ -5,7 +5,6 @@ using System.Threading;
 using Nito.AsyncEx;
 using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Scripts
@@ -26,7 +25,8 @@ namespace Octopus.Shared.Scripts
             string lockName,
             Action<string> taskLog,
             string taskId,
-            CancellationToken token)
+            CancellationToken token,
+            ILog log)
         {
             var taskLock = ReaderWriterLocks.GetOrAdd(lockName, _ => new TaskLock());
 
@@ -36,7 +36,8 @@ namespace Octopus.Shared.Scripts
                 token,
                 mutexAcquireTimeout,
                 lockName,
-                taskId).EnterLock();
+                taskId,
+                log).EnterLock();
         }
 
         class ScriptIsolationMutexReleaser : IDisposable
@@ -48,7 +49,7 @@ namespace Octopus.Shared.Scripts
             readonly Action<string> taskLog;
             readonly TaskLock taskLock;
             readonly CancellationToken cancellationToken;
-            readonly ILogWithContext systemLog;
+            readonly ILog systemLog;
             readonly string lockType;
             IDisposable? lockReleaser;
 
@@ -58,9 +59,10 @@ namespace Octopus.Shared.Scripts
                 CancellationToken cancellationToken,
                 TimeSpan mutexAcquireTimeout,
                 string lockName,
-                string taskId)
+                string taskId,
+                ILog log)
             {
-                systemLog = Log.System();
+                systemLog = log;
 
                 this.isolationLevel = isolationLevel;
                 this.taskLog = taskLog;

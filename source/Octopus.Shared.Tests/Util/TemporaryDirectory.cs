@@ -5,10 +5,11 @@ namespace Octopus.Shared.Tests.Util
 {
     public class TemporaryDirectory : IDisposable
     {
-        readonly IOctopusFileSystem fileSystem = new OctopusPhysicalFileSystem();
+        readonly IOctopusFileSystem fileSystem;
 
-        public TemporaryDirectory(string directoryPath = null)
+        public TemporaryDirectory(IOctopusFileSystem fileSystem, string directoryPath = null)
         {
+            this.fileSystem = fileSystem;
             DirectoryPath = directoryPath ?? fileSystem.CreateTemporaryDirectory();
         }
 

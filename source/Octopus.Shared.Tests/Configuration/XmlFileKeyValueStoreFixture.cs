@@ -9,8 +9,10 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using FluentAssertions;
 using Newtonsoft.Json;
+using NSubstitute;
 using NUnit.Framework;
 using Octopus.Configuration;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Util;
 using Formatting = System.Xml.Formatting;
@@ -24,7 +26,7 @@ namespace Octopus.Shared.Tests.Configuration
         public void WritesSortedXmlUsingCorrectTypes()
         {
             var configurationFile = Path.GetTempFileName();
-            var fileSystem = new OctopusPhysicalFileSystem();
+            var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ILog>());
             fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
 
             var settings = new XmlFileKeyValueStore(fileSystem, configurationFile);
@@ -52,7 +54,7 @@ namespace Octopus.Shared.Tests.Configuration
         public void ReturnsNiceExceptionOnInvalidData()
         {
             var configurationFile = Path.GetTempFileName();
-            var fileSystem = new OctopusPhysicalFileSystem();
+            var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ILog>());
             fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
 
             var settings = new XmlFileKeyValueStore(fileSystem, configurationFile);
@@ -93,7 +95,7 @@ namespace Octopus.Shared.Tests.Configuration
             protected override IKeyValueStore SetupKeyValueStore()
             {
                 var configurationFile = Path.GetTempFileName();
-                var fileSystem = new OctopusPhysicalFileSystem();
+                var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ILog>());
                 fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
                 var configurationObject = new MyObject
                 {

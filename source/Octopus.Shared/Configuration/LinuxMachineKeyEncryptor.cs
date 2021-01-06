@@ -38,7 +38,7 @@ namespace Octopus.Shared.Configuration
 
             static void Generate()
             {
-                Log.Octopus().Verbose("Machine key file does not yet exist. Generating key file that will be used to encrypt data on this machine");
+                Log.System().Verbose("Machine key file does not yet exist. Generating key file that will be used to encrypt data on this machine");
                 var d = new RijndaelManaged();
                 d.GenerateIV();
                 d.GenerateKey();

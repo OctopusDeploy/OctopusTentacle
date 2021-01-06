@@ -13,13 +13,12 @@ namespace Octopus.Shared.Util
         public static TimeSpan InitialAcquisitionAttemptTimeout = DefaultInitialAcquisitionAttemptTimeout;
         public static TimeSpan WaitBetweenAcquisitionAttempts = DefaultWaitBetweenAcquisitionAttempts;
 
-        public static ILog Log = Diagnostics.Log.Octopus();
         public static ILog SystemLog = Diagnostics.Log.System();
 
-        public static IDisposable Enter(object obj, CancellationToken cancellationToken)
-            => Enter(obj, null, cancellationToken);
+        public static IDisposable Enter(object obj, CancellationToken cancellationToken, ILog log)
+            => Enter(obj, null, cancellationToken, log);
 
-        public static IDisposable Enter(object obj, string? waitMessage, CancellationToken cancellationToken)
+        public static IDisposable Enter(object obj, string? waitMessage, CancellationToken cancellationToken, ILog log)
         {
             SystemLog.Trace($"Acquiring monitor {obj}");
             cancellationToken.ThrowIfCancellationRequested();
@@ -33,14 +32,14 @@ namespace Octopus.Shared.Util
 
             // Go into an acquisition loop supporting cooperative cancellation
             cancellationToken.ThrowIfCancellationRequested();
-            LogWaiting(obj, waitMessage);
+            LogWaiting(obj, waitMessage, log);
             while (true)
             {
                 if (TryAcquire(obj, WaitBetweenAcquisitionAttempts, out mutexReleaser))
                     return mutexReleaser;
 
                 cancellationToken.ThrowIfCancellationRequested();
-                LogWaiting(obj, waitMessage);
+                LogWaiting(obj, waitMessage, log);
             }
         }
 
@@ -70,11 +69,11 @@ namespace Octopus.Shared.Util
             return false;
         }
 
-        static void LogWaiting(object obj, string? waitMessage)
+        static void LogWaiting(object obj, string? waitMessage, ILog log)
         {
             SystemLog.Verbose($"Monitor {obj} in use, waiting. {waitMessage}");
             if (!string.IsNullOrWhiteSpace(waitMessage))
-                Log.Info(waitMessage);
+                log.Info(waitMessage);
         }
 
         class OctoMonitorReleaser : IDisposable

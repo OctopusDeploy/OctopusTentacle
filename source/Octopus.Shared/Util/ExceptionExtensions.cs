@@ -1,117 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
-#if NETFX
-using System.Data.SqlClient;
-#else
-using Microsoft.Data.SqlClient;
-
-#endif
 
 namespace Octopus.Shared.Util
 {
     public static class ExceptionExtensions
     {
-        public static string PrettyPrint(this Exception ex, bool printStackTrace = true)
-        {
-            var sb = new StringBuilder();
-            PrettyPrint(sb, ex, printStackTrace);
-            return sb.ToString().Trim();
-        }
-
-        static void PrettyPrint(StringBuilder sb, Exception ex, bool printStackTrace)
-        {
-            var aex = ex as AggregateException;
-            if (aex != null)
-            {
-                AppendAggregateException(sb, printStackTrace, aex);
-                return;
-            }
-
-            if (ex is OperationCanceledException)
-            {
-                sb.AppendLine("The task was canceled");
-                return;
-            }
-
-            var sqlEx = ex as SqlException;
-            if (sqlEx != null)
-                sb.AppendLine($"SQL Error {sqlEx.Number} - {ex.Message}");
-            else
-                sb.AppendLine(ex.Message);
-
-            if (ex is ControlledFailureException)
-                return;
-
-            if (printStackTrace)
-                AddStackTrace(sb, ex);
-
-            if (ex.InnerException == null)
-                return;
-
-            if (printStackTrace)
-                sb.AppendLine("--Inner Exception--");
-
-            PrettyPrint(sb, ex.InnerException, printStackTrace);
-        }
-
-        static void AppendAggregateException(StringBuilder sb, bool printStackTrace, AggregateException aex)
-        {
-            if (!printStackTrace && aex.InnerException != null)
-            {
-                PrettyPrint(sb, aex.InnerException, printStackTrace);
-            }
-            else
-            {
-                sb.AppendLine("Aggregate Exception");
-                if (printStackTrace)
-                    AddStackTrace(sb, aex);
-                for (var x = 0; x < aex.InnerExceptions.Count; x++)
-                {
-                    sb.AppendLine($"--Inner Exception {x + 1}--");
-                    PrettyPrint(sb, aex.InnerExceptions[x], printStackTrace);
-                }
-            }
-        }
-
-        static void AddStackTrace(StringBuilder sb, Exception ex)
-        {
-            if (ex is ReflectionTypeLoadException rtle)
-                AddReflectionTypeLoadExceptionDetails(rtle, sb);
-
-            sb.AppendLine(ex.GetType().FullName);
-            try
-            {
-                sb.AppendLine(ex.StackTraceEx()); // Sometimes fails printing the trace
-            }
-            catch
-            {
-                sb.AppendLine(ex.StackTrace);
-            }
-        }
-
-        static void AddReflectionTypeLoadExceptionDetails(ReflectionTypeLoadException rtle, StringBuilder sb)
-        {
-            if (rtle.LoaderExceptions != null)
-                foreach (var loaderException in rtle.LoaderExceptions)
-                {
-                    if (loaderException == null)
-                        continue;
-
-                    sb.AppendLine();
-                    sb.AppendLine("--Loader Exception--");
-                    PrettyPrint(sb, loaderException, true);
-
-                    var fusionLog = (loaderException as FileNotFoundException)?.FusionLog;
-                    if (!string.IsNullOrEmpty(fusionLog))
-                        sb.Append("Fusion log: ").AppendLine(fusionLog);
-                }
-        }
-
         public static Exception UnpackFromContainers(this Exception error)
         {
             if (error is AggregateException aggregateException && aggregateException.InnerExceptions.Count == 1)

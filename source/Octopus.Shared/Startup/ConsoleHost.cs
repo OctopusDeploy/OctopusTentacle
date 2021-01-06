@@ -18,7 +18,7 @@ namespace Octopus.Shared.Startup
 
         public static readonly string ConsoleSwitchPrototype = "console";
         public static readonly string ConsoleSwitchExample = $"--{ConsoleSwitchPrototype}";
-        readonly ILog log = Log.Octopus();
+        readonly ILog log = Log.System();
         readonly string displayName;
 
         public ConsoleHost(string displayName)

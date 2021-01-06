@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using NLog;
 using NLog.Targets;
-using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
@@ -39,7 +38,7 @@ namespace Octopus.Shared.Startup
                 : $"{Path.GetFileName(fullProcessPath)}.exe";
         }
 
-        public ILogContext Context { get; set; } = new LogContext();
+        public SensitiveValueMasker Masker { get; set; } = new SensitiveValueMasker();
         public static ILogFileOnlyLogger Current { get; } = new LogFileOnlyLogger();
 
         public static void AssertConfigurationIsCorrect()
@@ -56,15 +55,15 @@ namespace Octopus.Shared.Startup
                 throw new Exception($"The {LoggerName} rule should write to a file target. {HelpMessage}");
         }
 
-        public void Info(string message) => Context.SafeSanitize(message, s => Log.Info(s));
-        public void Warn(string message) => Context.SafeSanitize(message, s => Log.Warn(s));
-        public void Error(string message) => Context.SafeSanitize(message, s => Log.Error(s));
-        public void Error(Exception ex, string message) => Context.SafeSanitize(message, s => Log.Error(ex, s));
-        public void Fatal(string message) => Context.SafeSanitize(message, s => Log.Fatal(s));
+        public void Info(string message) => Masker.SafeSanitize(message, s => Log.Info(s));
+        public void Warn(string message) => Masker.SafeSanitize(message, s => Log.Warn(s));
+        public void Error(string message) => Masker.SafeSanitize(message, s => Log.Error(s));
+        public void Error(Exception ex, string message) => Masker.SafeSanitize(message, s => Log.Error(ex, s));
+        public void Fatal(string message) => Masker.SafeSanitize(message, s => Log.Fatal(s));
 
         public void AddSensitiveValues(string[] values)
         {
-            Context = Context.WithSensitiveValues(values);
+            Masker = Masker.WithSensitiveValues(values);
         }
     }
 }

@@ -1,8 +1,10 @@
 using System;
 using System.IO;
 using FluentAssertions;
+using NSubstitute;
 using NUnit.Framework;
 using Octopus.Configuration;
+using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Configuration
@@ -16,7 +18,7 @@ namespace Octopus.Shared.Tests.Configuration
         protected RoundTripTestBaseFixture()
         {
             ConfigurationFile = Path.GetTempFileName();
-            FileSystem = new OctopusPhysicalFileSystem();
+            FileSystem = new OctopusPhysicalFileSystem(Substitute.For<ILog>());
         }
 
         protected byte[] EncryptedValue { get; set; }

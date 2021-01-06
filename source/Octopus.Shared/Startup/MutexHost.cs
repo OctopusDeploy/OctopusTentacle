@@ -17,7 +17,7 @@ namespace Octopus.Shared.Startup
             (int)OctopusProgram.ExitCode.ControlledFailureException
         };
 
-        readonly ILog log = Log.Octopus();
+        readonly ILog log = Log.System();
 
         readonly string monitorMutexHost;
         readonly CancellationTokenSource sourceToken = new CancellationTokenSource();

@@ -1,7 +1,7 @@
 using System;
 using System.Net;
 using Autofac.Core;
-using Octopus.Shared.Diagnostics;
+using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {
@@ -9,11 +9,13 @@ namespace Octopus.Shared.Configuration
     {
         readonly IProxyConfiguration proxyConfiguration;
         readonly IProxyConfigParser configParser;
+        readonly ILog log;
 
-        public ProxyInitializer(IProxyConfiguration proxyConfiguration, IProxyConfigParser configParser)
+        public ProxyInitializer(IProxyConfiguration proxyConfiguration, IProxyConfigParser configParser, ILog log)
         {
             this.proxyConfiguration = proxyConfiguration;
             this.configParser = configParser;
+            this.log = log;
         }
 
         public void InitializeProxy()
@@ -30,7 +32,7 @@ namespace Octopus.Shared.Configuration
             }
             catch (Exception ex)
             {
-                Log.Octopus().Warn(ex, "Unable to configure the proxy server: " + ex.Message);
+                log.Warn(ex, "Unable to configure the proxy server: " + ex.Message);
             }
         }
 

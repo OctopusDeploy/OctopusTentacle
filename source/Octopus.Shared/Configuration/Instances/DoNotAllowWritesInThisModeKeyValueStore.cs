@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration.Instances
@@ -15,6 +16,7 @@ namespace Octopus.Shared.Configuration.Instances
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
             => readonlyStore.Get(name, protectionLevel);
 
+        [return: MaybeNull]
         public TData Get<TData>(string name, TData defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None)
             => readonlyStore.Get(name, defaultValue, protectionLevel);
 

@@ -7,7 +7,7 @@ namespace Octopus.Shared.Startup
 {
     public abstract class AbstractStandardCommand : AbstractCommand
     {
-        protected static readonly ILogWithContext Log = Diagnostics.Log.System();
+        protected static readonly ILog Log = Diagnostics.Log.System();
 
         readonly IApplicationInstanceSelector instanceSelector;
 

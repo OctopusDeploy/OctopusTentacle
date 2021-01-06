@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Scripts;
+using Octopus.Shared.Tests.Support;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Util
@@ -44,11 +45,12 @@ namespace Octopus.Shared.Tests.Util
                 shell = new Bash();
             }
 
-            temporaryDirectory = new TemporaryDirectory(testRootPath);
+            temporaryDirectory = new TemporaryDirectory(Substitute.For<IOctopusFileSystem>(), testRootPath);
             var homeConfiguration = Substitute.For<IHomeConfiguration>();
             homeConfiguration.HomeDirectory.Returns(temporaryDirectory.DirectoryPath);
             homeConfiguration.ApplicationSpecificHomeDirectory.Returns(temporaryDirectory.DirectoryPath);
-            var workspaceFactory = new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration);
+            var log = new InMemoryLog();
+            var workspaceFactory = new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(log), homeConfiguration);
             taskId = Guid.NewGuid().ToString();
             workspace = workspaceFactory.GetWorkspace(new ScriptTicket(taskId));
             Console.WriteLine($"Working directory: {workspace.WorkingDirectory}");
@@ -58,7 +60,8 @@ namespace Octopus.Shared.Tests.Util
                 workspace,
                 scriptLog,
                 taskId,
-                cancellationTokenSource.Token);
+                cancellationTokenSource.Token,
+                log);
         }
 
         [TearDown]
@@ -182,7 +185,8 @@ namespace Octopus.Shared.Tests.Util
                     workspace,
                     scriptLog,
                     taskId,
-                    cts.Token);
+                    cts.Token,
+                    new InMemoryLog());
 
                 workspace.BootstrapScript($"echo Starting\n{sleepCommand} 10\necho Finito");
                 script.Execute();

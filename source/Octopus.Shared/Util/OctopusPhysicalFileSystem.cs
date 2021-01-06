@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using Octopus.Shared.Diagnostics;
+using Octopus.Diagnostics;
 using Polly;
 
 namespace Octopus.Shared.Util
@@ -66,6 +66,13 @@ namespace Octopus.Shared.Util
             '/'
         };
 
+        public OctopusPhysicalFileSystem(ILog log)
+        {
+            Log = log;
+        }
+
+        ILog Log { get; }
+
         public bool FileExists(string path)
             => File.Exists(path);
 
@@ -80,7 +87,7 @@ namespace Octopus.Shared.Util
             }
             catch (Exception ex)
             {
-                Log.Octopus().Error(ex, "Failed to list directory contents");
+                Log.Error(ex, "Failed to list directory contents");
                 return false;
             }
         }

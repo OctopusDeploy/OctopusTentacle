@@ -46,12 +46,12 @@ namespace Octopus.Shared.Startup
                 if (ExceptionKnowledgeBase.TryInterpret(ex, out var entry))
                 {
                     var message = entry.ToString();
-                    Log.Octopus().Error(ex, message);
+                    Log.System().Error(ex, message);
                     throw new Exception(message, ex) { HelpLink = entry.HelpLink };
                 }
 
-                Log.Octopus().Fatal(ex);
-                Log.Octopus().Flush();
+                Log.System().Fatal(ex);
+                Log.System().Flush();
 
                 throw;
             }

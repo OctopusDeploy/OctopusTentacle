@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Octopus.Configuration;
 
@@ -16,6 +17,7 @@ namespace Octopus.Shared.Configuration.Instances
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
             => Get(name, default(string?), protectionLevel);
 
+        [return: MaybeNull]
         public TData Get<TData>(string name, TData defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             // the default value must not be sent to the aggregated config, it gets applied at this level if

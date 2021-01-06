@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Bcl.IO
@@ -18,7 +20,7 @@ namespace Octopus.Shared.Tests.Bcl.IO
                 "IO",
                 filename);
 
-            var fs = new OctopusPhysicalFileSystem();
+            var fs = new OctopusPhysicalFileSystem(Substitute.For<ILog>());
             return IOUtil.SniffEncoding(fs, path);
         }
 

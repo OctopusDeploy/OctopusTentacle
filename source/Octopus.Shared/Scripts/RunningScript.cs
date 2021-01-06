@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Util;
 
@@ -16,25 +17,28 @@ namespace Octopus.Shared.Scripts
         readonly IShell shell;
         readonly string taskId;
         readonly CancellationToken token;
+        readonly ILog log;
 
         public RunningScript(IShell shell,
             IScriptWorkspace workspace,
-            IScriptLog log,
+            IScriptLog scriptLog,
             string taskId,
-            CancellationToken token)
+            CancellationToken token,
+            ILog log)
         {
             this.shell = shell;
             this.workspace = workspace;
             this.taskId = taskId;
             this.token = token;
-            Log = log;
+            this.log = log;
+            ScriptLog = scriptLog;
             State = ProcessState.Pending;
         }
 
         public ProcessState State { get; private set; }
         public int ExitCode { get; private set; }
 
-        public IScriptLog Log { get; }
+        public IScriptLog ScriptLog { get; }
 
         public void Execute()
         {
@@ -42,7 +46,7 @@ namespace Octopus.Shared.Scripts
             {
                 var shellPath = shell.GetFullPath();
 
-                using (var writer = Log.CreateWriter())
+                using (var writer = ScriptLog.CreateWriter())
                 {
                     try
                     {
@@ -51,7 +55,8 @@ namespace Octopus.Shared.Scripts
                             GetType().Name,
                             message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
                             taskId,
-                            token))
+                            token,
+                            log))
                         {
                             RunScript(shellPath, writer);
                         }

@@ -7,7 +7,7 @@ namespace Octopus.Shared.Startup
 {
     public class WindowsServiceHost : ICommandHost, ICommandRuntime
     {
-        readonly ILog log = Log.Octopus();
+        readonly ILog log = Log.System();
 
         public void Run(Action<ICommandRuntime> start, Action shutdown)
         {

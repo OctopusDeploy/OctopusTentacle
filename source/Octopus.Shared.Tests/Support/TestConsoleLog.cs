@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
@@ -8,7 +7,14 @@ namespace Octopus.Shared.Tests.Support
 {
     public class TestConsoleLog : AbstractLog
     {
-        public override ILogContext CurrentContext => new LogContext();
+        public TestConsoleLog(SensitiveValueMasker masker) : base(masker)
+        {
+        }
+
+        protected override string CorrelationId => "system/" + Environment.MachineName;
+
+        public override bool IsEnabled(LogCategory category)
+            => true;
 
         protected override void WriteEvent(LogEvent logEvent)
         {
@@ -16,23 +22,8 @@ namespace Octopus.Shared.Tests.Support
             if (logEvent.Error != null) Console.WriteLine(logEvent.Error);
         }
 
-        protected override void WriteEvents(IList<LogEvent> logEvents)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IDisposable WithinBlock(ILogContext logContext)
-            => null;
-
         public override void Flush()
         {
         }
-
-        public override void Flush(string correlationId)
-        {
-        }
-
-        public override bool IsEnabled(LogCategory category)
-            => true;
     }
 }

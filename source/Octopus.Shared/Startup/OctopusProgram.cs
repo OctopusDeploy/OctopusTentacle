@@ -37,7 +37,7 @@ namespace Octopus.Shared.Startup
         static readonly string StdOutTargetName = "stdout";
         static readonly string StdErrTargetName = "stderr";
 
-        readonly ILog log = Log.Octopus();
+        readonly ILog log = Log.System();
         readonly string displayName;
         readonly string version;
         readonly string informationalVersion;
@@ -288,7 +288,7 @@ namespace Octopus.Shared.Startup
 
         static void CleanFileSystem(ILog log)
         {
-            var fileSystem = new OctopusPhysicalFileSystem();
+            var fileSystem = new OctopusPhysicalFileSystem(log);
             var fileSystemCleaner = new FileSystemCleaner(fileSystem, log);
             fileSystemCleaner.Clean(FileSystemCleaner.PathsToDeleteOnStartupResource);
         }

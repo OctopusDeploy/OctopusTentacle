@@ -16,7 +16,7 @@ namespace Octopus.Shared.Startup
         static readonly string TextFormat = "text";
         static readonly string JsonFormat = "json";
         static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
-        readonly ILog log = Log.Octopus();
+        readonly ILog log = Log.System();
 
         readonly ICommandLocator commands;
 

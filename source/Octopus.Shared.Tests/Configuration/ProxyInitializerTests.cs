@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Net;
+using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 
 namespace Octopus.Shared.Tests.Configuration
@@ -110,7 +112,7 @@ namespace Octopus.Shared.Tests.Configuration
                 host,
                 port);
             var parser = new ProxyConfigParser();
-            return new ProxyInitializer(config, parser);
+            return new ProxyInitializer(config, parser, Substitute.For<ILog>());
         }
 
         class StubProxyConfiguration : IProxyConfiguration
