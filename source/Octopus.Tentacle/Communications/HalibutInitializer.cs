@@ -4,12 +4,11 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using Halibut;
-using Halibut.Transport.Proxy;
 using Octopus.Client.Model;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Diagnostics;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Communications
 {

@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
-using Octopus.Shared.Diagnostics;
+
 using Octopus.Shared.Scripts;
 using Octopus.Shared.Security;
 using Octopus.Shared.Util;
@@ -57,7 +57,7 @@ namespace Octopus.Tentacle.Services.Scripts
             }
             else
             {
-                workspace.BootstrapScript(command.ScriptBody);   
+                workspace.BootstrapScript(command.ScriptBody);
             }
 
             command.Files.ForEach(file => SaveFileToDisk(workspace, file));
