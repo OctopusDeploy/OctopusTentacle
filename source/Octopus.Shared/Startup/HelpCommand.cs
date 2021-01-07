@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
-using Octopus.Shared.Diagnostics;
+using Octopus.Diagnostics;
 using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Util;
 

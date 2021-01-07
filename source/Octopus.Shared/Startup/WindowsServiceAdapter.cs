@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.ServiceProcess;
 using System.Threading;
-using Octopus.Shared.Diagnostics;
+using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics.KnowledgeBase;
 
 namespace Octopus.Shared.Startup

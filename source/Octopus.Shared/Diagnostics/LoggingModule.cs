@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Diagnostics

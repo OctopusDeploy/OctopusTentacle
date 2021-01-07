@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup
 {
