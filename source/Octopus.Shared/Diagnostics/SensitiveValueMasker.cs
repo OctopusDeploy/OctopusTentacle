@@ -73,6 +73,12 @@ namespace Octopus.Shared.Diagnostics
             return WithSensitiveValues(new[] { sensitiveValue });
         }
 
+        public void Flush()
+        {
+            if (trie.Value != null)
+                sensitiveDataMask?.Flush(trie.Value);
+        }
+
         AhoCorasick? CreateTrie()
         {
             if (SensitiveValues.Length == 0)
