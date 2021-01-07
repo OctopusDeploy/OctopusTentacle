@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Client;
@@ -15,7 +14,7 @@ namespace Octopus.Tentacle.Commands
     public class DeregisterMachineCommand : AbstractStandardCommand
     {
         readonly Lazy<ITentacleConfiguration> configuration;
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly ApiEndpointOptions api;
         bool allowMultiple;
         readonly IProxyConfigParser proxyConfig;
@@ -25,14 +24,14 @@ namespace Octopus.Tentacle.Commands
 
         public const string DeregistrationSuccessMsg = "Machine deregistered successfully";
         public const string MultipleMatchErrorMsg = "The Tentacle matches more than one machine on the server. To deregister all of these machines specify the --multiple flag.";
-        
-        public DeregisterMachineCommand(Lazy<ITentacleConfiguration> configuration, 
-                                        ILog log,
+
+        public DeregisterMachineCommand(Lazy<ITentacleConfiguration> configuration,
+                                        ISystemLog log,
                                         IApplicationInstanceSelector selector,
                                         IProxyConfigParser proxyConfig,
                                         IOctopusClientInitializer octopusClientInitializer,
                                         ISpaceRepositoryFactory spaceRepositoryFactory)
-            : base(selector)
+            : base(selector, log)
         {
             this.configuration = configuration;
             this.log = log;
@@ -72,7 +71,7 @@ namespace Octopus.Tentacle.Commands
 
             if (matchingMachines.Count > 1 && !allowMultiple)
                 throw new ControlledFailureException(MultipleMatchErrorMsg);
-            
+
             // 2. contact the server and de-register, this is independant to any tentacle configuration
             foreach (var machineResource in matchingMachines)
             {

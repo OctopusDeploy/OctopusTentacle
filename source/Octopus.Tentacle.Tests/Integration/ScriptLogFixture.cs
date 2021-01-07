@@ -1,11 +1,12 @@
 ﻿using System.IO;
 using System.Linq;
 using FluentAssertions;
+using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
-using Octopus.Tentacle.Configuration.Proxy;
 using Octopus.Tentacle.Services.Scripts;
 
 namespace Octopus.Tentacle.Tests.Integration
@@ -15,16 +16,14 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         string logFile;
         ScriptLog sut;
-        ISensitiveValueMasker sensitiveValueMasker;
-        LogContext logContext;
+        SensitiveValueMasker sensitiveValueMasker;
 
         [SetUp]
         public void SetUp()
         {
             logFile = Path.GetTempFileName();
-            logContext = new LogContext();
-            sensitiveValueMasker = new SensitiveValueMasker(logContext);
-            sut = new ScriptLog(logFile, new OctopusPhysicalFileSystem(), sensitiveValueMasker);
+            sensitiveValueMasker = new SensitiveValueMasker();
+            sut = new ScriptLog(logFile, new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>()), sensitiveValueMasker);
         }
 
         [TearDown]
@@ -70,7 +69,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public void MaskSensitiveValues_SingleMessage_Masked()
         {
-            logContext.WithSensitiveValues(new[] {"abcde"});
+            sensitiveValueMasker.WithSensitiveValues(new[] {"abcde"});
             using (var writer = sut.CreateWriter())
             {
                 writer.WriteOutput(ProcessOutputSource.Debug, "hello abcde123");
@@ -96,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public void MaskSensitiveValues_MultiMessage_2ndMessageMasked()
         {
-            logContext.WithSensitiveValues(new[] {"abcde12345"});
+            sensitiveValueMasker.WithSensitiveValues(new[] {"abcde12345"});
             using (var writer = sut.CreateWriter())
             {
                 writer.WriteOutput(ProcessOutputSource.Debug, "hello abcde");

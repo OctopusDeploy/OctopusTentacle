@@ -9,10 +9,11 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 {
     public static class UnhandledErrorTrapper
     {
-        static readonly ILog Log = Shared.Diagnostics.Log.Octopus();
+        static ILog systemLog;
 
-        public static void Initialize()
+        public static void Initialize(ILog log)
         {
+            systemLog = log;
             TaskScheduler.UnobservedTaskException += HandleTaskException;
             AppDomain.CurrentDomain.UnhandledException += HandleAppDomainException;
             Application.Current.DispatcherUnhandledException += HandleDispatcherException;
@@ -26,7 +27,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 
                 Dispatcher.CurrentDispatcher.BeginInvoke(new Action(delegate
                 {
-                    Log.Error(e.Exception);
+                    systemLog.Error(e.Exception);
                     ErrorDialog.ShowDialog(e.Exception);
                 }));
             }
@@ -40,13 +41,13 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 
         static void HandleAppDomainException(object sender, UnhandledExceptionEventArgs e)
         {
-            Log.Error((Exception)e.ExceptionObject);
+            systemLog.Error((Exception)e.ExceptionObject);
         }
 
         static void HandleTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             e.SetObserved();
-            Log.Error(e.Exception);
+            systemLog.Error(e.Exception);
         }
     }
 }

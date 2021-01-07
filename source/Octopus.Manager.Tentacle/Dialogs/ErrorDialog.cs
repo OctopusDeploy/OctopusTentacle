@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows;
-using Octopus.Shared.Util;
+using Octopus.Diagnostics;
 
 namespace Octopus.Manager.Tentacle.Dialogs
 {

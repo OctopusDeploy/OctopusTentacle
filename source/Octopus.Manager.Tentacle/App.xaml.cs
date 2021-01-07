@@ -29,7 +29,8 @@ namespace Octopus.Manager.Tentacle
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            UnhandledErrorTrapper.Initialize();
+            var systemLog = new SystemLog();
+            UnhandledErrorTrapper.Initialize(systemLog);
 
             if (!ElevationHelper.IsElevated)
             {

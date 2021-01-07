@@ -32,7 +32,7 @@
 		</PackageReference>
 		<PackageReference Include="Octopus.Client" Version="8.9.2" />
 		<PackageReference Include="Octopus.Configuration" Version="4.0.0" />
-		<PackageReference Include="Octopus.Shared" Version="7.3.1" />
+		<PackageReference Include="Octopus.Shared" Version="7.3.2-enh-logwithconte0005" />
 	</ItemGroup>
 
 	<ItemGroup>

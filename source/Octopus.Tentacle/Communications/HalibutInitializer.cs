@@ -8,7 +8,6 @@ using Octopus.Client.Model;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Communications
 {
@@ -17,13 +16,14 @@ namespace Octopus.Tentacle.Communications
         readonly IWritableTentacleConfiguration configuration;
         readonly HalibutRuntime halibut;
         readonly IProxyConfigParser proxyConfigParser;
-        readonly ILog log = Log.Octopus();
+        readonly ISystemLog log;
 
-        public HalibutInitializer(IWritableTentacleConfiguration configuration, HalibutRuntime halibut, IProxyConfigParser proxyConfigParser)
+        public HalibutInitializer(IWritableTentacleConfiguration configuration, HalibutRuntime halibut, IProxyConfigParser proxyConfigParser, ISystemLog log)
         {
             this.configuration = configuration;
             this.halibut = halibut;
             this.proxyConfigParser = proxyConfigParser;
+            this.log = log;
         }
 
         public void Start()
@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Communications
 
             if (configuration.NoListen)
             {
-                Log.Octopus().Info("Agent will not listen on any TCP ports");
+                log.Info("Agent will not listen on any TCP ports");
                 return;
             }
 
@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Communications
             {
                 if (pollingEndPoint.Address == null)
                 {
-                    Log.Octopus().WarnFormat("Configured to connect to server {0}, but its configuration is incomplete; skipping.", pollingEndPoint);
+                    log.WarnFormat("Configured to connect to server {0}, but its configuration is incomplete; skipping.", pollingEndPoint);
                     continue;
                 }
                 if (pollingEndPoint.SubscriptionId == null)

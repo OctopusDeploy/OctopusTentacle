@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 
@@ -14,7 +16,7 @@ namespace Octopus.Tentacle.Tests.FileSystem
         [Test]
         public void ShouldNotDeleteFilesThatWeNeed()
         {
-            var fileSystem = new OctopusPhysicalFileSystem();
+            var fileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
 
             var pathsThatWillBeDeleted = GetPathsThatWillBeDeleted();
             Assert.That(pathsThatWillBeDeleted, Is.Not.Empty);

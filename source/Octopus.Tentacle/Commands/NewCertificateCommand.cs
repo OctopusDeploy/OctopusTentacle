@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Commands
     public class NewCertificateCommand : AbstractStandardCommand
     {
         readonly Lazy<IWritableTentacleConfiguration> configuration;
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly Lazy<ICertificateGenerator> generator;
         bool preserve;
         string exportFile;
@@ -24,9 +24,9 @@ namespace Octopus.Tentacle.Commands
 
         public NewCertificateCommand(
             Lazy<IWritableTentacleConfiguration> configuration,
-            ILog log,
+            ISystemLog log,
             IApplicationInstanceSelector selector,
-            Lazy<ICertificateGenerator> generator) : base(selector)
+            Lazy<ICertificateGenerator> generator) : base(selector, log)
         {
             this.configuration = configuration;
             this.log = log;
