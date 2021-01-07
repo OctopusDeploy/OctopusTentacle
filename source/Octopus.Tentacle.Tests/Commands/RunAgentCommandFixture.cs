@@ -40,7 +40,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 new Lazy<IHomeConfiguration>(() => home),
                 new Lazy<IProxyConfiguration>(() => Substitute.For<IProxyConfiguration>()),
                 sleep,
-                Substitute.For<ILog>(),
+                Substitute.For<ISystemLog>(),
                 selector = Substitute.For<IApplicationInstanceSelector>(),
                 new Lazy<IProxyInitializer>(() => Substitute.For<IProxyInitializer>()),
                 new AppVersion(GetType().Assembly));

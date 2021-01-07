@@ -1,4 +1,5 @@
 using System;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
 
@@ -9,7 +10,7 @@ namespace Octopus.Tentacle.Commands
         readonly IApplicationInstanceSelector instanceSelector;
         readonly IApplicationInstanceManager instanceManager;
 
-        public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector, IApplicationInstanceManager instanceManager) : base(instanceSelector)
+        public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector, IApplicationInstanceManager instanceManager, ISystemLog log) : base(instanceSelector, log)
         {
             this.instanceSelector = instanceSelector;
             this.instanceManager = instanceManager;

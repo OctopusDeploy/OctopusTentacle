@@ -6,20 +6,20 @@ using Octopus.Shared.Util;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared;
-using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Commands
 {
     public class ExtractCommand : AbstractCommand
     {
         readonly Lazy<IPackageInstaller> packageInstaller;
-        readonly ILog log = Log.Octopus();
+        readonly ISystemLog log;
         string packageFile;
         string destinationDirectory;
 
-        public ExtractCommand(Lazy<IPackageInstaller> packageInstaller, Lazy<IOctopusFileSystem> fileSystem)
+        public ExtractCommand(Lazy<IPackageInstaller> packageInstaller, Lazy<IOctopusFileSystem> fileSystem, ISystemLog log)
         {
             this.packageInstaller = packageInstaller;
+            this.log = log;
             Options.Add("package=", "Package file", v =>
             {
                 var fullPath = fileSystem.Value.GetFullPath(v);

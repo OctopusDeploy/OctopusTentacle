@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Octopus.Tentacle.Diagnostics;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Manager.Tentacle.PreReq
 {
@@ -40,7 +40,7 @@ namespace Octopus.Manager.Tentacle.PreReq
                     s => stdErr.WriteLine($"ERR: {s}"));
 
                 var outputText = stdOut.ToString();
-                Log.Octopus().Verbose("PowerShell prerequisite check output: " + outputText);
+                new SystemLog().Verbose("PowerShell prerequisite check output: " + outputText);
 
                 commandLineOutput = $"{commandLineOutput}{Environment.NewLine}{stdOut}{Environment.NewLine}{stdErr}";
 

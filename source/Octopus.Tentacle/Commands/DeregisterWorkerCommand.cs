@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Octopus.Client;
 using Octopus.Diagnostics;
@@ -15,7 +14,7 @@ namespace Octopus.Tentacle.Commands
     public class DeregisterWorkerCommand : AbstractStandardCommand
     {
         readonly Lazy<ITentacleConfiguration> configuration;
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly ApiEndpointOptions api;
         bool allowMultiple;
         readonly IProxyConfigParser proxyConfig;
@@ -27,12 +26,12 @@ namespace Octopus.Tentacle.Commands
         public const string MultipleMatchErrorMsg = "The worker matches more than one machine on the server. To deregister all of these machines specify the --multiple flag.";
 
         public DeregisterWorkerCommand(Lazy<ITentacleConfiguration> configuration,
-            ILog log,
+            ISystemLog log,
             IApplicationInstanceSelector selector,
             IProxyConfigParser proxyConfig,
             IOctopusClientInitializer octopusClientInitializer,
             ISpaceRepositoryFactory spaceRepositoryFactory)
-            : base(selector)
+            : base(selector, log)
         {
             this.configuration = configuration;
             this.log = log;
@@ -79,7 +78,7 @@ namespace Octopus.Tentacle.Commands
                 log.Info($"Deleting worker '{machineResource.Name}' from the Octopus Server...");
                 await repository.Workers.Delete(machineResource);
             }
-            
+
             log.Info("The Octopus Server is still trusted. " +
                 "If you wish to remove trust for this Octopus Server, use 'Tentacle.exe configure --remove-trust=...'");
 

@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Commands
 
         public RegisterWorkerCommand(Lazy<IRegisterWorkerOperation> lazyRegisterMachineOperation,
             Lazy<IWritableTentacleConfiguration> configuration,
-            ILog log,
+            ISystemLog log,
             IApplicationInstanceSelector selector,
             Lazy<IOctopusServerChecker> octopusServerChecker,
             IProxyConfigParser proxyConfig,

@@ -13,15 +13,15 @@ namespace Octopus.Tentacle.Commands
     public class ServerCommsCommand : AbstractStandardCommand
     {
         readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
-        readonly ILog log;
+        readonly ISystemLog log;
         string serverThumbprint;
         string style;
         string serverHost;
         int serverPort = 10943;
         string webSocket;
 
-        public ServerCommsCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ILog log, IApplicationInstanceSelector selector)
-            : base(selector)
+        public ServerCommsCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector)
+            : base(selector, log)
         {
             this.tentacleConfiguration = tentacleConfiguration;
             this.log = log;

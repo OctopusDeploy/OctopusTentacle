@@ -4,7 +4,6 @@ using Halibut;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Contracts;
-using Octopus.Tentacle.Diagnostics;
 
 using Octopus.Shared.Util;
 
@@ -13,17 +12,18 @@ namespace Octopus.Tentacle.Services.FileTransfer
     [Service]
     public class FileTransferService : IFileTransferService
     {
-        readonly ILog log = Log.Octopus();
+        readonly ISystemLog log;
         readonly IOctopusFileSystem fileSystem;
         readonly IHomeConfiguration home;
 
-        public FileTransferService(IOctopusFileSystem fileSystem, IHomeConfiguration home)
+        public FileTransferService(IOctopusFileSystem fileSystem, IHomeConfiguration home, ISystemLog log)
         {
             if (home.HomeDirectory == null)
                 throw new ArgumentException($"{GetType().Name} cannot function without the HomeDirectory configured.", nameof(home));
 
             this.fileSystem = fileSystem;
             this.home = home;
+            this.log = log;
         }
 
         public DataStream DownloadFile(string remotePath)

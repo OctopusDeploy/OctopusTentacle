@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Commands
         readonly ApiEndpointOptions apiEndpointOptions;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly ISpaceRepositoryFactory spaceRepositoryFactory;
         string spaceName;
 
@@ -43,8 +43,8 @@ namespace Octopus.Tentacle.Commands
             Lazy<IWatchdog> watchdog,
             IProxyConfigParser proxyConfig,
             IOctopusClientInitializer octopusClientInitializer,
-            ILog log,
-            ISpaceRepositoryFactory spaceRepositoryFactory) : base(instanceSelector)
+            ISystemLog log,
+            ISpaceRepositoryFactory spaceRepositoryFactory) : base(instanceSelector, log)
         {
             this.instanceSelector = instanceSelector;
             this.fileSystem = fileSystem;
@@ -131,7 +131,7 @@ namespace Octopus.Tentacle.Commands
                     switch (matchingMachines.Count)
                     {
                         case 0:
-                            Log.Error($"No machines were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
+                            log.Error($"No machines were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
                             break;
 
                         case 1:

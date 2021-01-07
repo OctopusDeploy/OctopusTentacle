@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Commands
         [SetUp]
         public void SetupForEachTest()
         {
-            octopusFileSystem = new OctopusPhysicalFileSystem();
+            octopusFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             homeDirectory = octopusFileSystem.CreateTemporaryDirectory();
             configFile = $"{homeDirectory}\\File.config";
 
@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Commands
             const string expectedPassword = "do or do not, there is no try";
             const int expectedProxyPort = 8888;
 
-            Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ILog>());
+            Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ISystemLog>());
 
             EnableACustomProxy();
             config.Value.UseDefaultProxy.Should().BeFalse(because: "we're using a custom proxy now");
@@ -82,7 +82,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public void TurnOnDefaultProxy()
         {
             var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
-            Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ILog>());
+            Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ISystemLog>());
 
             EnableTheDefaultProxy();
 
@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public void UseACustomHostAndIgnoreHttpAndPort()
         {
             var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
-            Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ILog>());
+            Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ISystemLog>());
 
             EnableAnIncorrectlySuppliedProxyHost();
 

@@ -15,7 +15,6 @@ namespace Octopus.Tentacle.Commands
     public class ConfigureCommand : AbstractStandardCommand
     {
         readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
-        readonly Lazy<IWritableHomeConfiguration> home;
         readonly ILog log;
         readonly List<string> octopusToAdd = new List<string>();
         readonly List<string> octopusToRemove = new List<string>();
@@ -26,12 +25,11 @@ namespace Octopus.Tentacle.Commands
             Lazy<IWritableTentacleConfiguration> tentacleConfiguration,
             Lazy<IWritableHomeConfiguration> home,
             IOctopusFileSystem fileSystem,
-            ILog log,
+            ISystemLog log,
             IApplicationInstanceSelector selector)
-            : base(selector)
+            : base(selector, log)
         {
             this.tentacleConfiguration = tentacleConfiguration;
-            this.home = home;
             this.log = log;
 
             Options.Add("home=|homedir=", "Home directory", v => QueueOperation(delegate
