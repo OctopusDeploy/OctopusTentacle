@@ -8,14 +8,14 @@ namespace Octopus.Shared.Startup
     public class FileSystemCleaner
     {
         readonly IOctopusFileSystem fileSystem;
-        readonly ILog log;
+        readonly ISystemLog log;
 #if NETFX
         public const string PathsToDeleteOnStartupResource = "Octopus.Shared.Startup.PathsToDeleteOnStartup.netfx.txt";
 #else
         public const string PathsToDeleteOnStartupResource = "Octopus.Shared.Startup.PathsToDeleteOnStartup.core.txt";
 #endif
 
-        public FileSystemCleaner(IOctopusFileSystem fileSystem, ILog log)
+        public FileSystemCleaner(IOctopusFileSystem fileSystem, ISystemLog log)
         {
             this.fileSystem = fileSystem;
             this.log = log;

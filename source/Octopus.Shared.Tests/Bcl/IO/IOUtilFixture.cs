@@ -20,7 +20,7 @@ namespace Octopus.Shared.Tests.Bcl.IO
                 "IO",
                 filename);
 
-            var fs = new OctopusPhysicalFileSystem(Substitute.For<ILog>());
+            var fs = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             return IOUtil.SniffEncoding(fs, path);
         }
 

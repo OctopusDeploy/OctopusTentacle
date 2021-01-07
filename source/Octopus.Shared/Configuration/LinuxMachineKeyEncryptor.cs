@@ -8,9 +8,9 @@ namespace Octopus.Shared.Configuration
 {
     public class LinuxMachineKeyEncryptor : IMachineKeyEncryptor
     {
-        readonly ILog log;
+        readonly ISystemLog log;
 
-        public LinuxMachineKeyEncryptor(ILog log)
+        public LinuxMachineKeyEncryptor(ISystemLog log)
         {
             this.log = log;
         }
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Configuration
         {
             internal static string FileName = "/etc/octopus/machinekey";
 
-            static void Generate(ILog log)
+            static void Generate(ISystemLog log)
             {
                 log.Verbose("Machine key file does not yet exist. Generating key file that will be used to encrypt data on this machine");
                 var d = new RijndaelManaged();
@@ -72,7 +72,7 @@ namespace Octopus.Shared.Configuration
                 }
             }
 
-            public static (byte[] Key, byte[] IV) Load(ILog log)
+            public static (byte[] Key, byte[] IV) Load(ISystemLog log)
             {
                 if (!File.Exists(FileName))
                     Generate(log);

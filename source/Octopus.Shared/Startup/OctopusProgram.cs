@@ -286,7 +286,7 @@ namespace Octopus.Shared.Startup
             return (int)ExitCode.ControlledFailureException;
         }
 
-        static void CleanFileSystem(ILog log)
+        static void CleanFileSystem(ISystemLog log)
         {
             var fileSystem = new OctopusPhysicalFileSystem(log);
             var fileSystemCleaner = new FileSystemCleaner(fileSystem, log);
@@ -479,7 +479,7 @@ namespace Octopus.Shared.Startup
             return new ConsoleHost(displayName);
         }
 
-        static bool IsRunningAsAWindowsService(ILog log)
+        static bool IsRunningAsAWindowsService(ISystemLog log)
         {
             if (PlatformDetection.IsRunningOnMac || PlatformDetection.IsRunningOnNix)
                 return false;
@@ -526,7 +526,7 @@ namespace Octopus.Shared.Startup
 #endif
         }
 
-        static string[] ProcessCommonOptions(OptionSet commonOptions, string[] commandLineArguments, ILog log)
+        static string[] ProcessCommonOptions(OptionSet commonOptions, string[] commandLineArguments, ISystemLog log)
         {
             log.Trace("Processing common command-line options");
             return commonOptions.Parse(commandLineArguments).ToArray();

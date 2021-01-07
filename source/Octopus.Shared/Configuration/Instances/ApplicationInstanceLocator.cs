@@ -13,7 +13,7 @@ namespace Octopus.Shared.Configuration.Instances
         readonly string machineConfigurationHomeDirectory;
 
         public ApplicationInstanceLocator(ApplicationName applicationName,
-            ILog log,
+            ISystemLog log,
             IOctopusFileSystem fileSystem,
             IRegistryApplicationInstanceStore registryApplicationInstanceStore)
         {
@@ -29,7 +29,7 @@ namespace Octopus.Shared.Configuration.Instances
         }
 
         protected ApplicationName ApplicationName { get; }
-        protected ILog Log { get; }
+        protected ISystemLog Log { get; }
         protected IOctopusFileSystem FileSystem { get; }
         protected IRegistryApplicationInstanceStore RegistryApplicationInstanceStore { get; }
 

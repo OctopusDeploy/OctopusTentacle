@@ -14,7 +14,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public ApplicationInstanceStore(
             StartUpInstanceRequest startUpInstanceRequest,
-            ILog log,
+            ISystemLog log,
             IOctopusFileSystem fileSystem,
             IRegistryApplicationInstanceStore registryApplicationInstanceStore) : base(startUpInstanceRequest.ApplicationName, log, fileSystem, registryApplicationInstanceStore)
         {

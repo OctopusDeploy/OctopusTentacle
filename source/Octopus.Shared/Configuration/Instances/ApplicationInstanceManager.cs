@@ -8,12 +8,12 @@ namespace Octopus.Shared.Configuration.Instances
     class ApplicationInstanceManager : IApplicationInstanceManager
     {
         readonly IOctopusFileSystem fileSystem;
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly IApplicationInstanceStore instanceStore;
 
         public ApplicationInstanceManager(ApplicationName applicationName,
             IOctopusFileSystem fileSystem,
-            ILog log,
+            ISystemLog log,
             IApplicationInstanceStore instanceStore)
         {
             ApplicationName = applicationName;

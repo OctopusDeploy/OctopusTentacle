@@ -32,7 +32,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void EncryptsAndDecrypts()
         {
-            var lme = new LinuxMachineKeyEncryptor(Substitute.For<ILog>());
+            var lme = new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>());
             var encrypted = lme.Encrypt("FooBar");
             var decrypted = lme.Decrypt(encrypted);
             Assert.AreNotEqual(encrypted, "FooBar");
@@ -43,7 +43,7 @@ namespace Octopus.Shared.Tests.Configuration
         public void CorruptKeyThrowsException()
         {
             File.WriteAllText(tempKeyFileName, "IAMAKEY");
-            var lme = new LinuxMachineKeyEncryptor(Substitute.For<ILog>());
+            var lme = new LinuxMachineKeyEncryptor(Substitute.For<ISystemLog>());
             Assert.Throws<InvalidOperationException>(() => lme.Encrypt("FooBar"));
         }
     }

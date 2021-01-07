@@ -112,7 +112,7 @@ namespace Octopus.Shared.Tests.Configuration
                 host,
                 port);
             var parser = new ProxyConfigParser();
-            return new ProxyInitializer(config, parser, Substitute.For<ILog>());
+            return new ProxyInitializer(config, parser, Substitute.For<ISystemLog>());
         }
 
         class StubProxyConfiguration : IProxyConfiguration

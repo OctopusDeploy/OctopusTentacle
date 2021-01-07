@@ -4,7 +4,7 @@ using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Diagnostics
 {
-    public class DelayedLog : ILog
+    public class DelayedLog : ISystemLog
     {
         readonly List<Action<ILog>> actions = new List<Action<ILog>>();
 

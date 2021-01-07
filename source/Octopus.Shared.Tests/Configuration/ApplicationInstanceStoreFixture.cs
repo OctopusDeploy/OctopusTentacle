@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using FluentAssertions;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
@@ -25,7 +24,7 @@ namespace Octopus.Shared.Tests.Configuration
         {
             registryStore = Substitute.For<IRegistryApplicationInstanceStore>();
             fileSystem = Substitute.For<IOctopusFileSystem>();
-            var log = Substitute.For<ILog>();
+            var log = Substitute.For<ISystemLog>();
             instanceStore = new ApplicationInstanceStore(new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, "instance 1"), log, fileSystem, registryStore);
         }
 

@@ -9,7 +9,7 @@ namespace Octopus.Shared.Startup
 {
     public class WatchdogCommand : AbstractCommand
     {
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly ApplicationName applicationName;
         readonly Lazy<IWatchdog> watchdog;
         readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
@@ -19,7 +19,7 @@ namespace Octopus.Shared.Startup
         HashSet<string> instances = new HashSet<string> { "*" };
 
         public WatchdogCommand(
-            ILog log,
+            ISystemLog log,
             ApplicationName applicationName,
             Lazy<IWatchdog> watchdog,
             IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker)

@@ -11,11 +11,11 @@ namespace Octopus.Shared.Services
 {
     public class Watchdog : IWatchdog
     {
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly string taskName;
         readonly string argsPrefix = "checkservices --instances ";
 
-        public Watchdog(ApplicationName applicationName, ILog log)
+        public Watchdog(ApplicationName applicationName, ISystemLog log)
         {
             taskName = "Octopus Watchdog " + applicationName;
             this.log = log;

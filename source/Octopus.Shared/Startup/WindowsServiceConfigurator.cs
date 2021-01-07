@@ -13,12 +13,12 @@ namespace Octopus.Shared.Startup
 {
     public class WindowsServiceConfigurator : IServiceConfigurator
     {
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly ILogFileOnlyLogger logFileOnlyLogger;
         readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
 
         public WindowsServiceConfigurator(
-            ILog log,
+            ISystemLog log,
             ILogFileOnlyLogger logFileOnlyLogger,
             IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker)
         {

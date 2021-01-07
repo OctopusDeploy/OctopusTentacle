@@ -12,13 +12,13 @@ namespace Octopus.Shared.Startup
 {
     public class CheckServicesCommand : AbstractCommand
     {
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly IApplicationInstanceLocator instanceLocator;
         readonly ApplicationName applicationName;
         internal HashSet<string>? instances;
         readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
 
-        public CheckServicesCommand(ILog log,
+        public CheckServicesCommand(ISystemLog log,
             IApplicationInstanceLocator instanceLocator,
             ApplicationName applicationName,
             IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker)

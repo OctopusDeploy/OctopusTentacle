@@ -10,10 +10,10 @@ namespace Octopus.Shared.Startup
 {
     public class LinuxServiceConfigurator : IServiceConfigurator
     {
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly SystemCtlHelper systemCtlHelper;
 
-        public LinuxServiceConfigurator(ILog log)
+        public LinuxServiceConfigurator(ISystemLog log)
         {
             this.log = log;
             systemCtlHelper = new SystemCtlHelper(log);

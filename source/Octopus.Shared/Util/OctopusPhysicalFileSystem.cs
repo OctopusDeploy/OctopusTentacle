@@ -66,12 +66,12 @@ namespace Octopus.Shared.Util
             '/'
         };
 
-        public OctopusPhysicalFileSystem(ILog log)
+        public OctopusPhysicalFileSystem(ISystemLog log)
         {
             Log = log;
         }
 
-        ILog Log { get; }
+        ISystemLog Log { get; }
 
         public bool FileExists(string path)
             => File.Exists(path);

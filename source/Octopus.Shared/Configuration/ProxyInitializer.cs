@@ -9,9 +9,9 @@ namespace Octopus.Shared.Configuration
     {
         readonly IProxyConfiguration proxyConfiguration;
         readonly IProxyConfigParser configParser;
-        readonly ILog log;
+        readonly ISystemLog log;
 
-        public ProxyInitializer(IProxyConfiguration proxyConfiguration, IProxyConfigParser configParser, ILog log)
+        public ProxyInitializer(IProxyConfiguration proxyConfiguration, IProxyConfigParser configParser, ISystemLog log)
         {
             this.proxyConfiguration = proxyConfiguration;
             this.configParser = configParser;

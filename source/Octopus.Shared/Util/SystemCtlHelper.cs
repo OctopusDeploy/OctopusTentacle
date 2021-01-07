@@ -5,9 +5,9 @@ namespace Octopus.Shared.Util
 {
     public class SystemCtlHelper
     {
-        readonly ILog log;
+        readonly ISystemLog log;
 
-        public SystemCtlHelper(ILog log)
+        public SystemCtlHelper(ISystemLog log)
         {
             this.log = log;
         }

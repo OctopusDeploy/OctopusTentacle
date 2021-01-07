@@ -18,7 +18,7 @@ namespace Octopus.Shared.Tests.Configuration
         protected RoundTripTestBaseFixture()
         {
             ConfigurationFile = Path.GetTempFileName();
-            FileSystem = new OctopusPhysicalFileSystem(Substitute.For<ILog>());
+            FileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
         }
 
         protected byte[] EncryptedValue { get; set; }

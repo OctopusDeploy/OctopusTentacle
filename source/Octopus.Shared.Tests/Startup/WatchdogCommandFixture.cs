@@ -22,7 +22,7 @@ namespace Octopus.Shared.Tests.Startup
         public void Setup()
         {
             windowsLocalAdminRightsChecker = Substitute.For<IWindowsLocalAdminRightsChecker>();
-            var log = Substitute.For<ILog>();
+            var log = Substitute.For<ISystemLog>();
             var watchdog = new Lazy<IWatchdog>(() => Substitute.For<IWatchdog>());
 
             command = new WatchdogCommand(log, ApplicationName.OctopusServer, watchdog, windowsLocalAdminRightsChecker);
