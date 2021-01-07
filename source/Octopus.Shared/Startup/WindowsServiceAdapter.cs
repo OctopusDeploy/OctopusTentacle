@@ -11,12 +11,14 @@ namespace Octopus.Shared.Startup
     {
         readonly Action execute;
         readonly Action shutdown;
+        readonly ISystemLog systemLog;
         Thread? workerThread;
 
-        public WindowsServiceAdapter(Action execute, Action shutdown)
+        public WindowsServiceAdapter(Action execute, Action shutdown, ISystemLog systemLog)
         {
             this.execute = execute;
             this.shutdown = shutdown;
+            this.systemLog = systemLog;
         }
 
         protected override void OnStart(string[] args)
@@ -46,12 +48,12 @@ namespace Octopus.Shared.Startup
                 if (ExceptionKnowledgeBase.TryInterpret(ex, out var entry))
                 {
                     var message = entry.ToString();
-                    Log.System().Error(ex, message);
+                    systemLog.Error(ex, message);
                     throw new Exception(message, ex) { HelpLink = entry.HelpLink };
                 }
 
-                Log.System().Fatal(ex);
-                Log.System().Flush();
+                systemLog.Fatal(ex);
+                systemLog.Flush();
 
                 throw;
             }

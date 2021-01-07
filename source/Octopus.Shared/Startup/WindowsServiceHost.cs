@@ -1,13 +1,17 @@
 using System;
 using System.ServiceProcess;
-using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup
 {
     public class WindowsServiceHost : ICommandHost, ICommandRuntime
     {
-        readonly ILog log = Log.System();
+        readonly ISystemLog log;
+
+        public WindowsServiceHost(ISystemLog log)
+        {
+            this.log = log;
+        }
 
         public void Run(Action<ICommandRuntime> start, Action shutdown)
         {
@@ -20,7 +24,7 @@ namespace Octopus.Shared.Startup
                 log.Info("The Windows Service has started");
             });
 
-            var adapter = new WindowsServiceAdapter(startService, () => Stop(shutdown));
+            var adapter = new WindowsServiceAdapter(startService, () => Stop(shutdown), log);
 
             log.Trace("Running the service host adapter");
             ServiceBase.Run(adapter);

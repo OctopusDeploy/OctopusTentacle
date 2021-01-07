@@ -14,19 +14,17 @@ namespace Octopus.Shared.Security.Certificates
 {
     public static class CertificateEncoder
     {
-        static readonly ILog Log = Diagnostics.Log.System();
-
-        public static X509Certificate2 FromPfxFile(string pfxFilePath, string password)
+        public static X509Certificate2 FromPfxFile(string pfxFilePath, string password, ILog log)
         {
             X509Certificate2Collection certificates = new X509Certificate2Collection();
             if (string.IsNullOrEmpty(password))
             {
-                Log.Info($"Importing the certificate stored in PFX file in {pfxFilePath}...");
+                log.Info($"Importing the certificate stored in PFX file in {pfxFilePath}...");
                 certificates.Import(pfxFilePath, string.Empty, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
             else
             {
-                Log.Info($"Importing the certificate stored in PFX file in {pfxFilePath} using the provided password...");
+                log.Info($"Importing the certificate stored in PFX file in {pfxFilePath} using the provided password...");
                 certificates.Import(pfxFilePath, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
 
@@ -34,11 +32,11 @@ namespace Octopus.Shared.Security.Certificates
                 throw new Exception($"The PFX file ({pfxFilePath}) does not contain any certificates.");
 
             if (certificates.Count > 1)
-                Log.Info($"PFX file {pfxFilePath} contains multiple certificates, taking the first one.");
+                log.Info($"PFX file {pfxFilePath} contains multiple certificates, taking the first one.");
 
             var x509Certificate = certificates[0];
 
-            if (CheckThatCertificateWasLoadedWithPrivateKey(x509Certificate) == false)
+            if (CheckThatCertificateWasLoadedWithPrivateKey(x509Certificate, log) == false)
                 throw new CryptographicException("Unable to load X509 Certificate file. The X509 certificate file you provided does not include the private key. Please make sure the private key is included in your X509 certificate file and try again.");
 
             return x509Certificate;
@@ -69,13 +67,13 @@ namespace Octopus.Shared.Security.Certificates
             return encoded;
         }
 
-        public static X509Certificate2 FromBase64String(string certificateString)
-            => FromBase64String(null, certificateString, null);
+        public static X509Certificate2 FromBase64String(string certificateString, ILog log)
+            => FromBase64String(null, certificateString, null, log);
 
-        public static X509Certificate2 FromBase64String(string thumbprint, string certificateString)
-            => FromBase64String(thumbprint, certificateString, null);
+        public static X509Certificate2 FromBase64String(string thumbprint, string certificateString, ILog log)
+            => FromBase64String(thumbprint, certificateString, null, log);
 
-        public static X509Certificate2 FromBase64String(string? thumbprint, string certificateString, string? password)
+        public static X509Certificate2 FromBase64String(string? thumbprint, string certificateString, string? password, ILog log)
         {
             if (certificateString == null) throw new ArgumentNullException(nameof(certificateString));
             var store = new X509Store(PlatformDetection.IsRunningOnWindows ? "Octopus" : "My", StoreLocation.CurrentUser);
@@ -85,17 +83,17 @@ namespace Octopus.Shared.Security.Certificates
             {
                 if (thumbprint != null)
                 {
-                    Log.Verbose("Loading certificate with thumbprint: " + thumbprint);
+                    log.Verbose("Loading certificate with thumbprint: " + thumbprint);
 
-                    var certificateFromStore = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false).OfType<X509Certificate2>().FirstOrDefault(CheckThatCertificateWasLoadedWithPrivateKey);
+                    var certificateFromStore = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false).OfType<X509Certificate2>().FirstOrDefault(c => CheckThatCertificateWasLoadedWithPrivateKey(c, log));
                     if (certificateFromStore != null)
                     {
-                        Log.Verbose("Certificate was found in store");
+                        log.Verbose("Certificate was found in store");
                         return certificateFromStore;
                     }
                 }
 
-                Log.Verbose("Loading certificate from disk");
+                log.Verbose("Loading certificate from disk");
                 var raw = Convert.FromBase64String(certificateString);
                 var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
 
@@ -104,7 +102,7 @@ namespace Octopus.Shared.Security.Certificates
                     File.WriteAllBytes(file, raw);
 
                     var certificate = LoadCertificateWithPrivateKey(file, password);
-                    if (CheckThatCertificateWasLoadedWithPrivateKey(certificate) == false)
+                    if (CheckThatCertificateWasLoadedWithPrivateKey(certificate, log) == false)
                         certificate = LoadCertificateWithPrivateKey(file, password);
 
                     if (certificate == null)
@@ -134,7 +132,7 @@ namespace Octopus.Shared.Security.Certificates
                 ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, false)
                 ?? throw new InvalidOperationException($"Unable to load certificate from file {file}");
 
-        static bool CheckThatCertificateWasLoadedWithPrivateKey(X509Certificate2 certificate)
+        static bool CheckThatCertificateWasLoadedWithPrivateKey(X509Certificate2 certificate, ILog log)
         {
             try
             {
@@ -168,7 +166,7 @@ namespace Octopus.Shared.Security.Certificates
                         message.AppendLine("Furthermore, the private key file could not be located: " + ex.Message);
                     }
 
-                    Log.Warn(message.ToString().Trim());
+                    log.Warn(message.ToString().Trim());
 
                     return false;
                 }
@@ -177,7 +175,7 @@ namespace Octopus.Shared.Security.Certificates
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
+                log.Warn(ex);
                 return false;
             }
         }

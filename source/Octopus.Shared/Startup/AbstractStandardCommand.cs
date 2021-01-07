@@ -1,21 +1,21 @@
 using System;
-using Octopus.Diagnostics;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
 
 namespace Octopus.Shared.Startup
 {
     public abstract class AbstractStandardCommand : AbstractCommand
     {
-        protected static readonly ILog Log = Diagnostics.Log.System();
-
         readonly IApplicationInstanceSelector instanceSelector;
+        readonly ISystemLog log;
 
         bool voteForRestart;
 
-        protected AbstractStandardCommand(IApplicationInstanceSelector instanceSelector)
+        protected AbstractStandardCommand(IApplicationInstanceSelector instanceSelector, ISystemLog log)
         {
             this.instanceSelector = instanceSelector;
+            this.log = log;
 
             // The instance is actually parsed from the command-line as early as possible when the program starts to make sure logs end up in the most appropriate folder for the instance
             // See OctopusProgram.TryLoadInstanceName()
@@ -45,7 +45,7 @@ namespace Octopus.Shared.Startup
             if (voteForRestart)
             {
                 var applicationName = instanceSelector.GetCurrentName() != null ? instanceSelector.ApplicationName.ToString() : "service";
-                Log.Warn($"These changes require a restart of the {applicationName}.");
+                log.Warn($"These changes require a restart of the {applicationName}.");
             }
         }
 

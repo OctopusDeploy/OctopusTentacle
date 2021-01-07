@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 
 namespace Octopus.Shared.Tests.Configuration
@@ -30,7 +32,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void EncryptsAndDecrypts()
         {
-            var lme = new LinuxMachineKeyEncryptor();
+            var lme = new LinuxMachineKeyEncryptor(Substitute.For<ILog>());
             var encrypted = lme.Encrypt("FooBar");
             var decrypted = lme.Decrypt(encrypted);
             Assert.AreNotEqual(encrypted, "FooBar");
@@ -41,7 +43,7 @@ namespace Octopus.Shared.Tests.Configuration
         public void CorruptKeyThrowsException()
         {
             File.WriteAllText(tempKeyFileName, "IAMAKEY");
-            var lme = new LinuxMachineKeyEncryptor();
+            var lme = new LinuxMachineKeyEncryptor(Substitute.For<ILog>());
             Assert.Throws<InvalidOperationException>(() => lme.Encrypt("FooBar"));
         }
     }

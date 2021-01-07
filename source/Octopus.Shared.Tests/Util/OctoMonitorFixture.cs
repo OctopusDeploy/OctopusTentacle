@@ -26,7 +26,7 @@ namespace Octopus.Shared.Tests.Util
         [TearDown]
         public void TearDown()
         {
-            OctoMonitor.SystemLog = Log.System();
+            OctoMonitor.SystemLog = new SystemLog();
             OctoMonitor.InitialAcquisitionAttemptTimeout = OctoMonitor.DefaultInitialAcquisitionAttemptTimeout;
             OctoMonitor.WaitBetweenAcquisitionAttempts = OctoMonitor.DefaultWaitBetweenAcquisitionAttempts;
         }

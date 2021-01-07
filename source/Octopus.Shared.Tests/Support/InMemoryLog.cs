@@ -9,7 +9,7 @@ using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Tests.Support
 {
-    public class InMemoryLog : AbstractLog
+    public class InMemoryLog : SystemLog
     {
         readonly ILog log;
         readonly BlockingCollection<LogEvent> events = new BlockingCollection<LogEvent>(1000);
@@ -18,7 +18,7 @@ namespace Octopus.Shared.Tests.Support
         {
         }
 
-        public InMemoryLog(ILog log) : base(new SensitiveValueMasker())
+        public InMemoryLog(ILog log)
         {
             this.log = log ?? new TestConsoleLog(new SensitiveValueMasker());
         }

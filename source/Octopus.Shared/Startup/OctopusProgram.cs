@@ -37,7 +37,7 @@ namespace Octopus.Shared.Startup
         static readonly string StdOutTargetName = "stdout";
         static readonly string StdErrTargetName = "stderr";
 
-        readonly ILog log = Log.System();
+        readonly ISystemLog log = new SystemLog();
         readonly string displayName;
         readonly string version;
         readonly string informationalVersion;
@@ -82,7 +82,7 @@ namespace Octopus.Shared.Startup
 
             // Initialize logging as soon as possible - waiting for the Container to be built is too late
             InitializeLogging();
-            delayedLog.FlushTo(Log.System());
+            delayedLog.FlushTo(log);
 
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
@@ -306,7 +306,7 @@ namespace Octopus.Shared.Startup
             LogManager.ThrowConfigExceptions = true;
             LogManager.Configuration = new XmlLoggingConfiguration(nLogFile);
 #endif
-            Log.Appenders.Add(new NLogAppender());
+            SystemLog.Appenders.Add(new NLogAppender());
             AssertLoggingConfigurationIsCorrect();
         }
 
@@ -436,7 +436,7 @@ namespace Octopus.Shared.Startup
 
         static ICommandHost SelectMostAppropriateHost(ICommand command,
             string displayName,
-            ILog log,
+            ISystemLog log,
             bool forceConsoleHost,
             bool forceNoninteractiveHost,
             string? monitorMutexHost)
@@ -448,7 +448,7 @@ namespace Octopus.Shared.Startup
             if (!string.IsNullOrEmpty(monitorMutexHost))
             {
                 log.Trace("The --monitorMutex switch was provided for a supported command");
-                return new MutexHost(monitorMutexHost);
+                return new MutexHost(monitorMutexHost, log);
             }
 
             if (forceNoninteractiveHost && commandSupportsConsoleSwitch)
@@ -472,7 +472,7 @@ namespace Octopus.Shared.Startup
             if (IsRunningAsAWindowsService(log))
             {
                 log.Trace("The program is not running interactively; using a Windows Service host");
-                return new WindowsServiceHost();
+                return new WindowsServiceHost(log);
             }
 
             log.Trace("The program is running interactively; using a console host");

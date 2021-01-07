@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Octopus.Diagnostics;
+using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Util
 {
@@ -13,7 +14,7 @@ namespace Octopus.Shared.Util
         public static TimeSpan InitialAcquisitionAttemptTimeout = DefaultInitialAcquisitionAttemptTimeout;
         public static TimeSpan WaitBetweenAcquisitionAttempts = DefaultWaitBetweenAcquisitionAttempts;
 
-        public static ILog SystemLog = Diagnostics.Log.System();
+        public static ISystemLog SystemLog = new SystemLog();
 
         public static IDisposable Enter(object obj, CancellationToken cancellationToken, ILog log)
             => Enter(obj, null, cancellationToken, log);
@@ -27,7 +28,7 @@ namespace Octopus.Shared.Util
             if (TryAcquire(obj, InitialAcquisitionAttemptTimeout, out var mutexReleaser))
             {
                 SystemLog.Trace($"Acquired monitor {obj}");
-                return new OctoMonitorReleaser(obj);
+                return new OctoMonitorReleaser(obj, SystemLog);
             }
 
             // Go into an acquisition loop supporting cooperative cancellation
@@ -56,7 +57,7 @@ namespace Octopus.Shared.Util
                 if (lockTaken)
                 {
                     SystemLog.Trace($"Acquired monitor {obj}");
-                    mutexReleaser = new OctoMonitorReleaser(obj);
+                    mutexReleaser = new OctoMonitorReleaser(obj, SystemLog);
                     return true;
                 }
             }
@@ -79,10 +80,12 @@ namespace Octopus.Shared.Util
         class OctoMonitorReleaser : IDisposable
         {
             readonly object obj;
+            readonly ISystemLog log;
 
-            public OctoMonitorReleaser(object obj)
+            public OctoMonitorReleaser(object obj, ISystemLog log)
             {
                 this.obj = obj;
+                this.log = log;
             }
 
             public void Dispose()
@@ -93,10 +96,10 @@ namespace Octopus.Shared.Util
                 }
                 catch (Exception ex)
                 {
-                    Diagnostics.Log.System().Warn(ex, $"Exception thrown while releasing monitor {obj}");
+                    log.Warn(ex, $"Exception thrown while releasing monitor {obj}");
                 }
 
-                Diagnostics.Log.System().Trace($"Released monitor {obj}");
+                log.Trace($"Released monitor {obj}");
             }
         }
     }

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Util
 {
     public class CommandLineRunner : ICommandLineRunner
     {
-        public bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations, ILog log)
+        public bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations, ISystemLog log)
         {
             foreach (var invocation in commandLineInvocations)
                 if (!Execute(invocation, log))
@@ -16,9 +15,9 @@ namespace Octopus.Shared.Util
             return true;
         }
 
-        public bool Execute(CommandLineInvocation invocation, ILog log)
+        public bool Execute(CommandLineInvocation invocation, ISystemLog log)
             => Execute(invocation,
-                Log.System().Info,
+                log.Info,
                 log.Info,
                 log.Error,
                 log.Error);

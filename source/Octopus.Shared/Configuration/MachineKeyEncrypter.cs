@@ -1,4 +1,5 @@
 ﻿using System;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration
@@ -9,7 +10,7 @@ namespace Octopus.Shared.Configuration
 
         static MachineKeyEncrypter()
         {
-            Current = PlatformDetection.IsRunningOnWindows ? (IMachineKeyEncryptor)new WindowsMachineKeyEncryptor() : new LinuxMachineKeyEncryptor();
+            Current = PlatformDetection.IsRunningOnWindows ? (IMachineKeyEncryptor)new WindowsMachineKeyEncryptor() : new LinuxMachineKeyEncryptor(new SystemLog());
         }
 
         MachineKeyEncrypter()

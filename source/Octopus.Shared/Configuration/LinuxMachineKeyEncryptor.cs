@@ -2,15 +2,22 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using Octopus.Shared.Diagnostics;
+using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {
     public class LinuxMachineKeyEncryptor : IMachineKeyEncryptor
     {
+        readonly ILog log;
+
+        public LinuxMachineKeyEncryptor(ILog log)
+        {
+            this.log = log;
+        }
+
         public string Encrypt(string raw)
         {
-            var (key, iv) = LinuxMachineKey.Load();
+            var (key, iv) = LinuxMachineKey.Load(log);
             using (var rijandel = new RijndaelManaged())
             using (var enc = rijandel.CreateEncryptor(key, iv))
             {
@@ -22,7 +29,7 @@ namespace Octopus.Shared.Configuration
 
         public string Decrypt(string encrypted)
         {
-            var (key, iv) = LinuxMachineKey.Load();
+            var (key, iv) = LinuxMachineKey.Load(log);
             using (var rijandel = new RijndaelManaged())
             using (var dec = rijandel.CreateDecryptor(key, iv))
             {
@@ -36,9 +43,9 @@ namespace Octopus.Shared.Configuration
         {
             internal static string FileName = "/etc/octopus/machinekey";
 
-            static void Generate()
+            static void Generate(ILog log)
             {
-                Log.System().Verbose("Machine key file does not yet exist. Generating key file that will be used to encrypt data on this machine");
+                log.Verbose("Machine key file does not yet exist. Generating key file that will be used to encrypt data on this machine");
                 var d = new RijndaelManaged();
                 d.GenerateIV();
                 d.GenerateKey();
@@ -65,10 +72,10 @@ namespace Octopus.Shared.Configuration
                 }
             }
 
-            public static (byte[] Key, byte[] IV) Load()
+            public static (byte[] Key, byte[] IV) Load(ILog log)
             {
                 if (!File.Exists(FileName))
-                    Generate();
+                    Generate(log);
                 return LoadFromFile();
             }
         }

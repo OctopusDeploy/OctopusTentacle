@@ -1,18 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Diagnostics
 {
-    public class Log : AbstractLog
+    public abstract class Log : AbstractLog
     {
         public static ConcurrentBag<ILogAppender> Appenders { get; } = new ConcurrentBag<ILogAppender>();
 
-        public Log() : base(new SensitiveValueMasker())
+        protected Log() : base(new SensitiveValueMasker())
         {
         }
-
         protected override string CorrelationId => "system/" + Environment.MachineName;
 
         protected override void WriteEvent(LogEvent logEvent)

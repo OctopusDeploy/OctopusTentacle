@@ -3,7 +3,9 @@ using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using FluentAssertions;
+using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Security.Certificates;
 
 namespace Octopus.Shared.Tests.Security.Certificates
@@ -18,7 +20,7 @@ namespace Octopus.Shared.Tests.Security.Certificates
             var pfxFilePath = GetPfxFilePath("TestCertificateWithPassword.pfx");
 
             // When
-            var cert = CertificateEncoder.FromPfxFile(pfxFilePath, "Password01!");
+            var cert = CertificateEncoder.FromPfxFile(pfxFilePath, "Password01!", Substitute.For<ILog>());
 
             // Then
             try
@@ -37,7 +39,7 @@ namespace Octopus.Shared.Tests.Security.Certificates
         {
             // Given
             var pfxFilePath = GetPfxFilePath("TestCertificateWithPassword.pfx");
-            Action action = () => CertificateEncoder.FromPfxFile(pfxFilePath, "");
+            Action action = () => CertificateEncoder.FromPfxFile(pfxFilePath, "", Substitute.For<ILog>());
 
             try
             {
@@ -56,7 +58,7 @@ namespace Octopus.Shared.Tests.Security.Certificates
             var pfxFilePath = GetPfxFilePath("TestCertificateNoPassword.pfx");
 
             // When
-            var cert = CertificateEncoder.FromPfxFile(pfxFilePath, "");
+            var cert = CertificateEncoder.FromPfxFile(pfxFilePath, "", Substitute.For<ILog>());
 
             // Then
             try
@@ -75,7 +77,7 @@ namespace Octopus.Shared.Tests.Security.Certificates
             // Given
             var pfxFilePath = GetPfxFilePath("TestCertificateNoPrivateKey.pfx");
 
-            Action action = () => CertificateEncoder.FromPfxFile(pfxFilePath, "Password01!");
+            Action action = () => CertificateEncoder.FromPfxFile(pfxFilePath, "Password01!", Substitute.For<ILog>());
 
             try
             {

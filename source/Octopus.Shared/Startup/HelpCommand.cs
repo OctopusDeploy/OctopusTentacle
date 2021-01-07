@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
-using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Util;
@@ -16,13 +15,14 @@ namespace Octopus.Shared.Startup
         static readonly string TextFormat = "text";
         static readonly string JsonFormat = "json";
         static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
-        readonly ILog log = Log.System();
 
         readonly ICommandLocator commands;
+        readonly ISystemLog log;
 
-        public HelpCommand(ICommandLocator commands)
+        public HelpCommand(ICommandLocator commands, ISystemLog log)
         {
             this.commands = commands;
+            this.log = log;
 
             Options.Add("format=", $"The format of the output ({string.Join(",", SupportedFormats)}). Defaults to {Format}.", v => Format = v);
         }

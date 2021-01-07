@@ -3,7 +3,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Startup
@@ -17,16 +16,16 @@ namespace Octopus.Shared.Startup
             (int)OctopusProgram.ExitCode.ControlledFailureException
         };
 
-        readonly ILog log = Log.System();
-
         readonly string monitorMutexHost;
+        readonly ISystemLog log;
         readonly CancellationTokenSource sourceToken = new CancellationTokenSource();
         readonly ManualResetEventSlim shutdownTrigger = new ManualResetEventSlim(false);
         Task? task;
 
-        public MutexHost(string monitorMutexHost)
+        public MutexHost(string monitorMutexHost, ISystemLog log)
         {
             this.monitorMutexHost = monitorMutexHost;
+            this.log = log;
         }
 
         public void Run(Action<ICommandRuntime> start, Action shutdown)
