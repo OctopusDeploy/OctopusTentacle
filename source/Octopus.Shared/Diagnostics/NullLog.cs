@@ -3,7 +3,7 @@ using Octopus.Diagnostics;
 
 namespace Octopus.Shared.Diagnostics
 {
-    public class NullLog : ILog
+    public class NullLog : ISystemLog
     {
         public void Trace(string messageText)
         {
