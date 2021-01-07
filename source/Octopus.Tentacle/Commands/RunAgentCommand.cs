@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IHomeConfiguration> home;
         readonly Lazy<IProxyConfiguration> proxyConfiguration;
         readonly ISleep sleep;
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly IApplicationInstanceSelector selector;
         readonly Lazy<IProxyInitializer> proxyInitializer;
         readonly AppVersion appVersion;
@@ -38,10 +38,10 @@ namespace Octopus.Tentacle.Commands
             Lazy<IHomeConfiguration> home,
             Lazy<IProxyConfiguration> proxyConfiguration,
             ISleep sleep,
-            ILog log,
+            ISystemLog log,
             IApplicationInstanceSelector selector,
             Lazy<IProxyInitializer> proxyInitializer,
-            AppVersion appVersion) : base(selector)
+            AppVersion appVersion) : base(selector, log)
         {
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.halibut = halibut;
@@ -89,7 +89,7 @@ namespace Octopus.Tentacle.Commands
             }
             catch (CryptographicException cx)
             {
-                Log.Error($"The owner of the x509stores is not the current user, please change ownership of the x509stores directory or run with sudo. Details: {cx.Message}");
+                log.Error($"The owner of the x509stores is not the current user, please change ownership of the x509stores directory or run with sudo. Details: {cx.Message}");
                 return;
             }
 

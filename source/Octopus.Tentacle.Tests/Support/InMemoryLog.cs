@@ -2,27 +2,22 @@ using System;
 using System.Text;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
-using AbstractLog = Octopus.Tentacle.Diagnostics.AbstractLog;
-using Log = Octopus.Tentacle.Diagnostics.Log;
-using LogEvent = Octopus.Tentacle.Diagnostics.LogEvent;
 
 namespace Octopus.Tentacle.Tests.Support
 {
-    public class InMemoryLog : AbstractLog
+    public class InMemoryLog : SystemLog
     {
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly StringBuilder logText = new StringBuilder();
 
         public InMemoryLog() : this(null)
         {
         }
 
-        public InMemoryLog(ILog log)
+        public InMemoryLog(ISystemLog log)
         {
-            this.log = log ?? Log.Octopus();
+            this.log = log ?? new SystemLog();
         }
-
-        public override ILogContext CurrentContext => new LogContext();
 
         protected override void WriteEvent(LogEvent logEvent)
         {

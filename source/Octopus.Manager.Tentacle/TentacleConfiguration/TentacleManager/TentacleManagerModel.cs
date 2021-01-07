@@ -7,7 +7,7 @@ using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Security;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Configuration;
 
@@ -152,7 +152,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                 keyStore,
                 new HomeConfiguration(ApplicationName.Tentacle, keyStore),
                 new ProxyConfiguration(keyStore),
-                new PollingProxyConfiguration(keyStore)
+                new PollingProxyConfiguration(keyStore),
+                new SystemLog()
             );
 
             pollsServers = false;

@@ -16,13 +16,13 @@ namespace Octopus.Tentacle.Commands
     public class ImportCertificateCommand : AbstractStandardCommand
     {
         readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
-        readonly ILog log;
+        readonly ISystemLog log;
         bool fromRegistry;
         string importFile;
         string importPfxPassword;
 
-        public ImportCertificateCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ILog log, IApplicationInstanceSelector selector)
-            : base(selector)
+        public ImportCertificateCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector)
+            : base(selector, log)
         {
             this.tentacleConfiguration = tentacleConfiguration;
             this.log = log;
@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Commands
                 {
                     throw new ControlledFailureException("No Octopus 1.x Tentacle certificate was found.");
                 }
-                x509Certificate = CertificateEncoder.FromBase64String(encoded);
+                x509Certificate = CertificateEncoder.FromBase64String(encoded, log);
             }
             else if (!string.IsNullOrWhiteSpace(importFile))
             {
@@ -67,16 +67,16 @@ namespace Octopus.Tentacle.Commands
                     {
                         log.Info($"Importing the certificate stored in {importFile}...");
                         var encoded = File.ReadAllText(importFile, Encoding.UTF8);
-                        x509Certificate = CertificateEncoder.FromBase64String(encoded);
+                        x509Certificate = CertificateEncoder.FromBase64String(encoded, log);
                     }
                     catch (FormatException)
                     {
-                        x509Certificate = CertificateEncoder.FromPfxFile(importFile, importPfxPassword);
+                        x509Certificate = CertificateEncoder.FromPfxFile(importFile, importPfxPassword, log);
                     }
                 }
                 else
                 {
-                    x509Certificate = CertificateEncoder.FromPfxFile(importFile, importPfxPassword);
+                    x509Certificate = CertificateEncoder.FromPfxFile(importFile, importPfxPassword, log);
                 }
             }
 

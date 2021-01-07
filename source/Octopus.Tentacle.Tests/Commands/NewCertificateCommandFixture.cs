@@ -13,14 +13,14 @@ namespace Octopus.Tentacle.Tests.Commands
     public class NewCertificateCommandFixture : CommandFixture<NewCertificateCommand>
     {
         StubTentacleConfiguration configuration;
-        ILog log;
+        ISystemLog log;
 
         [SetUp]
         public override void SetUp()
         {
             base.SetUp();
 
-            log = Substitute.For<ILog>();
+            log = Substitute.For<ISystemLog>();
             configuration = new StubTentacleConfiguration();
             Command = new NewCertificateCommand(new Lazy<IWritableTentacleConfiguration>(() => configuration), log, Substitute.For<IApplicationInstanceSelector>(), new Lazy<ICertificateGenerator>(() => Substitute.For<ICertificateGenerator>()));
         }

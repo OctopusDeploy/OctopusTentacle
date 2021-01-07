@@ -30,6 +30,7 @@ namespace Octopus.Tentacle.Configuration
         readonly IHomeConfiguration home;
         readonly IProxyConfiguration proxyConfiguration;
         readonly IPollingProxyConfiguration pollingProxyConfiguration;
+        readonly ISystemLog log;
 
         // these are held in memory for when running without a config file.
         protected static X509Certificate2? CachedCertificate;
@@ -39,12 +40,14 @@ namespace Octopus.Tentacle.Configuration
             IKeyValueStore settings,
             IHomeConfiguration home,
             IProxyConfiguration proxyConfiguration,
-            IPollingProxyConfiguration pollingProxyConfiguration)
+            IPollingProxyConfiguration pollingProxyConfiguration,
+            ISystemLog log)
         {
             this.settings = settings;
             this.home = home;
             this.proxyConfiguration = proxyConfiguration;
             this.pollingProxyConfiguration = pollingProxyConfiguration;
+            this.log = log;
         }
 
         [Obsolete("This configuration entry is obsolete as of 3.0. It is only used as a Subscription ID where one does not exist.")]
@@ -107,7 +110,7 @@ namespace Octopus.Tentacle.Configuration
 
                 var thumbprint = settings.Get<string>(CertificateThumbprintSettingName);
                 var encoded = settings.Get<string>(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
-                return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint, encoded);
+                return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint, encoded, log);
             }
         }
 
@@ -141,7 +144,7 @@ namespace Octopus.Tentacle.Configuration
             ICertificateGenerator certificateGenerator,
             IProxyConfiguration proxyConfiguration,
             IPollingProxyConfiguration pollingProxyConfiguration,
-            ILog log) : base(settings, home, proxyConfiguration, pollingProxyConfiguration)
+            ISystemLog log) : base(settings, home, proxyConfiguration, pollingProxyConfiguration, log)
         {
             this.settings = settings;
             this.certificateGenerator = certificateGenerator;

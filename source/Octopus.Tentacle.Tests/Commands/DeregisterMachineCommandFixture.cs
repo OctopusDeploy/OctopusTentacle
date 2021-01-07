@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class DeregisterMachineCommandFixture : CommandFixture<DeregisterMachineCommand>
     {
-        ILog log;
+        ISystemLog log;
         IProxyConfigParser proxyConfig;
         IOctopusAsyncRepository asyncRepository;
         [SetUp]
@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Commands
             base.SetUp();
             asyncRepository = Substitute.For<IOctopusAsyncRepository>();
             proxyConfig = Substitute.For<IProxyConfigParser>();
-            log = Substitute.For<ILog>();
+            log = Substitute.For<ISystemLog>();
         }
 
         [Test]
@@ -44,9 +44,9 @@ namespace Octopus.Tentacle.Tests.Commands
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
                 TentacleCertificate = new CertificateGenerator().GenerateNew($"CN={Guid.NewGuid()}", new Shared.Diagnostics.NullLog())
             };
-            Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration), 
-                                                   log, 
-                                                   Substitute.For<IApplicationInstanceSelector>(), 
+            Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
+                                                   log,
+                                                   Substitute.For<IApplicationInstanceSelector>(),
                                                    proxyConfig,
                                                    Substitute.For<IOctopusClientInitializer>(),
                                                    new SpaceRepositoryFactory());
@@ -74,10 +74,10 @@ namespace Octopus.Tentacle.Tests.Commands
             };
 
             Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
-                                                   log, 
+                                                   log,
                                                    Substitute.For<IApplicationInstanceSelector>(),
                                                    proxyConfig,
-                                                   Substitute.For<IOctopusClientInitializer>(), 
+                                                   Substitute.For<IOctopusClientInitializer>(),
                                                    new SpaceRepositoryFactory());
 
             const string machineName = "MachineToBeDeleted";

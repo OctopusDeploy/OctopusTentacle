@@ -18,14 +18,14 @@ namespace Octopus.Tentacle.Commands
         static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
 
         readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
-        readonly ILog log;
+        readonly ISystemLog log;
         string exportFile;
 
         public string Format { get; set; } = TextFormat;
 
         public override bool SuppressConsoleLogging => true;
 
-        public ShowThumbprintCommand(Lazy<ITentacleConfiguration> tentacleConfiguration, ILog log, IApplicationInstanceSelector selector) : base(selector)
+        public ShowThumbprintCommand(Lazy<ITentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector) : base(selector, log)
         {
             this.tentacleConfiguration = tentacleConfiguration;
             this.log = log;
