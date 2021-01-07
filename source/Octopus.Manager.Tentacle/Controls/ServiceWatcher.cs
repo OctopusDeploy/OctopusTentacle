@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ServiceProcess;
 using System.Timers;
+using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Util;

@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Newtonsoft.Json;
-using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Scripts;
 using Octopus.Shared.Util;
-using Octopus.Tentacle.Configuration.Proxy;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
@@ -15,10 +14,10 @@ namespace Octopus.Tentacle.Services.Scripts
     {
         readonly string logFile;
         readonly IOctopusFileSystem fileSystem;
-        readonly ISensitiveValueMasker sensitiveValueMasker;
+        readonly SensitiveValueMasker sensitiveValueMasker;
         readonly object sync = new object();
 
-        public ScriptLog(string logFile, IOctopusFileSystem fileSystem, ISensitiveValueMasker sensitiveValueMasker)
+        public ScriptLog(string logFile, IOctopusFileSystem fileSystem, SensitiveValueMasker sensitiveValueMasker)
         {
             this.logFile = logFile;
             this.fileSystem = fileSystem;
@@ -104,12 +103,12 @@ namespace Octopus.Tentacle.Services.Scripts
         class Writer : IScriptLogWriter
         {
             readonly object sync;
-            readonly ISensitiveValueMasker sensitiveValueMasker;
+            readonly SensitiveValueMasker sensitiveValueMasker;
             readonly JsonTextWriter json;
             readonly StreamWriter writer;
             readonly Stream writeStream;
 
-            public Writer(string logFile, IOctopusFileSystem fileSystem, object sync, ISensitiveValueMasker sensitiveValueMasker)
+            public Writer(string logFile, IOctopusFileSystem fileSystem, object sync, SensitiveValueMasker sensitiveValueMasker)
             {
                 this.sync = sync;
                 this.sensitiveValueMasker = sensitiveValueMasker;
@@ -124,7 +123,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 {
                     json.WriteStartArray();
                     json.WriteValue(SourceToString(source));
-                    json.WriteValue(sensitiveValueMasker.MaskSensitiveValues(message));
+                    sensitiveValueMasker.SafeSanitize(message, json.WriteValue);
                     json.WriteValue(DateTimeOffset.UtcNow);
                     json.WriteEndArray();
                     json.Flush();

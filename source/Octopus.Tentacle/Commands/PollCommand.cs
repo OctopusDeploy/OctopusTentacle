@@ -21,18 +21,18 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IOctopusServerChecker> octopusServerChecker;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly ApiEndpointOptions api;
         int commsPort = 10943;
         string serverWebSocketAddress;
 
         public PollCommand(Lazy<IWritableTentacleConfiguration> configuration,
-                           ILog log,
+                           ISystemLog log,
                            IApplicationInstanceSelector selector,
                            Lazy<IOctopusServerChecker> octopusServerChecker,
                            IProxyConfigParser proxyConfig,
                            IOctopusClientInitializer octopusClientInitializer)
-            : base(selector)
+            : base(selector, log)
         {
             this.configuration = configuration;
             this.octopusServerChecker = octopusServerChecker;

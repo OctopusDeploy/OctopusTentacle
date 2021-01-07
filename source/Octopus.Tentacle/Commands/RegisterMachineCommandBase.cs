@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Commands
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly ISpaceRepositoryFactory spaceRepositoryFactory;
 
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly ApiEndpointOptions api;
         string name;
         string policy;
@@ -43,13 +43,13 @@ namespace Octopus.Tentacle.Commands
 
         public RegisterMachineCommandBase(Lazy<TRegistrationOperationType> lazyRegisterMachineOperation,
             Lazy<IWritableTentacleConfiguration> configuration,
-            ILog log,
+            ISystemLog log,
             IApplicationInstanceSelector selector,
             Lazy<IOctopusServerChecker> octopusServerChecker,
             IProxyConfigParser proxyConfig,
             IOctopusClientInitializer octopusClientInitializer,
             ISpaceRepositoryFactory spaceRepositoryFactory)
-            : base(selector)
+            : base(selector, log)
         {
             this.lazyRegisterMachineOperation = lazyRegisterMachineOperation;
             this.configuration = configuration;

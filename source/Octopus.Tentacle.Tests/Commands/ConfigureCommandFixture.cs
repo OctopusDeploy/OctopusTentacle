@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Tests.Commands
     {
         StubTentacleConfiguration tentacleConfiguration;
         IOctopusFileSystem fileSystem;
-        ILog log;
+        ISystemLog log;
 
         [SetUp]
         public override void SetUp()
@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             tentacleConfiguration = new StubTentacleConfiguration();
             fileSystem = Substitute.For<IOctopusFileSystem>();
-            log = Substitute.For<ILog>();
+            log = Substitute.For<ISystemLog>();
             Command = new ConfigureCommand(new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration), new Lazy<IWritableHomeConfiguration>(() => new StubHomeConfiguration()), fileSystem, log, Substitute.For<IApplicationInstanceSelector>());
         }
 

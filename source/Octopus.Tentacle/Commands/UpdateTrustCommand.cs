@@ -10,15 +10,15 @@ namespace Octopus.Tentacle.Commands
     public class UpdateTrustCommand : AbstractStandardCommand
     {
         readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
-        readonly ILog log;
+        readonly ISystemLog log;
         string oldThumbprint;
         string newThumbprint;
 
         public UpdateTrustCommand(
             Lazy<IWritableTentacleConfiguration> tentacleConfiguration,
-            ILog log,
+            ISystemLog log,
             IApplicationInstanceSelector selector)
-            : base(selector)
+            : base(selector, log)
         {
             this.tentacleConfiguration = tentacleConfiguration;
             this.log = log;

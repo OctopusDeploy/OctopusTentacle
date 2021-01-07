@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading;
 using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Scripts;
 using Octopus.Shared.Util;
-using Octopus.Tentacle.Configuration.Proxy;
 using Octopus.Tentacle.Services.Scripts;
 
 namespace Octopus.Tentacle.Tests.Integration
@@ -25,10 +25,12 @@ namespace Octopus.Tentacle.Tests.Integration
             var homeConfiguration = Substitute.For<IHomeConfiguration>();
             homeConfiguration.HomeDirectory.Returns(Environment.CurrentDirectory);
 
-            service = new ScriptService(PlatformDetection.IsRunningOnWindows
-                ? (IShell) new PowerShell()
-                : new Bash()
-                , new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(), homeConfiguration), new OctopusPhysicalFileSystem(), new SensitiveValueMasker(new LogContext()));
+            var octopusPhysicalFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
+
+            service = new ScriptService(PlatformDetection.IsRunningOnWindows ? (IShell) new PowerShell() : new Bash(),
+                new ScriptWorkspaceFactory(octopusPhysicalFileSystem, homeConfiguration), octopusPhysicalFileSystem,
+                new SensitiveValueMasker(),
+                Substitute.For<ISystemLog>());
         }
 
         [Test]
