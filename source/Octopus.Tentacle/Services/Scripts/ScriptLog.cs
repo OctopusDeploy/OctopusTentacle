@@ -123,11 +123,18 @@ namespace Octopus.Tentacle.Services.Scripts
                 {
                     json.WriteStartArray();
                     json.WriteValue(SourceToString(source));
-                    sensitiveValueMasker.SafeSanitize(message, json.WriteValue);
+                    json.WriteValue(MaskSensitiveValues(message));
                     json.WriteValue(DateTimeOffset.UtcNow);
                     json.WriteEndArray();
                     json.Flush();
                 }
+            }
+
+            string MaskSensitiveValues(string rawMessage)
+            {
+                string maskedMessage = null;
+                sensitiveValueMasker.SafeSanitize(rawMessage, s => maskedMessage = s);
+                return maskedMessage ?? rawMessage;
             }
 
             public void Dispose()
