@@ -2,12 +2,10 @@
 using System.Windows.Controls;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
-using AbstractLog = Octopus.Tentacle.Diagnostics.AbstractLog;
-using LogEvent = Octopus.Tentacle.Diagnostics.LogEvent;
 
 namespace Octopus.Manager.Tentacle.Infrastructure
 {
-    public class TextBoxLogger : AbstractLog
+    public class TextBoxLogger : SystemLog
     {
         readonly TextBox textBox;
 
@@ -15,8 +13,6 @@ namespace Octopus.Manager.Tentacle.Infrastructure
         {
             this.textBox = textBox;
         }
-
-        public override ILogContext CurrentContext => new LogContext();
 
         public void Clear()
         {

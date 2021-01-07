@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Commands
     public class RegisterWorkerCommandFixture : CommandFixture<RegisterWorkerCommand>
     {
         IWritableTentacleConfiguration configuration;
-        ILog log;
+        ISystemLog log;
         X509Certificate2 certificate;
         IRegisterWorkerOperation operation;
         IOctopusServerChecker serverChecker;
@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Commands
             configuration = Substitute.For<IWritableTentacleConfiguration>();
             operation = Substitute.For<IRegisterWorkerOperation>();
             serverChecker = Substitute.For<IOctopusServerChecker>();
-            log = Substitute.For<ILog>();
+            log = Substitute.For<ISystemLog>();
             var octopusClientInitializer = Substitute.For<IOctopusClientInitializer>();
             var octopusAsyncClient = Substitute.For<IOctopusAsyncClient>();
 

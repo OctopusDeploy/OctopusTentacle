@@ -4,11 +4,10 @@ using System.IO;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
-
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Scripts;
 using Octopus.Shared.Security;
 using Octopus.Shared.Util;
-using Octopus.Tentacle.Configuration.Proxy;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
@@ -18,16 +17,18 @@ namespace Octopus.Tentacle.Services.Scripts
         readonly IShell shell;
         readonly IScriptWorkspaceFactory workspaceFactory;
         readonly IOctopusFileSystem fileSystem;
-        readonly ISensitiveValueMasker sensitiveValueMasker;
+        readonly SensitiveValueMasker sensitiveValueMasker;
+        readonly ISystemLog log;
         readonly ConcurrentDictionary<string, RunningScript> running = new ConcurrentDictionary<string, RunningScript>(StringComparer.OrdinalIgnoreCase);
         readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
 
-        public ScriptService(IShell shell, IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem, ISensitiveValueMasker sensitiveValueMasker)
+        public ScriptService(IShell shell, IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem, SensitiveValueMasker sensitiveValueMasker, ISystemLog log)
         {
             this.shell = shell;
             this.workspaceFactory = workspaceFactory;
             this.fileSystem = fileSystem;
             this.sensitiveValueMasker = sensitiveValueMasker;
+            this.log = log;
         }
 
         public ScriptTicket StartScript(StartScriptCommand command)
@@ -90,7 +91,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
         {
-            var runningScript = new RunningScript(shell, workspace, CreateLog(workspace), serverTaskId, cancel.Token);
+            var runningScript = new RunningScript(shell, workspace, CreateLog(workspace), serverTaskId, cancel.Token, log);
             var thread = new Thread(runningScript.Execute) {Name = "Executing PowerShell script for " + ticket.TaskId};
             thread.Start();
             return runningScript;
@@ -132,10 +133,9 @@ namespace Octopus.Tentacle.Services.Scripts
         {
             var exitCode = script != null ? script.ExitCode : 0;
             var state = script != null ? script.State : ProcessState.Complete;
-            var log = script != null ? script.Log : CreateLog(workspaceFactory.GetWorkspace(ticket));
+            var scriptLog = script != null ? script.ScriptLog : CreateLog(workspaceFactory.GetWorkspace(ticket));
 
-            long next;
-            var logs = log.GetOutput(lastLogSequence, out next);
+            var logs = scriptLog.GetOutput(lastLogSequence, out var next);
             return new ScriptStatusResponse(ticket, state, exitCode, logs, next);
         }
     }
