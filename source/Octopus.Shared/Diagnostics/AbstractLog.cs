@@ -20,7 +20,7 @@ namespace Octopus.Shared.Diagnostics
 
         protected SensitiveValueMasker SensitiveValueMasker { get; }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             SensitiveValueMasker.Flush();
             Flush();
