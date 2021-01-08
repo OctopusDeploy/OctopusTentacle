@@ -366,7 +366,7 @@ Task("Pack-CrossPlatformBundle")
         var debARM64PackageFilename = ConstructDebianPackageFilename("tentacle", versionInfo, "arm64");
         var debARM32PackageFilename = ConstructDebianPackageFilename("tentacle", versionInfo, "armhf");
 
-        var rpmARM64PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "arm64");
+        var rpmARM64PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "aarch64");
         var rpmARM32PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "armv7hl");
         var rpmx64PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "x86_64");
 
