@@ -7,12 +7,6 @@ namespace Octopus.Shared.Tests.Support
 {
     public class TestConsoleLog : AbstractLog
     {
-        public TestConsoleLog(SensitiveValueMasker masker) : base(masker)
-        {
-        }
-
-        protected override string CorrelationId => "system/" + Environment.MachineName;
-
         public override bool IsEnabled(LogCategory category)
             => true;
 

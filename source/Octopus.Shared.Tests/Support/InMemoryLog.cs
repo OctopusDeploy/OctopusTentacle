@@ -20,10 +20,8 @@ namespace Octopus.Shared.Tests.Support
 
         public InMemoryLog(ILog log)
         {
-            this.log = log ?? new TestConsoleLog(new SensitiveValueMasker());
+            this.log = log ?? new TestConsoleLog();
         }
-
-        protected override string CorrelationId => "system/" + Environment.MachineName;
 
         protected override void WriteEvent(LogEvent logEvent)
         {

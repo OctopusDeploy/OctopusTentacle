@@ -8,6 +8,30 @@ namespace Octopus.Shared.Diagnostics
     {
         readonly List<Action<ILog>> actions = new List<Action<ILog>>();
 
+        public DelayedLog()
+        {
+            CorrelationId = Guid.NewGuid().ToString();
+        }
+
+        public string CorrelationId { get; }
+
+        public void Dispose()
+        {
+        }
+
+        public ISystemLog ChildContext(string[] sensitiveValues)
+        {
+            return new DelayedLog();
+        }
+
+        public void WithSensitiveValues(string[] sensitiveValues)
+        {
+        }
+
+        public void WithSensitiveValue(string sensitiveValue)
+        {
+        }
+
         public void Add(Action<ILog> action) => actions.Add(action);
 
         public void FlushTo(ILog log)

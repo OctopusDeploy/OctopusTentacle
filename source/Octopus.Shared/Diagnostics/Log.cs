@@ -8,7 +8,7 @@ namespace Octopus.Shared.Diagnostics
     {
         public static ConcurrentBag<ILogAppender> Appenders { get; } = new ConcurrentBag<ILogAppender>();
 
-        protected Log() : base(new SensitiveValueMasker())
+        protected Log(string? correlationId = null, string[]? sensitiveValues = null) : base(correlationId, sensitiveValues)
         {
         }
         protected override string CorrelationId => "system/" + Environment.MachineName;

@@ -5,6 +5,30 @@ namespace Octopus.Shared.Diagnostics
 {
     public class NullLog : ISystemLog
     {
+        public NullLog()
+        {
+            CorrelationId = Guid.NewGuid().ToString();
+        }
+
+        public string CorrelationId { get; }
+
+        public void Dispose()
+        {
+        }
+
+        public ISystemLog ChildContext(string[] sensitiveValues)
+        {
+            return new NullLog();
+        }
+
+        public void WithSensitiveValues(string[] sensitiveValues)
+        {
+        }
+
+        public void WithSensitiveValue(string sensitiveValue)
+        {
+        }
+
         public void Trace(string messageText)
         {
         }

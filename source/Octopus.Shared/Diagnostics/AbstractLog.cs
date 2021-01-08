@@ -6,16 +6,35 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Diagnostics
 {
-    public abstract class AbstractLog : ILog
+    public abstract class AbstractLog : ILog, IDisposable
     {
-        readonly SensitiveValueMasker masker;
+        static string GenerateId() => Guid.NewGuid().ToString("N");
 
-        protected AbstractLog(SensitiveValueMasker masker)
+        protected AbstractLog(string? correlationId = null, string[]? sensitiveValues = null)
         {
-            this.masker = masker;
+            CorrelationId = correlationId ?? GenerateId();
+            SensitiveValueMasker = new SensitiveValueMasker(sensitiveValues);
         }
 
-        protected abstract string CorrelationId { get; }
+        public string CorrelationId { get; }
+
+        protected SensitiveValueMasker SensitiveValueMasker { get; }
+
+        public void Dispose()
+        {
+            SensitiveValueMasker.Flush();
+            Flush();
+        }
+
+        public void WithSensitiveValues(string[] sensitiveValues)
+        {
+            SensitiveValueMasker.WithSensitiveValues(sensitiveValues);
+        }
+
+        public void WithSensitiveValue(string sensitiveValue)
+        {
+            SensitiveValueMasker.WithSensitiveValue(sensitiveValue);
+        }
 
         protected abstract void WriteEvent(LogEvent logEvent);
 
@@ -40,7 +59,7 @@ namespace Octopus.Shared.Diagnostics
         public virtual void Write(LogCategory category, Exception? error, string messageText)
         {
             if (IsEnabled(category))
-                masker.SafeSanitize(messageText,
+                SensitiveValueMasker.SafeSanitize(messageText,
                     sanitized => WriteEvent(new LogEvent(CorrelationId, category, sanitized, error?.UnpackFromContainers())));
         }
 
@@ -54,7 +73,7 @@ namespace Octopus.Shared.Diagnostics
             if (!IsEnabled(category))
                 return;
 
-            masker.SafeSanitize(SafeFormat(messageFormat, args),
+            SensitiveValueMasker.SafeSanitize(SafeFormat(messageFormat, args),
                 sanitized => WriteEvent(new LogEvent(CorrelationId, category, sanitized, error?.UnpackFromContainers())));
         }
 
@@ -222,7 +241,7 @@ namespace Octopus.Shared.Diagnostics
 
         public void UpdateProgress(int progressPercentage, string messageText)
         {
-            masker.SafeSanitize(messageText,
+            SensitiveValueMasker.SafeSanitize(messageText,
                 sanitized => WriteEvent(new LogEvent(CorrelationId,
                     LogCategory.Progress,
                     sanitized,
