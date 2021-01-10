@@ -9,7 +9,7 @@ namespace Octopus.Shared.Startup
     {
         readonly List<Action> operations = new List<Action>();
 
-        protected AbstractMultiOperationCommand(IApplicationInstanceSelector instanceSelector, ISystemLog log) : base(instanceSelector, log)
+        protected AbstractMultiOperationCommand(IApplicationInstanceSelector instanceSelector, ISystemLog systemLog) : base(instanceSelector, systemLog)
         {
         }
 

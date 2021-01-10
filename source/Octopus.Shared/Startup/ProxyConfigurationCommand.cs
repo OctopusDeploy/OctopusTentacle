@@ -10,14 +10,12 @@ namespace Octopus.Shared.Startup
     {
         readonly Lazy<IWritableProxyConfiguration> proxyConfiguration;
         readonly List<Action> operations = new List<Action>();
-        readonly ISystemLog log;
         bool useAProxy;
         string? host;
 
-        public ProxyConfigurationCommand(Lazy<IWritableProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ISystemLog log) : base(instanceSelector, log)
+        public ProxyConfigurationCommand(Lazy<IWritableProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ISystemLog systemLog) : base(instanceSelector, systemLog)
         {
             this.proxyConfiguration = proxyConfiguration;
-            this.log = log;
 
             Options.Add("proxyEnable=",
                 "Whether to use a proxy",
@@ -31,7 +29,7 @@ namespace Octopus.Shared.Startup
                 v => QueueOperation(delegate
                 {
                     proxyConfiguration.Value.SetCustomProxyUsername(v);
-                    log.Info(string.IsNullOrWhiteSpace(v) ? "Proxy username cleared" : "Proxy username set to: " + v);
+                    systemLog.Info(string.IsNullOrWhiteSpace(v) ? "Proxy username cleared" : "Proxy username set to: " + v);
                 }));
 
             Options.Add("proxyPassword=",
@@ -39,7 +37,7 @@ namespace Octopus.Shared.Startup
                 v => QueueOperation(delegate
                 {
                     proxyConfiguration.Value.SetCustomProxyPassword(v);
-                    log.Info(string.IsNullOrWhiteSpace(v) ? "Proxy password cleared" : "Proxy password set to: *******");
+                    systemLog.Info(string.IsNullOrWhiteSpace(v) ? "Proxy password cleared" : "Proxy password set to: *******");
                 }),
                 sensitive: true);
 
@@ -57,7 +55,7 @@ namespace Octopus.Shared.Startup
                 {
                     proxyConfiguration.Value.SetCustomProxyPort(string.IsNullOrWhiteSpace(v) ? 80 : int.Parse(v));
                     if (host != null)
-                        log.Info("Proxy port set to: " + proxyConfiguration.Value.CustomProxyPort);
+                        systemLog.Info("Proxy port set to: " + proxyConfiguration.Value.CustomProxyPort);
                 }));
         }
 
@@ -71,7 +69,7 @@ namespace Octopus.Shared.Startup
             {
                 proxyConfiguration.Value.SetCustomProxyHost(host);
                 proxyConfiguration.Value.SetUseDefaultProxy(host == null);
-                log.Info(host != null
+                SystemLog.Info(host != null
                     ? "Using custom proxy at: " + host
                     : "Using Internet Explorer Proxy");
             }
@@ -79,7 +77,7 @@ namespace Octopus.Shared.Startup
             {
                 proxyConfiguration.Value.SetCustomProxyHost(null);
                 proxyConfiguration.Value.SetUseDefaultProxy(false);
-                log.Info("Proxy use is disabled");
+                SystemLog.Info("Proxy use is disabled");
             }
         }
 
