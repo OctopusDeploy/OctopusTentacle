@@ -104,6 +104,8 @@ namespace Octopus.Shared.Configuration.Instances
                 throw new ControlledFailureException($"Unable to delete file '{instanceConfiguration}' as user '{Environment.UserName}'. Please check file permissions.");
             }
 
+            registryApplicationInstanceStore.DeleteFromRegistry(instanceName);
+
             Log.Info($"Deleted instance: {instanceName}");
         }
 

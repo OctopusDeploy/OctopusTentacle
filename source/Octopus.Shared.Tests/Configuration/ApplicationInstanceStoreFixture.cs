@@ -130,6 +130,10 @@ namespace Octopus.Shared.Tests.Configuration
             instanceStore.MigrateInstance(sourceInstance);
             fileSystem.Received().CreateDirectory(Arg.Any<string>());
             fileSystem.Received().OverwriteFile(Arg.Is<string>(x => x.Contains(sourceInstance.InstanceName)), Arg.Is<string>(x => x.Contains(sourceInstance.ConfigurationFilePath)));
+
+            //we explicitly dont want to delete from the registry here, as we want to allow for customers who try to upgrade and have issues
+            //but then rollback the database and install the old version. This would be a nasty thing to deal with in an already bad experience.
+            registryStore.Received(0).DeleteFromRegistry(Arg.Is("instance1"));
         }
 
         [Test]
@@ -151,6 +155,18 @@ namespace Octopus.Shared.Tests.Configuration
                 .Do(x => throw new UnauthorizedAccessException("fake exception"));
             var ex = Assert.Throws<ControlledFailureException>(() => instanceStore.DeleteInstance("instance1"));
             ex.Message.Should().Match("Unable to delete file '*' as user '*'. Please check file permissions.");
+        }
+
+        [Test]
+        public void DeleteInstance_DeletesFromRegistry()
+        {
+            var sourceInstance = new ApplicationInstanceRecord("instance1", "configFilePath");
+            registryStore.GetInstanceFromRegistry(Arg.Is("instance1")).Returns(sourceInstance);
+
+            instanceStore.DeleteInstance("instance1");
+
+            fileSystem.Received().DeleteFile(Arg.Any<string>());
+            registryStore.Received().DeleteFromRegistry(Arg.Is("instance1"));
         }
     }
 }
