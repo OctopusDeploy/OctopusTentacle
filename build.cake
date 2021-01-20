@@ -341,6 +341,7 @@ Task("Pack-WindowsInstallers")
 
         CopyFiles($"{buildDir}/Tentacle/net452/win-x64/*", installerDir);
         CopyFiles($"{buildDir}/Octopus.Manager.Tentacle/net452/win-x64/*", installerDir);
+        CopyFiles("scripts/Harden-InstallationDirectory.ps1", installerDir);
 
         GenerateMsiInstallerContents(installerDir);
         BuildMsiInstallerForPlatform(PlatformTarget.x64);
