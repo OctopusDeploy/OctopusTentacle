@@ -24,7 +24,13 @@
     <Media Id="1" Cabinet="Files.cab" EmbedCab="yes" />
     <Property Id="MSIFASTINSTALL" Value="3" />
     <Property Id="REINSTALLMODE" Value="amus" />
-
+    <Property Id="POWERSHELLEXE" Secure="yes">
+      <RegistrySearch Id="POWERSHELLEXE"
+                      Type="raw"
+                      Root="HKLM"
+                      Key="SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell"
+                      Name="Path" />
+    </Property>
     <MajorUpgrade AllowDowngrades="yes" Schedule="afterInstallInitialize"/>
 
     <!--
@@ -130,6 +136,16 @@
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
       </Component>
     </DirectoryRef>
+
+    <!--
+    Harden installation directory
+    -->
+    <CustomAction Id="SetExecProp" Property="WixQuietExecCmdLine" Value='"[POWERSHELLEXE]" -NoProfile -NonInteractive -InputFormat None -ExecutionPolicy Bypass -Command "[INSTALLLOCATION]Harden-InstallationDirectory.ps1"'></CustomAction>
+    <CustomAction Id="HardenInstallationDirectory" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="immediate" Return="check"/>
+    <InstallExecuteSequence>
+      <Custom Action="SetExecProp" After="InstallExecute"/>
+      <Custom Action="HardenInstallationDirectory" After="SetExecProp"/>
+    </InstallExecuteSequence>
 
     <!--
     Launch tools after installer finishes

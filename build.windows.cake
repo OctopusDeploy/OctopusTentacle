@@ -8,7 +8,7 @@ var testDir = "./_test";
 Task("Test-WindowsInstallerPermissions")
     .Does(() =>
     {
-        InTestSuite("Test-LinuxPackages", () => {
+        InTestSuite("Test-WindowsInstallerPermissions", () => {
             CleanDirectories(testDir);
             CreateDirectory(testDir);
 
