@@ -303,7 +303,8 @@ namespace Octopus.Shared.Startup
 #endif
 #if REQUIRES_EXPLICIT_LOG_CONFIG
             var nLogFile = Path.ChangeExtension(GetType().Assembly.Location, "exe.nlog");
-            LogManager.Configuration = new XmlLoggingConfiguration(nLogFile, false);
+            LogManager.ThrowConfigExceptions = true;
+            LogManager.Configuration = new XmlLoggingConfiguration(nLogFile);
 #endif
             Log.Appenders.Add(new NLogAppender());
             AssertLoggingConfigurationIsCorrect();
