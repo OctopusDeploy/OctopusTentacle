@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Octopus.Diagnostics;
@@ -19,7 +20,7 @@ namespace Octopus.Shared.Diagnostics
             threadLocalLogContext = new ThreadLocal<ILogContext>(() => new LogContext("system/" + Environment.MachineName));
         }
 
-        public static List<ILogAppender> Appenders { get; } = new List<ILogAppender>();
+        public static ConcurrentBag<ILogAppender> Appenders { get; } = new ConcurrentBag<ILogAppender>();
 
         public override ILogContext CurrentContext => threadLocalLogContext.Value!;
 
@@ -31,13 +32,13 @@ namespace Octopus.Shared.Diagnostics
 
         protected override void WriteEvent(LogEvent logEvent)
         {
-            foreach (var appender in Appenders)
+            foreach (var appender in GetThreadSafeAppenderCollection())
                 appender.WriteEvent(logEvent);
         }
 
         protected override void WriteEvents(IList<LogEvent> logEvents)
         {
-            foreach (var appender in Appenders)
+            foreach (var appender in GetThreadSafeAppenderCollection())
                 appender.WriteEvents(logEvents);
         }
 
@@ -50,15 +51,17 @@ namespace Octopus.Shared.Diagnostics
 
         public override void Flush()
         {
-            foreach (var appender in Appenders)
+            foreach (var appender in GetThreadSafeAppenderCollection())
                 appender.Flush();
         }
 
         public override void Flush(string correlationId)
         {
-            foreach (var appender in Appenders)
+            foreach (var appender in GetThreadSafeAppenderCollection())
                 appender.Flush(correlationId);
         }
+
+        static IEnumerable<ILogAppender> GetThreadSafeAppenderCollection() => Appenders.ToArray();
 
         class RevertLogContext : IDisposable
         {
