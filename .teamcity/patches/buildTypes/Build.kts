@@ -11,7 +11,7 @@ accordingly, and delete the patch script.
 changeBuildType(RelativeId("Build")) {
     params {
         add {
-            param("env.Git_Branch", "")
+            param("env.Git_Branch", "${DslContext.settingsRoot.paramRefs.buildVcsBranch}")
         }
     }
 
