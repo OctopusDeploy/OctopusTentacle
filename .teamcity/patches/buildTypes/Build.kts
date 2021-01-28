@@ -9,6 +9,12 @@ To apply the patch, change the buildType with id = 'Build'
 accordingly, and delete the patch script.
 */
 changeBuildType(RelativeId("Build")) {
+    params {
+        add {
+            param("env.Git_Branch", "%teamcity.build.vcs.branch.<vcsid>%")
+        }
+    }
+
     requirements {
         remove {
             equals("system.Octopus.AgentType", "Build-VS2019")
