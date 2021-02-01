@@ -73,11 +73,12 @@ var versionInfo = DeriveVersionInfo();
 
 // Keep this list in order by most likely to succeed
 var signingTimestampUrls = new string[] {
-    "http://timestamp.globalsign.com/scripts/timestamp.dll",
+    "http://tsa.starfieldtech.com",
     "http://www.startssl.com/timestamp",
     "http://timestamp.comodoca.com/rfc3161",
     "http://timestamp.verisign.com/scripts/timstamp.dll",
-    "http://tsa.starfieldtech.com"};
+    "http://timestamp.globalsign.com/scripts/timestamp.dll"
+    };
 
 
 var artifactsDir = "./_artifacts";
