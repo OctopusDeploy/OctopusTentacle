@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Text;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
@@ -41,6 +39,10 @@ namespace Octopus.Tentacle.Tests.Support
         }
 
         public override void Flush()
+        {
+        }
+
+        public override void Flush(string correlationId)
         {
         }
 

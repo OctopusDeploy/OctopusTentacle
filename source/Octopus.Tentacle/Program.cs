@@ -1,4 +1,3 @@
-using System;
 using System.Net;
 using Autofac;
 using Octopus.Shared.Configuration;
@@ -36,13 +35,13 @@ namespace Octopus.Tentacle
             return new Program(args).Run();
         }
 
-        protected override IContainer BuildContainer(string instanceName)
+        protected override IContainer BuildContainer(StartUpInstanceRequest startUpInstanceRequest)
         {
             var builder = new ContainerBuilder();
             const ApplicationName applicationName = ApplicationName.Tentacle;
 
             builder.RegisterModule(new ShellModule());
-            builder.RegisterModule(new ConfigurationModule(applicationName, instanceName));
+            builder.RegisterModule(new ConfigurationModule(startUpInstanceRequest));
             builder.RegisterModule(new TentacleConfigurationModule());
             builder.RegisterModule(new LogMaskingModule());
             builder.RegisterModule(new OctopusClientInitializerModule());
@@ -58,9 +57,9 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<CreateInstanceCommand>("create-instance", "Registers a new instance of the Tentacle service");
             builder.RegisterCommand<DeleteInstanceCommand>("delete-instance", "Deletes an instance of the Tentacle service");
             builder.RegisterCommand<WatchdogCommand>("watchdog", "Configure a scheduled task to monitor the Tentacle service(s)")
-                .WithParameter("applicationName", ApplicationName.Tentacle);
+                .WithParameter("applicationName", ApplicationName);
             builder.RegisterCommand<CheckServicesCommand>("checkservices", "Checks the Tentacle instances are running")
-                .WithParameter("applicationName", ApplicationName.Tentacle);
+                .WithParameter("applicationName", ApplicationName);
             builder.RegisterCommand<RunAgentCommand>("agent", "Starts the Tentacle Agent in debug mode", "", "run");
             builder.RegisterCommand<ConfigureCommand>("configure", "Sets Tentacle settings such as the port number and thumbprints");
             builder.RegisterCommand<UpdateTrustCommand>("update-trust", "Replaces the trusted Octopus Server thumbprint of any matching polling or listening registrations with a new thumbprint to trust");
@@ -72,7 +71,7 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<NewCertificateCommand>("new-certificate", "Creates and installs a new certificate for this Tentacle");
             builder.RegisterCommand<ShowThumbprintCommand>("show-thumbprint", "Show the thumbprint of this Tentacle's certificate");
             builder.RegisterCommand<ServiceCommand>("service", "Start, stop, install and configure the Tentacle service")
-                .WithParameter("applicationName", ApplicationName.Tentacle)
+                .WithParameter("applicationName", ApplicationName)
                 .WithParameter("serviceDescription", "Octopus Deploy: Tentacle deployment agent")
                 .WithParameter("assemblyContainingService", typeof(Program).Assembly);
             builder.RegisterCommand<ProxyConfigurationCommand>("proxy", "Configure the HTTP proxy used by Octopus");
@@ -86,5 +85,7 @@ namespace Octopus.Tentacle
 
             return builder.Build();
         }
+
+        protected override ApplicationName ApplicationName => ApplicationName.Tentacle;
     }
 }
