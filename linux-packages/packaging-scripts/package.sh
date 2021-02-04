@@ -28,7 +28,7 @@ set +ex
 architecture=$1
 if [ $architecture == "linux-arm64" ] ; then
   DEB_PACKAGE_ARCHITECTURE="arm64";
-  RPM_PACKAGE_ARCHITECTURE="arm64";
+  RPM_PACKAGE_ARCHITECTURE="aarch64";
 elif [ $architecture == "linux-arm" ] ; then
   DEB_PACKAGE_ARCHITECTURE="armhf"
   RPM_PACKAGE_ARCHITECTURE="armv7hl"

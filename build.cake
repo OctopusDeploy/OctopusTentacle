@@ -73,11 +73,12 @@ var versionInfo = DeriveVersionInfo();
 
 // Keep this list in order by most likely to succeed
 var signingTimestampUrls = new string[] {
-    "http://timestamp.globalsign.com/scripts/timestamp.dll",
+    "http://tsa.starfieldtech.com",
     "http://www.startssl.com/timestamp",
     "http://timestamp.comodoca.com/rfc3161",
     "http://timestamp.verisign.com/scripts/timstamp.dll",
-    "http://tsa.starfieldtech.com"};
+    "http://timestamp.globalsign.com/scripts/timestamp.dll"
+    };
 
 
 var artifactsDir = "./_artifacts";
@@ -341,6 +342,7 @@ Task("Pack-WindowsInstallers")
 
         CopyFiles($"{buildDir}/Tentacle/net452/win-x64/*", installerDir);
         CopyFiles($"{buildDir}/Octopus.Manager.Tentacle/net452/win-x64/*", installerDir);
+        CopyFiles("scripts/Harden-InstallationDirectory.ps1", installerDir);
 
         GenerateMsiInstallerContents(installerDir);
         BuildMsiInstallerForPlatform(PlatformTarget.x64);
@@ -366,7 +368,7 @@ Task("Pack-CrossPlatformBundle")
         var debARM64PackageFilename = ConstructDebianPackageFilename("tentacle", versionInfo, "arm64");
         var debARM32PackageFilename = ConstructDebianPackageFilename("tentacle", versionInfo, "armhf");
 
-        var rpmARM64PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "arm64");
+        var rpmARM64PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "aarch64");
         var rpmARM32PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "armv7hl");
         var rpmx64PackageFilename = ConstructRedHatPackageFilename("tentacle", versionInfo, "x86_64");
 
