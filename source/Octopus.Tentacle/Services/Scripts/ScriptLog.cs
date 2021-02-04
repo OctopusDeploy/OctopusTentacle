@@ -134,7 +134,6 @@ namespace Octopus.Tentacle.Services.Scripts
             {
                 string maskedMessage = null;
                 sensitiveValueMasker.SafeSanitize(rawMessage, s => maskedMessage = s);
-                sensitiveValueMasker.Flush();
                 return maskedMessage ?? rawMessage;
             }
 
