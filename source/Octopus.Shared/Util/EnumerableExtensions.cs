@@ -15,16 +15,6 @@ namespace Octopus.Shared.Util
             }
         }
 
-        public static IEnumerable<TElement> NotNull<TElement>(this IEnumerable<TElement> source)
-        {
-            return source.Where(item => item != null);
-        }
-
-        public static IEnumerable<string> NotNullOrWhiteSpace(this IEnumerable<string> source)
-        {
-            return source.Where(item => !string.IsNullOrWhiteSpace(item));
-        }
-
         public static IEnumerable<TValue[]> Permutations<TKey, TValue>(this IEnumerable<TKey> keys, Func<TKey, IEnumerable<TValue>> selector)
         {
             var keyArray = keys.ToArray();
@@ -58,15 +48,6 @@ namespace Octopus.Shared.Util
                 .Select((x, index) => new { x, index })
                 .GroupBy(x => x.index / blockSize, y => y.x);
         }
-
-        public static bool IsNullOrEmpty<T>(this IEnumerable<T> source)
-        {
-            return source == null || !source.Any();
-        }
-
-        public static bool None<T>(this IEnumerable<T> items) => !items.Any();
-
-        public static bool None<T>(this IEnumerable<T> items, Func<T, bool> predicate) => !items.Any(predicate);
 
         public static IEnumerable<T> TakeUntilIncluding<T>(this IEnumerable<T> list, Func<T, bool> predicate)
         {

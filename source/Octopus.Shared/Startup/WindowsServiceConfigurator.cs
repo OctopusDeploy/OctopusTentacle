@@ -6,6 +6,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using NLog.Fluent;
+using Octopus.CoreUtilities.Extensions;
 using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 

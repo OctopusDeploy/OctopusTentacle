@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Octopus.CoreUtilities.Extensions;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics.Formatters;
 using Octopus.Shared.Util;
@@ -113,7 +114,7 @@ namespace Octopus.Shared.Diagnostics
         {
             if (IsEnabled(category))
             {
-                CurrentContext.SafeSanitize(messageText, 
+                CurrentContext.SafeSanitize(messageText,
                     sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitized, error?.UnpackFromContainers())));
             }
         }
@@ -128,7 +129,7 @@ namespace Octopus.Shared.Diagnostics
             if (!IsEnabled(category))
                 return;
 
-            CurrentContext.SafeSanitize(SafeFormat(messageFormat, args), 
+            CurrentContext.SafeSanitize(SafeFormat(messageFormat, args),
                 sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId, category, sanitized, error?.UnpackFromContainers())));
         }
 
@@ -140,7 +141,7 @@ namespace Octopus.Shared.Diagnostics
             }
             catch (Exception ex)
             {
-                return (messageFormat ?? "") + " (" + string.Join(",", (args ?? new object[0]).NotNull()) + ") => " + ex.Message;
+                return (messageFormat ?? "") + " (" + string.Join(",", (args ?? new object[0]).WhereNotNull()) + ") => " + ex.Message;
             }
         }
 
@@ -296,7 +297,7 @@ namespace Octopus.Shared.Diagnostics
 
         public void UpdateProgress(int progressPercentage, string messageText)
         {
-            CurrentContext.SafeSanitize(messageText, 
+            CurrentContext.SafeSanitize(messageText,
                 sanitized => WriteEvent(new LogEvent(CurrentContext.CorrelationId, LogCategory.Progress, sanitized, null, progressPercentage)));
         }
 
