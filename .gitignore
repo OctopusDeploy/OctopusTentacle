@@ -51,7 +51,6 @@ hgignore[.-]*
 ignore[.-]*
 svnignore[.-]*
 lint.db
-build
 tools/TestResult.xml
 *.ReSharper
 source/packages
@@ -65,4 +64,5 @@ source/OctopusTools.v2.ncrunchsolution
 /artifacts/
 /publish/
 TestResult.xml
-.idea
+*.received.*
+/source/.idea

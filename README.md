@@ -1,6 +1,2 @@
-This repository contains the utility classes shared between the [Octopus Deploy][1] server, Calamari and other Octopus libraries.
-
-## Issues
+This repository contains the ShellRunner and other command line invocation things.
 Please see [Contributing](CONTRIBUTING.md)
-
-[1]: https://octopus.com
