@@ -13,6 +13,8 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <Copyright>Copyright © Octopus Deploy 2017</Copyright>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>9</LangVersion>
+    <nullable>enable</nullable>
   </PropertyGroup>
 
   <ItemGroup>
