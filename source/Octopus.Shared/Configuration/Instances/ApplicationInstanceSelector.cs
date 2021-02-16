@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Octopus.Configuration;
+using Octopus.CoreUtilities.Extensions;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 

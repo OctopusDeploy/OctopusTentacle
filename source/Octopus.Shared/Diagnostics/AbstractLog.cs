@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Octopus.CoreUtilities.Extensions;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics.Formatters;
 using Octopus.Shared.Util;
@@ -133,7 +134,7 @@ namespace Octopus.Shared.Diagnostics
             }
             catch (Exception ex)
             {
-                return (messageFormat ?? "") + " (" + string.Join(",", (args ?? new object[0]).NotNull()) + ") => " + ex.Message;
+                return (messageFormat ?? "") + " (" + string.Join(",", (args ?? new object[0]).WhereNotNull()) + ") => " + ex.Message;
             }
         }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Octopus.CoreUtilities.Extensions;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Contracts
