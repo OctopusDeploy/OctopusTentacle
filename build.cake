@@ -142,7 +142,7 @@ Task("__CreateNuGet")
         NoBuild = true,
         IncludeSymbols = true,
         OutputDirectory = new DirectoryPath(artifactsDir),
-        ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion}")
+        ArgumentCustomization = args => args.Append($"/p:Version={gitVersion.NuGetVersion} /p:NoWarn=NU5104")
     });
 });
 
