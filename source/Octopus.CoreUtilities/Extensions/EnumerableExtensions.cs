@@ -1,9 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
 
 namespace Octopus.CoreUtilities.Extensions
 {
     public static class EnumerableExtensions
     {
+#if NET40 || NET452 // ToHashSet was added to System.Linq in 4.7.2, NetStandard 2.1
         public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
         {
             return new HashSet<T>(source);
@@ -12,6 +18,81 @@ namespace Octopus.CoreUtilities.Extensions
         public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source, IEqualityComparer<T> comparer)
         {
             return new HashSet<T>(source, comparer);
+        }
+#endif
+
+#if NET40 || NET452 || NETSTANDARD2_0 || NETCOREAPP3_1
+        // In .NET 5.0 Enumerable.Any() calls Count/Length so these are no longer needed
+        // https://github.com/dotnet/corefx/pull/40377
+        public static bool Any<T>(this ICollection<T> collection)
+            => collection.Count > 0;
+
+        public static bool Any<T>(this List<T> list)
+            => list.Count > 0;
+
+        public static bool Any<T>(this T[] array)
+            => array.Length > 0;
+
+        public static bool Any<TKey, TValue>(this IDictionary<TKey, TValue> list)
+            where TKey : notnull
+            => list.Count > 0;
+
+        public static bool Any<TKey, TValue>(this ILookup<TKey, TValue> list)
+            => list.Count > 0;
+
+        public static bool Any<TKey, TValue>(this Dictionary<TKey, TValue> list)
+            where TKey : notnull
+            => list.Count > 0;
+
+        public static bool Any<T>(this HashSet<T> list)
+            => list.Count > 0;
+#endif
+
+#if NET452 || NETSTANDARD2_0 || NETCOREAPP3_1
+        public static bool Any<T>(this IReadOnlyList<T> list)
+            => list.Count > 0;
+
+        public static bool Any<T>(this IReadOnlyCollection<T> list)
+            => list.Count > 0;
+#endif
+
+        public static bool None<T>(this IEnumerable<T> items)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            switch (items)
+            {
+                case ICollection coll:
+                    return coll.Count == 0;
+#if !NET40
+                case IReadOnlyList<T> list:
+                    return list.Count == 0;
+                case IReadOnlyCollection<T> collection:
+                    return collection.Count == 0;
+#endif
+                case IList<T> list:
+                    return list.Count == 0;
+                case ICollection<T> collection:
+                    return collection.Count == 0;
+                default:
+                    return !items.Any();
+            }
+        }
+
+        public static bool None<T>(this IEnumerable<T> items, Func<T, bool> predicate)
+            => !items.Any(predicate);
+
+        public static bool IsNullOrEmpty<T>(this IEnumerable<T>? source)
+            => source == null || !source.Any();
+
+        public static bool IsNullOrEmpty<T>(this string source)
+            => string.IsNullOrEmpty(source);
+
+        public static string StringJoin<T>(this IEnumerable<T> items, string separator, Func<T, string?>? toString = null)
+        {
+            toString ??= (i => i?.ToString());
+            return string.Join(separator, items.Select(toString));
         }
 
         public static string ToSingleQuotedCommaSeperated<T>(this IEnumerable<T> items)
@@ -22,7 +103,38 @@ namespace Octopus.CoreUtilities.Extensions
 
         public static IEnumerable<T> ToEnumerable<T>(this T source)
         {
-            return new T[] { source };
+            return new T[] {source};
         }
+
+        public static IEnumerable<TSource> Yield<TSource>(this TSource item)
+        {
+            yield return item;
+        }
+
+#if !NET40
+        public static IReadOnlyCollection<T> AsReadOnly<T>(this IEnumerable<T> items)
+        {
+            return new ReadOnlyCollection<T>(items.ToList());
+        }
+#endif
+
+        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
+            where TKey : notnull
+        {
+            return keyValuePairs.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        public static IEnumerable<TSource> TakeUntil<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
+            => source.TakeWhile(x => !predicate(x));
+
+        public static IEnumerable<TSource> SkipUntil<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
+            => source.SkipWhile(x => !predicate(x));
+
+        public static IEnumerable<string> WhereNotNullOrWhiteSpace(this IEnumerable<string> source)
+            => source.Where(item => !string.IsNullOrWhiteSpace(item));
+
+        public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> items)
+            where T : class
+            => items.Where(i => i != null)!;
     }
 }
