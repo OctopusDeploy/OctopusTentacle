@@ -15,6 +15,7 @@
 #addin "nuget:?package=Cake.Json&version=5.2"
 #addin "nuget:?package=Newtonsoft.Json&version=11.0.2"
 #addin "nuget:?package=SharpZipLib&version=1.2.0"
+#tool "nuget:?package=Chocolatey&version=0.10.8"
 
 using Path = System.IO.Path;
 using Dir = System.IO.Directory;
@@ -296,7 +297,11 @@ Task("Pack-ChocolateyPackage")
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", checksum64Value);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype64>", checksum64.Algorithm.ToString());
 
-        RunProcess("dotnet", $"tool run dotnet-octo pack --id=OctopusDeploy.Tentacle --version={versionInfo.FullSemVer} --basePath=./source/Chocolatey --outFolder={artifactsDir}/chocolatey");
+        ChocolateyPack("./source/Chocolatey/OctopusDeploy.Tentacle.nuspec", new ChocolateyPackSettings
+        {
+            Version = versionInfo.FullSemVer,
+            OutputDirectory = $"{artifactsDir}/chocolatey"
+        });
     });
 
 
