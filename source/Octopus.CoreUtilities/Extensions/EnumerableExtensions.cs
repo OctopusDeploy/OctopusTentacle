@@ -22,7 +22,6 @@ namespace Octopus.CoreUtilities.Extensions
         }
 #endif
 
-#if NET40 || NET452 || NETSTANDARD2_0 || NETCOREAPP3_1
         // In .NET 5.0 Enumerable.Any() calls Count/Length so these are no longer needed
         // https://github.com/dotnet/corefx/pull/40377
         public static bool Any<T>(this ICollection<T> collection)
@@ -48,6 +47,14 @@ namespace Octopus.CoreUtilities.Extensions
         public static bool Any<T>(this HashSet<T> list)
             => list.Count > 0;
 
+#if !NET40
+        public static bool Any<T>(this IReadOnlyList<T> list)
+            => list.Count > 0;
+
+        public static bool Any<T>(this IReadOnlyCollection<T> list)
+            => list.Count > 0;
+#endif
+
         public static bool None<T>(this ICollection<T> collection)
             => collection.Count == 0;
 
@@ -70,15 +77,8 @@ namespace Octopus.CoreUtilities.Extensions
 
         public static bool None<T>(this HashSet<T> list)
             => list.Count == 0;
-#endif
 
-#if NET452 || NETSTANDARD2_0 || NETCOREAPP3_1
-        public static bool Any<T>(this IReadOnlyList<T> list)
-            => list.Count > 0;
-
-        public static bool Any<T>(this IReadOnlyCollection<T> list)
-            => list.Count > 0;
-
+#if !NET40
         public static bool None<T>(this IReadOnlyList<T> list)
             => list.Count == 0;
 
