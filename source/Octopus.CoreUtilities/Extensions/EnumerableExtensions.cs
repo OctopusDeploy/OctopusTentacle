@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Octopus.CoreUtilities.Extensions
 {
@@ -46,6 +47,29 @@ namespace Octopus.CoreUtilities.Extensions
 
         public static bool Any<T>(this HashSet<T> list)
             => list.Count > 0;
+
+        public static bool None<T>(this ICollection<T> collection)
+            => collection.Count == 0;
+
+        public static bool None<T>(this List<T> list)
+            => list.Count == 0;
+
+        public static bool None<T>(this T[] array)
+            => array.Length > 0;
+
+        public static bool None<TKey, TValue>(this IDictionary<TKey, TValue> list)
+            where TKey : notnull
+            => list.Count == 0;
+
+        public static bool None<TKey, TValue>(this ILookup<TKey, TValue> list)
+            => list.Count == 0;
+
+        public static bool None<TKey, TValue>(this Dictionary<TKey, TValue> list)
+            where TKey : notnull
+            => list.Count == 0;
+
+        public static bool None<T>(this HashSet<T> list)
+            => list.Count == 0;
 #endif
 
 #if NET452 || NETSTANDARD2_0 || NETCOREAPP3_1
@@ -54,31 +78,16 @@ namespace Octopus.CoreUtilities.Extensions
 
         public static bool Any<T>(this IReadOnlyCollection<T> list)
             => list.Count > 0;
+
+        public static bool None<T>(this IReadOnlyList<T> list)
+            => list.Count == 0;
+
+        public static bool None<T>(this IReadOnlyCollection<T> list)
+            => list.Count == 0;
 #endif
 
         public static bool None<T>(this IEnumerable<T> items)
-        {
-            if (items == null)
-                throw new ArgumentNullException(nameof(items));
-
-            switch (items)
-            {
-                case ICollection coll:
-                    return coll.Count == 0;
-#if !NET40
-                case IReadOnlyList<T> list:
-                    return list.Count == 0;
-                case IReadOnlyCollection<T> collection:
-                    return collection.Count == 0;
-#endif
-                case IList<T> list:
-                    return list.Count == 0;
-                case ICollection<T> collection:
-                    return collection.Count == 0;
-                default:
-                    return !items.Any();
-            }
-        }
+            => !items.Any();
 
         public static bool None<T>(this IEnumerable<T> items, Func<T, bool> predicate)
             => !items.Any(predicate);
