@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Octopus.CoreUtilities.Extensions;
 using Octopus.Client.Model;
 using Octopus.Diagnostics;
 using Octopus.Shared;
@@ -55,7 +56,6 @@ namespace Octopus.Tentacle.Commands
             var servers = tentacleConfiguration.Value.TrustedOctopusServers.Where(s => s.Thumbprint == serverThumbprint).ToArray();
             if (servers.None())
                 throw new ControlledFailureException("No trusted server was found with the supplied thumbprint");
-
 
             if (communicationStyle == CommunicationStyle.TentacleActive)
                 SetupActive(servers);

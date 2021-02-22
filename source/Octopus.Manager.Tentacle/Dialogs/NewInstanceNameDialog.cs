@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
-using Octopus.Shared.Util;
+using Octopus.CoreUtilities.Extensions;
 
 namespace Octopus.Manager.Tentacle.Dialogs
 {

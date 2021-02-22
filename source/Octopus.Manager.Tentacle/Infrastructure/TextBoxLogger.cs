@@ -59,6 +59,10 @@ namespace Octopus.Manager.Tentacle.Infrastructure
         {
         }
 
+        public override void Flush(string correlationId)
+        {
+        }
+
         public override bool IsEnabled(LogCategory category)
         {
             return true;

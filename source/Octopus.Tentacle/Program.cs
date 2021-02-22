@@ -19,6 +19,8 @@ namespace Octopus.Tentacle
 {
     public class Program : OctopusProgram
     {
+        protected override ApplicationName ApplicationName => ApplicationName.Tentacle;
+
         public Program(string[] commandLineArguments) : base("Octopus Deploy: Tentacle",
             OctopusTentacle.Version.ToString(),
             OctopusTentacle.InformationalVersion,
@@ -36,13 +38,13 @@ namespace Octopus.Tentacle
             return new Program(args).Run();
         }
 
-        protected override IContainer BuildContainer(string instanceName)
+        protected override IContainer BuildContainer(StartUpInstanceRequest startupRequest)
         {
             var builder = new ContainerBuilder();
             const ApplicationName applicationName = ApplicationName.Tentacle;
 
             builder.RegisterModule(new ShellModule());
-            builder.RegisterModule(new ConfigurationModule(applicationName, instanceName));
+            builder.RegisterModule(new ConfigurationModule(startupRequest));
             builder.RegisterModule(new TentacleConfigurationModule());
             builder.RegisterModule(new LogMaskingModule());
             builder.RegisterModule(new OctopusClientInitializerModule());
