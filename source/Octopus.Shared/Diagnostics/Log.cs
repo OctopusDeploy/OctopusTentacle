@@ -11,7 +11,8 @@ namespace Octopus.Shared.Diagnostics
         protected Log(string? correlationId = null, string[]? sensitiveValues = null) : base(correlationId, sensitiveValues)
         {
         }
-        protected override string CorrelationId => "system/" + Environment.MachineName;
+
+        public override string CorrelationId => "system/" + Environment.MachineName;
 
         protected override void WriteEvent(LogEvent logEvent)
         {
@@ -24,7 +25,7 @@ namespace Octopus.Shared.Diagnostics
             foreach (var appender in GetThreadSafeAppenderCollection())
                 appender.Flush();
         }
-		
+
         static IEnumerable<ILogAppender> GetThreadSafeAppenderCollection() => Appenders.ToArray();
     }
 }

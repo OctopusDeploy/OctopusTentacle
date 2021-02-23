@@ -16,7 +16,7 @@ namespace Octopus.Shared.Diagnostics
             SensitiveValueMasker = new SensitiveValueMasker(sensitiveValues);
         }
 
-        public string CorrelationId { get; }
+        public virtual string CorrelationId { get; }
 
         protected SensitiveValueMasker SensitiveValueMasker { get; }
 
