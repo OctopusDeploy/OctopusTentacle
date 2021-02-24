@@ -22,9 +22,7 @@ namespace Octopus.CoreUtilities.Extensions
         }
 #endif
 
-        // In .NET 5.0 Enumerable.Any() calls Count/Length so these are no longer needed
-        // https://github.com/dotnet/corefx/pull/40377
-        public static bool Any<T>(this ICollection<T> collection)
+       public static bool Any<T>(this ICollection<T> collection)
             => collection.Count > 0;
 
         public static bool Any<T>(this List<T> list)
