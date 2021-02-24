@@ -6,7 +6,7 @@ namespace Octopus.Shared.Diagnostics
 {
     public class SystemLog : Log, ISystemLog
     {
-        public SystemLog(string[]? sensitiveValues = null) : base("system/" + Environment.MachineName, sensitiveValues)
+        public SystemLog(string[]? sensitiveValues = null) : base(sensitiveValues)
         {
         }
 
@@ -15,5 +15,7 @@ namespace Octopus.Shared.Diagnostics
             // creates a child context that will mask the given values.
             return new SystemLog(SensitiveValueMasker.SensitiveValues.Concat(sensitiveValues).ToArray());
         }
+
+        public override string CorrelationId => "system/" + Environment.MachineName;
     }
 }

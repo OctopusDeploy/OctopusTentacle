@@ -8,15 +8,12 @@ namespace Octopus.Shared.Diagnostics
 {
     public abstract class AbstractLog : ILog, IDisposable
     {
-        static string GenerateId() => Guid.NewGuid().ToString("N");
-
-        protected AbstractLog(string? correlationId = null, string[]? sensitiveValues = null)
+        protected AbstractLog(string[]? sensitiveValues = null)
         {
-            CorrelationId = correlationId ?? GenerateId();
             SensitiveValueMasker = new SensitiveValueMasker(sensitiveValues);
         }
 
-        public virtual string CorrelationId { get; }
+        public abstract string CorrelationId { get; }
 
         protected SensitiveValueMasker SensitiveValueMasker { get; }
 

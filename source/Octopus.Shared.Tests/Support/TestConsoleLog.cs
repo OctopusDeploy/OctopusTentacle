@@ -19,5 +19,7 @@ namespace Octopus.Shared.Tests.Support
         public override void Flush()
         {
         }
+
+        public override string CorrelationId => "system/" + Environment.MachineName;
     }
 }
