@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using Autofac;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
@@ -84,6 +85,7 @@ namespace Octopus.Tentacle
             builder.RegisterCommand<ListInstancesCommand>("list-instances", "Lists all installed Tentacle instances");
             builder.RegisterCommand<VersionCommand>("version", "Show the Tentacle version information");
             builder.RegisterCommand<ShowConfigurationCommand>("show-configuration", "Outputs the Tentacle configuration");
+            builder.RegisterType<SystemLog>().As<ILog>();
 
             return builder.Build();
         }
