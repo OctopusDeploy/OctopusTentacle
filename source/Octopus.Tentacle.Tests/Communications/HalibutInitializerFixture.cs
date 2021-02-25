@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Communications
         {
             var config = new StubProxyConfiguration(useDefaultProxy, username, password, host, port);
             var parser = new ProxyConfigParser { GetSystemWebProxy = BuildDefaultProxy };
-            return parser.ParseToHalibutProxy(config, new Uri("http://octopus.com"), Substitute.For<ILog>());
+            return parser.ParseToHalibutProxy(config, new Uri("http://octopus.com"), Substitute.For<ISystemLog>());
         }
 
         WebProxy BuildDefaultProxy()

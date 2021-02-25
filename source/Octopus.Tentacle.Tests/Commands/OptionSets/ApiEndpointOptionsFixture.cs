@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Tests.Commands.OptionSets
             else
             {
                 Action action = api.Validate;
-                action.ShouldThrow<ControlledFailureException>().WithMessage(expectedExceptionMessage);
+                action.Should().Throw<ControlledFailureException>().WithMessage(expectedExceptionMessage);
             }
         }
 
@@ -120,7 +120,7 @@ namespace Octopus.Tentacle.Tests.Commands.OptionSets
             else
             {
                 Action action = api.Validate;
-                action.ShouldThrow<ControlledFailureException>().WithMessage(expectedExceptionMessage);
+                action.Should().Throw<ControlledFailureException>().WithMessage(expectedExceptionMessage);
             }
         }
 

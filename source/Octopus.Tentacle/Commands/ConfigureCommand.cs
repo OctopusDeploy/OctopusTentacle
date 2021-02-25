@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Commands
     public class ConfigureCommand : AbstractStandardCommand
     {
         readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
-        readonly ILog log;
+        readonly ISystemLog log;
         readonly List<string> octopusToAdd = new List<string>();
         readonly List<string> octopusToRemove = new List<string>();
         readonly List<Action> operations = new List<Action>();
