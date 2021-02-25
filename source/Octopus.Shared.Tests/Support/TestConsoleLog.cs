@@ -5,7 +5,7 @@ using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Tests.Support
 {
-    public class TestConsoleLog : AbstractLog
+    public class TestConsoleLog : Log
     {
         public override bool IsEnabled(LogCategory category)
             => true;
