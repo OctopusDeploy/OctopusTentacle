@@ -64,4 +64,7 @@
     <Reference Include="System.IdentityModel" Condition="'$(TargetFramework)' == 'net452'" />
     <Reference Include="System.ServiceProcess" Condition="'$(TargetFramework)' == 'net452'" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Integration" />
+  </ItemGroup>
 </Project>
