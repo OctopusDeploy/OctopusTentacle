@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Commands
 
             if (!string.IsNullOrWhiteSpace(exportFile))
             {
-                var cert = generator.Value.GenerateNew(CertificateExpectations.TentacleCertificateFullName, log);
+                var cert = generator.Value.GenerateNew(CertificateExpectations.TentacleCertificateFullName);
                 var base64 = Convert.ToBase64String(CertificateEncoder.Export(cert));
                 File.WriteAllText(exportFile, base64, Encoding.UTF8);
                 log.Info($"A new certificate has been generated and written to {exportFile}. Thumbprint:");
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Commands
             }
             else if (!string.IsNullOrWhiteSpace(exportPfx))
             {
-                var cert = generator.Value.GenerateNew(CertificateExpectations.TentacleCertificateFullName, log);
+                var cert = generator.Value.GenerateNew(CertificateExpectations.TentacleCertificateFullName);
                 var pfxBytes = cert.Export(X509ContentType.Pkcs12, password);
                 File.WriteAllBytes(exportPfx, pfxBytes);
                 log.Info($"A new certificate has been generated and written to {exportPfx}. Thumbprint:");

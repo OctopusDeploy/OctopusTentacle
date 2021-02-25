@@ -13,7 +13,7 @@ using Octopus.Client.Repositories.Async;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Security;
+using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 new SpaceRepositoryFactory());
 
             configuration.ServicesPortNumber.Returns(90210);
-            certificate = new CertificateGenerator().GenerateNew("CN=Hello", new Shared.Diagnostics.NullLog());
+            certificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew("CN=Hello");
             configuration.TentacleCertificate.Returns(certificate);
         }
 

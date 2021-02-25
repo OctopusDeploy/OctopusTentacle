@@ -15,7 +15,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
     {
         readonly IList<CommandLineInvocation> commandLines;
         readonly string logsDirectory;
-        readonly ICommandLineRunner commandLineRunner = new CommandLineRunner();
+        readonly ICommandLineRunner commandLineRunner;
         readonly TextBoxLogger logger;
 
         public RunProcessDialog(IList<CommandLineInvocation> commandLines, string logsDirectory)
@@ -24,6 +24,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
             this.logsDirectory = logsDirectory;
             InitializeComponent();
             logger = new TextBoxLogger(OutputLog);
+            commandLineRunner = new CommandLineRunner(logger);
         }
 
         public static void ShowDialog(Window owner, IEnumerable<CommandLineInvocation> commandLines, string title, string logsDirectory, bool showOutputLog = false)
@@ -55,7 +56,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
                 var success = false;
                 try
                 {
-                    success = commandLineRunner.Execute(commandLines, logger);
+                    success = commandLineRunner.Execute(commandLines);
                 }
                 catch (Exception ex)
                 {

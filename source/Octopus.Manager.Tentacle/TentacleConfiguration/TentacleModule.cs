@@ -26,7 +26,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
             builder.RegisterType<ProxyWizardLauncher>();
             builder.RegisterType<DeleteWizardLauncher>();
             builder.RegisterType<InstanceSelectionModel>().AsSelf().SingleInstance().WithParameter("applicationName", ApplicationName.Tentacle);
-            builder.RegisterType<SystemLog>().As<ILog>();
         }
 
         static ShellView CreateShell(IComponentContext container)

@@ -136,7 +136,7 @@ namespace Octopus.Tentacle.Configuration
     {
         readonly IWritableKeyValueStore settings;
         readonly ICertificateGenerator certificateGenerator;
-        readonly ILog log;
+        readonly ISystemLog log;
 
         public WritableTentacleConfiguration(
             IWritableKeyValueStore settings,
@@ -266,7 +266,7 @@ namespace Octopus.Tentacle.Configuration
 
         public X509Certificate2 GenerateNewCertificate(bool writeToConfig = true)
         {
-            var certificate = certificateGenerator.GenerateNew(CertificateExpectations.TentacleCertificateFullName, log);
+            var certificate = certificateGenerator.GenerateNew(CertificateExpectations.TentacleCertificateFullName);
             // we write to the config, if there is one, else just hold in memory for the transient tentacles/workers
             if (writeToConfig)
                 SetTentacleCertificate(certificate);
