@@ -31,7 +31,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Octopus.Client" Version="8.9.2" />
-		<PackageReference Include="Octopus.Shared" Version="10.0.0" />
+		<PackageReference Include="Octopus.Shared" Version="10.0.1-tothegills-usesy0003" />
 	</ItemGroup>
 
 	<ItemGroup>

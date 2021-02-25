@@ -74,7 +74,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public void NoTrusts()
         {
             Action action = () => Execute(Thumb1, CommunicationStyle.TentaclePassive);
-            action.ShouldThrow<ControlledFailureException>()
+            action.Should().Throw<ControlledFailureException>()
                 .WithMessage("Before server communications can be modified, trust must be established with the configure command");
         }
 
@@ -94,7 +94,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             AddTrusts(Thumb1);
             Action action = () => Execute(Thumb1, CommunicationStyle.TentacleActive, null, "1234");
-            action.ShouldThrow<ControlledFailureException>()
+            action.Should().Throw<ControlledFailureException>()
                 .WithMessage("Please provide either the server hostname or websocket address, e.g. --host=OCTOPUS");
         }
 

@@ -9,9 +9,9 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 {
     public static class UnhandledErrorTrapper
     {
-        static ILog systemLog;
+        static ISystemLog systemLog;
 
-        public static void Initialize(ILog log)
+        public static void Initialize(ISystemLog log)
         {
             systemLog = log;
             TaskScheduler.UnobservedTaskException += HandleTaskException;

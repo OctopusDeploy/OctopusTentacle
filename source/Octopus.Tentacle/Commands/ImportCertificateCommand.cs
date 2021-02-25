@@ -10,6 +10,7 @@ using Octopus.Shared.Security;
 using Octopus.Shared.Security.Certificates;
 using Octopus.Shared.Startup;
 using Octopus.Tentacle.Configuration;
+using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
 
 namespace Octopus.Tentacle.Commands
 {
