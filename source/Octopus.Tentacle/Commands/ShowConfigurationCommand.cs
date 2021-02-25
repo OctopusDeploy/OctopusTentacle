@@ -17,6 +17,7 @@ using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
+using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -93,7 +94,7 @@ namespace Octopus.Tentacle.Commands
             var homeConfiguration = new WritableHomeConfiguration(ApplicationName.Tentacle, outputStore);
             homeConfiguration.SetHomeDirectory(oldHomeConfiguration.HomeDirectory);
 
-            var certificateGenerator = new CertificateGenerator();
+            var certificateGenerator = new CertificateGenerator(log);
             var newTentacleConfiguration = new WritableTentacleConfiguration(outputStore, homeConfiguration, certificateGenerator, tentacleConfiguration.Value.ProxyConfiguration, tentacleConfiguration.Value.PollingProxyConfiguration, new NullLog());
 
             newTentacleConfiguration.SetApplicationDirectory(tentacleConfiguration.Value.ApplicationDirectory);

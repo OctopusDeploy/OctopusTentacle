@@ -9,9 +9,9 @@ namespace Octopus.Tentacle.Communications
 {
     public class OctopusServerChecker : IOctopusServerChecker
     {
-        readonly ILog log;
+        readonly ISystemLog log;
 
-        public OctopusServerChecker(ILog log)
+        public OctopusServerChecker(ISystemLog log)
         {
             this.log = log;
         }

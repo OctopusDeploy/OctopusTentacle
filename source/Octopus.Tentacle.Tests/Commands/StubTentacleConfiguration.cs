@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Security;
+using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
 using IPollingProxyConfiguration = Octopus.Tentacle.Configuration.IPollingProxyConfiguration;
 
@@ -107,7 +107,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
         public X509Certificate2 GenerateNewCertificate(bool writeToConfig = true)
         {
-            var cert = new CertificateGenerator().GenerateNew("cn=foo", new Shared.Diagnostics.NullLog());
+            var cert = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew("cn=foo");
             TentacleCertificate = cert;
             return cert;
         }

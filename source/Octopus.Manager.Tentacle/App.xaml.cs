@@ -17,6 +17,8 @@ using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Security;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Configuration;
+using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
+using CertificatesModule = Octopus.Tentacle.Certificates.CertificatesModule;
 
 namespace Octopus.Manager.Tentacle
 {

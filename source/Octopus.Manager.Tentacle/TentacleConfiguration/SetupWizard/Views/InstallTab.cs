@@ -76,7 +76,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
                 try
                 {
                     var script = model.GenerateScript();
-                    success = commandLineRunner.Execute(script, logger);
+                    success = commandLineRunner.Execute(script);
                 }
                 catch (Exception ex)
                 {
@@ -112,7 +112,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             try
             {
                 var script = model.GenerateRollbackScript();
-                commandLineRunner.Execute(script, logger);
+                commandLineRunner.Execute(script);
             }
             catch (Exception ex2)
             {

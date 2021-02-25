@@ -4,7 +4,7 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Security;
+using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Versioning;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Communications;
@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             halibut = Substitute.For<IHalibutInitializer>();
             tentacleConfiguration = Substitute.For<IWritableTentacleConfiguration>();
-            var certificate = new CertificateGenerator().GenerateNew("cn=Test.Cert.For.Octopus.Tests", new Shared.Diagnostics.NullLog());
+            var certificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew("cn=Test.Cert.For.Octopus.Tests");
             tentacleConfiguration.TentacleCertificate.Returns(certificate);
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
