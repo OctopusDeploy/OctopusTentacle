@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Octopus.Client.Model;
+using Octopus.CoreUtilities.Extensions;
 using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Shared.Configuration.Instances;
