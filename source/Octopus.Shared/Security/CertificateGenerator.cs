@@ -22,15 +22,21 @@ namespace Octopus.Shared.Security
     public class CertificateGenerator : ICertificateGenerator
     {
         public const int RecommendedKeyBitLength = 2048;
+        readonly ISystemLog log;
 
-        public X509Certificate2 GenerateNew(string fullName, ISystemLog log)
-            => Generate(fullName, true, log);
+        public CertificateGenerator(ISystemLog log)
+        {
+            this.log = log;
+        }
 
-        public X509Certificate2 GenerateNewNonExportable(string fullName, ISystemLog log)
-            => Generate(fullName, false, log);
+        public X509Certificate2 GenerateNew(string fullName)
+            => Generate(fullName, true);
+
+        public X509Certificate2 GenerateNewNonExportable(string fullName)
+            => Generate(fullName, false);
 
 #if NETFRAMEWORK
-        static X509Certificate2 Generate(string fullName, bool exportable, ISystemLog log)
+        X509Certificate2 Generate(string fullName, bool exportable)
         {
             using (var cryptography = new CryptContext(log))
             {
@@ -48,7 +54,7 @@ namespace Octopus.Shared.Security
             }
         }
 #else
-        static X509Certificate2 Generate(string fullName, bool exportable, ILog log)
+        X509Certificate2 Generate(string fullName, bool exportable)
         {
             var random = new SecureRandom();
             var certificateGenerator = new X509V3CertificateGenerator();

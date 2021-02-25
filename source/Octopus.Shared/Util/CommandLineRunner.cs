@@ -6,16 +6,23 @@ namespace Octopus.Shared.Util
 {
     public class CommandLineRunner : ICommandLineRunner
     {
-        public bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations, ISystemLog log)
+        ISystemLog log;
+
+        public CommandLineRunner(ISystemLog log)
+        {
+            this.log = log;
+        }
+
+        public bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations)
         {
             foreach (var invocation in commandLineInvocations)
-                if (!Execute(invocation, log))
+                if (!Execute(invocation))
                     return false;
 
             return true;
         }
 
-        public bool Execute(CommandLineInvocation invocation, ISystemLog log)
+        public bool Execute(CommandLineInvocation invocation)
             => Execute(invocation,
                 log.Info,
                 log.Info,

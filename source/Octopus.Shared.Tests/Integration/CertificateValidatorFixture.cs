@@ -16,12 +16,12 @@ namespace Octopus.Shared.Tests.Integration
     [TestFixture]
     public class CertificateValidatorFixture
     {
-        readonly CertificateGenerator generator = new CertificateGenerator();
+        readonly CertificateGenerator generator = new CertificateGenerator(new NullLog());
 
         [Test]
         public void AcceptsValidCertificate()
         {
-            var expected = generator.GenerateNew("CN=expected", new NullLog());
+            var expected = generator.GenerateNew("CN=expected");
 
             var validator = new CertificateValidator(() => new[] { expected.Thumbprint }, CertificateValidationDirection.TheyCalledUs, Substitute.For<ILog>());
 
@@ -32,8 +32,8 @@ namespace Octopus.Shared.Tests.Integration
         [Retry(3)]
         public void RejectsInvalidCertificate()
         {
-            var expected = generator.GenerateNew("CN=expected", new NullLog());
-            var evil = generator.GenerateNew("CN=evil", new NullLog());
+            var expected = generator.GenerateNew("CN=expected");
+            var evil = generator.GenerateNew("CN=evil");
 
             var validator1 = new CertificateValidator(() => new[] { expected.Thumbprint }, CertificateValidationDirection.TheyCalledUs, Substitute.For<ILog>());
 
