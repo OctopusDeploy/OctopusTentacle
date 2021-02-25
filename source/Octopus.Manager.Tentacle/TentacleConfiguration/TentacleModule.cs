@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.DeleteWizard;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
@@ -6,6 +7,7 @@ using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard;
 using Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Diagnostics;
 using InstanceSelectionModel = Octopus.Manager.Tentacle.Shell.InstanceSelectionModel;
 using ShellViewModel = Octopus.Manager.Tentacle.Shell.ShellViewModel;
 
@@ -24,6 +26,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
             builder.RegisterType<ProxyWizardLauncher>();
             builder.RegisterType<DeleteWizardLauncher>();
             builder.RegisterType<InstanceSelectionModel>().AsSelf().SingleInstance().WithParameter("applicationName", ApplicationName.Tentacle);
+            builder.RegisterType<SystemLog>().As<ILog>();
         }
 
         static ShellView CreateShell(IComponentContext container)
