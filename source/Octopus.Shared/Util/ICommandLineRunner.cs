@@ -6,8 +6,8 @@ namespace Octopus.Shared.Util
 {
     public interface ICommandLineRunner
     {
-        bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations, ILog log);
-        bool Execute(CommandLineInvocation commandLineInvocation, ILog log);
+        bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations, ISystemLog log);
+        bool Execute(CommandLineInvocation commandLineInvocation, ISystemLog log);
 
         bool Execute(CommandLineInvocation invocation,
             Action<string> debug,

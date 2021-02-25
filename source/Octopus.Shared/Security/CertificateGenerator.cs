@@ -23,14 +23,14 @@ namespace Octopus.Shared.Security
     {
         public const int RecommendedKeyBitLength = 2048;
 
-        public X509Certificate2 GenerateNew(string fullName, ILog log)
+        public X509Certificate2 GenerateNew(string fullName, ISystemLog log)
             => Generate(fullName, true, log);
 
-        public X509Certificate2 GenerateNewNonExportable(string fullName, ILog log)
+        public X509Certificate2 GenerateNewNonExportable(string fullName, ISystemLog log)
             => Generate(fullName, false, log);
 
 #if NETFRAMEWORK
-        static X509Certificate2 Generate(string fullName, bool exportable, ILog log)
+        static X509Certificate2 Generate(string fullName, bool exportable, ISystemLog log)
         {
             using (var cryptography = new CryptContext(log))
             {

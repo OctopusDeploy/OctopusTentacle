@@ -12,13 +12,13 @@ namespace Octopus.Shared.Internals.CertificateGeneration
     // In the future, I may expand it to do other things.
     public class CryptContext : FinalizableObject
     {
-        readonly ILog log;
+        readonly ISystemLog log;
         IntPtr handle = IntPtr.Zero;
 
         /// <summary>
         /// By default, sets up to create a new randomly named key container
         /// </summary>
-        public CryptContext(ILog log)
+        public CryptContext(ISystemLog log)
         {
             this.log = log;
             ContainerName = Guid.NewGuid().ToString();

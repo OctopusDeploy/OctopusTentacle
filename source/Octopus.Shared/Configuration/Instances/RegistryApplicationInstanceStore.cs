@@ -17,9 +17,9 @@ namespace Octopus.Shared.Configuration.Instances
         const string KeyName = "Software\\Octopus";
 
         readonly StartUpInstanceRequest startUpInstanceRequest;
-        readonly ILog log;
+        readonly ISystemLog log;
 
-        public RegistryApplicationInstanceStore(StartUpInstanceRequest startUpInstanceRequest, ILog log)
+        public RegistryApplicationInstanceStore(StartUpInstanceRequest startUpInstanceRequest, ISystemLog log)
         {
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.log = log;

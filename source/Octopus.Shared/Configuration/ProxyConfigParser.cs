@@ -9,7 +9,7 @@ namespace Octopus.Shared.Configuration
 {
     public interface IProxyConfigParser
     {
-        ProxyDetails? ParseToHalibutProxy(IProxyConfiguration config, Uri destination, ILog log);
+        ProxyDetails? ParseToHalibutProxy(IProxyConfiguration config, Uri destination, ISystemLog log);
         IWebProxy? ParseToWebProxy(IProxyConfiguration config);
     }
 
@@ -18,7 +18,7 @@ namespace Octopus.Shared.Configuration
         public const string ProxyNotConfiguredForDestination = "Agent configured to use the system proxy, but no system proxy is configured for {0}";
         public Func<IWebProxy?> GetSystemWebProxy = () => PlatformDetection.IsRunningOnWindows ? WebRequest.GetSystemWebProxy() : null; //allow us to swap this for tests without having to inject
 
-        public ProxyDetails? ParseToHalibutProxy(IProxyConfiguration config, Uri destination, ILog log)
+        public ProxyDetails? ParseToHalibutProxy(IProxyConfiguration config, Uri destination, ISystemLog log)
         {
             if (config == null)
                 return null;

@@ -6,7 +6,7 @@ namespace Octopus.Shared.Security
 {
     public interface ICertificateGenerator
     {
-        X509Certificate2 GenerateNew(string fullName, ILog log);
-        X509Certificate2 GenerateNewNonExportable(string fullName, ILog log);
+        X509Certificate2 GenerateNew(string fullName, ISystemLog log);
+        X509Certificate2 GenerateNewNonExportable(string fullName, ISystemLog log);
     }
 }
