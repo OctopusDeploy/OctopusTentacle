@@ -108,7 +108,9 @@ namespace Octopus.Shared.Util
             if (error == null)
                 throw new ArgumentNullException(nameof(error));
 
-            customEnvironmentVariables ??= new Dictionary<string, string>();
+            customEnvironmentVariables = customEnvironmentVariables == null
+                ? new Dictionary<string, string>()
+                : new Dictionary<string, string>(customEnvironmentVariables);
 
             void WriteData(Action<string> action, ManualResetEventSlim resetEvent, DataReceivedEventArgs e)
             {
@@ -185,7 +187,7 @@ namespace Octopus.Shared.Util
 
                     if (runAs == null)
                         RunAsSameUser(process.StartInfo, customEnvironmentVariables);
-                    else if (PlatformDetection.IsRunningOnWindows)
+                    else if(PlatformDetection.IsRunningOnWindows)
                         RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
                     else
                         throw new PlatformNotSupportedException("NetCore on Linux or Mac does not support running a process as a different user.");
@@ -291,6 +293,10 @@ namespace Octopus.Shared.Util
             NetworkCredential? runAs = null,
             IDictionary<string, string>? customEnvironmentVariables = null)
         {
+            customEnvironmentVariables = customEnvironmentVariables == null
+                ? new Dictionary<string, string>()
+                : new Dictionary<string, string>(customEnvironmentVariables);
+
             try
             {
                 using (var process = new Process())
