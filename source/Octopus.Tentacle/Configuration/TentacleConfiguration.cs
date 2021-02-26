@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Configuration
         internal const string TrustedServersSettingName = "Tentacle.Communication.TrustedOctopusServers";
         internal const string DeploymentApplicationDirectorySettingName = "Tentacle.Deployment.ApplicationDirectory";
         internal const string CertificateSettingName = "Tentacle.Certificate";
-        internal const string CertificateThumbprintSettingName = "Tentacle.CertificateThumprint";
+        internal const string CertificateThumbprintSettingName = "Tentacle.CertificateThumbprint";
         internal const string LastReceivedHandshakeSettingName = "Tentacle.Communication.LastReceivedHandshake";
 
         readonly IKeyValueStore settings;
