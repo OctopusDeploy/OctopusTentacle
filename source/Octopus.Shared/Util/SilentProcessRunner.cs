@@ -108,7 +108,9 @@ namespace Octopus.Shared.Util
             if (error == null)
                 throw new ArgumentNullException(nameof(error));
 
-            customEnvironmentVariables ??= new Dictionary<string, string>();
+            customEnvironmentVariables = customEnvironmentVariables == null
+                ? new Dictionary<string, string>()
+                : new Dictionary<string, string>(customEnvironmentVariables);
 
             void WriteData(Action<string> action, ManualResetEventSlim resetEvent, DataReceivedEventArgs e)
             {
@@ -291,6 +293,10 @@ namespace Octopus.Shared.Util
             NetworkCredential? runAs = null,
             IDictionary<string, string>? customEnvironmentVariables = null)
         {
+            customEnvironmentVariables = customEnvironmentVariables == null
+                ? new Dictionary<string, string>()
+                : new Dictionary<string, string>(customEnvironmentVariables);
+
             try
             {
                 using (var process = new Process())
