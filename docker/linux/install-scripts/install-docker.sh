@@ -33,6 +33,7 @@ dos2unix /usr/local/bin/dind
 chmod +x /usr/local/bin/dockerd-entrypoint.sh
 dos2unix /usr/local/bin/dockerd-entrypoint.sh
 
+export VERSION=19
 curl -sSL https://get.docker.com/ | sh
 
 # https://forums.docker.com/t/failing-to-start-dockerd-failed-to-create-nat-chain-docker/78269
