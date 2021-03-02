@@ -76,7 +76,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
                 try
                 {
                     var script = model.GenerateScript();
-                    success = commandLineRunner.Execute(script);
+                    success = commandLineRunner.Execute(script, logger.Verbose, logger.Info, logger.Error, logger.Error);
                 }
                 catch (Exception ex)
                 {
