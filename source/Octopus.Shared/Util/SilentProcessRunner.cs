@@ -187,7 +187,7 @@ namespace Octopus.Shared.Util
 
                     if (runAs == null)
                         RunAsSameUser(process.StartInfo, customEnvironmentVariables);
-                    else if(PlatformDetection.IsRunningOnWindows)
+                    else if (PlatformDetection.IsRunningOnWindows)
                         RunAsDifferentUser(process.StartInfo, runAs, customEnvironmentVariables);
                     else
                         throw new PlatformNotSupportedException("NetCore on Linux or Mac does not support running a process as a different user.");
