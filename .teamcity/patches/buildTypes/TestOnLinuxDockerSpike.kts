@@ -22,6 +22,8 @@ create(DslContext.projectId, BuildType({
 
     vcs {
         root(DslContext.settingsRoot)
+
+        checkoutMode = CheckoutMode.ON_AGENT
     }
 
     steps {
