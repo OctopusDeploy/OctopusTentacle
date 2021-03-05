@@ -34,15 +34,12 @@ create(DslContext.projectId, BuildType({
                 #!/bin/bash
                 set -eux
                 
-                whoami
-                apt-get update && apt-get install -y sudo
-                
                 #dotnet vstest build/artifacts/linux-x64/Octopus.Shared.Tests.dll /logger:logger://teamcity /TestAdapterPath:/opt/TeamCity/BuildAgent/plugins/dotnet/tools/vstest15 /logger:console;verbosity=detailed
-                sudo /usr/bin/dotnet vstest build/artifacts/linux-x64/Octopus.Shared.Tests.dll /logger:logger://teamcity /logger:console;verbosity=detailed
+                dotnet vstest build/artifacts/linux-x64/Octopus.Shared.Tests.dll /logger:logger://teamcity /logger:console;verbosity=detailed
             """.trimIndent()
             dockerImagePlatform = ScriptBuildStep.ImagePlatform.Linux
             dockerPull = true
-            dockerImage = "docker.packages.octopushq.com/octopusdeploy/tool-containers/test-ubuntu18"
+            dockerImage = "docker.packages.octopushq.com/octopusdeploy/tool-containers/build-base-dotnet"
             param("org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource", "Job configuration")
             param("org.jfrog.artifactory.selectedDeployableServer.useSpecs", "false")
             param("org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource", "Job configuration")
