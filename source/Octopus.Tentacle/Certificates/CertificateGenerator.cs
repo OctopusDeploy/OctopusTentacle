@@ -20,6 +20,12 @@ using Org.BouncyCastle.X509;
 
 namespace Octopus.Tentacle.Certificates
 {
+    public interface ICertificateGenerator
+    {
+        X509Certificate2 GenerateNew(string fullName);
+        X509Certificate2 GenerateNewNonExportable(string fullName);
+    }
+
     public class CertificateGenerator : ICertificateGenerator
     {
         public const int RecommendedKeyBitLength = 2048;

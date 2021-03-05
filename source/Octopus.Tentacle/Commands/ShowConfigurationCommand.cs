@@ -11,7 +11,6 @@ using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Security;
 using Octopus.Shared.Services;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
