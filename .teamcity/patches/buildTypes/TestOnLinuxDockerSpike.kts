@@ -29,7 +29,13 @@ create(DslContext.projectId, BuildType({
     steps {
         script {
             name = "dotnet vstest"
-            scriptContent = "dotnet vstest build/artifacts/linux-x64/Octopus.Shared.Tests.dll /logger:logger://teamcity /TestAdapterPath:/opt/TeamCity/BuildAgent/plugins/dotnet/tools/vstest15 /logger:console;verbosity=detailed"
+            scriptContent = """
+                #!/bin/bash
+                set -eux
+                
+                #dotnet vstest build/artifacts/linux-x64/Octopus.Shared.Tests.dll /logger:logger://teamcity /TestAdapterPath:/opt/TeamCity/BuildAgent/plugins/dotnet/tools/vstest15 /logger:console;verbosity=detailed
+                dotnet vstest build/artifacts/linux-x64/Octopus.Shared.Tests.dll /logger:logger://teamcity /logger:console;verbosity=detailed
+            """.trimIndent()
             dockerImagePlatform = ScriptBuildStep.ImagePlatform.Linux
             dockerPull = true
             dockerImage = "docker.packages.octopushq.com/octopusdeploy/tool-containers/test-ubuntu18"
