@@ -11,5 +11,5 @@ accordingly, and delete the patch script.
 */
 changeProject(DslContext.projectId) {
     expectBuildTypesOrder(RelativeId("Build"), RelativeId("TestOnLinux"), RelativeId("TestOnWindows"), RelativeId("Publish"))
-    buildTypesOrderIds = arrayListOf(RelativeId("Build"), RelativeId("BuildNew"), RelativeId("TestOnLinux"), RelativeId("TestOnWindows"), RelativeId("Publish"))
+    buildTypesOrderIds = arrayListOf(RelativeId("Build"), RelativeId("TestOnLinux"), RelativeId("TestOnLinuxDockerSpike"), RelativeId("TestOnWindows"), RelativeId("Publish"))
 }
