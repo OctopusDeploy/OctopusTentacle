@@ -38,7 +38,7 @@ create(DslContext.projectId, BuildType({
                 apt-get update && apt-get install -y sudo
                 
                 #dotnet vstest build/artifacts/linux-x64/Octopus.Shared.Tests.dll /logger:logger://teamcity /TestAdapterPath:/opt/TeamCity/BuildAgent/plugins/dotnet/tools/vstest15 /logger:console;verbosity=detailed
-                sudo dotnet vstest build/artifacts/linux-x64/Octopus.Shared.Tests.dll /logger:logger://teamcity /logger:console;verbosity=detailed
+                sudo /usr/bin/dotnet vstest build/artifacts/linux-x64/Octopus.Shared.Tests.dll /logger:logger://teamcity /logger:console;verbosity=detailed
             """.trimIndent()
             dockerImagePlatform = ScriptBuildStep.ImagePlatform.Linux
             dockerPull = true
