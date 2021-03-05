@@ -73,8 +73,10 @@ create(DslContext.projectId, BuildType({
 
     requirements {
         exists("system.Octopus.Docker")
-        equals("system.Octopus.OSPlatform", "Linux")
+        equals("system.Octopus.OSPlatform", "Linux", "RQ_2")
         equals("system.Octopus.Purpose", "Test")
     }
+    
+    disableSettings("RQ_2")
 }))
 
