@@ -3,7 +3,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Security;
+using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
 
