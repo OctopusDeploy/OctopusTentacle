@@ -8,6 +8,7 @@ using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Security;
 using Octopus.Shared.Security.Certificates;
 using Octopus.Shared.Startup;
+using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Tentacle.Commands

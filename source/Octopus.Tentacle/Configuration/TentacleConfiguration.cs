@@ -12,6 +12,7 @@ using Octopus.Shared.Configuration;
 using Octopus.Shared.Security;
 using Octopus.Shared.Security.Certificates;
 using Octopus.Shared.Util;
+using Octopus.Tentacle.Certificates;
 
 namespace Octopus.Tentacle.Configuration
 {
