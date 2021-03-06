@@ -6,14 +6,7 @@ namespace Octopus.Shared.Util
 {
     public class CommandLineRunner : ICommandLineRunner
     {
-        readonly ISystemLog log;
-
-        public CommandLineRunner(ISystemLog log)
-        {
-            this.log = log;
-        }
-
-        public bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations)
+        public bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations, ILog log)
         {
             return Execute(commandLineInvocations,
                 log.Verbose,
@@ -35,7 +28,7 @@ namespace Octopus.Shared.Util
             return true;
         }
 
-        public bool Execute(CommandLineInvocation invocation)
+        public bool Execute(CommandLineInvocation invocation, ILog log)
             => Execute(invocation,
                 log.Info,
                 log.Info,
