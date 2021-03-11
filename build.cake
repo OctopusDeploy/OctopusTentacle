@@ -51,9 +51,6 @@ var testOnLinuxDistributions = new string[][] {
 var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
 var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
 
-var gpgSigningCertificatePath = Argument("gpg_signing_certificate_path", "./certificates/octopus-privkey.asc");
-var gpgSigningCertificatePassword = Argument("gpg_signing_certificate_password", "Password01!");
-
 var awsAccessKeyId = Argument("aws_access_key_id", EnvironmentVariable("AWS_ACCESS_KEY") ?? "XXXX");
 var awsSecretAccessKey = Argument("aws_secret_access_key", EnvironmentVariable("AWS_SECRET_KEY") ?? "YYYY");
 
