@@ -7,6 +7,7 @@
 // dotnet tools are installed via the `dotnet tool install` command (not via this Cakefile),
 // and are restored using `dotnet tool restore` on build.
 
+#tool "dotnet:?package=AzureSignTool&version=2.0.17"
 #tool "nuget:?package=TeamCity.Dotnet.Integration&version=1.0.10"
 #tool "nuget:?package=WiX&version=3.11.2"
 #addin "nuget:?package=Cake.Docker&version=0.10.0"
@@ -47,6 +48,11 @@ var testOnLinuxDistributions = new string[][] {
     new [] { "netcoreapp3.1", "linux-x64", "roboxes/rhel7", "rpm" },
     new [] { "netcoreapp3.1", "linux-x64", "roboxes/rhel8", "rpm" },
 };
+
+var keyVaultUrl = Argument("AzureKeyVaultUrl", "");
+var keyVaultAppId = Argument("AzureKeyVaultAppId", "");
+var keyVaultAppSecret = Argument("AzureKeyVaultAppSecret", "");
+var keyVaultCertificateName = Argument("AzureKeyVaultCertificateName", "");
 
 var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
 var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
@@ -806,36 +812,79 @@ private void SignAndTimeStamp(params FilePath[] filePaths)
             }
         }
 
-        var lastException = default(Exception);
-        var signSettings = new SignToolSignSettings
+        if (string.IsNullOrEmpty(keyVaultUrl) && string.IsNullOrEmpty(keyVaultAppId) && string.IsNullOrEmpty(keyVaultAppSecret) && string.IsNullOrEmpty(keyVaultCertificateName))
         {
-            CertPath = File(signingCertificatePath),
-            Password = signingCertificatPassword,
-            DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
-            Description = "Octopus Tentacle Agent",
-            DescriptionUri = new Uri("http://octopus.com")
-        };
-
-        foreach (var url in signingTimestampUrls)
-        {
-            InBlock($"Trying to time stamp [{string.Join(Environment.NewLine, filePaths.Select(a => a.ToString()))}] using {url}", () => {
-                signSettings.TimeStampUri = new Uri(url);
-                try
-                {
-                    Sign(filePaths, signSettings);
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    lastException = ex;
-                }
-            });
-
-            if (lastException == null) return;
+            Information("Signing files using signtool and the self-signed development code signing certificate.");
+            SignWithSignTool(filePaths);
         }
-
-        throw(lastException);
+        else
+        {
+            Information("Signing files using azuresigntool and the production code signing certificate.");
+            SignWithAzureSignTool(filePaths);
+        }
     });
+}
+
+private void SignWithAzureSignTool(IEnumerable<FilePath> files, string display = "", string displayUrl = "")
+{
+    var signArguments = new ProcessArgumentBuilder()
+        .Append("sign")
+        .Append("--azure-key-vault-url").AppendQuoted(keyVaultUrl)
+        .Append("--azure-key-vault-client-id").AppendQuoted(keyVaultAppId)
+        .Append("--azure-key-vault-client-secret").AppendQuoted(keyVaultAppSecret)
+        .Append("--azure-key-vault-certificate").AppendQuoted(keyVaultCertificateName)
+        .Append("--file-digest sha256");
+
+    if (!string.IsNullOrEmpty(display))
+    {
+        signArguments
+            .Append("--description").AppendQuoted(display)
+            .Append("--description-url").AppendQuoted(displayUrl);
+    }
+
+    foreach (var file in files)
+    {
+        signArguments.AppendQuoted(file.FullPath);
+    }
+
+    var azureSignToolPath = Context.MakeAbsolute(Context.File("./tools/azuresigntool.exe"));
+    Information($"Executing: {azureSignToolPath} {signArguments.RenderSafe()}");
+    RunProcess(azureSignToolPath.ToString(), signArguments.Render());
+
+    Information($"Finished signing {files.Count()} files.");
+}
+
+private void SignWithSignTool(IEnumerable<FilePath> files, string display = "", string displayUrl = "")
+{
+    var lastException = default(Exception);
+    var signSettings = new SignToolSignSettings
+    {
+        CertPath = File(signingCertificatePath),
+        Password = signingCertificatPassword,
+        DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+        Description = "Octopus Tentacle Agent",
+        DescriptionUri = new Uri("http://octopus.com")
+    };
+
+    foreach (var url in signingTimestampUrls)
+    {
+        InBlock($"Trying to time stamp [{string.Join(Environment.NewLine, files.Select(a => a.ToString()))}] using {url}", () => {
+            signSettings.TimeStampUri = new Uri(url);
+            try
+            {
+                Sign(files, signSettings);
+                return;
+            }
+            catch (Exception ex)
+            {
+                lastException = ex;
+            }
+        });
+
+        if (lastException == null) return;
+    }
+
+    throw(lastException);
 }
 
 private string RunProcessAndGetOutput(string fileName, string args) {
