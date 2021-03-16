@@ -831,7 +831,7 @@ private void SignWithAzureSignTool(IEnumerable<FilePath> files, string display =
         .Append("sign")
         .Append("--azure-key-vault-url").AppendQuoted(keyVaultUrl)
         .Append("--azure-key-vault-client-id").AppendQuoted(keyVaultAppId)
-        .Append("--azure-key-vault-client-secret").AppendQuoted(keyVaultAppSecret)
+        .Append("--azure-key-vault-client-secret").AppendQuotedSecret(keyVaultAppSecret)
         .Append("--azure-key-vault-certificate").AppendQuoted(keyVaultCertificateName)
         .Append("--file-digest sha256");
 
