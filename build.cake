@@ -868,7 +868,7 @@ private void SignWithSignTool(IEnumerable<FilePath> files, string display = "", 
 
     foreach (var url in signingTimestampUrls)
     {
-        InBlock($"Trying to time stamp [{string.Join(Environment.NewLine, files.Select(a => a.ToString()))}] using {url}", () => {
+        InBlock($"Trying to time stamp using {url}", () => {
             signSettings.TimeStampUri = new Uri(url);
             try
             {
