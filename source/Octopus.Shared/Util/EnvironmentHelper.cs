@@ -35,11 +35,7 @@ namespace Octopus.Shared.Util
 
         static IEnumerable<string> GetEnvironmentVars()
         {
-#if FULL_FRAMEWORK
-            yield return "Unable to retrieve environment information.";
-#else
             yield return SafelyGet(() => $"OperatingSystem: {RuntimeInformation.OSDescription}");
-#endif
             yield return SafelyGet(() => $"OsBitVersion: {(Environment.Is64BitOperatingSystem ? "x64" : "x86")}");
             yield return SafelyGet(() => $"Is64BitProcess: {Environment.Is64BitProcess}");
             yield return SafelyGet(() => $"CurrentUser: {CurrentUserName}");
