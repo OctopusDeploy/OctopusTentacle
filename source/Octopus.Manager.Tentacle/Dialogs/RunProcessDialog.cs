@@ -24,7 +24,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
             this.logsDirectory = logsDirectory;
             InitializeComponent();
             logger = new TextBoxLogger(OutputLog);
-            commandLineRunner = new CommandLineRunner(logger);
+            commandLineRunner = new CommandLineRunner();
         }
 
         public static void ShowDialog(Window owner, IEnumerable<CommandLineInvocation> commandLines, string title, string logsDirectory, bool showOutputLog = false)
@@ -56,7 +56,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
                 var success = false;
                 try
                 {
-                    success = commandLineRunner.Execute(commandLines);
+                    success = commandLineRunner.Execute(commandLines, logger);
                 }
                 catch (Exception ex)
                 {
@@ -107,7 +107,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
             if (!success)
             {
                 StatusProgressBar.Foreground = Brushes.Red;
-            } 
+            }
         }
 
         void ShowOutputLog()
