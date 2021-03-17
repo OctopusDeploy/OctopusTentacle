@@ -31,7 +31,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Octopus.Client" Version="8.9.2" />
-		<PackageReference Include="Octopus.Shared" Version="10.1.1-enh-logging0001" />
+		<PackageReference Include="Octopus.Shared" Version="10.2.0" />
 	</ItemGroup>
 
 	<ItemGroup>
