@@ -31,7 +31,7 @@ using System.Security.Cryptography.X509Certificates;
 var target = Argument("target", "Default");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
 var frameworks = new [] { "net452", "netcoreapp3.1" };
-var runtimeIds =  new [] { "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
+var runtimeIds =  new [] { "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
 var testOnLinuxDistributions = new string[][] {
     new [] { "netcoreapp3.1", "linux-x64", "debian:buster", "deb" },
     new [] { "netcoreapp3.1", "linux-x64", "debian:oldoldstable-slim", "deb" },
@@ -55,7 +55,7 @@ var keyVaultAppSecret = Argument("AzureKeyVaultAppSecret", "");
 var keyVaultCertificateName = Argument("AzureKeyVaultCertificateName", "");
 
 var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
-var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
+var signingCertificatePassword = Argument("signing_certificate_password", "Password01!");
 
 var awsAccessKeyId = Argument("aws_access_key_id", EnvironmentVariable("AWS_ACCESS_KEY") ?? "XXXX");
 var awsSecretAccessKey = Argument("aws_secret_access_key", EnvironmentVariable("AWS_SECRET_KEY") ?? "YYYY");
@@ -176,7 +176,7 @@ foreach (var framework in frameworks)
 {
     foreach (var runtimeId in runtimeIds )
     {
-        if (framework == "net452" && runtimeId != "win-x64") continue;
+        if (framework == "net452" && !runtimeId.StartsWith("win-")) continue;
 
         var taskName = $"Build-{framework}-{runtimeId}";
         Task(taskName)
@@ -346,16 +346,8 @@ Task("Pack-WindowsInstallers")
     {
         CreateDirectory($"{artifactsDir}/msi");
 
-        var installerDir = $"{buildDir}/Installer";
-        CreateDirectory(installerDir);
-
-        CopyFiles($"{buildDir}/Tentacle/net452/win-x64/*", installerDir);
-        CopyFiles($"{buildDir}/Octopus.Manager.Tentacle/net452/win-x64/*", installerDir);
-        CopyFiles("scripts/Harden-InstallationDirectory.ps1", installerDir);
-
-        GenerateMsiInstallerContents(installerDir);
-        BuildMsiInstallerForPlatform(PlatformTarget.x64);
-        BuildMsiInstallerForPlatform(PlatformTarget.x86);
+        PackWindowsInstaller(PlatformTarget.x64);
+        PackWindowsInstaller(PlatformTarget.x86);
     });
 
 Task("Pack-CrossPlatformBundle")
@@ -384,6 +376,7 @@ Task("Pack-CrossPlatformBundle")
         CopyFiles($"./source/Octopus.Tentacle.CrossPlatformBundle/Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDir);
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi", $"{workingDir}/Octopus.Tentacle.msi");
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi", $"{workingDir}/Octopus.Tentacle-x64.msi");
+        CopyFiles($"{buildDir}/Octopus.Tentacle.Upgrader/net452/win-x86/*", workingDir);
         CopyFiles($"{buildDir}/Octopus.Tentacle.Upgrader/net452/win-x64/*", workingDir);
         CopyFile($"{artifactsDir}/deb/{debAMD64PackageFilename}", $"{workingDir}/{debAMD64PackageFilename}");
         CopyFile($"{artifactsDir}/deb/{debARM64PackageFilename}", $"{workingDir}/{debARM64PackageFilename}");
@@ -396,7 +389,7 @@ Task("Pack-CrossPlatformBundle")
         {
             foreach (var runtimeId in runtimeIds)
             {
-                if (framework == "net452" && runtimeId != "win-x64") continue;  // General exclusion of net452+(not Windows)
+                if (framework == "net452" && !runtimeId.StartsWith("win-")) continue;  // General exclusion of net452+(not Windows)
 
                 var fileExtension = runtimeId.StartsWith("win-") ? "zip" : "tar.gz";
                 CopyFile($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}", $"{workingDir}/tentacle-{framework}-{runtimeId}.{fileExtension}");
@@ -451,12 +444,12 @@ Task("Pack")
 // We dynamically define test tasks based on the cross-product of frameworks and runtimes.
 // We do this rather than attempting to have a single "Test" task because there's no feasible way to actually run
 // all of the different framework/runtime combinations on a single host. Notable examples would be
-// net452/win-x64 and netcoreapp3.1/linux-musl-x64, or anything linux-x64 versus linux-arm64.
+// net452/win-x64|x86 and netcoreapp3.1/linux-musl-x64, or anything linux-x64 versus linux-arm64.
 foreach (var framework in frameworks)
 {
     foreach (var runtimeId in runtimeIds )
     {
-        if (framework == "net452" && runtimeId != "win-x64") continue;
+        if (framework == "net452" && !runtimeId.StartsWith("win-")) continue;
 
         var testTaskName = $"Test-{framework}-{runtimeId}";
         var buildTaskName = $"Build-{framework}-{runtimeId}";
@@ -670,6 +663,20 @@ private void BuildMsiInstallerForPlatform(PlatformTarget platformTarget)
     });
 }
 
+private void PackWindowsInstaller(PlatformTarget platformTarget)
+{
+    var platformPath = platformTarget == PlatformTarget.x64 ? "win-x64" : "win-x86";
+    var installerDir = $"{buildDir}/Installer/{platformPath}";
+    CreateDirectory(installerDir);
+
+    CopyFiles($"{buildDir}/Tentacle/net452/{platformPath}/*", installerDir);
+    CopyFiles($"{buildDir}/Octopus.Manager.Tentacle/net452/{platformPath}/*", installerDir);
+    CopyFiles("scripts/Harden-InstallationDirectory.ps1", installerDir);
+
+    GenerateMsiInstallerContents(installerDir);
+    BuildMsiInstallerForPlatform(platformTarget);
+}
+
 private void CreateLinuxPackages(string runtimeId)
 {
     if (string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY")) )
@@ -861,7 +868,7 @@ private void SignWithSignTool(IEnumerable<FilePath> files, string display = "", 
     var signSettings = new SignToolSignSettings
     {
         CertPath = File(signingCertificatePath),
-        Password = signingCertificatPassword,
+        Password = signingCertificatePassword,
         DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
         Description = "Octopus Tentacle Agent",
         DescriptionUri = new Uri("http://octopus.com")
