@@ -27,16 +27,16 @@ namespace Octopus.Shared.Diagnostics
 
     class SqlPrettyPrintHandler : ICustomPrettyPrintHandler<SqlException>
     {
-        public bool Handle(StringBuilder sb, Exception ex)
+        public bool Handle(StringBuilder sb, SqlException ex)
         {
-            var number = ((SqlException)ex).Number;
+            var number = ex.Number;
             sb.AppendLine($"SQL Error {number} - {ex.Message}");
             return true;
         }
     }
     class ControlledFailureExceptionPrettyPrintHandler : ICustomPrettyPrintHandler<ControlledFailureException>
     {
-        public bool Handle(StringBuilder sb, Exception ex)
+        public bool Handle(StringBuilder sb, ControlledFailureException ex)
         {
             sb.AppendLine(ex.Message);
             return false;
