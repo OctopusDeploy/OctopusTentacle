@@ -34,10 +34,10 @@ namespace Octopus.CoreUtilities
 
     }
 
-    public static class MaybeExtentions
+    public static class MaybeExtensions
     {
         public static Maybe<T> AsSome<T>(this T value) => Maybe<T>.Some(value);
-        public static bool None<T>(this Maybe<T> maybe) => maybe == null || maybe == Maybe<T>.None;
+        public static bool None<T>(this Maybe<T>? maybe) => maybe == null || maybe == Maybe<T>.None;
         public static bool Some<T>(this Maybe<T> maybe) => !None(maybe);
 
         public static T? SomeOrDefault<T>(this Maybe<T> maybe)
@@ -55,7 +55,7 @@ namespace Octopus.CoreUtilities
         public static R SelectValueOr<T, R>(this Maybe<T> maybe, Func<T, R> selector, R ifNone)
             => maybe.Some() ? selector(maybe.Value) : ifNone;
 
-        public static Maybe<T> ToMaybe<T>(this T value) where T : class
+        public static Maybe<T> ToMaybe<T>(this T? value) where T : class
             => value == null ? Maybe<T>.None : value.AsSome();
     }
 }
