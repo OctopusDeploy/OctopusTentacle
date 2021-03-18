@@ -41,17 +41,13 @@ namespace Octopus.Shared.Startup
                 Password = Environment.GetEnvironmentVariable(ServicePasswordEnvVar)
             };
 
-            var serviceType = PlatformDetection.IsRunningOnWindows
-                ? "Windows Service"
-                : "system service";
-
-            Options.Add("start", $"Start the {serviceType} if it is not already running", v => serviceConfigurationState.Start = true);
-            Options.Add("stop", $"Stop the {serviceType} if it is running", v => serviceConfigurationState.Stop = true);
-            Options.Add("restart", $"Restart the {serviceType} if it is running", v => serviceConfigurationState.Restart = true);
-            Options.Add("reconfigure", $"Reconfigure the {serviceType}", v => serviceConfigurationState.Reconfigure = true);
-            Options.Add("install", $"Install the {serviceType}", v => serviceConfigurationState.Install = true);
-            Options.Add("username=|user=", $"Username to run the service under (DOMAIN\\Username format). Only used when --install or --reconfigure are used.  Can also be passed via an environment variable {ServiceUsernameEnvVar}.", v => serviceConfigurationState.Username = v);
-            Options.Add("uninstall", $"Uninstall the {serviceType}", v => serviceConfigurationState.Uninstall = true);
+            Options.Add("start", $"Start the service if it is not already running", v => serviceConfigurationState.Start = true);
+            Options.Add("stop", $"Stop the service if it is running", v => serviceConfigurationState.Stop = true);
+            Options.Add("restart", $"Restart the service if it is running", v => serviceConfigurationState.Restart = true);
+            Options.Add("reconfigure", $"Reconfigure the service", v => serviceConfigurationState.Reconfigure = true);
+            Options.Add("install", $"Install the service", v => serviceConfigurationState.Install = true);
+            Options.Add("username=|user=", $"Username to run the service under (DOMAIN\\Username format for Windows). Only used when --install or --reconfigure are used.  Can also be passed via an environment variable {ServiceUsernameEnvVar}. Defaults to 'root' for Systemd services.", v => serviceConfigurationState.Username = v);
+            Options.Add("uninstall", $"Uninstall the service", v => serviceConfigurationState.Uninstall = true);
             Options.Add("password=",
                 $"Password for the username specified with --username. Only used when --install or --reconfigure are used. Can also be passed via an environment variable {ServicePasswordEnvVar}.",
                 v =>

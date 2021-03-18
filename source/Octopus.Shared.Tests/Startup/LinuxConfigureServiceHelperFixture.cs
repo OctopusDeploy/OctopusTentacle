@@ -1,20 +1,36 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Tests.Support;
+using Octopus.Shared.Tests.Util;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Startup
 {
     [TestFixture]
     [LinuxTest]
-    public class ConfigureSystemdHelperFixture
+    public class LinuxConfigureServiceHelperFixture
     {
         [Test]
-        public void CanInstallService()
+        public void CanInstallServiceAsRoot()
+        {
+            CanInstallService(null, null);
+        }
+
+        [Test]
+        public void CanInstallServiceAsUser()
+        {
+            var user = new LinuxTestUserPrincipal("octo-shared-svc-test");
+            CanInstallService(user.UserName, user.Password);
+        }
+
+        void CanInstallService(string username, string password)
         {
             const string serviceName = "OctopusShared.ServiceHelperTest";
             const string instance = "TestInstance";
@@ -32,7 +48,9 @@ namespace Octopus.Shared.Tests.Startup
             var serviceConfigurationState = new ServiceConfigurationState
             {
                 Install = true,
-                Start = true
+                Start = true,
+                Username = username,
+                Password = password
             };
 
             configureServiceHelper.ConfigureService(serviceName,
@@ -43,6 +61,12 @@ namespace Octopus.Shared.Tests.Startup
 
             //Check that the systemd unit service file has been written
             Assert.IsTrue(DoesServiceUnitFileExist(instance), "The service unit file has not been created");
+
+            var status = GetServiceStatus(instance);
+            status["ActiveState"].Should().Be("active");
+            status["SubState"].Should().Be("running");
+            status["LoadState"].Should().Be("loaded");
+            status["User"].Should().Be(username ?? "root");
 
             //Check that the Service is running
             Assert.IsTrue(IsServiceRunning(instance), "The service is not running");
@@ -82,6 +106,18 @@ namespace Octopus.Shared.Tests.Startup
                 writer.WriteLine("while true; do now=$(date +\"%T\");echo \"Current time : $now\";sleep 1; done\n");
                 writer.Close();
             }
+        }
+
+        Dictionary<string, string> GetServiceStatus(string serviceName)
+        {
+            var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"systemctl show {serviceName}\"");
+            var result = commandLineInvocation.ExecuteCommand();
+            Console.WriteLine($"Status of service {serviceName}");
+            foreach (var info in result.Infos)
+                Console.WriteLine(info);
+            return result.Infos
+                .Select(x => x.Split(new [] {'='}, 2, StringSplitOptions.RemoveEmptyEntries))
+                .ToDictionary(x => x[0], x => x[1]);
         }
 
         bool IsServiceRunning(string serviceName)

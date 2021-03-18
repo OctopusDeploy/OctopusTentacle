@@ -12,14 +12,14 @@ using Octopus.Shared.Tests.Support;
 using Octopus.Shared.Tests.Util;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Tests
+namespace Octopus.Shared.Tests.Startup
 {
     [TestFixture]
     [WindowsTest]
-    public class ConfigureServiceHelperFixture
+    public class WindowsServiceConfiguratorFixture
     {
         [Test]
-        public void CanInstallService()
+        public void CanInstallWindowsService()
         {
             const string serviceName = "OctopusShared.ServiceHelperTest";
             const string instance = "TestInstance";
@@ -91,7 +91,6 @@ namespace Octopus.Shared.Tests
                 serviceConfigurationState));
             ex.Message.Should().Be("Unable to set dependency on service 'ServiceThatDoesNotExist' as no service was found with that name.");
         }
-
         ServiceController GetInstalledService(string serviceName)
         {
             return ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == serviceName);

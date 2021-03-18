@@ -46,11 +46,13 @@ namespace Octopus.Shared.Startup
             if (!string.IsNullOrWhiteSpace(serviceConfigurationState.DependOn))
                 serviceDependencies.Add(serviceConfigurationState.DependOn);
 
+            var userName = serviceConfigurationState.Username ?? "root";
             if (serviceConfigurationState.Install)
                 InstallService(cleanedInstanceName,
                     exePath,
                     serviceDescription,
                     systemdUnitFilePath,
+                    userName,
                     serviceDependencies);
 
             if (serviceConfigurationState.Reconfigure)
@@ -58,6 +60,7 @@ namespace Octopus.Shared.Startup
                     exePath,
                     serviceDescription,
                     systemdUnitFilePath,
+                    userName,
                     serviceDependencies);
 
             if (serviceConfigurationState.Start)
@@ -111,11 +114,12 @@ namespace Octopus.Shared.Startup
             string exePath,
             string serviceDescription,
             string systemdUnitFilePath,
+            string userName,
             IEnumerable<string> serviceDependencies)
         {
             try
             {
-                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, serviceDependencies));
+                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, userName, serviceDependencies));
                 systemCtlHelper.EnableService(instance, true);
                 log.Info($"Service installed: {instance}");
             }
@@ -130,6 +134,7 @@ namespace Octopus.Shared.Startup
             string exePath,
             string serviceDescription,
             string systemdUnitFilePath,
+            string userName,
             IEnumerable<string> serviceDependencies)
         {
             try
@@ -141,7 +146,7 @@ namespace Octopus.Shared.Startup
                 File.Delete(systemdUnitFilePath);
 
                 //re-add service
-                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, serviceDependencies));
+                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, userName, serviceDependencies));
                 systemCtlHelper.EnableService(instance, true);
                 log.Info($"Service installed: {instance}");
             }
@@ -193,7 +198,7 @@ namespace Octopus.Shared.Startup
             return result.ExitCode == 0;
         }
 
-        string GenerateSystemdUnitFile(string instance, string serviceDescription, string exePath, IEnumerable<string> serviceDependencies)
+        string GenerateSystemdUnitFile(string instance, string serviceDescription, string exePath, string userName, IEnumerable<string> serviceDependencies)
         {
             var stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("[Unit]");
@@ -202,7 +207,7 @@ namespace Octopus.Shared.Startup
             stringBuilder.AppendLine();
             stringBuilder.AppendLine("[Service]");
             stringBuilder.AppendLine("Type=simple");
-            stringBuilder.AppendLine("User=root");
+            stringBuilder.AppendLine($"User={userName}");
             stringBuilder.AppendLine($"ExecStart={exePath} run --instance={instance} --noninteractive");
             stringBuilder.AppendLine("Restart=always");
             stringBuilder.AppendLine();
