@@ -34,6 +34,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
             logger = new TextBoxLogger(outputLog);
             Loaded += async (a, e) =>
             {
+                model.ContributeSensitiveValues(logger);
                 await model.VerifyCredentials(logger);
                 if (model.HaveCredentialsBeenVerified)
                 {
