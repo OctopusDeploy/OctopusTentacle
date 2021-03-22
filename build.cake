@@ -295,7 +295,7 @@ Task("Pack-ChocolateyPackage")
         var chocolateyInstallScriptPath = "./source/Chocolatey/chocolateyInstall.ps1";
         RestoreFileOnCleanup(chocolateyInstallScriptPath);
 
-        ReplaceTextInFiles(chocolateyInstallScriptPath, "0.0.0", versionInfo.NuGetVersion);
+        ReplaceTextInFiles(chocolateyInstallScriptPath, "0.0.0", versionInfo.FullSemVer);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum>", checksumValue);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype>", checksum.Algorithm.ToString());
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", checksum64Value);
