@@ -946,6 +946,14 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         {
             return CliBuilder.ForTool(TentacleExe, action, InstanceName);
         }
+
+        public void ContributeSensitiveValues(ILog log)
+        {
+            if (password != null)
+                log.WithSensitiveValue(password);
+            if (apiKey != null)
+                log.WithSensitiveValue(apiKey);
+        }
     }
 
     public class SpaceSpecificData

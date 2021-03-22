@@ -55,7 +55,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
         {
             if (textBox.Dispatcher.CheckAccess())
             {
-                textBox.AppendText(line);
+                SensitiveValueMasker.SafeSanitize(line, sanitized => textBox.AppendText(sanitized));
                 textBox.AppendText(Environment.NewLine);
                 textBox.ScrollToEnd();
             }

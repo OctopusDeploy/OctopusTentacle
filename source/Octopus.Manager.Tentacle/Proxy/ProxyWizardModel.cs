@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using FluentValidation;
+using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Controls;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Util;
@@ -234,6 +235,12 @@ namespace Octopus.Manager.Tentacle.Proxy
         bool NotContainHttp(string host)
         {
             return true;
+        }
+
+        public void ContributeSensitiveValues(ILog log)
+        {
+            if (proxyPassword != null)
+                log.WithSensitiveValue(proxyPassword);
         }
     }
 }

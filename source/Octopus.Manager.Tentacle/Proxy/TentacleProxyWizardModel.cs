@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Shared.Util;
 
@@ -47,6 +48,11 @@ namespace Octopus.Manager.Tentacle.Proxy
         {
             pollingProxyWizardModel = pollingWizardModel;
             pollingProxyWizardModel.ToggleService = false;
+        }
+
+        public void ContributeSensitiveValues(ILog log)
+        {
+            proxyWizardModel.ContributeSensitiveValues(log);
         }
     }
 }
