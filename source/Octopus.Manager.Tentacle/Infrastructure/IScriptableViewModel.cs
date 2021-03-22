@@ -3,7 +3,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Manager.Tentacle.Infrastructure
 {
-    public interface IScriptableViewModel
+    public interface IScriptableViewModel : ICanHaveSensitiveValues
     {
         string InstanceName { get; }
         IEnumerable<CommandLineInvocation> GenerateScript();
