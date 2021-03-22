@@ -71,6 +71,7 @@ public class VersionInfo
     public string BuildMetadata { get; set; }
     public string BuildMetadataWithPlus { get; set; }
     public string FullSemVer { get; set; }
+    public string NuGetVersion { get; set; }
 }
 
 var versionInfo = DeriveVersionInfo();
@@ -141,7 +142,7 @@ Task("VersionAssemblies")
         ReplaceRegexInFiles(versionInfoFile, "AssemblyFileVersion\\(\".*?\"\\)", $"AssemblyFileVersion(\"{versionInfo.MajorMinorPatch}\")");
         ReplaceRegexInFiles(versionInfoFile, "AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{versionInfo.FullSemVer}\")");
         ReplaceRegexInFiles(versionInfoFile, "AssemblyGitBranch\\(\".*?\"\\)", $"AssemblyGitBranch(\"{gitBranch}\")");
-        ReplaceRegexInFiles(versionInfoFile, "AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{versionInfo.FullSemVer}\")");
+        ReplaceRegexInFiles(versionInfoFile, "AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{versionInfo.NuGetVersion}\")");
 
         var productWxs = "./installer/Octopus.Tentacle.Installer/Product.wxs";
         RestoreFileOnCleanup(productWxs);
@@ -294,7 +295,7 @@ Task("Pack-ChocolateyPackage")
         var chocolateyInstallScriptPath = "./source/Chocolatey/chocolateyInstall.ps1";
         RestoreFileOnCleanup(chocolateyInstallScriptPath);
 
-        ReplaceTextInFiles(chocolateyInstallScriptPath, "0.0.0", versionInfo.FullSemVer);
+        ReplaceTextInFiles(chocolateyInstallScriptPath, "0.0.0", versionInfo.NuGetVersion);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum>", checksumValue);
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype>", checksum.Algorithm.ToString());
         ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", checksum64Value);
@@ -302,7 +303,7 @@ Task("Pack-ChocolateyPackage")
 
         ChocolateyPack("./source/Chocolatey/OctopusDeploy.Tentacle.nuspec", new ChocolateyPackSettings
         {
-            Version = versionInfo.FullSemVer,
+            Version = versionInfo.NuGetVersion,
             OutputDirectory = $"{artifactsDir}/chocolatey"
         });
     });
