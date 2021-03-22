@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using FluentValidation;
+using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Shared.Configuration;
@@ -38,6 +39,11 @@ namespace Octopus.Manager.Tentacle.DeleteWizard
             var validator = new InlineValidator<DeleteWizardModel>();
 
             return validator;
+        }
+
+        public void ContributeSensitiveValues(ILog log)
+        {
+            // no sensitive values to contribute
         }
     }
 }
