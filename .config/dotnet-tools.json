@@ -9,7 +9,7 @@
       ]
     },
     "octoversion.tool": {
-      "version": "0.0.64",
+      "version": "0.2.393",
       "commands": [
         "octoversion"
       ]
