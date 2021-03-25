@@ -114,8 +114,8 @@ function setupPollingTentacle {
 
     read -p 'Select auth method: 1) API-Key or 2) Username and Password (default 1): ' authmethod
 
-    case $authmethod in
-        2)
+    case "${authmethod,,}" in
+        2 | username | "username and password")
             while [ -z "$username" ] 
             do
                 read -p 'Username: ' username
@@ -140,15 +140,16 @@ function setupPollingTentacle {
 
     read -p "Select type of Tentacle do you want to setup: 1) Deployment Target or 2) Worker (default $machinetype): " inputmachinetype
     machinetype=$(assignNonEmptyValue "$inputmachinetype" $machinetype)
+	machinetype="${machinetype,,}"
 
     read -p 'What Space would you like to register this Tentacle in? (Default): ' spaceinput
     space=$(assignNonEmptyValue "$spaceinput" $space)
 
     read -p "What name would you like to register this Tentacle with? ($displayname): " displaynameinput
-    displayname=$(assignNonEmptyValue "$displaynameinput" $displayname)
+    displayname=$(assignNonEmptyValue "$displaynameinput" $displayname)	
 
-    case $machinetype in
-        2)
+    case machinetype in
+        2 | worker)
             #Get worker pools
             while [ -z "$workerpoolsinput" ] 
             do
@@ -178,7 +179,7 @@ function setupPollingTentacle {
     echo -e "sudo /opt/octopus/tentacle/Tentacle new-certificate --instance \"$instancename\" --if-blank"
     echo -e "sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --noListen \"True\" --reset-trust"
 
-    if [ $machinetype = 2 ]; then
+    if [ $machinetype = 2 ] || [ $machinetype = "worker" ]; then
         echo -e "sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $displayauth --space \"$space\" $workerpoolsstring"
     else
         echo -e "sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $displayauth --space \"$space\" $envstring $rolesstring"
@@ -197,7 +198,7 @@ function setupPollingTentacle {
     eval sudo /opt/octopus/tentacle/Tentacle configure --instance \"$instancename\" --app \"$applicationpath\" --noListen \"True\" --reset-trust
     exitIfCommandFailed 
 
-    if [ $machinetype = 2 ]; then
+    if [ $machinetype = 2 ] || [ $machinetype = "worker" ]; then
         eval sudo /opt/octopus/tentacle/Tentacle register-worker --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $workerpoolsstring
     else
         eval sudo /opt/octopus/tentacle/Tentacle register-with --instance \"$instancename\" --server \"$octopusserverurl\" --name \"$displayname\" --comms-style \"TentacleActive\" --server-comms-port \"10943\" $auth --space \"$space\" $envstring $rolesstring
@@ -224,8 +225,8 @@ fi
 
 read -p 'What kind of Tentacle would you like to configure: 1) Listening or 2) Polling (default 1): ' commsstlye
 
-case $commsstlye in
-     2)
+case "${commsstlye,,}"  in
+     2 | polling)
           setupPollingTentacle $instance
           ;; 
      *)
