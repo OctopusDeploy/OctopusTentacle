@@ -146,7 +146,7 @@ function setupPollingTentacle {
     space=$(assignNonEmptyValue "$spaceinput" $space)
 
     read -p "What name would you like to register this Tentacle with? ($displayname): " displaynameinput
-    displayname=$(assignNonEmptyValue "$displaynameinput" $displayname)	
+    displayname=$(assignNonEmptyValue "$displaynameinput" $displayname)
 
     case machinetype in
         2 | worker)
