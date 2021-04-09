@@ -454,12 +454,11 @@ foreach (var framework in frameworks)
 {
     foreach (var runtimeId in runtimeIds )
     {
-        if (runtimeId == "win" && framework != "net452" //win runtime id can only do net452
-         || runtimeId != "win" && framework == "net452") continue; //others can't do net452
+        if (runtimeId == "win" && framework != "net452"
+         || runtimeId != "win" && framework == "net452") continue;
 
         var testTaskName = $"Test-{framework}-{runtimeId}";
         var buildTaskName = $"Build-{framework}-{runtimeId}";
-
         Task(testTaskName)
             .IsDependentOn(buildTaskName)
             .Description($"Runs the test suite for {framework}/{runtimeId}")
