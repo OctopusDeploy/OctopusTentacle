@@ -5,8 +5,8 @@
     <OutputPath>bin</OutputPath>
     <OutputType>WinExe</OutputType>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
-    <RuntimeIdentifiers>win</RuntimeIdentifiers>
-    <TargetFramework>net452</TargetFramework>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <TargetFrameworks>net452</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
