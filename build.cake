@@ -30,8 +30,8 @@ using System.Security.Cryptography.X509Certificates;
 //////////////////////////////////////////////////////////////////////
 var target = Argument("target", "Default");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
-var frameworks = new [] { "net452", "netcoreapp3.1" };
-var runtimeIds =  new [] { "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
+var frameworks = new [] { "netcoreapp3.1", "net452"};
+var runtimeIds = new [] { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
 var testOnLinuxDistributions = new string[][] {
     new [] { "netcoreapp3.1", "linux-x64", "debian:buster", "deb" },
     new [] { "netcoreapp3.1", "linux-x64", "debian:oldoldstable-slim", "deb" },
@@ -176,7 +176,8 @@ foreach (var framework in frameworks)
 {
     foreach (var runtimeId in runtimeIds )
     {
-        if (framework == "net452" && !runtimeId.StartsWith("win-")) continue;
+        if (runtimeId == "win" && framework != "net452"
+         || runtimeId != "win" && framework == "net452") continue;
 
         var taskName = $"Build-{framework}-{runtimeId}";
         Task(taskName)
@@ -188,7 +189,7 @@ foreach (var framework in frameworks)
             });
 
         // Include this task in the dependencies of whichever is the appropriate rolled-up build task for its operating system.
-        if (runtimeId.StartsWith("win-"))
+        if (runtimeId.StartsWith("win"))
         {
             taskBuildWindows.IsDependentOn(taskName);
         }
@@ -216,13 +217,17 @@ Task("Pack-WindowsZips")
     .Does(() => {
         CreateDirectory($"{artifactsDir}/zip");
 
-        var targetTrameworks = frameworks;
-        var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("win-")).ToArray();
+        var targetFrameworks = frameworks;
+        var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("win")).ToArray();
 
-        foreach (var framework in targetTrameworks)
+        foreach (var framework in targetFrameworks)
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
+                if (runtimeId == "win" && framework != "net452"
+                 || runtimeId != "win" && framework == "net452") continue; //Pack net452 only for the AnyCPU runtime (ie 'win'), and don't pack anything else for it.
+
+                Information($"Packing: {framework}, {runtimeId}");
                 var workingDir = $"{buildDir}/zip/{framework}/{runtimeId}";
                 CreateDirectory(workingDir);
                 CreateDirectory($"{workingDir}/tentacle");
@@ -238,10 +243,10 @@ Task("Pack-LinuxTarballs")
     .Does(() => {
         CreateDirectory($"{artifactsDir}/zip");
 
-        var targetTrameworks = frameworks.Where(f => f.StartsWith("netcore"));
+        var targetFrameworks = frameworks.Where(f => f.StartsWith("netcore"));
         var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("linux-")).ToArray();
 
-        foreach (var framework in targetTrameworks)
+        foreach (var framework in targetFrameworks)
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
@@ -261,10 +266,10 @@ Task("Pack-OSXTarballs")
     .Does(() => {
         CreateDirectory($"{artifactsDir}/zip");
 
-        var targetTrameworks = frameworks.Where(f => f.StartsWith("netcore"));
+        var targetFrameworks = frameworks.Where(f => f.StartsWith("netcore"));
         var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("osx-")).ToArray();
 
-        foreach (var framework in targetTrameworks)
+        foreach (var framework in targetFrameworks)
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
@@ -376,8 +381,7 @@ Task("Pack-CrossPlatformBundle")
         CopyFiles($"./source/Octopus.Tentacle.CrossPlatformBundle/Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDir);
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi", $"{workingDir}/Octopus.Tentacle.msi");
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi", $"{workingDir}/Octopus.Tentacle-x64.msi");
-        CopyFiles($"{buildDir}/Octopus.Tentacle.Upgrader/net452/win-x86/*", workingDir);
-        CopyFiles($"{buildDir}/Octopus.Tentacle.Upgrader/net452/win-x64/*", workingDir);
+        CopyFiles($"{buildDir}/Octopus.Tentacle.Upgrader/net452/win/*", workingDir);
         CopyFile($"{artifactsDir}/deb/{debAMD64PackageFilename}", $"{workingDir}/{debAMD64PackageFilename}");
         CopyFile($"{artifactsDir}/deb/{debARM64PackageFilename}", $"{workingDir}/{debARM64PackageFilename}");
         CopyFile($"{artifactsDir}/deb/{debARM32PackageFilename}", $"{workingDir}/{debARM32PackageFilename}");
@@ -389,9 +393,10 @@ Task("Pack-CrossPlatformBundle")
         {
             foreach (var runtimeId in runtimeIds)
             {
-                if (framework == "net452" && !runtimeId.StartsWith("win-")) continue;  // General exclusion of net452+(not Windows)
+                if (runtimeId == "win" && framework != "net452"
+                 || runtimeId != "win" && framework == "net452") continue;  // General exclusion of net452+ (not Windows, and only the AnyCPU runtime id)
 
-                var fileExtension = runtimeId.StartsWith("win-") ? "zip" : "tar.gz";
+                var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
                 CopyFile($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}", $"{workingDir}/tentacle-{framework}-{runtimeId}.{fileExtension}");
             }
         }
@@ -444,15 +449,17 @@ Task("Pack")
 // We dynamically define test tasks based on the cross-product of frameworks and runtimes.
 // We do this rather than attempting to have a single "Test" task because there's no feasible way to actually run
 // all of the different framework/runtime combinations on a single host. Notable examples would be
-// net452/win-x64|x86 and netcoreapp3.1/linux-musl-x64, or anything linux-x64 versus linux-arm64.
+// net452/win-anycpu and netcoreapp3.1/linux-musl-x64, or anything linux-x64 versus linux-arm64.
 foreach (var framework in frameworks)
 {
     foreach (var runtimeId in runtimeIds )
     {
-        if (framework == "net452" && !runtimeId.StartsWith("win-")) continue;
+        if (runtimeId == "win" && framework != "net452" //win runtime id can only do net452
+         || runtimeId != "win" && framework == "net452") continue; //others can't do net452
 
         var testTaskName = $"Test-{framework}-{runtimeId}";
         var buildTaskName = $"Build-{framework}-{runtimeId}";
+
         Task(testTaskName)
             .IsDependentOn(buildTaskName)
             .Description($"Runs the test suite for {framework}/{runtimeId}")
@@ -485,6 +492,7 @@ Task("Copy-ToLocalPackages")
     .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
     .Does(() =>
     {
+    versionInfo.FullSemVer = "6.0.544-MissedTheMark-Bug-M";
         CreateDirectory(localPackagesDir);
         CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.{versionInfo.FullSemVer}.nupkg"), localPackagesDir);
     });
@@ -669,8 +677,8 @@ private void PackWindowsInstaller(PlatformTarget platformTarget)
     var installerDir = $"{buildDir}/Installer/{platformPath}";
     CreateDirectory(installerDir);
 
-    CopyFiles($"{buildDir}/Tentacle/net452/{platformPath}/*", installerDir);
-    CopyFiles($"{buildDir}/Octopus.Manager.Tentacle/net452/{platformPath}/*", installerDir);
+    CopyFiles($"{buildDir}/Tentacle/net452/win/*", installerDir);
+    CopyFiles($"{buildDir}/Octopus.Manager.Tentacle/net452/win/*", installerDir);
     CopyFiles("scripts/Harden-InstallationDirectory.ps1", installerDir);
 
     GenerateMsiInstallerContents(installerDir);
@@ -947,6 +955,7 @@ private void RunBuildFor(string framework, string runtimeId)
         Runtime = runtimeId
     });
 
+    Information(configuration);
     DotNetCorePublish("./source/Tentacle.sln",
         new DotNetCorePublishSettings
         {
@@ -959,7 +968,7 @@ private void RunBuildFor(string framework, string runtimeId)
         }
     );
 
-    if (runtimeId.StartsWith("win-"))
+    if (runtimeId.StartsWith("win"))
     {
         // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
         // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
