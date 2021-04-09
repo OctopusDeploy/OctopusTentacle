@@ -30,7 +30,7 @@ using System.Security.Cryptography.X509Certificates;
 //////////////////////////////////////////////////////////////////////
 var target = Argument("target", "Default");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
-var frameworks = new [] { "netcoreapp3.1", "net452"};
+var frameworks = new [] { "net452", "netcoreapp3.1" };
 var runtimeIds = new [] { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
 var testOnLinuxDistributions = new string[][] {
     new [] { "netcoreapp3.1", "linux-x64", "debian:buster", "deb" },
@@ -151,7 +151,7 @@ Task("VersionAssemblies")
 
 // This task will have dependencies programmatically added to it below.
 var taskBuildWindows = Task("Build-Windows")
-    .Description("Builds all of the win-* runtime targets.");
+    .Description("Builds all of the win* runtime targets.");
 
 // This task will have dependencies programmatically added to it below.
 var taskBuildLinux = Task("Build-Linux")
@@ -177,7 +177,8 @@ foreach (var framework in frameworks)
     foreach (var runtimeId in runtimeIds )
     {
         if (runtimeId == "win" && framework != "net452"
-         || runtimeId != "win" && framework == "net452") continue;
+         || runtimeId != "win" && framework == "net452") continue;  // Net452 is only for the 'win' runtime (ie 'AnyCPU'), and
+                                                                    // the 'win' runtime can't be used for the other frameworks.
 
         var taskName = $"Build-{framework}-{runtimeId}";
         Task(taskName)
@@ -225,9 +226,8 @@ Task("Pack-WindowsZips")
             foreach (var runtimeId in targetRuntimeIds)
             {
                 if (runtimeId == "win" && framework != "net452"
-                 || runtimeId != "win" && framework == "net452") continue; //Pack net452 only for the AnyCPU runtime (ie 'win'), and don't pack anything else for it.
+                 || runtimeId != "win" && framework == "net452") continue;
 
-                Information($"Packing: {framework}, {runtimeId}");
                 var workingDir = $"{buildDir}/zip/{framework}/{runtimeId}";
                 CreateDirectory(workingDir);
                 CreateDirectory($"{workingDir}/tentacle");
@@ -394,7 +394,7 @@ Task("Pack-CrossPlatformBundle")
             foreach (var runtimeId in runtimeIds)
             {
                 if (runtimeId == "win" && framework != "net452"
-                 || runtimeId != "win" && framework == "net452") continue;  // General exclusion of net452+ (not Windows, and only the AnyCPU runtime id)
+                 || runtimeId != "win" && framework == "net452") continue;
 
                 var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
                 CopyFile($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}", $"{workingDir}/tentacle-{framework}-{runtimeId}.{fileExtension}");
@@ -449,7 +449,7 @@ Task("Pack")
 // We dynamically define test tasks based on the cross-product of frameworks and runtimes.
 // We do this rather than attempting to have a single "Test" task because there's no feasible way to actually run
 // all of the different framework/runtime combinations on a single host. Notable examples would be
-// net452/win-anycpu and netcoreapp3.1/linux-musl-x64, or anything linux-x64 versus linux-arm64.
+// net452/win and netcoreapp3.1/linux-musl-x64, or anything linux-x64 versus linux-arm64.
 foreach (var framework in frameworks)
 {
     foreach (var runtimeId in runtimeIds )
@@ -492,9 +492,8 @@ Task("Copy-ToLocalPackages")
     .Description("If not running on a build agent, this step copies the relevant built artifacts to the local packages cache.")
     .Does(() =>
     {
-    versionInfo.FullSemVer = "6.0.544-MissedTheMark-Bug-M";
         CreateDirectory(localPackagesDir);
-        CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.{versionInfo.FullSemVer}.nupkg"), localPackagesDir);
+        CopyFileToDirectory(Path.Combine($"{artifactsDir}/Chocolatey", $"OctopusDeploy.Tentacle.{versionInfo.NuGetVersion}.nupkg"), localPackagesDir);
     });
 
 Task("Default")
@@ -955,7 +954,6 @@ private void RunBuildFor(string framework, string runtimeId)
         Runtime = runtimeId
     });
 
-    Information(configuration);
     DotNetCorePublish("./source/Tentacle.sln",
         new DotNetCorePublishSettings
         {
