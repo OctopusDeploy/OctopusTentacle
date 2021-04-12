@@ -672,7 +672,7 @@ private void BuildMsiInstallerForPlatform(PlatformTarget platformTarget)
 private void PackWindowsInstaller(PlatformTarget platformTarget)
 {
     var platformPath = platformTarget == PlatformTarget.x64 ? "win-x64" : "win-x86";
-    var installerDir = $"{buildDir}/Installer/{platformPath}";
+    var installerDir = $"{buildDir}/Installer/";
     CreateDirectory(installerDir);
 
     CopyFiles($"{buildDir}/Tentacle/net452/win/*", installerDir);
