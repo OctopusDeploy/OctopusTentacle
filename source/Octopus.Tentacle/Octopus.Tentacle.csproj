@@ -10,11 +10,23 @@
 		<OutputType>Exe</OutputType>
 		<PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
-		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
 		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<LangVersion>8</LangVersion>
 	</PropertyGroup>
+
+	<Choose>
+		<When Condition="'$(TargetFramework)' == 'net452'">
+			<PropertyGroup>
+				<RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
+			</PropertyGroup>
+		</When>
+		<Otherwise>
+			<PropertyGroup>
+				<RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
+			</PropertyGroup>
+		</Otherwise>
+	</Choose>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<Optimize>True</Optimize>

@@ -31,7 +31,7 @@ using System.Security.Cryptography.X509Certificates;
 var target = Argument("target", "Default");
 var verbosity = Argument<Verbosity>("verbosity", Verbosity.Quiet);
 var frameworks = new [] { "net452", "netcoreapp3.1" };
-var runtimeIds =  new [] { "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
+var runtimeIds = new [] { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
 var testOnLinuxDistributions = new string[][] {
     new [] { "netcoreapp3.1", "linux-x64", "debian:buster", "deb" },
     new [] { "netcoreapp3.1", "linux-x64", "debian:oldoldstable-slim", "deb" },
@@ -55,7 +55,7 @@ var keyVaultAppSecret = Argument("AzureKeyVaultAppSecret", "");
 var keyVaultCertificateName = Argument("AzureKeyVaultCertificateName", "");
 
 var signingCertificatePath = Argument("signing_certificate_path", "./certificates/OctopusDevelopment.pfx");
-var signingCertificatPassword = Argument("signing_certificate_password", "Password01!");
+var signingCertificatePassword = Argument("signing_certificate_password", "Password01!");
 
 var awsAccessKeyId = Argument("aws_access_key_id", EnvironmentVariable("AWS_ACCESS_KEY") ?? "XXXX");
 var awsSecretAccessKey = Argument("aws_secret_access_key", EnvironmentVariable("AWS_SECRET_KEY") ?? "YYYY");
@@ -151,7 +151,7 @@ Task("VersionAssemblies")
 
 // This task will have dependencies programmatically added to it below.
 var taskBuildWindows = Task("Build-Windows")
-    .Description("Builds all of the win-* runtime targets.");
+    .Description("Builds all of the win* runtime targets.");
 
 // This task will have dependencies programmatically added to it below.
 var taskBuildLinux = Task("Build-Linux")
@@ -176,7 +176,9 @@ foreach (var framework in frameworks)
 {
     foreach (var runtimeId in runtimeIds )
     {
-        if (framework == "net452" && runtimeId != "win-x64") continue;
+        if (runtimeId == "win" && framework != "net452"
+         || runtimeId != "win" && framework == "net452") continue;  // Net452 is only for the 'win' runtime (ie 'AnyCPU'), and
+                                                                    // the 'win' runtime can't be used for the other frameworks.
 
         var taskName = $"Build-{framework}-{runtimeId}";
         Task(taskName)
@@ -188,7 +190,7 @@ foreach (var framework in frameworks)
             });
 
         // Include this task in the dependencies of whichever is the appropriate rolled-up build task for its operating system.
-        if (runtimeId.StartsWith("win-"))
+        if (runtimeId.StartsWith("win"))
         {
             taskBuildWindows.IsDependentOn(taskName);
         }
@@ -216,13 +218,16 @@ Task("Pack-WindowsZips")
     .Does(() => {
         CreateDirectory($"{artifactsDir}/zip");
 
-        var targetTrameworks = frameworks;
-        var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("win-")).ToArray();
+        var targetFrameworks = frameworks;
+        var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("win")).ToArray();
 
-        foreach (var framework in targetTrameworks)
+        foreach (var framework in targetFrameworks)
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
+                if (runtimeId == "win" && framework != "net452"
+                 || runtimeId != "win" && framework == "net452") continue;
+
                 var workingDir = $"{buildDir}/zip/{framework}/{runtimeId}";
                 CreateDirectory(workingDir);
                 CreateDirectory($"{workingDir}/tentacle");
@@ -238,10 +243,10 @@ Task("Pack-LinuxTarballs")
     .Does(() => {
         CreateDirectory($"{artifactsDir}/zip");
 
-        var targetTrameworks = frameworks.Where(f => f.StartsWith("netcore"));
+        var targetFrameworks = frameworks.Where(f => f.StartsWith("netcore"));
         var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("linux-")).ToArray();
 
-        foreach (var framework in targetTrameworks)
+        foreach (var framework in targetFrameworks)
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
@@ -261,10 +266,10 @@ Task("Pack-OSXTarballs")
     .Does(() => {
         CreateDirectory($"{artifactsDir}/zip");
 
-        var targetTrameworks = frameworks.Where(f => f.StartsWith("netcore"));
+        var targetFrameworks = frameworks.Where(f => f.StartsWith("netcore"));
         var targetRuntimeIds = runtimeIds.Where(rid => rid.StartsWith("osx-")).ToArray();
 
-        foreach (var framework in targetTrameworks)
+        foreach (var framework in targetFrameworks)
         {
             foreach (var runtimeId in targetRuntimeIds)
             {
@@ -346,16 +351,8 @@ Task("Pack-WindowsInstallers")
     {
         CreateDirectory($"{artifactsDir}/msi");
 
-        var installerDir = $"{buildDir}/Installer";
-        CreateDirectory(installerDir);
-
-        CopyFiles($"{buildDir}/Tentacle/net452/win-x64/*", installerDir);
-        CopyFiles($"{buildDir}/Octopus.Manager.Tentacle/net452/win-x64/*", installerDir);
-        CopyFiles("scripts/Harden-InstallationDirectory.ps1", installerDir);
-
-        GenerateMsiInstallerContents(installerDir);
-        BuildMsiInstallerForPlatform(PlatformTarget.x64);
-        BuildMsiInstallerForPlatform(PlatformTarget.x86);
+        PackWindowsInstaller(PlatformTarget.x64);
+        PackWindowsInstaller(PlatformTarget.x86);
     });
 
 Task("Pack-CrossPlatformBundle")
@@ -384,7 +381,7 @@ Task("Pack-CrossPlatformBundle")
         CopyFiles($"./source/Octopus.Tentacle.CrossPlatformBundle/Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDir);
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}.msi", $"{workingDir}/Octopus.Tentacle.msi");
         CopyFile($"{artifactsDir}/msi/Octopus.Tentacle.{versionInfo.FullSemVer}-x64.msi", $"{workingDir}/Octopus.Tentacle-x64.msi");
-        CopyFiles($"{buildDir}/Octopus.Tentacle.Upgrader/net452/win-x64/*", workingDir);
+        CopyFiles($"{buildDir}/Octopus.Tentacle.Upgrader/net452/win/*", workingDir);
         CopyFile($"{artifactsDir}/deb/{debAMD64PackageFilename}", $"{workingDir}/{debAMD64PackageFilename}");
         CopyFile($"{artifactsDir}/deb/{debARM64PackageFilename}", $"{workingDir}/{debARM64PackageFilename}");
         CopyFile($"{artifactsDir}/deb/{debARM32PackageFilename}", $"{workingDir}/{debARM32PackageFilename}");
@@ -396,9 +393,10 @@ Task("Pack-CrossPlatformBundle")
         {
             foreach (var runtimeId in runtimeIds)
             {
-                if (framework == "net452" && runtimeId != "win-x64") continue;  // General exclusion of net452+(not Windows)
+                if (runtimeId == "win" && framework != "net452"
+                 || runtimeId != "win" && framework == "net452") continue;
 
-                var fileExtension = runtimeId.StartsWith("win-") ? "zip" : "tar.gz";
+                var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
                 CopyFile($"{artifactsDir}/zip/tentacle-{versionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}", $"{workingDir}/tentacle-{framework}-{runtimeId}.{fileExtension}");
             }
         }
@@ -451,12 +449,13 @@ Task("Pack")
 // We dynamically define test tasks based on the cross-product of frameworks and runtimes.
 // We do this rather than attempting to have a single "Test" task because there's no feasible way to actually run
 // all of the different framework/runtime combinations on a single host. Notable examples would be
-// net452/win-x64 and netcoreapp3.1/linux-musl-x64, or anything linux-x64 versus linux-arm64.
+// net452/win and netcoreapp3.1/linux-musl-x64, or anything linux-x64 versus linux-arm64.
 foreach (var framework in frameworks)
 {
     foreach (var runtimeId in runtimeIds )
     {
-        if (framework == "net452" && runtimeId != "win-x64") continue;
+        if (runtimeId == "win" && framework != "net452"
+         || runtimeId != "win" && framework == "net452") continue;
 
         var testTaskName = $"Test-{framework}-{runtimeId}";
         var buildTaskName = $"Build-{framework}-{runtimeId}";
@@ -493,7 +492,7 @@ Task("Copy-ToLocalPackages")
     .Does(() =>
     {
         CreateDirectory(localPackagesDir);
-        CopyFileToDirectory(Path.Combine(artifactsDir, $"Tentacle.{versionInfo.FullSemVer}.nupkg"), localPackagesDir);
+        CopyFileToDirectory(Path.Combine($"{artifactsDir}/Chocolatey", $"OctopusDeploy.Tentacle.{versionInfo.NuGetVersion}.nupkg"), localPackagesDir);
     });
 
 Task("Default")
@@ -668,6 +667,20 @@ private void BuildMsiInstallerForPlatform(PlatformTarget platformTarget)
 
         MoveFile(builtMsi, File(artifactDestination));
     });
+}
+
+private void PackWindowsInstaller(PlatformTarget platformTarget)
+{
+    var platformPath = platformTarget == PlatformTarget.x64 ? "win-x64" : "win-x86";
+    var installerDir = $"{buildDir}/Installer/";
+    CreateDirectory(installerDir);
+
+    CopyFiles($"{buildDir}/Tentacle/net452/win/*", installerDir);
+    CopyFiles($"{buildDir}/Octopus.Manager.Tentacle/net452/win/*", installerDir);
+    CopyFiles("scripts/Harden-InstallationDirectory.ps1", installerDir);
+
+    GenerateMsiInstallerContents(installerDir);
+    BuildMsiInstallerForPlatform(platformTarget);
 }
 
 private void CreateLinuxPackages(string runtimeId)
@@ -861,7 +874,7 @@ private void SignWithSignTool(IEnumerable<FilePath> files, string display = "", 
     var signSettings = new SignToolSignSettings
     {
         CertPath = File(signingCertificatePath),
-        Password = signingCertificatPassword,
+        Password = signingCertificatePassword,
         DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
         Description = "Octopus Tentacle Agent",
         DescriptionUri = new Uri("http://octopus.com")
@@ -952,7 +965,7 @@ private void RunBuildFor(string framework, string runtimeId)
         }
     );
 
-    if (runtimeId.StartsWith("win-"))
+    if (runtimeId.StartsWith("win"))
     {
         // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
         // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
