@@ -6,6 +6,7 @@ using Octopus.Shared.Security;
 #if NETFRAMEWORK
 using Octopus.Shared.Internals.CertificateGeneration;
 #else
+using Octopus.Shared.Util;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
@@ -95,10 +96,11 @@ namespace Octopus.Tentacle.Certificates
             using (var ms = new MemoryStream())
             {
                 store.Save(ms, exportpw.ToCharArray(), random);
+                var platformSpecificX509KeyStorageFlags = PlatformDetection.IsRunningOnMac ? X509KeyStorageFlags.DefaultKeySet : X509KeyStorageFlags.EphemeralKeySet;
                 certificate = exportable
 #pragma warning disable PC001 // API not supported on all platforms
-                    ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable | (X509KeyStorageFlags)32)
-                    : new X509Certificate2(ms.ToArray(), exportpw, (X509KeyStorageFlags)32);
+                    ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable | platformSpecificX509KeyStorageFlags)
+                    : new X509Certificate2(ms.ToArray(), exportpw, platformSpecificX509KeyStorageFlags);
 #pragma warning restore PC001 // API not supported on all platforms
             }
 
