@@ -101,6 +101,7 @@ class Build : NukeBuild
         });
 
     Target Default => _ => _
+        .DependsOn(Pack)
         .DependsOn(CopyToLocalPackages);
 
     /// Support plugins are available for:
