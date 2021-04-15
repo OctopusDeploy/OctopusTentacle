@@ -34,7 +34,7 @@ namespace Octopus.CoreUtilities
 
     }
 
-    public static class MaybeExtensions
+    public static class MaybeExtentions
     {
         public static Maybe<T> AsSome<T>(this T value) => Maybe<T>.Some(value);
         public static bool None<T>(this Maybe<T>? maybe) => maybe == null || maybe == Maybe<T>.None;
