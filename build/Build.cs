@@ -57,8 +57,8 @@ class Build : NukeBuild
             DotNetBuild(_ => _
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
-                .SetAssemblyVersion(OctoVersionInfo.FullSemVer)
-                .SetFileVersion(OctoVersionInfo.FullSemVer)
+                .SetAssemblyVersion(OctoVersionInfo.MajorMinorPatch)
+                .SetFileVersion(OctoVersionInfo.MajorMinorPatch)
                 .SetInformationalVersion(OctoVersionInfo.InformationalVersion)
                 .EnableNoRestore());
         });
