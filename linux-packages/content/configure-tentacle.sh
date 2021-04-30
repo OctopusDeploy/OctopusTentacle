@@ -148,7 +148,7 @@ function setupPollingTentacle {
     read -p "What name would you like to register this Tentacle with? ($displayname): " displaynameinput
     displayname=$(assignNonEmptyValue "$displaynameinput" $displayname)
 
-    case machinetype in
+    case $machinetype in
         2 | worker)
             #Get worker pools
             while [ -z "$workerpoolsinput" ] 
