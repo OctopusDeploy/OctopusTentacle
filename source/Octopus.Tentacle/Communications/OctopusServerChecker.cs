@@ -89,12 +89,12 @@ namespace Octopus.Tentacle.Communications
                 {
                     if (i >= retryCount)
                     {
-                        log.ErrorFormat(ex, "{0} failed with message {1) after {2} retries.", actionDescription, ex.Message, i);
+                        log.ErrorFormat(ex, "{0} failed with message {1} after {2} retries.", actionDescription, ex.Message, i);
                         throw;
                     }
 
                     delay = new TimeSpan((long)(delay.Ticks * backOffFactor));
-                    log.WarnFormat(ex, "{0} failed with message {1). Retrying ({2}/{3}) in {4}.", actionDescription, ex.Message, i, retryCount, delay);
+                    log.WarnFormat(ex, "{0} failed with message {1}. Retrying ({2}/{3}) in {4}.", actionDescription, ex.Message, i, retryCount, delay);
                 }
             }
         }
