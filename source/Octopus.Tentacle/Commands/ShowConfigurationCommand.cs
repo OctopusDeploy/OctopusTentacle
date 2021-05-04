@@ -128,7 +128,7 @@ namespace Octopus.Tentacle.Commands
                     switch (matchingMachines.Count)
                     {
                         case 0:
-                            log.Error($"No machines or workers were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
+                            log.Error($"No machines were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
                             break;
 
                         case 1:
