@@ -44,6 +44,11 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
+            if (string.IsNullOrWhiteSpace(packageFile))
+                throw new ControlledFailureException("Please specify the package to extract via the --package argument.");
+            if (string.IsNullOrWhiteSpace(destinationDirectory))
+                throw new ControlledFailureException("Please specify the destination directory via the --destination argument.");
+
             for (int tryCount = 0; tryCount < ExtractRetries; tryCount++)
             {
                 try
