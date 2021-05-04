@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
@@ -25,6 +26,7 @@ namespace Octopus.Tentacle.Commands
         readonly ISystemLog log;
         readonly IApplicationInstanceSelector selector;
         readonly Lazy<IProxyInitializer> proxyInitializer;
+        readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
         readonly AppVersion appVersion;
         int wait;
         bool halibutHasStarted;
@@ -41,6 +43,7 @@ namespace Octopus.Tentacle.Commands
             ISystemLog log,
             IApplicationInstanceSelector selector,
             Lazy<IProxyInitializer> proxyInitializer,
+            IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker,
             AppVersion appVersion) : base(selector, log)
         {
             this.startUpInstanceRequest = startUpInstanceRequest;
@@ -52,6 +55,7 @@ namespace Octopus.Tentacle.Commands
             this.log = log;
             this.selector = selector;
             this.proxyInitializer = proxyInitializer;
+            this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
             this.appVersion = appVersion;
 
             Options.Add("wait=", "Delay (ms) before starting", arg => wait = int.Parse(arg));
@@ -112,12 +116,29 @@ namespace Octopus.Tentacle.Commands
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyHost, proxyConfiguration.Value.CustomProxyHost);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyPort, proxyConfiguration.Value.CustomProxyPort.ToString());
 
+            LogWarningIfNotRunningAsAdministrator();
+
             proxyInitializer.Value.InitializeProxy();
 
             halibut.Value.Start();
             halibutHasStarted = true;
 
             Runtime.WaitForUserToExit();
+        }
+
+        void LogWarningIfNotRunningAsAdministrator()
+        {
+            if (PlatformDetection.IsRunningOnWindows)
+            {
+#pragma warning disable PC001 // API not supported on all platforms
+                if (!windowsLocalAdminRightsChecker.IsRunningElevated())
+                {
+                    var groupName = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null).Translate(typeof(NTAccount)).Value;
+
+                    log.Warn($"Tentacle is not running with elevated permissions (user '{WindowsIdentity.GetCurrent().Name}' is not a member of '{groupName}'). Some functionality may be impaired.");
+                }
+#pragma warning restore PC001 // API not supported on all platforms
+            }
         }
 
         protected override void Stop()
