@@ -42,7 +42,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Octopus.Client" Version="11.2.5-mattr-nicer-validation" />
+		<PackageReference Include="Octopus.Client" Version="11.2.3279-mattr-nicer-validation" />
 		<PackageReference Include="Octopus.Shared" Version="10.2.3" />
 		<PackageReference Include="Octopus.TinyTypes.Json" Version="0.1.499" />
 		<PackageReference Include="Octopus.TinyTypes.TypeConverters" Version="0.1.499" />
