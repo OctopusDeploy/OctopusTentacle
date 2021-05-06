@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            instanceManager.DeleteInstance(instanceSelector.GetCurrentName());
+            instanceManager.DeleteInstance(instanceSelector.Current.InstanceName);
         }
     }
 }

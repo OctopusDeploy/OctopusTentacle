@@ -56,11 +56,12 @@ namespace Octopus.Tentacle.Tests.Commands
             repository.CertificateConfiguration.Returns(certificateConfigurationRepository);
             octopusClientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<IWebProxy>())
                 .Returns(Task.FromResult(octopusAsyncClient));
-
+            var selector = Substitute.For<IApplicationInstanceSelector>();
+            selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
             Command = new RegisterMachineCommand(new Lazy<IRegisterMachineOperation>(() => operation),
                                                  new Lazy<IWritableTentacleConfiguration>(() => configuration),
                                                  log,
-                                                 Substitute.For<IApplicationInstanceSelector>(),
+                                                 selector,
                                                  new Lazy<IOctopusServerChecker>(() => serverChecker),
                                                  new ProxyConfigParser(),
                                                  octopusClientInitializer,
