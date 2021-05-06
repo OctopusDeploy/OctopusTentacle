@@ -42,4 +42,12 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Configuration\EnvironmentValuesFixture.SupportedEnvironmentValueNames.approved.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  
+  
 </Project>
