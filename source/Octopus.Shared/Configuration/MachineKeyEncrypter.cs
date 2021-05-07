@@ -10,7 +10,21 @@ namespace Octopus.Shared.Configuration
 
         static MachineKeyEncrypter()
         {
-            Current = PlatformDetection.IsRunningOnWindows ? (IMachineKeyEncryptor)new WindowsMachineKeyEncryptor() : new LinuxMachineKeyEncryptor(new SystemLog());
+            Current = PlatformDetection.IsRunningOnWindows ? new WindowsMachineKeyEncryptor() : LinuxEncryptor();
+        }
+
+        static IMachineKeyEncryptor LinuxEncryptor()
+        {
+            var log = new SystemLog();
+            // Sources to find the crypto IV+Key. We want to enforce trying to use the machine-key
+            // first but still fallback to the existing Octopus generated one if that doesnt work.
+            var keySources = new LinuxMachineKeyEncryptor.ICryptoKeyNixSource[]
+            {
+                new LinuxMachineKeyEncryptor.LinuxMachineIdKey(log), new LinuxMachineKeyEncryptor.LinuxGeneratedMachineKey(log)
+            };
+
+            return new LinuxMachineKeyEncryptor(keySources);
+
         }
 
         MachineKeyEncrypter()

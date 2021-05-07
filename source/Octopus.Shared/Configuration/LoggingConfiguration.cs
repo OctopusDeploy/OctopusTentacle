@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using Octopus.Shared.Diagnostics;
 
 namespace Octopus.Shared.Configuration
 {
@@ -13,6 +12,6 @@ namespace Octopus.Shared.Configuration
             this.home = home;
         }
 
-        public string LogsDirectory => home.HomeDirectory == null ? OctopusLogsDirectoryRenderer.LogsDirectory : Path.Combine(home.HomeDirectory, "Logs");
+        public string LogsDirectory => Path.Combine(home.HomeDirectory, "Logs");
     }
 }

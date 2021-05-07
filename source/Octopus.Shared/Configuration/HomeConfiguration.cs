@@ -19,16 +19,16 @@ namespace Octopus.Shared.Configuration
             this.settings = settings;
         }
 
-        public string? ApplicationSpecificHomeDirectory => HomeDirectory == null ? null : Path.Combine(HomeDirectory, application.ToString());
+        public string ApplicationSpecificHomeDirectory => Path.Combine(HomeDirectory, application.ToString());
 
-        public string? HomeDirectory
+        public string HomeDirectory
         {
             get
             {
                 var value = settings.Get<string?>(OctopusHomeSettingName);
                 if (value != null && !Path.IsPathRooted(value))
                     value = PathHelper.ResolveRelativeDirectoryPath(value);
-                return value;
+                return value ?? Environment.CurrentDirectory;
             }
         }
 

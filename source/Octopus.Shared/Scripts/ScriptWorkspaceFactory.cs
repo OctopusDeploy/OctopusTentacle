@@ -13,9 +13,6 @@ namespace Octopus.Shared.Scripts
 
         public ScriptWorkspaceFactory(IOctopusFileSystem fileSystem, IHomeConfiguration home)
         {
-            if (home.ApplicationSpecificHomeDirectory == null)
-                throw new ArgumentException($"{GetType().Name} cannot function without the HomeDirectory configured.", nameof(home));
-
             this.fileSystem = fileSystem;
             this.home = home;
         }
@@ -30,7 +27,7 @@ namespace Octopus.Shared.Scripts
 
         string FindWorkingDirectory(ScriptTicket ticket)
         {
-            var work = fileSystem.GetFullPath(Path.Combine(home.HomeDirectory ?? "", "Work", ticket.TaskId));
+            var work = fileSystem.GetFullPath(Path.Combine(home.HomeDirectory, "Work", ticket.TaskId));
             fileSystem.EnsureDirectoryExists(work);
             return work;
         }

@@ -9,52 +9,70 @@ namespace Octopus.Shared.Configuration.Instances
     {
         readonly IOctopusFileSystem fileSystem;
         readonly ISystemLog log;
-        readonly IApplicationInstanceStore instanceStore;
+        readonly IApplicationInstanceRegistry instanceRegistry;
+        readonly StartUpInstanceRequest startUpInstanceRequest;
 
-        public ApplicationInstanceManager(ApplicationName applicationName,
+        public ApplicationInstanceManager(StartUpInstanceRequest startUpInstanceRequest,
             IOctopusFileSystem fileSystem,
             ISystemLog log,
-            IApplicationInstanceStore instanceStore)
+            IApplicationInstanceRegistry instanceRegistry)
         {
-            ApplicationName = applicationName;
+            this.startUpInstanceRequest = startUpInstanceRequest;
             this.fileSystem = fileSystem;
             this.log = log;
-            this.instanceStore = instanceStore;
+            this.instanceRegistry = instanceRegistry;
         }
 
-        public ApplicationName ApplicationName { get; }
-
         public ApplicationRecord? GetInstance(string instanceName)
-            => instanceStore.GetInstance(instanceName);
+            => instanceRegistry.GetInstance(instanceName);
 
         public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
         {
-            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(ApplicationName), configurationFile, homeDirectory);
+            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName), configurationFile, homeDirectory);
         }
 
         public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
         {
-            var parentDirectory = Path.GetDirectoryName(configurationFile) ?? throw new ArgumentException("Configuration file location must include directory information", nameof(configurationFile));
-            fileSystem.EnsureDirectoryExists(parentDirectory);
+            if (string.IsNullOrEmpty(configurationFile))
+            {
+                homeDirectory ??= Environment.CurrentDirectory;
+                configurationFile = Path.Combine(homeDirectory, $"{startUpInstanceRequest.ApplicationName}.config");
+            }
 
+            var configurationDirectory = Path.GetDirectoryName(configurationFile) ?? throw new ArgumentException("Configuration file location must include directory information", nameof(configurationFile));
+            homeDirectory ??= configurationDirectory;
+
+
+            // Ensure we can write configuration file
+            fileSystem.EnsureDirectoryExists(configurationDirectory);
             if (!fileSystem.FileExists(configurationFile))
             {
                 log.Info("Creating empty configuration file: " + configurationFile);
                 fileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
             }
-
-            var instance = new ApplicationInstanceRecord(instanceName, configurationFile);
-            instanceStore.SaveInstance(instance);
-
-            var homeConfig = new WritableHomeConfiguration(ApplicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
-            var home = !string.IsNullOrWhiteSpace(homeDirectory) ? homeDirectory : parentDirectory;
-            log.Info($"Setting home directory to: {home}");
-            homeConfig.SetHomeDirectory(home);
+            
+            // If completely dynamic (no registry) then dont bother setting anything
+            if (!(startUpInstanceRequest is StartUpDynamicInstanceRequest))
+            {
+                var homeConfig = new WritableHomeConfiguration(startUpInstanceRequest.ApplicationName, new XmlFileKeyValueStore(fileSystem, configurationFile));
+                log.Info($"Setting home directory to: {homeDirectory}");
+                homeConfig.SetHomeDirectory(homeDirectory);
+                
+                var instance = new ApplicationInstanceRecord(instanceName, configurationFile);
+                instanceRegistry.RegisterInstance(instance);
+            }
         }
 
         public void DeleteInstance(string instanceName)
         {
-            instanceStore.DeleteInstance(instanceName);
+            if (startUpInstanceRequest is StartUpDynamicInstanceRequest && string.IsNullOrEmpty(instanceName))
+            {
+                log.Warn($"No {startUpInstanceRequest.ApplicationName} instance available in the global registry to be removed. ");
+            }
+            else
+            {
+                instanceRegistry.DeleteInstance(instanceName);
+            }
         }
     }
 }

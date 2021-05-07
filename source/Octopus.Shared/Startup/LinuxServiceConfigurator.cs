@@ -21,14 +21,15 @@ namespace Octopus.Shared.Startup
 
         public void ConfigureService(string thisServiceName,
             string exePath,
-            string instance,
+            string workingDir,
+            string? instance,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState)
         {
             //Check if system has bash and systemd
             CheckSystemPrerequisites();
 
-            var cleanedInstanceName = SanitizeString(instance);
+            var cleanedInstanceName = SanitizeString(instance ?? thisServiceName);
             var systemdUnitFilePath = $"/etc/systemd/system/{cleanedInstanceName}.service";
 
             if (serviceConfigurationState.Restart)
@@ -41,7 +42,7 @@ namespace Octopus.Shared.Startup
                 UninstallService(cleanedInstanceName, systemdUnitFilePath);
 
             var serviceDependencies = new List<string>();
-            serviceDependencies.AddRange(new[] { "network.target" });
+            serviceDependencies.AddRange(new[] {"network.target"});
 
             if (!string.IsNullOrWhiteSpace(serviceConfigurationState.DependOn))
                 serviceDependencies.Add(serviceConfigurationState.DependOn);
@@ -49,6 +50,8 @@ namespace Octopus.Shared.Startup
             var userName = serviceConfigurationState.Username ?? "root";
             if (serviceConfigurationState.Install)
                 InstallService(cleanedInstanceName,
+                    instance,
+                    workingDir,
                     exePath,
                     serviceDescription,
                     systemdUnitFilePath,
@@ -57,6 +60,8 @@ namespace Octopus.Shared.Startup
 
             if (serviceConfigurationState.Reconfigure)
                 ReconfigureService(cleanedInstanceName,
+                    instance,
+                    workingDir,
                     exePath,
                     serviceDescription,
                     systemdUnitFilePath,
@@ -67,30 +72,30 @@ namespace Octopus.Shared.Startup
                 StartService(cleanedInstanceName);
         }
 
-        void RestartService(string instance)
+        void RestartService(string serviceName)
         {
-            log.Info($"Restarting service: {instance}");
-            if (systemCtlHelper.RestartService(instance))
+            log.Info($"Restarting service: {serviceName}");
+            if (systemCtlHelper.RestartService(serviceName))
                 log.Info("Service has been restarted");
             else
                 log.Error("The service could not be restarted");
         }
 
-        void StopService(string instance)
+        void StopService(string serviceName)
         {
-            log.Info($"Stopping service: {instance}");
-            if (systemCtlHelper.StopService(instance))
+            log.Info($"Stopping service: {serviceName}");
+            if (systemCtlHelper.StopService(serviceName))
                 log.Info("Service stopped");
             else
                 log.Error("The service could not be stopped");
         }
 
-        void StartService(string instance)
+        void StartService(string serviceName)
         {
-            if (systemCtlHelper.StartService(instance, true))
-                log.Info($"Service started: {instance}");
+            if (systemCtlHelper.StartService(serviceName, true))
+                log.Info($"Service started: {serviceName}");
             else
-                log.Error($"Could not start the systemd service: {instance}");
+                log.Error($"Could not start the systemd service: {serviceName}");
         }
 
         void UninstallService(string instance, string systemdUnitFilePath)
@@ -110,7 +115,9 @@ namespace Octopus.Shared.Startup
             }
         }
 
-        void InstallService(string instance,
+        void InstallService(string serviceName, 
+            string? instance,
+            string workingDir,
             string exePath,
             string serviceDescription,
             string systemdUnitFilePath,
@@ -119,18 +126,20 @@ namespace Octopus.Shared.Startup
         {
             try
             {
-                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, userName, serviceDependencies));
-                systemCtlHelper.EnableService(instance, true);
-                log.Info($"Service installed: {instance}");
+                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, workingDir, serviceDescription, exePath, userName, serviceDependencies));
+                systemCtlHelper.EnableService(serviceName, true);
+                log.Info($"Service installed: {serviceName}");
             }
             catch (Exception e)
             {
-                log.Error(e, $"Could not install the systemd service: {instance}");
+                log.Error(e, $"Could not install the systemd service: {serviceName}");
                 throw;
             }
         }
 
-        void ReconfigureService(string instance,
+        void ReconfigureService(string serviceName,
+            string? instance,
+            string workingDir,
             string exePath,
             string serviceDescription,
             string systemdUnitFilePath,
@@ -139,16 +148,16 @@ namespace Octopus.Shared.Startup
         {
             try
             {
-                log.Info($"Attempting to remove old service: {instance}");
+                log.Info($"Attempting to remove old service: {serviceName}");
                 //remove service
-                systemCtlHelper.StopService(instance);
-                systemCtlHelper.DisableService(instance);
+                systemCtlHelper.StopService(serviceName);
+                systemCtlHelper.DisableService(serviceName);
                 File.Delete(systemdUnitFilePath);
 
                 //re-add service
-                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, serviceDescription, exePath, userName, serviceDependencies));
-                systemCtlHelper.EnableService(instance, true);
-                log.Info($"Service installed: {instance}");
+                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, workingDir, serviceDescription, exePath, userName, serviceDependencies));
+                systemCtlHelper.EnableService(serviceName, true);
+                log.Info($"Service installed: {serviceName}");
             }
             catch (Exception e)
             {
@@ -198,7 +207,9 @@ namespace Octopus.Shared.Startup
             return result.ExitCode == 0;
         }
 
-        string GenerateSystemdUnitFile(string instance, string serviceDescription, string exePath, string userName, IEnumerable<string> serviceDependencies)
+        string GenerateSystemdUnitFile(string? instance, 
+            string workingDirectory,
+            string serviceDescription, string exePath, string userName, IEnumerable<string> serviceDependencies)
         {
             var stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("[Unit]");
@@ -208,7 +219,13 @@ namespace Octopus.Shared.Startup
             stringBuilder.AppendLine("[Service]");
             stringBuilder.AppendLine("Type=simple");
             stringBuilder.AppendLine($"User={userName}");
-            stringBuilder.AppendLine($"ExecStart={exePath} run --instance={instance} --noninteractive");
+            stringBuilder.AppendLine($"WorkingDirectory=\"{workingDirectory}\"");
+            stringBuilder.Append($"ExecStart=\"{exePath}\" run");
+            if (!string.IsNullOrEmpty(instance))
+            {
+                stringBuilder.Append($" --instance=\"{instance}\"");
+            }
+            stringBuilder.AppendLine(" --noninteractive");
             stringBuilder.AppendLine("Restart=always");
             stringBuilder.AppendLine();
             stringBuilder.AppendLine("[Install]");

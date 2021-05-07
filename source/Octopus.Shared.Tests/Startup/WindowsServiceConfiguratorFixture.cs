@@ -45,6 +45,7 @@ namespace Octopus.Shared.Tests.Startup
             {
                 configureServiceHelper.ConfigureService(serviceName,
                     exePath,
+                    string.Empty,
                     instance,
                     serviceDescription,
                     serviceConfigurationState);
@@ -86,6 +87,7 @@ namespace Octopus.Shared.Tests.Startup
 
             var ex = Assert.Throws<ControlledFailureException>(() => configureServiceHelper.ConfigureService(serviceName,
                 exePath,
+                string.Empty,
                 instance,
                 serviceDescription,
                 serviceConfigurationState));

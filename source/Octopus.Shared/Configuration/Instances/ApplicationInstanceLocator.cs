@@ -39,16 +39,6 @@ namespace Octopus.Shared.Configuration.Instances
         protected string InstanceFileName(string instanceName)
             => instanceName.Replace(' ', '-').ToLower();
 
-        public bool AnyInstancesConfigured()
-        {
-            var instancesFolder = InstancesFolder();
-            if (FileSystem.DirectoryExists(instancesFolder))
-                if (FileSystem.EnumerateFiles(instancesFolder).Any())
-                    return true;
-            var listFromRegistry = RegistryApplicationInstanceStore.GetListFromRegistry();
-            return listFromRegistry.Any();
-        }
-
         public ApplicationInstanceRecord? GetInstance(string instanceName)
         {
             var instancesFolder = InstancesFolder();

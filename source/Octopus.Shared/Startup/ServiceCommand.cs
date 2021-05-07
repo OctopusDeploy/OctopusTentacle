@@ -16,6 +16,7 @@ namespace Octopus.Shared.Startup
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
+        readonly IHomeConfiguration homeConfiguration;
         readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
         readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
 
@@ -26,7 +27,8 @@ namespace Octopus.Shared.Startup
             IApplicationInstanceSelector instanceSelector,
             string serviceDescription,
             Assembly assemblyContainingService,
-            IServiceConfigurator serviceConfigurator)
+            IServiceConfigurator serviceConfigurator,
+            IHomeConfiguration homeConfiguration)
         {
             this.applicationName = applicationName;
             this.instanceLocator = instanceLocator;
@@ -34,6 +36,7 @@ namespace Octopus.Shared.Startup
             this.serviceDescription = serviceDescription;
             this.assemblyContainingService = assemblyContainingService;
             this.serviceConfigurator = serviceConfigurator;
+            this.homeConfiguration = homeConfiguration;
 
             serviceConfigurationState = new ServiceConfigurationState
             {
@@ -77,6 +80,7 @@ namespace Octopus.Shared.Startup
                         var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
                         serviceConfigurator.ConfigureService(thisServiceName,
                             exePath,
+                            string.Empty,
                             instance.InstanceName,
                             serviceDescription,
                             serviceConfigurationState);
@@ -93,11 +97,13 @@ namespace Octopus.Shared.Startup
             else
             {
                 var currentName = instanceSelector.GetCurrentName();
-                if (currentName == null)
+                if (currentName == null && !instanceSelector.CanRunAsService())
                     throw new ArgumentException("Unable to locate instance configuration");
+
                 var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, currentName);
                 serviceConfigurator.ConfigureService(thisServiceName,
                     exePath,
+                    homeConfiguration.HomeDirectory,
                     currentName,
                     serviceDescription,
                     serviceConfigurationState);

@@ -39,8 +39,8 @@ namespace Octopus.Shared.Configuration
 
             builder.RegisterType<EnvironmentVariableReader>().As<IEnvironmentVariableReader>();
 
-            builder.RegisterType<ApplicationInstanceStore>()
-                .As<IApplicationInstanceStore>()
+            builder.RegisterType<ApplicationInstanceRegistry>()
+                .As<IApplicationInstanceRegistry>()
                 .As<IApplicationConfigurationStrategy>();
 
             builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>().SingleInstance();
@@ -53,6 +53,9 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<ConfigFileConfigurationStrategy>()
                 .As<IApplicationConfigurationStrategy>();
 
+            builder.RegisterType<WorkingDirectoryConfigurationStrategy>()
+                .As<IApplicationConfigurationStrategy>();
+            
             builder.RegisterType<ApplicationInstanceSelector>()
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
@@ -136,8 +139,8 @@ namespace Octopus.Shared.Configuration
                 .As<IRegistryApplicationInstanceStore>();
             builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
 
-            builder.RegisterType<ApplicationInstanceStore>()
-                .As<IApplicationInstanceStore>();
+            builder.RegisterType<ApplicationInstanceRegistry>()
+                .As<IApplicationInstanceRegistry>();
 
             builder.RegisterType<ApplicationInstanceLocator>()
                 .As<IApplicationInstanceLocator>();

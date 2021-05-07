@@ -5,7 +5,7 @@ namespace Octopus.Shared.Configuration
 {
     public static class ServiceName
     {
-        public static string GetWindowsServiceName(ApplicationName application, string instanceName)
+        public static string GetWindowsServiceName(ApplicationName application, string? instanceName)
         {
             string? name;
 
@@ -22,7 +22,7 @@ namespace Octopus.Shared.Configuration
             }
 
             var defaultInstanceName = ApplicationInstanceRecord.GetDefaultInstance(application);
-            if (defaultInstanceName == instanceName)
+            if (instanceName == null || defaultInstanceName == instanceName)
                 return name;
 
             return name + ": " + instanceName;

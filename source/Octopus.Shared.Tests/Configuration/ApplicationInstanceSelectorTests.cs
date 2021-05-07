@@ -153,7 +153,7 @@ namespace Octopus.Shared.Tests.Configuration
             if (string.IsNullOrWhiteSpace(currentInstanceName))
                 startupRequest = new StartUpDynamicInstanceRequest(ApplicationName.OctopusServer);
             else
-                startupRequest = new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, currentInstanceName);
+                startupRequest = new StartUpRegistryInstanceRequest(ApplicationName.OctopusServer, currentInstanceName);
 
             var selector = new ApplicationInstanceSelector(startupRequest,
                 new[] { (IApplicationConfigurationStrategy)ConfigurationStore, OtherStrategy },

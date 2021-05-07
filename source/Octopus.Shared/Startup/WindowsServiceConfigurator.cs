@@ -29,10 +29,16 @@ namespace Octopus.Shared.Startup
 
         public void ConfigureService(string thisServiceName,
             string exePath,
-            string instance,
+            string workingDir,
+            string? instance,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState)
         {
+            if (string.IsNullOrEmpty(instance))
+            {
+                throw new InvalidOperationException("Only instances registered via the standard `--instance` mechanism can be run as a Windows Service");
+            }
+
             windowsLocalAdminRightsChecker.AssertIsRunningElevated();
             var services = ServiceController.GetServices();
             var controller = services.FirstOrDefault(s => s.ServiceName == thisServiceName);

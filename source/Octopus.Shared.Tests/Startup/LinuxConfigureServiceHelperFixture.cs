@@ -55,6 +55,7 @@ namespace Octopus.Shared.Tests.Startup
 
             configureServiceHelper.ConfigureService(serviceName,
                 scriptPath,
+                string.Empty,
                 instance,
                 serviceDescription,
                 serviceConfigurationState);
@@ -82,6 +83,7 @@ namespace Octopus.Shared.Tests.Startup
 
             configureServiceHelper.ConfigureService(serviceName,
                 scriptPath,
+                string.Empty,
                 instance,
                 serviceDescription,
                 stopServiceConfigurationState);

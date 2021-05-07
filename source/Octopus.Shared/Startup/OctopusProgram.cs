@@ -329,7 +329,7 @@ namespace Octopus.Shared.Startup
 
         void WriteDiagnosticsInfoToLogFile(StartUpInstanceRequest startupRequest)
         {
-            var persistedRequest = startupRequest as StartUpPersistedInstanceRequest;
+            var persistedRequest = startupRequest as StartUpRegistryInstanceRequest;
             var fullProcessPath = Assembly.GetEntryAssembly()?.FullProcessPath() ?? throw new Exception("Could not get path of the entry assembly");
             var executable = PlatformDetection.IsRunningOnWindows
                 ? Path.GetFileNameWithoutExtension(fullProcessPath)
@@ -364,7 +364,7 @@ namespace Octopus.Shared.Startup
             options.Parse(commandLineArguments);
 
             if (!string.IsNullOrWhiteSpace(instanceName))
-                return new StartUpPersistedInstanceRequest(ApplicationName, instanceName);
+                return new StartUpRegistryInstanceRequest(ApplicationName, instanceName);
             if (!string.IsNullOrWhiteSpace(configFile))
                 return new StartUpConfigFileInstanceRequest(ApplicationName, configFile);
             return new StartUpDynamicInstanceRequest(ApplicationName);

@@ -7,22 +7,20 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    class ApplicationInstanceStore : ApplicationInstanceLocator, IApplicationInstanceStore, IApplicationConfigurationStrategy
+    class ApplicationInstanceRegistry : ApplicationInstanceLocator, IApplicationInstanceRegistry, IApplicationConfigurationStrategy
     {
-        readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IRegistryApplicationInstanceStore registryApplicationInstanceStore;
 
-        public ApplicationInstanceStore(
+        public ApplicationInstanceRegistry(
             StartUpInstanceRequest startUpInstanceRequest,
             ISystemLog log,
             IOctopusFileSystem fileSystem,
             IRegistryApplicationInstanceStore registryApplicationInstanceStore) : base(startUpInstanceRequest.ApplicationName, log, fileSystem, registryApplicationInstanceStore)
         {
-            this.startUpInstanceRequest = startUpInstanceRequest;
             this.registryApplicationInstanceStore = registryApplicationInstanceStore;
         }
 
-        public int Priority => 1000;
+        public int Priority => 1;
 
         public IAggregatableKeyValueStore LoadedConfiguration(ApplicationRecord applicationInstance)
         {
@@ -50,12 +48,14 @@ namespace Octopus.Shared.Configuration.Instances
             }
         }
 
+        /*
         public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
         {
             CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName), configurationFile, homeDirectory);
         }
+        */
 
-        public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
+        /*public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
         {
             var parentDirectory = Path.GetDirectoryName(configurationFile) ?? throw new ArgumentException("Directory required", nameof(configurationFile));
             FileSystem.EnsureDirectoryExists(parentDirectory);
@@ -73,9 +73,9 @@ namespace Octopus.Shared.Configuration.Instances
             var home = !string.IsNullOrWhiteSpace(homeDirectory) ? homeDirectory : parentDirectory;
             Log.Info($"Setting home directory to: {home}");
             homeConfig.SetHomeDirectory(home);
-        }
+        }*/
 
-        public void SaveInstance(ApplicationInstanceRecord instanceRecord)
+        public void RegisterInstance(ApplicationInstanceRecord instanceRecord)
         {
             var instancesFolder = InstancesFolder();
             if (!FileSystem.DirectoryExists(instancesFolder))
@@ -124,7 +124,7 @@ namespace Octopus.Shared.Configuration.Instances
                     Log.Info($"Migrating {ApplicationName} instance from registry - {instanceName}");
                     try
                     {
-                        SaveInstance(instanceRecord);
+                        RegisterInstance(instanceRecord);
                     }
                     catch (Exception ex)
                     {

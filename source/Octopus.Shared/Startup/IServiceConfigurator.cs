@@ -6,7 +6,8 @@ namespace Octopus.Shared.Startup
     {
         void ConfigureService(string thisServiceName,
             string exePath,
-            string instance,
+            string workingDir,
+            string? instance,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState);
     }
