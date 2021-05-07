@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Commands
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
             Command = new RunAgentCommand(
-                new StartUpPersistedInstanceRequest(ApplicationName.Tentacle, "MyTentacle"),
+                new StartUpRegistryInstanceRequest(ApplicationName.Tentacle, "MyTentacle"),
                 new Lazy<IHalibutInitializer>(() => halibut),
                 new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration),
                 new Lazy<IHomeConfiguration>(() => home),

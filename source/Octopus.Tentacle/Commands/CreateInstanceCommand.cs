@@ -25,10 +25,6 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            if (string.IsNullOrWhiteSpace(config)) throw new ControlledFailureException("No configuration file was specified. Please use the --config parameter to specify a configuration file path.");
-
-            config = fileSystem.GetFullPath(config);
-
             if (string.IsNullOrWhiteSpace(instanceName))
             {
                 instanceManager.CreateDefaultInstance(config, home);

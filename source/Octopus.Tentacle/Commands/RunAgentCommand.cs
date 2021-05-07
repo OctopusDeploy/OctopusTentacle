@@ -72,9 +72,6 @@ namespace Octopus.Tentacle.Commands
                 sleep.For(wait);
             }
 
-            if (home.Value.HomeDirectory == null)
-                throw new InvalidOperationException("No home directory has been configured for this Tentacle. Please run the configure command before starting.");
-
             try
             {
                 if (configuration.Value.TentacleCertificate == null)
