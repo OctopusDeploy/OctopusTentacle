@@ -36,7 +36,7 @@ namespace Octopus.Shared.Startup
             // These kinds of commands depend on being able to load the correct instance
             // We need to assert the current instance can be loaded otherwise the rest of the command won't work as expected
             // NOTE: This method should throw a ControlledFailureException with the most appropriate message inside it
-            var unused = instanceSelector.GetCurrentName();
+            var unused = instanceSelector.Current.InstanceName;
         }
 
         protected override void Completed()
@@ -45,8 +45,8 @@ namespace Octopus.Shared.Startup
 
             if (voteForRestart)
             {
-                var applicationName = instanceSelector.GetCurrentName() != null ? instanceSelector.ApplicationName.ToString() : "service";
-                SystemLog.Warn($"These changes require a restart of the {applicationName}.");
+                var namedApplication = instanceSelector.Current.InstanceName != null ? instanceSelector.ApplicationName.ToString() : "service";
+                SystemLog.Warn($"These changes require a restart of the {namedApplication}.");
             }
         }
 

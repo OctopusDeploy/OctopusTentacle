@@ -27,7 +27,7 @@ namespace Octopus.Shared.Configuration
 
             if (PlatformDetection.IsRunningOnWindows)
             {
-                builder.RegisterType<RegistryApplicationInstanceStore>()
+                builder.RegisterType<WindowsRegistryApplicationInstanceStore>()
                     .As<IRegistryApplicationInstanceStore>();
                 builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
             }
@@ -39,9 +39,8 @@ namespace Octopus.Shared.Configuration
 
             builder.RegisterType<EnvironmentVariableReader>().As<IEnvironmentVariableReader>();
 
-            builder.RegisterType<ApplicationInstanceRegistry>()
-                .As<IApplicationInstanceRegistry>()
-                .As<IApplicationConfigurationStrategy>();
+            builder.RegisterType<ApplicationInstanceStore>()
+                .As<IApplicationInstanceStore>();
 
             builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>().SingleInstance();
             builder.RegisterType<EnvFileConfigurationStrategy>()
@@ -50,22 +49,12 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<EnvironmentConfigurationStrategy>()
                 .As<IApplicationConfigurationStrategy>();
 
-            builder.RegisterType<ConfigFileConfigurationStrategy>()
-                .As<IApplicationConfigurationStrategy>();
-
-            builder.RegisterType<WorkingDirectoryConfigurationStrategy>()
-                .As<IApplicationConfigurationStrategy>();
-            
             builder.RegisterType<ApplicationInstanceSelector>()
                 .As<IApplicationInstanceSelector>()
                 .SingleInstance();
 
             builder.RegisterType<WindowsLocalAdminRightsChecker>()
                 .As<IWindowsLocalAdminRightsChecker>()
-                .SingleInstance();
-
-            builder.RegisterType<ApplicationInstanceLocator>()
-                .As<IApplicationInstanceLocator>()
                 .SingleInstance();
 
             builder.RegisterType<ApplicationInstanceManager>()
@@ -75,7 +64,7 @@ namespace Octopus.Shared.Configuration
             builder.Register(c =>
                 {
                     var selector = c.Resolve<IApplicationInstanceSelector>();
-                    return selector.GetCurrentConfiguration();
+                    return selector.Current.Configuration;
                 })
                 .As<IKeyValueStore>()
                 .SingleInstance();
@@ -83,7 +72,7 @@ namespace Octopus.Shared.Configuration
             builder.Register(c =>
                 {
                     var selector = c.Resolve<IApplicationInstanceSelector>();
-                    return selector.GetWritableCurrentConfiguration();
+                    return selector.Current.WritableConfiguration;
                 })
                 .As<IWritableKeyValueStore>()
                 .SingleInstance();
@@ -135,16 +124,13 @@ namespace Octopus.Shared.Configuration
             builder.Register(_ => startUpInstanceRequest.ApplicationName).As<ApplicationName>();
 
             // the Wpf apps only run on Windows
-            builder.RegisterType<RegistryApplicationInstanceStore>()
+            builder.RegisterType<WindowsRegistryApplicationInstanceStore>()
                 .As<IRegistryApplicationInstanceStore>();
             builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
 
-            builder.RegisterType<ApplicationInstanceRegistry>()
-                .As<IApplicationInstanceRegistry>();
-
-            builder.RegisterType<ApplicationInstanceLocator>()
-                .As<IApplicationInstanceLocator>();
-
+            builder.RegisterType<ApplicationInstanceStore>()
+                .As<IApplicationInstanceStore>();
+            
             builder.RegisterType<ApplicationInstanceManager>()
                 .As<IApplicationInstanceManager>();
         }

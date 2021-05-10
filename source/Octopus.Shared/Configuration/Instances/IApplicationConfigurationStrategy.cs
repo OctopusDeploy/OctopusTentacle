@@ -5,7 +5,6 @@ namespace Octopus.Shared.Configuration.Instances
     public interface IApplicationConfigurationStrategy
     {
         int Priority { get; }
-
-        IAggregatableKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance);
+        IAggregatableKeyValueStore? LoadContributedConfiguration();
     }
 }

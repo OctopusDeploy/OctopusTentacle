@@ -367,6 +367,8 @@ namespace Octopus.Shared.Startup
                 return new StartUpRegistryInstanceRequest(ApplicationName, instanceName);
             if (!string.IsNullOrWhiteSpace(configFile))
                 return new StartUpConfigFileInstanceRequest(ApplicationName, configFile);
+            
+            
             return new StartUpDynamicInstanceRequest(ApplicationName);
         }
 

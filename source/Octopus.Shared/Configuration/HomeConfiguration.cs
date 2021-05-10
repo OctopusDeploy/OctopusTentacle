@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using Octopus.Configuration;
-using Octopus.Shared.Util;
+using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Configuration
 {
@@ -12,23 +12,25 @@ namespace Octopus.Shared.Configuration
 
         readonly ApplicationName application;
         readonly IKeyValueStore settings;
+        readonly IApplicationInstanceSelector applicationInstanceSelector;
 
-        public HomeConfiguration(ApplicationName application, IKeyValueStore settings)
+        public HomeConfiguration(ApplicationName application,
+            IKeyValueStore settings,
+            IApplicationInstanceSelector applicationInstanceSelector)
         {
             this.application = application;
             this.settings = settings;
+            this.applicationInstanceSelector = applicationInstanceSelector;
         }
 
-        public string ApplicationSpecificHomeDirectory => Path.Combine(HomeDirectory, application.ToString());
+        public string? ApplicationSpecificHomeDirectory => HomeDirectory == null ? null : Path.Combine(HomeDirectory, application.ToString());
 
-        public string HomeDirectory
+        public string? HomeDirectory
         {
             get
             {
                 var value = settings.Get<string?>(OctopusHomeSettingName);
-                if (value != null && !Path.IsPathRooted(value))
-                    value = PathHelper.ResolveRelativeDirectoryPath(value);
-                return value ?? Environment.CurrentDirectory;
+                return value == null ? null : EnsureRootedPath(value);
             }
         }
 
@@ -37,22 +39,40 @@ namespace Octopus.Shared.Configuration
             get
             {
                 var value = settings.Get<string?>(OctopusNodeCacheSettingName);
-                if (value == null)
-                    return ApplicationSpecificHomeDirectory;
-
-                if (!Path.IsPathRooted(value))
-                    value = PathHelper.ResolveRelativeDirectoryPath(value);
-
-                return value;
+                return value == null ? ApplicationSpecificHomeDirectory : EnsureRootedPath(value);
             }
         }
+
+        string? EnsureRootedPath(string path)
+        {
+            if (Path.IsPathRooted(path))
+            {
+                return path;
+            }
+
+            // Its possible that this code path is being run before there is any instance yet configured.
+            // Rather than making assumptions, fall back to missing.
+            if (!applicationInstanceSelector.CanLoadCurrentInstance())
+            {
+                return null;
+            }
+            
+            var relativeRoot = Path.GetDirectoryName(applicationInstanceSelector.Current.ConfigurationPath);
+            if (relativeRoot == null)
+            {
+                throw new Exception("Unable to load configuration directory details");
+            }
+            
+            return Path.Combine(relativeRoot, path);
+        }
     }
+    
 
     public class WritableHomeConfiguration : HomeConfiguration, IWritableHomeConfiguration
     {
         readonly IWritableKeyValueStore settings;
 
-        public WritableHomeConfiguration(ApplicationName application, IWritableKeyValueStore writableConfiguration) : base(application, writableConfiguration)
+        public WritableHomeConfiguration(ApplicationName application, IWritableKeyValueStore writableConfiguration, IApplicationInstanceSelector applicationInstanceSelector) : base(application, writableConfiguration, applicationInstanceSelector)
         {
             settings = writableConfiguration;
         }

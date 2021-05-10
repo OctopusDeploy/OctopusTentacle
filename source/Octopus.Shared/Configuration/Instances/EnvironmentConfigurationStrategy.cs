@@ -23,13 +23,15 @@ namespace Octopus.Shared.Configuration.Instances
             this.reader = reader;
         }
 
-        public int Priority => 200;
-
-        public IAggregatableKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
+        public int Priority => 1;
+        public IAggregatableKeyValueStore? LoadContributedConfiguration()
         {
             EnsureLoaded();
-
-            return !foundValues ? null : new InMemoryKeyValueStore(mapper);
+            if (foundValues)
+            {
+                return new InMemoryKeyValueStore(mapper);
+            }
+            return null;
         }
 
         void EnsureLoaded()

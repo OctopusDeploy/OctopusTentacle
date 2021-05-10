@@ -12,7 +12,7 @@ namespace Octopus.Shared.Startup
         readonly string serviceDescription;
         readonly Assembly assemblyContainingService;
         readonly ApplicationName applicationName;
-        readonly IApplicationInstanceLocator instanceLocator;
+        readonly IApplicationInstanceStore instanceLocator;
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
@@ -23,7 +23,7 @@ namespace Octopus.Shared.Startup
         string? instanceName;
 
         public ServiceCommand(ApplicationName applicationName,
-            IApplicationInstanceLocator instanceLocator,
+            IApplicationInstanceStore instanceLocator,
             IApplicationInstanceSelector instanceSelector,
             string serviceDescription,
             Assembly assemblyContainingService,
@@ -96,14 +96,14 @@ namespace Octopus.Shared.Startup
             }
             else
             {
-                var currentName = instanceSelector.GetCurrentName();
-                if (currentName == null && !instanceSelector.CanRunAsService())
+                var currentName = instanceSelector.Current.InstanceName;
+                if (currentName == null)
                     throw new ArgumentException("Unable to locate instance configuration");
 
                 var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, currentName);
                 serviceConfigurator.ConfigureService(thisServiceName,
                     exePath,
-                    homeConfiguration.HomeDirectory,
+                    homeConfiguration.HomeDirectory ?? Environment.CurrentDirectory,
                     currentName,
                     serviceDescription,
                     serviceConfigurationState);
