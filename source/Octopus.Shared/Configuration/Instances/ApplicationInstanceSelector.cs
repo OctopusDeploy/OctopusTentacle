@@ -2,34 +2,12 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Octopus.Configuration;
 using Octopus.CoreUtilities.Extensions;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class ApplicationInstanceConfiguration {
-        public ApplicationInstanceConfiguration(string? instanceName,
-            string configurationPath,
-            IKeyValueStore configuration,
-            IWritableKeyValueStore writableConfiguration)
-        {
-            InstanceName = instanceName;
-            ConfigurationPath = configurationPath;
-            Configuration = configuration;
-            WritableConfiguration = writableConfiguration;
-        }
-
-        public string ConfigurationPath { get;  }
-        public string? InstanceName { get;  }
-
-        public IKeyValueStore Configuration { get; }
-
-        public IWritableKeyValueStore WritableConfiguration { get; }
-    }
-
-    
     class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
         readonly IApplicationInstanceStore applicationInstanceStore;
@@ -90,7 +68,7 @@ namespace Octopus.Shared.Configuration.Instances
         void InitializeLogging()
         {
             Debug.Assert(current != null, nameof(current) + " != null");
-            var homeConfig = new HomeConfiguration(startUpInstanceRequest.ApplicationName, current.Configuration, this);
+            var homeConfig = new HomeConfiguration(ApplicationName, current.Configuration, this);
             // BEWARE if you try to resolve HomeConfiguration from the container you'll create a loop
             // back to here
             var logInit = new LogInitializer(new LoggingConfiguration(homeConfig), logFileOnlyLogger);
@@ -141,8 +119,16 @@ namespace Octopus.Shared.Configuration.Instances
                     var rootPath = Path.Combine(Environment.CurrentDirectory, $"{ApplicationName}.config");
                     if (fileSystem.FileExists(rootPath))
                         return (null, rootPath);
-                    var indexInstanceFallback = applicationInstanceStore.LoadInstanceDetails(null);
-                    return (indexInstanceFallback.InstanceName, indexInstanceFallback.ConfigurationFilePath);
+
+                    try
+                    {
+                        var indexInstanceFallback = applicationInstanceStore.LoadInstanceDetails(null);
+                        return (indexInstanceFallback.InstanceName, indexInstanceFallback.ConfigurationFilePath);
+                    }
+                    catch (ControlledFailureException)
+                    {
+                        throw new ControlledFailureException("There are no instances of OctopusServer configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file");
+                    }
                 }
             }
         }

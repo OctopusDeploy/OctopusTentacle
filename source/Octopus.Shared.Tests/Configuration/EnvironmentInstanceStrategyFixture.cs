@@ -37,7 +37,7 @@ namespace Octopus.Shared.Tests.Configuration
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new[] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") }));
 
             var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(), mapper, reader);
-            subject.LoadedConfiguration(new ApplicationRecord()).Should().NotBeNull("there is an instance if there are any environment variables");
+            subject.LoadContributedConfiguration().Should().NotBeNull("there is an instance if there are any environment variables");
         }
 
         [Test]
@@ -48,7 +48,7 @@ namespace Octopus.Shared.Tests.Configuration
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>());
 
             var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(), mapper, reader);
-            subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull("there isn't an instance when there is no config");
+            subject.LoadContributedConfiguration().Should().BeNull("there isn't an instance when there is no config");
         }
 
         [Test]
@@ -60,7 +60,7 @@ namespace Octopus.Shared.Tests.Configuration
             mapper.SupportedEnvironmentVariables.Returns(new HashSet<EnvironmentVariable>(new[] { EnvironmentVariable.PlaintText("OCTOPUS_HOME") }));
 
             var subject = new EnvironmentConfigurationStrategy(Substitute.For<ILogFileOnlyLogger>(), mapper, reader);
-            subject.LoadedConfiguration(new ApplicationRecord()).Should().NotBeNull("there is an instance when there is a complete config");
+            subject.LoadContributedConfiguration().Should().NotBeNull("there is an instance when there is a complete config");
             mapper.Received(1).SetEnvironmentValues(Arg.Is<Dictionary<string, string?>>(v => v.Count() == 1 && v["OCTOPUS_HOME"] == "."));
         }
     }

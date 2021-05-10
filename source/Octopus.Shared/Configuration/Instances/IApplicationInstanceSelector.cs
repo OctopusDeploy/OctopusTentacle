@@ -17,12 +17,8 @@ namespace Octopus.Shared.Configuration.Instances
     /// </summary>
     public interface IApplicationInstanceSelector
     {
-        ApplicationName ApplicationName { get; } 
-        //string? GetCurrentName();
+        ApplicationName ApplicationName { get; }
         ApplicationInstanceConfiguration Current { get;  }
-        /*IKeyValueStore GetCurrentConfiguration();
-        IWritableKeyValueStore GetWritableCurrentConfiguration();*/
         bool CanLoadCurrentInstance();
-        /*bool CanRunAsService();*/
     }
 }

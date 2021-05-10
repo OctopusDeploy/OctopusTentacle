@@ -2,6 +2,9 @@
 
 namespace Octopus.Shared.Configuration.Instances
 {
+    /// <summary>
+    /// Coordinates creation and deletion of an instance
+    /// </summary>
     public interface IApplicationInstanceManager
     {
         void CreateDefaultInstance(string configurationFile, string? homeDirectory = null);

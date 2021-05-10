@@ -364,12 +364,11 @@ namespace Octopus.Shared.Startup
             options.Parse(commandLineArguments);
 
             if (!string.IsNullOrWhiteSpace(instanceName))
-                return new StartUpRegistryInstanceRequest(ApplicationName, instanceName);
+                return new StartUpRegistryInstanceRequest(instanceName);
             if (!string.IsNullOrWhiteSpace(configFile))
-                return new StartUpConfigFileInstanceRequest(ApplicationName, configFile);
+                return new StartUpConfigFileInstanceRequest(configFile);
             
-            
-            return new StartUpDynamicInstanceRequest(ApplicationName);
+            return new StartUpDynamicInstanceRequest();
         }
 
         public static string[] ParseCommandHostArgumentsFromCommandLineArguments(

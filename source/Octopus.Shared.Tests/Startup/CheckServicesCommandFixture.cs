@@ -12,17 +12,17 @@ namespace Octopus.Shared.Tests.Startup
 {
     public class CheckServicesCommandFixture
     {
-        IApplicationInstanceRegistry instanceRegistry;
+        IApplicationInstanceStore instanceStore;
         IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
         CheckServicesCommand command;
 
         [SetUp]
         public void Setup()
         {
-            instanceRegistry = Substitute.For<IApplicationInstanceRegistry>();
+            instanceStore = Substitute.For<IApplicationInstanceStore>();
             windowsLocalAdminRightsChecker = Substitute.For<IWindowsLocalAdminRightsChecker>();
             var log = Substitute.For<ISystemLog>();
-            command = new CheckServicesCommand(log, instanceRegistry, ApplicationName.OctopusServer, windowsLocalAdminRightsChecker);
+            command = new CheckServicesCommand(log, instanceStore, ApplicationName.OctopusServer, windowsLocalAdminRightsChecker);
         }
 
         [Test]

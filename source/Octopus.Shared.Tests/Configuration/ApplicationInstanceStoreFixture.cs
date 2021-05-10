@@ -17,7 +17,7 @@ namespace Octopus.Shared.Tests.Configuration
     {
         IRegistryApplicationInstanceStore registryStore;
         IOctopusFileSystem fileSystem;
-        ApplicationInstanceRegistry instanceStore;
+        ApplicationInstanceStore instanceStore;
 
         [SetUp]
         public void Setup()
@@ -25,7 +25,7 @@ namespace Octopus.Shared.Tests.Configuration
             registryStore = Substitute.For<IRegistryApplicationInstanceStore>();
             fileSystem = Substitute.For<IOctopusFileSystem>();
             var log = Substitute.For<ISystemLog>();
-            instanceStore = new ApplicationInstanceRegistry(new StartUpRegistryInstanceRequest(ApplicationName.OctopusServer, "instance 1"), log, fileSystem, registryStore);
+            instanceStore = new ApplicationInstanceStore(ApplicationName.OctopusServer, log, fileSystem, registryStore);
         }
 
         [Test]
@@ -95,13 +95,14 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void GetInstance_ShouldPreferFileSystemEntries()
         {
-            var configFilename = Path.Combine(instanceStore.InstancesFolder(), "instance-1.config");
+            var configFilename = Path.Combine(instanceStore.InstancesFolder, "instance-1.config");
 
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
             fileSystem.FileExists(Arg.Any<string>()).Returns(true);
+            fileSystem.EnumerateFiles(instanceStore.InstancesFolder).Returns(new[] { configFilename});
             fileSystem.ReadFile(Arg.Is(configFilename)).Returns("{\"Name\": \"instance 1\",\"ConfigurationFilePath\": \"fileConfigFilePath2\"}");
 
-            var instance = instanceStore.GetInstance("instance 1");
+            var instance = instanceStore.LoadInstanceDetails("instance 1");
             instance.InstanceName.Should().Be("instance 1");
             instance.ConfigurationFilePath.Should().Be("fileConfigFilePath2");
         }
@@ -116,8 +117,7 @@ namespace Octopus.Shared.Tests.Configuration
                     new ApplicationInstanceRecord("instance2", "ServerPath2")
                 });
 
-            var instance = instanceStore.GetInstance("I AM FAKE");
-            Assert.IsNull(instance);
+            Assert.Throws<ControlledFailureException>(() => instanceStore.LoadInstanceDetails("I AM FAKE"));
         }
 
         [Test]

@@ -76,7 +76,7 @@ namespace Octopus.Shared.Tests.Configuration
             var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
 
             var subject = new EnvFileConfigurationStrategy(fileSystem, fileLocator, mapper);
-            subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull("there isn't an instance when the file contains no values");
+            subject.LoadContributedConfiguration().Should().BeNull("there isn't an instance when the file contains no values");
         }
 
         [Test]
@@ -88,7 +88,7 @@ namespace Octopus.Shared.Tests.Configuration
             var mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
 
             var subject = new EnvFileConfigurationStrategy(fileSystem, fileLocator, mapper);
-            subject.LoadedConfiguration(new ApplicationRecord()).Should().BeNull("there isn't an instance when there is no envFile");
+            subject.LoadContributedConfiguration().Should().BeNull("there isn't an instance when there is no envFile");
         }
 
         [Test]
@@ -103,7 +103,7 @@ namespace Octopus.Shared.Tests.Configuration
             mapper.SupportedEnvironmentVariables.Returns(hashSet);
 
             var subject = new EnvFileConfigurationStrategy(fileSystem, fileLocator, mapper);
-            subject.LoadedConfiguration(new ApplicationRecord()).Should().NotBeNull("there is an instance when there is a file");
+            subject.LoadContributedConfiguration().Should().NotBeNull("there is an instance when there is a file");
         }
     }
 }

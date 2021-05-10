@@ -11,10 +11,12 @@ namespace Octopus.Shared.Configuration
 {
     public class ConfigurationModule : Module
     {
+        private readonly ApplicationName applicationName;
         readonly StartUpInstanceRequest startUpInstanceRequest;
 
-        public ConfigurationModule(StartUpInstanceRequest startUpInstanceRequest)
+        public ConfigurationModule(ApplicationName applicationName,StartUpInstanceRequest startUpInstanceRequest)
         {
+            this.applicationName = applicationName;
             this.startUpInstanceRequest = startUpInstanceRequest;
         }
 
@@ -23,7 +25,8 @@ namespace Octopus.Shared.Configuration
             base.Load(builder);
 
             builder.RegisterInstance(startUpInstanceRequest).As<StartUpInstanceRequest>();
-            builder.Register(_ => startUpInstanceRequest.ApplicationName).As<ApplicationName>();
+            builder.Register(_ => applicationName).As<ApplicationName>();
+            builder.Register((c) => c.Resolve<IApplicationInstanceSelector>().Current).AsSelf();
 
             if (PlatformDetection.IsRunningOnWindows)
             {
@@ -119,9 +122,8 @@ namespace Octopus.Shared.Configuration
         {
             base.Load(builder);
 
-            var startUpInstanceRequest = new StartUpDynamicInstanceRequest(applicationName);
-            builder.RegisterInstance(startUpInstanceRequest).As<StartUpInstanceRequest>();
-            builder.Register(_ => startUpInstanceRequest.ApplicationName).As<ApplicationName>();
+            builder.RegisterInstance(new StartUpDynamicInstanceRequest()).As<StartUpInstanceRequest>();
+            builder.Register(_ => applicationName).As<ApplicationName>();
 
             // the Wpf apps only run on Windows
             builder.RegisterType<WindowsRegistryApplicationInstanceStore>()

@@ -11,15 +11,18 @@ namespace Octopus.Shared.Configuration.Instances
         readonly ISystemLog log;
         readonly IApplicationInstanceStore instanceStore;
         readonly IApplicationInstanceSelector instanceSelector;
+        private readonly ApplicationName applicationName;
         readonly StartUpInstanceRequest startUpInstanceRequest;
 
         public ApplicationInstanceManager(
+            ApplicationName applicationName,
             StartUpInstanceRequest startUpInstanceRequest,
             IOctopusFileSystem fileSystem,
             ISystemLog log,
             IApplicationInstanceStore instanceStore,
             IApplicationInstanceSelector instanceSelector)
         {
+            this.applicationName = applicationName;
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.fileSystem = fileSystem;
             this.log = log;
@@ -29,7 +32,7 @@ namespace Octopus.Shared.Configuration.Instances
 
         public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
         {
-            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName), configurationFile, homeDirectory);
+            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(applicationName), configurationFile, homeDirectory);
         }
 
         public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
@@ -58,7 +61,7 @@ namespace Octopus.Shared.Configuration.Instances
         void WriteHomeDirectory(string configurationFile, string homeDirectory)
         {
             var keyValueStore = new XmlFileKeyValueStore(fileSystem, configurationFile);
-            var homeConfig = new WritableHomeConfiguration(startUpInstanceRequest.ApplicationName, keyValueStore, instanceSelector);
+            var homeConfig = new WritableHomeConfiguration(applicationName, keyValueStore, instanceSelector);
             log.Info($"Setting home directory to: {homeDirectory}");
             homeConfig.SetHomeDirectory(homeDirectory);
         }
@@ -90,7 +93,7 @@ namespace Octopus.Shared.Configuration.Instances
             // We can therefore assume that if its missing, it will end up being created in the cwd
             if (string.IsNullOrEmpty(configurationFile))
             {
-                configurationFile = $"{startUpInstanceRequest.ApplicationName}.config";
+                configurationFile = $"{applicationName}.config";
             }
             
             // If configuration File isn't rooted, root it to the home directory 

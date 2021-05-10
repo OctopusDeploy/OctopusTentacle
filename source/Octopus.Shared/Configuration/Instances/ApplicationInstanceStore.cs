@@ -105,7 +105,7 @@ namespace Octopus.Shared.Configuration.Instances
             return combinedInstanceList.ToList();
         }
 
-        void MigrateInstance(ApplicationInstanceRecord instanceRecord)
+        internal void MigrateInstance(ApplicationInstanceRecord instanceRecord)
         {
             var instanceName = instanceRecord.InstanceName;
             if (File.Exists(InstanceFileName(instanceName)))
@@ -199,7 +199,7 @@ namespace Octopus.Shared.Configuration.Instances
         string InstanceFileName(string instanceName)
             => Path.Combine(InstancesFolder, instanceName.Replace(' ', '-').ToLower() + ".config");
 
-        string InstancesFolder => Path.Combine(machineConfigurationHomeDirectory, applicationName.ToString(), "Instances");
+        internal string InstancesFolder => Path.Combine(machineConfigurationHomeDirectory, applicationName.ToString(), "Instances");
 
         Instance LoadInstanceConfiguration(string path)
         {

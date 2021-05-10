@@ -4,7 +4,7 @@ namespace Octopus.Shared.Configuration
 {
     public class StartUpConfigFileInstanceRequest : StartUpInstanceRequest
     {
-        public StartUpConfigFileInstanceRequest(ApplicationName applicationName, string configFile) : base(applicationName)
+        public StartUpConfigFileInstanceRequest(string configFile)
         {
             ConfigFile = configFile;
         }
