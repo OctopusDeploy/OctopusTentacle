@@ -40,8 +40,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
                 new TentacleManagerView(
                     container.Resolve<TentacleManagerModel>(),
                     container.Resolve<InstanceSelectionModel>(),
-                    container.Resolve<IApplicationInstanceLocator>(),
                     container.Resolve<IApplicationInstanceManager>(),
+                    container.Resolve<IApplicationInstanceIndex>(),
                     newInstanceLauncher,
                     container.Resolve<ProxyWizardLauncher>(),
                     container.Resolve<DeleteWizardLauncher>()));

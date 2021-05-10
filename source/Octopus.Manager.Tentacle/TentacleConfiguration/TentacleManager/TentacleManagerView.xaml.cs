@@ -23,8 +23,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
     public partial class TentacleManagerView
     {
         readonly InstanceSelectionModel instanceSelection;
-        readonly IApplicationInstanceLocator instanceLocator;
         readonly IApplicationInstanceManager instanceManager;
+        private readonly IApplicationInstanceIndex instanceIndex;
         readonly TentacleSetupWizardLauncher tentacleSetupWizardLauncher;
         readonly ProxyWizardLauncher proxyWizardLauncher;
         readonly DeleteWizardLauncher deleteWizardLaunchers;
@@ -32,15 +32,15 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
         public TentacleManagerView(TentacleManagerModel model,
             InstanceSelectionModel instanceSelection,
-            IApplicationInstanceLocator instanceLocator,
             IApplicationInstanceManager instanceManager,
+            IApplicationInstanceIndex instanceIndex,
             TentacleSetupWizardLauncher tentacleSetupWizardLauncher,
             ProxyWizardLauncher proxyWizardLauncher,
             DeleteWizardLauncher deleteWizardLaunchers)
         {
             this.instanceSelection = instanceSelection;
-            this.instanceLocator = instanceLocator;
             this.instanceManager = instanceManager;
+            this.instanceIndex = instanceIndex;
             this.tentacleSetupWizardLauncher = tentacleSetupWizardLauncher;
             this.proxyWizardLauncher = proxyWizardLauncher;
             this.deleteWizardLaunchers = deleteWizardLaunchers;
@@ -64,7 +64,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             Dispatcher.BeginInvoke(new Action(delegate
             {
-                var instances = instanceLocator.ListInstances();
+                var instances = instanceIndex.ListInstances();
                 var defaultInstall = instances.SingleOrDefault(s => s.InstanceName == instanceSelection.SelectedInstance);
                 if (defaultInstall != null && !File.Exists(defaultInstall.ConfigurationFilePath))
                 {

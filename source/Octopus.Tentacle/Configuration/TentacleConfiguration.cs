@@ -97,7 +97,10 @@ namespace Octopus.Tentacle.Configuration
             get { return Path.Combine(ApplicationDirectory, "Packages"); }
         }
 
-        public string JournalFilePath => Path.Combine(home.HomeDirectory, "DeploymentJournal.xml");
+        public string JournalFilePath
+        {
+            get { return Path.Combine(home.HomeDirectory ?? ".", "DeploymentJournal.xml"); }
+        }
 
         public X509Certificate2? TentacleCertificate
         {
@@ -106,9 +109,14 @@ namespace Octopus.Tentacle.Configuration
                 if (CachedCertificate != null)
                     return CachedCertificate;
 
-                var thumbprint = settings.Get<string>(CertificateThumbprintSettingName);
+                var thumbprint = settings.Get<string?>(CertificateThumbprintSettingName);
+                if (string.IsNullOrWhiteSpace(thumbprint))
+                {
+                    return null;
+                }
+                
                 var encoded = settings.Get<string>(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
-                return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint, encoded, log);
+                return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint ?? "", encoded, log);
             }
         }
 
@@ -262,14 +270,21 @@ namespace Octopus.Tentacle.Configuration
             return string.Empty;
         }
 
-        public X509Certificate2 GenerateNewCertificate(bool writeToConfig = true)
+        public X509Certificate2 GenerateNewCertificate()
         {
             var certificate = certificateGenerator.GenerateNew(CertificateExpectations.TentacleCertificateFullName);
+
             // we write to the config, if there is one, else just hold in memory for the transient tentacles/workers
-            if (writeToConfig)
+            try
+            {
                 SetTentacleCertificate(certificate);
-            else
+            }
+            catch (InvalidOperationException)
+            {
+                log.Warn("Unable to save Certificate. Storing it in local memory");
                 CachedCertificate = certificate;
+            }
+
             return certificate;
         }
 

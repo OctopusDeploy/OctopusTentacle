@@ -76,12 +76,9 @@ namespace Octopus.Tentacle.Commands
             {
                 if (configuration.Value.TentacleCertificate == null)
                 {
-                    if (startUpInstanceRequest is StartUpDynamicInstanceRequest)
-                    {
-                        configuration.Value.GenerateNewCertificate(writeToConfig: false);
-                    }
-                    else
-                        throw new InvalidOperationException("No certificate has been generated for this Tentacle. Please run the new-certificate command before starting.");
+                    var certificate = configuration.Value.GenerateNewCertificate();
+                    log.Info("A new certificate has been generated and installed as none were yet available. Thumbprint:");
+                    log.Info(certificate.Thumbprint);
                 }
             }
             catch (CryptographicException cx)
@@ -93,7 +90,7 @@ namespace Octopus.Tentacle.Commands
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleHome, home.Value.HomeDirectory);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleApplications, configuration.Value.ApplicationDirectory);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleJournal, configuration.Value.JournalFilePath);
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleInstanceName, selector.GetCurrentName());
+            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleInstanceName, selector.Current.InstanceName);
             var currentPath = typeof(RunAgentCommand).Assembly.FullLocalPath();
             var exePath = PlatformDetection.IsRunningOnWindows
                 ? Path.ChangeExtension(currentPath, "exe")

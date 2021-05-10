@@ -10,10 +10,10 @@ namespace Octopus.Manager.Tentacle.Shell
 {
     public class InstanceSelectionModel : ViewModel
     {
-        readonly IApplicationInstanceLocator instanceLocator;
+        readonly IApplicationInstanceIndex instanceLocator;
         string selectedInstance;
 
-        public InstanceSelectionModel(ApplicationName applicationName, IApplicationInstanceLocator instanceLocator)
+        public InstanceSelectionModel(ApplicationName applicationName, IApplicationInstanceIndex instanceLocator)
         {
             this.ApplicationName = applicationName;
             this.instanceLocator = instanceLocator;

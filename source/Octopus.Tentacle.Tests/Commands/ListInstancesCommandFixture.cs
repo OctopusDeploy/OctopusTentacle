@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             base.SetUp();
 
-            Command = new ListInstancesCommand(Substitute.For<IApplicationInstanceLocator>());
+            Command = new ListInstancesCommand(Substitute.For<IApplicationInstanceIndex>());
         }
 
         [Test]

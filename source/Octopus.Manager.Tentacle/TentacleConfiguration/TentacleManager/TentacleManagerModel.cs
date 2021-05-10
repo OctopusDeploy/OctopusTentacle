@@ -26,10 +26,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         bool pollsServers;
 
         IOctopusFileSystem fileSystem;
+        private readonly IApplicationInstanceSelector applicationInstanceSelector;
 
-        public TentacleManagerModel(IOctopusFileSystem fileSystem)
+        public TentacleManagerModel(IOctopusFileSystem fileSystem, IApplicationInstanceSelector applicationInstanceSelector)
         {
             this.fileSystem = fileSystem;
+            this.applicationInstanceSelector = applicationInstanceSelector;
         }
 
         public string InstanceName { get; set; }
@@ -137,7 +139,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             var keyStore = LoadConfiguration();
 
-            var home = new HomeConfiguration(ApplicationName.Tentacle, keyStore);
+            var home = new HomeConfiguration(ApplicationName.Tentacle, keyStore, null);
 
             HomeDirectory = home.HomeDirectory;
 
@@ -150,7 +152,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
             var tencon = new Octopus.Tentacle.Configuration.TentacleConfiguration(
                 keyStore,
-                new HomeConfiguration(ApplicationName.Tentacle, keyStore),
+                new HomeConfiguration(ApplicationName.Tentacle, keyStore, applicationInstanceSelector),
                 new ProxyConfiguration(keyStore),
                 new PollingProxyConfiguration(keyStore),
                 new SystemLog()

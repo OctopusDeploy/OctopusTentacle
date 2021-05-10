@@ -87,10 +87,10 @@ namespace Octopus.Tentacle.Commands
 
         internal async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
         {
-            var configStore = instanceSelector.GetCurrentConfiguration();
+            var configStore = instanceSelector.Current.Configuration;
 
-            var oldHomeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, configStore);
-            var homeConfiguration = new WritableHomeConfiguration(ApplicationName.Tentacle, outputStore);
+            var oldHomeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, configStore, instanceSelector);
+            var homeConfiguration = new WritableHomeConfiguration(ApplicationName.Tentacle, outputStore, instanceSelector);
             homeConfiguration.SetHomeDirectory(oldHomeConfiguration.HomeDirectory);
 
             var certificateGenerator = new CertificateGenerator(log);
