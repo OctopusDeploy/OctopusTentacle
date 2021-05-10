@@ -15,12 +15,12 @@ namespace Octopus.Tentacle.Commands
         static readonly string JsonFormat = "json";
         static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
 
-        readonly IApplicationInstanceIndex instanceStore;
+        readonly IApplicationInstanceStore instanceStore;
         public string Format { get; set; } = TextFormat;
 
         public override bool SuppressConsoleLogging => true;
 
-        public ListInstancesCommand(IApplicationInstanceIndex instanceStore)
+        public ListInstancesCommand(IApplicationInstanceStore instanceStore)
         {
             this.instanceStore = instanceStore;
 

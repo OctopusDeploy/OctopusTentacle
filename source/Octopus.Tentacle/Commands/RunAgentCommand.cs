@@ -16,7 +16,6 @@ namespace Octopus.Tentacle.Commands
 {
     public class RunAgentCommand : AbstractStandardCommand
     {
-        readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly Lazy<IHalibutInitializer> halibut;
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly Lazy<IHomeConfiguration> home;
@@ -32,7 +31,6 @@ namespace Octopus.Tentacle.Commands
         public override bool CanRunAsService => true;
 
         public RunAgentCommand(
-            StartUpInstanceRequest startUpInstanceRequest,
             Lazy<IHalibutInitializer> halibut,
             Lazy<IWritableTentacleConfiguration> configuration,
             Lazy<IHomeConfiguration> home,
@@ -43,7 +41,6 @@ namespace Octopus.Tentacle.Commands
             Lazy<IProxyInitializer> proxyInitializer,
             AppVersion appVersion) : base(selector, log)
         {
-            this.startUpInstanceRequest = startUpInstanceRequest;
             this.halibut = halibut;
             this.configuration = configuration;
             this.home = home;

@@ -33,8 +33,8 @@ namespace Octopus.Tentacle.Tests.Commands
             tentacleConfiguration.TentacleCertificate.Returns(certificate);
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
+            
             Command = new RunAgentCommand(
-                new StartUpRegistryInstanceRequest(ApplicationName.Tentacle, "MyTentacle"),
                 new Lazy<IHalibutInitializer>(() => halibut),
                 new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration),
                 new Lazy<IHomeConfiguration>(() => home),
@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 new Lazy<IProxyInitializer>(() => Substitute.For<IProxyInitializer>()),
                 new AppVersion(GetType().Assembly));
 
-            selector.GetCurrentName().Returns("MyTentacle");
+            selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
         }
 
         [Test]
