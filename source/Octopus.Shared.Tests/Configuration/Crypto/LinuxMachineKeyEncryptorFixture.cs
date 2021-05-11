@@ -81,11 +81,6 @@ namespace Octopus.Shared.Tests.Configuration.Crypto
             {
                 return (key, iv);
             }
-
-            public void MakeDodgy()
-            {
-                key = new byte[] { 11, 23 };
-            }
         }
     }
 }
