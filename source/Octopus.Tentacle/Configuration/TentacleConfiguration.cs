@@ -116,7 +116,7 @@ namespace Octopus.Tentacle.Configuration
                 }
                 
                 var encoded = settings.Get<string>(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
-                return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint ?? "", encoded, log);
+                return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint!, encoded, log);
             }
         }
 

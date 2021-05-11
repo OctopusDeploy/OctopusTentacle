@@ -24,7 +24,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
     {
         readonly InstanceSelectionModel instanceSelection;
         readonly IApplicationInstanceManager instanceManager;
-        private readonly IApplicationInstanceIndex instanceIndex;
+        readonly IApplicationInstanceStore instanceStore;
         readonly TentacleSetupWizardLauncher tentacleSetupWizardLauncher;
         readonly ProxyWizardLauncher proxyWizardLauncher;
         readonly DeleteWizardLauncher deleteWizardLaunchers;
@@ -33,14 +33,14 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         public TentacleManagerView(TentacleManagerModel model,
             InstanceSelectionModel instanceSelection,
             IApplicationInstanceManager instanceManager,
-            IApplicationInstanceIndex instanceIndex,
+            IApplicationInstanceStore instanceStore,
             TentacleSetupWizardLauncher tentacleSetupWizardLauncher,
             ProxyWizardLauncher proxyWizardLauncher,
             DeleteWizardLauncher deleteWizardLaunchers)
         {
             this.instanceSelection = instanceSelection;
             this.instanceManager = instanceManager;
-            this.instanceIndex = instanceIndex;
+            this.instanceStore = instanceStore;
             this.tentacleSetupWizardLauncher = tentacleSetupWizardLauncher;
             this.proxyWizardLauncher = proxyWizardLauncher;
             this.deleteWizardLaunchers = deleteWizardLaunchers;
@@ -64,7 +64,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
         {
             Dispatcher.BeginInvoke(new Action(delegate
             {
-                var instances = instanceIndex.ListInstances();
+                var instances = instanceStore.ListInstances();
                 var defaultInstall = instances.SingleOrDefault(s => s.InstanceName == instanceSelection.SelectedInstance);
                 if (defaultInstall != null && !File.Exists(defaultInstall.ConfigurationFilePath))
                 {

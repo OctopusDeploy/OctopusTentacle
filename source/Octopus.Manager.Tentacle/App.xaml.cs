@@ -93,7 +93,7 @@ namespace Octopus.Manager.Tentacle
 
         void ReconfigureTentacleService(IComponentContext container)
         {
-            var applicationInstanceLocator = container.Resolve<IApplicationInstanceIndex>();
+            var applicationInstanceLocator = container.Resolve<IApplicationInstanceStore>();
             var instances = applicationInstanceLocator.ListInstances();
             var defaultInstance = instances.Where(x => x.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(ApplicationName.Tentacle)).ToArray();
             var instancesWithDefaultFirst = defaultInstance.Concat(instances.Except(defaultInstance).OrderBy(x => x.InstanceName));

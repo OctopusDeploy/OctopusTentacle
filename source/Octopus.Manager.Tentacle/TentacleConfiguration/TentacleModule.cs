@@ -41,7 +41,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration
                     container.Resolve<TentacleManagerModel>(),
                     container.Resolve<InstanceSelectionModel>(),
                     container.Resolve<IApplicationInstanceManager>(),
-                    container.Resolve<IApplicationInstanceIndex>(),
+                    container.Resolve<IApplicationInstanceStore>(),
                     newInstanceLauncher,
                     container.Resolve<ProxyWizardLauncher>(),
                     container.Resolve<DeleteWizardLauncher>()));
