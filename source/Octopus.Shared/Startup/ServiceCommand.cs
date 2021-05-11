@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
@@ -16,7 +17,7 @@ namespace Octopus.Shared.Startup
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
-        readonly IHomeConfiguration homeConfiguration;
+        private readonly ISystemLog log;
         readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
         readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
 
@@ -28,7 +29,7 @@ namespace Octopus.Shared.Startup
             string serviceDescription,
             Assembly assemblyContainingService,
             IServiceConfigurator serviceConfigurator,
-            IHomeConfiguration homeConfiguration)
+            ISystemLog log)
         {
             this.applicationName = applicationName;
             this.instanceLocator = instanceLocator;
@@ -36,7 +37,7 @@ namespace Octopus.Shared.Startup
             this.serviceDescription = serviceDescription;
             this.assemblyContainingService = assemblyContainingService;
             this.serviceConfigurator = serviceConfigurator;
-            this.homeConfiguration = homeConfiguration;
+            this.log = log;
 
             serviceConfigurationState = new ServiceConfigurationState
             {
@@ -78,9 +79,8 @@ namespace Octopus.Shared.Startup
                     try
                     {
                         var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
-                        serviceConfigurator.ConfigureService(thisServiceName,
+                        serviceConfigurator.ConfigureServiceByInstanceName(thisServiceName,
                             exePath,
-                            string.Empty,
                             instance.InstanceName,
                             serviceDescription,
                             serviceConfigurationState);
@@ -97,16 +97,27 @@ namespace Octopus.Shared.Startup
             else
             {
                 var currentName = instanceSelector.Current.InstanceName;
-                if (currentName == null)
-                    throw new ArgumentException("Unable to locate instance configuration");
-
                 var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, currentName);
-                serviceConfigurator.ConfigureService(thisServiceName,
-                    exePath,
-                    homeConfiguration.HomeDirectory ?? Environment.CurrentDirectory,
-                    currentName,
-                    serviceDescription,
-                    serviceConfigurationState);
+                if (currentName == null)
+                {
+                    if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                    {
+                        log.Warn("Please note, currently there can only be one un-named instance configured as a service on a machine at a time.");    
+                    }
+                    serviceConfigurator.ConfigureServiceByConfigPath(thisServiceName,
+                        exePath,
+                        instanceSelector.Current.ConfigurationPath,
+                        serviceDescription,
+                        serviceConfigurationState);
+                }
+                else
+                {
+                    serviceConfigurator.ConfigureServiceByInstanceName(thisServiceName,
+                        exePath,
+                        currentName,
+                        serviceDescription,
+                        serviceConfigurationState);
+                }
             }
         }
     }

@@ -19,12 +19,35 @@ namespace Octopus.Shared.Startup
             systemCtlHelper = new SystemCtlHelper(log);
         }
 
-        public void ConfigureService(string thisServiceName,
+        public void ConfigureServiceByInstanceName(string thisServiceName,
             string exePath,
-            string workingDir,
-            string? instance,
+            string instance,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState)
+        {
+            ConfigureService(thisServiceName,
+                exePath,
+                instance,
+                null,
+                serviceDescription,
+                serviceConfigurationState);
+        }
+
+        public void ConfigureServiceByConfigPath(string thisServiceName,
+            string exePath,
+            string configPath,
+            string serviceDescription,
+            ServiceConfigurationState serviceConfigurationState)
+        {
+            ConfigureService(thisServiceName,
+                exePath,
+                null,
+                configPath,
+                serviceDescription,
+                serviceConfigurationState);
+        }
+
+        void ConfigureService(string thisServiceName, string exePath, string? instance, string? configPath, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
         {
             //Check if system has bash and systemd
             CheckSystemPrerequisites();
@@ -51,7 +74,7 @@ namespace Octopus.Shared.Startup
             if (serviceConfigurationState.Install)
                 InstallService(cleanedInstanceName,
                     instance,
-                    workingDir,
+                    configPath,
                     exePath,
                     serviceDescription,
                     systemdUnitFilePath,
@@ -61,7 +84,7 @@ namespace Octopus.Shared.Startup
             if (serviceConfigurationState.Reconfigure)
                 ReconfigureService(cleanedInstanceName,
                     instance,
-                    workingDir,
+                    configPath,
                     exePath,
                     serviceDescription,
                     systemdUnitFilePath,
@@ -117,7 +140,7 @@ namespace Octopus.Shared.Startup
 
         void InstallService(string serviceName, 
             string? instance,
-            string workingDir,
+            string? configPath,
             string exePath,
             string serviceDescription,
             string systemdUnitFilePath,
@@ -126,7 +149,7 @@ namespace Octopus.Shared.Startup
         {
             try
             {
-                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, workingDir, serviceDescription, exePath, userName, serviceDependencies));
+                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, configPath, serviceDescription, exePath, userName, serviceDependencies));
                 systemCtlHelper.EnableService(serviceName, true);
                 log.Info($"Service installed: {serviceName}");
             }
@@ -139,7 +162,7 @@ namespace Octopus.Shared.Startup
 
         void ReconfigureService(string serviceName,
             string? instance,
-            string workingDir,
+            string? configPath,
             string exePath,
             string serviceDescription,
             string systemdUnitFilePath,
@@ -155,7 +178,7 @@ namespace Octopus.Shared.Startup
                 File.Delete(systemdUnitFilePath);
 
                 //re-add service
-                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, workingDir, serviceDescription, exePath, userName, serviceDependencies));
+                WriteUnitFile(systemdUnitFilePath, GenerateSystemdUnitFile(instance, configPath, serviceDescription, exePath, userName, serviceDependencies));
                 systemCtlHelper.EnableService(serviceName, true);
                 log.Info($"Service installed: {serviceName}");
             }
@@ -208,7 +231,7 @@ namespace Octopus.Shared.Startup
         }
 
         string GenerateSystemdUnitFile(string? instance, 
-            string workingDirectory,
+            string? configPath,
             string serviceDescription, string exePath, string userName, IEnumerable<string> serviceDependencies)
         {
             var stringBuilder = new StringBuilder();
@@ -219,11 +242,17 @@ namespace Octopus.Shared.Startup
             stringBuilder.AppendLine("[Service]");
             stringBuilder.AppendLine("Type=simple");
             stringBuilder.AppendLine($"User={userName}");
-            stringBuilder.AppendLine($"WorkingDirectory=\"{workingDirectory}\"");
             stringBuilder.Append($"ExecStart=\"{exePath}\" run");
             if (!string.IsNullOrEmpty(instance))
             {
                 stringBuilder.Append($" --instance=\"{instance}\"");
+            } else if (!string.IsNullOrEmpty(configPath))
+            {
+                stringBuilder.Append($" --config=\"{configPath}\"");
+            }
+            else
+            {
+                throw new InvalidOperationException("Either the instance name of configuration path must be provided to configure a service");
             }
             stringBuilder.AppendLine(" --noninteractive");
             stringBuilder.AppendLine("Restart=always");

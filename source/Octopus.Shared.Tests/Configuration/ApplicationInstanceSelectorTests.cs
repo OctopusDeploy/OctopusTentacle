@@ -4,6 +4,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Configuration;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
@@ -26,13 +27,14 @@ namespace Octopus.Shared.Tests.Configuration
         ApplicationInstanceSelector CreateApplicationInstanceSelector(StartUpInstanceRequest instanceRequest = null,
             IApplicationConfigurationContributor[] additionalConfigurations = null)
         {
-            return new ApplicationInstanceSelector(applicationInstanceStore,
+            return new ApplicationInstanceSelector(ApplicationName.Tentacle,
+                applicationInstanceStore,
                 instanceRequest ?? new StartUpDynamicInstanceRequest(),
                 additionalConfigurations ?? new IApplicationConfigurationContributor[0],
                 octopusFileSystem,
-                ApplicationName.Tentacle);
+                Substitute.For<ISystemLog>());
         }
-        
+
         [Test]
         public void GivenNoInstanceAvailable_ThenCurrentThrows()
         {

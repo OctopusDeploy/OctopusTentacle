@@ -4,10 +4,15 @@ namespace Octopus.Shared.Startup
 {
     public interface IServiceConfigurator
     {
-        void ConfigureService(string thisServiceName,
+        void ConfigureServiceByInstanceName(string thisServiceName,
             string exePath,
-            string workingDir,
-            string? instance,
+            string instance,
+            string serviceDescription,
+            ServiceConfigurationState serviceConfigurationState);
+        
+        void ConfigureServiceByConfigPath(string thisServiceName,
+            string exePath,
+            string configPath,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState);
     }

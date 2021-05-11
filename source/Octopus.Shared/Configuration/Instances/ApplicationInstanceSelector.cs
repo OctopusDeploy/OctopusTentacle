@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Octopus.CoreUtilities.Extensions;
+using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
@@ -11,20 +12,23 @@ namespace Octopus.Shared.Configuration.Instances
         readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly IApplicationConfigurationContributor[] instanceStrategies;
         readonly IOctopusFileSystem fileSystem;
+        readonly ISystemLog log;
         readonly object @lock = new object();
         ApplicationInstanceConfiguration? current;
         
         public ApplicationInstanceSelector(
+            ApplicationName applicationName,
             IApplicationInstanceStore applicationInstanceStore,
             StartUpInstanceRequest startUpInstanceRequest,
             IApplicationConfigurationContributor[] instanceStrategies,
             IOctopusFileSystem fileSystem,
-            ApplicationName applicationName)
+            ISystemLog log)
         {
             this.applicationInstanceStore = applicationInstanceStore;
             this.startUpInstanceRequest = startUpInstanceRequest;
             this.instanceStrategies = instanceStrategies;
             this.fileSystem = fileSystem;
+            this.log = log;
             ApplicationName = applicationName;
         }
 
@@ -61,6 +65,7 @@ namespace Octopus.Shared.Configuration.Instances
         ApplicationInstanceConfiguration LoadInstance()
         {
             var appInstance = LocateApplicationPrimaryConfiguration();
+            log.Verbose($"Loading configuration from {appInstance.configurationpath}");
             var writableConfig = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath);
             
             var aggregatedKeyValueStore = ContributeAdditionalConfiguration(writableConfig);

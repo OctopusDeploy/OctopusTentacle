@@ -43,9 +43,8 @@ namespace Octopus.Shared.Tests.Startup
 
             try
             {
-                configureServiceHelper.ConfigureService(serviceName,
+                configureServiceHelper.ConfigureServiceByInstanceName(serviceName,
                     exePath,
-                    string.Empty,
                     instance,
                     serviceDescription,
                     serviceConfigurationState);
@@ -85,9 +84,8 @@ namespace Octopus.Shared.Tests.Startup
             };
             var configureServiceHelper = new WindowsServiceConfigurator(new InMemoryLog(), Substitute.For<ILogFileOnlyLogger>(), new WindowsLocalAdminRightsChecker());
 
-            var ex = Assert.Throws<ControlledFailureException>(() => configureServiceHelper.ConfigureService(serviceName,
+            var ex = Assert.Throws<ControlledFailureException>(() => configureServiceHelper.ConfigureServiceByInstanceName(serviceName,
                 exePath,
-                string.Empty,
                 instance,
                 serviceDescription,
                 serviceConfigurationState));
