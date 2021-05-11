@@ -66,7 +66,7 @@ namespace Octopus.Shared.Tests.Configuration.Crypto
 
         class InMemoryCryptoKeyNixSource : ICryptoKeyNixSource
         {
-            byte[] key;
+            readonly byte[] key;
             readonly byte[] iv;
             public InMemoryCryptoKeyNixSource()
             {
