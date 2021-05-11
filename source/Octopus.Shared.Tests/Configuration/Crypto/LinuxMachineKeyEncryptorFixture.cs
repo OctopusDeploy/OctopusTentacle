@@ -59,7 +59,9 @@ namespace Octopus.Shared.Tests.Configuration.Crypto
 
         static ICryptoKeyNixSource DodgyKey()
         {
-            return Substitute.For<ICryptoKeyNixSource>();
+            var dodgyKey = Substitute.For<ICryptoKeyNixSource>();
+            dodgyKey.Load().Returns(callInfo => (new byte[] {77}, new byte[]{43, 11}));
+            return dodgyKey;
         }
 
         class InMemoryCryptoKeyNixSource : ICryptoKeyNixSource
@@ -78,6 +80,11 @@ namespace Octopus.Shared.Tests.Configuration.Crypto
             public (byte[] Key, byte[] IV) Load()
             {
                 return (key, iv);
+            }
+
+            public void MakeDodgy()
+            {
+                key = new byte[] { 11, 23 };
             }
         }
     }
