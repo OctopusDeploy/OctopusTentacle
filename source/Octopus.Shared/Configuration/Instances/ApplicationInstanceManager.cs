@@ -87,7 +87,7 @@ namespace Octopus.Shared.Configuration.Instances
             // If home directory is not provided, we should try use the config file path if provided, otherwise fallback to cwd
             homeDirectory ??= (string.IsNullOrEmpty(configurationFile) ?
                 "." :
-                (Path.GetDirectoryName(PathHelper.ResolveRelativeWorkingDirectoryFilePath(configurationFile)) ?? "."));
+                Path.GetDirectoryName(fileSystem.GetFullPath(configurationFile)) ?? ".");
             
             // Current "Indexed" installs require configuration file to be provided.
             // We can therefore assume that if its missing, it will end up being created in the cwd
@@ -103,7 +103,7 @@ namespace Octopus.Shared.Configuration.Instances
             }
             
             // get the configurationPath for writing, even if it is a relative path
-            configurationFile = PathHelper.ResolveRelativeWorkingDirectoryFilePath(configurationFile);
+            configurationFile = fileSystem.GetFullPath(configurationFile);
             
             return (configurationFile, homeDirectory);
         }

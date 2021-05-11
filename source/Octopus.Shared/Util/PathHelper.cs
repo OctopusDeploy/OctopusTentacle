@@ -40,20 +40,6 @@ namespace Octopus.Shared.Util
 
             return path;
         }
-        
-        public static string ResolveRelativeWorkingDirectoryFilePath(string path)
-        {
-            if (!Path.IsPathRooted(path))
-            {
-                path = Path.Combine(Directory.GetCurrentDirectory(), path);
-            }
-
-            path = Path.GetFullPath(path);
-
-            return path;
-        }
-        
-        
 
         public static string GetPathWithoutExtension(string path)
         {

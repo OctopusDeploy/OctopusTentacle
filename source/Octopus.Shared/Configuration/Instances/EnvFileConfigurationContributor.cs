@@ -6,7 +6,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    class EnvFileConfigurationStrategy : IApplicationConfigurationStrategy
+    class EnvFileConfigurationContributor : IApplicationConfigurationContributor
     {
         readonly IOctopusFileSystem fileSystem;
         readonly IEnvFileLocator envFileLocator;
@@ -14,7 +14,7 @@ namespace Octopus.Shared.Configuration.Instances
         bool loaded;
         bool foundValues;
 
-        public EnvFileConfigurationStrategy(IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentValuesToConfigItems mapper)
+        public EnvFileConfigurationContributor(IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentValuesToConfigItems mapper)
         {
             this.fileSystem = fileSystem;
             this.envFileLocator = envFileLocator;

@@ -14,6 +14,7 @@ using NUnit.Framework;
 using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Crypto;
 using Octopus.Shared.Util;
 using Formatting = System.Xml.Formatting;
 
@@ -156,7 +157,7 @@ namespace Octopus.Shared.Tests.Configuration
                     }
 
                     if (protectionLevel == ProtectionLevel.MachineKey)
-                        value = MachineKeyEncrypter.Current.Encrypt(value);
+                        value = MachineKeyEncryptor.Current.Encrypt(value);
 
                     Write(name, value);
                     Save();

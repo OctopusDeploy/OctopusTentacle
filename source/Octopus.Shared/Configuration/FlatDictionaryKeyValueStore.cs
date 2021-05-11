@@ -1,6 +1,7 @@
 using System;
 using Newtonsoft.Json;
 using Octopus.Configuration;
+using Octopus.Shared.Configuration.Crypto;
 using Octopus.Shared.Configuration.Instances;
 
 namespace Octopus.Shared.Configuration
@@ -29,7 +30,7 @@ namespace Octopus.Shared.Configuration
                     return defaultValue;
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                    data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
+                    data = MachineKeyEncryptor.Current.Decrypt(valueAsString);
 
                 if (typeof(TData) == typeof(string))
                     return (TData)data;
@@ -63,7 +64,7 @@ namespace Octopus.Shared.Configuration
                     return (false, default!);
 
                 if (protectionLevel == ProtectionLevel.MachineKey)
-                    data = MachineKeyEncrypter.Current.Decrypt(valueAsString);
+                    data = MachineKeyEncryptor.Current.Decrypt(valueAsString);
 
                 if (typeof(TData) == typeof(string))
                     return (true, (TData)data);
@@ -100,7 +101,7 @@ namespace Octopus.Shared.Configuration
                 valueAsObject = JsonConvert.SerializeObject(value, JsonSerializerSettings);
 
             if (protectionLevel == ProtectionLevel.MachineKey && valueAsObject != null)
-                valueAsObject = MachineKeyEncrypter.Current.Encrypt((string)valueAsObject);
+                valueAsObject = MachineKeyEncryptor.Current.Encrypt((string)valueAsObject);
 
             Write(name, valueAsObject);
             if (AutoSaveOnSet)

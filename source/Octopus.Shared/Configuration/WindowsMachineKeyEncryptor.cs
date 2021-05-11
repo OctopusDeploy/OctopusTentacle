@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Text;
+using Octopus.Shared.Configuration.Crypto;
 
 namespace Octopus.Shared.Configuration
 {

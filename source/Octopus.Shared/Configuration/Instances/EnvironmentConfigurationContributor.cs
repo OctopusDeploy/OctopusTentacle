@@ -6,7 +6,7 @@ using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    class EnvironmentConfigurationStrategy : IApplicationConfigurationStrategy
+    class EnvironmentConfigurationContributor : IApplicationConfigurationContributor
     {
         readonly ILogFileOnlyLogger log;
         readonly IMapEnvironmentValuesToConfigItems mapper;
@@ -14,7 +14,7 @@ namespace Octopus.Shared.Configuration.Instances
         bool loaded;
         bool foundValues;
 
-        public EnvironmentConfigurationStrategy(ILogFileOnlyLogger log,
+        public EnvironmentConfigurationContributor(ILogFileOnlyLogger log,
             IMapEnvironmentValuesToConfigItems mapper,
             IEnvironmentVariableReader reader)
         {

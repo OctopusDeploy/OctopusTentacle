@@ -2,13 +2,13 @@
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Util;
 
-namespace Octopus.Shared.Configuration
+namespace Octopus.Shared.Configuration.Crypto
 {
-    public class MachineKeyEncrypter : IMachineKeyEncryptor
+    public class MachineKeyEncryptor : IMachineKeyEncryptor
     {
         public static readonly IMachineKeyEncryptor Current;
 
-        static MachineKeyEncrypter()
+        static MachineKeyEncryptor()
         {
             Current = PlatformDetection.IsRunningOnWindows ? new WindowsMachineKeyEncryptor() : LinuxEncryptor();
         }
@@ -16,18 +16,19 @@ namespace Octopus.Shared.Configuration
         static IMachineKeyEncryptor LinuxEncryptor()
         {
             var log = new SystemLog();
+            var filesystem = new OctopusPhysicalFileSystem(log);
             // Sources to find the crypto IV+Key. We want to enforce trying to use the machine-key
             // first but still fallback to the existing Octopus generated one if that doesnt work.
-            var keySources = new LinuxMachineKeyEncryptor.ICryptoKeyNixSource[]
+            var keySources = new ICryptoKeyNixSource[]
             {
-                new LinuxMachineKeyEncryptor.LinuxMachineIdKey(log), new LinuxMachineKeyEncryptor.LinuxGeneratedMachineKey(log)
+                new LinuxMachineIdKey(filesystem), new LinuxGeneratedMachineKey(log, filesystem)
             };
 
-            return new LinuxMachineKeyEncryptor(keySources);
+            return new LinuxMachineKeyEncryptor(log, keySources);
 
         }
 
-        MachineKeyEncrypter()
+        MachineKeyEncryptor()
         {
         }
 

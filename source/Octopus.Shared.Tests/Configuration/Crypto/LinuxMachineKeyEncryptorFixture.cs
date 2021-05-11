@@ -3,19 +3,21 @@ using System.Security.Cryptography;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Shared.Configuration;
+using Octopus.Diagnostics;
+using Octopus.Shared.Configuration.Crypto;
 
-namespace Octopus.Shared.Tests.Configuration
+namespace Octopus.Shared.Tests.Configuration.Crypto
 {
     [TestFixture]
     public class LinuxMachineKeyEncryptorFixture
     {
         readonly InMemoryCryptoKeyNixSource validKey = new InMemoryCryptoKeyNixSource();
-
+        readonly ISystemLog systemLog = Substitute.For<ISystemLog>();
+    
         [Test]
         public void EncryptsAndDecrypts()
         {
-            var lme = new LinuxMachineKeyEncryptor(new[] { validKey });
+            var lme = new LinuxMachineKeyEncryptor(systemLog,new[] { validKey });
 
             var encrypted = lme.Encrypt("FooBar");
             var decrypted = lme.Decrypt(encrypted);
@@ -27,7 +29,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void CorruptKeyThrowsException()
         {
-            var lme = new LinuxMachineKeyEncryptor(new []{DodgyKey()});
+            var lme = new LinuxMachineKeyEncryptor(systemLog, new []{DodgyKey()});
             
             Assert.Throws<AggregateException>(() => lme.Encrypt("FooBar"));
         }
@@ -35,7 +37,7 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void CorruptKeyWithFallbackSuccessful()
         {
-            var lme = new LinuxMachineKeyEncryptor(new []{DodgyKey(), validKey});
+            var lme = new LinuxMachineKeyEncryptor(systemLog, new []{DodgyKey(), validKey});
 
             var roundTrip = lme.Decrypt(lme.Encrypt("FooBar"));
 
@@ -48,19 +50,19 @@ namespace Octopus.Shared.Tests.Configuration
             var firstDodgyKey = DodgyKey();
             var lastDodgyKey = DodgyKey();
             
-            var lme = new LinuxMachineKeyEncryptor(new []{firstDodgyKey, validKey, lastDodgyKey});
+            var lme = new LinuxMachineKeyEncryptor(systemLog, new []{firstDodgyKey, validKey, lastDodgyKey});
             
             lme.Encrypt("FooBar").Should().NotBeEmpty();
             firstDodgyKey.Received(1).Load();
             lastDodgyKey.Received(0).Load();
         }
 
-        static LinuxMachineKeyEncryptor.ICryptoKeyNixSource DodgyKey()
+        static ICryptoKeyNixSource DodgyKey()
         {
-            return Substitute.For<LinuxMachineKeyEncryptor.ICryptoKeyNixSource>();
+            return Substitute.For<ICryptoKeyNixSource>();
         }
 
-        class InMemoryCryptoKeyNixSource : LinuxMachineKeyEncryptor.ICryptoKeyNixSource
+        class InMemoryCryptoKeyNixSource : ICryptoKeyNixSource
         {
             byte[] key;
             readonly byte[] iv;

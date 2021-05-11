@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using FluentAssertions;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
+using Octopus.Configuration;
 using Octopus.Shared.Configuration;
-using Octopus.Shared.Configuration.EnvironmentVariableMappings;
 using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Tests.Configuration
@@ -14,9 +13,168 @@ namespace Octopus.Shared.Tests.Configuration
     [TestFixture]
     public class ApplicationInstanceSelectorTests
     {
-        static readonly object ConfigurationStore = Substitute.For<IApplicationConfigurationStrategy, IApplicationConfigurationWithMultipleInstances>();
-        static readonly IApplicationConfigurationStrategy OtherStrategy = Substitute.For<IApplicationConfigurationStrategy>();
+        IApplicationInstanceStore applicationInstanceStore = Substitute.For<IApplicationInstanceStore>();
+        IOctopusFileSystem octopusFileSystem = Substitute.For<IOctopusFileSystem>();
 
+        [SetUp]
+        public void Setup()
+        {
+            applicationInstanceStore = Substitute.For<IApplicationInstanceStore>();
+            octopusFileSystem = Substitute.For<IOctopusFileSystem>();
+        }
+
+        ApplicationInstanceSelector CreateApplicationInstanceSelector(StartUpInstanceRequest instanceRequest = null,
+            IApplicationConfigurationContributor[] additionalConfigurations = null)
+        {
+            return new ApplicationInstanceSelector(applicationInstanceStore,
+                instanceRequest ?? new StartUpDynamicInstanceRequest(),
+                additionalConfigurations ?? new IApplicationConfigurationContributor[0],
+                octopusFileSystem,
+                ApplicationName.Tentacle);
+        }
+        
+        [Test]
+        public void GivenNoInstanceAvailable_ThenCurrentThrows()
+        {
+            var mock = CreateApplicationInstanceSelector();
+            SetupMissingStoredInstances();
+            
+            Assert.Throws<ControlledFailureException>(() => { var x = mock.Current;  });
+        }
+        
+        [Test]
+        public void GivenNoInstanceAvailable_ThenCanLoadCurrentInstanceIsFalse()
+        {
+            var mock = CreateApplicationInstanceSelector();
+            SetupMissingStoredInstances();
+                
+            mock.CanLoadCurrentInstance().Should().BeFalse();
+        }
+        
+        [Test]
+        public void GivenNamedInstanceExists_WhenRequestingThatInstance_ThenCurrentReturnsThatInstance()
+        {
+            var name = Guid.NewGuid().ToString();
+            var mock = CreateApplicationInstanceSelector(new StartUpRegistryInstanceRequest(name));
+            var configPath = SetupAvailableStoredInstance(name);
+
+            mock.Current.InstanceName.Should().Be(name);
+            mock.Current.ConfigurationPath.Should().Be(configPath);
+        }
+        
+        [Test]
+        public void GivenMultipleNamedInstanceExists_WhenRequestingDefaultInstance_ThenCurrentReturnsDefaultInstance()
+        {
+            var mock = CreateApplicationInstanceSelector(new StartUpDynamicInstanceRequest());
+             SetupAvailableStoredInstance("NAMED");
+            var configPath = SetupAvailableStoredInstance(null);
+
+            mock.Current.ConfigurationPath.Should().Be(configPath);
+        }
+        
+        [Test]
+        public void GivenConfigurationInstanceExists_WhenRequestingConfigurationInstance_ThenCurrentReturnsConfigurationInstance()
+        {
+            var filePath = "FILE.txt";
+            var mock = CreateApplicationInstanceSelector(new StartUpConfigFileInstanceRequest(filePath));
+
+            octopusFileSystem.FileExists(filePath).Returns(true);
+            
+            mock.Current.InstanceName.Should().BeNull();
+            mock.Current.ConfigurationPath.Should().Be(filePath);
+        }
+        
+        [Test]
+        public void GivenConfigurationInstanceDoesNotExists_WhenRequestingConfigurationInstance_ThenThrows()
+        {
+            var filePath = "FILE.txt";
+            var mock = CreateApplicationInstanceSelector(new StartUpConfigFileInstanceRequest(filePath));
+            octopusFileSystem.FileExists(filePath).Returns(false);
+            
+            Assert.Throws<ControlledFailureException>(() => { var x = mock.Current;  });
+        }
+
+        [Test]
+        public void GivenCWDConfigExists_WhenRequestingDynamicInstance_ThenCurrentReturnsCWDDefaultConfig()
+        {
+            var filePath = "FULLPATH";
+            var defaultConfig = $"{ApplicationName.Tentacle}.config";
+            var mock = CreateApplicationInstanceSelector(new StartUpDynamicInstanceRequest());
+            octopusFileSystem.GetFullPath(defaultConfig).Returns(filePath);
+            octopusFileSystem.FileExists(filePath).Returns(true);
+            
+            mock.Current.InstanceName.Should().BeNull();
+            mock.Current.ConfigurationPath.Should().Be("FULLPATH");
+        }
+        
+        
+        [Test]
+        public void GivenCWDConfigAndDefaultInstanceExists_WhenRequestingDynamicInstance_ThenCurrentReturnsCWDDefaultConfig()
+        {
+            var filePath = "FULLPATH";
+            var defaultConfig = $"{ApplicationName.Tentacle}.config";
+            var mock = CreateApplicationInstanceSelector(new StartUpDynamicInstanceRequest());
+            SetupAvailableStoredInstance(null);
+            
+            octopusFileSystem.GetFullPath(defaultConfig).Returns(filePath);
+            octopusFileSystem.FileExists(filePath).Returns(true);
+            
+            
+            mock.Current.InstanceName.Should().BeNull();
+            mock.Current.ConfigurationPath.Should().Be("FULLPATH");
+        }
+        
+        [Test]
+        public void GivenContributingVariableSourceExists_ThenOverridingVariableIsAvailableInConfiguration()
+        {
+            var mockContributor = Substitute.For<IApplicationConfigurationContributor>();
+            var mockKeyValueStore = Substitute.For<IAggregatableKeyValueStore>();
+            mockKeyValueStore.TryGet<string>("FOO", Arg.Any<ProtectionLevel>()).Returns(info => (true, "BAR"));
+            mockContributor.LoadContributedConfiguration().Returns(mockKeyValueStore);
+                
+            var mock = CreateApplicationInstanceSelector(additionalConfigurations: new []  { mockContributor });
+            SetupAvailableStoredInstance(null);
+            
+            mock.Current.Configuration.Get<string>("FOO").Should().Be("BAR");
+        }
+        
+        [Test]
+        public void GivenMultipleContributingVariableSources_ThenPrioritySetsRetrievalOrder()
+        {
+            var contributor1 = SetupMockContributor(1,"FOO", "PRIORITY_1");
+            var contributor2 = SetupMockContributor(2,"FOO", "PRIORITY_2");
+            var contributor3 = SetupMockContributor(3,"FOO", "PRIORITY_3");
+            var unorderedContributors = new[] { contributor2, contributor1, contributor3 };
+            
+            var mock = CreateApplicationInstanceSelector(additionalConfigurations: unorderedContributors);
+            SetupAvailableStoredInstance(null);
+            
+            mock.Current.Configuration.Get<string>("FOO").Should().Be("PRIORITY_1");
+        }
+
+        static IApplicationConfigurationContributor SetupMockContributor(int priority, string entryKey, string entryValue)
+        {
+            var mockContributor = Substitute.For<IApplicationConfigurationContributor>();
+            var mockKeyValueStore = Substitute.For<IAggregatableKeyValueStore>();
+            mockKeyValueStore.TryGet<string>(entryKey, Arg.Any<ProtectionLevel>()).Returns(info => (true, entryValue));
+            mockContributor.Priority.Returns(priority);
+            mockContributor.LoadContributedConfiguration().Returns(mockKeyValueStore);
+            return mockContributor;
+        }
+
+        void SetupMissingStoredInstances(string instanceName = null)
+        {
+            applicationInstanceStore.LoadInstanceDetails(instanceName).Throws(new ControlledFailureException(""));
+        }
+
+        string SetupAvailableStoredInstance(string instanceName)
+        {
+            var configPath = Guid.NewGuid().ToString();
+            applicationInstanceStore.LoadInstanceDetails(instanceName).Returns(new ApplicationInstanceRecord(instanceName, configPath));
+            return configPath;
+        }
+
+        /*
         [Test]
         public void LoadInstanceThrowsWhenNoInstanceNamePassedAndNoInstancesConfigured()
         {
@@ -132,7 +290,10 @@ namespace Octopus.Shared.Tests.Configuration
             };
             var selector = GetApplicationInstanceSelector(instanceRecords, "instance 2");
 
-            ((Action)(() => selector.LoadInstance()))
+            ((Action)(() =>
+                {
+                    var x = selector.Current;
+                }))
                 .Should()
                 .Throw<ControlledFailureException>()
                 .WithMessage("Instance instance 2 of OctopusServer could not be matched to one of the existing instances: Instance 2, INSTANCE 2.");
@@ -159,6 +320,6 @@ namespace Octopus.Shared.Tests.Configuration
                 new[] { (IApplicationConfigurationStrategy)ConfigurationStore, OtherStrategy },
                 Substitute.For<ILogFileOnlyLogger>());
             return selector;
-        }
+        }*/
     }
 }

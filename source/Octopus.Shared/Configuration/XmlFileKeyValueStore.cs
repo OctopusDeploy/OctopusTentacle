@@ -17,7 +17,7 @@ namespace Octopus.Shared.Configuration
             bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
             this.fileSystem = fileSystem;
-            this.configurationFile = PathHelper.ResolveRelativeWorkingDirectoryFilePath(configurationFile);
+            this.configurationFile = fileSystem.GetFullPath(configurationFile);
         }
 
         protected override void LoadSettings(IDictionary<string, object?> settingsToFill)

@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using Octopus.Shared.Configuration;
 
-namespace Octopus.Shared.Tests.Configuration
+namespace Octopus.Shared.Tests.Configuration.Crypto
 {
     [TestFixture]
     [WindowsTest]

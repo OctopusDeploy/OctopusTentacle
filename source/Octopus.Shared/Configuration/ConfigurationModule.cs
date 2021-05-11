@@ -46,11 +46,11 @@ namespace Octopus.Shared.Configuration
                 .As<IApplicationInstanceStore>();
 
             builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>().SingleInstance();
-            builder.RegisterType<EnvFileConfigurationStrategy>()
-                .As<IApplicationConfigurationStrategy>();
+            builder.RegisterType<EnvFileConfigurationContributor>()
+                .As<IApplicationConfigurationContributor>();
 
-            builder.RegisterType<EnvironmentConfigurationStrategy>()
-                .As<IApplicationConfigurationStrategy>();
+            builder.RegisterType<EnvironmentConfigurationContributor>()
+                .As<IApplicationConfigurationContributor>();
 
             builder.RegisterType<ApplicationInstanceSelector>()
                 .As<IApplicationInstanceSelector>()
@@ -87,6 +87,7 @@ namespace Octopus.Shared.Configuration
                 .As<IWritableHomeConfiguration>()
                 .SingleInstance();
 
+            builder.RegisterType<LogInitializer>().AsSelf();
             builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().SingleInstance();
             builder.RegisterType<ProxyConfigParser>().As<IProxyConfigParser>();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
