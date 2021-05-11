@@ -15,7 +15,7 @@ namespace Octopus.Shared.Tests.Configuration.Crypto
         readonly ISystemLog systemLog = Substitute.For<ISystemLog>();
     
         [Test]
-        public void EncryptsAndDecrypts()
+        public void GivenValidKeysAvailable_ThenEncryptsAndDecrypts()
         {
             var lme = new LinuxMachineKeyEncryptor(systemLog,new[] { validKey });
 
@@ -27,7 +27,7 @@ namespace Octopus.Shared.Tests.Configuration.Crypto
         }
 
         [Test]
-        public void CorruptKeyThrowsException()
+        public void GivenCorruptKeyProvided_ThenThrowsException()
         {
             var lme = new LinuxMachineKeyEncryptor(systemLog, new []{DodgyKey()});
             
@@ -35,7 +35,7 @@ namespace Octopus.Shared.Tests.Configuration.Crypto
         }
         
         [Test]
-        public void CorruptKeyWithFallbackSuccessful()
+        public void GivenCorruptKeyProvided_WhenFallbackKeyAvailable_ThenEncrypts()
         {
             var lme = new LinuxMachineKeyEncryptor(systemLog, new []{DodgyKey(), validKey});
 
@@ -45,7 +45,7 @@ namespace Octopus.Shared.Tests.Configuration.Crypto
         }
 
         [Test]
-        public void KeysAttemptedUntilSucess()
+        public void GenMultipleKeys_FirstSuccessfulKeyIsUsed()
         {
             var firstDodgyKey = DodgyKey();
             var lastDodgyKey = DodgyKey();

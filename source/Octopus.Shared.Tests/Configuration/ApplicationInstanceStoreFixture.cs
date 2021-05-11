@@ -135,17 +135,6 @@ namespace Octopus.Shared.Tests.Configuration
             registryStore.Received(0).DeleteFromRegistry(Arg.Is("instance1"));
         }
 
-        /*[Test]
-        public void SaveInstance_WhenUnauthorizedAccessException_ShowsNiceErrorMessage()
-        {
-            fileSystem
-                .When(x => x.OverwriteFile(Arg.Any<string>(), Arg.Any<string>()))
-                .Do(x => throw new UnauthorizedAccessException("fake exception"));
-            var sourceInstance = new ApplicationInstanceRecord("instance1", "configFilePath");
-            var ex = Assert.Throws<ControlledFailureException>(() => instanceStore.SaveInstance(sourceInstance));
-            ex.Message.Should().Match("Unable to write file '*' as user '*'. Please check file permissions.");
-        }*/
-
         [Test]
         public void DeleteInstance_WhenUnauthorizedAccessException_ShowsNiceErrorMessage()
         {
