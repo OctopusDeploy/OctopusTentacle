@@ -12,7 +12,7 @@ using Octopus.Shared.Util;
 namespace Octopus.Shared.Tests.Configuration
 {
     [TestFixture]
-    public class ApplicationInstanceSelectorTests
+    public class ApplicationInstanceSelectorFixture
     {
         IApplicationInstanceStore applicationInstanceStore = Substitute.For<IApplicationInstanceStore>();
         IOctopusFileSystem octopusFileSystem = Substitute.For<IOctopusFileSystem>();
@@ -156,12 +156,21 @@ namespace Octopus.Shared.Tests.Configuration
         void SetupMissingStoredInstances(string instanceName = null)
         {
             applicationInstanceStore.LoadInstanceDetails(instanceName).Throws(new ControlledFailureException(""));
+            applicationInstanceStore.TryLoadInstanceDetails(instanceName, out Arg.Any<ApplicationInstanceRecord>())
+                .Returns(x => false);
         }
 
         string SetupAvailableStoredInstance(string instanceName)
         {
             var configPath = Guid.NewGuid().ToString();
-            applicationInstanceStore.LoadInstanceDetails(instanceName).Returns(new ApplicationInstanceRecord(instanceName, configPath));
+            var record = new ApplicationInstanceRecord(instanceName, configPath);
+            applicationInstanceStore.LoadInstanceDetails(instanceName).Returns(record);
+            applicationInstanceStore.TryLoadInstanceDetails(instanceName, out Arg.Any<ApplicationInstanceRecord>())
+                .Returns(x =>
+                {
+                    x[1] = record;
+                    return true;
+                });
             return configPath;
         }
 

@@ -60,7 +60,8 @@ namespace Octopus.Shared.Configuration
             var relativeRoot = Path.GetDirectoryName(applicationInstanceSelector.Current.ConfigurationPath);
             if (relativeRoot == null)
             {
-                throw new Exception("Unable to load configuration directory details");
+                throw new Exception($"Unable to load configuration directory details. "
+                    + $"Unable to determine path from configuration path '{applicationInstanceSelector.Current.ConfigurationPath}'");
             }
             
             return Path.Combine(relativeRoot, path);

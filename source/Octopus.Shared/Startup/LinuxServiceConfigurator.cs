@@ -246,13 +246,14 @@ namespace Octopus.Shared.Startup
             if (!string.IsNullOrEmpty(instance))
             {
                 stringBuilder.Append($" --instance=\"{instance}\"");
-            } else if (!string.IsNullOrEmpty(configPath))
+            } 
+            else if (!string.IsNullOrEmpty(configPath))
             {
                 stringBuilder.Append($" --config=\"{configPath}\"");
             }
             else
             {
-                throw new InvalidOperationException("Either the instance name of configuration path must be provided to configure a service");
+                throw new ControlledFailureException("Either the instance name of configuration path must be provided to configure a service");
             }
             stringBuilder.AppendLine(" --noninteractive");
             stringBuilder.AppendLine("Restart=always");

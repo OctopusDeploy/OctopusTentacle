@@ -33,6 +33,20 @@ namespace Octopus.Shared.Configuration.Instances
                 machineConfigurationHomeDirectory = "/etc/octopus";
         }
 
+        public bool TryLoadInstanceDetails(string? instanceName, out ApplicationInstanceRecord? instanceRecord)
+        {
+            instanceRecord = null;
+            try
+            {
+                instanceRecord = LoadInstanceDetails(instanceName);
+                return true;
+            }
+            catch (ControlledFailureException)
+            {
+                return false;
+            }
+        }
+
         public ApplicationInstanceRecord LoadInstanceDetails(string? instanceName)
         {
             ApplicationInstanceRecord? persistedRecord;

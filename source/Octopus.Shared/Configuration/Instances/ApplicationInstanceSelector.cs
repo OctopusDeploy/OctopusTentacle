@@ -108,15 +108,13 @@ namespace Octopus.Shared.Configuration.Instances
                     if (fileSystem.FileExists(rootPath))
                         return (null, rootPath);
 
-                    try
+                    if (!applicationInstanceStore.TryLoadInstanceDetails(null, out var indexDefaultInstance))
                     {
-                        var indexInstanceFallback = applicationInstanceStore.LoadInstanceDetails(null);
-                        return (indexInstanceFallback.InstanceName, indexInstanceFallback.ConfigurationFilePath);
+                        throw new ControlledFailureException("There are no instances of OctopusServer configured on this machine. " +
+                            "Please run the setup wizard, configure an instance using the command-line interface or specify a configuration file");
                     }
-                    catch (ControlledFailureException)
-                    {
-                        throw new ControlledFailureException("There are no instances of OctopusServer configured on this machine. Please run the setup wizard, configure an instance using the command-line interface, specify a configuration file");
-                    }
+
+                    return (indexDefaultInstance!.InstanceName, indexDefaultInstance!.ConfigurationFilePath);
                 }
             }
         }
