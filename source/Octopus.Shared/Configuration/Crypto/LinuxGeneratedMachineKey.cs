@@ -43,7 +43,9 @@ namespace Octopus.Shared.Configuration.Crypto
             }
             catch (Exception ex) when (ex is FormatException || ex is IndexOutOfRangeException)
             {
-                throw new InvalidOperationException($"Machine key file at `{FileName}` is corrupt and cannot be loaded");
+                throw new InvalidOperationException($"Machine key file at `{FileName}` is corrupt and cannot be loaded. "
+                    + $"If this file previously contained a valid key to encrypt data, that data may no longer be retrievable."
+                    + $"Remove the file `{FileName}` and allow Octopus to regenerate the key.");
             }
         }
 

@@ -35,15 +35,15 @@ namespace Octopus.Shared.Configuration.Crypto
             if (!fileSystem.FileExists(FileName))
             {
                 throw new InvalidOperationException($"Unable to locate machineId file at {FileName}."
-                    + $"Please refer to https://www.commandlinux.com/man-page/man5/machine-id.5.html for further details.");
+                    + $"Please refer to http://g.octopushq.com/LinuxMachineId for the machine-id linux man page.");
             }
             var machineId = fileSystem.ReadAllLines(FileName).FirstOrDefault();
 
             if (string.IsNullOrEmpty(machineId) || machineId.Length != 32)
             {
-                throw new InvalidOperationException($"machine-id contents at {FileName} is either empty or not 256 bits"
-                    + $"is un-unable to be used for the encryption key."
-                    + $"Please refer to https://www.commandlinux.com/man-page/man5/machine-id.5.html for further details.");
+                throw new InvalidOperationException($"machine-id contents at {FileName} is either empty or not 256 bits "
+                    + $"so is un-unable to be used for the encryption key."
+                    + $"Please refer to http://g.octopushq.com/LinuxMachineId for the machine-id linux man page.");
             }
             return machineId.Select(Convert.ToByte).ToArray();
         }

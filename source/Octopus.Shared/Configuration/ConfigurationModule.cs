@@ -136,6 +136,10 @@ namespace Octopus.Shared.Configuration
             
             builder.RegisterType<ApplicationInstanceManager>()
                 .As<IApplicationInstanceManager>();
+            
+            builder.RegisterType<ApplicationInstanceSelector>()
+                .As<IApplicationInstanceSelector>();
+            
         }
     }
 }
