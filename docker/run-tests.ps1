@@ -8,8 +8,9 @@ param (
 )
 
 # -SkipPublisherCheck is required because earlier versions of Pester cause conflicts if they're already installed.
-Install-Module -Name "Pester" -MinimumVersion "5.0.2" -Force -SkipPublisherCheck
-Import-Module -Name "Pester"
+Install-Module -Name "Pester" -MinimumVersion "5.0.2" -MaximumVersion "5.1.1" -Force -SkipPublisherCheck
+Import-Module -Name "Pester" -MinimumVersion "5.0.2" -MaximumVersion "5.1.1" 
+Write-Host "Pester Version: " (Get-Module Pester).Version
 
 # We do this here even though it's a dependency of our tests because we can't install it more than once
 # without erroring.
