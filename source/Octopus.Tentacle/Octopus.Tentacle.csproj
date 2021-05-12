@@ -10,15 +10,9 @@
 		<OutputType>Exe</OutputType>
 		<PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
+		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<LangVersion>8</LangVersion>
-	</PropertyGroup>
-	
-	<PropertyGroup Condition="!$([MSBuild]::IsOsUnixLike())">
-		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
-	</PropertyGroup>
-	<PropertyGroup Condition="$([MSBuild]::IsOsUnixLike())">
-		<TargetFramework>netcoreapp3.1</TargetFramework>
 	</PropertyGroup>
 
 	<Choose>
@@ -49,7 +43,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Octopus.Client" Version="8.9.2" />
-		<PackageReference Include="Octopus.Shared" Version="10.2.7-robe-rootless-te0011" />
+		<PackageReference Include="Octopus.Shared" Version="10.2.3" />
 	</ItemGroup>
 
 	<ItemGroup>
