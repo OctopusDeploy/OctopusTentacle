@@ -10,13 +10,13 @@ namespace Octopus.Manager.Tentacle.Shell
 {
     public class InstanceSelectionModel : ViewModel
     {
-        readonly IApplicationInstanceLocator instanceLocator;
+        readonly IApplicationInstanceStore instanceStore;
         string selectedInstance;
 
-        public InstanceSelectionModel(ApplicationName applicationName, IApplicationInstanceLocator instanceLocator)
+        public InstanceSelectionModel(ApplicationName applicationName, IApplicationInstanceStore instanceStore)
         {
             this.ApplicationName = applicationName;
-            this.instanceLocator = instanceLocator;
+            this.instanceStore = instanceStore;
         }
 
         public ObservableCollection<Instance> Instances { get; } = new ObservableCollection<Instance>();
@@ -45,7 +45,7 @@ namespace Octopus.Manager.Tentacle.Shell
         public void Refresh()
         {
             var currentlySelectedInstance = selectedInstance;
-            var existing = instanceLocator.ListInstances();
+            var existing = instanceStore.ListInstances();
 
             Instances.Clear();
             if (existing.Count > 0)

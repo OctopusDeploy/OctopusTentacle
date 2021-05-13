@@ -18,9 +18,6 @@ namespace Octopus.Tentacle.Services.FileTransfer
 
         public FileTransferService(IOctopusFileSystem fileSystem, IHomeConfiguration home, ISystemLog log)
         {
-            if (home.HomeDirectory == null)
-                throw new ArgumentException($"{GetType().Name} cannot function without the HomeDirectory configured.", nameof(home));
-
             this.fileSystem = fileSystem;
             this.home = home;
             this.log = log;

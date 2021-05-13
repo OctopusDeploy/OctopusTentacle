@@ -44,7 +44,7 @@ namespace Octopus.Tentacle
             var builder = new ContainerBuilder();
 
             builder.RegisterModule(new ShellModule());
-            builder.RegisterModule(new ConfigurationModule(startUpInstanceRequest));
+            builder.RegisterModule(new ConfigurationModule(ApplicationName, startUpInstanceRequest));
             builder.RegisterModule(new TentacleConfigurationModule());
             builder.RegisterModule(new LogMaskingModule());
             builder.RegisterModule(new OctopusClientInitializerModule());
@@ -53,7 +53,7 @@ namespace Octopus.Tentacle
             builder.RegisterModule(new CertificatesModule());
             builder.RegisterModule(new TimeModule());
             builder.RegisterModule(new ClientModule());
-            builder.RegisterModule(new TentacleCommunicationsModule(ApplicationName));
+            builder.RegisterModule(new TentacleCommunicationsModule());
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new VersioningModule(GetType().Assembly));
 
