@@ -43,7 +43,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Octopus.Client" Version="8.9.2" />
-		<PackageReference Include="Octopus.Shared" Version="10.2.7-robe-rootless-te0011" />
+		<PackageReference Include="Octopus.Shared" Version="10.3.1-ci0001" />
 	</ItemGroup>
 
 	<ItemGroup>
