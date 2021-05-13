@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Util;
@@ -12,21 +13,23 @@ namespace Octopus.Shared.Startup
         readonly string serviceDescription;
         readonly Assembly assemblyContainingService;
         readonly ApplicationName applicationName;
-        readonly IApplicationInstanceLocator instanceLocator;
+        readonly IApplicationInstanceStore instanceLocator;
         readonly IApplicationInstanceSelector instanceSelector;
         readonly ServiceConfigurationState serviceConfigurationState;
         readonly IServiceConfigurator serviceConfigurator;
+        private readonly ISystemLog log;
         readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
         readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
 
         string? instanceName;
 
         public ServiceCommand(ApplicationName applicationName,
-            IApplicationInstanceLocator instanceLocator,
+            IApplicationInstanceStore instanceLocator,
             IApplicationInstanceSelector instanceSelector,
             string serviceDescription,
             Assembly assemblyContainingService,
-            IServiceConfigurator serviceConfigurator)
+            IServiceConfigurator serviceConfigurator,
+            ISystemLog log)
         {
             this.applicationName = applicationName;
             this.instanceLocator = instanceLocator;
@@ -34,6 +37,7 @@ namespace Octopus.Shared.Startup
             this.serviceDescription = serviceDescription;
             this.assemblyContainingService = assemblyContainingService;
             this.serviceConfigurator = serviceConfigurator;
+            this.log = log;
 
             serviceConfigurationState = new ServiceConfigurationState
             {
@@ -75,7 +79,7 @@ namespace Octopus.Shared.Startup
                     try
                     {
                         var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
-                        serviceConfigurator.ConfigureService(thisServiceName,
+                        serviceConfigurator.ConfigureServiceByInstanceName(thisServiceName,
                             exePath,
                             instance.InstanceName,
                             serviceDescription,
@@ -92,15 +96,28 @@ namespace Octopus.Shared.Startup
             }
             else
             {
-                var currentName = instanceSelector.GetCurrentName();
-                if (currentName == null)
-                    throw new ArgumentException("Unable to locate instance configuration");
+                var currentName = instanceSelector.Current.InstanceName;
                 var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, currentName);
-                serviceConfigurator.ConfigureService(thisServiceName,
-                    exePath,
-                    currentName,
-                    serviceDescription,
-                    serviceConfigurationState);
+                if (currentName == null)
+                {
+                    if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
+                    {
+                        log.Warn("Please note, currently there can only be one un-named instance configured as a service on a machine at a time.");    
+                    }
+                    serviceConfigurator.ConfigureServiceByConfigPath(thisServiceName,
+                        exePath,
+                        instanceSelector.Current.ConfigurationPath,
+                        serviceDescription,
+                        serviceConfigurationState);
+                }
+                else
+                {
+                    serviceConfigurator.ConfigureServiceByInstanceName(thisServiceName,
+                        exePath,
+                        currentName,
+                        serviceDescription,
+                        serviceConfigurationState);
+                }
             }
         }
     }

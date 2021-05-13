@@ -6,7 +6,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    class EnvFileConfigurationStrategy : IApplicationConfigurationStrategy
+    class EnvFileConfigurationContributor : IApplicationConfigurationContributor
     {
         readonly IOctopusFileSystem fileSystem;
         readonly IEnvFileLocator envFileLocator;
@@ -14,20 +14,22 @@ namespace Octopus.Shared.Configuration.Instances
         bool loaded;
         bool foundValues;
 
-        public EnvFileConfigurationStrategy(IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentValuesToConfigItems mapper)
+        public EnvFileConfigurationContributor(IOctopusFileSystem fileSystem, IEnvFileLocator envFileLocator, IMapEnvironmentValuesToConfigItems mapper)
         {
             this.fileSystem = fileSystem;
             this.envFileLocator = envFileLocator;
             this.mapper = mapper;
         }
 
-        public int Priority => 300;
+        public int Priority => 2;
 
-        public IAggregatableKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
+        public IAggregatableKeyValueStore? LoadContributedConfiguration()
         {
             EnsureLoaded();
-
-            return !foundValues ? null : new InMemoryKeyValueStore(mapper);
+            if (!foundValues)
+                return null;
+            
+            return new InMemoryKeyValueStore(mapper);
         }
 
         void EnsureLoaded()

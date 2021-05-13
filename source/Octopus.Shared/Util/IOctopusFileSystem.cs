@@ -15,6 +15,7 @@ namespace Octopus.Shared.Util
         void DeleteFile(string path, DeletionOptions options);
         void DeleteDirectory(string path);
         void DeleteDirectory(string path, DeletionOptions options);
+        string GetCurrentDirectory();
         IEnumerable<string> EnumerateDirectories(string parentDirectoryPath);
         IEnumerable<string> EnumerateDirectoriesRecursively(string parentDirectoryPath);
         IEnumerable<string> EnumerateFiles(string parentDirectoryPath, params string[] searchPatterns);
@@ -43,15 +44,23 @@ namespace Octopus.Shared.Util
         void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes);
         bool DiskHasEnoughFreeSpace(string directoryPath);
         bool DiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes);
+        
+        /// <summary>
+        /// Resolves the full file path. Relative paths are taken relative to current working directory
+        /// </summary>
+        /// <param name="relativeOrAbsoluteFilePath"></param>
+        /// <returns></returns>
         string GetFullPath(string relativeOrAbsoluteFilePath);
         void OverwriteAndDelete(string originalFile, string temporaryReplacement);
         void WriteAllBytes(string filePath, byte[] data);
+        void WriteAllText(string filePath, string contents);
         string RemoveInvalidFileNameChars(string path);
         void MoveFile(string sourceFile, string destinationFile);
         void MoveDirectory(string sourceDirectory, string destinationDirectory);
         ReplaceStatus Replace(string path, Stream stream, int overwriteRetryAttempts = 3);
         bool EqualHash(Stream first, Stream second);
         string ReadAllText(string scriptFile);
+        string[] ReadAllLines(string scriptFile);
         string GetFileVersion(string file);
     }
 }

@@ -91,6 +91,8 @@ namespace Octopus.Shared.Util
                 return false;
             }
         }
+        
+        public string GetCurrentDirectory() => Directory.GetCurrentDirectory();
 
         public void DeleteFile(string path)
         {
@@ -383,6 +385,11 @@ namespace Octopus.Shared.Util
             File.WriteAllBytes(filePath, data);
         }
 
+        public void WriteAllText(string path, string contents)
+        {
+            File.WriteAllText(path, contents);
+        }
+
         public string RemoveInvalidFileNameChars(string path)
         {
             path = new string(path.Where(c => !InvalidFileNameChars.Contains(c)).ToArray());
@@ -578,6 +585,9 @@ namespace Octopus.Shared.Util
 
         public string ReadAllText(string scriptFile)
             => File.ReadAllText(scriptFile);
+        
+        public string[] ReadAllLines(string scriptFile)
+            => File.ReadAllLines(scriptFile);
 
         public string GetFileVersion(string file)
             => FileVersionInfo.GetVersionInfo(file).FileVersion;

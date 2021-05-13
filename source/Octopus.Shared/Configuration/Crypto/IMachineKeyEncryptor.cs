@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Configuration
+namespace Octopus.Shared.Configuration.Crypto
 {
     public interface IMachineKeyEncryptor
     {

@@ -1,6 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 using Octopus.Configuration;
+using Octopus.Shared.Configuration.Crypto;
 
 namespace Octopus.Shared.Configuration
 {
@@ -34,7 +35,7 @@ namespace Octopus.Shared.Configuration
             {
                 if (!(valueAsObject is string))
                     valueAsObject = JsonConvert.SerializeObject(value, jsonSerializerSettings);
-                valueAsObject = MachineKeyEncrypter.Current.Encrypt((string)valueAsObject);
+                valueAsObject = MachineKeyEncryptor.Current.Encrypt((string)valueAsObject);
             }
 
             Write(name, valueAsObject);

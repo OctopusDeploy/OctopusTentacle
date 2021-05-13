@@ -1,5 +1,4 @@
 using System;
-using Octopus.Configuration;
 
 namespace Octopus.Shared.Configuration.Instances
 {
@@ -19,12 +18,7 @@ namespace Octopus.Shared.Configuration.Instances
     public interface IApplicationInstanceSelector
     {
         ApplicationName ApplicationName { get; }
-
-        bool IsCurrentInstanceDefault();
-        string? GetCurrentName();
-        IKeyValueStore GetCurrentConfiguration();
-        IWritableKeyValueStore GetWritableCurrentConfiguration();
-
+        ApplicationInstanceConfiguration Current { get;  }
         bool CanLoadCurrentInstance();
     }
 }

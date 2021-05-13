@@ -33,7 +33,6 @@ namespace Octopus.Shared.Util
                 var uri = new UriBuilder(codeBase);
                 var root = Uri.UnescapeDataString(uri.Path);
                 root = Path.GetDirectoryName(root) ?? throw new Exception("Directory for executing assembly not found");
-                ;
                 path = Path.Combine(root, path);
             }
 

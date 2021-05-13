@@ -17,13 +17,15 @@ namespace Octopus.Shared.Configuration
             bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
             this.fileSystem = fileSystem;
-            this.configurationFile = PathHelper.ResolveRelativeFilePath(configurationFile);
+            this.configurationFile = fileSystem.GetFullPath(configurationFile);
         }
 
         protected override void LoadSettings(IDictionary<string, object?> settingsToFill)
         {
             if (!ExistsForReading())
-                throw new Exception(string.Format("Configuration file {0} could not be found.", configurationFile));
+            {
+                throw new Exception($"Configuration file {configurationFile} could not be found.");
+            }
 
             base.LoadSettings(settingsToFill);
         }

@@ -53,7 +53,7 @@ namespace Octopus.Shared.Tests.Startup
                 Password = password
             };
 
-            configureServiceHelper.ConfigureService(serviceName,
+            configureServiceHelper.ConfigureServiceByInstanceName(serviceName,
                 scriptPath,
                 instance,
                 serviceDescription,
@@ -80,7 +80,7 @@ namespace Octopus.Shared.Tests.Startup
                 Uninstall = true
             };
 
-            configureServiceHelper.ConfigureService(serviceName,
+            configureServiceHelper.ConfigureServiceByInstanceName(serviceName,
                 scriptPath,
                 instance,
                 serviceDescription,

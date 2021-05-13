@@ -1,39 +1,199 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Threading;
+using System.Linq;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
 using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    class ApplicationInstanceStore : ApplicationInstanceLocator, IApplicationInstanceStore, IApplicationConfigurationStrategy
+    class ApplicationInstanceStore : IApplicationInstanceStore
     {
-        readonly StartUpInstanceRequest startUpInstanceRequest;
+        readonly IOctopusFileSystem fileSystem;
+        readonly ApplicationName applicationName;
+        readonly ISystemLog log;
         readonly IRegistryApplicationInstanceStore registryApplicationInstanceStore;
+        readonly string machineConfigurationHomeDirectory;
 
         public ApplicationInstanceStore(
-            StartUpInstanceRequest startUpInstanceRequest,
+            ApplicationName applicationName,
             ISystemLog log,
             IOctopusFileSystem fileSystem,
-            IRegistryApplicationInstanceStore registryApplicationInstanceStore) : base(startUpInstanceRequest.ApplicationName, log, fileSystem, registryApplicationInstanceStore)
+            IRegistryApplicationInstanceStore registryApplicationInstanceStore)
         {
-            this.startUpInstanceRequest = startUpInstanceRequest;
+            this.log = log;
+            this.fileSystem = fileSystem;
+            this.applicationName = applicationName;
             this.registryApplicationInstanceStore = registryApplicationInstanceStore;
+
+            machineConfigurationHomeDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Octopus");
+
+            if (!PlatformDetection.IsRunningOnWindows)
+                machineConfigurationHomeDirectory = "/etc/octopus";
         }
 
-        public int Priority => 1000;
-
-        public IAggregatableKeyValueStore LoadedConfiguration(ApplicationRecord applicationInstance)
+        public bool TryLoadInstanceDetails(string? instanceName, out ApplicationInstanceRecord? instanceRecord)
         {
-            var instance = applicationInstance as ApplicationInstanceRecord;
-            if (instance == null)
-                throw new ArgumentException("Incorrect application instance record type", nameof(applicationInstance));
+            instanceRecord = null;
+            try
+            {
+                instanceRecord = LoadInstanceDetails(instanceName);
+                return true;
+            }
+            catch (ControlledFailureException)
+            {
+                return false;
+            }
+        }
 
-            // If the entry is still in the registry then migrate it to the file index
-            MigrateInstance(instance);
+        public ApplicationInstanceRecord LoadInstanceDetails(string? instanceName)
+        {
+            ApplicationInstanceRecord? persistedRecord;
+            if (!string.IsNullOrEmpty(instanceName))
+            {
+                persistedRecord = GetNamedRegistryRecord(instanceName);
+                if (persistedRecord == null)
+                    throw new ControlledFailureException($"Instance {instanceName} of {applicationName} has not been configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {AvailableInstancesText()}.");
+            }
+            else
+            {
+                // No `--instance` provided, try get Default
+                persistedRecord = GetDefaultRegistryRecord();
+                if (persistedRecord == null)
+                    throw new ControlledFailureException($"Unable to find default instance of {applicationName}. Available instances: {AvailableInstancesText()}.");
+            }
 
-            return new XmlFileKeyValueStore(FileSystem, instance.ConfigurationFilePath);
+            MigrateInstance(persistedRecord);
+            return persistedRecord;
+        }
+
+        public void RegisterInstance(ApplicationInstanceRecord instanceRecord)
+        {
+            if (!fileSystem.DirectoryExists(InstancesFolder))
+                fileSystem.CreateDirectory(InstancesFolder);
+            var instanceConfiguration = InstanceFileName(instanceRecord.InstanceName);
+            var instance = TryLoadInstanceConfiguration(instanceConfiguration) ??
+                new Instance(instanceRecord.InstanceName, instanceRecord.ConfigurationFilePath);
+
+            instance.ConfigurationFilePath = instanceRecord.ConfigurationFilePath;
+
+            WriteInstanceConfiguration(instance, instanceConfiguration);
+            log.Info("Saving instance: " + instance.Name);
+        }
+
+        public void DeleteInstance(string instanceName)
+        {
+            var instanceConfiguration = InstanceFileName(instanceName);
+
+            try
+            {
+                fileSystem.DeleteFile(instanceConfiguration);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                log.Warn(ex.Message);
+                throw new ControlledFailureException($"Unable to delete file '{instanceConfiguration}' as user '{Environment.UserName}'. Please check file permissions.");
+            }
+
+            registryApplicationInstanceStore.DeleteFromRegistry(instanceName);
+
+            log.Info($"Deleted instance: {instanceName}");
+        }
+
+        public IList<ApplicationInstanceRecord> ListInstances()
+        {
+            var listFromRegistry = registryApplicationInstanceStore.GetListFromRegistry();
+            var listFromFileSystem = new List<ApplicationInstanceRecord>();
+            if (fileSystem.DirectoryExists(InstancesFolder))
+                listFromFileSystem = fileSystem.EnumerateFiles(InstancesFolder)
+                    .Select(LoadInstanceConfiguration)
+                    .Select(instance => new ApplicationInstanceRecord(instance.Name, instance.ConfigurationFilePath))
+                    .ToList();
+
+            // for customers running multiple instances on a machine, they may have a version that only understood
+            // using the registry. We need to list those too.
+            var combinedInstanceList = listFromFileSystem
+                .Concat(listFromRegistry.Where(x => listFromFileSystem.All(y => y.InstanceName != x.InstanceName)))
+                .OrderBy(i => i.InstanceName);
+            return combinedInstanceList.ToList();
+        }
+
+        internal void MigrateInstance(ApplicationInstanceRecord instanceRecord)
+        {
+            var instanceName = instanceRecord.InstanceName;
+            if (File.Exists(InstanceFileName(instanceName)))
+                return;
+
+            var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(instanceName);
+            if (registryInstance != null)
+            {
+                log.Info($"Migrating {applicationName} instance from registry - {instanceName}");
+                try
+                {
+                    RegisterInstance(instanceRecord);
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex, "Error migrating instance data");
+                    throw;
+                }
+            }
+        }
+
+        ApplicationInstanceRecord? GetNamedRegistryRecord(string instanceName)
+        {
+            var persistedApplicationInstanceRecords = this.ListInstances();
+
+            var possibleNamedInstances = persistedApplicationInstanceRecords
+                .Where(i => string.Equals(i.InstanceName, instanceName, StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
+
+            if (possibleNamedInstances.Length == 0)
+                throw new ControlledFailureException($"Instance {instanceName} of {applicationName} has not been configured on this machine. Available instances: {AvailableInstancesText()}.");
+
+            if (possibleNamedInstances.Length == 1 && possibleNamedInstances.Count() == 1)
+            {
+                var applicationInstanceRecord = possibleNamedInstances.First();
+                return applicationInstanceRecord;
+            }
+
+            // to get more than 1, there must have been a match on differing case, try an exact case match
+            var exactMatch = possibleNamedInstances.FirstOrDefault(x => x.InstanceName == instanceName);
+            if (exactMatch == null) // null here means all matches were different case
+                throw new ControlledFailureException($"Instance {instanceName} of {applicationName} could not be matched to one of the existing instances: {AvailableInstancesText()}.");
+            return exactMatch;
+        }
+
+        ApplicationInstanceRecord? GetDefaultRegistryRecord()
+        {
+            var persistedApplicationInstanceRecords = ListInstances();
+            // pick the default, if there is one
+            var defaultInstance = persistedApplicationInstanceRecords.FirstOrDefault(i => i.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(applicationName));
+            if (defaultInstance != null)
+            {
+                return defaultInstance;
+            }
+
+            // if there is only a single instance, then pick it
+            if (persistedApplicationInstanceRecords.Count == 1)
+            {
+                var singleInstance = persistedApplicationInstanceRecords.Single();
+                return singleInstance;
+            }
+
+            if (persistedApplicationInstanceRecords.Count > 1)
+                throw new ControlledFailureException($"There is more than one instance of {applicationName} configured on this machine. Please pass --instance=INSTANCENAME when invoking this command to target a specific instance. Available instances: {AvailableInstancesText()}.");
+
+            return null;
+        }
+
+        string AvailableInstancesText()
+        {
+            return string.Join(", ",
+                this.ListInstances()
+                    .OrderBy(x => x.InstanceName, StringComparer.InvariantCultureIgnoreCase)
+                    .Select(x => x.InstanceName));
         }
 
         void WriteInstanceConfiguration(Instance instance, string path)
@@ -41,98 +201,51 @@ namespace Octopus.Shared.Configuration.Instances
             var data = JsonConvert.SerializeObject(instance, Formatting.Indented);
             try
             {
-                FileSystem.OverwriteFile(path, data);
+                fileSystem.OverwriteFile(path, data);
             }
             catch (UnauthorizedAccessException ex)
             {
-                Log.Warn(ex.Message);
+                log.Warn(ex.Message);
                 throw new ControlledFailureException($"Unable to write file '{path}' as user '{Environment.UserName}'. Please check file permissions.");
             }
         }
 
-        public void CreateDefaultInstance(string configurationFile, string? homeDirectory = null)
+        string InstanceFileName(string instanceName)
+            => Path.Combine(InstancesFolder, instanceName.Replace(' ', '-').ToLower() + ".config");
+
+        internal string InstancesFolder => Path.Combine(machineConfigurationHomeDirectory, applicationName.ToString(), "Instances");
+
+        Instance LoadInstanceConfiguration(string path)
         {
-            CreateInstance(ApplicationInstanceRecord.GetDefaultInstance(startUpInstanceRequest.ApplicationName), configurationFile, homeDirectory);
+            var result = TryLoadInstanceConfiguration(path);
+            if (result == null)
+                throw new ArgumentException($"Could not load instance at path {path}");
+            return result;
         }
 
-        public void CreateInstance(string instanceName, string configurationFile, string? homeDirectory = null)
+        Instance? TryLoadInstanceConfiguration(string path)
         {
-            var parentDirectory = Path.GetDirectoryName(configurationFile) ?? throw new ArgumentException("Directory required", nameof(configurationFile));
-            FileSystem.EnsureDirectoryExists(parentDirectory);
+            if (!fileSystem.FileExists(path))
+                return null;
 
-            if (!FileSystem.FileExists(configurationFile))
-            {
-                Log.Info("Creating empty configuration file: " + configurationFile);
-                FileSystem.OverwriteFile(configurationFile, @"<?xml version='1.0' encoding='UTF-8' ?><octopus-settings></octopus-settings>");
-            }
-
-            var instance = new ApplicationInstanceRecord(instanceName, configurationFile);
-            SaveInstance(instance);
-
-            var homeConfig = new WritableHomeConfiguration(startUpInstanceRequest.ApplicationName, new XmlFileKeyValueStore(FileSystem, configurationFile));
-            var home = !string.IsNullOrWhiteSpace(homeDirectory) ? homeDirectory : parentDirectory;
-            Log.Info($"Setting home directory to: {home}");
-            homeConfig.SetHomeDirectory(home);
+            var data = fileSystem.ReadFile(path);
+            var instance = JsonConvert.DeserializeObject<Instance>(data);
+            return instance;
         }
 
-        public void SaveInstance(ApplicationInstanceRecord instanceRecord)
+        /// <summary>
+        /// Serialized details of instance in stored in registry file
+        /// </summary>
+        class Instance
         {
-            var instancesFolder = InstancesFolder();
-            if (!FileSystem.DirectoryExists(instancesFolder))
-                FileSystem.CreateDirectory(instancesFolder);
-            var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceRecord.InstanceName) + ".config");
-            var instance = TryLoadInstanceConfiguration(instanceConfiguration) ?? new Instance(instanceRecord.InstanceName, instanceRecord.ConfigurationFilePath);
-
-            instance.ConfigurationFilePath = instanceRecord.ConfigurationFilePath;
-
-            WriteInstanceConfiguration(instance, instanceConfiguration);
-            Log.Info("Saving instance: " + instance.Name);
-        }
-
-        public void DeleteInstance(string instanceName)
-        {
-            var instancesFolder = InstancesFolder();
-            var instanceConfiguration = Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config");
-
-            try
+            public Instance(string name, string configurationFilePath)
             {
-                FileSystem.DeleteFile(instanceConfiguration);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                Log.Warn(ex.Message);
-                throw new ControlledFailureException($"Unable to delete file '{instanceConfiguration}' as user '{Environment.UserName}'. Please check file permissions.");
+                Name = name;
+                ConfigurationFilePath = configurationFilePath;
             }
 
-            registryApplicationInstanceStore.DeleteFromRegistry(instanceName);
-
-            Log.Info($"Deleted instance: {instanceName}");
-        }
-
-        public void MigrateInstance(ApplicationInstanceRecord instanceRecord)
-        {
-            var instanceName = instanceRecord.InstanceName;
-            var instancesFolder = InstancesFolder();
-            if (File.Exists(Path.Combine(instancesFolder, InstanceFileName(instanceName) + ".config")))
-                return;
-
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
-            {
-                var registryInstance = registryApplicationInstanceStore.GetInstanceFromRegistry(instanceName);
-                if (registryInstance != null)
-                {
-                    Log.Info($"Migrating {ApplicationName} instance from registry - {instanceName}");
-                    try
-                    {
-                        SaveInstance(instanceRecord);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Error migrating instance data");
-                        throw;
-                    }
-                }
-            }
+            public string Name { get; }
+            public string ConfigurationFilePath { get; set; }
         }
     }
 }

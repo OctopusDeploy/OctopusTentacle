@@ -25,7 +25,7 @@ namespace Octopus.Shared.Tests.Configuration
             registryStore = Substitute.For<IRegistryApplicationInstanceStore>();
             fileSystem = Substitute.For<IOctopusFileSystem>();
             var log = Substitute.For<ISystemLog>();
-            instanceStore = new ApplicationInstanceStore(new StartUpPersistedInstanceRequest(ApplicationName.OctopusServer, "instance 1"), log, fileSystem, registryStore);
+            instanceStore = new ApplicationInstanceStore(ApplicationName.OctopusServer, log, fileSystem, registryStore);
         }
 
         [Test]
@@ -95,13 +95,14 @@ namespace Octopus.Shared.Tests.Configuration
         [Test]
         public void GetInstance_ShouldPreferFileSystemEntries()
         {
-            var configFilename = Path.Combine(instanceStore.InstancesFolder(), "instance-1.config");
+            var configFilename = Path.Combine(instanceStore.InstancesFolder, "instance-1.config");
 
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
             fileSystem.FileExists(Arg.Any<string>()).Returns(true);
+            fileSystem.EnumerateFiles(instanceStore.InstancesFolder).Returns(new[] { configFilename});
             fileSystem.ReadFile(Arg.Is(configFilename)).Returns("{\"Name\": \"instance 1\",\"ConfigurationFilePath\": \"fileConfigFilePath2\"}");
 
-            var instance = instanceStore.GetInstance("instance 1");
+            var instance = instanceStore.LoadInstanceDetails("instance 1");
             instance.InstanceName.Should().Be("instance 1");
             instance.ConfigurationFilePath.Should().Be("fileConfigFilePath2");
         }
@@ -116,8 +117,7 @@ namespace Octopus.Shared.Tests.Configuration
                     new ApplicationInstanceRecord("instance2", "ServerPath2")
                 });
 
-            var instance = instanceStore.GetInstance("I AM FAKE");
-            Assert.IsNull(instance);
+            Assert.Throws<ControlledFailureException>(() => instanceStore.LoadInstanceDetails("I AM FAKE"));
         }
 
         [Test]
@@ -133,17 +133,6 @@ namespace Octopus.Shared.Tests.Configuration
             //we explicitly dont want to delete from the registry here, as we want to allow for customers who try to upgrade and have issues
             //but then rollback the database and install the old version. This would be a nasty thing to deal with in an already bad experience.
             registryStore.Received(0).DeleteFromRegistry(Arg.Is("instance1"));
-        }
-
-        [Test]
-        public void SaveInstance_WhenUnauthorizedAccessException_ShowsNiceErrorMessage()
-        {
-            fileSystem
-                .When(x => x.OverwriteFile(Arg.Any<string>(), Arg.Any<string>()))
-                .Do(x => throw new UnauthorizedAccessException("fake exception"));
-            var sourceInstance = new ApplicationInstanceRecord("instance1", "configFilePath");
-            var ex = Assert.Throws<ControlledFailureException>(() => instanceStore.SaveInstance(sourceInstance));
-            ex.Message.Should().Match("Unable to write file '*' as user '*'. Please check file permissions.");
         }
 
         [Test]

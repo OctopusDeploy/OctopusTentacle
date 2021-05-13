@@ -10,18 +10,18 @@ namespace Octopus.Shared.Configuration.Instances
     /// <summary>
     /// This is here for legacy purposes, we need it to read the old entries in order to migrate them to the new file based index.
     /// </summary>
-    class RegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
+    class WindowsRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
         const RegistryHive Hive = RegistryHive.LocalMachine;
         const RegistryView View = RegistryView.Registry64;
         const string KeyName = "Software\\Octopus";
 
-        readonly StartUpInstanceRequest startUpInstanceRequest;
+        private readonly ApplicationName applicationName;
         readonly ISystemLog log;
 
-        public RegistryApplicationInstanceStore(StartUpInstanceRequest startUpInstanceRequest, ISystemLog log)
+        public WindowsRegistryApplicationInstanceStore(ApplicationName applicationName, ISystemLog log)
         {
-            this.startUpInstanceRequest = startUpInstanceRequest;
+            this.applicationName = applicationName;
             this.log = log;
         }
 
@@ -44,7 +44,7 @@ namespace Octopus.Shared.Configuration.Instances
                 if (subKey == null)
                     return results;
 
-                using (var applicationNameKey = subKey.OpenSubKey(startUpInstanceRequest.ApplicationName.ToString(), false))
+                using (var applicationNameKey = subKey.OpenSubKey(applicationName.ToString(), false))
                 {
                     if (applicationNameKey == null)
                         return results;
@@ -86,7 +86,7 @@ namespace Octopus.Shared.Configuration.Instances
                         if (subKey == null)
                             return;
 
-                        using (var applicationNameKey = subKey.OpenSubKey(startUpInstanceRequest.ApplicationName.ToString(), true))
+                        using (var applicationNameKey = subKey.OpenSubKey(applicationName.ToString(), true))
                         {
                             if (applicationNameKey == null)
                                 return;
@@ -99,12 +99,12 @@ namespace Octopus.Shared.Configuration.Instances
             }
             catch (UnauthorizedAccessException ex)
             {
-                log.Error(ex, $"Unable to delete instance '{instanceName}' from registry at {Hive}\\{KeyName}\\{startUpInstanceRequest.ApplicationName}\\{instanceName} as user '{Environment.UserName}'.");
+                log.Error(ex, $"Unable to delete instance '{instanceName}' from registry at {Hive}\\{KeyName}\\{applicationName}\\{instanceName} as user '{Environment.UserName}'.");
                 throw new ControlledFailureException($"Unable to delete instance '{instanceName}' from registry as user '{Environment.UserName}'. Please check your permissions.");
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Unable to delete instance '{instanceName}' from registry at {Hive}\\{KeyName}\\{startUpInstanceRequest.ApplicationName}\\{instanceName} as user '{Environment.UserName}'.");
+                log.Error(ex, $"Unable to delete instance '{instanceName}' from registry at {Hive}\\{KeyName}\\{applicationName}\\{instanceName} as user '{Environment.UserName}'.");
                 throw new ControlledFailureException($"Unable to delete instance '{instanceName}' from registry as user '{Environment.UserName}'.");
             }
         }

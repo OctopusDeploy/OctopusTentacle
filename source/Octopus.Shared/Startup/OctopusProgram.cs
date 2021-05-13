@@ -113,10 +113,14 @@ namespace Octopus.Shared.Startup
                 log.Trace("Creating and configuring the Autofac container");
                 container = BuildContainer(startupRequest);
 
-                // Try to load the instance here so we can log into the instance's log file as soon as possible
+                // Try to load the instance here so we can configure and log into the instance's log file as soon as possible
                 // If we can't load it, that's OK, we might be creating the instance, or we'll fail with the same error later on when we try to load the instance for real
-                if (container.Resolve<IApplicationInstanceSelector>().CanLoadCurrentInstance())
+                var instanceSelector = container.Resolve<IApplicationInstanceSelector>();
+                if (instanceSelector.CanLoadCurrentInstance())
+                {
+                    container.Resolve<LogInitializer>().Start();
                     WriteDiagnosticsInfoToLogFile(startupRequest);
+                }
 
                 // Now register extensions and their modules into the container
                 RegisterAdditionalModules(container);
@@ -329,7 +333,7 @@ namespace Octopus.Shared.Startup
 
         void WriteDiagnosticsInfoToLogFile(StartUpInstanceRequest startupRequest)
         {
-            var persistedRequest = startupRequest as StartUpPersistedInstanceRequest;
+            var persistedRequest = startupRequest as StartUpRegistryInstanceRequest;
             var fullProcessPath = Assembly.GetEntryAssembly()?.FullProcessPath() ?? throw new Exception("Could not get path of the entry assembly");
             var executable = PlatformDetection.IsRunningOnWindows
                 ? Path.GetFileNameWithoutExtension(fullProcessPath)
@@ -364,10 +368,11 @@ namespace Octopus.Shared.Startup
             options.Parse(commandLineArguments);
 
             if (!string.IsNullOrWhiteSpace(instanceName))
-                return new StartUpPersistedInstanceRequest(ApplicationName, instanceName);
+                return new StartUpRegistryInstanceRequest(instanceName);
             if (!string.IsNullOrWhiteSpace(configFile))
-                return new StartUpConfigFileInstanceRequest(ApplicationName, configFile);
-            return new StartUpDynamicInstanceRequest(ApplicationName);
+                return new StartUpConfigFileInstanceRequest(configFile);
+            
+            return new StartUpDynamicInstanceRequest();
         }
 
         public static string[] ParseCommandHostArgumentsFromCommandLineArguments(

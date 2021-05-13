@@ -6,7 +6,7 @@ using Octopus.Shared.Startup;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    class EnvironmentConfigurationStrategy : IApplicationConfigurationStrategy
+    class EnvironmentConfigurationContributor : IApplicationConfigurationContributor
     {
         readonly ILogFileOnlyLogger log;
         readonly IMapEnvironmentValuesToConfigItems mapper;
@@ -14,7 +14,7 @@ namespace Octopus.Shared.Configuration.Instances
         bool loaded;
         bool foundValues;
 
-        public EnvironmentConfigurationStrategy(ILogFileOnlyLogger log,
+        public EnvironmentConfigurationContributor(ILogFileOnlyLogger log,
             IMapEnvironmentValuesToConfigItems mapper,
             IEnvironmentVariableReader reader)
         {
@@ -23,13 +23,15 @@ namespace Octopus.Shared.Configuration.Instances
             this.reader = reader;
         }
 
-        public int Priority => 200;
-
-        public IAggregatableKeyValueStore? LoadedConfiguration(ApplicationRecord applicationInstance)
+        public int Priority => 1;
+        public IAggregatableKeyValueStore? LoadContributedConfiguration()
         {
             EnsureLoaded();
-
-            return !foundValues ? null : new InMemoryKeyValueStore(mapper);
+            if (foundValues)
+            {
+                return new InMemoryKeyValueStore(mapper);
+            }
+            return null;
         }
 
         void EnsureLoaded()

@@ -2,11 +2,7 @@ using System;
 
 namespace Octopus.Shared.Configuration.Instances
 {
-    public class ApplicationRecord
-    {
-    }
-
-    public class ApplicationInstanceRecord : ApplicationRecord
+    public class ApplicationInstanceRecord
     {
         public ApplicationInstanceRecord(string instanceName, string configurationFilePath)
         {
@@ -18,7 +14,6 @@ namespace Octopus.Shared.Configuration.Instances
 
         public string ConfigurationFilePath { get; }
 
-        public static string GetDefaultInstance(ApplicationName application)
-            => application.ToString();
+        public static string GetDefaultInstance(ApplicationName application) => application.ToString();
     }
 }

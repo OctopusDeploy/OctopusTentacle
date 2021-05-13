@@ -11,10 +11,12 @@ namespace Octopus.Shared.Configuration
 {
     public class ConfigurationModule : Module
     {
+        private readonly ApplicationName applicationName;
         readonly StartUpInstanceRequest startUpInstanceRequest;
 
-        public ConfigurationModule(StartUpInstanceRequest startUpInstanceRequest)
+        public ConfigurationModule(ApplicationName applicationName,StartUpInstanceRequest startUpInstanceRequest)
         {
+            this.applicationName = applicationName;
             this.startUpInstanceRequest = startUpInstanceRequest;
         }
 
@@ -23,11 +25,12 @@ namespace Octopus.Shared.Configuration
             base.Load(builder);
 
             builder.RegisterInstance(startUpInstanceRequest).As<StartUpInstanceRequest>();
-            builder.Register(_ => startUpInstanceRequest.ApplicationName).As<ApplicationName>();
+            builder.Register(_ => applicationName).As<ApplicationName>();
+            builder.Register((c) => c.Resolve<IApplicationInstanceSelector>().Current).AsSelf();
 
             if (PlatformDetection.IsRunningOnWindows)
             {
-                builder.RegisterType<RegistryApplicationInstanceStore>()
+                builder.RegisterType<WindowsRegistryApplicationInstanceStore>()
                     .As<IRegistryApplicationInstanceStore>();
                 builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
             }
@@ -40,18 +43,14 @@ namespace Octopus.Shared.Configuration
             builder.RegisterType<EnvironmentVariableReader>().As<IEnvironmentVariableReader>();
 
             builder.RegisterType<ApplicationInstanceStore>()
-                .As<IApplicationInstanceStore>()
-                .As<IApplicationConfigurationStrategy>();
+                .As<IApplicationInstanceStore>();
 
             builder.RegisterType<EnvFileLocator>().As<IEnvFileLocator>().SingleInstance();
-            builder.RegisterType<EnvFileConfigurationStrategy>()
-                .As<IApplicationConfigurationStrategy>();
+            builder.RegisterType<EnvFileConfigurationContributor>()
+                .As<IApplicationConfigurationContributor>();
 
-            builder.RegisterType<EnvironmentConfigurationStrategy>()
-                .As<IApplicationConfigurationStrategy>();
-
-            builder.RegisterType<ConfigFileConfigurationStrategy>()
-                .As<IApplicationConfigurationStrategy>();
+            builder.RegisterType<EnvironmentConfigurationContributor>()
+                .As<IApplicationConfigurationContributor>();
 
             builder.RegisterType<ApplicationInstanceSelector>()
                 .As<IApplicationInstanceSelector>()
@@ -61,10 +60,6 @@ namespace Octopus.Shared.Configuration
                 .As<IWindowsLocalAdminRightsChecker>()
                 .SingleInstance();
 
-            builder.RegisterType<ApplicationInstanceLocator>()
-                .As<IApplicationInstanceLocator>()
-                .SingleInstance();
-
             builder.RegisterType<ApplicationInstanceManager>()
                 .As<IApplicationInstanceManager>()
                 .SingleInstance();
@@ -72,7 +67,7 @@ namespace Octopus.Shared.Configuration
             builder.Register(c =>
                 {
                     var selector = c.Resolve<IApplicationInstanceSelector>();
-                    return selector.GetCurrentConfiguration();
+                    return selector.Current.Configuration;
                 })
                 .As<IKeyValueStore>()
                 .SingleInstance();
@@ -80,7 +75,7 @@ namespace Octopus.Shared.Configuration
             builder.Register(c =>
                 {
                     var selector = c.Resolve<IApplicationInstanceSelector>();
-                    return selector.GetWritableCurrentConfiguration();
+                    return selector.Current.WritableConfiguration;
                 })
                 .As<IWritableKeyValueStore>()
                 .SingleInstance();
@@ -92,6 +87,7 @@ namespace Octopus.Shared.Configuration
                 .As<IWritableHomeConfiguration>()
                 .SingleInstance();
 
+            builder.RegisterType<LogInitializer>().AsSelf();
             builder.RegisterType<LoggingConfiguration>().As<ILoggingConfiguration>().SingleInstance();
             builder.RegisterType<ProxyConfigParser>().As<IProxyConfigParser>();
             builder.RegisterType<ProxyConfiguration>().As<IProxyConfiguration>();
@@ -127,23 +123,23 @@ namespace Octopus.Shared.Configuration
         {
             base.Load(builder);
 
-            var startUpInstanceRequest = new StartUpDynamicInstanceRequest(applicationName);
-            builder.RegisterInstance(startUpInstanceRequest).As<StartUpInstanceRequest>();
-            builder.Register(_ => startUpInstanceRequest.ApplicationName).As<ApplicationName>();
+            builder.RegisterInstance(new StartUpDynamicInstanceRequest()).As<StartUpInstanceRequest>();
+            builder.Register(_ => applicationName).As<ApplicationName>();
 
             // the Wpf apps only run on Windows
-            builder.RegisterType<RegistryApplicationInstanceStore>()
+            builder.RegisterType<WindowsRegistryApplicationInstanceStore>()
                 .As<IRegistryApplicationInstanceStore>();
             builder.RegisterType<WindowsServiceConfigurator>().As<IServiceConfigurator>();
 
             builder.RegisterType<ApplicationInstanceStore>()
                 .As<IApplicationInstanceStore>();
-
-            builder.RegisterType<ApplicationInstanceLocator>()
-                .As<IApplicationInstanceLocator>();
-
+            
             builder.RegisterType<ApplicationInstanceManager>()
                 .As<IApplicationInstanceManager>();
+            
+            builder.RegisterType<ApplicationInstanceSelector>()
+                .As<IApplicationInstanceSelector>();
+            
         }
     }
 }

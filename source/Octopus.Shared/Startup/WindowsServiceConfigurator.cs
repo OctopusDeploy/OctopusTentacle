@@ -26,10 +26,39 @@ namespace Octopus.Shared.Startup
             this.logFileOnlyLogger = logFileOnlyLogger;
             this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
         }
-
-        public void ConfigureService(string thisServiceName,
+        
+        public void ConfigureServiceByInstanceName(string thisServiceName,
             string exePath,
             string instance,
+            string serviceDescription,
+            ServiceConfigurationState serviceConfigurationState)
+        {
+            ConfigureService(thisServiceName,
+                exePath,
+                instance,
+                null,
+                serviceDescription,
+                serviceConfigurationState);
+        }
+
+        public void ConfigureServiceByConfigPath(string thisServiceName,
+            string exePath,
+            string configPath,
+            string serviceDescription,
+            ServiceConfigurationState serviceConfigurationState)
+        {
+            ConfigureService(thisServiceName,
+                exePath,
+                null,
+                configPath,
+                serviceDescription,
+                serviceConfigurationState);
+        }
+
+        void ConfigureService(string thisServiceName,
+            string exePath,
+            string? instance,
+            string? configPath,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState)
         {
@@ -39,40 +68,17 @@ namespace Octopus.Shared.Startup
 
             if (serviceConfigurationState.Restart)
             {
-                if (controller == null)
-                {
-                    logFileOnlyLogger.Info($"Restart requested for service {thisServiceName}, but service controller was not found. Skipping.");
-                }
-                else
-                {
-                    log.Info($"Restarting service {thisServiceName}");
-                    if (TryStopService(controller))
-                        StartService(controller);
-                    else
-                        log.Info($"Service {thisServiceName} wasn't restarted as it is not running.");
-                }
+                RestartService(thisServiceName, controller);
             }
 
             if (serviceConfigurationState.Stop)
             {
-                if (controller == null)
-                    logFileOnlyLogger.Info($"Stop requested for service {thisServiceName}, but service controller was not found. Skipping.");
-                else
-                    TryStopService(controller);
+                StopService(thisServiceName, controller);
             }
 
             if (serviceConfigurationState.Uninstall)
             {
-                if (controller == null)
-                {
-                    logFileOnlyLogger.Info($"Uninstall requested for service {thisServiceName}, but service controller was not found. Skipping.");
-                }
-                else
-                {
-                    Sc($"delete \"{thisServiceName}\"");
-
-                    log.Info("Service uninstalled");
-                }
+                UninstallService(thisServiceName, controller);
             }
 
             var serviceDependencies = new List<string>();
@@ -87,71 +93,152 @@ namespace Octopus.Shared.Startup
 
             if (serviceConfigurationState.Install)
             {
-                if (controller != null)
-                {
-                    logFileOnlyLogger.Info($"Install requested for service {thisServiceName}, but service controller already existing. Triggering 'Reconfigure' mode.");
-                    serviceConfigurationState.Reconfigure = true;
-                }
-                else
-                {
-                    var command = exePath.EndsWith(".dll")
-                        ? $"create \"{thisServiceName}\" binpath= \"dotnet \\\"{exePath}\\\" run --instance=\\\"{instance}\\\"\" DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto"
-                        : $"create \"{thisServiceName}\" binpath= \"\\\"{exePath}\\\" run --instance=\\\"{instance}\\\"\" DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto";
-
-                    Sc(command);
-                    Sc($"description \"{thisServiceName}\" \"{serviceDescription}\"");
-                }
-
-                log.Info("Service installed");
-
-                // Reload after install
-                controller = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == thisServiceName);
+                controller = InstallService(thisServiceName, exePath, instance, configPath,
+                    serviceDescription, serviceConfigurationState, controller, serviceDependencies);
             }
 
             if (serviceConfigurationState.Reconfigure)
             {
-                var command = exePath.EndsWith(".dll")
-                    ? $"config \"{thisServiceName}\" binpath= \"dotnet \\\"{exePath}\\\" run --instance=\\\"{instance}\\\"\" DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto"
-                    : $"config \"{thisServiceName}\" binpath= \"\\\"{exePath}\\\" run --instance=\\\"{instance}\\\"\" DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto";
-                Sc(command);
-                Sc($"description \"{thisServiceName}\" \"{serviceDescription}\"");
-
-                log.Info("Service reconfigured");
+                ReconfigureService(thisServiceName, exePath, instance, configPath, serviceDescription, serviceDependencies);
             }
 
             if ((serviceConfigurationState.Install || serviceConfigurationState.Reconfigure) && !string.IsNullOrWhiteSpace(serviceConfigurationState.Username))
             {
-                if (!string.IsNullOrWhiteSpace(serviceConfigurationState.Password))
-                {
-                    log.Info("Granting log on as a service right to " + serviceConfigurationState.Username);
-                    LsaUtility.SetRight(serviceConfigurationState.Username, "SeServiceLogonRight");
-
-                    var query = new ManagementPath($"Win32_Service.Name='{thisServiceName.Replace("'", "\\'")}'");
-                    using (var service = new ManagementObject(query))
-                    {
-                        var wmiParams = new object[10];
-                        wmiParams[5] = false; //interact with desktop
-                        wmiParams[6] = serviceConfigurationState.Username;
-                        wmiParams[7] = serviceConfigurationState.Password;
-                        var result = service.InvokeMethod("Change", wmiParams);
-                        if ((uint)result != 0)
-                            log.Error($"Unable to set username/password on service '{thisServiceName}'. WMI returned {result}.");
-                    }
-                }
-                else
-                {
-                    Sc($"config \"{thisServiceName}\" obj= \"{serviceConfigurationState.Username}\"");
-                }
-
-                log.Info("Service credentials set");
+                ConfigureCredentialsForService(thisServiceName, serviceConfigurationState);
             }
 
             if (serviceConfigurationState.Start)
             {
-                if (controller == null)
-                    throw new ControlledFailureException($"Start requested for service {thisServiceName}, but no service with this name was found.");
+                StartService(thisServiceName, controller);
+            }
+        }
 
-                StartService(controller);
+        void ConfigureCredentialsForService(string thisServiceName, ServiceConfigurationState serviceConfigurationState)
+        {
+            if (!string.IsNullOrWhiteSpace(serviceConfigurationState.Password))
+            {
+                log.Info("Granting log on as a service right to " + serviceConfigurationState.Username);
+                LsaUtility.SetRight(serviceConfigurationState.Username!, "SeServiceLogonRight");
+
+                var query = new ManagementPath($"Win32_Service.Name='{thisServiceName.Replace("'", "\\'")}'");
+                using (var service = new ManagementObject(query))
+                {
+                    var wmiParams = new object[10];
+                    wmiParams[5] = false; //interact with desktop
+                    wmiParams[6] = serviceConfigurationState.Username!;
+                    wmiParams[7] = serviceConfigurationState.Password;
+                    var result = service.InvokeMethod("Change", wmiParams);
+                    if ((uint)result != 0)
+                        log.Error($"Unable to set username/password on service '{thisServiceName}'. WMI returned {result}.");
+                }
+            }
+            else
+            {
+                Sc($"config \"{thisServiceName}\" obj= \"{serviceConfigurationState.Username}\"");
+            }
+
+            log.Info("Service credentials set");
+        }
+
+        void ReconfigureService(string thisServiceName,
+            string exePath,
+            string? instance,
+            string? configPath,
+            string serviceDescription,
+            List<string> serviceDependencies)
+        {
+            var instanceIdentifier = InstanceIdentifier(instance, configPath);
+            var command = exePath.EndsWith(".dll")
+                ? $"config \"{thisServiceName}\" binpath= \"dotnet \\\"{exePath}\\\" run {instanceIdentifier} DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto"
+                : $"config \"{thisServiceName}\" binpath= \"\\\"{exePath}\\\" run {instanceIdentifier} DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto";
+            Sc(command);
+            Sc($"description \"{thisServiceName}\" \"{serviceDescription}\"");
+
+            log.Info("Service reconfigured");
+        }
+
+        ServiceController? InstallService(string thisServiceName,
+            string exePath,
+            string? instance,
+            string? configPath,
+            string serviceDescription,
+            ServiceConfigurationState serviceConfigurationState,
+            ServiceController? controller,
+            List<string> serviceDependencies)
+        {
+            if (controller != null)
+            {
+                logFileOnlyLogger.Info($"Install requested for service {thisServiceName}, but service controller already existing. Triggering 'Reconfigure' mode.");
+                serviceConfigurationState.Reconfigure = true;
+            }
+            else
+            {
+                var instanceIdentifier = InstanceIdentifier(instance, configPath);
+                var command = exePath.EndsWith(".dll")
+                    ? $"create \"{thisServiceName}\" binpath= \"dotnet \\\"{exePath}\\\" run {instanceIdentifier} DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto"
+                    : $"create \"{thisServiceName}\" binpath= \"\\\"{exePath}\\\" run {instanceIdentifier} DisplayName= \"{thisServiceName}\" depend= {string.Join("/", serviceDependencies)} start= auto";
+
+                Sc(command);
+                Sc($"description \"{thisServiceName}\" \"{serviceDescription}\"");
+            }
+
+            log.Info("Service installed");
+
+            // Reload after install
+            controller = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == thisServiceName);
+            return controller;
+        }
+
+        static string InstanceIdentifier(string? instance, string? configPath)
+        {
+            if (!string.IsNullOrEmpty(instance))
+            {
+                return $"--instance=\\\"{instance}\\\"\"";
+            }
+
+            if (!string.IsNullOrEmpty(configPath))
+            {
+                return $"--config=\\\"{configPath}\\\"\"";
+            }
+
+            throw new InvalidOperationException("Either the instance name of configuration path must be provided to configure a service");
+        }
+
+        void UninstallService(string thisServiceName, ServiceController? controller)
+        {
+            if (controller == null)
+            {
+                logFileOnlyLogger.Info($"Uninstall requested for service {thisServiceName}, but service controller was not found. Skipping.");
+            }
+            else
+            {
+                Sc($"delete \"{thisServiceName}\"");
+
+                log.Info("Service uninstalled");
+            }
+        }
+
+        void StopService(string thisServiceName, ServiceController? controller)
+        {
+            if (controller == null)
+                logFileOnlyLogger.Info($"Stop requested for service {thisServiceName}, but service controller was not found. Skipping.");
+            else
+                TryStopService(controller);
+        }
+
+        void RestartService(string thisServiceName, ServiceController? controller)
+        {
+            if (controller == null)
+            {
+                logFileOnlyLogger.Info($"Restart requested for service {thisServiceName}, but service controller was not found. Skipping.");
+            }
+            else
+            {
+                log.Info($"Restarting service {thisServiceName}");
+                if (TryStopService(controller))
+                    StartService(thisServiceName, controller);
+                else
+                    log.Info($"Service {thisServiceName} wasn't restarted as it is not running.");
             }
         }
 
@@ -194,8 +281,11 @@ namespace Octopus.Shared.Startup
             return true;
         }
 
-        void StartService(ServiceController controller)
+        void StartService(string thisServiceName, ServiceController? controller)
         {
+            if (controller == null)
+                throw new ControlledFailureException($"Start requested for service {thisServiceName}, but no service with this name was found.");
+            
             if (controller.Status != ServiceControllerStatus.Running)
             {
                 if (controller.Status != ServiceControllerStatus.StartPending)
