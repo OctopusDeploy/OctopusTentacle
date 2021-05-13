@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Nito.AsyncEx;
 using Octopus.Manager.Tentacle.Infrastructure;
 
 namespace Octopus.Manager.Tentacle.Shell
