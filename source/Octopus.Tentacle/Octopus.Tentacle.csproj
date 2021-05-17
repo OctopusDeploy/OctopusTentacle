@@ -46,6 +46,8 @@
 		<PackageReference Include="Octopus.Shared" Version="10.2.3" />
 		<PackageReference Include="Octopus.TinyTypes.Json" Version="0.1.499" />
 		<PackageReference Include="Octopus.TinyTypes.TypeConverters" Version="0.1.499" />
+		<PackageReference Include="Octopus.Client" Version="8.9.2" />
+		<PackageReference Include="Octopus.Shared" Version="10.3.1-ci0001" />
 	</ItemGroup>
 
 	<ItemGroup>

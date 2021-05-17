@@ -11,10 +11,6 @@ namespace Octopus.Tentacle.Communications
 {
     public class TentacleCommunicationsModule : Module
     {
-        public TentacleCommunicationsModule(ApplicationName applicationName)
-        {
-        }
-
         protected override void Load(ContainerBuilder builder)
         {
             base.Load(builder);

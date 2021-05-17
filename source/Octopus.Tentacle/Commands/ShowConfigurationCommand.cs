@@ -87,10 +87,10 @@ namespace Octopus.Tentacle.Commands
 
         internal async Task CollectConfigurationSettings(DictionaryKeyValueStore outputStore)
         {
-            var configStore = instanceSelector.GetCurrentConfiguration();
+            var configStore = instanceSelector.Current.Configuration;
 
-            var oldHomeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, configStore);
-            var homeConfiguration = new WritableHomeConfiguration(ApplicationName.Tentacle, outputStore);
+            var oldHomeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, configStore, instanceSelector);
+            var homeConfiguration = new WritableHomeConfiguration(ApplicationName.Tentacle, outputStore, instanceSelector);
             homeConfiguration.SetHomeDirectory(oldHomeConfiguration.HomeDirectory);
 
             var certificateGenerator = new CertificateGenerator(log);
@@ -117,28 +117,35 @@ namespace Octopus.Tentacle.Commands
 
         async Task CollectServerSideConfiguration(IWritableKeyValueStore outputStore)
         {
+            if (tentacleConfiguration.Value.TentacleCertificate == null)
+                throw new ControlledFailureException("No certificate has been generated for this Tentacle. Unable to display configuration.");
+
             var proxyOverride = proxyConfig.ParseToWebProxy(tentacleConfiguration.Value.PollingProxyConfiguration);
             try
             {
                 using (var client = await octopusClientInitializer.CreateClient(apiEndpointOptions, proxyOverride))
                 {
                     var repository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
-                    var matchingMachines = await repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint);
+                    var matchingMachines = (await repository.Machines.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint)).Cast<MachineBasedResource>().ToArray();
+                    var matchingWorkers = (await repository.Workers.FindByThumbprint(tentacleConfiguration.Value.TentacleCertificate.Thumbprint)).Cast<MachineBasedResource>().ToArray();
 
-                    switch (matchingMachines.Count)
+                    var matches = matchingMachines.Concat(matchingWorkers).ToList();
+                    switch (matches.Count)
                     {
                         case 0:
-                            log.Error($"No machines were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
+                            log.Error($"No machines or workers were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
                             break;
 
-                        case 1:
-                            await CollectionServerSideConfigurationFromMachine(outputStore, repository, matchingMachines.First());
+                        case 1 when matches.First() is MachineResource:
+                            await CollectionServerSideConfigurationFromMachine(outputStore, repository, matches.First() as MachineResource);
+                            break;
+
+                        case 1 when matches.First() is WorkerResource:
+                            await CollectionServerSideConfigurationFromWorker(outputStore, repository, matches.First() as WorkerResource);
                             break;
 
                         default:
-                            if (matchingMachines.Count > 1)
-                                throw new ControlledFailureException("This Tentacle is registered multiple times with the server - unable to display configuration");
-                            break;
+                            throw new ControlledFailureException("This Tentacle is registered multiple times with the server. Unable to display configuration.");
                     }
                 }
             }
@@ -167,6 +174,22 @@ namespace Octopus.Tentacle.Commands
             }
 
             outputStore.Set("Tentacle.Roles", machine.Roles);
+            if (machine.MachinePolicyId != null)
+            {
+                var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);
+                outputStore.Set("Tentacle.MachinePolicy", new { machinePolicy.Id, machinePolicy.Name });
+            }
+
+            outputStore.Set<string>("Tentacle.DisplayName", machine.Name);
+            if (machine.Endpoint is ListeningTentacleEndpointResource)
+                outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
+        }
+
+        async Task CollectionServerSideConfigurationFromWorker(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, WorkerResource machine)
+        {
+            var workerPools = await repository.WorkerPools.FindAll();
+            outputStore.Set("Tentacle.WorkerPools", workerPools.Where(x => machine.WorkerPoolIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
+
             if (machine.MachinePolicyId != null)
             {
                 var machinePolicy = await repository.MachinePolicies.Get(machine.MachinePolicyId);

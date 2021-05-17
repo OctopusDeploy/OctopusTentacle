@@ -27,10 +27,12 @@ namespace Octopus.Tentacle.Tests.Commands
         public void SetUp()
         {
             configuration = new StubTentacleConfiguration();
+            var selector = Substitute.For<IApplicationInstanceSelector>();
+            selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
             command = new ServerCommsCommand(
                 new Lazy<IWritableTentacleConfiguration>(() => configuration),
                 new InMemoryLog(),
-                Substitute.For<IApplicationInstanceSelector>()
+                selector
                 );
         }
 
