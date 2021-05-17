@@ -42,7 +42,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Octopus.Client" Version="11.2.3286-mattr-ilmerge-netstandard" />
+		<PackageReference Include="Octopus.Client" Version="11.2.3287-mattr-ilmerge-netstandard" />
 		<PackageReference Include="Octopus.Shared" Version="10.3.1-ci0001" />
 	</ItemGroup>
 
