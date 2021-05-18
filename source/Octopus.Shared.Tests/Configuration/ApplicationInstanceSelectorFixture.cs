@@ -52,7 +52,21 @@ namespace Octopus.Shared.Tests.Configuration
             mock.Current.InstanceName.Should().Be(name);
             mock.Current.ConfigurationPath.Should().Be(configPath);
         }
-        
+
+        [Test]
+        public void GivenNamedInstanceExists_WhenConfigurationIsMissing_ThenCurrentThrowsException()
+        {
+            var name = Guid.NewGuid().ToString();
+            var mock = CreateApplicationInstanceSelector(new StartUpRegistryInstanceRequest(name));
+            var configPath = SetupAvailableStoredInstance(name);
+            octopusFileSystem.FileExists(configPath).Returns(false);
+
+            Assert.Throws<ControlledFailureException>(() =>
+            {
+                var _ = mock.Current.InstanceName;
+            });
+        }
+
         [Test]
         public void GivenMultipleNamedInstanceExists_WhenRequestingDefaultInstance_ThenCurrentReturnsDefaultInstance()
         {
@@ -171,6 +185,7 @@ namespace Octopus.Shared.Tests.Configuration
                     x[1] = record;
                     return true;
                 });
+            octopusFileSystem.FileExists(configPath).Returns(true);
             return configPath;
         }
 

@@ -65,11 +65,27 @@ namespace Octopus.Shared.Configuration.Instances
         ApplicationInstanceConfiguration LoadInstance()
         {
             var appInstance = LocateApplicationPrimaryConfiguration();
+            EnsureConfigurationExists(appInstance.instanceName, appInstance.configurationpath);
+
             log.Verbose($"Loading configuration from {appInstance.configurationpath}");
             var writableConfig = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath);
             
             var aggregatedKeyValueStore = ContributeAdditionalConfiguration(writableConfig);
             return new ApplicationInstanceConfiguration(appInstance.instanceName, appInstance.configurationpath, aggregatedKeyValueStore, writableConfig);
+        }
+
+        void EnsureConfigurationExists(string? instanceName, string configurationPath)
+        {
+            if (!fileSystem.FileExists(configurationPath))
+            {
+                var message = !string.IsNullOrEmpty(instanceName)
+                    ? $"The configuration file for instance {instanceName} was unable to be located at the specified location {configurationPath}. " +
+                    "The file might have been manually removed without properly removing the instance and as such it is still listed as present." +
+                    "The instance must be created again before you can interact with it."
+                    : $"The configuration file at {configurationPath} was unable to be located at the specified location.";
+                    
+                throw new ControlledFailureException(message);
+            }
         }
 
         AggregatedKeyValueStore ContributeAdditionalConfiguration(XmlFileKeyValueStore writableConfig)
@@ -98,8 +114,6 @@ namespace Octopus.Shared.Configuration.Instances
                 }
                 case StartUpConfigFileInstanceRequest configFileInstanceRequest: 
                 {   // `--config` parameter provided. Use that 
-                    if (!fileSystem.FileExists(configFileInstanceRequest.ConfigFile))
-                        throw new ControlledFailureException($"Specified instance config file {configFileInstanceRequest.ConfigFile} not found.");
                     return (null, configFileInstanceRequest.ConfigFile);
                 }
                 default:
