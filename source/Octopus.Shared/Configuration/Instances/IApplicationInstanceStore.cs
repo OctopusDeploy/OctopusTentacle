@@ -15,6 +15,5 @@ namespace Octopus.Shared.Configuration.Instances
         void RegisterInstance(ApplicationInstanceRecord instanceRecord);
         void DeleteInstance(string instanceName);
         IList<ApplicationInstanceRecord> ListInstances();
-        
     }
 }
