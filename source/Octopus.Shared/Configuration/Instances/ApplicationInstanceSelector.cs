@@ -79,10 +79,10 @@ namespace Octopus.Shared.Configuration.Instances
             if (!fileSystem.FileExists(configurationPath))
             {
                 var message = !string.IsNullOrEmpty(instanceName)
-                    ? $"The configuration file for instance {instanceName} was unable to be located at the specified location {configurationPath}. " +
+                    ? $"The configuration file for instance {instanceName} could not be located at the specified location {configurationPath}. " +
                     "The file might have been manually removed without properly removing the instance and as such it is still listed as present." +
                     "The instance must be created again before you can interact with it."
-                    : $"The configuration file at {configurationPath} was unable to be located at the specified location.";
+                    : $"The configuration file at {configurationPath} could not be located at the specified location.";
                     
                 throw new ControlledFailureException(message);
             }
