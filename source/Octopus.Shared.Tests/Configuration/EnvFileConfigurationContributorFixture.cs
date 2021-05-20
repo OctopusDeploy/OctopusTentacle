@@ -13,7 +13,7 @@ using Octopus.Shared.Util;
 namespace Octopus.Shared.Tests.Configuration
 {
     [TestFixture]
-    public class EnvFileInstanceStrategyFixture
+    public class EnvFileConfigurationContributorFixture
     {
         IOctopusFileSystem fileSystem = null!;
         IEnvFileLocator fileLocator = null!;
