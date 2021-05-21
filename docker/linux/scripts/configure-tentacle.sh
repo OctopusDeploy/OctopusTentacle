@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-# This is very much a work in progress. Please do not view this as production-ready. It's in Octopus-internal use at
-# the moment and will be made more robust in due course.
-
 if [[ "$ACCEPT_EULA" != "Y" ]]; then
     echo "ERROR: You must accept the EULA at https://octopus.com/company/legal by passing an environment variable 'ACCEPT_EULA=Y'"
     exit 1
