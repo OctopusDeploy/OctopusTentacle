@@ -4,6 +4,7 @@ ARG BUILD_NUMBER
 ARG BUILD_DATE
 
 ENV TentacleVersion ${BUILD_NUMBER}
+ENV OCTOPUS_RUNNING_IN_CONTAINER Y
 
 LABEL \
     org.label-schema.schema-version="1.0" \
