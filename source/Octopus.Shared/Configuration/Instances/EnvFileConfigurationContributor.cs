@@ -25,6 +25,11 @@ namespace Octopus.Shared.Configuration.Instances
 
         public IAggregatableKeyValueStore? LoadContributedConfiguration()
         {
+            if (!ApplicationConfigurationContributionFlag.CanContributeSettings)
+            {
+                return null;
+            }
+            
             EnsureLoaded();
             if (!foundValues)
                 return null;
