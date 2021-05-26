@@ -78,12 +78,9 @@ var versionInfo = DeriveVersionInfo();
 
 // Keep this list in order by most likely to succeed
 var signingTimestampUrls = new string[] {
-    "http://tsa.starfieldtech.com",
-    "http://www.startssl.com/timestamp",
-    "http://timestamp.comodoca.com/rfc3161",
-    "http://timestamp.verisign.com/scripts/timstamp.dll",
-    "http://timestamp.globalsign.com/scripts/timestamp.dll"
-    };
+   "http://timestamp.digicert.com?alg=sha256",
+   "http://timestamp.comodoca.com"
+};
 
 
 var artifactsDir = "./_artifacts";
@@ -877,7 +874,7 @@ private void SignWithSignTool(IEnumerable<FilePath> files, string display = "", 
         Password = signingCertificatePassword,
         DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
         Description = "Octopus Tentacle Agent",
-        DescriptionUri = new Uri("http://octopus.com")
+        DescriptionUri = new Uri("https://octopus.com")
     };
 
     foreach (var url in signingTimestampUrls)
