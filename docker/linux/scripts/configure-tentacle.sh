@@ -16,8 +16,9 @@ mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
 
 if [ -f "$alreadyConfiguredSemaphore" ]; then
-    echo "Octopus Tentacle is already configured."
-    exit 1
+    echo "Octopus Tentacle is already configured. Skipping reconfiguration."
+    echo "If you want to force reconfiguration, please delete the file $alreadyConfiguredSemaphore and re-launch the container."
+    exit 0
 fi
 
 if [ ! -f /usr/bin/tentacle ]; then
