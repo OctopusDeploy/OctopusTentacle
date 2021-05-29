@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-# This is very much a work in progress. Please do not view this as production-ready. It's in Octopus-internal use at
-# the moment and will be made more robust in due course.
-
 if [[ "$ACCEPT_EULA" != "Y" ]]; then
     echo "ERROR: You must accept the EULA at https://octopus.com/company/legal by passing an environment variable 'ACCEPT_EULA=Y'"
     exit 1
@@ -19,8 +16,9 @@ mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
 
 if [ -f "$alreadyConfiguredSemaphore" ]; then
-    echo "Octopus Tentacle is already configured."
-    exit 1
+    echo "Octopus Tentacle is already configured. Skipping reconfiguration."
+    echo "If you want to force reconfiguration, please delete the file $alreadyConfiguredSemaphore and re-launch the container."
+    exit 0
 fi
 
 if [ ! -f /usr/bin/tentacle ]; then
