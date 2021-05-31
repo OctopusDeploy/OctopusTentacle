@@ -26,7 +26,9 @@ namespace Octopus.Shared.Startup
             IApplicationInstanceSelector instanceSelector,
             string serviceDescription,
             Assembly assemblyContainingService,
-            IServiceConfigurator serviceConfigurator)
+            IServiceConfigurator serviceConfigurator,
+            ILogFileOnlyLogger logFileOnlyLogger)
+            : base(logFileOnlyLogger)
         {
             this.applicationName = applicationName;
             this.instanceLocator = instanceLocator;
