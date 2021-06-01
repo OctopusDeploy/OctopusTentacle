@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Commands
 
         string format = TextFormat;
 
-        public VersionCommand()
+        public VersionCommand(ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
             Options.Add("format=", $"The format of the output ({string.Join(",", SupportedFormats)}). Defaults to {format}.", v => format = v);
         }

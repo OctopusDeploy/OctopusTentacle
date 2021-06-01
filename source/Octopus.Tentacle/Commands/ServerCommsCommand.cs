@@ -21,8 +21,8 @@ namespace Octopus.Tentacle.Commands
         int serverPort = 10943;
         string webSocket;
 
-        public ServerCommsCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector)
-            : base(selector, log)
+        public ServerCommsCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector, ILogFileOnlyLogger logFileOnlyLogger)
+            : base(selector, log, logFileOnlyLogger)
         {
             this.tentacleConfiguration = tentacleConfiguration;
             this.log = log;

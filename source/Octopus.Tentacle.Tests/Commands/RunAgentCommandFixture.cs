@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Versioning;
 using Octopus.Tentacle.Commands;
@@ -43,7 +44,8 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<ISystemLog>(),
                 selector = Substitute.For<IApplicationInstanceSelector>(),
                 new Lazy<IProxyInitializer>(() => Substitute.For<IProxyInitializer>()),
-                new AppVersion(GetType().Assembly));
+                new AppVersion(GetType().Assembly),
+                Substitute.For<ILogFileOnlyLogger>());
 
             selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
         }

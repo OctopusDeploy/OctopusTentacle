@@ -30,8 +30,9 @@ namespace Octopus.Tentacle.Commands
             IApplicationInstanceSelector selector,
             IProxyConfigParser proxyConfig,
             IOctopusClientInitializer octopusClientInitializer,
-            ISpaceRepositoryFactory spaceRepositoryFactory)
-            : base(selector, log)
+            ISpaceRepositoryFactory spaceRepositoryFactory,
+            ILogFileOnlyLogger logFileOnlyLogger)
+            : base(selector, log, logFileOnlyLogger)
         {
             this.configuration = configuration;
             this.log = log;

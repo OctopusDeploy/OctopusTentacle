@@ -6,6 +6,7 @@ using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Startup;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
@@ -23,8 +24,9 @@ namespace Octopus.Tentacle.Commands
             Lazy<IOctopusServerChecker> octopusServerChecker,
             IProxyConfigParser proxyConfig,
             IOctopusClientInitializer octopusClientInitializer,
-            ISpaceRepositoryFactory spaceRepositoryFactory)
-            : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory)
+            ISpaceRepositoryFactory spaceRepositoryFactory,
+            ILogFileOnlyLogger logFileOnlyLogger)
+            : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
         {
             Options.Add("workerpool=", "The worker pool name to add the machine to - e.g., 'Windows Pool'; specify this argument multiple times to add to multiple pools", s => workerpoolNames.Add(s));
         }

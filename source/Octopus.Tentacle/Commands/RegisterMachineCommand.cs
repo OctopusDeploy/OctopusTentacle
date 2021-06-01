@@ -11,6 +11,7 @@ using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Tentacle.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -29,8 +30,9 @@ namespace Octopus.Tentacle.Commands
                                       Lazy<IOctopusServerChecker> octopusServerChecker,
                                       IProxyConfigParser proxyConfig,
                                       IOctopusClientInitializer octopusClientInitializer,
-                                      ISpaceRepositoryFactory spaceRepositoryFactory)
-            : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory)
+                                      ISpaceRepositoryFactory spaceRepositoryFactory,
+                                      ILogFileOnlyLogger logFileOnlyLogger)
+            : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
         {
             Options.Add("env|environment=", "The environment name to add the machine to - e.g., 'Production'; specify this argument multiple times to add multiple environments", s => environmentNames.Add(s));
             Options.Add("r|role=", "The machine role that the machine will assume - e.g., 'web-server'; specify this argument multiple times to add multiple roles", s => roles.Add(s));

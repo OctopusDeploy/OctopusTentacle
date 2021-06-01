@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Commands
         string config;
         string home;
 
-        public CreateInstanceCommand(IApplicationInstanceManager instanceManager)
+        public CreateInstanceCommand(IApplicationInstanceManager instanceManager, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
             this.instanceManager = instanceManager;
             Options.Add("instance=", "Name of the instance to create", v => instanceName = v);
