@@ -32,7 +32,8 @@ namespace Octopus.Tentacle.Tests.Commands
             command = new ServerCommsCommand(
                 new Lazy<IWritableTentacleConfiguration>(() => configuration),
                 new InMemoryLog(),
-                selector
+                selector,
+                Substitute.For<ILogFileOnlyLogger>()
                 );
         }
 

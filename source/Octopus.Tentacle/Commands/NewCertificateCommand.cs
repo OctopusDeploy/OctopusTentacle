@@ -27,7 +27,8 @@ namespace Octopus.Tentacle.Commands
             Lazy<IWritableTentacleConfiguration> configuration,
             ISystemLog log,
             IApplicationInstanceSelector selector,
-            Lazy<ICertificateGenerator> generator) : base(selector, log)
+            Lazy<ICertificateGenerator> generator,
+            ILogFileOnlyLogger logFileOnlyLogger) : base(selector, log, logFileOnlyLogger)
         {
             this.configuration = configuration;
             this.log = log;
