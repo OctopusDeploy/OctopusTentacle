@@ -22,7 +22,8 @@ namespace Octopus.Shared.Tests.Startup
             instanceLocator = Substitute.For<IApplicationInstanceLocator>();
             windowsLocalAdminRightsChecker = Substitute.For<IWindowsLocalAdminRightsChecker>();
             var log = Substitute.For<ILog>();
-            command = new CheckServicesCommand(log, instanceLocator, ApplicationName.OctopusServer, windowsLocalAdminRightsChecker);
+            var fileLog = Substitute.For<ILogFileOnlyLogger>();
+            command = new CheckServicesCommand(log, instanceLocator, ApplicationName.OctopusServer, windowsLocalAdminRightsChecker, fileLog);
         }
 
         [Test]

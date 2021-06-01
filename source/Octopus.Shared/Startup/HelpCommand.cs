@@ -20,7 +20,7 @@ namespace Octopus.Shared.Startup
 
         readonly ICommandLocator commands;
 
-        public HelpCommand(ICommandLocator commands)
+        public HelpCommand(ICommandLocator commands, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
             this.commands = commands;
 
