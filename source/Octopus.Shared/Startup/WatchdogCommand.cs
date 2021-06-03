@@ -22,7 +22,9 @@ namespace Octopus.Shared.Startup
             ISystemLog log,
             ApplicationName applicationName,
             Lazy<IWatchdog> watchdog,
-            IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker)
+            IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker,
+            ILogFileOnlyLogger logFileOnlyLogger)
+            : base(logFileOnlyLogger)
         {
             this.log = log;
             this.applicationName = applicationName;
