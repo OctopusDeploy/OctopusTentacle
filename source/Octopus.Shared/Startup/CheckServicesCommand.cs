@@ -21,7 +21,9 @@ namespace Octopus.Shared.Startup
         public CheckServicesCommand(ISystemLog log,
             IApplicationInstanceStore instanceLocator,
             ApplicationName applicationName,
-            IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker)
+            IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker,
+            ILogFileOnlyLogger logFileOnlyLogger)
+            : base(logFileOnlyLogger)
         {
             this.log = log;
             this.instanceLocator = instanceLocator;

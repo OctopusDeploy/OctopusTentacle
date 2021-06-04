@@ -8,6 +8,11 @@ namespace Octopus.Shared.Startup
 {
     public abstract class AbstractCommand : ICommand
     {
+        protected AbstractCommand(ILogFileOnlyLogger logFileOnlyLogger)
+        {
+            this.LogFileOnlyLogger = logFileOnlyLogger;
+        }
+        protected ILogFileOnlyLogger LogFileOnlyLogger { get; }
         static readonly Lazy<List<string>> SpecialLocations = new Lazy<List<string>>(() =>
         {
             var result = new List<string>();
@@ -81,8 +86,8 @@ namespace Octopus.Shared.Startup
 
             EnsureSensitiveParametersAreNotLoggedToLogFileOnlyLogger();
 
-            LogFileOnlyLogger.Current.Info($"==== {GetType().Name} ====");
-            LogFileOnlyLogger.Current.Info($"CommandLine: {string.Join(" ", Environment.GetCommandLineArgs())}");
+            LogFileOnlyLogger.Info($"==== {GetType().Name} ====");
+            LogFileOnlyLogger.Info($"CommandLine: {string.Join(" ", Environment.GetCommandLineArgs())}");
 
             Start();
             Completed();
@@ -103,7 +108,7 @@ namespace Octopus.Shared.Startup
                 //Also, due to timing issues of when loggers are created, it gets very difficult to ensure that the logger
                 //will have the sensitive values set. Its all rather complicated, and its preventing a theoretical problem
                 //whereas this LogFileOnlyLogger is definitely logging sensitive values, so we need to mask there
-                LogFileOnlyLogger.Current.AddSensitiveValues(option.Values.Where(x => x != null).ToArray()!);
+                LogFileOnlyLogger.AddSensitiveValues(option.Values.Where(x => x != null).ToArray()!);
             }
         }
 

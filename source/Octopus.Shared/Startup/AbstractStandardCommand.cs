@@ -11,7 +11,7 @@ namespace Octopus.Shared.Startup
 
         bool voteForRestart;
 
-        protected AbstractStandardCommand(IApplicationInstanceSelector instanceSelector, ISystemLog systemLog)
+        protected AbstractStandardCommand(IApplicationInstanceSelector instanceSelector, ISystemLog systemLog, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
             this.instanceSelector = instanceSelector;
             SystemLog = systemLog;
