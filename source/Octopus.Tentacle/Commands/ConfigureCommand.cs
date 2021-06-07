@@ -26,8 +26,9 @@ namespace Octopus.Tentacle.Commands
             Lazy<IWritableHomeConfiguration> home,
             IOctopusFileSystem fileSystem,
             ISystemLog log,
-            IApplicationInstanceSelector selector)
-            : base(selector, log)
+            IApplicationInstanceSelector selector,
+            ILogFileOnlyLogger logFileOnlyLogger)
+            : base(selector, log, logFileOnlyLogger)
         {
             this.tentacleConfiguration = tentacleConfiguration;
             this.log = log;

@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Commands
 
         public override bool SuppressConsoleLogging => true;
 
-        public ListInstancesCommand(IApplicationInstanceStore instanceStore)
+        public ListInstancesCommand(IApplicationInstanceStore instanceStore, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
             this.instanceStore = instanceStore;
 

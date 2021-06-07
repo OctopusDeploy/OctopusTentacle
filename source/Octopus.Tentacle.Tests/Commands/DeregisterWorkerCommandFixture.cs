@@ -10,6 +10,7 @@ using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Commands.OptionSets;
@@ -49,7 +50,8 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IApplicationInstanceSelector>(),
                 proxyConfig,
                 Substitute.For<IOctopusClientInitializer>(),
-                new SpaceRepositoryFactory());
+                new SpaceRepositoryFactory(),
+                Substitute.For<ILogFileOnlyLogger>());
 
             var matchingMachines = new List<WorkerResource>
             {
@@ -78,7 +80,8 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IApplicationInstanceSelector>(),
                 proxyConfig,
                 Substitute.For<IOctopusClientInitializer>(),
-                new SpaceRepositoryFactory());
+                new SpaceRepositoryFactory(),
+                Substitute.For<ILogFileOnlyLogger>());
 
             const string machineName = "MachineToBeDeleted";
             var matchingMachines = new List<WorkerResource>
@@ -108,7 +111,8 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<IApplicationInstanceSelector>(),
                 proxyConfig,
                 Substitute.For<IOctopusClientInitializer>(),
-                new SpaceRepositoryFactory());
+                new SpaceRepositoryFactory(),
+                Substitute.For<ILogFileOnlyLogger>());
 
             asyncRepository.CertificateConfiguration.GetOctopusCertificate()
                 .ReturnsForAnyArgs(new CertificateConfigurationResource { Thumbprint = expectedThumbPrint }.AsTask());
