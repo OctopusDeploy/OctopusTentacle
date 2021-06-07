@@ -10,7 +10,8 @@ namespace Octopus.Tentacle.Commands
         readonly IApplicationInstanceSelector instanceSelector;
         readonly IApplicationInstanceManager instanceManager;
 
-        public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector, IApplicationInstanceManager instanceManager, ISystemLog log) : base(instanceSelector, log)
+        public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector, IApplicationInstanceManager instanceManager, ISystemLog log, ILogFileOnlyLogger logFileOnlyLogger)
+            : base(instanceSelector, log, logFileOnlyLogger)
         {
             this.instanceSelector = instanceSelector;
             this.instanceManager = instanceManager;

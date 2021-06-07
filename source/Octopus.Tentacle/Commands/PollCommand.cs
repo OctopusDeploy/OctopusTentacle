@@ -31,8 +31,9 @@ namespace Octopus.Tentacle.Commands
                            IApplicationInstanceSelector selector,
                            Lazy<IOctopusServerChecker> octopusServerChecker,
                            IProxyConfigParser proxyConfig,
-                           IOctopusClientInitializer octopusClientInitializer)
-            : base(selector, log)
+                           IOctopusClientInitializer octopusClientInitializer,
+                           ILogFileOnlyLogger logFileOnlyLogger)
+            : base(selector, log, logFileOnlyLogger)
         {
             this.configuration = configuration;
             this.octopusServerChecker = octopusServerChecker;

@@ -21,8 +21,8 @@ namespace Octopus.Tentacle.Commands
         string importFile;
         string importPfxPassword;
 
-        public ImportCertificateCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector)
-            : base(selector, log)
+        public ImportCertificateCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector, ILogFileOnlyLogger logFileOnlyLogger)
+            : base(selector, log, logFileOnlyLogger)
         {
             this.tentacleConfiguration = tentacleConfiguration;
             this.log = log;

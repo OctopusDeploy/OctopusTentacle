@@ -7,6 +7,7 @@ using Octopus.Client.Model;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
@@ -30,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Commands
             log = Substitute.For<ISystemLog>();
             var selector = Substitute.For<IApplicationInstanceSelector>();
             selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
-            Command = new ConfigureCommand(new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration), new Lazy<IWritableHomeConfiguration>(() => new StubHomeConfiguration()), fileSystem, log, selector);
+            Command = new ConfigureCommand(new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration), new Lazy<IWritableHomeConfiguration>(() => new StubHomeConfiguration()), fileSystem, log, selector, Substitute.For<ILogFileOnlyLogger>());
         }
 
         [Test]
