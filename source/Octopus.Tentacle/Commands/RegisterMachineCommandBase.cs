@@ -153,7 +153,14 @@ namespace Octopus.Tentacle.Commands
 
             EnhanceOperation(registerMachineOperation);
 
-            await registerMachineOperation.ExecuteAsync(repository);
+            try
+            {
+                await registerMachineOperation.ExecuteAsync(repository);
+            }
+            catch (InvalidRegistrationArgumentsException ex)
+            {
+                throw new ControlledFailureException(ex.Message, ex);
+            }
 
             configuration.Value.AddOrUpdateTrustedOctopusServer(server);
             VoteForRestart();
@@ -182,7 +189,7 @@ namespace Octopus.Tentacle.Commands
                 return new Uri($"https://{api.ServerUri.Host}:{serverCommsPort}");
 
             if (!HalibutRuntime.OSSupportsWebSockets)
-                throw new Exception("Websockets is only supported on Windows Server 2012 and later");
+                throw new ControlledFailureException("Websockets is only supported on Windows Server 2012 and later");
 
             var address = new Uri(serverWebSocketAddress);
 
