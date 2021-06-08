@@ -39,7 +39,8 @@ namespace Octopus.Tentacle.Commands
             ISystemLog log,
             IApplicationInstanceSelector selector,
             Lazy<IProxyInitializer> proxyInitializer,
-            AppVersion appVersion) : base(selector, log)
+            AppVersion appVersion,
+            ILogFileOnlyLogger logFileOnlyLogger) : base(selector, log, logFileOnlyLogger)
         {
             this.halibut = halibut;
             this.configuration = configuration;

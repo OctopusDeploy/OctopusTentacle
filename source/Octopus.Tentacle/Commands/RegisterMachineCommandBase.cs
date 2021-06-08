@@ -48,8 +48,9 @@ namespace Octopus.Tentacle.Commands
             Lazy<IOctopusServerChecker> octopusServerChecker,
             IProxyConfigParser proxyConfig,
             IOctopusClientInitializer octopusClientInitializer,
-            ISpaceRepositoryFactory spaceRepositoryFactory)
-            : base(selector, log)
+            ISpaceRepositoryFactory spaceRepositoryFactory,
+            ILogFileOnlyLogger logFileOnlyLogger)
+            : base(selector, log, logFileOnlyLogger)
         {
             this.lazyRegisterMachineOperation = lazyRegisterMachineOperation;
             this.configuration = configuration;

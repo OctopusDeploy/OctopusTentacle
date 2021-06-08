@@ -44,7 +44,8 @@ namespace Octopus.Tentacle.Commands
             IProxyConfigParser proxyConfig,
             IOctopusClientInitializer octopusClientInitializer,
             ISystemLog log,
-            ISpaceRepositoryFactory spaceRepositoryFactory) : base(instanceSelector, log)
+            ISpaceRepositoryFactory spaceRepositoryFactory,
+            ILogFileOnlyLogger logFileOnlyLogger) : base(instanceSelector, log, logFileOnlyLogger)
         {
             this.instanceSelector = instanceSelector;
             this.fileSystem = fileSystem;

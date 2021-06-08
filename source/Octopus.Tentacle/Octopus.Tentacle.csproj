@@ -44,6 +44,8 @@
 		</PackageReference>
 		<PackageReference Include="Octopus.Client" Version="11.2.3291" />
 		<PackageReference Include="Octopus.Shared" Version="10.3.1-ci0001" />
+		<PackageReference Include="Octopus.Client" Version="8.9.2" />
+		<PackageReference Include="Octopus.Shared" Version="10.3.1-ci0014" />
 	</ItemGroup>
 
 	<ItemGroup>

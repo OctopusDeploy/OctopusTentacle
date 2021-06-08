@@ -16,7 +16,8 @@ namespace Octopus.Tentacle.Commands
         string packageFile;
         string destinationDirectory;
 
-        public ExtractCommand(Lazy<IPackageInstaller> packageInstaller, Lazy<IOctopusFileSystem> fileSystem, ISystemLog log)
+        public ExtractCommand(Lazy<IPackageInstaller> packageInstaller, Lazy<IOctopusFileSystem> fileSystem, ISystemLog log, ILogFileOnlyLogger logFileOnlyLogger)
+            : base(logFileOnlyLogger)
         {
             this.packageInstaller = packageInstaller;
             this.log = log;

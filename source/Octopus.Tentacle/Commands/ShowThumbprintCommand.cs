@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Commands
 
         public override bool SuppressConsoleLogging => true;
 
-        public ShowThumbprintCommand(Lazy<ITentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector) : base(selector, log)
+        public ShowThumbprintCommand(Lazy<ITentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector, ILogFileOnlyLogger logFileOnlyLogger) : base(selector, log, logFileOnlyLogger)
         {
             this.tentacleConfiguration = tentacleConfiguration;
             this.log = log;

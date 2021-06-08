@@ -17,8 +17,9 @@ namespace Octopus.Tentacle.Commands
         public UpdateTrustCommand(
             Lazy<IWritableTentacleConfiguration> tentacleConfiguration,
             ISystemLog log,
-            IApplicationInstanceSelector selector)
-            : base(selector, log)
+            IApplicationInstanceSelector selector,
+            ILogFileOnlyLogger logFileOnlyLogger)
+            : base(selector, log, logFileOnlyLogger)
         {
             this.tentacleConfiguration = tentacleConfiguration;
             this.log = log;

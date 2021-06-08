@@ -3,6 +3,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
@@ -24,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Commands
             configuration = new StubTentacleConfiguration();
             var selector = Substitute.For<IApplicationInstanceSelector>();
             selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
-            Command = new NewCertificateCommand(new Lazy<IWritableTentacleConfiguration>(() => configuration), log, selector, new Lazy<ICertificateGenerator>(() => Substitute.For<ICertificateGenerator>()));
+            Command = new NewCertificateCommand(new Lazy<IWritableTentacleConfiguration>(() => configuration), log, selector, new Lazy<ICertificateGenerator>(() => Substitute.For<ICertificateGenerator>()), Substitute.For<ILogFileOnlyLogger>());
         }
 
         [Test]
