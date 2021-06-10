@@ -242,14 +242,14 @@ namespace Octopus.Shared.Startup
             stringBuilder.AppendLine("[Service]");
             stringBuilder.AppendLine("Type=simple");
             stringBuilder.AppendLine($"User={userName}");
-            stringBuilder.Append($"ExecStart=\"{exePath}\" run");
+            stringBuilder.Append($"ExecStart={exePath} run");
             if (!string.IsNullOrEmpty(instance))
             {
-                stringBuilder.Append($" --instance=\"{instance}\"");
+                stringBuilder.Append($" --instance={instance}");
             } 
             else if (!string.IsNullOrEmpty(configPath))
             {
-                stringBuilder.Append($" --config=\"{configPath}\"");
+                stringBuilder.Append($" --config={configPath}");
             }
             else
             {
