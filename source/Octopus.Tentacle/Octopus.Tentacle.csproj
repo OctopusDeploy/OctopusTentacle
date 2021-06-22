@@ -42,7 +42,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Octopus.Client" Version="11.2.3319" />
+		<PackageReference Include="Octopus.Client" Version="11.2.3350" />
 		<PackageReference Include="Octopus.Shared" Version="10.3.1-ci0014" />
 	</ItemGroup>
 
