@@ -4,27 +4,42 @@ Tentacle is the secure, lightweight, cross-platform agent for [Octopus Server](h
 
 ![Tentacles Everywhere](https://user-images.githubusercontent.com/1627582/92418318-430ed000-f1aa-11ea-8a46-6d6763feef3a.png)
 
+## Code of Conduct
+This project and everyone participating in it is governed by the [Octopus Deploy Code of Conduct](https://github.com/OctopusDeploy/.github/blob/main/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior using the instructions in the code of conduct.
+
+## Did you find a bug?
+If the bug is a security vulnerability in Octopus Deploy, please refer to our [security policy](https://github.com/OctopusDeploy/.github/blob/main/SECURITY.md).
+
+Search our [public Issues repository](https://github.com/OctopusDeploy/Issues) to ensure the bug was not already reported.
+
+If you're unable to find an open issue addressing the problem, please follow our [support guidelines](https://github.com/OctopusDeploy/.github/blob/main/SUPPORT.md).
+
 ## Contributing
-
-:+1::tada: First off, thanks for your contribution to Tentacle! :tada::+1:
-
-If you are a customer of Octopus Deploy, please start a conversation about any problems with Tentacle with our [support team](mailto:support@octopus.com) - this is the best way to get our attention.
 
 ### Issues, Pull Requests, and Release Notes
 
+:+1::tada: First off, thanks for your contribution to Tentacle! :tada::+1:
+
 Please [create a new issue](issues/new) for each bug fix or enhancement. [Issues in this repository](issues) are automatically used to create release notes for [releases](releases).
+
+Please ensure every commit that hits `main` links either to an issue directly, or to a PR that in turn links to an issue. Please use the [appropriate keywords to close issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword).
 
 ### Build, Test, and delivery
 
 We use the [Octopus Tentacle project in our private TeamCity server](https://build.octopushq.com/project/OctopusDeploy_OctopusTentacle) for automated build and test reporting status changes to pull requests.
 
-We use the [Octopus Tentacle project in our private Octopus server](https://deploy.octopus.app/app#/Spaces-1/projects/octopus-tentacle) to deploy releases of Tentacle. You can also use `@releasebot What's up Octopus Tentacle` in our Slack workspace to start a deployment.
+We use the [Octopus Tentacle project in our private Octopus server](https://deploy.octopus.app/app#/Spaces-1/projects/octopus-tentacle) to deploy releases of Tentacle.
+
+Deployments happen automatically - a merge to `main` will trigger a build and a deployment - continuous delivery for the win!
+
+For internal developers, on closing an issue, ReleaseBot will ask you for release notes.
+For external developers, or if ReleaseBot fails for some reason, please add a comment to the issue `Release note: XXXX` to ensure release notes are generated correctly.
 
 ### Bundling Tentacle with Octopus Server
 
 We bundle Tentacle inside Octopus Server to make it super duper easy to keep Tentacle updated across entire fleets of customer installations. Choosing the version of Tentacle to bundle inside Octopus Server is currently a manual process.
 
-To include a new version into the next Octopus Server release, update the [reference in Octopus.E2ETests.csproj](https://github.com/OctopusDeploy/OctopusDeploy/blob/master/source/Octopus.E2ETests/Octopus.E2ETests.csproj#L29). This is how we guarantee the version of Tentacle we bundle is also the version we use for all the end to end tests.
+To include a new version into the next Octopus Server release, update the [reference in Octopus.Server.csproj](https://github.com/OctopusDeploy/OctopusDeploy/blob/master/source/Octopus.Server/Octopus.Server.csproj#L36). This is how we guarantee the version of Tentacle we bundle is also the version we use for all the end to end tests.
 
 ## Debugging
 
