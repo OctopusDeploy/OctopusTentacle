@@ -1,7 +1,6 @@
 ﻿#nullable enable
 using System.Collections.Generic;
 using System.Linq;
-using Assent;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -41,17 +40,31 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void SupportedEnvironmentValueNames()
         {
-            var text = @"===================================================================================
-This list contains the supported environment value names, which is a public contract.
-===================================================================================
-" + string.Join("\n",
-                MapsTentacleEnvironmentValuesToConfigItems.SupportedEnvironmentValues.Select(x =>
+            var names = MapsTentacleEnvironmentValuesToConfigItems.SupportedEnvironmentValues
+                .Select(x =>
                 {
                     if (x is SensitiveEnvironmentVariable)
                         return x.Name + " (sensitive)";
                     return x.Name;
-                }).OrderBy(x => x));
-            this.Assent(text);
+                })
+                .OrderBy(x => x);
+
+            //This list contains the supported environment value names, which is a public contract.
+            var expected = new[] {
+                "TENTACLE_APPLICATION_DIRECTORY",
+                "TENTACLE_CERTIFICATE",
+                "TENTACLE_CERTIFICATE_THUMBPRINT",
+                "TENTACLE_LISTEN_IP",
+                "TENTACLE_NO_LISTEN",
+                "TENTACLE_POLLING_CUSTOM_PROXY_HOST",
+                "TENTACLE_POLLING_CUSTOM_PROXY_PASSWORD (sensitive)",
+                "TENTACLE_POLLING_CUSTOM_PROXY_PORT",
+                "TENTACLE_POLLING_CUSTOM_PROXY_USER",
+                "TENTACLE_POLLING_USE_DEFAULT_PROXY",
+                "TENTACLE_SERVICE_PORT",
+                "TENTACLE_TRUSTED_SERVERS"
+            };
+            names.Should().BeEquivalentTo(expected, "the environment variable names are part of our public contract");
         }
     }
 }
