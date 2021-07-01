@@ -9,6 +9,7 @@
     <TargetFramework>net452</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Properties\Icon.ico</ApplicationIcon>
