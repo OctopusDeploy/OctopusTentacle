@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Tests", "O
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Upgrader", "Octopus.Tentacle.Upgrader\Octopus.Tentacle.Upgrader.csproj", "{8F604C33-4137-4C00-A9B3-847FD403811D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.csproj", "{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,8 @@ Global
 		Release-netcoreapp3.1-osx-x64|Any CPU = Release-netcoreapp3.1-osx-x64|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
