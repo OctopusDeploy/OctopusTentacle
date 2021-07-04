@@ -44,13 +44,4 @@ services:
             args:
                 BUILD_DATE: ${BUILD_DATE:?err}
                 BUILD_NUMBER: ${BUILD_NUMBER:?err}
-        image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-windows-2019
-
-    octopusdeploy-tentacle-windows-20H2:
-        build:
-            context: .
-            dockerfile: ./docker/windows/Dockerfile
-            args:
-                BUILD_DATE: ${BUILD_DATE:?err}
-                BUILD_NUMBER: ${BUILD_NUMBER:?err}
-        image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-windows-20H2        
+        image: docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER?err}-windows-2019  
