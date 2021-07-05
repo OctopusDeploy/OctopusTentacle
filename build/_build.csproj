@@ -15,4 +15,10 @@
     <PackageReference Include="Nuke.OctoVersion" Version="0.2.549" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageDownload Include="AzureSignTool" Version="[2.0.17]" />
+    <PackageDownload Include="Chocolatey" Version="[0.10.14]" />
+    <PackageDownload Include="WiX" Version="[3.11.2]" />
+  </ItemGroup>
+
 </Project>

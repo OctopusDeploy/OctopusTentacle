@@ -39,6 +39,21 @@ class Build : NukeBuild
 
     [Parameter] string TestFramework;
     [Parameter] string TestRuntime;
+    
+    [PackageExecutable(
+        packageId: "azuresigntool",
+        packageExecutable: "azuresigntool.dll")]
+    readonly Tool AzureSignTool;
+    
+    [PackageExecutable(
+        packageId: "wix",
+        packageExecutable: "heat.exe")]
+    readonly Tool WiXHeatTool;
+    
+    [PackageExecutable(
+        packageId: "chocolatey",
+        packageExecutable: "chocolatey.exe")]
+    readonly Tool ChocolateyTool;
 
     [KeyVaultSettings(
         BaseUrlParameterName = nameof(AzureKeyVaultUrl),
@@ -295,11 +310,13 @@ class Build : NukeBuild
                 // ReSharper disable once StringLiteralTypo
                 ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype64>", "md5");
             
-                var process = ProcessTasks.StartProcess("chocolatey", 
-                    $"pack {SourceDirectory / "Chocolatey" / "OctopusDeploy.Tentacle.nuspec"} " +
+                //Once PR merged used Chocolatey Task: https://github.com/nuke-build/nuke/pull/755
+
+                var chocolateyArguments = $"pack {SourceDirectory / "Chocolatey" / "OctopusDeploy.Tentacle.nuspec"} " +
                     $"-version {OctoVersionInfo.NuGetVersion} " +
-                    $"-outputDirectory {ArtifactsDirectory / "chocolatey"}");
-                process.WaitForExit();
+                    $"-outputDirectory {ArtifactsDirectory / "chocolatey"}";
+
+                ChocolateyTool(chocolateyArguments);
             }
             finally
             {
@@ -418,11 +435,7 @@ class Build : NukeBuild
                     var testProcess = ProcessTasks.StartShell("dir /a-D /S /B");
                     testProcess.WaitForExit();
                     
-                    var heatExe = (RootDirectory / "tools").GlobFiles("**/heat.exe").FirstOrDefault();
-                    if (heatExe == null) throw new Exception("Unable to find heat.exe in tools folder");
-                    
-                    var process = ProcessTasks.StartProcess(heatExe, 
-                        $"dir {harvestDirectory} " +
+                    var heatArguments = $"dir {harvestDirectory} " +
                         "-nologo " +
                         "-gg " + //GenerateGuid
                         "-sfrag " + //SuppressFragments
@@ -432,8 +445,9 @@ class Build : NukeBuild
                         "-cg TentacleComponents " + //ComponentGroupName
                         "-var var.TentacleSource " + //PreprocessorVariable
                         "-dr INSTALLLOCATION " + //DirectoryReferenceId
-                        $"-out {harvestFile}");
-                    process.WaitForExit();
+                        $"-out {harvestFile}";
+
+                    WiXHeatTool(heatArguments);
                 });
             }
 
@@ -763,8 +777,6 @@ class Build : NukeBuild
 
     void SignWithAzureSignTool(AbsolutePath[] files)
     {
-        var azureSignToolExe = RootDirectory / "tools" / "azuresigntool.exe";
-
         var arguments = "sign " +
             $"--azure-key-vault-url \"{AzureKeyVaultUrl}\" " +
             $"--azure-key-vault-client-id \"{AzureKeyVaultAppId}\" " +
@@ -777,8 +789,7 @@ class Build : NukeBuild
             arguments += $"\"{file}\" ";
         }
         
-        var azureSignToolProcess = ProcessTasks.StartProcess(azureSignToolExe, arguments);
-        azureSignToolProcess.WaitForExit();
+        AzureSignTool(arguments);
         
         Logger.Info($"Finished signing {files.Count()} files.");
     }
