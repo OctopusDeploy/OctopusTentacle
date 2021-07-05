@@ -251,9 +251,9 @@ class Build : NukeBuild
                 EnsureExistingDirectory(workingDir / "tentacle");
 
                 (RootDirectory / "linux-packages" / "content").GlobFiles("*")
-                    .ForEach(x => CopyFile(x, workingDir / "tentacle"));
+                    .ForEach(x => CopyFileToDirectory(x, workingDir / "tentacle"));
                 (BuildDirectory / "Tentacle" / NetCore / runtimeId).GlobFiles("*")
-                    .ForEach(x => CopyFile(x, workingDir / "tentacle"));
+                    .ForEach(x => CopyFileToDirectory(x, workingDir / "tentacle"));
                 TarGZipCompress(
                     workingDir,
                     "tentacle",
