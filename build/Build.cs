@@ -415,7 +415,7 @@ class Build : NukeBuild
                 {
                     var harvestDirectory = installerDirectory;
 
-                    var testProcess = ProcessTasks.StartShell("dir /a-D /S /B", RootDirectory / "tools");
+                    var testProcess = ProcessTasks.StartShell("dir /a-D /S /B");
                     testProcess.WaitForExit();
                     
                     var heatExe = (RootDirectory / "tools").GlobFiles("**/heat.exe").FirstOrDefault();
