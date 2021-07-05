@@ -415,8 +415,7 @@ class Build : NukeBuild
                 {
                     var harvestDirectory = installerDirectory;
 
-                    var heatExe = (RootDirectory / "tools").GlobDirectories("**/WiX*")
-                        .SelectMany(x => x.GlobFiles("**/heat.exe")).FirstOrDefault();
+                    var heatExe = (RootDirectory / "tools").GlobFiles("**/heat.exe").FirstOrDefault();
                     if (heatExe == null) throw new Exception("Unable to find heat.exe in tools folder");
                     
                     var process = ProcessTasks.StartProcess(heatExe, 
