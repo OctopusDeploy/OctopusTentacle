@@ -204,7 +204,7 @@ class Build : NukeBuild
                 EnsureExistingDirectory(workingTentacleDirectory);
 
                 (BuildDirectory / "Tentacle" / NetFramework / runtimeId).GlobFiles($"*")
-                    .ForEach(x => CopyFile(x, workingDirectory / "tentacle"));
+                    .ForEach(x => CopyFileToDirectory(x, workingDirectory / "tentacle"));
                 ZipFile.CreateFromDirectory(
                     workingDirectory, 
                     ArtifactsDirectory / "zip" / $"tentacle-{OctoVersionInfo.FullSemVer}-{NetFramework}-{runtimeId}.zip");
