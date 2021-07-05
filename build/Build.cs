@@ -415,6 +415,9 @@ class Build : NukeBuild
                 {
                     var harvestDirectory = installerDirectory;
 
+                    var testProcess = ProcessTasks.StartShell("dir /a-D /S /B", RootDirectory / "tools");
+                    testProcess.WaitForExit();
+                    
                     var heatExe = (RootDirectory / "tools").GlobFiles("**/heat.exe").FirstOrDefault();
                     if (heatExe == null) throw new Exception("Unable to find heat.exe in tools folder");
                     
