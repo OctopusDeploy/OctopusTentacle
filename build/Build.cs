@@ -718,14 +718,12 @@ class Build : NukeBuild
             { 
                 Logger.Info("Signing files using signtool and the self-signed development code signing certificate.");
                 SignWithSignTool(files);
-                
             }
             else
             {
                 Logger.Info("Signing files using azuresigntool and the production code signing certificate.");
                 SignWithAzureSignTool(files);
             }
-            
         });
     }
 
@@ -762,7 +760,24 @@ class Build : NukeBuild
 
     void SignWithAzureSignTool(AbsolutePath[] files)
     {
-        //TODO: Azure key store signing
+        var azureSignToolExe = RootDirectory / "tools" / "azuresigntool.exe";
+
+        var arguments = "sign " +
+            $"--azure-key-vault-url \"{AzureKeyVaultUrl}\" " +
+            $"--azure-key-vault-client-id \"{AzureKeyVaultAppId}\" " +
+            $"--azure-key-vault-client-secret \"{AzureKeyVaultAppSecret}\" " +
+            $"--azure-key-vault-certificate \"{AzureKeyVaultCertificateName}\" " +
+            "--file-digest sha256 ";
+
+        foreach (var file in files)
+        {
+            arguments += $"\"{file}\" ";
+        }
+        
+        var azureSignToolProcess = ProcessTasks.StartProcess(azureSignToolExe, arguments);
+        azureSignToolProcess.WaitForExit();
+        
+        Logger.Info($"Finished signing {files.Count()} files.");
     }
 
     // We need to use tar directly, because .NET utilities aren't able to preserve the file permissions
