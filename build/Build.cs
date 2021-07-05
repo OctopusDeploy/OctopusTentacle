@@ -225,9 +225,9 @@ class Build : NukeBuild
                 EnsureExistingDirectory(workingDir / "tentacle");
                 
                 (RootDirectory / "linux-packages" / "content").GlobFiles("*")
-                    .ForEach(x => CopyFile(x, workingDir / "tentacle"));
+                    .ForEach(x => CopyFileToDirectory(x, workingDir / "tentacle"));
                 (BuildDirectory / "Tentacle" / NetCore / runtimeId).GlobFiles("*")
-                    .ForEach(x => CopyFile(x, workingDir / "tentacle"));
+                    .ForEach(x => CopyFileToDirectory(x, workingDir / "tentacle"));
                 TarGZipCompress(
                     workingDir,
                     "tentacle",
@@ -329,7 +329,7 @@ class Build : NukeBuild
                 EnsureExistingDirectory(debBuildDir / "output");
 
                 (RootDirectory / "linux-packages" / "packaging-scripts").GlobFiles("*")
-                    .ForEach(x => CopyFile(x, debBuildDir / "scripts"));
+                    .ForEach(x => CopyFileToDirectory(x, debBuildDir / "scripts"));
 
                 DockerTasks.DockerPull(settings => settings
                     .SetName("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest"));
@@ -349,7 +349,8 @@ class Build : NukeBuild
                         $"{debBuildDir / "output"}:/output"
                     )
                     .SetImage("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest")
-                    .SetCommand($"bash /scripts/package.sh {runtimeId}"));
+                    .SetCommand($"bash")
+                    .SetArgs("/scripts/package.sh", runtimeId));
             }
 
             var targetRuntimeIds = RuntimeIds.Where(x => x.StartsWith("linux-"))
@@ -774,7 +775,7 @@ class Build : NukeBuild
             .SetTty(true)
             .SetVolume($"{inputDirectory}:/input", $"{outputDirectory}:/output")
             .SetCommand("debian")
-            .SetArgs($"tar -C /input -czvf /output/{outputFile} {filespec} --preserve-permissions"));
+            .SetArgs("tar", "-C", "/input", "-czvf", $"/output/{outputFile}", filespec, "--preserve-permissions"));
     }
     
     static void InBlock(string block, Action action)
