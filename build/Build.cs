@@ -362,11 +362,11 @@ class Build : NukeBuild
                 
                 EnsureExistingDirectory(ArtifactsDirectory / "deb");
                 (BuildDirectory / "deb" / runtimeId / "output").GlobFiles("*.deb")
-                    .ForEach(x => CopyFile(x, ArtifactsDirectory / "deb"));
+                    .ForEach(x => CopyFileToDirectory(x, ArtifactsDirectory / "deb"));
 
                 EnsureExistingDirectory(ArtifactsDirectory / "rpm");
                 (BuildDirectory / "deb" / runtimeId / "output").GlobFiles("*.rpm")
-                    .ForEach(x => CopyFile(x, ArtifactsDirectory / "rpm"));
+                    .ForEach(x => CopyFileToDirectory(x, ArtifactsDirectory / "rpm"));
             }
         });
 
