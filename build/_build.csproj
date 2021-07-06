@@ -13,6 +13,7 @@
   <ItemGroup>
     <PackageReference Include="Nuke.Common" Version="5.2.1" />
     <PackageReference Include="Nuke.OctoVersion" Version="0.2.549" />
+    <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,7 +2,9 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Nuke.Common;
@@ -62,6 +64,7 @@ class Build : NukeBuild
     readonly AbsolutePath ArtifactsDirectory = RootDirectory / "_artifacts";
     readonly AbsolutePath BuildDirectory = RootDirectory / "_build";
     readonly AbsolutePath LocalPackagesDirectory = RootDirectory / ".." / "LocalPackages";
+    readonly AbsolutePath TestDirectory = RootDirectory / "_test";
 
     //TODO: Consider if we want to make an array so it's easy to add new frameworks
     const string NetFramework = "net452";
@@ -588,6 +591,93 @@ class Build : NukeBuild
     Target TestOSX => _ => _
         .DependsOn(BuildOSX)
         .Executes(RunTests);
+
+    // ReSharper disable once UnusedMember.Local
+    Target TestWindowsInstallerPermissions => _ => _
+        .DependsOn(PackWindowsInstallers)
+        .Executes(() =>
+        {
+            string GetTestName(AbsolutePath installerPath) => Path.GetFileName(installerPath).Replace(".msi", "");
+            
+            void TestInstallerPermissions(AbsolutePath installerPath)
+            {
+                var destination = TestDirectory / "install" / GetTestName(installerPath);
+                EnsureExistingDirectory(destination);
+
+                InstallMsi(installerPath, destination);
+
+                try
+                {
+                    var builtInUsersHaveWriteAccess = DoesSidHaveRightsToDirectory(destination, WellKnownSidType.BuiltinUsersSid, FileSystemRights.AppendData, FileSystemRights.CreateFiles);
+                    if (builtInUsersHaveWriteAccess)
+                    {
+                        throw new Exception($"The installation destination {destination} has write permissions for the user BUILTIN\\Users. Expected write permissions to be removed by the installer.");
+                    }
+                }
+                finally
+                {
+                    UninstallMsi(installerPath);
+                }
+                
+                Logger.Info($"BUILTIN\\Users do not have write access to {destination}. Hooray!");
+            }
+
+            void InstallMsi(AbsolutePath installerPath, AbsolutePath destination)
+            {
+                var installLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.install.log");
+
+                Logger.Info($"Installing {installerPath} to {destination}");
+
+                var arguments = $"/i {installerPath} /QN INSTALLLOCATION={destination} /L*V {installLogName}";
+                Logger.Info($"Running msiexec {arguments}");
+                var installationProcess = ProcessTasks.StartProcess("msiexec", arguments);
+                installationProcess.WaitForExit();
+                CopyFileToDirectory(installLogName, ArtifactsDirectory);
+                if (installationProcess.ExitCode != 0) {
+                    throw new Exception($"The installation process exited with a non-zero exit code ({installationProcess.ExitCode}). Check the log {installLogName} for details.");
+                }
+            }
+            
+            void UninstallMsi(AbsolutePath installerPath)
+            {
+                Logger.Info($"Uninstalling {installerPath}");
+                var uninstallLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.uninstall.log");
+
+                var arguments = $"/x {installerPath} /QN /L*V {uninstallLogName}";
+                Logger.Info($"Running msiexec {arguments}");
+                var uninstallProcess = ProcessTasks.StartProcess("msiexec", arguments);
+                uninstallProcess.WaitForExit();
+                CopyFileToDirectory(uninstallLogName, ArtifactsDirectory);
+            }
+            
+            bool DoesSidHaveRightsToDirectory(string directory, WellKnownSidType sid, params FileSystemRights[] rights)
+            {
+                var destinationInfo = new DirectoryInfo(directory);
+                var acl = destinationInfo.GetAccessControl();
+                var identifier = new SecurityIdentifier(sid, null);
+                return acl
+                    .GetAccessRules(true, true, typeof(SecurityIdentifier))
+                    .Cast<FileSystemAccessRule>()
+                    .Where(r => r.IdentityReference.Value == identifier.Value)
+                    .Where(r => r.AccessControlType == AccessControlType.Allow)
+                    .Any(r => rights.Any(right => r.FileSystemRights.HasFlag(right)));
+            }
+
+            EnsureExistingDirectory(TestDirectory);
+            EnsureCleanDirectory(TestDirectory);
+
+            var installers = (ArtifactsDirectory / "msi").GlobFiles("*x64.msi");
+
+            if (!installers.Any())
+            {
+                throw new Exception($"Expected to find at least one installer in the directory {ArtifactsDirectory}");
+            }
+            
+            foreach (var installer in installers)
+            {
+                TestInstallerPermissions(installer);
+            }
+        });
     #endregion
 
     Target CopyToLocalPackages => _ => _
