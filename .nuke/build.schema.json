@@ -18,14 +18,6 @@
         "AzureKeyVaultUrl": {
           "type": "string"
         },
-        "Configuration": {
-          "type": "string",
-          "description": "Configuration to build - Default is 'Debug' (local) or 'Release' (server)",
-          "enum": [
-            "Debug",
-            "Release"
-          ]
-        },
         "Continue": {
           "type": "boolean",
           "description": "Indicates to continue a previously failed build attempt"
@@ -53,9 +45,6 @@
             "VisualStudio",
             "VSCode"
           ]
-        },
-        "KeyVault": {
-          "type": "string"
         },
         "NoLogo": {
           "type": "boolean",
@@ -113,7 +102,9 @@
               "PackWindowsInstallers",
               "PackWindowsZips",
               "Restore",
-              "RunTests",
+              "TestLinux",
+              "TestOSX",
+              "TestWindows",
               "VersionAssemblies"
             ]
           }
@@ -149,7 +140,9 @@
               "PackWindowsInstallers",
               "PackWindowsZips",
               "Restore",
-              "RunTests",
+              "TestLinux",
+              "TestOSX",
+              "TestWindows",
               "VersionAssemblies"
             ]
           }
