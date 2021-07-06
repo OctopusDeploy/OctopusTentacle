@@ -66,7 +66,6 @@ class Build : NukeBuild
     //TODO: Consider if we want to make an array so it's easy to add new frameworks
     const string NetFramework = "net452";
     const string NetCore = "netcoreapp3.1";
-    readonly string[] WindowsRuntimeIds = {"win"};
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
 
     // Keep this list in order by most likely to succeed
@@ -146,7 +145,7 @@ class Build : NukeBuild
         .DependsOn(VersionAssemblies)
         .Executes(() =>
         {
-            foreach (var runtimeId in WindowsRuntimeIds)
+            foreach (var runtimeId in RuntimeIds)
             {
                 if (runtimeId.StartsWith("win"))
                 {
@@ -613,6 +612,8 @@ class Build : NukeBuild
 
     void RunTests()
     {
+        Logger.Info($"Running test for Framework: {TestFramework} and Runtime: {TestRuntime}");
+        
         EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
             
         // We call dotnet test against the assemblies directly here because calling it against the .sln requires
@@ -622,7 +623,7 @@ class Build : NukeBuild
         var testAssembliesPath = (BuildDirectory / "Octopus.Tentacle.Tests" / TestFramework / TestRuntime)
             .GlobFiles("*.Tests.dll");
         var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-{TestFramework}-{TestRuntime}.xml";
-
+        
         try
         {
             // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
