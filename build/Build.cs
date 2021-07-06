@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -13,8 +12,6 @@ using Nuke.Common.Execution;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
-using Nuke.Common.Tools.AzureKeyVault;
-using Nuke.Common.Tools.AzureKeyVault.Attributes;
 using Nuke.Common.Tools.Docker;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.MSBuild;
@@ -24,15 +21,13 @@ using Nuke.OctoVersion;
 using OctoVersion.Core;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
+// ReSharper disable StringLiteralTypo
 
 [CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
 class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.BuildWindows);
-
-    [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
-    readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+    public static int Main () => Execute<Build>(x => x.Default);
 
     [Solution] readonly Solution Solution;
     [NukeOctoVersion] readonly OctoVersionInfo OctoVersionInfo;
@@ -55,14 +50,6 @@ class Build : NukeBuild
         packageExecutable: "chocolatey.exe")]
     readonly Tool ChocolateyTool;
 
-    [KeyVaultSettings(
-        BaseUrlParameterName = nameof(AzureKeyVaultUrl),
-        ClientIdParameterName = nameof(AzureKeyVaultAppId),
-        ClientSecretParameterName = nameof(AzureKeyVaultAppSecret))]
-    readonly KeyVaultSettings KeyVaultSettings;
-    
-    [KeyVault] readonly KeyVault KeyVault;
-
     [Parameter] string AzureKeyVaultUrl = "";
     [Parameter] string AzureKeyVaultAppId = "";
     [Parameter] string AzureKeyVaultAppSecret = "";
@@ -76,7 +63,6 @@ class Build : NukeBuild
     readonly AbsolutePath BuildDirectory = RootDirectory / "_build";
     readonly AbsolutePath LocalPackagesDirectory = RootDirectory / ".." / "LocalPackages";
 
-
     //TODO: Consider if we want to make an array so it's easy to add new frameworks
     const string NetFramework = "net452";
     const string NetCore = "netcoreapp3.1";
@@ -84,13 +70,11 @@ class Build : NukeBuild
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
 
     // Keep this list in order by most likely to succeed
-    string[] SigningTimestampUrls = {
+    readonly string[] SigningTimestampUrls = {
         "http://timestamp.digicert.com?alg=sha256",
         "http://timestamp.comodoca.com"
     };
 
-    List<Action> FilesToRestoreOnCleanup = new List<Action>();
-    
     Target Clean => _ => _
         .Executes(() =>
         {
@@ -120,7 +104,11 @@ class Build : NukeBuild
                 namespaceManager.AddNamespace("wi", "http://schemas.microsoft.com/wix/2006/wi");
 
                 var product = xmlDoc.SelectSingleNode("//wi:Product", namespaceManager);
-                
+
+                if (product == null) throw new Exception("Couldn't find Product Node in wxs file");
+                if (product.Attributes == null) throw new Exception("Couldn't find Version attribute in Product Node");
+
+                // ReSharper disable once PossibleNullReferenceException
                 product.Attributes["Version"].Value = OctoVersionInfo.MajorMinorPatch;
                 
                 xmlDoc.Save(productWxs);
@@ -200,6 +188,7 @@ class Build : NukeBuild
             }
         });
 
+    // ReSharper disable once UnusedMember.Local
     Target BuildAll => _ => _
         .Description("Build all the framework/runtime combinations. Notional task - running this on a single host is possible but cumbersome.")
         .DependsOn(BuildWindows)
@@ -301,10 +290,8 @@ class Build : NukeBuild
             {
                 ReplaceTextInFiles(chocolateyInstallScriptPath, "0.0.0", OctoVersionInfo.FullSemVer);
                 ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum>", md5Checksum);
-                // ReSharper disable once StringLiteralTypo
                 ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype>", "md5"); //TODO: Check this value is correct, used to be checksum.Algorithm.ToString() 
                 ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", md5ChecksumX64);
-                // ReSharper disable once StringLiteralTypo
                 ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype64>", "md5");
             
                 //Once PR merged used Chocolatey Task: https://github.com/nuke-build/nuke/pull/755
@@ -422,7 +409,7 @@ class Build : NukeBuild
                     restoreHarvestFileAction.Invoke();
                 }
             }
-
+            
             void GenerateMsiInstallerContents(AbsolutePath installerDirectory, AbsolutePath harvestFile)
             {
                 InBlock("Running HEAT to generate the installer contents...", () =>
@@ -592,38 +579,20 @@ class Build : NukeBuild
     #endregion
     
     #region tests
-    //TODO: There's more work here to figure out how we want to handle all the framework x runtime combos
-    Target RunTests => _ => _
+    // ReSharper disable once UnusedMember.Local
+    Target TestWindows => _ => _
         .DependsOn(BuildWindows)
-        .Executes(() =>
-        {
-            EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
-            
-            // We call dotnet test against the assemblies directly here because calling it against the .sln requires
-            // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
-            // have to shunt them all around the place.
-            // By doing things this way, we can have a seamless experience between local and remote builds.
-            var testAssembliesPath = (BuildDirectory / "Octopus.Tentacle.Tests" / TestFramework / TestRuntime)
-                .GlobFiles("*.Tests.dll");
-            var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-{TestFramework}-{TestRuntime}.xml";
-
-            try
-            {
-                // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
-                // when the test runner is being asked to build things, not when they're already built.
-                // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
-                testAssembliesPath.ForEach(x =>
-                    DotNetTest(settings => settings
-                        .SetProjectFile(x)
-                        .SetLogger($"trx;LogFileName={testResultsPath}"))
-                );
-            }
-            catch (Exception e)
-            {
-                //TODO: When a test failed, Nuke didn't say this failed. Is that because of the catch? We obviously don't want that
-                Logger.Warn($"{e.Message}: {e}");
-            }
-        });
+        .Executes(RunTests);
+    
+    // ReSharper disable once UnusedMember.Local
+    Target TestLinux => _ => _
+        .DependsOn(BuildLinux)
+        .Executes(RunTests);
+    
+    // ReSharper disable once UnusedMember.Local
+    Target TestOSX => _ => _
+        .DependsOn(BuildOSX)
+        .Executes(RunTests);
     #endregion
 
     Target CopyToLocalPackages => _ => _
@@ -641,6 +610,35 @@ class Build : NukeBuild
         .DependsOn(CopyToLocalPackages);
 
     #region implementation details
+
+    void RunTests()
+    {
+        EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
+            
+        // We call dotnet test against the assemblies directly here because calling it against the .sln requires
+        // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
+        // have to shunt them all around the place.
+        // By doing things this way, we can have a seamless experience between local and remote builds.
+        var testAssembliesPath = (BuildDirectory / "Octopus.Tentacle.Tests" / TestFramework / TestRuntime)
+            .GlobFiles("*.Tests.dll");
+        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-{TestFramework}-{TestRuntime}.xml";
+
+        try
+        {
+            // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
+            // when the test runner is being asked to build things, not when they're already built.
+            // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
+            testAssembliesPath.ForEach(x =>
+                DotNetTest(settings => settings
+                    .SetProjectFile(x)
+                    .SetLogger($"trx;LogFileName={testResultsPath}"))
+            );
+        }
+        catch (Exception e)
+        {
+            Logger.Warn($"{e.Message}: {e}");
+        }
+    }
     
     string DeriveGitBranch()
     {
@@ -787,7 +785,7 @@ class Build : NukeBuild
             if (lastException == null) return;
         }
 
-        throw lastException;
+        if (lastException != null) throw lastException;
     }
 
     void SignWithAzureSignTool(AbsolutePath[] files)
@@ -811,14 +809,14 @@ class Build : NukeBuild
 
     // We need to use tar directly, because .NET utilities aren't able to preserve the file permissions
     // Importantly, the Tentacle executable needs to be +x in the tar.gz file
-    void TarGZipCompress(AbsolutePath inputDirectory, string filespec, AbsolutePath outputDirectory, string outputFile)
+    void TarGZipCompress(AbsolutePath inputDirectory, string fileSpec, AbsolutePath outputDirectory, string outputFile)
     {
         DockerTasks.DockerRun(settings => settings
             .SetRm(true)
             .SetTty(true)
             .SetVolume($"{inputDirectory}:/input", $"{outputDirectory}:/output")
             .SetCommand("debian")
-            .SetArgs("tar", "-C", "/input", "-czvf", $"/output/{outputFile}", filespec, "--preserve-permissions"));
+            .SetArgs("tar", "-C", "/input", "-czvf", $"/output/{outputFile}", fileSpec, "--preserve-permissions"));
     }
     
     static void InBlock(string block, Action action)
