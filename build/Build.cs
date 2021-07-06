@@ -528,10 +528,10 @@ class Build : NukeBuild
             // ReSharper disable once IdentifierTypo
             var rpmx64PackageFilename = ConstructRedHatPackageFilename("tentacle", "x86_64");
             
-            CopyFile(SourceDirectory / "Octopus.Tentacle.CrossPlatformBundle" / "Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDirectory);
-            CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}.msi", workingDirectory / "Octopus.Tentacle.msi");
-            CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
-            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win").GlobFiles("*").ForEach(x => CopyFile(x, workingDirectory));
+            CopyFileToDirectory(SourceDirectory / "Octopus.Tentacle.CrossPlatformBundle" / "Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDirectory);
+            CopyFileToDirectory(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}.msi", workingDirectory / "Octopus.Tentacle.msi");
+            CopyFileToDirectory(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
+            (BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win").GlobFiles("*").ForEach(x => CopyFileToDirectory(x, workingDirectory));
             CopyFile(ArtifactsDirectory / "deb" / debAMD64PackageFilename, workingDirectory / debAMD64PackageFilename);
             CopyFile(ArtifactsDirectory / "deb" / debARM64PackageFilename, workingDirectory / debARM64PackageFilename);
             CopyFile(ArtifactsDirectory / "deb" / debARM32PackageFilename, workingDirectory / debARM32PackageFilename);
