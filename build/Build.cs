@@ -49,7 +49,7 @@ class Build : NukeBuild
         packageId: "wix",
         packageExecutable: "heat.exe")]
     readonly Tool WiXHeatTool;
-    
+
     [PackageExecutable(
         packageId: "chocolatey",
         packageExecutable: "chocolatey.exe")]
@@ -282,13 +282,6 @@ class Build : NukeBuild
         .DependsOn(PackWindowsInstallers)
         .Executes(() =>
         {
-            static void ReplaceTextInFiles(AbsolutePath path, string oldValue, string newValue)
-            {
-                var fileText = File.ReadAllText(path);
-                fileText = fileText.Replace(oldValue, newValue);
-                File.WriteAllText(path, fileText);
-            }
-            
             EnsureExistingDirectory(ArtifactsDirectory / "chocolatey");
             
             var md5Checksum = GetFileHash(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}.msi");
@@ -400,7 +393,7 @@ class Build : NukeBuild
         .DependsOn(BuildWindows)
         .Executes(() =>
         {
-            void PackWindowsInstallers(MSBuildTargetPlatform platform)
+            void PackWindowsInstallers(MSBuildTargetPlatform platform, AbsolutePath wixNugetPackagePath)
             {
                 var installerDirectory = BuildDirectory / "Installer";
                 EnsureExistingDirectory(installerDirectory);
@@ -417,7 +410,7 @@ class Build : NukeBuild
                 try
                 {
                     GenerateMsiInstallerContents(installerDirectory, harvestFile);
-                    BuildMsiInstallerForPlatform(platform);
+                    BuildMsiInstallerForPlatform(platform, wixNugetPackagePath);
                 }
                 finally
                 {
@@ -432,9 +425,6 @@ class Build : NukeBuild
                 {
                     var harvestDirectory = installerDirectory;
 
-                    var testProcess = ProcessTasks.StartShell("dir /a-D /S /B");
-                    testProcess.WaitForExit();
-                    
                     var heatArguments = $"dir {harvestDirectory} " +
                         "-nologo " +
                         "-gg " + //GenerateGuid
@@ -451,12 +441,18 @@ class Build : NukeBuild
                 });
             }
 
-            void BuildMsiInstallerForPlatform(MSBuildTargetPlatform platform)
+            void BuildMsiInstallerForPlatform(MSBuildTargetPlatform platform, AbsolutePath wixNugetPackagePath)
             {
                 InBlock($"Building {platform} installer", () =>
                 {
+                    var tentacleInstallerWixProject = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Octopus.Tentacle.Installer.wixproj";
+                    var restoreWiXProjectAction = RestoreFileForCleanup(tentacleInstallerWixProject);
                     try
                     {
+                        ReplaceTextInFiles(tentacleInstallerWixProject, "{WixToolPath}", wixNugetPackagePath / "tools");
+                        ReplaceTextInFiles(tentacleInstallerWixProject, "{WixTargetsPath}", wixNugetPackagePath / "tools" / "Wix.targets");
+                        ReplaceTextInFiles(tentacleInstallerWixProject, "{WixTasksPath}", wixNugetPackagePath / "tools" / "wixtasks.dll");
+                        
                         MSBuildTasks.MSBuild(settings => settings
                             .SetConfiguration("Release")
                             .SetProperty("AllowUpgrade", "True")
@@ -470,6 +466,10 @@ class Build : NukeBuild
                         Console.WriteLine(e);
                         throw;
                     }
+                    finally
+                    {
+                        restoreWiXProjectAction.Invoke();
+                    }
                     
                     var builtMsi = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "bin" / platform / "Octopus.Tentacle.msi";
                     SignAndTimeStamp(builtMsi);
@@ -480,10 +480,14 @@ class Build : NukeBuild
                         ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}{platformString}.msi");
                 });
             }
-            
+
+            // This is a slow operation
+            var wixNugetInstalledPackage = NuGetPackageResolver.GetLocalInstalledPackage("wix", ToolPathResolver.NuGetPackagesConfigFile);
+            if (wixNugetInstalledPackage == null) throw new Exception("Failed to find wix nuget package path");
+
             EnsureExistingDirectory(ArtifactsDirectory / "msi");
-            PackWindowsInstallers(MSBuildTargetPlatform.x64);
-            PackWindowsInstallers(MSBuildTargetPlatform.x86);
+            PackWindowsInstallers(MSBuildTargetPlatform.x64, wixNugetInstalledPackage.Directory);
+            PackWindowsInstallers(MSBuildTargetPlatform.x86, wixNugetInstalledPackage.Directory);
         });
 
     // ReSharper disable InconsistentNaming
@@ -700,6 +704,13 @@ class Build : NukeBuild
 
             SignAndTimeStamp(filesToSign);
         }
+    }
+    
+    static void ReplaceTextInFiles(AbsolutePath path, string oldValue, string newValue)
+    {
+        var fileText = File.ReadAllText(path);
+        fileText = fileText.Replace(oldValue, newValue);
+        File.WriteAllText(path, fileText);
     }
     
     Action RestoreFileForCleanup(AbsolutePath file)
