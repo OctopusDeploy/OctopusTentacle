@@ -163,6 +163,10 @@ class Build : NukeBuild
                 if (runtimeId.StartsWith("win"))
                 {
                     RunBuildFor(NetFramework, runtimeId);
+                    if (!runtimeId.Equals("win"))
+                    {
+                        RunBuildFor(NetCore, runtimeId);    
+                    }
                 }
             }
         });
