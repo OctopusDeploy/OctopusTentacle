@@ -579,7 +579,7 @@ class Build : NukeBuild
             ControlFlow.Assert(FileExists(workingDirectory / rpmARM32PackageFilename), $"Missing {rpmARM32PackageFilename}");
             ControlFlow.Assert(FileExists(workingDirectory / rpmx64PackageFilename), $"Missing {rpmx64PackageFilename}");
             
-            var process = ProcessTasks.StartProcess("dotnet", $"tool run dotnet-octo pack --id=Octopus.Tentacle.CrossPlatformBundle --version={OctoVersionInfo.FullSemVer} --basePath={workingDirectory} --outFolder={ArtifactsDirectory / "nuget"}");
+            var process = ProcessTasks.StartProcess("octo", $"pack --id=Octopus.Tentacle.CrossPlatformBundle --version={OctoVersionInfo.FullSemVer} --basePath={workingDirectory} --outFolder={ArtifactsDirectory / "nuget"}");
             process.WaitForExit();
         });
 
