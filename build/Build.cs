@@ -52,6 +52,11 @@ class Build : NukeBuild
         packageExecutable: "chocolatey.exe")]
     readonly Tool ChocolateyTool;
 
+    [PackageExecutable(
+        packageId: "OctopusTools",
+        packageExecutable: "octo.exe")]
+    readonly Tool OctoCliTool;
+
     [Parameter] string AzureKeyVaultUrl = "";
     [Parameter] string AzureKeyVaultAppId = "";
     [Parameter] string AzureKeyVaultAppSecret = "";
@@ -578,9 +583,8 @@ class Build : NukeBuild
             ControlFlow.Assert(FileExists(workingDirectory / rpmARM64PackageFilename), $"Missing {rpmARM64PackageFilename}");
             ControlFlow.Assert(FileExists(workingDirectory / rpmARM32PackageFilename), $"Missing {rpmARM32PackageFilename}");
             ControlFlow.Assert(FileExists(workingDirectory / rpmx64PackageFilename), $"Missing {rpmx64PackageFilename}");
-            
-            var process = ProcessTasks.StartProcess("octo", $"pack --id=Octopus.Tentacle.CrossPlatformBundle --version={OctoVersionInfo.FullSemVer} --basePath={workingDirectory} --outFolder={ArtifactsDirectory / "nuget"}");
-            process.WaitForExit();
+
+            OctoCliTool($"pack --id=Octopus.Tentacle.CrossPlatformBundle --version={OctoVersionInfo.FullSemVer} --basePath={workingDirectory} --outFolder={ArtifactsDirectory / "nuget"}");
         });
 
     Target PackWindows => _ => _
