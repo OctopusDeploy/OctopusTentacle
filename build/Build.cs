@@ -749,6 +749,7 @@ class Build : NukeBuild
             testAssembliesPath.ForEach(x =>
                 DotNetTest(settings => settings
                     .SetProjectFile(x)
+                    .SetFramework(TestFramework)
                     .SetLogger($"trx;LogFileName={testResultsPath}"))
             );
         }
