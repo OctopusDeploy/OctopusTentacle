@@ -513,9 +513,10 @@ class Build : NukeBuild
     // ReSharper disable InconsistentNaming
     Target PackCrossPlatformBundle => _ => _
         .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
-        .DependsOn(PackWindows)
-        .DependsOn(PackLinux)
-        .DependsOn(PackOSX)
+        // Disabling these dependencies right now until we understand how we can consume artifacts from previous build steps without having to re-run this target
+        // .DependsOn(PackWindows)
+        // .DependsOn(PackLinux)
+        // .DependsOn(PackOSX)
         .Executes(() =>
         {
             string ConstructDebianPackageFilename(string packageName, string architecture) {
