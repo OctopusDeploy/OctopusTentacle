@@ -148,6 +148,21 @@ class Build : NukeBuild
         .DependsOn(VersionAssemblies)
         .Executes(() =>
         {
+            static bool HasAuthenticodeSignature(AbsolutePath fileInfo)
+            {
+                // note: Doesn't check if existing signatures are valid, only that one exists
+                // source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
+                try
+                {
+                    X509Certificate.CreateFromSignedFile(fileInfo);
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            
             foreach (var runtimeId in RuntimeIds)
             {
                 if (runtimeId.StartsWith("win"))
@@ -155,6 +170,18 @@ class Build : NukeBuild
                     RunBuildFor(runtimeId.Equals("win") ? NetFramework : NetCore, runtimeId);
                 }
             }
+            
+            // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
+            // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
+            // Decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
+            var windowsOnlyBuiltFileSpec = BuildDirectory.GlobDirectories($"**/win*/**");
+        
+            var filesToSign = windowsOnlyBuiltFileSpec
+                .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll"))
+                .Where(file => !HasAuthenticodeSignature(file))
+                .ToArray();
+
+            SignAndTimeStamp(filesToSign);
         });
 
     Target BuildLinux => _ => _
@@ -200,20 +227,24 @@ class Build : NukeBuild
         .DependsOn(BuildWindows)
         .Executes(() =>
         {
+            EnsureCleanDirectory(ArtifactsDirectory / "zip");
+            
             foreach (var runtimeId in RuntimeIds.Where(x => x.StartsWith("win")))
             {
-                var workingDirectory = BuildDirectory / "zip" / NetFramework / runtimeId;
+                var framework = runtimeId.Equals("win") ? NetFramework : NetCore;
+                
+                var workingDirectory = BuildDirectory / "zip" / framework / runtimeId;
                 var workingTentacleDirectory = workingDirectory / "tentacle";
+    
+                EnsureCleanDirectory(workingDirectory);
+                EnsureCleanDirectory(workingTentacleDirectory);
 
-                EnsureExistingDirectory(ArtifactsDirectory / "zip");
-                EnsureExistingDirectory(workingDirectory);
-                EnsureExistingDirectory(workingTentacleDirectory);
-
-                (BuildDirectory / "Tentacle" / NetFramework / runtimeId).GlobFiles($"*")
-                    .ForEach(x => CopyFileToDirectory(x, workingDirectory / "tentacle"));
+                (BuildDirectory / "Tentacle" / framework / runtimeId).GlobFiles($"*")
+                    .ForEach(x => CopyFileToDirectory(x, workingTentacleDirectory));
+                
                 ZipFile.CreateFromDirectory(
                     workingDirectory, 
-                    ArtifactsDirectory / "zip" / $"tentacle-{OctoVersionInfo.FullSemVer}-{NetFramework}-{runtimeId}.zip");
+                    ArtifactsDirectory / "zip" / $"tentacle-{OctoVersionInfo.FullSemVer}-{framework}-{runtimeId}.zip");
             }
         });
 
@@ -747,24 +778,6 @@ class Build : NukeBuild
     
     void RunBuildFor(string framework, string runtimeId)
     {
-        static bool HasAuthenticodeSignature(AbsolutePath fileInfo)
-        {
-            // note: Doesn't check if existing signatures are valid, only that one exists
-            // source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
-            try
-            {
-                X509Certificate.CreateFromSignedFile(fileInfo);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-        
-        // 1. Build everything
-        // 2. If Windows, sign the binaries
-        // 3. Publish everything. This avoids signing binaries twice.
         var configuration = $"Release-{framework}-{runtimeId}";
         
         //TODO: How do we set MSBuildSettings.MaxCpuCount?
@@ -774,25 +787,7 @@ class Build : NukeBuild
             .SetFramework(framework)
             .SetRuntime(runtimeId)
             .SetNoRestore(true)
-            //TODO: Which way to set the version?
             .SetVersion(OctoVersionInfo.FullSemVer));
-            //.SetProcessArgumentConfigurator(args => args.Add($"/p:Version={OctoVersionInfo.FullSemVer}")));
-
-        // ReSharper disable once InvertIf
-        if (runtimeId.StartsWith("win"))
-        {
-            // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
-            // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
-            // Decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
-            var windowsOnlyBuiltFileSpec = BuildDirectory.GlobDirectories($"**/{framework}/{runtimeId}/**");
-            
-            var filesToSign = windowsOnlyBuiltFileSpec
-                .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll"))
-                .Where(file => !HasAuthenticodeSignature(file))
-                .ToArray();
-
-            SignAndTimeStamp(filesToSign);
-        }
     }
     
     static void ReplaceTextInFiles(AbsolutePath path, string oldValue, string newValue)
