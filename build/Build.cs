@@ -699,6 +699,8 @@ class Build : NukeBuild
     void RunTests()
     {
         Logger.Info($"Running test for Framework: {TestFramework} and Runtime: {TestRuntime}");
+
+        DotNet("--info");
         
         EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
             
