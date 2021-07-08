@@ -31,31 +31,31 @@ class Build : NukeBuild
 {
     public static int Main () => Execute<Build>(x => x.Default);
 
-    [Solution] readonly Solution Solution;
-    [NukeOctoVersion] readonly OctoVersionInfo OctoVersionInfo;
+    [Solution] readonly Solution Solution = null!;
+    [NukeOctoVersion] readonly OctoVersionInfo OctoVersionInfo = null!;
 
-    [Parameter] string TestFramework;
-    [Parameter] string TestRuntime;
+    [Parameter] string TestFramework = "";
+    [Parameter] string TestRuntime = "";
     
     [PackageExecutable(
         packageId: "azuresigntool",
         packageExecutable: "azuresigntool.dll")]
-    readonly Tool AzureSignTool;
+    readonly Tool AzureSignTool = null!;
     
     [PackageExecutable(
         packageId: "wix",
         packageExecutable: "heat.exe")]
-    readonly Tool WiXHeatTool;
+    readonly Tool WiXHeatTool = null!;
 
     [PackageExecutable(
         packageId: "chocolatey",
         packageExecutable: "chocolatey.exe")]
-    readonly Tool ChocolateyTool;
+    readonly Tool ChocolateyTool = null!;
 
     [PackageExecutable(
         packageId: "OctopusTools",
         packageExecutable: "octo.exe")]
-    readonly Tool OctoCliTool;
+    readonly Tool OctoCliTool = null!;
 
     [Parameter] string AzureKeyVaultUrl = "";
     [Parameter] string AzureKeyVaultAppId = "";
@@ -97,60 +97,10 @@ class Build : NukeBuild
             DotNetRestore(s => s
                 .SetProjectFile(Solution));
         });
-    
-    Target VersionAssemblies => _ => _
-        .Description("Modifies the VersionInfo.cs and Product.wxs files to embed version information into the shipped product.")
-        .Executes(() =>
-        {
-            void UpdateMsiProductVersion(AbsolutePath productWxs)
-            {
-                var xmlDoc = new XmlDocument();
-                xmlDoc.Load(productWxs);
-
-                var namespaceManager = new XmlNamespaceManager(xmlDoc.NameTable);
-                namespaceManager.AddNamespace("wi", "http://schemas.microsoft.com/wix/2006/wi");
-
-                var product = xmlDoc.SelectSingleNode("//wi:Product", namespaceManager);
-
-                if (product == null) throw new Exception("Couldn't find Product Node in wxs file");
-                if (product.Attributes == null) throw new Exception("Couldn't find Version attribute in Product Node");
-
-                // ReSharper disable once PossibleNullReferenceException
-                product.Attributes["Version"].Value = OctoVersionInfo.MajorMinorPatch;
-                
-                xmlDoc.Save(productWxs);
-            }
-
-            static void ReplaceRegexInFiles(AbsolutePath file, string matchingPattern, string replacement)
-            {
-                var fileText = File.ReadAllText(file);
-                fileText = Regex.Replace(fileText, matchingPattern, replacement);
-                File.WriteAllText(file, fileText);
-            }
-            
-            var versionInfoFile = SourceDirectory / "Solution Items" / "VersionInfo.cs";
-            
-            //TODO: Use this action
-            var versionInfoFileRestoreAction = RestoreFileForCleanup(versionInfoFile);
-            
-            ReplaceRegexInFiles(versionInfoFile, "AssemblyVersion\\(\".*?\"\\)", $"AssemblyVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
-            ReplaceRegexInFiles(versionInfoFile, "AssemblyFileVersion\\(\".*?\"\\)", $"AssemblyFileVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
-            ReplaceRegexInFiles(versionInfoFile, "AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{OctoVersionInfo.FullSemVer}\")");
-            //TODO: How to get branch? Maybe env var?
-            ReplaceRegexInFiles(versionInfoFile, "AssemblyGitBranch\\(\".*?\"\\)", $"AssemblyGitBranch(\"{DeriveGitBranch()}\")");
-            ReplaceRegexInFiles(versionInfoFile, "AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{OctoVersionInfo.FullSemVer}\")");
-            
-            var productWxs = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
-            
-            //TODO: Use this action
-            var productWxsRestoreFile = RestoreFileForCleanup(productWxs);
-            UpdateMsiProductVersion(productWxs);
-        });
 
     #region Build
     Target BuildWindows => _ => _
         .DependsOn(Restore)
-        .DependsOn(VersionAssemblies)
         .Executes(() =>
         {
             static bool HasAuthenticodeSignature(AbsolutePath fileInfo)
@@ -168,6 +118,7 @@ class Build : NukeBuild
                 }
             }
             
+            ModifyTemplatedVersionAndProductFilesWithValues(out var versionInfoRestoreAction, out var productWxsRestoreAction);
             foreach (var runtimeId in RuntimeIds)
             {
                 if (runtimeId.StartsWith("win"))
@@ -175,6 +126,9 @@ class Build : NukeBuild
                     RunBuildFor(runtimeId.Equals("win") ? NetFramework : NetCore, runtimeId);
                 }
             }
+            
+            versionInfoRestoreAction.Invoke();
+            productWxsRestoreAction.Invoke();
             
             // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
             // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
@@ -191,9 +145,10 @@ class Build : NukeBuild
 
     Target BuildLinux => _ => _
         .DependsOn(Restore)
-        .DependsOn(VersionAssemblies)
         .Executes(() =>
         {
+            ModifyTemplatedVersionAndProductFilesWithValues(out var versionInfoRestoreAction, out var productWxsRestoreAction);
+
             foreach (var runtimeId in RuntimeIds)
             {
                 if (runtimeId.StartsWith("linux-"))
@@ -201,14 +156,18 @@ class Build : NukeBuild
                     RunBuildFor(NetCore, runtimeId);
                 }
             }
+            
+            versionInfoRestoreAction.Invoke();
+            productWxsRestoreAction.Invoke();
         });
 
     // ReSharper disable once InconsistentNaming
     Target BuildOSX => _ => _
         .DependsOn(Restore)
-        .DependsOn(VersionAssemblies)
         .Executes(() =>
         {
+            ModifyTemplatedVersionAndProductFilesWithValues(out var versionInfoRestoreAction, out var productWxsRestoreAction);
+
             foreach (var runtimeId in RuntimeIds)
             {
                 if (runtimeId.StartsWith("osx-"))
@@ -216,6 +175,9 @@ class Build : NukeBuild
                     RunBuildFor(NetCore, runtimeId);
                 }
             }
+            
+            versionInfoRestoreAction.Invoke();
+            productWxsRestoreAction.Invoke();
         });
 
     // ReSharper disable once UnusedMember.Local
@@ -370,21 +332,21 @@ class Build : NukeBuild
                     .SetName("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest"));
 
                 DockerTasks.DockerRun(settings => settings
-                    .SetRm(true)
-                    .SetTty(true)
+                    .EnableRm()
+                    .EnableTty()
                     .SetEnv(
                         $"VERSION={OctoVersionInfo.FullSemVer}",
                         "INPUT_PATH=/input",
                         "OUTPUT_PATH=/output",
                         "SIGN_PRIVATE_KEY",
                         "SIGN_PASSPHRASE")
-                    .SetVolume( //TODO: Double check this paths, they should be good because AbsolutePath 
+                    .SetVolume( 
                         $"{debBuildDir / "scripts"}:/scripts",
                         $"{BuildDirectory / "zip" / "netcoreapp3.1" / runtimeId / "tentacle"}:/input",
                         $"{debBuildDir / "output"}:/output"
                     )
                     .SetImage("docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest")
-                    .SetCommand($"bash")
+                    .SetCommand("bash")
                     .SetArgs("/scripts/package.sh", runtimeId));
             }
 
@@ -539,8 +501,7 @@ class Build : NukeBuild
 
             var workingDirectory = BuildDirectory / "Octopus.Tentacle.CrossPlatformBundle";
             EnsureExistingDirectory(workingDirectory);
-            
-            
+
             var debAMD64PackageFilename = ConstructDebianPackageFilename("tentacle", "amd64");
             var debARM64PackageFilename = ConstructDebianPackageFilename("tentacle", "arm64");
             var debARM32PackageFilename = ConstructDebianPackageFilename("tentacle", "armhf");
@@ -587,6 +548,7 @@ class Build : NukeBuild
             OctoCliTool($"pack --id=Octopus.Tentacle.CrossPlatformBundle --version={OctoVersionInfo.FullSemVer} --basePath={workingDirectory} --outFolder={ArtifactsDirectory / "nuget"}");
         });
 
+    // ReSharper disable once UnusedMember.Local
     Target PackWindows => _ => _
         .Description("Packs all the Windows targets.")
         .DependsOn(BuildWindows)
@@ -594,6 +556,7 @@ class Build : NukeBuild
         .DependsOn(PackChocolateyPackage)
         .DependsOn(PackWindowsInstallers);
 
+    // ReSharper disable once UnusedMember.Local
     Target PackLinux => _ => _
         .Description("Packs all the Linux targets.")
         .DependsOn(BuildLinux)
@@ -601,6 +564,7 @@ class Build : NukeBuild
         .DependsOn(PackDebianPackage)
         .DependsOn(PackRedHatPackage);
 
+    // ReSharper disable once UnusedMember.Local
     // ReSharper disable once InconsistentNaming
     Target PackOSX => _ => _
         .Description("Packs all the OS/X targets.")
@@ -763,23 +727,67 @@ class Build : NukeBuild
             Logger.Warn($"{e.Message}: {e}");
         }
     }
-    
-    string DeriveGitBranch()
+
+    static string DeriveGitBranch()
     {
-        //TODO: Backup if var isn't set? Does this get set from the [OctoVersion] attribute?
         var branch = Environment.GetEnvironmentVariable("OCTOVERSION_CurrentBranch");
         if (string.IsNullOrEmpty(branch))
         {
-            Logger.Warn("Git branch not available from environment variable. Attempting to work it out for ourselves. DANGER: Don't rely on this on your build server!");
+            Logger.Error("Git branch not available from environment variable. This should be set via OctoVersion for local dev and defined in environment variable OCTOVERSION_CurrentBranch for build servers.");
+            const string message = "Git branch not available from environment variable";
             if (TeamCity.Instance != null)
             {
-                var message = "Git branch not available from environment variable";
                 Console.WriteLine($"##teamcity[message text='{message}' status='FAILURE']");
-                throw new NotSupportedException(message);
             }
+            throw new NotSupportedException(message);
         }
 
         return branch;
+    }
+    
+    //Modifies the VersionInfo.cs and Product.wxs files to embed version information into the shipped product.
+    void ModifyTemplatedVersionAndProductFilesWithValues(out Action versionInfoRestoreAction, out Action productWxsRestoreAction)
+    {
+        void UpdateMsiProductVersion(AbsolutePath productWxs)
+        {
+            var xmlDoc = new XmlDocument();
+            xmlDoc.Load(productWxs);
+
+            var namespaceManager = new XmlNamespaceManager(xmlDoc.NameTable);
+            namespaceManager.AddNamespace("wi", "http://schemas.microsoft.com/wix/2006/wi");
+
+            var product = xmlDoc.SelectSingleNode("//wi:Product", namespaceManager);
+
+            if (product == null) throw new Exception("Couldn't find Product Node in wxs file");
+            if (product.Attributes == null) throw new Exception("Couldn't find Version attribute in Product Node");
+
+            // ReSharper disable once PossibleNullReferenceException
+            product.Attributes["Version"]!.Value = OctoVersionInfo.MajorMinorPatch;
+
+            xmlDoc.Save(productWxs);
+        }
+
+        static void ReplaceRegexInFiles(AbsolutePath file, string matchingPattern, string replacement)
+        {
+            var fileText = File.ReadAllText(file);
+            fileText = Regex.Replace(fileText, matchingPattern, replacement);
+            File.WriteAllText(file, fileText);
+        }
+
+        var versionInfoFile = SourceDirectory / "Solution Items" / "VersionInfo.cs";
+        var productWxs = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
+
+        //TODO: Use this action
+        versionInfoRestoreAction = RestoreFileForCleanup(versionInfoFile);
+        productWxsRestoreAction = RestoreFileForCleanup(productWxs);
+
+        ReplaceRegexInFiles(versionInfoFile, "AssemblyVersion\\(\".*?\"\\)", $"AssemblyVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
+        ReplaceRegexInFiles(versionInfoFile, "AssemblyFileVersion\\(\".*?\"\\)", $"AssemblyFileVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
+        ReplaceRegexInFiles(versionInfoFile, "AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{OctoVersionInfo.FullSemVer}\")");
+        ReplaceRegexInFiles(versionInfoFile, "AssemblyGitBranch\\(\".*?\"\\)", $"AssemblyGitBranch(\"{DeriveGitBranch()}\")");
+        ReplaceRegexInFiles(versionInfoFile, "AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{OctoVersionInfo.FullSemVer}\")");
+
+        UpdateMsiProductVersion(productWxs);
     }
     
     void RunBuildFor(string framework, string runtimeId)
@@ -792,7 +800,7 @@ class Build : NukeBuild
             .SetConfiguration(configuration)
             .SetFramework(framework)
             .SetRuntime(runtimeId)
-            .SetNoRestore(true)
+            .EnableNoRestore()
             .SetVersion(OctoVersionInfo.FullSemVer));
     }
     
@@ -900,8 +908,8 @@ class Build : NukeBuild
     void TarGZipCompress(AbsolutePath inputDirectory, string fileSpec, AbsolutePath outputDirectory, string outputFile)
     {
         DockerTasks.DockerRun(settings => settings
-            .SetRm(true)
-            .SetTty(true)
+            .EnableRm()
+            .EnableTty()
             .SetVolume($"{inputDirectory}:/input", $"{outputDirectory}:/output")
             .SetCommand("debian")
             .SetArgs("tar", "-C", "/input", "-czvf", $"/output/{outputFile}", fileSpec, "--preserve-permissions"));

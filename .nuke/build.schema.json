@@ -105,8 +105,7 @@
               "TestLinux",
               "TestOSX",
               "TestWindows",
-              "TestWindowsInstallerPermissions",
-              "VersionAssemblies"
+              "TestWindowsInstallerPermissions"
             ]
           }
         },
@@ -144,8 +143,7 @@
               "TestLinux",
               "TestOSX",
               "TestWindows",
-              "TestWindowsInstallerPermissions",
-              "VersionAssemblies"
+              "TestWindowsInstallerPermissions"
             ]
           }
         },
