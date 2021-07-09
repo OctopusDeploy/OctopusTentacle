@@ -70,8 +70,7 @@ class Build : NukeBuild
     readonly AbsolutePath BuildDirectory = RootDirectory / "_build";
     readonly AbsolutePath LocalPackagesDirectory = RootDirectory / ".." / "LocalPackages";
     readonly AbsolutePath TestDirectory = RootDirectory / "_test";
-
-    //TODO: Consider if we want to make an array so it's easy to add new frameworks
+    
     const string NetFramework = "net452";
     const string NetCore = "netcoreapp3.1";
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
@@ -286,7 +285,7 @@ class Build : NukeBuild
             {
                 ReplaceTextInFiles(chocolateyInstallScriptPath, "0.0.0", OctoVersionInfo.FullSemVer);
                 ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum>", md5Checksum);
-                ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype>", "md5"); //TODO: Check this value is correct, used to be checksum.Algorithm.ToString() 
+                ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype>", "md5"); 
                 ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", md5ChecksumX64);
                 ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype64>", "md5");
             
@@ -796,7 +795,6 @@ class Build : NukeBuild
     {
         var configuration = $"Release-{framework}-{runtimeId}";
         
-        //TODO: How do we set MSBuildSettings.MaxCpuCount?
         DotNetPublish(p => p
             .SetProject(SourceDirectory / "Tentacle.sln")
             .SetConfiguration(configuration)
