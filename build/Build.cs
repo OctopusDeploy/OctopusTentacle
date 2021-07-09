@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -74,6 +75,22 @@ class Build : NukeBuild
     const string NetFramework = "net452";
     const string NetCore = "netcoreapp3.1";
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
+    readonly string[][] TestOnLinuxDistributions = new string[][] {
+        new [] { "netcoreapp3.1", "linux-x64", "debian:buster", "deb" },
+        new [] { "netcoreapp3.1", "linux-x64", "debian:oldoldstable-slim", "deb" },
+        new [] { "netcoreapp3.1", "linux-x64", "debian:oldstable-slim", "deb" },
+        new [] { "netcoreapp3.1", "linux-x64", "debian:stable-slim", "deb" },
+        new [] { "netcoreapp3.1", "linux-x64", "linuxmintd/mint19.3-amd64", "deb" },
+        new [] { "netcoreapp3.1", "linux-x64", "ubuntu:latest", "deb" },
+        new [] { "netcoreapp3.1", "linux-x64", "ubuntu:rolling", "deb" },
+        new [] { "netcoreapp3.1", "linux-x64", "ubuntu:trusty", "deb" },
+        new [] { "netcoreapp3.1", "linux-x64", "ubuntu:xenial", "deb" },
+        new [] { "netcoreapp3.1", "linux-x64", "centos:latest", "rpm" },
+        new [] { "netcoreapp3.1", "linux-x64", "centos:7", "rpm" },
+        new [] { "netcoreapp3.1", "linux-x64", "fedora:latest", "rpm" },
+        new [] { "netcoreapp3.1", "linux-x64", "roboxes/rhel7", "rpm" },
+        new [] { "netcoreapp3.1", "linux-x64", "roboxes/rhel8", "rpm" },
+    };
 
     // Keep this list in order by most likely to succeed
     readonly string[] SigningTimestampUrls = {
@@ -591,6 +608,67 @@ class Build : NukeBuild
         .DependsOn(BuildOSX)
         .Executes(RunTests);
 
+    Target TestLinuxPackages => _ => _
+        .Description("Tests installing the .deb and .rpm packages onto all of the Linux target distributions.")
+        .DependsOn(PackDebianPackage)
+        .DependsOn(PackRedHatPackage)
+        .Executes(() =>
+        {
+            void RunLinuxPackageTestsFor(IReadOnlyList<string> testConfiguration)
+            {
+                var framework = testConfiguration[0];
+                var runtimeId = testConfiguration[1];
+                var dockerImage = testConfiguration[2];
+                var packageType = testConfiguration[3];
+
+                InTest($"{framework}/{runtimeId}/{dockerImage}/{packageType}", () =>
+                {
+                    string? archSuffix = null;
+                    if (packageType == "deb")
+                    {
+                        if (runtimeId == "linux-x64") archSuffix = "_amd64";
+                    }
+                    else if (packageType == "rpm")
+                    {
+                        if (runtimeId == "linux-x64") archSuffix = ".x86_64";
+                    }
+                    if (string.IsNullOrEmpty(archSuffix)) throw new NotSupportedException();
+
+                    var searchForTestFileDirectory = ArtifactsDirectory / packageType;
+                    Logger.Info($"Searching for files in {searchForTestFileDirectory}");
+                    var packageFile = searchForTestFileDirectory.GlobFiles($"*{archSuffix}.{packageType}")
+                        .Single();
+                    Logger.Info($"Testing Linux package file {packageFile}");
+
+                    var testScriptsBindMountPoint = RootDirectory / "linux-packages" / "test-scripts";
+
+                    DockerTasks.DockerPull(settings => settings.SetName(dockerImage));
+                    DockerTasks.DockerRun(settings => settings
+                        .EnableRm()
+                        .EnableTty()
+                        .SetImage(dockerImage)
+                        .SetEnv(
+                            $"VERSION={OctoVersionInfo.FullSemVer}",
+                            "INPUT_PATH=/input",
+                            "OUTPUT_PATH=/output",
+                            "SIGN_PRIVATE_KEY",
+                            "SIGN_PASSPHRASE",
+                            "REDHAT_SUBSCRIPTION_USERNAME",
+                            "REDHAT_SUBSCRIPTION_PASSWORD",
+                            $"BUILD_NUMBER={OctoVersionInfo.FullSemVer}")
+                        .SetVolume(
+                            $"{testScriptsBindMountPoint}:/test-scripts:ro",
+                            $"{ArtifactsDirectory}:/artifacts:ro")
+                        .SetArgs("bash", "/test-scripts/test-linux-package.sh", $"/artifacts/{packageType}/{packageFile}"));
+                });
+            }
+            
+            foreach (var testConfiguration in TestOnLinuxDistributions)
+            {
+                RunLinuxPackageTestsFor(testConfiguration);
+            }
+        });
+
     // ReSharper disable once UnusedMember.Local
     Target TestWindowsInstallerPermissions => _ => _
         .DependsOn(PackWindowsInstallers)
@@ -939,6 +1017,28 @@ class Build : NukeBuild
             {
                 Logger.Info($"Finished {block}");
             }
+        }
+    }
+    
+    static void InTest(string test, Action action)
+    {
+        var startTime = DateTimeOffset.UtcNow;
+
+        try
+        {
+            if (TeamCity.Instance != null) Console.WriteLine($"##teamcity[testStarted name='{test}' captureStandardOutput='true']");
+            action();
+        }
+        catch (Exception ex)
+        {
+            if (TeamCity.Instance != null) Console.WriteLine($"##teamcity[testFailed name='{test}' message='{ex.Message}']");
+            Logger.Error(ex.ToString());
+        }
+        finally
+        {
+            var finishTime = DateTimeOffset.UtcNow;
+            var elapsed = finishTime - startTime;
+            if (TeamCity.Instance != null) Console.WriteLine($"##teamcity[testFinished name='{test}' duration='{elapsed.TotalMilliseconds}']");
         }
     }
     #endregion

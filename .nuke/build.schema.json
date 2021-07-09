@@ -103,6 +103,7 @@
               "PackWindowsZips",
               "Restore",
               "TestLinux",
+              "TestLinuxPackages",
               "TestOSX",
               "TestWindows",
               "TestWindowsInstallerPermissions"
@@ -141,6 +142,7 @@
               "PackWindowsZips",
               "Restore",
               "TestLinux",
+              "TestLinuxPackages",
               "TestOSX",
               "TestWindows",
               "TestWindowsInstallerPermissions"
