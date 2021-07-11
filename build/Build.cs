@@ -322,7 +322,7 @@ class Build : NukeBuild
 
     Target PackLinuxPackagesLegacy => _ => _
         .Description("Legacy task until we can split creation of .rpm and .deb packages into their own tasks")
-        //.DependsOn(PackLinuxTarballs) //Disabled until we have a solution for consuming artifacts from previous build steps without re-running the target
+        .DependsOn(PackLinuxTarballs)
         .Executes(() =>
         {
             void CreateLinuxPackages(string runtimeId)
