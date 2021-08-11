@@ -46,8 +46,8 @@
     <None Remove="Startup\PathsToDeleteOnStartup.core.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="4.3.31" />
     <PackageReference Include="Autofac" Version="4.6.2" />
+    <PackageReference Include="Halibut" Version="4.4.0" />
     <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />
