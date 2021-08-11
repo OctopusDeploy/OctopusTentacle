@@ -7,22 +7,21 @@ using Octopus.CoreUtilities.Extensions;
 
 namespace Octopus.Shared.Communications
 {
-    public interface IAutofacServiceSource
-    {
-        IEnumerable<Type> GetServices();
-    }
-    
+    /// <summary>
+    /// This IServiceFactory allows you to resolve service classes from Autofac.
+    /// However, before resolving, one or more IAutofacServiceSources must also be registered.
+    /// This is so that only explicitly specified services will be resolved, and the types of all messages are known when the service is instantiated.
+    /// </summary>
     public class AutofacServiceFactory : IServiceFactory, IDisposable
     {
         readonly ILifetimeScope scope;
-        readonly HashSet<Type> serviceTypes = new HashSet<Type>();
+        readonly Dictionary<string, Type> serviceTypes = new Dictionary<string, Type>();
 
         public AutofacServiceFactory(ILifetimeScope scope, IEnumerable<IAutofacServiceSource> sources)
         {
             this.scope = scope.BeginLifetimeScope(b =>
             {
-                // ReSharper disable once ConstantNullCoalescingCondition : if GetServices returns null, this will throw
-                foreach (var service in sources.SelectMany(x => x.GetServices() ?? new Type[] {}))
+                foreach (var service in sources.SelectMany(x => x.ServiceTypes ?? new Type[] {}))
                 {
                     BuildService(b, service);
                 }
@@ -35,13 +34,13 @@ namespace Octopus.Shared.Communications
             var interfaces = serviceType.GetInterfaces();
             if (serviceType.IsInterface || interfaces.IsNullOrEmpty())
             {
-                throw new Exception("Service type must be a class that implements an interface");
+                throw new InvalidServiceTypeException(serviceType);
             }
             
             foreach (var face in interfaces)
             {
-                reg = reg.Named(face.Name, typeof(object));
-                serviceTypes.Add(face);
+                serviceTypes[face.Name] = face;
+                reg.As(face);
             }
         }
 
@@ -49,8 +48,12 @@ namespace Octopus.Shared.Communications
         {
             try
             {
-                var service = scope.ResolveNamed<object>(serviceName);
-                return new Lease(service);
+                if (serviceTypes.TryGetValue(serviceName, out var serviceType))
+                {
+                    return new Lease(scope.Resolve(serviceType));
+                }
+                
+                throw new UnknownServiceNameException(serviceName);
             }
             catch (ObjectDisposedException)
             {
@@ -58,7 +61,7 @@ namespace Octopus.Shared.Communications
             }
         }
 
-        public IReadOnlyList<Type> RegisteredServiceTypes => serviceTypes.ToList();
+        public IReadOnlyList<Type> RegisteredServiceTypes => serviceTypes.Values.ToList();
 
         class Lease : IServiceLease
         {
@@ -71,8 +74,7 @@ namespace Octopus.Shared.Communications
 
             public void Dispose()
             {
-                var disposable = Service as IDisposable;
-                if (disposable != null)
+                if (Service is IDisposable disposable)
                     disposable.Dispose();
             }
         }

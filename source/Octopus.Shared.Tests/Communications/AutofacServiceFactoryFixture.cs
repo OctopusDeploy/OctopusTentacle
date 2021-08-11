@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using Autofac.Core;
@@ -12,8 +11,15 @@ namespace Octopus.Shared.Tests.Communications
 {
     public class AutofacServiceFactoryFixture
     {
+        readonly IAutofacServiceSource simpleSource = new KnownServiceSource(typeof(SimpleService));
+        readonly IAutofacServiceSource pieSource = new KnownServiceSource(typeof(PieService));
+        readonly IAutofacServiceSource emptySource = new KnownServiceSource(new Type[] {});
+        readonly IAutofacServiceSource nullSource = new KnownServiceSource();
+        readonly IAutofacServiceSource invalidInterfaceSource = new KnownServiceSource(typeof(ISimpleService));
+        readonly IAutofacServiceSource invalidClassSource = new KnownServiceSource(typeof(PlainClass));
+        
         [Test]
-        public void NoSources_WorksAsExpected()
+        public void Resolved_WithNoSources_WorksAsExpected()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
@@ -25,11 +31,11 @@ namespace Octopus.Shared.Tests.Communications
         }
         
         [Test]
-        public void SingleServiceSource_RegistersCorrectNamedTypes()
+        public void Resolved_WithSingleSource_CanCreateServices()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterType<SimpleServiceSource>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
             
             var container = builder.Build();
             
@@ -43,12 +49,12 @@ namespace Octopus.Shared.Tests.Communications
         }
 
         [Test]
-        public void MultipleServiceSources_RegisterCorrectTypes()
+        public void Resolved_WithMultipleSources_CanCreateServices()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterType<SimpleServiceSource>().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterType<PieServiceSource>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(simpleSource).AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(pieSource).AsImplementedInterfaces();
             
             var container = builder.Build();
             
@@ -68,11 +74,11 @@ namespace Octopus.Shared.Tests.Communications
         }
 
         [Test]
-        public void Source_ReturningNull_DoesNotThrow()
+        public void Resolved_WithNullSource_DoesNotThrow()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterType<NullServiceSource>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(nullSource).AsImplementedInterfaces();
             var container = builder.Build();
             
             var factory = container.Resolve<IServiceFactory>();
@@ -80,11 +86,11 @@ namespace Octopus.Shared.Tests.Communications
         }
         
         [Test]
-        public void Source_ReturningEmpty_DoesNotThrow()
+        public void Resolved_WithEmptySource_DoesNotThrow()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterType<EmptyServiceSource>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(emptySource).AsImplementedInterfaces();
             var container = builder.Build();
             
             var factory = container.Resolve<IServiceFactory>();
@@ -92,22 +98,77 @@ namespace Octopus.Shared.Tests.Communications
         }
         
         [Test]
-        public void InvalidSource_ThrowsExpectedException()
+        public void Resolved_WithInvalidInterfaceSource_ThrowsExpectedException()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterType<InvalidServiceSource>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(invalidInterfaceSource).AsImplementedInterfaces().SingleInstance();
             var container = builder.Build();
 
-            Assert.Throws<DependencyResolutionException>(() => container.Resolve<IServiceFactory>());
+            try
+            {
+                container.Resolve<IServiceFactory>();
+            }
+            catch (Exception ex)
+            {
+                ex.Should().BeOfType<DependencyResolutionException>();
+                var baseEx = ex.GetBaseException();
+                baseEx.Should().BeOfType<InvalidServiceTypeException>();
+                (baseEx as InvalidServiceTypeException)?.InvalidType.Name.Should().Be(nameof(ISimpleService));
+            }
         }
         
-        public interface IPieService
+        [Test]
+        public void Resolved_WithInvalidClassSource_ThrowsExpectedException()
+        {
+            var builder = new ContainerBuilder();
+            builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(invalidClassSource).AsImplementedInterfaces().SingleInstance();
+            var container = builder.Build();
+
+            try
+            {
+                container.Resolve<IServiceFactory>();
+            }
+            catch (Exception ex)
+            {
+                ex.Should().BeOfType<DependencyResolutionException>();
+                var baseEx = ex.GetBaseException();
+                baseEx.Should().BeOfType<InvalidServiceTypeException>();
+                (baseEx as InvalidServiceTypeException)?.InvalidType.Name.Should().Be(nameof(PlainClass));
+            }
+        }
+                
+        [Test]
+        public void CreateService_WithMissingService_ThrowsExpectedException()
+        {
+            var builder = new ContainerBuilder();
+            builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
+            
+            var container = builder.Build();
+            
+            var factory = container.Resolve<IServiceFactory>();
+            factory.RegisteredServiceTypes.Count.Should().Be(1);
+
+            const string missingService = "IAmNotHere";
+            try
+            {
+                var _ = factory.CreateService(missingService);
+            }
+            catch (Exception ex)
+            {
+                ex.Should().BeOfType<UnknownServiceNameException>();
+                (ex as UnknownServiceNameException)?.ServiceName.Should().Be(missingService);
+            }
+        }
+        
+        interface IPieService
         {
             float GetPie();
         }
 
-        public class PieService : IPieService
+        class PieService : IPieService
         {
             public float GetPie()
             {
@@ -115,20 +176,12 @@ namespace Octopus.Shared.Tests.Communications
             }
         }
         
-        public class PieServiceSource : IAutofacServiceSource
-        {
-            public IEnumerable<Type> GetServices()
-            {
-                yield return typeof(PieService);
-            }
-        }
-        
-        public interface ISimpleService
+        interface ISimpleService
         {
             string Greet(string name);
         }
 
-        public class SimpleService : ISimpleService
+        class SimpleService : ISimpleService
         {
             public string Greet(string name)
             {
@@ -136,35 +189,13 @@ namespace Octopus.Shared.Tests.Communications
             }
         }
 
-        public class SimpleServiceSource : IAutofacServiceSource
+        // No interface, this will not be register-able
+        class PlainClass
         {
-            public IEnumerable<Type> GetServices()
+            // ReSharper disable once UnusedMember.Local
+            public string Greet(string name)
             {
-                yield return typeof(SimpleService);
-            }
-        }
-        
-        public class NullServiceSource : IAutofacServiceSource
-        {
-            public IEnumerable<Type> GetServices()
-            {
-                return null;
-            }
-        }
-        
-        public class EmptyServiceSource : IAutofacServiceSource
-        {
-            public IEnumerable<Type> GetServices()
-            {
-                return new Type[] {};
-            }
-        }
-        
-        public class InvalidServiceSource  : IAutofacServiceSource
-        {
-            public IEnumerable<Type> GetServices()
-            {
-                yield return typeof(ISimpleService);
+                return $"Hello {name}!";
             }
         }
     }
