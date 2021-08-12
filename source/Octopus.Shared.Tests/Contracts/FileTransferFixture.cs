@@ -43,7 +43,7 @@ namespace Octopus.Shared.Tests.Contracts
         readonly IAutofacServiceSource serviceSource = new KnownServiceSource(typeof(DummyFileTransferService));
         
         [Test]
-        public void IScriptService_CanBeRegistered()
+        public void IFileTransferService_CanBeRegistered()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();

@@ -30,7 +30,7 @@ namespace Octopus.Shared.Communications
 
         void BuildService(ContainerBuilder builder, Type serviceType)
         {
-            var reg = builder.RegisterType(serviceType).SingleInstance();
+            var registrationBuilder = builder.RegisterType(serviceType).SingleInstance();
             var interfaces = serviceType.GetInterfaces();
             if (serviceType.IsInterface || interfaces.IsNullOrEmpty())
             {
@@ -40,7 +40,7 @@ namespace Octopus.Shared.Communications
             foreach (var face in interfaces)
             {
                 serviceTypes[face.Name] = face;
-                reg.As(face);
+                registrationBuilder.As(face);
             }
         }
 
