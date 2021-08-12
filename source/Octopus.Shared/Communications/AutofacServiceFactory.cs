@@ -4,6 +4,7 @@ using System.Linq;
 using Autofac;
 using Halibut.ServiceModel;
 using Octopus.CoreUtilities.Extensions;
+using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Communications
 {
@@ -21,7 +22,7 @@ namespace Octopus.Shared.Communications
         {
             this.scope = scope.BeginLifetimeScope(b =>
             {
-                foreach (var service in sources.SelectMany(x => x.ServiceTypes ?? new Type[] {}))
+                foreach (var service in sources.SelectMany(x => x.ServiceTypes.EmptyIfNull()))
                 {
                     BuildService(b, service);
                 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+// ReSharper disable once RedundantUsingDirective : Used in .CORE
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -72,6 +73,11 @@ namespace Octopus.Shared.Util
                     return default;
                 return result;
             }
+        }
+
+        public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source)
+        {
+            return source ?? new List<T>();
         }
     }
 }
