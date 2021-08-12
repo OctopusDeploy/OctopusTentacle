@@ -53,7 +53,7 @@ namespace Octopus.Shared.Tests.Communications
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterInstance(simpleSource).AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
             builder.RegisterInstance(pieSource).AsImplementedInterfaces();
             
             var container = builder.Build();
@@ -102,7 +102,7 @@ namespace Octopus.Shared.Tests.Communications
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterInstance(invalidInterfaceSource).AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(invalidInterfaceSource).AsImplementedInterfaces();
             var container = builder.Build();
 
             try
@@ -123,7 +123,7 @@ namespace Octopus.Shared.Tests.Communications
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterInstance(invalidClassSource).AsImplementedInterfaces().SingleInstance();
+            builder.RegisterInstance(invalidClassSource).AsImplementedInterfaces();
             var container = builder.Build();
 
             try
