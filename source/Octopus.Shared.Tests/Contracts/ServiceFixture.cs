@@ -10,7 +10,7 @@ namespace Octopus.Shared.Tests.Contracts
     public class ServiceFixture
     {
         [Test]
-        public void IScriptService_CanCreateClient()
+        public void IScriptService_HasValidTypes()
         {
             // Constructing binder verifies that the interface does not have any disallowed types
             var binder = new RegisteredSerializationBinder(new[] { typeof(IScriptService) });
