@@ -138,7 +138,7 @@ set +ex
 
 echo "Signing .rpm package."
 set -ex
-rpmsign --addsign "$PACKAGE_NAME.rpm"
+rpmsign --addsign *.rpm
 set +ex
 
   # "$INPUT_PATH/=$INSTALL_PATH/" \
