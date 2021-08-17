@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Autofac;
 using Halibut;
 using Halibut.ServiceModel;
-using Octopus.Shared.Communications;
 using Octopus.Shared.Configuration;
 using Octopus.Tentacle.Configuration;
 
