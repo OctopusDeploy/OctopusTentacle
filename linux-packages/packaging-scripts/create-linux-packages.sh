@@ -67,8 +67,6 @@ if [[ -d tmp_usr_bin ]]; then
 fi
 
 # Create executable symlink to include in package
-# Remove the build-id from the executable, to prevent collisions
-strip --remove-section=.note.gnu.build-id $INPUT_PATH/$COMMAND_FILE
 mkdir tmp_usr_bin && ln -s "$INSTALL_PATH/$COMMAND_FILE" tmp_usr_bin/ || exit
 
 # Make sure the command has execute permissions
