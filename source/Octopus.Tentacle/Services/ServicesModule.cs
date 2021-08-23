@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using Autofac;
 using Octopus.Shared.Packages;
 using Octopus.Shared.Scripts;
+using Octopus.Tentacle.Communications;
 
 namespace Octopus.Tentacle.Services
 {
@@ -15,11 +17,10 @@ namespace Octopus.Tentacle.Services
 
             builder.RegisterType<NuGetPackageInstaller>().As<IPackageInstaller>();
 
-            // Find anything with the [Service] attribute
-            builder.RegisterAssemblyTypes(ThisAssembly)
-                .Where(t => t.GetCustomAttributes(typeof (ServiceAttribute), true).Length > 0)
-                .Named(t => "I" + t.Name, typeof (object))
-                .SingleInstance();
+            // Register our Halibut services
+            var serviceTypes = ThisAssembly.GetTypes().Where(t => t.GetCustomAttributes(typeof(ServiceAttribute), true).Length > 0).ToArray();
+            var assemblyServices = new KnownServiceSource(serviceTypes);
+            builder.RegisterInstance(assemblyServices).AsImplementedInterfaces();
         }
     }
 }

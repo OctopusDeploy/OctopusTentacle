@@ -88,9 +88,9 @@ namespace Octopus.Tentacle.Communications
                     log.WarnFormat("Configured to connect to server {0}, but its configuration is incomplete; skipping.", pollingEndPoint);
                     continue;
                 }
-                if (pollingEndPoint.SubscriptionId == null)
+
 #pragma warning disable 618
-                    pollingEndPoint.SubscriptionId = "poll://" + configuration.TentacleSquid.ToLowerInvariant() + "/";
+                pollingEndPoint.SubscriptionId ??= "poll://" + configuration.TentacleSquid.ToLowerInvariant() + "/";
 #pragma warning restore 618
 
                 log.Info($"Agent will poll Octopus Server at {pollingEndPoint.Address} for subscription {pollingEndPoint.SubscriptionId} expecting thumbprint {pollingEndPoint.Thumbprint}");
