@@ -56,11 +56,11 @@ partial class Build : NukeBuild
 
     [Parameter] public static string AzureKeyVaultUrl = "";
     [Parameter] public static string AzureKeyVaultAppId = "";
-    [Secret] public static string AzureKeyVaultAppSecret = "";
+    [Secret] [Parameter] public static string AzureKeyVaultAppSecret = "";
     [Parameter] public static string AzureKeyVaultCertificateName = "";
     
     [Parameter(Name = "signing_certificate_path")] public static string SigningCertificatePath = RootDirectory / "certificates" / "OctopusDevelopment.pfx";
-    [Parameter(Name = "signing_certificate_password")] public static string SigningCertificatePassword = "Password01!";
+    [Secret] [Parameter(Name = "signing_certificate_password")] public static string SigningCertificatePassword = "Password01!";
 
     readonly AbsolutePath SourceDirectory = RootDirectory / "source";
     readonly AbsolutePath ArtifactsDirectory = RootDirectory / "_artifacts";
