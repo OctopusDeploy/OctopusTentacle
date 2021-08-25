@@ -1,0 +1,99 @@
+﻿// ReSharper disable RedundantUsingDirective
+using System;
+using System.IO;
+using System.Linq;
+using Nuke.Common;
+using Nuke.Common.IO;
+using Nuke.Common.Tooling;
+using Nuke.Common.Tools.SignTool;
+
+public static class Signing
+{
+    // Keep this list in order by most likely to succeed
+    static readonly string[] SigningTimestampUrls = {
+        "http://timestamp.digicert.com?alg=sha256",
+        "http://timestamp.comodoca.com"
+    };
+
+    public static void Sign(params AbsolutePath[] files)
+    {
+        Logging.InBlock("Signing and timestamping...", () =>
+        {
+            foreach (var file in files)
+            {
+                if (!FileSystemTasks.FileExists(file)) throw new Exception($"File {file} does not exist");
+                var fileInfo = new FileInfo(file);
+
+                if (fileInfo.IsReadOnly)
+                {
+                    Logger.Info($"{file} is readonly. Making it writeable.");
+                    fileInfo.IsReadOnly = false;
+                }
+            }
+
+            if (string.IsNullOrEmpty(Build.AzureKeyVaultUrl)
+                && string.IsNullOrEmpty(Build.AzureKeyVaultAppId)
+                && string.IsNullOrEmpty(Build.AzureKeyVaultAppSecret)
+                && string.IsNullOrEmpty(Build.AzureKeyVaultCertificateName))
+            { 
+                Logger.Info("Signing files using signtool and the self-signed development code signing certificate.");
+                SignWithSignTool(files);
+            }
+            else
+            {
+                Logger.Info("Signing files using azuresigntool and the production code signing certificate.");
+                SignWithAzureSignTool(files);
+            }
+        });
+    }
+
+    static void SignWithSignTool(AbsolutePath[] files)
+    {
+        var lastException = default(Exception);
+        foreach (var timestampUrl in SigningTimestampUrls)
+        {
+            Logging.InBlock($"Trying to time stamp using {timestampUrl}", () =>
+            {
+                try
+                {
+                    SignToolTasks.SignTool(settings => settings
+                        .SetFile(Build.SigningCertificatePath)
+                        .SetPassword(Build.SigningCertificatePassword)
+                        .SetFileDigestAlgorithm("sha256")
+                        .SetRfc3161TimestampServerUrl(timestampUrl)
+                        .SetProcessToolPath(NukeBuild.RootDirectory / "signtool.exe")
+                        .SetDescription("Octopus Tentacle Agent")
+                        .SetUrl("https://octopus.com")
+                        .SetFiles(files.Select(x => x.ToString())));
+                }
+                catch (Exception e)
+                {
+                    lastException = e;
+                }
+            });
+            
+            if (lastException == null) return;
+        }
+
+        if (lastException != null) throw lastException;
+    }
+    
+    static void SignWithAzureSignTool(AbsolutePath[] files)
+    {
+        var arguments = "sign " +
+            $"--azure-key-vault-url \"{Build.AzureKeyVaultUrl}\" " +
+            $"--azure-key-vault-client-id \"{Build.AzureKeyVaultAppId}\" " +
+            $"--azure-key-vault-client-secret \"{Build.AzureKeyVaultAppSecret}\" " +
+            $"--azure-key-vault-certificate \"{Build.AzureKeyVaultCertificateName}\" " +
+            "--file-digest sha256 ";
+
+        foreach (var file in files)
+        {
+            arguments += $"\"{file}\" ";
+        }
+        
+        Build.AzureSignTool(arguments);
+        
+        Logger.Info($"Finished signing {files.Length} files.");
+    }
+}
