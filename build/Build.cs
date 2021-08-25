@@ -31,7 +31,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 [ShutdownDotNetAfterServerBuild]
 partial class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.Default);
+    public static int Main () => Execute<Build>(x => x.BuildWindows);
 
     [Solution] readonly Solution Solution = null!;
     [NukeOctoVersion] readonly OctoVersionInfo OctoVersionInfo = null!;
@@ -113,7 +113,7 @@ partial class Build : NukeBuild
             ModifyTemplatedVersionAndProductFilesWithValues(out var versionInfoRestoreAction, out var productWxsRestoreAction);
 
             RuntimeIds.Where(x => x.StartsWith("win"))
-                .ForEach(runtimeId => RunBuildFor(runtimeId.StartsWith("win") ? NetFramework : NetCore, runtimeId));
+                .ForEach(runtimeId => RunBuildFor(runtimeId.Equals("win") ? NetFramework : NetCore, runtimeId));
 
             versionInfoRestoreAction.Invoke();
             productWxsRestoreAction.Invoke();
