@@ -42,7 +42,7 @@ partial class Build : NukeBuild
     [PackageExecutable(
         packageId: "azuresigntool",
         packageExecutable: "azuresigntool.dll")]
-    public static readonly Tool AzureSignTool = null!;
+    public static Tool AzureSignTool = null!;
     
     [PackageExecutable(
         packageId: "wix",

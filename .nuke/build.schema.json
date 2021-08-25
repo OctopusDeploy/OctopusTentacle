@@ -9,9 +9,6 @@
         "AzureKeyVaultAppId": {
           "type": "string"
         },
-        "AzureKeyVaultAppSecret": {
-          "type": "string"
-        },
         "AzureKeyVaultCertificateName": {
           "type": "string"
         },
@@ -83,7 +80,7 @@
             "enum": [
               "BuildAll",
               "BuildLinux",
-              "BuildOSX",
+              "BuildOsx",
               "BuildWindows",
               "Clean",
               "CopyToLocalPackages",
@@ -95,8 +92,8 @@
               "PackLinux",
               "PackLinuxPackagesLegacy",
               "PackLinuxTarballs",
-              "PackOSX",
-              "PackOSXTarballs",
+              "PackOsx",
+              "PackOsxTarballs",
               "PackRedHatPackage",
               "PackWindows",
               "PackWindowsInstallers",
@@ -104,7 +101,7 @@
               "Restore",
               "TestLinux",
               "TestLinuxPackages",
-              "TestOSX",
+              "TestOsx",
               "TestWindows",
               "TestWindowsInstallerPermissions"
             ]
@@ -122,7 +119,7 @@
             "enum": [
               "BuildAll",
               "BuildLinux",
-              "BuildOSX",
+              "BuildOsx",
               "BuildWindows",
               "Clean",
               "CopyToLocalPackages",
@@ -134,8 +131,8 @@
               "PackLinux",
               "PackLinuxPackagesLegacy",
               "PackLinuxTarballs",
-              "PackOSX",
-              "PackOSXTarballs",
+              "PackOsx",
+              "PackOsxTarballs",
               "PackRedHatPackage",
               "PackWindows",
               "PackWindowsInstallers",
@@ -143,7 +140,7 @@
               "Restore",
               "TestLinux",
               "TestLinuxPackages",
-              "TestOSX",
+              "TestOsx",
               "TestWindows",
               "TestWindowsInstallerPermissions"
             ]
