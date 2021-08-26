@@ -69,12 +69,14 @@ partial class Build
             {
                 CreateLinuxPackages(runtimeId);
 
+                var debOutputDirectory = BuildDirectory / "deb" / runtimeId / "output";
+                
                 FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "deb");
-                (BuildDirectory / "deb" / runtimeId / "output").GlobFiles("*.deb")
+                debOutputDirectory.GlobFiles("*.deb")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, ArtifactsDirectory / "deb"));
 
                 FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "rpm");
-                (BuildDirectory / "deb" / runtimeId / "output").GlobFiles("*.rpm")
+                debOutputDirectory.GlobFiles("*.rpm")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, ArtifactsDirectory / "rpm"));
             }
         });
@@ -82,6 +84,11 @@ partial class Build
     [PublicAPI]
     Target PackDebianPackage => _ => _
         .Description("TODO: Move .deb creation into this task")
+        .DependsOn(PackLinuxPackagesLegacy);
+    
+    [PublicAPI]
+    Target PackRedHatPackage => _ => _
+        .Description("TODO: Move .rpm creation into this task")
         .DependsOn(PackLinuxPackagesLegacy);
     
     [PublicAPI]
@@ -119,11 +126,6 @@ partial class Build
                 restoreChocolateyInstallScriptAction.Invoke();
             }
         });
-
-    [PublicAPI]
-    Target PackRedHatPackage => _ => _
-        .Description("TODO: Move .rpm creation into this task")
-        .DependsOn(PackLinuxPackagesLegacy);
 
     [PublicAPI]
     Target PackWindowsInstallers => _ => _
@@ -226,10 +228,6 @@ partial class Build
     [PublicAPI]
     Target PackCrossPlatformBundle => _ => _
         .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
-        // Disabling these dependencies right now until we understand how we can consume artifacts from previous build steps without having to re-run this target
-        // .DependsOn(PackWindows)
-        // .DependsOn(PackLinux)
-        // .DependsOn(PackOSX)
         .Executes(() =>
         {
             string ConstructDebianPackageFilename(string packageName, string architecture) => $"{packageName}_{OctoVersionInfo.FullSemVer}_{architecture}.deb";
@@ -354,6 +352,14 @@ partial class Build
         {
             RuntimeIds.Where(x => x.StartsWith("osx-")).ForEach(PackTarballs);
         });
+    
+    [PublicAPI]
+    Target PackLinux => _ => _
+        .Description("Packs all the Linux targets.")
+        .DependsOn(BuildLinux)
+        .DependsOn(PackLinuxTarballs)
+        .DependsOn(PackDebianPackage)
+        .DependsOn(PackRedHatPackage);
 
     void PackTarballs(string runtimeId)
     {
@@ -376,12 +382,4 @@ partial class Build
             ArtifactsDirectory / "zip",
             $"tentacle-{OctoVersionInfo.FullSemVer}-{NetCore}-{runtimeId}.tar.gz");
     }
-
-    [PublicAPI]
-    Target PackLinux => _ => _
-        .Description("Packs all the Linux targets.")
-        .DependsOn(BuildLinux)
-        .DependsOn(PackLinuxTarballs)
-        .DependsOn(PackDebianPackage)
-        .DependsOn(PackRedHatPackage);
 }

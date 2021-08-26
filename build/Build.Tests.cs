@@ -50,8 +50,6 @@ partial class Build
     [PublicAPI]
     Target TestLinuxPackages => _ => _
         .Description("Tests installing the .deb and .rpm packages onto all of the Linux target distributions.")
-        .DependsOn(PackDebianPackage)
-        .DependsOn(PackRedHatPackage)
         .Executes(() =>
         {
             void RunLinuxPackageTestsFor(TestConfigurationOnLinuxDistribution testConfiguration)
