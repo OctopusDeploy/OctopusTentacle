@@ -106,25 +106,18 @@ partial class Build
             Logger.Info($"Checksum: Octopus.Tentacle-x64.msi = {md5ChecksumX64}");
 
             var chocolateyInstallScriptPath = SourceDirectory / "Chocolatey" / "chocolateyInstall.ps1";
-            var restoreChocolateyInstallScriptAction = RestoreFileForCleanup(chocolateyInstallScriptPath);
+            using var chocolateyInstallScriptFile = new ModifiedFile(chocolateyInstallScriptPath);
+            
+            chocolateyInstallScriptFile.ReplaceRegexInFiles("0.0.0", OctoVersionInfo.FullSemVer);
+            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum>", md5Checksum);
+            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype>", "md5");
+            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum64>", md5ChecksumX64);
+            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype64>", "md5");
 
-            try
-            {
-                ReplaceTextInFiles(chocolateyInstallScriptPath, "0.0.0", OctoVersionInfo.FullSemVer);
-                ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum>", md5Checksum);
-                ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype>", "md5");
-                ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksum64>", md5ChecksumX64);
-                ReplaceTextInFiles(chocolateyInstallScriptPath, "<checksumtype64>", "md5");
-
-                ChocolateyTasks.ChocolateyPack(settings => settings
-                    .SetPathToNuspec(SourceDirectory / "Chocolatey" / "OctopusDeploy.Tentacle.nuspec")
-                    .SetVersion(OctoVersionInfo.NuGetVersion)
-                    .SetOutputDirectory(ArtifactsDirectory / "chocolatey"));
-            }
-            finally
-            {
-                restoreChocolateyInstallScriptAction.Invoke();
-            }
+            ChocolateyTasks.ChocolateyPack(settings => settings
+                .SetPathToNuspec(SourceDirectory / "Chocolatey" / "OctopusDeploy.Tentacle.nuspec")
+                .SetVersion(OctoVersionInfo.NuGetVersion)
+                .SetOutputDirectory(ArtifactsDirectory / "chocolatey"));
         });
 
     [PublicAPI]
@@ -145,18 +138,10 @@ partial class Build
                 FileSystemTasks.CopyFileToDirectory(RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1", installerDirectory, FileExistsPolicy.Overwrite);
 
                 var harvestFile = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Tentacle.Generated.wxs";
-                var restoreHarvestFileAction = RestoreFileForCleanup(harvestFile);
+                using var restoreHarvestFileAction = new ModifiedFile(harvestFile);
 
-                try
-                {
-                    GenerateMsiInstallerContents(installerDirectory, harvestFile);
-                    BuildMsiInstallerForPlatform(platform, wixNugetPackagePath);
-                }
-                finally
-                {
-                    //cleanup harvest file
-                    restoreHarvestFileAction.Invoke();
-                }
+                GenerateMsiInstallerContents(installerDirectory, harvestFile);
+                BuildMsiInstallerForPlatform(platform, wixNugetPackagePath);
             }
             
             void GenerateMsiInstallerContents(AbsolutePath installerDirectory, AbsolutePath harvestFile)
@@ -186,26 +171,20 @@ partial class Build
                 Logging.InBlock($"Building {platform} installer", () =>
                 {
                     var tentacleInstallerWixProject = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Octopus.Tentacle.Installer.wixproj";
-                    var restoreWiXProjectAction = RestoreFileForCleanup(tentacleInstallerWixProject);
-                    try
-                    {
-                        ReplaceTextInFiles(tentacleInstallerWixProject, "{WixToolPath}", wixNugetPackagePath / "tools");
-                        ReplaceTextInFiles(tentacleInstallerWixProject, "{WixTargetsPath}", wixNugetPackagePath / "tools" / "Wix.targets");
-                        ReplaceTextInFiles(tentacleInstallerWixProject, "{WixTasksPath}", wixNugetPackagePath / "tools" / "wixtasks.dll");
-                        
-                        MSBuildTasks.MSBuild(settings => settings
-                            .SetConfiguration("Release")
-                            .SetProperty("AllowUpgrade", "True")
-                            .SetVerbosity(MSBuildVerbosity.Normal) //TODO: Set verbosity from command line argument
-                            .SetTargets("build")
-                            .SetTargetPlatform(platform)
-                            .SetTargetPath(RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Octopus.Tentacle.Installer.wixproj"));
-                    }
-                    finally
-                    {
-                        restoreWiXProjectAction.Invoke();
-                    }
+                    using var restoreWiXProjectAction = new ModifiedFile(tentacleInstallerWixProject);
                     
+                    restoreWiXProjectAction.ReplaceTextInFile("{WixToolPath}", wixNugetPackagePath / "tools");
+                    restoreWiXProjectAction.ReplaceTextInFile("{WixTargetsPath}", wixNugetPackagePath / "tools" / "Wix.targets");
+                    restoreWiXProjectAction.ReplaceTextInFile("{WixTasksPath}", wixNugetPackagePath / "tools" / "wixtasks.dll");
+                        
+                    MSBuildTasks.MSBuild(settings => settings
+                        .SetConfiguration("Release")
+                        .SetProperty("AllowUpgrade", "True")
+                        .SetVerbosity(MSBuildVerbosity.Normal) //TODO: Set verbosity from command line argument
+                        .SetTargets("build")
+                        .SetTargetPlatform(platform)
+                        .SetTargetPath(RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Octopus.Tentacle.Installer.wixproj"));
+
                     var builtMsi = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "bin" / platform / "Octopus.Tentacle.msi";
                     Signing.Sign(builtMsi);
                     
@@ -299,7 +278,7 @@ partial class Build
 
     [PublicAPI]
     Target PackOsx => _ => _
-        .Description("Packs all the OS/X targets.")
+        .Description("Packs all the OSX targets.")
         .DependsOn(BuildOsx)
         .DependsOn(PackOsxTarballs);
 

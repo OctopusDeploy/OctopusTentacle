@@ -31,7 +31,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 [ShutdownDotNetAfterServerBuild]
 partial class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.BuildWindows);
+    public static int Main () => Execute<Build>(x => x.Default);
 
     [Solution] readonly Solution Solution = null!;
     [NukeOctoVersion] readonly OctoVersionInfo OctoVersionInfo = null!;
@@ -110,14 +110,14 @@ partial class Build : NukeBuild
                 }
             }
             
-            ModifyTemplatedVersionAndProductFilesWithValues(out var versionInfoRestoreAction, out var productWxsRestoreAction);
+            var (versionInfoFile, productWxsFile) = ModifyTemplatedVersionAndProductFilesWithValues();
 
             RuntimeIds.Where(x => x.StartsWith("win"))
                 .ForEach(runtimeId => RunBuildFor(runtimeId.Equals("win") ? NetFramework : NetCore, runtimeId));
-
-            versionInfoRestoreAction.Invoke();
-            productWxsRestoreAction.Invoke();
             
+            versionInfoFile.Dispose();
+            productWxsFile.Dispose();
+
             // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
             // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
             // Decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
@@ -136,13 +136,13 @@ partial class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            ModifyTemplatedVersionAndProductFilesWithValues(out var versionInfoRestoreAction, out var productWxsRestoreAction);
+            var (versionInfoFile, productWxsFile) = ModifyTemplatedVersionAndProductFilesWithValues();
 
             RuntimeIds.Where(x => x.StartsWith("linux-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
             
-            versionInfoRestoreAction.Invoke();
-            productWxsRestoreAction.Invoke();
+            versionInfoFile.Dispose();
+            productWxsFile.Dispose();
         });
 
     [PublicAPI]
@@ -150,13 +150,13 @@ partial class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            ModifyTemplatedVersionAndProductFilesWithValues(out var versionInfoRestoreAction, out var productWxsRestoreAction);
+            var (versionInfoFile, productWxsFile) = ModifyTemplatedVersionAndProductFilesWithValues();
 
             RuntimeIds.Where(x => x.StartsWith("osx-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
-
-            versionInfoRestoreAction.Invoke();
-            productWxsRestoreAction.Invoke();
+            
+            versionInfoFile.Dispose();
+            productWxsFile.Dispose();
         });
     
     [PublicAPI]
@@ -215,7 +215,7 @@ partial class Build : NukeBuild
     }
 
     //Modifies the VersionInfo.cs and Product.wxs files to embed version information into the shipped product.
-    void ModifyTemplatedVersionAndProductFilesWithValues(out Action versionInfoRestoreAction, out Action productWxsRestoreAction)
+    (ModifiedFile versionInfoFile, ModifiedFile productWxsFile) ModifyTemplatedVersionAndProductFilesWithValues()
     {
         void UpdateMsiProductVersion(AbsolutePath productWxs)
         {
@@ -236,27 +236,21 @@ partial class Build : NukeBuild
             xmlDoc.Save(productWxs);
         }
 
-        static void ReplaceRegexInFiles(AbsolutePath file, string matchingPattern, string replacement)
-        {
-            var fileText = File.ReadAllText(file);
-            fileText = Regex.Replace(fileText, matchingPattern, replacement);
-            File.WriteAllText(file, fileText);
-        }
+        var versionInfoFilePath = SourceDirectory / "Solution Items" / "VersionInfo.cs";
+        var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
+        
+        var versionInfoFile = new ModifiedFile(versionInfoFilePath);
+        var productWxsFile = new ModifiedFile(productWxsFilePath);
 
-        var versionInfoFile = SourceDirectory / "Solution Items" / "VersionInfo.cs";
-        var productWxs = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
+        versionInfoFile.ReplaceRegexInFiles("AssemblyVersion\\(\".*?\"\\)", $"AssemblyVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
+        versionInfoFile.ReplaceRegexInFiles("AssemblyFileVersion\\(\".*?\"\\)", $"AssemblyFileVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
+        versionInfoFile.ReplaceRegexInFiles("AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{OctoVersionInfo.FullSemVer}\")");
+        versionInfoFile.ReplaceRegexInFiles("AssemblyGitBranch\\(\".*?\"\\)", $"AssemblyGitBranch(\"{Git.DeriveGitBranch()}\")");
+        versionInfoFile.ReplaceRegexInFiles("AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{OctoVersionInfo.FullSemVer}\")");    
+        
+        UpdateMsiProductVersion(productWxsFilePath);
 
-        //TODO: Use this action
-        versionInfoRestoreAction = RestoreFileForCleanup(versionInfoFile);
-        productWxsRestoreAction = RestoreFileForCleanup(productWxs);
-
-        ReplaceRegexInFiles(versionInfoFile, "AssemblyVersion\\(\".*?\"\\)", $"AssemblyVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
-        ReplaceRegexInFiles(versionInfoFile, "AssemblyFileVersion\\(\".*?\"\\)", $"AssemblyFileVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
-        ReplaceRegexInFiles(versionInfoFile, "AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{OctoVersionInfo.FullSemVer}\")");
-        ReplaceRegexInFiles(versionInfoFile, "AssemblyGitBranch\\(\".*?\"\\)", $"AssemblyGitBranch(\"{Git.DeriveGitBranch()}\")");
-        ReplaceRegexInFiles(versionInfoFile, "AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{OctoVersionInfo.FullSemVer}\")");
-
-        UpdateMsiProductVersion(productWxs);
+        return (versionInfoFile, productWxsFile);
     }
     
     void RunBuildFor(string framework, string runtimeId)
@@ -270,22 +264,6 @@ partial class Build : NukeBuild
             .SetRuntime(runtimeId)
             .EnableNoRestore()
             .SetVersion(OctoVersionInfo.FullSemVer));
-    }
-    
-    static void ReplaceTextInFiles(AbsolutePath path, string oldValue, string newValue)
-    {
-        var fileText = File.ReadAllText(path);
-        fileText = fileText.Replace(oldValue, newValue);
-        File.WriteAllText(path, fileText);
-    }
-    
-    Action RestoreFileForCleanup(AbsolutePath file)
-    {
-        var contents = File.ReadAllBytes(file);
-        return () => {
-            Logger.Info("Restoring {0}", file);
-            File.WriteAllBytes(file, contents);
-        };
     }
 
     // We need to use tar directly, because .NET utilities aren't able to preserve the file permissions

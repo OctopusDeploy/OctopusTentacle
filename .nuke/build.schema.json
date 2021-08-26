@@ -9,6 +9,10 @@
         "AzureKeyVaultAppId": {
           "type": "string"
         },
+        "AzureKeyVaultAppSecret": {
+          "type": "string",
+          "default": "Secrets must be entered via 'nuke :secret [profile]'"
+        },
         "AzureKeyVaultCertificateName": {
           "type": "string"
         },
@@ -67,7 +71,8 @@
           "description": "Root directory during build execution"
         },
         "signing_certificate_password": {
-          "type": "string"
+          "type": "string",
+          "default": "Secrets must be entered via 'nuke :secret [profile]'"
         },
         "signing_certificate_path": {
           "type": "string"
