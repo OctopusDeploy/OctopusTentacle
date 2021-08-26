@@ -124,7 +124,7 @@ partial class Build : NukeBuild
             var windowsOnlyBuiltFileSpec = BuildDirectory.GlobDirectories($"**/win*/**");
         
             var filesToSign = windowsOnlyBuiltFileSpec
-                .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll"))
+                .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll", "**/Nevermore.dll"))
                 .Where(file => !HasAuthenticodeSignature(file))
                 .ToArray();
 
