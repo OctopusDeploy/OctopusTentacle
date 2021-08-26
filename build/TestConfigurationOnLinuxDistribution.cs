@@ -1,4 +1,5 @@
-﻿using System;
+﻿// ReSharper disable RedundantUsingDirective
+using System;
 
 public class TestConfigurationOnLinuxDistribution
 {
