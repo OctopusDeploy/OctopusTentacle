@@ -69,8 +69,9 @@ partial class Build
 
                     var searchForTestFileDirectory = ArtifactsDirectory / testConfiguration.PackageType;
                     Logger.Info($"Searching for files in {searchForTestFileDirectory}");
-                    var packageFile = searchForTestFileDirectory.GlobFiles($"*{archSuffix}.{testConfiguration.PackageType}")
+                    var packageTypeFilePath = searchForTestFileDirectory.GlobFiles($"*{archSuffix}.{testConfiguration.PackageType}")
                         .Single();
+                    var packageFile = Path.GetFileName(packageTypeFilePath);
                     Logger.Info($"Testing Linux package file {packageFile}");
 
                     var testScriptsBindMountPoint = RootDirectory / "linux-packages" / "test-scripts";
