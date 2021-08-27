@@ -52,11 +52,6 @@ partial class Build
     [PublicAPI]
     Target TestLinuxPackages => _ => _
         .Description("Tests installing the .deb and .rpm packages onto all of the Linux target distributions.")
-        .Requires(
-            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY")),
-            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PASSPHRASE")),
-            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("REDHAT_SUBSCRIPTION_USERNAME")),
-            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("REDHAT_SUBSCRIPTION_PASSWORD")))
         .Executes(() =>
         {
             void RunLinuxPackageTestsFor(TestConfigurationOnLinuxDistribution testConfiguration)
@@ -92,10 +87,6 @@ partial class Build
                             $"VERSION={OctoVersionInfo.FullSemVer}",
                             "INPUT_PATH=/input",
                             "OUTPUT_PATH=/output",
-                            "SIGN_PRIVATE_KEY",
-                            "SIGN_PASSPHRASE",
-                            "REDHAT_SUBSCRIPTION_USERNAME",
-                            "REDHAT_SUBSCRIPTION_PASSWORD",
                             $"BUILD_NUMBER={OctoVersionInfo.FullSemVer}")
                         .SetVolume(
                             $"{testScriptsBindMountPoint}:/test-scripts:ro",
