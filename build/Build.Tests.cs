@@ -180,20 +180,23 @@ partial class Build
                     .Any(r => rights.Any(right => r.FileSystemRights.HasFlag(right)));
             }
 
-            FileSystemTasks.EnsureExistingDirectory(TestDirectory);
-            FileSystemTasks.EnsureCleanDirectory(TestDirectory);
-
-            var installers = (ArtifactsDirectory / "msi").GlobFiles("*x64.msi");
-
-            if (!installers.Any())
+            Logging.InTest(nameof(TestWindowsInstallerPermissions), () =>
             {
-                throw new Exception($"Expected to find at least one installer in the directory {ArtifactsDirectory}");
-            }
+                FileSystemTasks.EnsureExistingDirectory(TestDirectory);
+                FileSystemTasks.EnsureCleanDirectory(TestDirectory);
+
+                var installers = (ArtifactsDirectory / "msi").GlobFiles("*x64.msi");
+
+                if (!installers.Any())
+                {
+                    throw new Exception($"Expected to find at least one installer in the directory {ArtifactsDirectory}");
+                }
             
-            foreach (var installer in installers)
-            {
-                TestInstallerPermissions(installer);
-            }
+                foreach (var installer in installers)
+                {
+                    TestInstallerPermissions(installer);
+                }
+            });
         });
     
     void RunTests()
