@@ -95,21 +95,6 @@ partial class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            static bool HasAuthenticodeSignature(AbsolutePath fileInfo)
-            {
-                // note: Doesn't check if existing signatures are valid, only that one exists
-                // source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
-                try
-                {
-                    X509Certificate.CreateFromSignedFile(fileInfo);
-                    return true;
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-            
             var (versionInfoFile, productWxsFile) = ModifyTemplatedVersionAndProductFilesWithValues();
 
             RuntimeIds.Where(x => x.StartsWith("win"))
@@ -125,7 +110,7 @@ partial class Build : NukeBuild
         
             var filesToSign = windowsOnlyBuiltFileSpec
                 .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll"))
-                .Where(file => !HasAuthenticodeSignature(file))
+                .Where(file => !Signing.HasAuthenticodeSignature(file))
                 .ToArray();
 
             Signing.Sign(filesToSign);
@@ -181,38 +166,6 @@ partial class Build : NukeBuild
     Target Default => _ => _
         .DependsOn(Pack)
         .DependsOn(CopyToLocalPackages);
-
-    void RunTests()
-    {
-        Logger.Info($"Running test for Framework: {TestFramework} and Runtime: {TestRuntime}");
-
-        EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
-            
-        // We call dotnet test against the assemblies directly here because calling it against the .sln requires
-        // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
-        // have to shunt them all around the place.
-        // By doing things this way, we can have a seamless experience between local and remote builds.
-        var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests" / TestFramework / TestRuntime;
-        var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests.dll");
-        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-{TestFramework}-{TestRuntime}.xml";
-        
-        try
-        {
-            // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
-            // when the test runner is being asked to build things, not when they're already built.
-            // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
-            testAssembliesPath.ForEach(projectPath =>
-                DotNetTest(settings => settings
-                    .SetProjectFile(projectPath)
-                    .SetFramework(TestFramework)
-                    .SetLoggers($"trx;LogFileName={testResultsPath}"))
-                );
-        }
-        catch (Exception e)
-        {
-            Logger.Warn($"{e.Message}: {e}");
-        }
-    }
 
     //Modifies the VersionInfo.cs and Product.wxs files to embed version information into the shipped product.
     (ModifiedFile versionInfoFile, ModifiedFile productWxsFile) ModifyTemplatedVersionAndProductFilesWithValues()

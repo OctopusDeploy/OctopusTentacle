@@ -17,18 +17,15 @@ partial class Build
     Target PackLinuxPackagesLegacy => _ => _
         .Description("Legacy task until we can split creation of .rpm and .deb packages into their own tasks")
         .DependsOn(PackLinuxTarballs)
+        .Requires(
+            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY")),
+            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PASSPHRASE")))
         .Executes(() =>
         {
             const string dockerToolsContainerImage = "docker.packages.octopushq.com/octopusdeploy/tool-containers/tool-linux-packages:latest";
 
             void CreateLinuxPackages(string runtimeId)
             {
-                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY")))
-                {
-                    throw new Exception("This build requires environment variables `SIGN_PRIVATE_KEY` (in a format gpg1 can import)"
-                        + " and `SIGN_PASSPHRASE`, which are used to sign the .rpm.");
-                }
-
                 //TODO It's probable that the .deb and .rpm package layouts will be different - and potentially _should already_ be different.
                 // We're approaching this with the assumption that we'll split .deb and .rpm creation soon, which means that we'll create a separate
                 // filesystem layout for each of them. Using .deb for now; expecting to replicate that soon for .rpm.

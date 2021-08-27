@@ -10,6 +10,8 @@ using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Docker;
+using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Utilities.Collections;
 
 partial class Build
 {
@@ -50,6 +52,11 @@ partial class Build
     [PublicAPI]
     Target TestLinuxPackages => _ => _
         .Description("Tests installing the .deb and .rpm packages onto all of the Linux target distributions.")
+        .Requires(
+            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PRIVATE_KEY")),
+            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGN_PASSPHRASE")),
+            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("REDHAT_SUBSCRIPTION_USERNAME")),
+            () => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("REDHAT_SUBSCRIPTION_PASSWORD")))
         .Executes(() =>
         {
             void RunLinuxPackageTestsFor(TestConfigurationOnLinuxDistribution testConfiguration)
@@ -105,7 +112,6 @@ partial class Build
 
     [PublicAPI]
     Target TestWindowsInstallerPermissions => _ => _
-        .DependsOn(PackWindowsInstallers)
         .Executes(() =>
         {
             string GetTestName(AbsolutePath installerPath) => Path.GetFileName(installerPath).Replace(".msi", "");
@@ -189,4 +195,36 @@ partial class Build
                 TestInstallerPermissions(installer);
             }
         });
+    
+    void RunTests()
+    {
+        Logger.Info($"Running test for Framework: {TestFramework} and Runtime: {TestRuntime}");
+
+        FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
+            
+        // We call dotnet test against the assemblies directly here because calling it against the .sln requires
+        // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
+        // have to shunt them all around the place.
+        // By doing things this way, we can have a seamless experience between local and remote builds.
+        var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests" / TestFramework / TestRuntime;
+        var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests.dll");
+        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-{TestFramework}-{TestRuntime}.xml";
+        
+        try
+        {
+            // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
+            // when the test runner is being asked to build things, not when they're already built.
+            // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
+            testAssembliesPath.ForEach(projectPath =>
+                DotNetTasks.DotNetTest(settings => settings
+                    .SetProjectFile(projectPath)
+                    .SetFramework(TestFramework)
+                    .SetLoggers($"trx;LogFileName={testResultsPath}"))
+            );
+        }
+        catch (Exception e)
+        {
+            Logger.Warn($"{e.Message}: {e}");
+        }
+    }
 }

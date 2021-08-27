@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
@@ -45,6 +46,21 @@ public static class Signing
                 SignWithAzureSignTool(files);
             }
         });
+    }
+    
+    public static bool HasAuthenticodeSignature(AbsolutePath fileInfo)
+    {
+        // note: Doesn't check if existing signatures are valid, only that one exists
+        // source: https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
+        try
+        {
+            X509Certificate.CreateFromSignedFile(fileInfo);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     static void SignWithSignTool(AbsolutePath[] files)
