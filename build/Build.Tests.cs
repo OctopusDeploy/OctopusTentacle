@@ -102,6 +102,7 @@ partial class Build
         });
 
     [PublicAPI]
+    //todo: move this out of the build script to a proper test project ("smoke tests"?)
     Target TestWindowsInstallerPermissions => _ => _
         .Executes(() =>
         {
