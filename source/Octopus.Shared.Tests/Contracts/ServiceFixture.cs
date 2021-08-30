@@ -13,7 +13,8 @@ namespace Octopus.Shared.Tests.Contracts
         public void IScriptService_HasValidTypes()
         {
             // Constructing binder verifies that the interface does not have any disallowed types
-            var binder = new RegisteredSerializationBinder(new[] { typeof(IScriptService) });
+            var binder = new RegisteredSerializationBinder();
+            binder.Register(typeof(IScriptService));
         }
     }
 }
