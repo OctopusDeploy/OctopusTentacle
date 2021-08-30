@@ -22,15 +22,18 @@ namespace Octopus.Shared.Configuration
             if (!fileSystem.FileExists(configurationFile))
                 return;
 
-            Dictionary<string, string> deserializedData;
+            Dictionary<string, string>? deserializedData;
             using (var reader = new StreamReader(fileSystem.OpenFile(configurationFile, FileMode.Open)))
             {
                 var serializedData = reader.ReadToEnd();
                 deserializedData = JsonConvert.DeserializeObject<Dictionary<string, string>>(serializedData, JsonSerializerSettings);
             }
 
-            foreach (var kvp in deserializedData)
-                settingsToFill.Add(kvp.Key, kvp.Value);
+            if (deserializedData?.Count > 0)
+            {
+                foreach (var kvp in deserializedData)
+                    settingsToFill.Add(kvp.Key, kvp.Value);
+            }
         }
 
         protected override void WriteSerializedData(string serializedData)
