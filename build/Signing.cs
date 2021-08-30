@@ -111,7 +111,7 @@ public static class Signing
                         $"--azure-key-vault-certificate \"{Build.AzureKeyVaultCertificateName}\" " +
                         "--file-digest sha256 " + 
                         $"--tr \"{timestampUrl}\" " +
-                        "--td \"sha256\" ";
+                        "--td sha256 ";
 
                     foreach (var file in files)
                     {
