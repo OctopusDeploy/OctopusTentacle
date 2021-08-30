@@ -112,11 +112,8 @@ public static class Signing
                         "--file-digest sha256 " +
                         $"--timestamp-rfc3161 \"{timestampUrl}\" ";
 
-                    foreach (var file in files)
-                    {
-                        arguments += $"\"{file}\" ";
-                    }
-        
+                    arguments = files.Aggregate(arguments, (current, file) => current + $"\"{file}\" ");
+
                     Build.AzureSignTool(arguments);
         
                     Logger.Info($"Finished signing {files.Length} files.");

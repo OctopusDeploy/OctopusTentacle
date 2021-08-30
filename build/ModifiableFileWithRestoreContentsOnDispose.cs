@@ -5,13 +5,13 @@ using System.Text.RegularExpressions;
 using Nuke.Common;
 using Nuke.Common.IO;
 
-public class ModifiedFile : IDisposable
+public class ModifiableFileWithRestoreContentsOnDispose : IDisposable
 {
-    readonly AbsolutePath FilePath;
+    public readonly AbsolutePath FilePath;
     readonly string OriginalFileText;
     string FileText;
         
-    public ModifiedFile(AbsolutePath filePath)
+    public ModifiableFileWithRestoreContentsOnDispose(AbsolutePath filePath)
     {
         FilePath = filePath;
         OriginalFileText = File.ReadAllText(filePath);

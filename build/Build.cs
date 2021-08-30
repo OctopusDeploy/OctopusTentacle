@@ -95,7 +95,8 @@ partial class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            var (versionInfoFile, productWxsFile) = ModifyTemplatedVersionAndProductFilesWithValues();
+            using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
+            using var productWxsFile = UpdateMsiProductVersion();
 
             RuntimeIds.Where(x => x.StartsWith("win"))
                 .ForEach(runtimeId => RunBuildFor(runtimeId.Equals("win") ? NetFramework : NetCore, runtimeId));
@@ -121,7 +122,8 @@ partial class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            var (versionInfoFile, productWxsFile) = ModifyTemplatedVersionAndProductFilesWithValues();
+            using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
+            using var productWxsFile = UpdateMsiProductVersion();
 
             RuntimeIds.Where(x => x.StartsWith("linux-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
@@ -135,7 +137,8 @@ partial class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            var (versionInfoFile, productWxsFile) = ModifyTemplatedVersionAndProductFilesWithValues();
+            using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
+            using var productWxsFile = UpdateMsiProductVersion();
 
             RuntimeIds.Where(x => x.StartsWith("osx-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
@@ -168,42 +171,44 @@ partial class Build : NukeBuild
         .DependsOn(CopyToLocalPackages);
 
     //Modifies the VersionInfo.cs and Product.wxs files to embed version information into the shipped product.
-    (ModifiedFile versionInfoFile, ModifiedFile productWxsFile) ModifyTemplatedVersionAndProductFilesWithValues()
+    ModifiableFileWithRestoreContentsOnDispose ModifyTemplatedVersionAndProductFilesWithValues()
     {
-        void UpdateMsiProductVersion(AbsolutePath productWxs)
-        {
-            var xmlDoc = new XmlDocument();
-            xmlDoc.Load(productWxs);
-
-            var namespaceManager = new XmlNamespaceManager(xmlDoc.NameTable);
-            namespaceManager.AddNamespace("wi", "http://schemas.microsoft.com/wix/2006/wi");
-
-            var product = xmlDoc.SelectSingleNode("//wi:Product", namespaceManager);
-
-            if (product == null) throw new Exception("Couldn't find Product Node in wxs file");
-            if (product.Attributes == null) throw new Exception("Couldn't find Version attribute in Product Node");
-
-            // ReSharper disable once PossibleNullReferenceException
-            product.Attributes["Version"]!.Value = OctoVersionInfo.MajorMinorPatch;
-
-            xmlDoc.Save(productWxs);
-        }
-
         var versionInfoFilePath = SourceDirectory / "Solution Items" / "VersionInfo.cs";
-        var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
         
-        var versionInfoFile = new ModifiedFile(versionInfoFilePath);
-        var productWxsFile = new ModifiedFile(productWxsFilePath);
+        
+        var versionInfoFile = new ModifiableFileWithRestoreContentsOnDispose(versionInfoFilePath);
 
         versionInfoFile.ReplaceRegexInFiles("AssemblyVersion\\(\".*?\"\\)", $"AssemblyVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
         versionInfoFile.ReplaceRegexInFiles("AssemblyFileVersion\\(\".*?\"\\)", $"AssemblyFileVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
         versionInfoFile.ReplaceRegexInFiles("AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{OctoVersionInfo.FullSemVer}\")");
         versionInfoFile.ReplaceRegexInFiles("AssemblyGitBranch\\(\".*?\"\\)", $"AssemblyGitBranch(\"{Git.DeriveGitBranch()}\")");
-        versionInfoFile.ReplaceRegexInFiles("AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{OctoVersionInfo.FullSemVer}\")");    
-        
-        UpdateMsiProductVersion(productWxsFilePath);
+        versionInfoFile.ReplaceRegexInFiles("AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{OctoVersionInfo.FullSemVer}\")");
 
-        return (versionInfoFile, productWxsFile);
+        return versionInfoFile;
+    }
+    
+    ModifiableFileWithRestoreContentsOnDispose UpdateMsiProductVersion()
+    {
+        var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
+        var productWxsFile = new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
+        
+        var xmlDoc = new XmlDocument();
+        xmlDoc.Load(productWxsFilePath);
+
+        var namespaceManager = new XmlNamespaceManager(xmlDoc.NameTable);
+        namespaceManager.AddNamespace("wi", "http://schemas.microsoft.com/wix/2006/wi");
+
+        var product = xmlDoc.SelectSingleNode("//wi:Product", namespaceManager);
+
+        if (product == null) throw new Exception("Couldn't find Product Node in wxs file");
+        if (product.Attributes == null) throw new Exception("Couldn't find Version attribute in Product Node");
+
+        // ReSharper disable once PossibleNullReferenceException
+        product.Attributes["Version"]!.Value = OctoVersionInfo.MajorMinorPatch;
+
+        xmlDoc.Save(productWxsFilePath);
+
+        return productWxsFile;
     }
     
     void RunBuildFor(string framework, string runtimeId)

@@ -37,17 +37,17 @@ partial class Build
     [PublicAPI]
     Target TestWindows => _ => _
         .DependsOn(BuildWindows)
-        .Executes(RunTests);
+        .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
     Target TestLinux => _ => _
         .DependsOn(BuildLinux)
-        .Executes(RunTests);
+        .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
     Target TestOsx => _ => _
         .DependsOn(BuildOsx)
-        .Executes(RunTests);
+        .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
     Target TestLinuxPackages => _ => _
@@ -191,9 +191,9 @@ partial class Build
             });
         });
     
-    void RunTests()
+    void RunTests(string testFramework, string testRuntime)
     {
-        Logger.Info($"Running test for Framework: {TestFramework} and Runtime: {TestRuntime}");
+        Logger.Info($"Running test for Framework: {testFramework} and Runtime: {testRuntime}");
 
         FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
             
@@ -201,9 +201,9 @@ partial class Build
         // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
         // have to shunt them all around the place.
         // By doing things this way, we can have a seamless experience between local and remote builds.
-        var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests" / TestFramework / TestRuntime;
+        var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests" / testFramework / testRuntime;
         var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests.dll");
-        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-{TestFramework}-{TestRuntime}.xml";
+        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-{testFramework}-{testRuntime}.xml";
         
         try
         {
@@ -213,7 +213,7 @@ partial class Build
             testAssembliesPath.ForEach(projectPath =>
                 DotNetTasks.DotNetTest(settings => settings
                     .SetProjectFile(projectPath)
-                    .SetFramework(TestFramework)
+                    .SetFramework(testFramework)
                     .SetLoggers($"trx;LogFileName={testResultsPath}"))
             );
         }

@@ -103,7 +103,7 @@ partial class Build
             Logger.Info($"Checksum: Octopus.Tentacle-x64.msi = {md5ChecksumX64}");
 
             var chocolateyInstallScriptPath = SourceDirectory / "Chocolatey" / "chocolateyInstall.ps1";
-            using var chocolateyInstallScriptFile = new ModifiedFile(chocolateyInstallScriptPath);
+            using var chocolateyInstallScriptFile = new ModifiableFileWithRestoreContentsOnDispose(chocolateyInstallScriptPath);
             
             chocolateyInstallScriptFile.ReplaceRegexInFiles("0.0.0", OctoVersionInfo.FullSemVer);
             chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum>", md5Checksum);
@@ -134,10 +134,10 @@ partial class Build
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 FileSystemTasks.CopyFileToDirectory(RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1", installerDirectory, FileExistsPolicy.Overwrite);
 
-                var harvestFile = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Tentacle.Generated.wxs";
-                using var restoreHarvestFileAction = new ModifiedFile(harvestFile);
+                var harvestFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Tentacle.Generated.wxs";
 
-                GenerateMsiInstallerContents(installerDirectory, harvestFile);
+                using var harvestFile = new ModifiableFileWithRestoreContentsOnDispose(harvestFilePath);
+                GenerateMsiInstallerContents(installerDirectory, harvestFile.FilePath);
                 BuildMsiInstallerForPlatform(platform, wixNugetPackagePath);
             }
             
@@ -168,11 +168,11 @@ partial class Build
                 Logging.InBlock($"Building {platform} installer", () =>
                 {
                     var tentacleInstallerWixProject = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Octopus.Tentacle.Installer.wixproj";
-                    using var restoreWiXProjectAction = new ModifiedFile(tentacleInstallerWixProject);
+                    using var wixProjectFile = new ModifiableFileWithRestoreContentsOnDispose(tentacleInstallerWixProject);
                     
-                    restoreWiXProjectAction.ReplaceTextInFile("{WixToolPath}", wixNugetPackagePath / "tools");
-                    restoreWiXProjectAction.ReplaceTextInFile("{WixTargetsPath}", wixNugetPackagePath / "tools" / "Wix.targets");
-                    restoreWiXProjectAction.ReplaceTextInFile("{WixTasksPath}", wixNugetPackagePath / "tools" / "wixtasks.dll");
+                    wixProjectFile.ReplaceTextInFile("{WixToolPath}", wixNugetPackagePath / "tools");
+                    wixProjectFile.ReplaceTextInFile("{WixTargetsPath}", wixNugetPackagePath / "tools" / "Wix.targets");
+                    wixProjectFile.ReplaceTextInFile("{WixTasksPath}", wixNugetPackagePath / "tools" / "wixtasks.dll");
                         
                     MSBuildTasks.MSBuild(settings => settings
                         .SetConfiguration("Release")
