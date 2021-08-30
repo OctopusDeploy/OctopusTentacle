@@ -109,9 +109,8 @@ public static class Signing
                         $"--azure-key-vault-client-id \"{Build.AzureKeyVaultAppId}\" " +
                         $"--azure-key-vault-client-secret \"{Build.AzureKeyVaultAppSecret}\" " +
                         $"--azure-key-vault-certificate \"{Build.AzureKeyVaultCertificateName}\" " +
-                        "--file-digest sha256 " + 
-                        $"--tr \"{timestampUrl}\" " +
-                        "--td sha256 ";
+                        "--file-digest sha256 " +
+                        $"--timestamp-rfc3161 \"{timestampUrl}\" ";
 
                     foreach (var file in files)
                     {
