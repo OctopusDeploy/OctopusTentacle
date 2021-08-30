@@ -96,20 +96,41 @@ public static class Signing
     
     static void SignWithAzureSignTool(AbsolutePath[] files)
     {
-        var arguments = "sign " +
-            $"--azure-key-vault-url \"{Build.AzureKeyVaultUrl}\" " +
-            $"--azure-key-vault-client-id \"{Build.AzureKeyVaultAppId}\" " +
-            $"--azure-key-vault-client-secret \"{Build.AzureKeyVaultAppSecret}\" " +
-            $"--azure-key-vault-certificate \"{Build.AzureKeyVaultCertificateName}\" " +
-            "--file-digest sha256 ";
-
-        foreach (var file in files)
+        
+        var lastException = default(Exception);
+        foreach (var timestampUrl in SigningTimestampUrls)
         {
-            arguments += $"\"{file}\" ";
+            Logging.InBlock($"Trying to time stamp using {timestampUrl}", () =>
+            {
+                try
+                {
+                    var arguments = "sign " +
+                        $"--azure-key-vault-url \"{Build.AzureKeyVaultUrl}\" " +
+                        $"--azure-key-vault-client-id \"{Build.AzureKeyVaultAppId}\" " +
+                        $"--azure-key-vault-client-secret \"{Build.AzureKeyVaultAppSecret}\" " +
+                        $"--azure-key-vault-certificate \"{Build.AzureKeyVaultCertificateName}\" " +
+                        "--file-digest sha256 " + 
+                        $"--tr {timestampUrl} " +
+                        "--td sha256 ";
+
+                    foreach (var file in files)
+                    {
+                        arguments += $"\"{file}\" ";
+                    }
+        
+                    Build.AzureSignTool(arguments);
+        
+                    Logger.Info($"Finished signing {files.Length} files.");
+                }
+                catch (Exception e)
+                {
+                    lastException = e;
+                }
+            });
+            
+            if (lastException == null) return;
         }
-        
-        Build.AzureSignTool(arguments);
-        
-        Logger.Info($"Finished signing {files.Length} files.");
+
+        if (lastException != null) throw lastException;
     }
 }
