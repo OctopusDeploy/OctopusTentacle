@@ -16,5 +16,8 @@ changeBuildType(RelativeId("TestOnWindows")) {
         add {
             doesNotContain("system.agent.name", "win12")
         }
+        add {
+            doesNotEqual("system.agent.name", "win2012")
+        }
     }
 }
