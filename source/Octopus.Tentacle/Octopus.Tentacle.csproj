@@ -37,13 +37,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Halibut" Version="4.4.4" />
+		<PackageReference Include="Halibut" Version="4.4.7" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Octopus.Client" Version="11.3.3425" />
-		<PackageReference Include="Octopus.Shared" Version="10.3.1" />
+		<PackageReference Include="Octopus.Shared" Version="10.3.3" />
 	</ItemGroup>
 
 	<ItemGroup>
