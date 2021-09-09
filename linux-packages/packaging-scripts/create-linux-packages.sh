@@ -130,6 +130,7 @@ fpm --version "$VERSION" \
   --url 'https://octopus.com/' \
   --description "$PACKAGE_DESC" \
   --verbose \
+  --rpm-rpmbuild-define "_build_id_links none" \
   "${FPM_RPM_OPTS[@]}" \
   "${FPM_OPTS[@]}" \
   "$INPUT_PATH/=$INSTALL_PATH/" \
