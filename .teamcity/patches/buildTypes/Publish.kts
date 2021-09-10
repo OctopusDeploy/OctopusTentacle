@@ -57,4 +57,13 @@ changeBuildType(RelativeId("Publish")) {
         }
 
     }
+
+    requirements {
+        remove {
+            equals("system.Octopus.OSPlatform", "Windows")
+        }
+        add {
+            startsWith("system.agent.name", "nautilus-")
+        }
+    }
 }
