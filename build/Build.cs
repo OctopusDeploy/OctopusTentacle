@@ -1,7 +1,6 @@
 // ReSharper disable RedundantUsingDirective
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -25,7 +24,6 @@ using Nuke.Common.Tools.SignTool;
 using Nuke.Common.Utilities.Collections;
 using Nuke.OctoVersion;
 using OctoVersion.Core;
-using Serilog;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
