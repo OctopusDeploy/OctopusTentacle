@@ -23,6 +23,7 @@ namespace Octopus.Shared.Util
         IEnumerable<string> EnumerateFilesRecursively(string parentDirectoryPath, params string[] searchPatterns);
         long GetFileSize(string path);
         DateTimeOffset GetFileLastWriteTimeUtc(string path);
+        DateTimeOffset GetFileCreationTimeUtc(string path);
         string ReadFile(string path);
         void AppendToFile(string path, string contents);
         void OverwriteFile(string path, string contents);

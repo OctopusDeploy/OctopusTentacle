@@ -220,6 +220,9 @@ namespace Octopus.Shared.Util
         public DateTimeOffset GetFileLastWriteTimeUtc(string path)
             => File.GetLastWriteTimeUtc(path);
 
+        public DateTimeOffset GetFileCreationTimeUtc(string path)
+            => File.GetCreationTimeUtc(path);
+
         public string ReadFile(string path)
         {
             var content = Policy<string>
