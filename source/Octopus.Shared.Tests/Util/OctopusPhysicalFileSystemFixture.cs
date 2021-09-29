@@ -38,5 +38,40 @@ namespace Octopus.Shared.Tests.Util
             var actual = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>()).DiskHasEnoughFreeSpace(Path.GetTempPath(), long.MaxValue);
             Assert.AreEqual(false, actual);
         }
+
+        [Test]
+        public void DeleteDirectory_WithReadOnlyFiles_ShouldSucceed()
+        {
+            // Arrange
+            var readonlyDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            var readonlyFile = Path.Combine(readonlyDir, "test-readonly.txt");
+
+            Directory.CreateDirectory(readonlyDir);
+            File.AppendAllText(
+                readonlyFile,
+                "Contents of a readonly file"
+            );
+
+            File.SetAttributes(readonlyDir, FileAttributes.ReadOnly);
+            File.SetAttributes(readonlyFile, FileAttributes.ReadOnly);
+
+            try
+            {
+                // Act
+                var actual = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
+                actual.DeleteDirectory(readonlyDir);
+
+                // Assert
+                new DirectoryInfo(readonlyDir).Exists.Should().BeFalse();
+            }
+            catch
+            {
+                // Clean up temp folder if test fails
+                File.SetAttributes(readonlyDir, FileAttributes.Normal);
+                File.SetAttributes(readonlyFile, FileAttributes.Normal);
+                Directory.Delete(readonlyDir, true);
+                throw;
+            }
+        }
     }
 }
