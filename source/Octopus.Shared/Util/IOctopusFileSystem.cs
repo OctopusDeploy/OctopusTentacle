@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Octopus.Shared.Util
 {
@@ -15,6 +16,7 @@ namespace Octopus.Shared.Util
         void DeleteFile(string path, DeletionOptions options);
         void DeleteDirectory(string path);
         void DeleteDirectory(string path, DeletionOptions options);
+        Task DeleteDirectory(string path, CancellationToken cancellationToken);
         string GetCurrentDirectory();
         IEnumerable<string> EnumerateDirectories(string parentDirectoryPath);
         IEnumerable<string> EnumerateDirectoriesRecursively(string parentDirectoryPath);

@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Polly;
 
@@ -134,7 +135,7 @@ namespace Octopus.Shared.Util
 
         public void DeleteDirectory(string path)
         {
-            Directory.Delete(path, true);
+            DeleteDirectory(path, CancellationToken.None).Wait();
         }
 
         public void DeleteDirectory(string path, DeletionOptions options)
@@ -147,13 +148,7 @@ namespace Octopus.Shared.Util
             for (var i = 0; i < options.RetryAttempts; i++)
                 try
                 {
-                    var dir = new DirectoryInfo(path);
-                    if (dir.Exists)
-                    {
-                        dir.Attributes = dir.Attributes & ~FileAttributes.ReadOnly;
-                        dir.Delete(true);
-                        return;
-                    }
+                    DeleteDirectory(path, CancellationToken.None).Wait();
                 }
                 catch
                 {
@@ -166,6 +161,39 @@ namespace Octopus.Shared.Util
                         break;
                     }
                 }
+        }
+
+        public async Task DeleteDirectory(string path, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            var deleteDirTasks = Directory.EnumerateDirectories(path)
+                .Select(x => DeleteDirectory(x, cancellationToken));
+
+            var deleteFileTasks = Directory.EnumerateFiles(path)
+                .Select(filename =>
+                {
+                    return Task.Run(() =>
+                    {
+                        var fileInfo = new FileInfo(filename)
+                        {
+                            Attributes = FileAttributes.Normal
+                        };
+                        fileInfo.Delete();
+                    }, cancellationToken);
+                });
+
+            await Task
+                .WhenAll(deleteDirTasks.Concat(deleteFileTasks))
+                .ContinueWith(_ =>
+                {
+                    var dirInfo = new DirectoryInfo(path)
+                    {
+                        Attributes = FileAttributes.Normal
+                    };
+                    dirInfo.Delete(true);
+                }, cancellationToken);
         }
 
         public IEnumerable<string> EnumerateFiles(string parentDirectoryPath, params string[] searchPatterns)
