@@ -135,7 +135,7 @@ namespace Octopus.Shared.Util
 
         public void DeleteDirectory(string path)
         {
-            DeleteDirectory(path, CancellationToken.None).Wait();
+            Directory.Delete(path, true);
         }
 
         public void DeleteDirectory(string path, DeletionOptions options)
@@ -148,7 +148,13 @@ namespace Octopus.Shared.Util
             for (var i = 0; i < options.RetryAttempts; i++)
                 try
                 {
-                    DeleteDirectory(path, CancellationToken.None).Wait();
+                    var dir = new DirectoryInfo(path);
+                    if (dir.Exists)
+                    {
+                        dir.Attributes = dir.Attributes & ~FileAttributes.ReadOnly;
+                        dir.Delete(true);
+                        return;
+                    }
                 }
                 catch
                 {
