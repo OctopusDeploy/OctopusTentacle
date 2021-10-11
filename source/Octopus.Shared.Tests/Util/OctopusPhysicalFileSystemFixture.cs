@@ -40,7 +40,6 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        [Ignore("Rolled back DeleteDirectory refactor to handle read-only files")]
         public void DeleteDirectory_WithReadOnlyFiles_ShouldSucceed()
         {
             // Arrange
