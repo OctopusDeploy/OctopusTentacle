@@ -153,7 +153,7 @@ namespace Octopus.Shared.Util
                 path,
                 includeFilter: null,
                 cancellationToken,
-                includeTarget: null,
+                includeTarget: true,
                 fileEnumerationFunc: null,
                 options);
         }

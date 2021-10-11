@@ -67,9 +67,15 @@ namespace Octopus.Shared.Tests.Util
             catch
             {
                 // Clean up temp folder if test fails
-                File.SetAttributes(readonlyDir, FileAttributes.Normal);
-                File.SetAttributes(readonlyFile, FileAttributes.Normal);
-                Directory.Delete(readonlyDir, true);
+                if (File.Exists(readonlyFile))
+                    File.SetAttributes(readonlyFile, FileAttributes.Normal);
+
+                if (Directory.Exists(readonlyDir))
+                {
+                    File.SetAttributes(readonlyDir, FileAttributes.Normal);
+                    Directory.Delete(readonlyDir, true);
+                }
+
                 throw;
             }
         }
