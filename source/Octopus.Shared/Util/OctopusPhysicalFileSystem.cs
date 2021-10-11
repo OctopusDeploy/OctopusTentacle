@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog.Filters;
 using Octopus.Diagnostics;
 using Polly;
 
@@ -92,32 +93,39 @@ namespace Octopus.Shared.Util
                 return false;
             }
         }
-        
+
         public string GetCurrentDirectory() => Directory.GetCurrentDirectory();
 
-        public void DeleteFile(string path)
+        public void DeleteFile(string path, DeletionOptions? options = null)
         {
-            DeleteFile(path, null);
+            DeleteFile(path, CancellationToken.None, options).Wait();
         }
 
-        public void DeleteFile(string path, DeletionOptions? options)
+        public async Task DeleteFile(string path, CancellationToken cancellationToken, DeletionOptions? options = null)
         {
-            options = options ?? DeletionOptions.TryThreeTimes;
+            options ??= DeletionOptions.TryThreeTimes;
 
             if (string.IsNullOrWhiteSpace(path))
                 return;
 
             var firstAttemptFailed = false;
             for (var i = 0; i < options.RetryAttempts; i++)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
                 try
                 {
-                    if (File.Exists(path))
-                    {
-                        if (firstAttemptFailed)
-                            File.SetAttributes(path, FileAttributes.Normal);
-                        File.Delete(path);
-                        return;
-                    }
+                    await Task.Run(() =>
+                        {
+                            if (File.Exists(path))
+                            {
+                                if (firstAttemptFailed)
+                                    File.SetAttributes(path, FileAttributes.Normal);
+                                File.Delete(path);
+                            }
+                        },
+                        cancellationToken);
                 }
                 catch
                 {
@@ -131,75 +139,23 @@ namespace Octopus.Shared.Util
                         break;
                     }
                 }
+            }
         }
 
-        public void DeleteDirectory(string path)
+        public void DeleteDirectory(string path, DeletionOptions? options = null)
         {
-            Directory.Delete(path, true);
+            DeleteDirectory(path, DefaultCancellationToken, options).Wait();
         }
 
-        public void DeleteDirectory(string path, DeletionOptions options)
+        public async Task DeleteDirectory(string path, CancellationToken cancellationToken, DeletionOptions? options = null)
         {
-            options = options ?? DeletionOptions.TryThreeTimes;
-
-            if (string.IsNullOrWhiteSpace(path))
-                return;
-
-            for (var i = 0; i < options.RetryAttempts; i++)
-                try
-                {
-                    var dir = new DirectoryInfo(path);
-                    if (dir.Exists)
-                    {
-                        dir.Attributes = dir.Attributes & ~FileAttributes.ReadOnly;
-                        dir.Delete(true);
-                        return;
-                    }
-                }
-                catch
-                {
-                    Thread.Sleep(options.SleepBetweenAttemptsMilliseconds);
-
-                    if (i == options.RetryAttempts - 1)
-                    {
-                        if (options.ThrowOnFailure)
-                            throw;
-                        break;
-                    }
-                }
-        }
-
-        public async Task DeleteDirectory(string path, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-                return;
-
-            var deleteDirTasks = Directory.EnumerateDirectories(path)
-                .Select(x => DeleteDirectory(x, cancellationToken));
-
-            var deleteFileTasks = Directory.EnumerateFiles(path)
-                .Select(filename =>
-                {
-                    return Task.Run(() =>
-                    {
-                        var fileInfo = new FileInfo(filename)
-                        {
-                            Attributes = FileAttributes.Normal
-                        };
-                        fileInfo.Delete();
-                    }, cancellationToken);
-                });
-
-            await Task
-                .WhenAll(deleteDirTasks.Concat(deleteFileTasks))
-                .ContinueWith(_ =>
-                {
-                    var dirInfo = new DirectoryInfo(path)
-                    {
-                        Attributes = FileAttributes.Normal
-                    };
-                    dirInfo.Delete(true);
-                }, cancellationToken);
+            await PurgeDirectoryAsync(
+                path,
+                includeFilter: null,
+                cancellationToken,
+                includeTarget: null,
+                fileEnumerationFunc: null,
+                options);
         }
 
         public IEnumerable<string> EnumerateFiles(string parentDirectoryPath, params string[] searchPatterns)
@@ -336,71 +292,180 @@ namespace Octopus.Shared.Util
 
         public void PurgeDirectory(string targetDirectory, DeletionOptions options)
         {
-            PurgeDirectory(targetDirectory, fi => true, options);
+            PurgeDirectoryAsync(
+                    targetDirectory,
+                    includeFilter: null,
+                    cancel: null,
+                    includeTarget: null,
+                    fileEnumerationFunc: null,
+                    options)
+                .Wait();
+        }
+
+        public Task PurgeDirectory(string targetDirectory, CancellationToken cancel, DeletionOptions? options = null)
+        {
+            return PurgeDirectoryAsync(
+                targetDirectory,
+                includeFilter: null,
+                cancel,
+                includeTarget: null,
+                fileEnumerationFunc: null,
+                options);
         }
 
         public void PurgeDirectory(string targetDirectory, DeletionOptions options, CancellationToken cancel)
         {
-            PurgeDirectory(targetDirectory, fi => true, options, cancel);
+            PurgeDirectoryAsync(
+                    targetDirectory,
+                    includeFilter: null,
+                    cancel,
+                    includeTarget: null,
+                    fileEnumerationFunc: null,
+                    options
+                )
+                .Wait(cancel);
         }
 
-        public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, DeletionOptions options)
+        public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, DeletionOptions? options = null)
         {
-            PurgeDirectory(targetDirectory, include, options, CancellationToken.None);
+            PurgeDirectoryAsync(
+                    targetDirectory,
+                    filter,
+                    cancel: null,
+                    includeTarget: null,
+                    fileEnumerationFunc: null,
+                    options)
+                .Wait();
+        }
+
+        public Task PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, CancellationToken cancel, DeletionOptions? options = null)
+        {
+            return PurgeDirectoryAsync(
+                targetDirectory,
+                filter,
+                cancel,
+                includeTarget: null,
+                fileEnumerationFunc: null,
+                options);
+        }
+
+        public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, Func<string, IEnumerable<string>> fileEnumerator, DeletionOptions? options = null)
+        {
+            PurgeDirectoryAsync(
+                    targetDirectory,
+                    filter,
+                    cancel: null,
+                    includeTarget: false,
+                    fileEnumerationFunc: fileEnumerator,
+                    options)
+                .Wait();
+        }
+
+        public Task PurgeDirectory(string targetDirectory,
+            Predicate<IFileInfo> filter,
+            Func<string, IEnumerable<string>> fileEnumerator,
+            CancellationToken cancel,
+            DeletionOptions? options = null)
+        {
+            return PurgeDirectoryAsync(
+                targetDirectory,
+                filter,
+                cancel,
+                includeTarget: null,
+                fileEnumerationFunc: null,
+                options);
         }
 
         public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> include, DeletionOptions options, Func<string, IEnumerable<string>> fileEnumerator)
         {
-            PurgeDirectory(targetDirectory,
-                include,
-                options,
-                CancellationToken.None,
-                fileEnumerationFunc: fileEnumerator);
+            PurgeDirectoryAsync(targetDirectory,
+                    include,
+                    cancel: null,
+                    includeTarget: null,
+                    fileEnumerationFunc: fileEnumerator,
+                    options)
+                .Wait();
         }
 
         void PurgeDirectory(string targetDirectory,
             Predicate<IFileInfo>? include,
-            DeletionOptions options,
             CancellationToken cancel,
-            bool includeTarget = false,
-            Func<string, IEnumerable<string>>? fileEnumerationFunc = null)
+            bool? includeTarget,
+            Func<string, IEnumerable<string>>? fileEnumerationFunc = null,
+            DeletionOptions? options = null)
+        {
+            PurgeDirectoryAsync(targetDirectory,
+                    include,
+                    cancel,
+                    includeTarget,
+                    fileEnumerationFunc,
+                    options)
+                .Wait(cancel);
+        }
+
+        static readonly Predicate<IFileInfo> DefaultIncludeFilter = fileInfo => true;
+        static readonly CancellationToken DefaultCancellationToken = CancellationToken.None;
+        const bool DefaultIncludeTarget = false;
+        static readonly DeletionOptions DefaultDeletionOptions = DeletionOptions.TryThreeTimes;
+
+        IEnumerable<string> DefaultFileEnumerationFunc(string target)
+        {
+            return EnumerateFiles(target);
+        }
+
+        async Task PurgeDirectoryAsync(
+            string targetDirectory,
+            Predicate<IFileInfo>? includeFilter,
+            CancellationToken? cancel,
+            bool? includeTarget,
+            Func<string, IEnumerable<string>>? fileEnumerationFunc,
+            DeletionOptions? options)
         {
             if (!DirectoryExists(targetDirectory))
                 return;
 
-            Func<string, IEnumerable<string>> fileEnumerator = fileEnumerationFunc ?? (target => EnumerateFiles(target));
+            includeFilter ??= fileInfo => true;
+            cancel ??= CancellationToken.None;
+            includeTarget ??= false;
+            options ??= DeletionOptions.TryThreeTimes;
+            var fileEnumerator = fileEnumerationFunc ?? DefaultFileEnumerationFunc;
 
             foreach (var file in fileEnumerator(targetDirectory))
             {
-                cancel.ThrowIfCancellationRequested();
-
-                if (include != null)
+                if (includeFilter != null)
                 {
                     var info = new FileInfoAdapter(new FileInfo(file));
-                    if (!include(info))
+                    if (!includeFilter(info))
                         continue;
                 }
 
-                DeleteFile(file, options);
+                await DeleteFile(file, cancel.Value, options);
             }
 
             foreach (var directory in EnumerateDirectories(targetDirectory))
             {
-                cancel.ThrowIfCancellationRequested();
-
                 var info = new DirectoryInfo(directory);
                 if ((info.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
                     Directory.Delete(directory);
                 else
-                    PurgeDirectory(directory,
-                        include,
-                        options,
+                    await PurgeDirectoryAsync(
+                        directory,
+                        includeFilter,
                         cancel,
-                        true);
+                        true,
+                        fileEnumerator,
+                        options);
             }
 
-            if (includeTarget && DirectoryIsEmpty(targetDirectory))
-                DeleteDirectory(targetDirectory, options);
+            await Task.Run(() =>
+                {
+                    if (includeTarget.Value && DirectoryIsEmpty(targetDirectory))
+                    {
+                        new DirectoryInfo(targetDirectory).Attributes = FileAttributes.Normal;
+                        Directory.Delete(targetDirectory, true);
+                    }
+                },
+                cancel.Value);
         }
 
         public void OverwriteAndDelete(string originalFile, string temporaryReplacement)
@@ -622,7 +687,7 @@ namespace Octopus.Shared.Util
 
         public string ReadAllText(string scriptFile)
             => File.ReadAllText(scriptFile);
-        
+
         public string[] ReadAllLines(string scriptFile)
             => File.ReadAllLines(scriptFile);
 
