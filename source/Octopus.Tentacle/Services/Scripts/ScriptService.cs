@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Services.Scripts
             workspace.ScriptMutexAcquireTimeout = command.ScriptIsolationMutexTimeout;
             workspace.ScriptArguments = command.Arguments;
 
-            if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnNix)
+            if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
             {
                 //TODO: This could be better
                 workspace.BootstrapScript(command.Scripts.ContainsKey(ScriptType.Bash)
