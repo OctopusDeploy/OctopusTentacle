@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
@@ -38,11 +39,12 @@ namespace Octopus.Tentacle.Communications
 
             Retry("Checking that server communications are open", () =>
             {
+#pragma warning disable DE0003
                 var req = WebRequest.Create(handshake);
                 req.Proxy = proxyOverride;
                 req.Method = "POST";
                 req.ContentLength = 0;
-
+#pragma warning restore DE0003
                 try
                 {
                     using (var resp = req.GetResponse())

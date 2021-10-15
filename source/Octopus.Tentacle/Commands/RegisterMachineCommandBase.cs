@@ -96,6 +96,7 @@ namespace Octopus.Tentacle.Commands
 
             Uri serverAddress = null;
 
+            var useDefaultProxy = configuration.Value.PollingProxyConfiguration.UseDefaultProxy;
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             IWebProxy proxyOverride = null;
             string sslThumbprint = null;
@@ -108,7 +109,7 @@ namespace Octopus.Tentacle.Commands
 
             log.Info($"Registering the tentacle with the server at {api.ServerUri}");
 
-            using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
+            using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride, useDefaultProxy))
             {
                 var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
                 await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle);

@@ -8,13 +8,15 @@ namespace Octopus.Tentacle.Commands.OptionSets
 {
     public class OctopusClientInitializer : IOctopusClientInitializer
     {
-        public async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, IWebProxy overrideProxy)
+        public async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, IWebProxy overrideProxy, bool allowDefaultProxy = true)
         {
             IOctopusAsyncClient client = null;
             try
             {
                 var endpoint = GetEndpoint(apiEndpointOptions, overrideProxy);
-                client = await OctopusAsyncClient.Create(endpoint).ConfigureAwait(false);
+                var clientOptions = new OctopusClientOptions() { AllowDefaultProxy = allowDefaultProxy };
+                client = await OctopusAsyncClient.Create(endpoint, clientOptions).ConfigureAwait(false);
+
                 if (string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey))
                 {
                     await client.Repository.Users

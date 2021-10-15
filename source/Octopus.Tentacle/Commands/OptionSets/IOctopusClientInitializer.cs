@@ -7,6 +7,6 @@ namespace Octopus.Tentacle.Commands.OptionSets
 {
     public interface IOctopusClientInitializer
     {
-        Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions api, IWebProxy proxyOverride);
+        Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions api, IWebProxy proxyOverride, bool allowDefaultProxy = true);
     }
 }
