@@ -42,7 +42,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Octopus.Client" Version="11.3.28-MissedTheMark-bug-ProxyIssue" />
+		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
 		<PackageReference Include="Octopus.Shared" Version="10.3.3" />
 	</ItemGroup>
 
