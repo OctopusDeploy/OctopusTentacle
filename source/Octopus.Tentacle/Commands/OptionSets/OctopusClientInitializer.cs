@@ -8,13 +8,23 @@ namespace Octopus.Tentacle.Commands.OptionSets
 {
     public class OctopusClientInitializer : IOctopusClientInitializer
     {
-        public async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, IWebProxy overrideProxy, bool allowDefaultProxy = true)
+        public async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, IWebProxy overrideProxy)
+        {
+            return await CreateClient(apiEndpointOptions, overrideProxy, false);
+        }
+
+        public async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, bool useDefaultProxy)
+        {
+            return await CreateClient(apiEndpointOptions, null, useDefaultProxy);
+        }
+
+        async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, IWebProxy overrideProxy, bool useDefaultProxy)
         {
             IOctopusAsyncClient client = null;
             try
             {
                 var endpoint = GetEndpoint(apiEndpointOptions, overrideProxy);
-                var clientOptions = new OctopusClientOptions() { AllowDefaultProxy = allowDefaultProxy };
+                var clientOptions = new OctopusClientOptions() { AllowDefaultProxy = useDefaultProxy };
                 client = await OctopusAsyncClient.Create(endpoint, clientOptions).ConfigureAwait(false);
 
                 if (string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey))
