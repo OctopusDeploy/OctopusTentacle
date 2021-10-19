@@ -13,6 +13,7 @@ using Octopus.Client.Repositories.Async;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Commands.OptionSets;
@@ -57,14 +58,18 @@ namespace Octopus.Tentacle.Tests.Commands
             octopusClientInitializer.CreateClient(Arg.Any<ApiEndpointOptions>(), Arg.Any<IWebProxy>())
                 .Returns(Task.FromResult(octopusAsyncClient));
 
+            var applicationInstanceSelector = Substitute.For<IApplicationInstanceSelector>();
+            applicationInstanceSelector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
+
             Command = new RegisterWorkerCommand(new Lazy<IRegisterWorkerOperation>(() => operation),
                 new Lazy<IWritableTentacleConfiguration>(() => configuration),
                 log,
-                Substitute.For<IApplicationInstanceSelector>(),
+                applicationInstanceSelector,
                 new Lazy<IOctopusServerChecker>(() => serverChecker),
                 new ProxyConfigParser(),
                 octopusClientInitializer,
-                new SpaceRepositoryFactory());
+                new SpaceRepositoryFactory(),
+                Substitute.For<ILogFileOnlyLogger>());
 
             configuration.ServicesPortNumber.Returns(90210);
             certificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew("CN=Hello");

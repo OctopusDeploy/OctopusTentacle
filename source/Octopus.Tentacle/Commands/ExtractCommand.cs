@@ -16,7 +16,8 @@ namespace Octopus.Tentacle.Commands
         string packageFile;
         string destinationDirectory;
 
-        public ExtractCommand(Lazy<IPackageInstaller> packageInstaller, Lazy<IOctopusFileSystem> fileSystem, ISystemLog log)
+        public ExtractCommand(Lazy<IPackageInstaller> packageInstaller, Lazy<IOctopusFileSystem> fileSystem, ISystemLog log, ILogFileOnlyLogger logFileOnlyLogger)
+            : base(logFileOnlyLogger)
         {
             this.packageInstaller = packageInstaller;
             this.log = log;
@@ -44,6 +45,11 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
+            if (string.IsNullOrWhiteSpace(packageFile))
+                throw new ControlledFailureException("Please specify the package to extract via the --package argument.");
+            if (string.IsNullOrWhiteSpace(destinationDirectory))
+                throw new ControlledFailureException("Please specify the destination directory via the --destination argument.");
+
             for (int tryCount = 0; tryCount < ExtractRetries; tryCount++)
             {
                 try

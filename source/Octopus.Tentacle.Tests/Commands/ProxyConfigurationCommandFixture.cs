@@ -17,6 +17,7 @@ namespace Octopus.Tentacle.Tests.Commands
         string homeDirectory;
         string configFile;
         OctopusPhysicalFileSystem octopusFileSystem;
+        private IApplicationInstanceSelector applicationInstanceSelector;
 
         [SetUp]
         public void SetupForEachTest()
@@ -24,6 +25,9 @@ namespace Octopus.Tentacle.Tests.Commands
             octopusFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             homeDirectory = octopusFileSystem.CreateTemporaryDirectory();
             configFile = $"{homeDirectory}\\File.config";
+            
+            applicationInstanceSelector = Substitute.For<IApplicationInstanceSelector>();
+            applicationInstanceSelector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
 
             octopusFileSystem.AppendToFile(configFile,
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -50,7 +54,7 @@ namespace Octopus.Tentacle.Tests.Commands
             const string expectedPassword = "do or do not, there is no try";
             const int expectedProxyPort = 8888;
 
-            Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ISystemLog>());
+            Command = new ProxyConfigurationCommand(config, applicationInstanceSelector, Substitute.For<ISystemLog>(), Substitute.For<ILogFileOnlyLogger>());
 
             EnableACustomProxy();
             config.Value.UseDefaultProxy.Should().BeFalse(because: "we're using a custom proxy now");
@@ -82,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public void TurnOnDefaultProxy()
         {
             var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
-            Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ISystemLog>());
+            Command = new ProxyConfigurationCommand(config, applicationInstanceSelector, Substitute.For<ISystemLog>(), Substitute.For<ILogFileOnlyLogger>());
 
             EnableTheDefaultProxy();
 
@@ -95,7 +99,7 @@ namespace Octopus.Tentacle.Tests.Commands
         public void UseACustomHostAndIgnoreHttpAndPort()
         {
             var config = new Lazy<IWritableProxyConfiguration>(() => new WritableProxyConfiguration(new XmlFileKeyValueStore(octopusFileSystem, configFile)));
-            Command = new ProxyConfigurationCommand(config, Substitute.For<IApplicationInstanceSelector>(), Substitute.For<ISystemLog>());
+            Command = new ProxyConfigurationCommand(config, applicationInstanceSelector, Substitute.For<ISystemLog>(), Substitute.For<ILogFileOnlyLogger>());
 
             EnableAnIncorrectlySuppliedProxyHost();
 

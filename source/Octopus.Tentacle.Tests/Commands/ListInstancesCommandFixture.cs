@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Startup;
 using Octopus.Tentacle.Commands;
 
 namespace Octopus.Tentacle.Tests.Commands
@@ -16,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             base.SetUp();
 
-            Command = new ListInstancesCommand(Substitute.For<IApplicationInstanceLocator>());
+            Command = new ListInstancesCommand(Substitute.For<IApplicationInstanceStore>(), Substitute.For<ILogFileOnlyLogger>());
         }
 
         [Test]

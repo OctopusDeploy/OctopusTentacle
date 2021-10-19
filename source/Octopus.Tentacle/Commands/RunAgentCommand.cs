@@ -17,7 +17,6 @@ namespace Octopus.Tentacle.Commands
 {
     public class RunAgentCommand : AbstractStandardCommand
     {
-        readonly StartUpInstanceRequest startUpInstanceRequest;
         readonly Lazy<IHalibutInitializer> halibut;
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly Lazy<IHomeConfiguration> home;
@@ -34,7 +33,6 @@ namespace Octopus.Tentacle.Commands
         public override bool CanRunAsService => true;
 
         public RunAgentCommand(
-            StartUpInstanceRequest startUpInstanceRequest,
             Lazy<IHalibutInitializer> halibut,
             Lazy<IWritableTentacleConfiguration> configuration,
             Lazy<IHomeConfiguration> home,
@@ -44,9 +42,9 @@ namespace Octopus.Tentacle.Commands
             IApplicationInstanceSelector selector,
             Lazy<IProxyInitializer> proxyInitializer,
             IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker,
-            AppVersion appVersion) : base(selector, log)
+            AppVersion appVersion,
+            ILogFileOnlyLogger logFileOnlyLogger) : base(selector, log, logFileOnlyLogger)
         {
-            this.startUpInstanceRequest = startUpInstanceRequest;
             this.halibut = halibut;
             this.configuration = configuration;
             this.home = home;
@@ -76,19 +74,13 @@ namespace Octopus.Tentacle.Commands
                 sleep.For(wait);
             }
 
-            if (home.Value.HomeDirectory == null)
-                throw new InvalidOperationException("No home directory has been configured for this Tentacle. Please run the configure command before starting.");
-
             try
             {
                 if (configuration.Value.TentacleCertificate == null)
                 {
-                    if (startUpInstanceRequest is StartUpDynamicInstanceRequest)
-                    {
-                        configuration.Value.GenerateNewCertificate(writeToConfig: false);
-                    }
-                    else
-                        throw new InvalidOperationException("No certificate has been generated for this Tentacle. Please run the new-certificate command before starting.");
+                    var certificate = configuration.Value.GenerateNewCertificate();
+                    log.Info("A new certificate has been generated and installed as none were yet available. Thumbprint:");
+                    log.Info(certificate.Thumbprint);
                 }
             }
             catch (CryptographicException cx)
@@ -100,7 +92,7 @@ namespace Octopus.Tentacle.Commands
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleHome, home.Value.HomeDirectory);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleApplications, configuration.Value.ApplicationDirectory);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleJournal, configuration.Value.JournalFilePath);
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleInstanceName, selector.GetCurrentName());
+            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleInstanceName, selector.Current.InstanceName);
             var currentPath = typeof(RunAgentCommand).Assembly.FullLocalPath();
             var exePath = PlatformDetection.IsRunningOnWindows
                 ? Path.ChangeExtension(currentPath, "exe")

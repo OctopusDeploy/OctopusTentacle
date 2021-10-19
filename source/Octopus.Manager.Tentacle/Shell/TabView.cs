@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Nito.AsyncEx;
 using Octopus.Manager.Tentacle.Infrastructure;
 
 namespace Octopus.Manager.Tentacle.Shell
@@ -91,6 +90,7 @@ namespace Octopus.Manager.Tentacle.Shell
         public virtual async Task OnSkip(CancelEventArgs e)
         {
             Model.PopRuleSet(RuleSet);
+            await Task.FromResult(0);
         }
 
         public virtual async Task OnNext(CancelEventArgs e)
@@ -101,6 +101,7 @@ namespace Octopus.Manager.Tentacle.Shell
             {
                 e.Cancel = true;
             }
+            await Task.FromResult(0);
         }
 
         public virtual void OnBack(CancelEventArgs e)

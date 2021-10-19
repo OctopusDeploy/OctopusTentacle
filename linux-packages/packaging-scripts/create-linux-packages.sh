@@ -129,12 +129,17 @@ fpm --version "$VERSION" \
   --vendor 'Octopus Deploy' \
   --url 'https://octopus.com/' \
   --description "$PACKAGE_DESC" \
-  --rpm-sign \
   --verbose \
+  --rpm-rpmbuild-define "_build_id_links none" \
   "${FPM_RPM_OPTS[@]}" \
   "${FPM_OPTS[@]}" \
   "$INPUT_PATH/=$INSTALL_PATH/" \
   tmp_usr_bin/=/usr/bin/
+set +ex
+
+echo "Signing .rpm package."
+set -ex
+rpmsign --addsign *.rpm
 set +ex
 
   # "$INPUT_PATH/=$INSTALL_PATH/" \

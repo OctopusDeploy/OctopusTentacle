@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Versioning;
@@ -34,8 +35,8 @@ namespace Octopus.Tentacle.Tests.Commands
             tentacleConfiguration.TentacleCertificate.Returns(certificate);
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();
+
             Command = new RunAgentCommand(
-                new StartUpPersistedInstanceRequest(ApplicationName.Tentacle, "MyTentacle"),
                 new Lazy<IHalibutInitializer>(() => halibut),
                 new Lazy<IWritableTentacleConfiguration>(() => tentacleConfiguration),
                 new Lazy<IHomeConfiguration>(() => home),
@@ -45,9 +46,10 @@ namespace Octopus.Tentacle.Tests.Commands
                 selector = Substitute.For<IApplicationInstanceSelector>(),
                 new Lazy<IProxyInitializer>(() => Substitute.For<IProxyInitializer>()),
                 Substitute.For<IWindowsLocalAdminRightsChecker>(),
-                new AppVersion(GetType().Assembly));
+                new AppVersion(GetType().Assembly),
+                Substitute.For<ILogFileOnlyLogger>());
 
-            selector.GetCurrentName().Returns("MyTentacle");
+            selector.Current.Returns(new ApplicationInstanceConfiguration("MyTentacle", null, null, null));
         }
 
         [Test]

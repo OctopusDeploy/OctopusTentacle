@@ -50,7 +50,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         string spaceDataLoadError;
         string selectedMachinePolicy;
         string selectedSpace;
-        string[] selectedWorkerPools;
         string[] potentialEnvironments;
         string[] potentialRoles;
         string[] potentialMachinePolicies;
@@ -114,7 +113,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             Validator = CreateValidator();
             ServerCommsPort = "10943";
             CommunicationStyle = CommunicationStyle.TentaclePassive;
-            
+
 
             // It would be nice to do this by sniffing for the advfirewall command, but doing
             // so would slow down showing the wizard. This check identifies and excludes Windows Server 2003.
@@ -522,7 +521,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 selectedSpace = value;
                 OnPropertyChanged();
                 if (!string.IsNullOrEmpty(selectedSpace))
-                    LoadSpaceData(client => LoadSpaceSpecificData(client));
+#pragma warning disable 4014 // we want this to be async
+                    LoadSpaceData(async client => await LoadSpaceSpecificData(client));
+#pragma warning restore 4014
             }
         }
 
@@ -767,8 +768,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 PotentialMachinePolicies = spaceSpecificData.MachinePolicies.Select(e => e.Name).ToArray();
                 if (spaceSpecificData.MachinePoliciesAreSupported)
                 {
-                    SelectedMachinePolicy = PotentialMachinePolicies.Contains(SelectedMachinePolicy) 
-                        ? SelectedMachinePolicy 
+                    SelectedMachinePolicy = PotentialMachinePolicies.Contains(SelectedMachinePolicy)
+                        ? SelectedMachinePolicy
                         : spaceSpecificData.MachinePolicies.First(x => x.IsDefault).Name;
                     ShowMachinePolicySelection = PotentialMachinePolicies.Length > 1;
                 }
