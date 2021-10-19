@@ -16,17 +16,26 @@ namespace Octopus.Tentacle.Commands.OptionSets
 
         async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, IWebProxy overrideProxy, bool useDefaultProxy)
         {
-            var endpoint = GetEndpoint(apiEndpointOptions, overrideProxy);
-            var clientOptions = new OctopusClientOptions() { AllowDefaultProxy = useDefaultProxy };
-            using var client = await OctopusAsyncClient.Create(endpoint, clientOptions).ConfigureAwait(false);
-
-            if (string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey))
+            IOctopusAsyncClient client = null;
+            try
             {
-                await client.Repository.Users
-                    .SignIn(new LoginCommand { Username = apiEndpointOptions.Username, Password = apiEndpointOptions.Password });
-            }
+                var endpoint = GetEndpoint(apiEndpointOptions, overrideProxy);
+                var clientOptions = new OctopusClientOptions() { AllowDefaultProxy = useDefaultProxy };
+                client = await OctopusAsyncClient.Create(endpoint, clientOptions).ConfigureAwait(false);
 
-            return client;
+                if (string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey))
+                {
+                    await client.Repository.Users
+                        .SignIn(new LoginCommand { Username = apiEndpointOptions.Username, Password = apiEndpointOptions.Password });
+                }
+
+                return client;
+            }
+            catch (Exception)
+            {
+                client?.Dispose();
+                throw;
+            }
         }
 
         OctopusServerEndpoint GetEndpoint(ApiEndpointOptions apiEndpointOptions, IWebProxy overrideProxy)
