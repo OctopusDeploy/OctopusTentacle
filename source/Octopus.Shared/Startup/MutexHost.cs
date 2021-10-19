@@ -35,10 +35,11 @@ namespace Octopus.Shared.Startup
                 task = Task.Run(() =>
                 {
                     while (!sourceToken.IsCancellationRequested)
-                        if (m.WaitOne(500))
+                        if (m!.WaitOne(500))
                         {
                             shutdown();
                             shutdownTrigger.Set();
+                            m.ReleaseMutex();
                             break;
                         }
                 });
