@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Commands
         readonly ISpaceRepositoryFactory spaceRepositoryFactory;
         string spaceName;
 
-        public const string DeregistrationSuccessMsg = "Machine deregistered successfully";
+        public const string DeregistrationSuccessMsg = "Worker deregistered successfully";
         public const string MultipleMatchErrorMsg = "The worker matches more than one machine on the server. To deregister all of these machines specify the --multiple flag.";
 
         public DeregisterWorkerCommand(Lazy<ITentacleConfiguration> configuration,
