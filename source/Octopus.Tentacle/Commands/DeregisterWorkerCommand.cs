@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Octopus.Client;
 using Octopus.Diagnostics;
@@ -6,6 +8,7 @@ using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
+using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
 
@@ -15,6 +18,7 @@ namespace Octopus.Tentacle.Commands
     {
         readonly Lazy<ITentacleConfiguration> configuration;
         readonly ISystemLog log;
+        readonly IApplicationInstanceSelector selector;
         readonly ApiEndpointOptions api;
         bool allowMultiple;
         readonly IProxyConfigParser proxyConfig;
@@ -36,6 +40,7 @@ namespace Octopus.Tentacle.Commands
         {
             this.configuration = configuration;
             this.log = log;
+            this.selector = selector;
             this.proxyConfig = proxyConfig;
             this.octopusClientInitializer = octopusClientInitializer;
             this.spaceRepositoryFactory = spaceRepositoryFactory;
@@ -73,15 +78,19 @@ namespace Octopus.Tentacle.Commands
             if (matchingMachines.Count > 1 && !allowMultiple)
                 throw new ControlledFailureException(MultipleMatchErrorMsg);
 
-            // 2. contact the server and de-register, this is independant to any tentacle configuration
+            // 2. contact the server and de-register, this is independent to any tentacle configuration
             foreach (var machineResource in matchingMachines)
             {
                 log.Info($"Deleting worker '{machineResource.Name}' from the Octopus Server...");
                 await repository.Workers.Delete(machineResource);
             }
 
+            var certificate = await repository.Certificates.GetOctopusCertificate();
+
+            var instanceArg = selector.Current.InstanceName == null ? "" : $" --instance {selector.Current.InstanceName}";
+            var executable = PlatformDetection.IsRunningOnWindows ? "Tentacle.exe" : "Tentacle";
             log.Info("The Octopus Server is still trusted. " +
-                "If you wish to remove trust for this Octopus Server, use 'Tentacle.exe configure --remove-trust=...'");
+                $"If you wish to remove trust for this Octopus Server, use '{executable} configure --remove-trust={certificate.Thumbprint}{instanceArg}'");
 
             log.Info(DeregistrationSuccessMsg);
         }

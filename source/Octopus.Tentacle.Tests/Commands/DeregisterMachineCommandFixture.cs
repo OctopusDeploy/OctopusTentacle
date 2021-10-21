@@ -6,6 +6,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Client;
 using Octopus.Client.Model;
+using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Shared.Configuration;
@@ -24,14 +25,18 @@ namespace Octopus.Tentacle.Tests.Commands
     {
         ISystemLog log;
         IProxyConfigParser proxyConfig;
-        IOctopusAsyncRepository asyncRepository;
+        IOctopusSpaceAsyncRepository asyncRepository;
+        IApplicationInstanceSelector selector;
+
         [SetUp]
         public override void SetUp()
         {
             base.SetUp();
-            asyncRepository = Substitute.For<IOctopusAsyncRepository>();
+            asyncRepository = Substitute.For<IOctopusSpaceAsyncRepository>();
             proxyConfig = Substitute.For<IProxyConfigParser>();
             log = Substitute.For<ISystemLog>();
+            selector = Substitute.For<IApplicationInstanceSelector>();
+            selector.Current.Returns(new ApplicationInstanceConfiguration("my-instance", "myconfig.config", Substitute.For<IKeyValueStore>(), Substitute.For<IWritableKeyValueStore>()));
         }
 
         [Test]
@@ -47,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Commands
             };
             Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
                                                    log,
-                                                   Substitute.For<IApplicationInstanceSelector>(),
+                                                   selector,
                                                    proxyConfig,
                                                    Substitute.For<IOctopusClientInitializer>(),
                                                    new SpaceRepositoryFactory(),
@@ -77,11 +82,14 @@ namespace Octopus.Tentacle.Tests.Commands
 
             Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
                                                    log,
-                                                   Substitute.For<IApplicationInstanceSelector>(),
+                                                   selector,
                                                    proxyConfig,
                                                    Substitute.For<IOctopusClientInitializer>(),
                                                    new SpaceRepositoryFactory(),
                                                    Substitute.For<ILogFileOnlyLogger>());
+
+            asyncRepository.Certificates.GetOctopusCertificate()
+                .ReturnsForAnyArgs(new CertificateConfigurationResource { Thumbprint = expectedThumbPrint }.AsTask());
 
             const string machineName = "MachineToBeDeleted";
             var matchingMachines = new List<MachineResource>
@@ -108,13 +116,13 @@ namespace Octopus.Tentacle.Tests.Commands
 
             Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
                                                    log,
-                                                   Substitute.For<IApplicationInstanceSelector>(),
+                                                   selector,
                                                    proxyConfig,
                                                    Substitute.For<IOctopusClientInitializer>(),
                                                    new SpaceRepositoryFactory(),
                                                    Substitute.For<ILogFileOnlyLogger>());
 
-            asyncRepository.CertificateConfiguration.GetOctopusCertificate()
+            asyncRepository.Certificates.GetOctopusCertificate()
                 .ReturnsForAnyArgs(new CertificateConfigurationResource { Thumbprint = expectedThumbPrint }.AsTask());
 
             const string machineName = "MachineToBeDeleted";
