@@ -11,6 +11,7 @@
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
     <TargetFrameworks>net452</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
