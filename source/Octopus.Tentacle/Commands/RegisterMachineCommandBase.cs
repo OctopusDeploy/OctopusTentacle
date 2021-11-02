@@ -96,7 +96,10 @@ namespace Octopus.Tentacle.Commands
 
             Uri serverAddress = null;
 
-            var useDefaultProxy = configuration.Value.PollingProxyConfiguration.UseDefaultProxy;
+            var useDefaultProxy = communicationStyle == CommunicationStyle.TentacleActive
+                ? configuration.Value.PollingProxyConfiguration.UseDefaultProxy
+                : configuration.Value.ProxyConfiguration.UseDefaultProxy;
+
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             IWebProxy proxyOverride = null;
             string sslThumbprint = null;
