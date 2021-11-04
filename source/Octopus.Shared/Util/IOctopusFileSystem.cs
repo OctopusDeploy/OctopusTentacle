@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Octopus.Shared.Util
 {
@@ -11,10 +12,10 @@ namespace Octopus.Shared.Util
         bool FileExists(string path);
         bool DirectoryExists(string path);
         bool DirectoryIsEmpty(string path);
-        void DeleteFile(string path);
-        void DeleteFile(string path, DeletionOptions options);
-        void DeleteDirectory(string path);
-        void DeleteDirectory(string path, DeletionOptions options);
+        void DeleteFile(string path, DeletionOptions? options = null);
+        Task DeleteFile(string path, CancellationToken cancellationToken, DeletionOptions? options = null);
+        void DeleteDirectory(string path, DeletionOptions? options = null);
+        Task DeleteDirectory(string path, CancellationToken cancellationToken, DeletionOptions? options = null);
         string GetCurrentDirectory();
         IEnumerable<string> EnumerateDirectories(string parentDirectoryPath);
         IEnumerable<string> EnumerateDirectoriesRecursively(string parentDirectoryPath);
@@ -40,6 +41,9 @@ namespace Octopus.Shared.Util
         void PurgeDirectory(string targetDirectory, DeletionOptions options, CancellationToken cancel);
         void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, DeletionOptions options);
         void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, DeletionOptions options, Func<string, IEnumerable<string>> fileEnumerator);
+        Task PurgeDirectory(string targetDirectory, CancellationToken cancel, DeletionOptions? options = null);
+        Task PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, CancellationToken cancel, DeletionOptions? options = null);
+        Task PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, Func<string, IEnumerable<string>> fileEnumerator, CancellationToken cancel, DeletionOptions? options = null);
         void EnsureDirectoryExists(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath, long requiredSpaceInBytes);
