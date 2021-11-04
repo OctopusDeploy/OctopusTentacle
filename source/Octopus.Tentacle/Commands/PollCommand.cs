@@ -9,6 +9,7 @@ using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Startup;
+using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
@@ -22,6 +23,7 @@ namespace Octopus.Tentacle.Commands
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly ISystemLog log;
+        readonly IApplicationInstanceSelector selector;
         readonly ApiEndpointOptions api;
         int commsPort = 10943;
         string serverWebSocketAddress;
@@ -40,6 +42,7 @@ namespace Octopus.Tentacle.Commands
             this.proxyConfig = proxyConfig;
             this.octopusClientInitializer = octopusClientInitializer;
             this.log = log;
+            this.selector = selector;
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
 
@@ -92,18 +95,23 @@ namespace Octopus.Tentacle.Commands
                 .Where(s => s.Thumbprint == serverThumbprint)
                 .ToArray();
 
+            var executable = PlatformDetection.IsRunningOnWindows ? "Tentacle.exe" : "Tentacle";
+            var instanceArg = selector.Current.InstanceName == null ? "" : $" --instance {selector.Current.InstanceName}";
+
             if (!alreadyConfiguredServersInCluster.Any())
             {
-                throw new ControlledFailureException($"The Octopus Server with the thumbprint '{serverThumbprint}' is not trusted yet. " +
-                    $"Trust this Octopus Server using 'Tentacle.exe configure --trust=\"{serverThumbprint}\"");
+                throw new ControlledFailureException($"The Octopus Server with the thumbprint '{serverThumbprint}' is not yet trusted. " + Environment.NewLine +
+                    $"Trust this Octopus Server using '{executable} configure --trust=\"{serverThumbprint}\"{instanceArg}'");
             }
 
-            OctopusServerConfiguration pollingServerConfiguration = alreadyConfiguredServersInCluster
+            var pollingServerConfiguration = alreadyConfiguredServersInCluster
                 .FirstOrDefault(c => c.CommunicationStyle == CommunicationStyle.TentacleActive && c.SubscriptionId != null);
             if (pollingServerConfiguration == null)
             {
-                throw new ControlledFailureException("This Octopus Server has not been configured as a polling Tentacle. " +
-                    $"Reconfigure the server as a polling Tentacle using 'Tentacle.exe server-comms --thumbprint=\"{serverThumbprint}\" --style=TentacleActive'");
+                throw new ControlledFailureException("This Tentacle has not been configured to connect to the specified Octopus Server as a polling Tentacle. " + Environment.NewLine +
+                    $"Reconfigure this Tentacle to poll the server using either:" + Environment.NewLine +
+                    $"'{executable} server-comms --thumbprint=\"{serverThumbprint}\" --style=TentacleActive{instanceArg} --host {new Uri(api.Server).Host}' or " + Environment.NewLine +
+                    $"'{executable} server-comms --thumbprint=\"{serverThumbprint}\" --style=TentacleActive{instanceArg} --web-socket <web-socket-address>'");
             }
 
             return pollingServerConfiguration;

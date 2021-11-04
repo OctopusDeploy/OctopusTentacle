@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Client;
+using Octopus.Client.Exceptions;
 using Octopus.Client.Model;
 using Octopus.Client.Operations;
 using Octopus.Diagnostics;
@@ -163,6 +164,10 @@ namespace Octopus.Tentacle.Commands
                 await registerMachineOperation.ExecuteAsync(repository);
             }
             catch (InvalidRegistrationArgumentsException ex)
+            {
+                throw new ControlledFailureException(ex.Message, ex);
+            }
+            catch (OctopusValidationException ex)
             {
                 throw new ControlledFailureException(ex.Message, ex);
             }
