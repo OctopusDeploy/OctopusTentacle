@@ -8,7 +8,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NLog.Filters;
 using Octopus.Diagnostics;
 using Polly;
 
@@ -22,8 +21,7 @@ namespace Octopus.Shared.Util
 
         const long FiveHundredMegabytes = 500 * 1024 * 1024;
 
-        static readonly char[] InvalidFileNameChars = new char[41]
-        {
+        static readonly char[] InvalidFileNameChars = {
             // From Path.InvalidPathChars which covers Windows and Linux
             '"',
             '<',
@@ -326,7 +324,7 @@ namespace Octopus.Shared.Util
                 .Wait(cancel);
         }
 
-        public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, DeletionOptions? options = null)
+        public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, DeletionOptions options)
         {
             PurgeDirectoryAsync(
                     targetDirectory,
@@ -347,18 +345,6 @@ namespace Octopus.Shared.Util
                 includeTarget: null,
                 fileEnumerationFunc: null,
                 options);
-        }
-
-        public void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, Func<string, IEnumerable<string>> fileEnumerator, DeletionOptions? options = null)
-        {
-            PurgeDirectoryAsync(
-                    targetDirectory,
-                    filter,
-                    cancel: null,
-                    includeTarget: false,
-                    fileEnumerationFunc: fileEnumerator,
-                    options)
-                .Wait();
         }
 
         public Task PurgeDirectory(string targetDirectory,
@@ -387,26 +373,7 @@ namespace Octopus.Shared.Util
                 .Wait();
         }
 
-        void PurgeDirectory(string targetDirectory,
-            Predicate<IFileInfo>? include,
-            CancellationToken cancel,
-            bool? includeTarget,
-            Func<string, IEnumerable<string>>? fileEnumerationFunc = null,
-            DeletionOptions? options = null)
-        {
-            PurgeDirectoryAsync(targetDirectory,
-                    include,
-                    cancel,
-                    includeTarget,
-                    fileEnumerationFunc,
-                    options)
-                .Wait(cancel);
-        }
-
-        static readonly Predicate<IFileInfo> DefaultIncludeFilter = fileInfo => true;
         static readonly CancellationToken DefaultCancellationToken = CancellationToken.None;
-        const bool DefaultIncludeTarget = false;
-        static readonly DeletionOptions DefaultDeletionOptions = DeletionOptions.TryThreeTimes;
 
         IEnumerable<string> DefaultFileEnumerationFunc(string target)
         {

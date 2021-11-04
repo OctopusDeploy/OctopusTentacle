@@ -38,10 +38,11 @@ namespace Octopus.Shared.Util
         void CopyDirectory(string sourceDirectory, string targetDirectory, CancellationToken cancel, int overwriteFileRetryAttempts = 3);
         ReplaceStatus CopyFile(string sourceFile, string destinationFile, int overwriteFileRetryAttempts = 3);
         void PurgeDirectory(string targetDirectory, DeletionOptions options);
+        void PurgeDirectory(string targetDirectory, DeletionOptions options, CancellationToken cancel);
+        void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, DeletionOptions options);
+        void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, DeletionOptions options, Func<string, IEnumerable<string>> fileEnumerator);
         Task PurgeDirectory(string targetDirectory, CancellationToken cancel, DeletionOptions? options = null);
-        void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, DeletionOptions? options = null);
         Task PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, CancellationToken cancel, DeletionOptions? options = null);
-        void PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, Func<string, IEnumerable<string>> fileEnumerator, DeletionOptions? options = null);
         Task PurgeDirectory(string targetDirectory, Predicate<IFileInfo> filter, Func<string, IEnumerable<string>> fileEnumerator, CancellationToken cancel, DeletionOptions? options = null);
         void EnsureDirectoryExists(string directoryPath);
         void EnsureDiskHasEnoughFreeSpace(string directoryPath);
