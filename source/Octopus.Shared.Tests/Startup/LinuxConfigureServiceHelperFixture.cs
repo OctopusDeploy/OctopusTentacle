@@ -30,6 +30,41 @@ namespace Octopus.Shared.Tests.Startup
             CanInstallService(user.UserName, user.Password);
         }
 
+        [Test]
+        public void CannotWriteToServiceFileAsUser()
+        {
+            const string serviceName = "OctopusShared.ServiceHelperTest";
+            const string instance = "TestCannotWriteToServiceFileInstance";
+            const string serviceDescription = "Test service for OctopusShared tests";
+            var log = new InMemoryLog();
+            var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullProcessPath());
+            var scriptPath = Path.Combine(root, "SampleScript.sh");
+            WriteUnixFile(scriptPath);
+
+            var chmodCmd = new CommandLineInvocation("/bin/bash", $"-c \"chmod 777 {scriptPath}\"");
+            chmodCmd.ExecuteCommand();
+
+            var configureServiceHelper = new LinuxServiceConfigurator(log);
+
+            var serviceConfigurationState = new ServiceConfigurationState
+            {
+                Install = true,
+                Start = true,
+                Username = "user",
+                Password = "password"
+            };
+
+            configureServiceHelper.ConfigureServiceByInstanceName(serviceName,
+                scriptPath,
+                instance,
+                serviceDescription,
+                serviceConfigurationState);
+
+            var statCmd = new CommandLineInvocation("/bin/bash", $"-c \"stat -c '%A' /etc/systemd/system/{instance}.service\"");
+            var result = statCmd.ExecuteCommand();
+            result.Infos.Single().Should().Be("-rw-rw-r--"); // Service file should not be writeable for all users
+        }
+
         void CanInstallService(string username, string password)
         {
             const string serviceName = "OctopusShared.ServiceHelperTest";
