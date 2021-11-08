@@ -31,7 +31,6 @@ namespace Octopus.Tentacle.Tests.Commands
         public string PackagesDirectory { get; private set; }
         public string LogsDirectory { get; private set; }
         public string JournalFilePath { get; private set; }
-        public string PackageRetentionFilePath { get; private set; }
         public X509Certificate2 TentacleCertificate { get; set; }
         public string ListenIpAddress { get; set; }
         public bool NoListen { get; set; }
