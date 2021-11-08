@@ -43,7 +43,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Octopus.Client" Version="11.3.3425" />
-		<PackageReference Include="Octopus.Shared" Version="10.3.6-nelson-fix-chmod0010" />
+		<PackageReference Include="Octopus.Shared" Version="10.4.1" />
 	</ItemGroup>
 
 	<ItemGroup>
