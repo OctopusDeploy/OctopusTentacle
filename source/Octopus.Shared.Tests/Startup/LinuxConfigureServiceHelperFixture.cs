@@ -62,7 +62,7 @@ namespace Octopus.Shared.Tests.Startup
 
             var statCmd = new CommandLineInvocation("/bin/bash", $"-c \"stat -c '%A' /etc/systemd/system/{instance}.service\"");
             var result = statCmd.ExecuteCommand();
-            result.Infos.Single().Should().Be("-rw-rw-r--"); // Service file should not be writeable for all users
+            result.Infos.Single().Should().Be("-rw-r--r--"); // Service file should only be writeable for the root user
         }
 
         void CanInstallService(string username, string password)
