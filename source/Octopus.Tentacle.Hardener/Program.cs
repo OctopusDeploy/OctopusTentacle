@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Hardener
             var accessControl = Directory.GetAccessControl(directory, AccessControlSections.Access);
 
             bool IsInheritedWritePermission(FileSystemAccessRule rule)
-                => rule.FileSystemRights == FileSystemRights.CreateFiles || rule.FileSystemRights == FileSystemRights.AppendData;
+                => rule.FileSystemRights.HasFlag(FileSystemRights.CreateFiles) || rule.FileSystemRights.HasFlag(FileSystemRights.AppendData);
 
             var writeRules = accessControl.GetAccessRules(true, true, typeof(SecurityIdentifier))
                 .Cast<FileSystemAccessRule>()
