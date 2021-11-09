@@ -98,7 +98,7 @@ namespace Octopus.Tentacle.Configuration
         }
 
         public string JournalFilePath => Path.Combine(home.HomeDirectory ?? ".", "DeploymentJournal.xml");
-        public string PackageRetentionFilePath => Path.Combine(home.HomeDirectory ?? ".", "PackageRetentionJournal.json");
+        public string PackageRetentionJournalFilePath => Path.Combine(home.HomeDirectory ?? ".", "PackageRetentionJournal.json");
 
         public X509Certificate2? TentacleCertificate
         {
