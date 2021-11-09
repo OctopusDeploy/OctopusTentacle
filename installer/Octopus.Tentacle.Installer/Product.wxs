@@ -140,8 +140,8 @@
     <!--
     Harden installation directory
     -->
-    <CustomAction Id="SetExecProp" Property="WixQuietExecCmdLine" Value='[INSTALLLOCATION]Octopus.Tentacle.Hardener.exe'></CustomAction>
-    <CustomAction Id="HardenInstallationDirectory" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="immediate" Return="ignore"/>
+    <CustomAction Id="SetExecProp" Property="WixQuietExec64CmdLine" Value='[INSTALLLOCATION]Octopus.Tentacle.Hardener.exe'></CustomAction>
+    <CustomAction Id="HardenInstallationDirectory" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="immediate" Return="ignore"/>
     <InstallExecuteSequence>
       <Custom Action="SetExecProp" After="InstallExecute"/>
       <Custom Action="HardenInstallationDirectory" After="SetExecProp"/>
