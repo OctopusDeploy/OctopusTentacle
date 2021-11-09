@@ -15,6 +15,7 @@ namespace Octopus.Shared.Variables
         public const string TentacleHome = "TentacleHome";
         public const string TentacleApplications = "TentacleApplications";
         public const string TentacleJournal = "TentacleJournal";
+        public const string CalamariPackageRetentionJournalPath = "CalamariPackageRetentionJournalPath";
         public const string TentacleInstanceName = "TentacleInstanceName";
         public const string TentacleExecutablePath = "TentacleExecutablePath";
         public const string TentacleProgramDirectoryPath = "TentacleProgramDirectoryPath";
