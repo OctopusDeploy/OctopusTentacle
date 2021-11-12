@@ -702,6 +702,7 @@ namespace Octopus.Shared.Util
                 try
                 {
                     await Task.Run(() => thingToDo(i), cancellationToken);
+                    break;
                 }
                 catch (Exception e)
                 {
