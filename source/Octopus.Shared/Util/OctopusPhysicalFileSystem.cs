@@ -432,8 +432,19 @@ namespace Octopus.Shared.Util
                 {
                     if (includeTarget.Value && DirectoryIsEmpty(targetDirectory))
                     {
-                        new DirectoryInfo(targetDirectory).Attributes = FileAttributes.Normal;
-                        Directory.Delete(targetDirectory, true);
+                        var dirInfo = new DirectoryInfo(targetDirectory)
+                        {
+                            Attributes = FileAttributes.Normal
+                        };
+
+                        try
+                        {
+                            dirInfo.Delete(true);
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e, $"PurgeDirectoryAsync could not delete directory {targetDirectory}");
+                        }
                     }
                 },
                 cancel.Value);
