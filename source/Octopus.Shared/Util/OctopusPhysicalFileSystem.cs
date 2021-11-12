@@ -21,7 +21,8 @@ namespace Octopus.Shared.Util
 
         const long FiveHundredMegabytes = 500 * 1024 * 1024;
 
-        static readonly char[] InvalidFileNameChars = {
+        static readonly char[] InvalidFileNameChars =
+        {
             // From Path.InvalidPathChars which covers Windows and Linux
             '"',
             '<',
@@ -106,42 +107,19 @@ namespace Octopus.Shared.Util
             if (string.IsNullOrWhiteSpace(path))
                 return;
 
-            var firstAttemptFailed = false;
-            for (var i = 0; i < options.RetryAttempts; i++)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
-
-                try
+            await TryToDoSomethingMultipleTimes(i =>
                 {
-                    await Task.Run(() =>
-                        {
-                            if (File.Exists(path))
-                            {
-                                if (firstAttemptFailed)
-                                    File.SetAttributes(path, FileAttributes.Normal);
-                                File.Delete(path);
-                            }
-                        },
-                        cancellationToken);
-                }
-                catch
-                {
-                    Thread.Sleep(options.SleepBetweenAttemptsMilliseconds);
-                    firstAttemptFailed = true;
-                    if (i == options.RetryAttempts - 1)
+                    if (File.Exists(path))
                     {
-                        Log.Error("DeleteFile caught an exception");
-                        if (options.ThrowOnFailure)
-                        {
-                            Log.Error("DeleteFile is throwing an exception");
-                            throw;
-                        }
-
-                        break;
+                        if (i > 1) // Did our first attempt fail?
+                            File.SetAttributes(path, FileAttributes.Normal);
+                        File.Delete(path);
                     }
-                }
-            }
+                },
+                options.RetryAttempts,
+                options.SleepBetweenAttemptsMilliseconds,
+                options.ThrowOnFailure,
+                cancellationToken);
         }
 
         public void DeleteDirectory(string path, DeletionOptions? options = null)
@@ -417,7 +395,12 @@ namespace Octopus.Shared.Util
             {
                 var info = new DirectoryInfo(directory);
                 if ((info.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
-                    Directory.Delete(directory);
+                    await TryToDoSomethingMultipleTimes(
+                        _ => info.Delete(true),
+                        options.RetryAttempts,
+                        options.SleepBetweenAttemptsMilliseconds,
+                        options.ThrowOnFailure,
+                        cancel.Value);
                 else
                     await PurgeDirectoryAsync(
                         directory,
@@ -428,26 +411,25 @@ namespace Octopus.Shared.Util
                         options);
             }
 
-            await Task.Run(() =>
-                {
-                    if (includeTarget.Value && DirectoryIsEmpty(targetDirectory))
+            if (includeTarget.Value)
+            {
+                await TryToDoSomethingMultipleTimes(
+                    _ =>
                     {
-                        var dirInfo = new DirectoryInfo(targetDirectory)
+                        if (DirectoryIsEmpty(targetDirectory))
                         {
-                            Attributes = FileAttributes.Normal
-                        };
-
-                        try
-                        {
+                            var dirInfo = new DirectoryInfo(targetDirectory)
+                            {
+                                Attributes = FileAttributes.Normal
+                            };
                             dirInfo.Delete(true);
                         }
-                        catch (Exception e)
-                        {
-                            Log.Error(e, $"PurgeDirectoryAsync could not delete directory {targetDirectory}");
-                        }
-                    }
-                },
-                cancel.Value);
+                    },
+                    options.RetryAttempts,
+                    options.SleepBetweenAttemptsMilliseconds,
+                    options.ThrowOnFailure,
+                    cancel.Value);
+            }
         }
 
         public void OverwriteAndDelete(string originalFile, string temporaryReplacement)
@@ -698,5 +680,45 @@ namespace Octopus.Shared.Util
 
         static bool IsUncPath(string directoryPath)
             => Uri.TryCreate(directoryPath, UriKind.Absolute, out var uri) && uri.IsUnc;
+
+        async Task TryToDoSomethingMultipleTimes(
+            Action<int> thingToDo,
+            int numberAttempts,
+            int sleepTime,
+            bool throwOnFailure,
+            CancellationToken cancellationToken)
+        {
+            if (numberAttempts < 1)
+            {
+                Log.Error("Trying to do something less than once, doesn't make much sense");
+                return;
+            }
+
+            for (var i = 1; i <= numberAttempts; i++)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                try
+                {
+                    await Task.Run(() => thingToDo(i), cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    Thread.Sleep(sleepTime);
+                    if (i == numberAttempts)
+                    {
+                        if (throwOnFailure)
+                        {
+                            Log.Error(e, $"Failed to complete action, attempted {numberAttempts} time(s), throwing error");
+                            throw;
+                        }
+
+                        Log.Error(e, $"Failed to complete action, attempted {numberAttempts} time(s), silently moving on...");
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
