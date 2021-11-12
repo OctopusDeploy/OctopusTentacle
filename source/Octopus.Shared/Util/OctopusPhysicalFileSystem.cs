@@ -131,8 +131,12 @@ namespace Octopus.Shared.Util
                     firstAttemptFailed = true;
                     if (i == options.RetryAttempts - 1)
                     {
+                        Log.Error("DeleteFile caught an exception");
                         if (options.ThrowOnFailure)
+                        {
+                            Log.Error("DeleteFile is throwing an exception");
                             throw;
+                        }
 
                         break;
                     }
