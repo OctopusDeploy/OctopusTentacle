@@ -68,7 +68,6 @@ namespace Octopus.Shared.Scripts
 
         public void Delete()
         {
-            FileSystem.PurgeDirectory(WorkingDirectory, DeletionOptions.TryThreeTimesIgnoreFailure);
             FileSystem.DeleteDirectory(WorkingDirectory, DeletionOptions.TryThreeTimesIgnoreFailure);
         }
     }
