@@ -18,7 +18,7 @@ namespace Octopus.Shared.Configuration
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
             => mapper.GetConfigurationValue(name);
 
-        public (bool foundResult, TData value) TryGet<TData>(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        public (bool foundResult, TData? value) TryGet<TData>(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             object? data = mapper.GetConfigurationValue(name);
 

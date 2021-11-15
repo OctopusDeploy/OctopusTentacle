@@ -14,7 +14,7 @@ namespace Octopus.Shared.Configuration
             this.jsonSerializerSettings = jsonSerializerSettings;
         }
 
-        public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        public override TData? Get<TData>(string name, TData? defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None) where TData : default
             => throw new NotImplementedException("This ");
 
         public override bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None)
