@@ -99,8 +99,8 @@ namespace Octopus.Shared.Tests.Util
             workspace.BootstrapScript("Write-Debug Hello");
             runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
-            scriptLog.StdOut.Length.Should().Be(0, "the script shouldn't have written to stdout");
-            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
+            scriptLog.StdOut.ToString().Should().NotContain("Hello", "the script shouldn't have written to stdout");
+            scriptLog.StdErr.ToString().Should().NotContain("Hello", "the script shouldn't have written to stderr");
         }
 
         [Test]
@@ -111,7 +111,7 @@ namespace Octopus.Shared.Tests.Util
             workspace.BootstrapScript("Write-Output Hello");
             runningScript.Execute();
             runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
-            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
+            scriptLog.StdErr.ToString().Should().NotContain("Hello", "the script shouldn't have written to stderr");
             scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Hello", "the message should have been written to stdout");
         }
 
@@ -127,7 +127,7 @@ namespace Octopus.Shared.Tests.Util
             else
                 runningScript.ExitCode.Should().Be(2, "&2 echo causes the exit code to be 1");
 
-            scriptLog.StdOut.Length.Should().Be(0, "the script shouldn't have written to stdout");
+            scriptLog.StdOut.ToString().Should().NotContain("EpicFail", "the script shouldn't have written to stdout");
             scriptLog.StdErr.ToString().Should().ContainEquivalentOf("EpicFail", "the message should have been written to stderr");
         }
 

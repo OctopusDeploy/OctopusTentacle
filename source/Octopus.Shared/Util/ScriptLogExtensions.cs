@@ -10,5 +10,12 @@ namespace Octopus.Shared.Util
             log(message);
             log("##octopus[stdout-default]");
         }
+
+        public static void WriteVerbose(this Action<string> log, string message)
+        {
+            log("##octopus[stdout-verbose]");
+            log(message);
+            log("##octopus[stdout-default]");
+        }
     }
 }

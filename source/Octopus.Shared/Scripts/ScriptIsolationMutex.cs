@@ -28,6 +28,7 @@ namespace Octopus.Shared.Scripts
             CancellationToken token,
             ILog log)
         {
+            taskLog.WriteVerbose($"Acquiring isolation mutex: {isolation} {lockName} {taskId}");
             var taskLock = ReaderWriterLocks.GetOrAdd(lockName, _ => new TaskLock());
 
             return new ScriptIsolationMutexReleaser(isolation,
