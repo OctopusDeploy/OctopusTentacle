@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Octopus.CoreUtilities.Extensions;
-using Octopus.Shared.Util;
+using Octopus.Shared.Scripts;
 
 namespace Octopus.Shared.Contracts
 {
@@ -12,7 +12,7 @@ namespace Octopus.Shared.Contracts
         public StartScriptCommand(string scriptBody,
             ScriptIsolationLevel isolation,
             TimeSpan scriptIsolationMutexTimeout,
-            string isolationMutexName,
+            string? isolationMutexName,
             string[] arguments,
             string? taskId)
         {
@@ -75,6 +75,6 @@ namespace Octopus.Shared.Contracts
         public string? TaskId { get; }
 
         public TimeSpan ScriptIsolationMutexTimeout { get; }
-        public string IsolationMutexName { get; }
+        public string? IsolationMutexName { get; }
     }
 }

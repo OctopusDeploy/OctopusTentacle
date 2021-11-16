@@ -17,6 +17,7 @@ namespace Octopus.Shared.Contracts
         ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
 
         TimeSpan scriptIsolationMutexTimeout = ScriptIsolationMutex.NoTimeout;
+        string scriptIsolationMutexName = nameof(RunningScript);
         string? taskId;
 
         public StartScriptCommandBuilder WithScriptBody(string scriptBody)
@@ -72,6 +73,12 @@ namespace Octopus.Shared.Contracts
             return this;
         }
 
+        public StartScriptCommandBuilder WithMutexName(string name)
+        {
+            scriptIsolationMutexName = name;
+            return this;
+        }
+
         public StartScriptCommandBuilder WithTaskId(string taskId)
         {
             this.taskId = taskId;
@@ -82,7 +89,7 @@ namespace Octopus.Shared.Contracts
             => new StartScriptCommand(scriptBody.ToString(),
                 isolation,
                 scriptIsolationMutexTimeout,
-                nameof(RunningScript),
+                scriptIsolationMutexName,
                 arguments.ToArray(),
                 taskId,
                 additionalScripts,
