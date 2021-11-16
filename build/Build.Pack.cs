@@ -128,11 +128,12 @@ partial class Build
                 var installerDirectory = BuildDirectory / "Installer";
                 FileSystemTasks.EnsureExistingDirectory(installerDirectory);
 
+                (BuildDirectory / "Octopus.Tentacle.Hardener" / NetFramework / "win").GlobFiles("*")
+                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 (BuildDirectory / "Tentacle" / NetFramework / "win").GlobFiles("*")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 (BuildDirectory / "Octopus.Manager.Tentacle" / NetFramework / "win").GlobFiles("*")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
-                FileSystemTasks.CopyFileToDirectory(RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1", installerDirectory, FileExistsPolicy.Overwrite);
 
                 var harvestFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Tentacle.Generated.wxs";
 

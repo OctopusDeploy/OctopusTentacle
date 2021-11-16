@@ -92,10 +92,14 @@ namespace Octopus.Tentacle.Commands
             if (configuration.Value.TentacleCertificate == null)
                 throw new ControlledFailureException("No certificate has been generated for this Tentacle. Please run the new-certificate command first.");
 
-            if(communicationStyle == CommunicationStyle.TentacleActive && !string.IsNullOrWhiteSpace(proxy))
+            if (communicationStyle == CommunicationStyle.TentacleActive && !string.IsNullOrWhiteSpace(proxy))
                 throw new ControlledFailureException("Option --proxy can only be used with --comms-style=TentaclePassive.  To set a proxy for a polling Tentacle use the polling-proxy command first and then register the Tentacle with register-with.");
 
             Uri serverAddress = null;
+
+            var useDefaultProxy = communicationStyle == CommunicationStyle.TentacleActive
+                ? configuration.Value.PollingProxyConfiguration.UseDefaultProxy
+                : configuration.Value.ProxyConfiguration.UseDefaultProxy;
 
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             IWebProxy proxyOverride = null;
@@ -109,11 +113,12 @@ namespace Octopus.Tentacle.Commands
 
             log.Info($"Registering the tentacle with the server at {api.ServerUri}");
 
-            using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
-            {
-                var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
-                await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle);
-            }
+            using var client = proxyOverride == null
+                ? await octopusClientInitializer.CreateClient(api, useDefaultProxy)
+                : await octopusClientInitializer.CreateClient(api, proxyOverride);
+
+            var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
+            await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle);
         }
 
         async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri serverAddress, string sslThumbprint, CommunicationStyle communicationStyle)
@@ -184,6 +189,7 @@ namespace Octopus.Tentacle.Commands
                     throw new Exception($"Could not determine thumbprint of the SSL Certificate at {serverAddress}");
                 return sslThumbprint;
             }
+
             var certificate = await repository.CertificateConfiguration.GetOctopusCertificate();
             return certificate.Thumbprint;
         }
@@ -231,6 +237,5 @@ namespace Octopus.Tentacle.Commands
         }
 
         #endregion
-
     }
 }
