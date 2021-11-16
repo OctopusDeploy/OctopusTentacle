@@ -54,7 +54,7 @@
     <PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58692" />
-    <PackageReference Include="Octopus.Configuration" Version="4.0.1-enh-nrt-default0004" />
+    <PackageReference Include="Octopus.Configuration" Version="4.1.0" />
     <PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
     <PackageReference Include="Octopus.Time" Version="1.1.339" />
     <PackageReference Include="Polly" Version="5.3.1" />
