@@ -12,6 +12,7 @@ namespace Octopus.Shared.Contracts
         public StartScriptCommand(string scriptBody,
             ScriptIsolationLevel isolation,
             TimeSpan scriptIsolationMutexTimeout,
+            string isolationMutexName,
             string[] arguments,
             string? taskId)
         {
@@ -20,17 +21,20 @@ namespace Octopus.Shared.Contracts
             ScriptBody = scriptBody;
             Isolation = isolation;
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
+            IsolationMutexName = isolationMutexName;
         }
 
         public StartScriptCommand(string scriptBody,
             ScriptIsolationLevel isolation,
             TimeSpan scriptIsolationMutexTimeout,
+            string isolationMutexName,
             string[] arguments,
             string? taskId,
             params ScriptFile[] additionalFiles)
             : this(scriptBody,
                 isolation,
                 scriptIsolationMutexTimeout,
+                isolationMutexName,
                 arguments,
                 taskId)
         {
@@ -41,6 +45,7 @@ namespace Octopus.Shared.Contracts
         public StartScriptCommand(string scriptBody,
             ScriptIsolationLevel isolation,
             TimeSpan scriptIsolationMutexTimeout,
+            string isolationMutexName,
             string[] arguments,
             string? taskId,
             Dictionary<ScriptType, string> additionalScripts,
@@ -48,6 +53,7 @@ namespace Octopus.Shared.Contracts
             : this(scriptBody,
                 isolation,
                 scriptIsolationMutexTimeout,
+                isolationMutexName,
                 arguments,
                 taskId,
                 additionalFiles)
@@ -69,5 +75,6 @@ namespace Octopus.Shared.Contracts
         public string? TaskId { get; }
 
         public TimeSpan ScriptIsolationMutexTimeout { get; }
+        public string IsolationMutexName { get; }
     }
 }

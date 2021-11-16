@@ -82,6 +82,7 @@ namespace Octopus.Shared.Contracts
             => new StartScriptCommand(scriptBody.ToString(),
                 isolation,
                 scriptIsolationMutexTimeout,
+                nameof(RunningScript),
                 arguments.ToArray(),
                 taskId,
                 additionalScripts,
