@@ -52,7 +52,7 @@ namespace Octopus.Shared.Scripts
                     {
                         using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
                             workspace.ScriptMutexAcquireTimeout,
-                            GetType().Name,
+                            workspace.ScriptMutexName,
                             message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
                             taskId,
                             token,

@@ -45,6 +45,8 @@ namespace Octopus.Shared.Scripts
             }
         }
 
+        public string ScriptMutexName { get; set; } = nameof(RunningScript);
+
         public string[]? ScriptArguments { get; set; }
 
         public string WorkingDirectory { get; }
