@@ -17,8 +17,8 @@ namespace Octopus.Shared.Configuration.Instances
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
             => Get(name, default(string?), protectionLevel);
 
-        [return: MaybeNull]
-        public TData Get<TData>(string name, TData defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        [return: NotNullIfNotNull("defaultValue")]
+        public TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             // the default value must not be sent to the aggregated config, it gets applied at this level if
             // none of the configurations return a value

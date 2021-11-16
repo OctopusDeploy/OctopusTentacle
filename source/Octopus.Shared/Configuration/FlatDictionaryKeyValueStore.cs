@@ -15,7 +15,7 @@ namespace Octopus.Shared.Configuration
             JsonSerializerSettings = jsonSerializerSettings;
         }
 
-        public override TData Get<TData>(string name, TData defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        public override TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None) where TData : default
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -49,7 +49,7 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-        public (bool foundResult, TData value) TryGet<TData>(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
+        public (bool foundResult, TData? value) TryGet<TData>(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
