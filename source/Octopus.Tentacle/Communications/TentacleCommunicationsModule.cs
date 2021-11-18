@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Communications
             {
                 var configuration = c.Resolve<ITentacleConfiguration>();
                 var services = c.Resolve<IServiceFactory>();
-                var halibutRuntime = new HalibutRuntime(services, configuration.TentacleCertificate);
+                var halibutRuntime = new HalibutRuntimeBuilder().WithServiceFactory(services).WithServerCertificate(configuration.TentacleCertificate).Build();
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
                 halibutRuntime.SetFriendlyHtmlPageHeaders(FriendlyHtmlPageHeaders);
                 return halibutRuntime;
