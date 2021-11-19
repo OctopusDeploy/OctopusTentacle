@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Threading;
 using FluentAssertions;
+using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
+using Octopus.Shared.Contracts;
 using Octopus.Shared.Scripts;
+using Octopus.Shared.Tests.Support;
 
 namespace Octopus.Shared.Tests.Scripts
 {
@@ -80,6 +83,34 @@ namespace Octopus.Shared.Tests.Scripts
                 lockReleaser2.Dispose();
                 lockReleaser3.Dispose();
             }
+
+            [Test]
+            public void LocksBlockOthersThatShareAName()
+            {
+                var lock1 = AcquireNamedLock("Lock 1");
+                Action a = () => AcquireNamedLock("Lock 1");
+                a.Should().Throw<TimeoutException>();
+                lock1.Dispose();
+            }
+
+            [Test]
+            public void LocksWithDifferentNamesCanBeHeldAtTheSameTime()
+            {
+                var lock1 = AcquireNamedLock("Lock 1");
+                var lock2 = AcquireNamedLock("Lock 2");
+                lock1.Dispose();
+                lock2.Dispose();
+            }
+
+            static IDisposable AcquireNamedLock(string name) => ScriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
+                TimeSpan.FromSeconds(1),
+                name,
+                s =>
+                {
+                },
+                "Task-1",
+                CancellationToken.None,
+                new TestConsoleLog());
         }
     }
 }
