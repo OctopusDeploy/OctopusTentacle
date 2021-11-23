@@ -48,6 +48,7 @@ namespace Octopus.Tentacle.Services.Scripts
             workspace.IsolationLevel = command.Isolation;
             workspace.ScriptMutexAcquireTimeout = command.ScriptIsolationMutexTimeout;
             workspace.ScriptArguments = command.Arguments;
+            workspace.ScriptMutexName = command.IsolationMutexName;
 
             if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
             {
