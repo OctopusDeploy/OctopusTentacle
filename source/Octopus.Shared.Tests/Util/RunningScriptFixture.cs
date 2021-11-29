@@ -175,7 +175,7 @@ namespace Octopus.Shared.Tests.Util
         [Retry(5)]
         public void CancellationToken_ShouldKillTheProcess()
         {
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
                 var (shell, sleepCommand) = PlatformDetection.IsRunningOnWindows
                     ? (new PowerShell(), "Start-Sleep -seconds")
@@ -188,7 +188,7 @@ namespace Octopus.Shared.Tests.Util
                     cts.Token,
                     new InMemoryLog());
 
-                workspace.BootstrapScript($"echo Starting\n{sleepCommand} 10\necho Finito");
+                workspace.BootstrapScript($"echo Starting\n{sleepCommand} 30\necho Finito");
                 script.Execute();
                 runningScript.ExitCode.Should().Be(0, "the script should have been canceled");
                 scriptLog.StdErr.ToString().Should().Be("", "the script shouldn't have written to stderr");
