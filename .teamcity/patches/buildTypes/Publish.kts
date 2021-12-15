@@ -1,6 +1,8 @@
 package patches.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.v2019_2.*
+import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.VcsTrigger
+import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.vcs
 import jetbrains.buildServer.configs.kotlin.v2019_2.ui.*
 
 /*
@@ -9,6 +11,17 @@ To apply the patch, change the buildType with id = 'Publish'
 accordingly, and delete the patch script.
 */
 changeBuildType(RelativeId("Publish")) {
+    triggers {
+        val trigger1 = find<VcsTrigger> {
+            vcs {
+            }
+        }
+        trigger1.apply {
+            enabled = false
+
+        }
+    }
+
     dependencies {
         expect(RelativeId("Build")) {
             snapshot {
