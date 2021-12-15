@@ -253,7 +253,9 @@ namespace Octopus.Shared.Util
             {
                 return process.ExitCode;
             }
-            catch (InvalidOperationException ex) when (ex.Message == "No process is associated with this object.")
+            catch (InvalidOperationException ex) 
+                when (ex.Message == "No process is associated with this object." || 
+                        ex.Message == "Process was not started by this object, so requested information cannot be determined.")
             {
                 return -1;
             }
