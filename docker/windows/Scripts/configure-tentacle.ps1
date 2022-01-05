@@ -11,6 +11,9 @@ $ServerUrl = $env:ServerUrl;
 $TargetEnvironment = $env:TargetEnvironment;
 $TargetRole = $env:TargetRole;
 $TargetWorkerPool = $env:TargetWorkerPool;
+$TargetTenant = $env:TargetTenant;
+$TargetTenantTag = $env:TargetTenantTag;
+$TargetTenantedDeploymentParticipation = $env:TargetTenantedDeploymentParticipation;
 $TargetName=$env:TargetName;
 $ListeningPort=$env:ListeningPort;
 $PublicHostNameConfiguration=$env:PublicHostNameConfiguration;
@@ -135,6 +138,14 @@ function Validate-Variables() {
       Write-Error "The 'TargetRole' environment variable is not valid in combination with the 'TargetWorkerPool' variable"
       exit 1;
     }
+    if($TargetTenant -ne $null) {
+      Write-Error "The 'TargetTenant' environment variable is not valid in combination with the 'TargetWorkerPool' variable"
+      exit 1;
+    }
+    if($TargetTenantTag -ne $null) {
+      Write-Error "The 'TargetTenantTag' environment variable is not valid in combination with the 'TargetWorkerPool' variable"
+      exit 1;
+    }
   } else {
     if($TargetEnvironment -eq $null) {
       Write-Error "Missing 'TargetEnvironment' environment variable"
@@ -142,6 +153,13 @@ function Validate-Variables() {
     }
     if($TargetRole -eq $null) {
       Write-Error "Missing 'TargetRole' environment variable"
+      exit 1;
+    }
+  }
+
+  if($TargetTenant -ne $null -or $TargetTenantTag -ne $null) {
+    if($TargetTenantedDeploymentParticipation -ne "Tenanted" -or $TargetTenantedDeploymentParticipation -ne "TenantedOrUntenanted"){
+      Write-Error "The 'TargetTenant' and 'TargetTenantTag' environment variables are not valid when the 'TargetTenantedDeploymentParticipation' variable is not set to 'Tenanted' or 'TenantedOrUntenanted'"
       exit 1;
     }
   }
@@ -228,39 +246,44 @@ function Register-Tentacle(){
     $arg += $TargetName;
   }
 
+  if($TargetTenantedDeploymentParticipation -ne $null) {
+    $arg += "--tenanted-deployment-participation";
+    $arg += $TargetTenantedDeploymentParticipation;
+  }
+
+  if($TargetEnvironment -ne $null) {
+    $TargetEnvironment.Split(",") | ForEach {
+      $arg += '--environment';
+      $arg += $_.Trim();
+     };
+  }
+
+  if($TargetRole -ne $null) {
+     $TargetRole.Split(",") | ForEach {
+      $arg += '--role';
+      $arg += $_.Trim();
+     };
+  }
+
+  if($TargetTenant -ne $null) {
+     $TargetTenant.Split(",") | ForEach {
+      $arg += '--tenant';
+      $arg += $_.Trim();
+     };
+  }
+
+  if($TargetTenantTag -ne $null) {
+     $TargetTenantTag.Split(",") | ForEach {
+      $arg += '--tenanttag';
+      $arg += $_.Trim();
+     };
+  }
+
   if($TargetWorkerPool -ne $null) {
     $TargetWorkerPool.Split(",") | ForEach {
       $arg += '--workerpool';
       $arg += $_.Trim();
      };
-  } else {
-    if($TargetEnvironment -ne $null) {
-      $TargetEnvironment.Split(",") | ForEach {
-        $arg += '--environment';
-        $arg += $_.Trim();
-       };
-    }
-  
-    if($TargetRole -ne $null) {
-       $TargetRole.Split(",") | ForEach {
-        $arg += '--role';
-        $arg += $_.Trim();
-       };
-    }
-  
-    if($Tenant -ne $null) {
-       $Tenant.Split(",") | ForEach {
-        $arg += '--tenant';
-        $arg += $_.Trim();
-       };
-    }
-  
-    if($TenantTag -ne $null) {
-       $TenantTag.Split(",") | ForEach {
-        $arg += '--tenanttag';
-        $arg += $_.Trim();
-       };
-    }
   }
 
   if($null -ne $Space) {

@@ -72,6 +72,13 @@ function validateVariables() {
 		fi
     fi
 
+	if [[ ! -z "$TargetTenant" || -z "$TargetTenantTag" ]]; then
+		if [[ "$TargetTenantedDeploymentParticipation" != "Tenanted" || "$TargetTenantedDeploymentParticipation" != "TenantedOrUntenanted" ]]; then
+			echo "The 'TargetTenant' and 'TargetTenantTag' environment variables are not valid when the 'TargetTenantedDeploymentParticipation' variable is not set to 'Tenanted' or 'TenantedOrUntenanted'"
+			exit 1
+		fi
+	fi
+
     echo " - server endpoint '$ServerUrl'"
     echo " - api key '##########'"
   if [[ ! -z "$ServerPort" ]]; then
@@ -142,15 +149,15 @@ function registerTentacle() {
 			done
 		fi
 
-		if [[ ! -z "$Tenant" ]]; then
-			IFS=',' read -ra TENANT <<< "$Tenant"
+		if [[ ! -z "$TargetTenant" ]]; then
+			IFS=',' read -ra TENANT <<< "$TargetTenant"
 			for i in "${TENANTS[@]}"; do
 				ARGS+=('--tenant' "$i")
 			done
 		fi
 
-		if [[ ! -z "$TenantTag" ]]; then
-			IFS=',' read -ra TENANTTAGS <<< "$TenantTag"
+		if [[ ! -z "$TargetTenantTag" ]]; then
+			IFS=',' read -ra TENANTTAGS <<< "$TargetTenantTag"
 			for i in "${TENANTTAGS[@]}"; do
 				ARGS+=('--tenanttag' "$i")
 			done
@@ -190,6 +197,10 @@ function registerTentacle() {
 
 	if [[ ! -z "$TargetName" ]]; then
 		ARGS+=('--name' "$TargetName")
+	fi
+	
+	if [[ ! -z "$TargetTenantedDeploymentParticipation" ]]; then
+		ARGS+=('--tenanted-deployment-participation' "$TargetTenantedDeploymentParticipation")
 	fi
 
 	tentacle "${ARGS[@]}"
