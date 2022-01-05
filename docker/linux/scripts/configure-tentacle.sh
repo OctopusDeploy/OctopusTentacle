@@ -72,7 +72,7 @@ function validateVariables() {
 		fi
     fi
 
-	if [[ ! -z "$TargetTenant" || -z "$TargetTenantTag" ]]; then
+	if [[ ! -z "$TargetTenant" || ! -z "$TargetTenantTag" ]]; then
 		if [[ "$TargetTenantedDeploymentParticipation" != "Tenanted" || "$TargetTenantedDeploymentParticipation" != "TenantedOrUntenanted" ]]; then
 			echo "The 'TargetTenant' and 'TargetTenantTag' environment variables are not valid when the 'TargetTenantedDeploymentParticipation' variable is not set to 'Tenanted' or 'TenantedOrUntenanted'"
 			exit 1
