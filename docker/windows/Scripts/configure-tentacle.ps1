@@ -228,25 +228,39 @@ function Register-Tentacle(){
     $arg += $TargetName;
   }
 
-  if($TargetEnvironment -ne $null) {
-    $TargetEnvironment.Split(",") | ForEach {
-      $arg += '--environment';
-      $arg += $_.Trim();
-     };
-  }
-
-  if($TargetRole -ne $null) {
-     $TargetRole.Split(",") | ForEach {
-      $arg += '--role';
-      $arg += $_.Trim();
-     };
-  }
-
   if($TargetWorkerPool -ne $null) {
     $TargetWorkerPool.Split(",") | ForEach {
       $arg += '--workerpool';
       $arg += $_.Trim();
      };
+  } else {
+    if($TargetEnvironment -ne $null) {
+      $TargetEnvironment.Split(",") | ForEach {
+        $arg += '--environment';
+        $arg += $_.Trim();
+       };
+    }
+  
+    if($TargetRole -ne $null) {
+       $TargetRole.Split(",") | ForEach {
+        $arg += '--role';
+        $arg += $_.Trim();
+       };
+    }
+  
+    if($Tenant -ne $null) {
+       $Tenant.Split(",") | ForEach {
+        $arg += '--tenant';
+        $arg += $_.Trim();
+       };
+    }
+  
+    if($TenantTag -ne $null) {
+       $TenantTag.Split(",") | ForEach {
+        $arg += '--tenanttag';
+        $arg += $_.Trim();
+       };
+    }
   }
 
   if($null -ne $Space) {

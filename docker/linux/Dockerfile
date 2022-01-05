@@ -50,6 +50,8 @@ ENV Space="Default"
 ENV TargetEnvironment=""
 ENV TargetName=""
 ENV TargetRole=""
+ENV Tenant=""
+ENV TenantTag=""
 ENV TargetWorkerPool=""
 
 VOLUME /var/lib/docker

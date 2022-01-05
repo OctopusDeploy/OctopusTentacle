@@ -141,6 +141,20 @@ function registerTentacle() {
 				ARGS+=('--role' "$i")
 			done
 		fi
+
+		if [[ ! -z "$Tenant" ]]; then
+			IFS=',' read -ra TENANT <<< "$Tenant"
+			for i in "${TENANTS[@]}"; do
+				ARGS+=('--tenant' "$i")
+			done
+		fi
+
+		if [[ ! -z "$TenantTag" ]]; then
+			IFS=',' read -ra TENANTTAGS <<< "$TenantTag"
+			for i in "${TENANTTAGS[@]}"; do
+				ARGS+=('--tenanttag' "$i")
+			done
+		fi
 	fi
 
 	ARGS+=(
