@@ -38,47 +38,6 @@ function getPublicHostName() {
 }
 
 function validateVariables() {
-	if [[ -z "$ServerApiKey" ]]; then
-		if [[ -z "$ServerPassword" || -z "$ServerUsername" ]]; then
-			echo "No 'ServerApiKey' or username/pasword environment variables are available" >&2
-			exit 1
-		fi
-	fi
-
-	if [[ -z "$ServerUrl" ]]; then
-		echo "Missing 'ServerUrl' environment variable" >&2
-		exit 1
-	fi
-
-	if [[ ! -z "$TargetWorkerPool" ]]; then
-		if [[ ! -z "$TargetEnvironment" ]]; then
-			echo "The 'TargetEnvironment' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
-			exit 1
-		fi
-
-		if [[ ! -z "$TargetRole" ]]; then
-			echo "The 'TargetRole' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
-			exit 1
-		fi
-	else
-		if [[ -z "$TargetEnvironment" ]]; then
-			echo "Missing 'TargetEnvironment' environment variable" >&2
-			exit 1
-		fi
-
-		if [[ -z "$TargetRole" ]]; then
-			echo "Missing 'TargetRole' environment variable" >&2
-			exit 1
-		fi
-    fi
-
-	if [[ ! -z "$TargetTenant" || ! -z "$TargetTenantTag" ]]; then
-		if [[ "$TargetTenantedDeploymentParticipation" != "Tenanted" || "$TargetTenantedDeploymentParticipation" != "TenantedOrUntenanted" ]]; then
-			echo "The 'TargetTenant' and 'TargetTenantTag' environment variables are not valid when the 'TargetTenantedDeploymentParticipation' variable is not set to 'Tenanted' or 'TenantedOrUntenanted'"
-			exit 1
-		fi
-	fi
-
     echo " - server endpoint '$ServerUrl'"
     echo " - api key '##########'"
   if [[ ! -z "$ServerPort" ]]; then

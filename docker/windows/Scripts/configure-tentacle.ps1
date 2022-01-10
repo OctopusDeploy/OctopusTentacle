@@ -117,53 +117,6 @@ function Get-PublicHostName
 }
 
 function Validate-Variables() {
-  if($ServerApiKey -eq $null) {
-    if($ServerPassword -eq $null -or $ServerUsername -eq $null){
-      Write-Error "No 'ServerApiKey' or username/pasword environment variables are available"
-      exit 1;
-    }
-  }
-
-  if($ServerUrl -eq $null) {
-    Write-Error "Missing 'ServerUrl' environment variable"
-    exit 1;
-  }
-
-  if($TargetWorkerPool -ne $null) {
-    if($TargetEnvironment -ne $null) {
-      Write-Error "The 'TargetEnvironment' environment variable is not valid in combination with the 'TargetWorkerPool' variable"
-      exit 1;
-    }
-    if($TargetRole -ne $null) {
-      Write-Error "The 'TargetRole' environment variable is not valid in combination with the 'TargetWorkerPool' variable"
-      exit 1;
-    }
-    if($TargetTenant -ne $null) {
-      Write-Error "The 'TargetTenant' environment variable is not valid in combination with the 'TargetWorkerPool' variable"
-      exit 1;
-    }
-    if($TargetTenantTag -ne $null) {
-      Write-Error "The 'TargetTenantTag' environment variable is not valid in combination with the 'TargetWorkerPool' variable"
-      exit 1;
-    }
-  } else {
-    if($TargetEnvironment -eq $null) {
-      Write-Error "Missing 'TargetEnvironment' environment variable"
-      exit 1;
-    }
-    if($TargetRole -eq $null) {
-      Write-Error "Missing 'TargetRole' environment variable"
-      exit 1;
-    }
-  }
-
-  if($TargetTenant -ne $null -or $TargetTenantTag -ne $null) {
-    if($TargetTenantedDeploymentParticipation -ne "Tenanted" -or $TargetTenantedDeploymentParticipation -ne "TenantedOrUntenanted"){
-      Write-Error "The 'TargetTenant' and 'TargetTenantTag' environment variables are not valid when the 'TargetTenantedDeploymentParticipation' variable is not set to 'Tenanted' or 'TenantedOrUntenanted'"
-      exit 1;
-    }
-  }
-
   if($PublicHostNameConfiguration -eq $null) {
     $script:PublicHostNameConfiguration = 'ComputerName'
   }
