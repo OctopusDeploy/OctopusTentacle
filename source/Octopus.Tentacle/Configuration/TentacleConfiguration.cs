@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Configuration
         [Obsolete("This configuration entry is obsolete as of 3.0. It is only used as a Subscription ID where one does not exist.")]
         public string? TentacleSquid => settings.Get("Octopus.Communications.Squid", (string?)null);
 
-        public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers => settings.Get(TrustedServersSettingName, new OctopusServerConfiguration[0]);
+        public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers => settings.Get<IEnumerable<OctopusServerConfiguration>>(TrustedServersSettingName) ?? new OctopusServerConfiguration[0];
 
         public IEnumerable<string> TrustedOctopusThumbprints
         {
@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Configuration
             get
             {
                 var path = settings.Get<string>(DeploymentApplicationDirectorySettingName);
-                if (string.IsNullOrWhiteSpace(path))
+                if (path is null || string.IsNullOrWhiteSpace(path))
                 {
                     if (PlatformDetection.IsRunningOnWindows)
                     {
@@ -97,10 +97,8 @@ namespace Octopus.Tentacle.Configuration
             get { return Path.Combine(ApplicationDirectory, "Packages"); }
         }
 
-        public string JournalFilePath
-        {
-            get { return Path.Combine(home.HomeDirectory ?? ".", "DeploymentJournal.xml"); }
-        }
+        public string JournalFilePath => Path.Combine(home.HomeDirectory ?? ".", "DeploymentJournal.xml");
+        public string PackageRetentionJournalPath => Path.Combine(home.HomeDirectory ?? ".", "PackageRetentionJournal.json");
 
         public X509Certificate2? TentacleCertificate
         {
@@ -114,9 +112,9 @@ namespace Octopus.Tentacle.Configuration
                 {
                     return null;
                 }
-                
+
                 var encoded = settings.Get<string>(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
-                return string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint!, encoded, log);
+                return encoded is null || string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint!, encoded, log);
             }
         }
 
@@ -132,7 +130,7 @@ namespace Octopus.Tentacle.Configuration
                     return OctopusServerConfiguration;
 
                 var setting = settings.Get<string>(LastReceivedHandshakeSettingName);
-                if (string.IsNullOrWhiteSpace(setting)) return null;
+                if (setting is null || string.IsNullOrWhiteSpace(setting)) return null;
                 return JsonConvert.DeserializeObject<OctopusServerConfiguration>(setting);
             }
         }

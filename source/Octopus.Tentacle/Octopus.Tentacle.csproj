@@ -12,7 +12,7 @@
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
 		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<LangVersion>8</LangVersion>
+		<LangVersion>9</LangVersion>
 	</PropertyGroup>
 
 	<Choose>
@@ -37,13 +37,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Halibut" Version="4.4.7" />
+		<PackageReference Include="Halibut" Version="4.4.9" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Octopus.Client" Version="11.3.3425" />
-		<PackageReference Include="Octopus.Shared" Version="10.3.3" />
+		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
+		<PackageReference Include="Octopus.Shared" Version="10.5.2" />
 	</ItemGroup>
 
 	<ItemGroup>

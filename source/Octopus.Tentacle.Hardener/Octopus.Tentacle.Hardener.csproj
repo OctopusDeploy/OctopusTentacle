@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AppConfig Condition="'$(TargetFramework)' == 'netcoreapp3.1'">app.netcore.config</AppConfig>
+        <AssemblyName>Octopus.Tentacle.Hardener</AssemblyName>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <IsPublishable>false</IsPublishable>
+        <NoWin32Manifest>true</NoWin32Manifest>
+        <OutputPath>bin</OutputPath>
+        <OutputType>WinExe</OutputType>
+        <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
+        <RuntimeIdentifiers>win</RuntimeIdentifiers>
+        <RootNamespace>Octopus.Tentacle.Hardener</RootNamespace>
+        <TargetFramework>net452</TargetFramework>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <LangVersion>8</LangVersion>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(TargetFramework)'=='net452'">
+        <IsPublishable>true</IsPublishable>
+    </PropertyGroup>
+</Project>

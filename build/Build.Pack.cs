@@ -67,7 +67,7 @@ partial class Build
                 CreateLinuxPackages(runtimeId);
 
                 var debOutputDirectory = BuildDirectory / "deb" / runtimeId / "output";
-                
+
                 FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "deb");
                 debOutputDirectory.GlobFiles("*.deb")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, ArtifactsDirectory / "deb"));
@@ -82,12 +82,12 @@ partial class Build
     Target PackDebianPackage => _ => _
         .Description("TODO: Move .deb creation into this task")
         .DependsOn(PackLinuxPackagesLegacy);
-    
+
     [PublicAPI]
     Target PackRedHatPackage => _ => _
         .Description("TODO: Move .rpm creation into this task")
         .DependsOn(PackLinuxPackagesLegacy);
-    
+
     [PublicAPI]
     Target PackChocolateyPackage => _ => _
         .Description("Packs the Chocolatey installer.")
@@ -104,7 +104,7 @@ partial class Build
 
             var chocolateyInstallScriptPath = SourceDirectory / "Chocolatey" / "chocolateyInstall.ps1";
             using var chocolateyInstallScriptFile = new ModifiableFileWithRestoreContentsOnDispose(chocolateyInstallScriptPath);
-            
+
             chocolateyInstallScriptFile.ReplaceRegexInFiles("0.0.0", OctoVersionInfo.FullSemVer);
             chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum>", md5Checksum);
             chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype>", "md5");
@@ -128,6 +128,8 @@ partial class Build
                 var installerDirectory = BuildDirectory / "Installer";
                 FileSystemTasks.EnsureExistingDirectory(installerDirectory);
 
+                (BuildDirectory / "Octopus.Tentacle.Hardener" / NetFramework / "win").GlobFiles("*")
+                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 (BuildDirectory / "Tentacle" / NetFramework / "win").GlobFiles("*")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 (BuildDirectory / "Octopus.Manager.Tentacle" / NetFramework / "win").GlobFiles("*")
@@ -139,7 +141,7 @@ partial class Build
                 GenerateMsiInstallerContents(installerDirectory, harvestFile.FilePath);
                 BuildMsiInstallerForPlatform(platform, wixNugetPackagePath);
             }
-            
+
             void GenerateMsiInstallerContents(AbsolutePath installerDirectory, AbsolutePath harvestFile)
             {
                 Logging.InBlock("Running HEAT to generate the installer contents...", () =>
@@ -168,11 +170,11 @@ partial class Build
                 {
                     var tentacleInstallerWixProject = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Octopus.Tentacle.Installer.wixproj";
                     using var wixProjectFile = new ModifiableFileWithRestoreContentsOnDispose(tentacleInstallerWixProject);
-                    
+
                     wixProjectFile.ReplaceTextInFile("{WixToolPath}", wixNugetPackagePath / "tools");
                     wixProjectFile.ReplaceTextInFile("{WixTargetsPath}", wixNugetPackagePath / "tools" / "Wix.targets");
                     wixProjectFile.ReplaceTextInFile("{WixTasksPath}", wixNugetPackagePath / "tools" / "wixtasks.dll");
-                        
+
                     MSBuildTasks.MSBuild(settings => settings
                         .SetConfiguration("Release")
                         .SetProperty("AllowUpgrade", "True")
@@ -183,7 +185,7 @@ partial class Build
 
                     var builtMsi = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "bin" / platform / "Octopus.Tentacle.msi";
                     Signing.Sign(builtMsi);
-                    
+
                     var platformString = platform == MSBuildTargetPlatform.x64 ? "-x64" : "";
                     FileSystemTasks.MoveFile(
                         builtMsi,
@@ -206,13 +208,13 @@ partial class Build
         .Executes(() =>
         {
             string ConstructDebianPackageFilename(string packageName, string architecture) => $"{packageName}_{OctoVersionInfo.FullSemVer}_{architecture}.deb";
-                
+
             string ConstructRedHatPackageFilename(string packageName, string architecture) {
                 var transformedVersion = OctoVersionInfo.FullSemVer.Replace("-", "_");
                 var filename = $"{packageName}-{transformedVersion}-1.{architecture}.rpm";
                 return filename;
             }
-            
+
             FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "nuget");
 
             var workingDirectory = BuildDirectory / "Octopus.Tentacle.CrossPlatformBundle";
@@ -221,12 +223,11 @@ partial class Build
             var debAmd64PackageFilename = ConstructDebianPackageFilename("tentacle", "amd64");
             var debArm64PackageFilename = ConstructDebianPackageFilename("tentacle", "arm64");
             var debArm32PackageFilename = ConstructDebianPackageFilename("tentacle", "armhf");
-            
+
             var rpmArm64PackageFilename = ConstructRedHatPackageFilename("tentacle", "aarch64");
             var rpmArm32PackageFilename = ConstructRedHatPackageFilename("tentacle", "armv7hl");
             var rpmx64PackageFilename = ConstructRedHatPackageFilename("tentacle", "x86_64");
-            
-            FileSystemTasks.CopyFileToDirectory(SourceDirectory / "Octopus.Tentacle.CrossPlatformBundle" / "Octopus.Tentacle.CrossPlatformBundle.nuspec", workingDirectory);
+
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}.msi", workingDirectory / "Octopus.Tentacle.msi");
             FileSystemTasks.CopyFile(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-x64.msi", workingDirectory / "Octopus.Tentacle-x64.msi");
             var octopusTentacleUpgraderDirectory = BuildDirectory / "Octopus.Tentacle.Upgrader" / NetFramework / "win";
@@ -250,7 +251,7 @@ partial class Build
                         workingDirectory / $"tentacle-{framework}-{runtimeId}.{fileExtension}");
                 }
             }
-            
+
             ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / "Octopus.Tentacle.msi"), "Missing Octopus.Tentacle.msi");
             ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / "Octopus.Tentacle-x64.msi"), "Missing Octopus.Tentacle-x64.msi");
             ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / "Octopus.Tentacle.Upgrader.exe"), "Missing Octopus.Tentacle.Upgrader.exe");
@@ -261,7 +262,10 @@ partial class Build
             ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / rpmArm32PackageFilename), $"Missing {rpmArm32PackageFilename}");
             ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / rpmx64PackageFilename), $"Missing {rpmx64PackageFilename}");
 
-            OctoCliTool($"pack --id=Octopus.Tentacle.CrossPlatformBundle --version={OctoVersionInfo.FullSemVer} --basePath={workingDirectory} --outFolder={ArtifactsDirectory / "nuget"}");
+            var description = "The deployment agent that is installed on each machine you plan to deploy to using Octopus.";
+            var author = "Octopus Deploy";
+            var title = "Octopus Tentacle cross platform bundle";
+            OctoCliTool($@"pack --id=Octopus.Tentacle.CrossPlatformBundle --version={OctoVersionInfo.FullSemVer} --basePath={workingDirectory} --outFolder={ArtifactsDirectory / "nuget"} --author=""{author}"" --title=""{title}"" --description=""{description}""");
         });
 
     [PublicAPI]
@@ -282,7 +286,7 @@ partial class Build
     Target Pack => _ => _
         .Description("Pack all the artifacts. Notional task - running this on a single host is possible but cumbersome.")
         .DependsOn(PackCrossPlatformBundle);
-    
+
     [PublicAPI]
     Target PackWindowsZips => _ => _
         .Description("Packs the Windows .zip files containing the published binaries.")
@@ -327,7 +331,7 @@ partial class Build
         {
             RuntimeIds.Where(x => x.StartsWith("osx-")).ForEach(PackTarballs);
         });
-    
+
     [PublicAPI]
     Target PackLinux => _ => _
         .Description("Packs all the Linux targets.")
