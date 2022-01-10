@@ -140,16 +140,11 @@
     <!--
     Harden installation directory
     -->
-    <CustomAction Id="HardenEXE"
-                  Directory="INSTALLLOCATION"
-                  ExeCommand="&quot;[INSTALLLOCATION]Octopus.Tentacle.Hardener.exe&quot;"
-                  Execute="deferred"
-                  Return="ignore"
-                  Impersonate="no"
-                 />
-
+    <CustomAction Id="SetExecProp" Property="WixQuietExecCmdLine" Value='"[POWERSHELLEXE]" -NoProfile -NonInteractive -InputFormat None -ExecutionPolicy Bypass -File "[INSTALLLOCATION]Harden-InstallationDirectory.ps1"'></CustomAction>
+    <CustomAction Id="HardenInstallationDirectory" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="immediate" Return="ignore"/>
     <InstallExecuteSequence>
-          <Custom Action='HardenEXE' After='InstallFiles' />
+      <Custom Action="SetExecProp" After="InstallExecute"/>
+      <Custom Action="HardenInstallationDirectory" After="SetExecProp"/>
     </InstallExecuteSequence>
 
     <!--

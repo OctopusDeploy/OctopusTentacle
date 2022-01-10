@@ -128,8 +128,6 @@ partial class Build
                 var installerDirectory = BuildDirectory / "Installer";
                 FileSystemTasks.EnsureExistingDirectory(installerDirectory);
 
-                (BuildDirectory / "Octopus.Tentacle.Hardener" / NetFramework / "win").GlobFiles("*")
-                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 (BuildDirectory / "Tentacle" / NetFramework / "win").GlobFiles("*")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, installerDirectory, FileExistsPolicy.Overwrite));
                 (BuildDirectory / "Octopus.Manager.Tentacle" / NetFramework / "win").GlobFiles("*")
