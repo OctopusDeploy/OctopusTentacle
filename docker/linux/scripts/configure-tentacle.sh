@@ -92,6 +92,15 @@ function validateVariables() {
   if [[ ! -z "$TargetName" ]]; then
     echo " - name '$TargetName'"
   fi
+  if [[ ! -z "$TargetTenant" ]]; then
+    echo " - tenant '$TargetTenant'"
+  fi
+  if [[ ! -z "$TargetTenantTag" ]]; then
+    echo " - tenant tag '$TargetTenantTag'"
+  fi
+  if [[ ! -z "$TargetTenantedDeploymentParticipation" ]]; then
+    echo " - tenanted deployment participation '$TargetTenantedDeploymentParticipation'"
+  fi
   if [[ ! -z "$Space" ]]; then
     echo " - space '$Space'"
   fi
@@ -147,7 +156,7 @@ function registerTentacle() {
 		fi
 
 		if [[ ! -z "$TargetTenant" ]]; then
-			IFS=',' read -ra TENANT <<< "$TargetTenant"
+			IFS=',' read -ra TENANTS <<< "$TargetTenant"
 			for i in "${TENANTS[@]}"; do
 				ARGS+=('--tenant' "$i")
 			done

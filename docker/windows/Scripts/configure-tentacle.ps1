@@ -24,53 +24,6 @@ $Space=$env:Space;
 $MachinePolicy=$env:MachinePolicy;
 
 $TentacleExe=$Exe
-function Configure-Tentacle
-{
-  Write-Log "Configure Octopus Deploy Tentacle"
-
-  if(!(Test-Path $TentacleExe)) {
-    throw "File not found. Expected to find '$TentacleExe' to perform setup."
-  }
-
-  Write-Log "Setting directory paths ..."
-  Execute-Command $TentacleExe @(
-    'configure',
-    '--console',
-    '--instance', 'Tentacle',
-    '--home', 'C:\TentacleHome',
-    '--app', 'C:\Applications')
-
-  Write-Log "Configuring communication type ..."
-  if ($ServerPort -ne $null) {
-    Execute-Command $TentacleExe @(
-      'configure',
-      '--console',
-      '--instance', 'Tentacle',
-      '--noListen', '"True"')
-  } else {
-    Execute-Command $TentacleExe @(
-      'configure',
-      '--console',
-      '--instance', 'Tentacle',
-      '--port', $DefaultListeningPort,
-      '--noListen', '"False"')
-  }
-
-  Write-Log "Updating trust ..."
-  Execute-Command $TentacleExe @(
-    'configure',
-    '--console',
-    '--instance', 'Tentacle',
-    '--reset-trust')
-
-  Write-Log "Creating certificate ..."
-  Execute-Command $TentacleExe @(
-    'new-certificate',
-    '--console',
-    '--instance', 'Tentacle',
-    '--if-blank'
-  )
-}
 
 # After the Tentacle is registered with Octopus, Tentacle listens on a TCP port, and Octopus connects to it. The Octopus server
 # needs to know the public IP address to use to connect to this Tentacle instance. Is there a way in Windows Azure in which we can
@@ -173,9 +126,66 @@ function Validate-Variables() {
   if($TargetName -ne $null) {
     Write-Log " - name '$env:TargetName'"
   }
+  if($TargetTenant -ne $null) {
+    Write-Log " - tenant '$env:TargetTenant'"
+  }
+  if($TargetTenantTag -ne $null) {
+    Write-Log " - tenant tag '$env:TargetTenantTag'"
+  }
+  if($TargetTenantedDeploymentParticipation -ne $null) {
+    Write-Log " - tenanted deployment participation '$env:TargetTenantedDeploymentParticipation'"
+  }
   if($null -ne $Space) {
     Write-Log " - space '$Space'"
   }
+}
+
+function Configure-Tentacle
+{
+  Write-Log "Configure Octopus Deploy Tentacle"
+
+  if(!(Test-Path $TentacleExe)) {
+    throw "File not found. Expected to find '$TentacleExe' to perform setup."
+  }
+
+  Write-Log "Setting directory paths ..."
+  Execute-Command $TentacleExe @(
+    'configure',
+    '--console',
+    '--instance', 'Tentacle',
+    '--home', 'C:\TentacleHome',
+    '--app', 'C:\Applications')
+
+  Write-Log "Configuring communication type ..."
+  if ($ServerPort -ne $null) {
+    Execute-Command $TentacleExe @(
+      'configure',
+      '--console',
+      '--instance', 'Tentacle',
+      '--noListen', '"True"')
+  } else {
+    Execute-Command $TentacleExe @(
+      'configure',
+      '--console',
+      '--instance', 'Tentacle',
+      '--port', $DefaultListeningPort,
+      '--noListen', '"False"')
+  }
+
+  Write-Log "Updating trust ..."
+  Execute-Command $TentacleExe @(
+    'configure',
+    '--console',
+    '--instance', 'Tentacle',
+    '--reset-trust')
+
+  Write-Log "Creating certificate ..."
+  Execute-Command $TentacleExe @(
+    'new-certificate',
+    '--console',
+    '--instance', 'Tentacle',
+    '--if-blank'
+  )
 }
 
 function Register-Tentacle(){
