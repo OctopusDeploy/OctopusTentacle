@@ -141,7 +141,7 @@
     Harden installation directory
     -->
     <CustomAction Id="SetExecProp" Property="WixQuietExecCmdLine" Value='"[POWERSHELLEXE]" -NoProfile -NonInteractive -InputFormat None -File "[INSTALLLOCATION]Harden-InstallationDirectory.ps1"'></CustomAction>
-    <CustomAction Id="HardenInstallationDirectory" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="immediate" Return="ignore"/>
+    <CustomAction Id="HardenInstallationDirectory" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="immediate"/>
     <InstallExecuteSequence>
       <Custom Action="SetExecProp" After="InstallExecute"/>
       <Custom Action="HardenInstallationDirectory" After="SetExecProp"/>
