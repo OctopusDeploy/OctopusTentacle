@@ -18,9 +18,10 @@ $TargetName=$env:TargetName;
 $ListeningPort=$env:ListeningPort;
 $PublicHostNameConfiguration=$env:PublicHostNameConfiguration;
 $CustomPublicHostName=$env:CustomPublicHostName;
-$InternalListeningPort=10933;
+$DefaultListeningPort=10933;
 $ServerPort=$env:ServerPort;
 $Space=$env:Space;
+$MachinePolicy=$env:MachinePolicy;
 
 $TentacleExe=$Exe
 function Configure-Tentacle
@@ -51,7 +52,7 @@ function Configure-Tentacle
       'configure',
       '--console',
       '--instance', 'Tentacle',
-      '--port', $InternalListeningPort,
+      '--port', $DefaultListeningPort,
       '--noListen', '"False"')
   }
 
@@ -117,6 +118,38 @@ function Get-PublicHostName
 }
 
 function Validate-Variables() {
+  if($ServerApiKey -eq $null) {
+    if($ServerPassword -eq $null -or $ServerUsername -eq $null){
+      Write-Error "Please specify either an API key or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables"
+      exit 1;
+    }
+  }
+
+  if($ServerUrl -eq $null) {
+    Write-Error "Please specify an Octopus Server with the 'ServerUrl' environment variable"
+    exit 1;
+  }
+
+  if($TargetWorkerPool -ne $null) {
+    if($TargetEnvironment -ne $null) {
+      Write-Error "The 'TargetEnvironment' environment variable is not valid in combination with the 'TargetWorkerPool' variable"
+      exit 1;
+    }
+    if($TargetRole -ne $null) {
+      Write-Error "The 'TargetRole' environment variable is not valid in combination with the 'TargetWorkerPool' variable"
+      exit 1;
+    }
+  } else {
+    if($TargetEnvironment -eq $null) {
+      Write-Error "Please specify an environment name with the 'TargetEnvironment' environment variable"
+      exit 1;
+    }
+    if($TargetRole -eq $null) {
+      Write-Error "Please specify a role name with the 'TargetRole' environment variable"
+      exit 1;
+    }
+  }
+
   if($PublicHostNameConfiguration -eq $null) {
     $script:PublicHostNameConfiguration = 'ComputerName'
   }
@@ -176,14 +209,14 @@ function Register-Tentacle(){
     $publicHostName = Get-PublicHostName $PublicHostNameConfiguration;
     $arg += "--publicHostName"
     $arg += $publicHostName
-    if (($null -ne $ListeningPort) -and ($ListeningPort -ne $InternalListeningPort)) {
+    if (($null -ne $ListeningPort) -and ($ListeningPort -ne $DefaultListeningPort)) {
       $arg += "--tentacle-comms-port"
       $arg += $ListeningPort
     }
   }
 
   if(!($ServerApiKey -eq $null)) {
-    Write-Verbose "Registering Tentacle with api key"
+    Write-Verbose "Registering Tentacle with API key"
     $arg += "--apiKey";
     $arg += $ServerApiKey
   } else {
@@ -242,6 +275,11 @@ function Register-Tentacle(){
   if($null -ne $Space) {
     $arg += "--space";
     $arg += "`"$Space`"";
+  }
+
+  if($null -ne $MachinePolicy) {
+    $arg += "--policy";
+    $arg += "`"$MachinePolicy`"";
   }
 
   Execute-Command $TentacleExe $arg;

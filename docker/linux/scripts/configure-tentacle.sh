@@ -11,6 +11,7 @@ instanceName=Tentacle
 configurationDirectory=/etc/octopus
 applicationsDirectory=/home/Octopus/Applications
 alreadyConfiguredSemaphore="$configurationDirectory/.configuredSemaphore"
+defaultListeningPort=10933
 
 mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
@@ -38,6 +39,40 @@ function getPublicHostName() {
 }
 
 function validateVariables() {
+	if [[ -z "$ServerApiKey" ]]; then
+		if [[ -z "$ServerPassword" || -z "$ServerUsername" ]]; then
+			echo "Please specify either an API key or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables" >&2
+			exit 1
+		fi
+	fi
+
+	if [[ -z "$ServerUrl" ]]; then
+		echo "Please specify an Octopus Server with the 'ServerUrl' environment variable" >&2
+		exit 1
+	fi
+
+	if [[ ! -z "$TargetWorkerPool" ]]; then
+		if [[ ! -z "$TargetEnvironment" ]]; then
+			echo "The 'TargetEnvironment' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
+			exit 1
+		fi
+
+		if [[ ! -z "$TargetRole" ]]; then
+			echo "The 'TargetRole' environment variable is not valid in combination with the 'TargetWorkerPool' variable" >&2
+			exit 1
+		fi
+	else
+		if [[ -z "$TargetEnvironment" ]]; then
+			echo "Please specify an environment name with the 'TargetEnvironment' environment variable" >&2
+			exit 1
+		fi
+
+		if [[ -z "$TargetRole" ]]; then
+			echo "Please specify a role name with the 'TargetRole' environment variable" >&2
+			exit 1
+		fi
+    fi
+
     echo " - server endpoint '$ServerUrl'"
     echo " - api key '##########'"
   if [[ ! -z "$ServerPort" ]]; then
@@ -57,6 +92,9 @@ function validateVariables() {
   if [[ ! -z "$TargetName" ]]; then
     echo " - name '$TargetName'"
   fi
+  if [[ ! -z "$Space" ]]; then
+    echo " - space '$Space'"
+  fi
 }
 
 function configureTentacle() {
@@ -69,7 +107,7 @@ function configureTentacle() {
 	if [[ ! -z "$ServerPort" ]]; then
 		tentacle configure --instance "$instanceName" --noListen "True"
 	else
-		tentacle configure --instance "$instanceName" --port $ListeningPort --noListen "False"
+		tentacle configure --instance "$instanceName" --port $defaultListeningPort --noListen "False"
 	fi
 
 	echo "Updating trust ..."
@@ -139,13 +177,13 @@ function registerTentacle() {
 			'--comms-style' 'TentaclePassive'
 			'--publicHostName' $(getPublicHostName))
 
-		if [[ ! -z "$ListeningPort" && "$ListeningPort" != "10933" ]]; then
+		if [[ ! -z "$ListeningPort" && "$ListeningPort" != $defaultListeningPort ]]; then
 			ARGS+=('--tentacle-comms-port' $ListeningPort)
 		fi
 	fi
 
 	if [[ ! -z "$ServerApiKey" ]]; then
-		echo "Registering Tentacle with api key"
+		echo "Registering Tentacle with API key"
 		ARGS+=('--apiKey' $ServerApiKey)
 	else
 		echo "Registering Tentacle with username/password"
