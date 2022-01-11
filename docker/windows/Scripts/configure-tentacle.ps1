@@ -215,12 +215,16 @@ function Register-Tentacle(){
     Write-Verbose "Registering Tentacle with api key"
     $arg += "--apiKey";
     $arg += $ServerApiKey
+
+    $mask = $ServerApiKey
   } else {
     Write-Verbose "Registering Tentacle with username/password"
     $arg += "--username";
     $arg += $ServerUsername
     $arg += "--password";
     $arg += $ServerPassword
+    
+    $mask = $ServerPassword
   }
 
   if($TargetName -ne $null) {
@@ -254,7 +258,7 @@ function Register-Tentacle(){
     $arg += "`"$Space`"";
   }
 
-  Execute-Command $TentacleExe $arg;
+  Execute-Command $TentacleExe $arg $mask;
 }
 
 try
