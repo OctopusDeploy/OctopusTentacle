@@ -41,13 +41,13 @@ function getPublicHostName() {
 function validateVariables() {
 	if [[ -z "$ServerApiKey" ]]; then
 		if [[ -z "$ServerPassword" || -z "$ServerUsername" ]]; then
-			echo "No 'ServerApiKey' or username/pasword environment variables are available" >&2
+			echo "Please specify either an API key or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables" >&2
 			exit 1
 		fi
 	fi
 
 	if [[ -z "$ServerUrl" ]]; then
-		echo "Missing 'ServerUrl' environment variable" >&2
+		echo "Please specify an Octopus Server with the 'ServerUrl' environment variable" >&2
 		exit 1
 	fi
 
@@ -63,12 +63,12 @@ function validateVariables() {
 		fi
 	else
 		if [[ -z "$TargetEnvironment" ]]; then
-			echo "Missing 'TargetEnvironment' environment variable" >&2
+			echo "Please specify an environment name with the 'TargetEnvironment' environment variable" >&2
 			exit 1
 		fi
 
 		if [[ -z "$TargetRole" ]]; then
-			echo "Missing 'TargetRole' environment variable" >&2
+			echo "Please specify a role name with the 'TargetRole' environment variable" >&2
 			exit 1
 		fi
     fi
@@ -91,6 +91,18 @@ function validateVariables() {
   echo " - host '$PublicHostNameConfiguration'"
   if [[ ! -z "$TargetName" ]]; then
     echo " - name '$TargetName'"
+  fi
+  if [[ ! -z "$TargetTenant" ]]; then
+    echo " - tenant '$TargetTenant'"
+  fi
+  if [[ ! -z "$TargetTenantTag" ]]; then
+    echo " - tenant tag '$TargetTenantTag'"
+  fi
+  if [[ ! -z "$TargetTenantedDeploymentParticipation" ]]; then
+    echo " - tenanted deployment participation '$TargetTenantedDeploymentParticipation'"
+  fi
+  if [[ ! -z "$Space" ]]; then
+    echo " - space '$Space'"
   fi
 }
 
@@ -142,6 +154,20 @@ function registerTentacle() {
 				ARGS+=('--role' "$i")
 			done
 		fi
+
+		if [[ ! -z "$TargetTenant" ]]; then
+			IFS=',' read -ra TENANTS <<< "$TargetTenant"
+			for i in "${TENANTS[@]}"; do
+				ARGS+=('--tenant' "$i")
+			done
+		fi
+
+		if [[ ! -z "$TargetTenantTag" ]]; then
+			IFS=',' read -ra TENANTTAGS <<< "$TargetTenantTag"
+			for i in "${TENANTTAGS[@]}"; do
+				ARGS+=('--tenanttag' "$i")
+			done
+		fi
 	fi
 
 	ARGS+=(
@@ -166,7 +192,7 @@ function registerTentacle() {
 	fi
 
 	if [[ ! -z "$ServerApiKey" ]]; then
-		echo "Registering Tentacle with api key"
+		echo "Registering Tentacle with API key"
 		ARGS+=('--apiKey' $ServerApiKey)
 	else
 		echo "Registering Tentacle with username/password"
@@ -177,6 +203,10 @@ function registerTentacle() {
 
 	if [[ ! -z "$TargetName" ]]; then
 		ARGS+=('--name' "$TargetName")
+	fi
+	
+	if [[ ! -z "$TargetTenantedDeploymentParticipation" ]]; then
+		ARGS+=('--tenanted-deployment-participation' "$TargetTenantedDeploymentParticipation")
 	fi
 
 	tentacle "${ARGS[@]}"
