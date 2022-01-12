@@ -18,7 +18,7 @@ $TargetName=$env:TargetName;
 $ListeningPort=$env:ListeningPort;
 $PublicHostNameConfiguration=$env:PublicHostNameConfiguration;
 $CustomPublicHostName=$env:CustomPublicHostName;
-$DefaultListeningPort=10933;
+$InternalListeningPort=10933;
 $ServerPort=$env:ServerPort;
 $Space=$env:Space;
 $MachinePolicy=$env:MachinePolicy;
@@ -168,7 +168,7 @@ function Configure-Tentacle
       'configure',
       '--console',
       '--instance', 'Tentacle',
-      '--port', $DefaultListeningPort,
+      '--port', $InternalListeningPort,
       '--noListen', '"False"')
   }
 
@@ -219,7 +219,7 @@ function Register-Tentacle(){
     $publicHostName = Get-PublicHostName $PublicHostNameConfiguration;
     $arg += "--publicHostName"
     $arg += $publicHostName
-    if (($null -ne $ListeningPort) -and ($ListeningPort -ne $DefaultListeningPort)) {
+    if (($null -ne $ListeningPort) -and ($ListeningPort -ne $InternalListeningPort)) {
       $arg += "--tentacle-comms-port"
       $arg += $ListeningPort
     }

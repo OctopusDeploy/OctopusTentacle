@@ -11,7 +11,6 @@ instanceName=Tentacle
 configurationDirectory=/etc/octopus
 applicationsDirectory=/home/Octopus/Applications
 alreadyConfiguredSemaphore="$configurationDirectory/.configuredSemaphore"
-defaultListeningPort=10933
 
 mkdir -p $configurationDirectory
 mkdir -p $applicationsDirectory
@@ -116,7 +115,7 @@ function configureTentacle() {
 	if [[ ! -z "$ServerPort" ]]; then
 		tentacle configure --instance "$instanceName" --noListen "True"
 	else
-		tentacle configure --instance "$instanceName" --port $defaultListeningPort --noListen "False"
+		tentacle configure --instance "$instanceName" --port $ListeningPort --noListen "False"
 	fi
 
 	echo "Updating trust ..."
@@ -186,7 +185,7 @@ function registerTentacle() {
 			'--comms-style' 'TentaclePassive'
 			'--publicHostName' $(getPublicHostName))
 
-		if [[ ! -z "$ListeningPort" && "$ListeningPort" != $defaultListeningPort ]]; then
+		if [[ ! -z "$ListeningPort" && "$ListeningPort" != "10933" ]]; then
 			ARGS+=('--tentacle-comms-port' $ListeningPort)
 		fi
 	fi
