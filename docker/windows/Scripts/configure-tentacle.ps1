@@ -11,6 +11,9 @@ $ServerUrl = $env:ServerUrl;
 $TargetEnvironment = $env:TargetEnvironment;
 $TargetRole = $env:TargetRole;
 $TargetWorkerPool = $env:TargetWorkerPool;
+$TargetTenant = $env:TargetTenant;
+$TargetTenantTag = $env:TargetTenantTag;
+$TargetTenantedDeploymentParticipation = $env:TargetTenantedDeploymentParticipation;
 $TargetName=$env:TargetName;
 $ListeningPort=$env:ListeningPort;
 $PublicHostNameConfiguration=$env:PublicHostNameConfiguration;
@@ -18,55 +21,9 @@ $CustomPublicHostName=$env:CustomPublicHostName;
 $InternalListeningPort=10933;
 $ServerPort=$env:ServerPort;
 $Space=$env:Space;
+$MachinePolicy=$env:MachinePolicy;
 
 $TentacleExe=$Exe
-function Configure-Tentacle
-{
-  Write-Log "Configure Octopus Deploy Tentacle"
-
-  if(!(Test-Path $TentacleExe)) {
-    throw "File not found. Expected to find '$TentacleExe' to perform setup."
-  }
-
-  Write-Log "Setting directory paths ..."
-  Execute-Command $TentacleExe @(
-    'configure',
-    '--console',
-    '--instance', 'Tentacle',
-    '--home', 'C:\TentacleHome',
-    '--app', 'C:\Applications')
-
-  Write-Log "Configuring communication type ..."
-  if ($ServerPort -ne $null) {
-    Execute-Command $TentacleExe @(
-      'configure',
-      '--console',
-      '--instance', 'Tentacle',
-      '--noListen', '"True"')
-  } else {
-    Execute-Command $TentacleExe @(
-      'configure',
-      '--console',
-      '--instance', 'Tentacle',
-      '--port', $InternalListeningPort,
-      '--noListen', '"False"')
-  }
-
-  Write-Log "Updating trust ..."
-  Execute-Command $TentacleExe @(
-    'configure',
-    '--console',
-    '--instance', 'Tentacle',
-    '--reset-trust')
-
-  Write-Log "Creating certificate ..."
-  Execute-Command $TentacleExe @(
-    'new-certificate',
-    '--console',
-    '--instance', 'Tentacle',
-    '--if-blank'
-  )
-}
 
 # After the Tentacle is registered with Octopus, Tentacle listens on a TCP port, and Octopus connects to it. The Octopus server
 # needs to know the public IP address to use to connect to this Tentacle instance. Is there a way in Windows Azure in which we can
@@ -116,13 +73,13 @@ function Get-PublicHostName
 function Validate-Variables() {
   if($ServerApiKey -eq $null) {
     if($ServerPassword -eq $null -or $ServerUsername -eq $null){
-      Write-Error "No 'ServerApiKey' or username/pasword environment variables are available"
+      Write-Error "Please specify either an API key or a username/password with the 'ServerApiKey' or 'ServerUsername'/'ServerPassword' environment variables"
       exit 1;
     }
   }
 
   if($ServerUrl -eq $null) {
-    Write-Error "Missing 'ServerUrl' environment variable"
+    Write-Error "Please specify an Octopus Server with the 'ServerUrl' environment variable"
     exit 1;
   }
 
@@ -137,11 +94,11 @@ function Validate-Variables() {
     }
   } else {
     if($TargetEnvironment -eq $null) {
-      Write-Error "Missing 'TargetEnvironment' environment variable"
+      Write-Error "Please specify an environment name with the 'TargetEnvironment' environment variable"
       exit 1;
     }
     if($TargetRole -eq $null) {
-      Write-Error "Missing 'TargetRole' environment variable"
+      Write-Error "Please specify a role name with the 'TargetRole' environment variable"
       exit 1;
     }
   }
@@ -169,9 +126,66 @@ function Validate-Variables() {
   if($TargetName -ne $null) {
     Write-Log " - name '$env:TargetName'"
   }
+  if($TargetTenant -ne $null) {
+    Write-Log " - tenant '$env:TargetTenant'"
+  }
+  if($TargetTenantTag -ne $null) {
+    Write-Log " - tenant tag '$env:TargetTenantTag'"
+  }
+  if($TargetTenantedDeploymentParticipation -ne $null) {
+    Write-Log " - tenanted deployment participation '$env:TargetTenantedDeploymentParticipation'"
+  }
   if($null -ne $Space) {
     Write-Log " - space '$Space'"
   }
+}
+
+function Configure-Tentacle
+{
+  Write-Log "Configure Octopus Deploy Tentacle"
+
+  if(!(Test-Path $TentacleExe)) {
+    throw "File not found. Expected to find '$TentacleExe' to perform setup."
+  }
+
+  Write-Log "Setting directory paths ..."
+  Execute-Command $TentacleExe @(
+    'configure',
+    '--console',
+    '--instance', 'Tentacle',
+    '--home', 'C:\TentacleHome',
+    '--app', 'C:\Applications')
+
+  Write-Log "Configuring communication type ..."
+  if ($ServerPort -ne $null) {
+    Execute-Command $TentacleExe @(
+      'configure',
+      '--console',
+      '--instance', 'Tentacle',
+      '--noListen', '"True"')
+  } else {
+    Execute-Command $TentacleExe @(
+      'configure',
+      '--console',
+      '--instance', 'Tentacle',
+      '--port', $InternalListeningPort,
+      '--noListen', '"False"')
+  }
+
+  Write-Log "Updating trust ..."
+  Execute-Command $TentacleExe @(
+    'configure',
+    '--console',
+    '--instance', 'Tentacle',
+    '--reset-trust')
+
+  Write-Log "Creating certificate ..."
+  Execute-Command $TentacleExe @(
+    'new-certificate',
+    '--console',
+    '--instance', 'Tentacle',
+    '--if-blank'
+  )
 }
 
 function Register-Tentacle(){
@@ -212,7 +226,7 @@ function Register-Tentacle(){
   }
 
   if(!($ServerApiKey -eq $null)) {
-    Write-Verbose "Registering Tentacle with api key"
+    Write-Verbose "Registering Tentacle with API key"
     $arg += "--apiKey";
     $arg += $ServerApiKey
 
@@ -223,13 +237,18 @@ function Register-Tentacle(){
     $arg += $ServerUsername
     $arg += "--password";
     $arg += $ServerPassword
-    
+
     $mask = $ServerPassword
   }
 
   if($TargetName -ne $null) {
     $arg += "--name";
     $arg += $TargetName;
+  }
+
+  if($TargetTenantedDeploymentParticipation -ne $null) {
+    $arg += "--tenanted-deployment-participation";
+    $arg += $TargetTenantedDeploymentParticipation;
   }
 
   if($TargetEnvironment -ne $null) {
@@ -246,6 +265,20 @@ function Register-Tentacle(){
      };
   }
 
+  if($TargetTenant -ne $null) {
+     $TargetTenant.Split(",") | ForEach {
+      $arg += '--tenant';
+      $arg += $_.Trim();
+     };
+  }
+
+  if($TargetTenantTag -ne $null) {
+     $TargetTenantTag.Split(",") | ForEach {
+      $arg += '--tenanttag';
+      $arg += $_.Trim();
+     };
+  }
+
   if($TargetWorkerPool -ne $null) {
     $TargetWorkerPool.Split(",") | ForEach {
       $arg += '--workerpool';
@@ -256,6 +289,11 @@ function Register-Tentacle(){
   if($null -ne $Space) {
     $arg += "--space";
     $arg += "`"$Space`"";
+  }
+
+  if($null -ne $MachinePolicy) {
+    $arg += "--policy";
+    $arg += "`"$MachinePolicy`"";
   }
 
   Execute-Command $TentacleExe $arg $mask;
