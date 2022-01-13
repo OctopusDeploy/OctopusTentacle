@@ -43,7 +43,7 @@ docker run --publish 10931:10933 --tty --interactive --env "ListeningPort=10931"
 ### Environment variables
 
 - **ServerApiKey**: The API Key of the Octopus Server the Tentacle should register with.
-- **ServerUsername**: If not using an API key, the user to use when registering the Tentacle with the Octopus Servr.
+- **ServerUsername**: If not using an API key, the user to use when registering the Tentacle with the Octopus Server.
 - **ServerPassword**: If not using an API key, the password to use when registering the Tentacle
 - **ServerUrl**: The Url of the Octopus Server the Tentacle should register with.
 - **Space**: The name of the space which the Tentacle will be added to. Defaults to the default space.
