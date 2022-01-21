@@ -21,12 +21,12 @@ namespace Octopus.Shared.Tests.Security
 
             var sdm = new SensitiveDataMask();
             var trie = CreateTrie(verysensitive, sensitive, prettysensitive);
+            var result = default(string);
             sdm.ApplyTo(trie,
                 raw,
-                result =>
-                {
-                    Assert.AreEqual(expected, result);
-                });
+                r => result = r
+            );
+            Assert.AreEqual(expected, result);
         }
 
         [Test]
