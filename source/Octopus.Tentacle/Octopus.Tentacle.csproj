@@ -43,7 +43,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
-		<PackageReference Include="Octopus.Shared" Version="10.5.2" />
+		<PackageReference Include="Octopus.Shared" Version="10.5.4-luke-dont-write-0006" />
 	</ItemGroup>
 
 	<ItemGroup>
