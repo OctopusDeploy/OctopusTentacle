@@ -10,7 +10,7 @@ try {
   # Remove inheritance but preserve existing entries
   $acl = (Get-Item $path).GetAccessControl('Access')
   $acl.SetAccessRuleProtection($true,$true)
-  Set-Acl  $path -AclObject $acl
+  Set-Acl $path -AclObject $acl
 
   # Remove write access rules
   $acl = (Get-Item $path).GetAccessControl('Access')
