@@ -27,8 +27,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Upgrader",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.csproj", "{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Hardener", "Octopus.Tentacle.Hardener\Octopus.Tentacle.Hardener.csproj", "{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,26 +109,6 @@ Global
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-netcoreapp3.1-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-netcoreapp3.1-linux-arm|Any CPU.ActiveCfg = Release|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-netcoreapp3.1-osx-x64|Any CPU.ActiveCfg = Release|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-net452-win|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-net452-win|Any CPU.Build.0 = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-win-x86|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-win-x86|Any CPU.Build.0 = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-win-x64|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-win-x64|Any CPU.Build.0 = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-linux-arm64|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-linux-arm64|Any CPU.Build.0 = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-linux-musl-x64|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-linux-musl-x64|Any CPU.Build.0 = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-linux-x64|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-linux-x64|Any CPU.Build.0 = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-linux-arm|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-linux-arm|Any CPU.Build.0 = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-osx-x64|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7FAF88D-F9E0-4352-A235-0D5D352D5D0C}.Release-netcoreapp3.1-osx-x64|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
