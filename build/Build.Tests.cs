@@ -27,7 +27,6 @@ partial class Build
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:rolling", "deb"),
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:trusty", "deb"),
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:xenial", "deb"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "centos:latest", "rpm"),
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "centos:7", "rpm"),
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:latest", "rpm"),
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel7", "rpm"),
