@@ -45,16 +45,12 @@ namespace Octopus.Shared.Security.Certificates
         public static X509Certificate2 FromBase64StringPublicKeyOnly(string certificateString)
         {
             var raw = Convert.FromBase64String(certificateString);
-            var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
-            try
-            {
-                File.WriteAllBytes(file, raw);
-                return new X509Certificate2(file);
-            }
-            finally
-            {
-                File.Delete(file);
-            }
+            // If the certificateString really is a public key then nothing is written to disk no matter the flags.
+            // However if this is given a non public key then we would write it to disk using the default
+            // ctor that just takes byte[].
+            // By using the keySet flag, if we are wrongly given a private key we wont write to disk
+            // if the framework supports that.
+            return newX509Certificate2(raw, (string) null!, keySet);
         }
 
         public static byte[] Export(X509Certificate2 certificate)
@@ -75,6 +71,30 @@ namespace Octopus.Shared.Security.Certificates
 
         public static X509Certificate2 FromBase64String(string? thumbprint, string certificateString, string? password, ILog log)
         {
+            return FromBase64String(thumbprint, certificateString, password, log, false);
+        }
+
+        /// <summary>
+        /// Decodes a certificate and writes it to the store.
+        /// </summary>
+        /// <remarks>
+        /// Ideally this behaviour wouldn't be in this class, however all FromBase64String methods used to write the certificate
+        /// to the store. This method remains so it is possible to make use of that exact behaviour.
+        /// </remarks>
+        /// <param name="thumbprint"></param>
+        /// <param name="certificateStringBase64"></param>
+        /// <param name="password"></param>
+        /// <param name="log"></param>
+        /// <returns></returns>
+        public static X509Certificate2 WriteCertificateToStore(string? thumbprint, string certificateStringBase64, string? password, ILog log)
+        {
+            return FromBase64String(thumbprint, certificateStringBase64, password, log, true);
+        }
+        
+        
+        
+        static X509Certificate2 FromBase64String(string? thumbprint, string certificateString, string? password, ILog log, bool storeInKeyStore)
+        {
             if (certificateString == null) throw new ArgumentNullException(nameof(certificateString));
             var store = new X509Store(PlatformDetection.IsRunningOnWindows ? "Octopus" : "My", StoreLocation.CurrentUser);
             store.Open(OpenFlags.ReadWrite);
@@ -93,44 +113,56 @@ namespace Octopus.Shared.Security.Certificates
                     }
                 }
 
-                log.Verbose("Loading certificate from disk");
+                log.Verbose("Loading certificate from given string");
                 var raw = Convert.FromBase64String(certificateString);
-                var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
 
-                try
-                {
-                    File.WriteAllBytes(file, raw);
+                var certificate = LoadCertificateWithPrivateKey(raw, password, storeInKeyStore);
+                if (CheckThatCertificateWasLoadedWithPrivateKey(certificate, log) == false)
+                    certificate = LoadCertificateWithPrivateKey(raw, password, storeInKeyStore);
 
-                    var certificate = LoadCertificateWithPrivateKey(file, password);
-                    if (CheckThatCertificateWasLoadedWithPrivateKey(certificate, log) == false)
-                        certificate = LoadCertificateWithPrivateKey(file, password);
+                if (certificate == null)
+                    throw new CryptographicException("Unable to load X509 Certificate. The provided certificate or password may be invalid.");
 
-                    if (certificate == null)
-                        throw new CryptographicException("Unable to load X509 Certificate file. The provided certificate or password may be invalid.");
+                store.Add(certificate);
 
-                    store.Add(certificate);
-
-                    return certificate;
-                }
-                finally
-                {
-                    File.Delete(file);
-                }
+                return certificate;
             }
             finally
             {
                 store.Close();
             }
         }
+        
+#if NET472_OR_GREATER || NETCOREAPP || NETSTANDARD
+        // Mac doesn't appear to support EphemeralKeySet 
+        // see: https://github.com/dotnet/runtime/blob/a2af6294767b4a3f4c2ce787c5dda2abeeda7a00/src/libraries/System.Security.Cryptography.X509Certificates/src/Internal/Cryptography/Pal.OSX/StorePal.cs#L38
+        static X509KeyStorageFlags keySet = PlatformDetection.IsRunningOnMac ? X509KeyStorageFlags.PersistKeySet : X509KeyStorageFlags.EphemeralKeySet;
 
-        static X509Certificate2 LoadCertificateWithPrivateKey(string file, string? password)
-            => TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, true)
-                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, true)
-                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, true)
-                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet, false)
-                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet, false)
-                ?? TryLoadCertificate(file, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet, false)
-                ?? throw new InvalidOperationException($"Unable to load certificate from file {file}");
+        static bool HasFlagEphemeralKeySet(X509KeyStorageFlags flags)
+        {
+            return flags.HasFlag(X509KeyStorageFlags.EphemeralKeySet);
+        }
+#else
+        static X509KeyStorageFlags keySet = X509KeyStorageFlags.PersistKeySet;
+
+        static bool HasFlagEphemeralKeySet(X509KeyStorageFlags flags)
+        {
+            return false;
+        }
+#endif
+
+        static X509Certificate2 LoadCertificateWithPrivateKey(byte[] rawData, string? password, bool storeInKeyStore)
+        {
+            var keySetToUse = storeInKeyStore ? X509KeyStorageFlags.PersistKeySet : keySet;
+            
+            return  TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | keySetToUse, true)
+                ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | keySetToUse, true)
+                ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | keySetToUse, true)
+                ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | keySetToUse, false)
+                ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | keySetToUse, false)
+                ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | keySetToUse, false)
+                ?? throw new InvalidOperationException($"Unable to load certificate");
+        }
 
         static bool CheckThatCertificateWasLoadedWithPrivateKey(X509Certificate2 certificate, ILog log)
         {
@@ -192,11 +224,11 @@ namespace Octopus.Shared.Security.Certificates
             }
         }
 
-        static X509Certificate2? TryLoadCertificate(string file, string? password, X509KeyStorageFlags flags, bool requirePrivateKey)
+        static X509Certificate2? TryLoadCertificate(byte[] rawData, string? password, X509KeyStorageFlags flags, bool requirePrivateKey)
         {
             try
             {
-                var cert = new X509Certificate2(file, password, flags);
+                X509Certificate2 cert = newX509Certificate2(rawData, password, flags);
 
                 if (!HasPrivateKey(cert) && requirePrivateKey)
                     return null;
@@ -206,6 +238,40 @@ namespace Octopus.Shared.Security.Certificates
             catch (Exception)
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Creates a new X509Certificate2
+        /// </summary>
+        /// <remarks>
+        /// It _is_ odd that this method needs to wrap the ctor. This tries to avoid writing anything to disk
+        /// when possible (when the flags include ephemeral) otherwise we take care of the required temp files
+        /// including deleting them.
+        /// </remarks>
+        /// <param name="rawData"></param>
+        /// <param name="password"></param>
+        /// <param name="flags"></param>
+        /// <returns></returns>
+        static X509Certificate2 newX509Certificate2(byte[] rawData, string? password, X509KeyStorageFlags flags)
+        {
+            if (HasFlagEphemeralKeySet(flags) && !flags.HasFlag(X509KeyStorageFlags.PersistKeySet))
+            {
+                return new X509Certificate2(rawData, password, flags);
+            }
+            else
+            {
+                // We have to write it to temp ourselves otherwise the framework will create and never delete the tmp file.
+                var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
+                try
+                {
+                    File.WriteAllBytes(file, rawData);
+                    return new X509Certificate2(file, password, flags);
+                }
+                finally
+                {
+                    File.Delete(file);
+                }
             }
         }
 

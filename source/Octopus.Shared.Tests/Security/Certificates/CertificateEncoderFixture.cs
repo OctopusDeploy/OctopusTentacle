@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -31,6 +32,18 @@ namespace Octopus.Shared.Tests.Security.Certificates
             {
                 File.Delete(pfxFilePath);
             }
+        }
+        
+        
+        [Test]
+        public void WhenGivenABase64StringOfACertificate_ACertificateCanBeCreated()
+        {
+            // Given
+            var base64Cert = CertificateEncoder.ToBase64String(Certificate());
+
+            var certFromBase64 = CertificateEncoder.FromBase64String(base64Cert, Substitute.For<ILog>());
+            // Then
+            Assert.That(certFromBase64, Is.Not.Null);
         }
 
         [Test]
@@ -108,6 +121,19 @@ namespace Octopus.Shared.Tests.Security.Certificates
             {
                 input.CopyTo(ms);
                 return ms.ToArray();
+            }
+        }
+        
+        static X509Certificate2 Certificate()
+        {
+            var pfxFilePath = GetPfxFilePath("TestCertificateWithPassword.pfx");
+            try
+            {
+                return CertificateEncoder.FromPfxFile(pfxFilePath, "Password01!", Substitute.For<ILog>());
+            }
+            finally
+            {
+                File.Delete(pfxFilePath);
             }
         }
     }
