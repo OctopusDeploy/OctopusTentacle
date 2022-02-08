@@ -7,11 +7,15 @@
     <NoWarn>CS0649;CS0169</NoWarn>
     <NukeRootDirectory>..</NukeRootDirectory>
     <NukeScriptDirectory>..</NukeScriptDirectory>
+    <NukeTelemetryVersion>1</NukeTelemetryVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nuke.Common" Version="5.1.0" />
-    <PackageReference Include="Nuke.OctoVersion" Version="0.2.438" />
+    <PackageReference Include="Nuke.Common" Version="6.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageDownload Include="OctoVersion.Tool" Version="[0.2.951]" />
   </ItemGroup>
 
 </Project>
