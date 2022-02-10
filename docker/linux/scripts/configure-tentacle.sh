@@ -172,7 +172,7 @@ function registerTentacle() {
 
 	ARGS+=(
 		'--instance' "$instanceName"
-		'--server' "$ServerUrl"
+		'--server' "$1"
 		'--space' "$Space"
 		'--policy' "$MachinePolicy"
 		'--force')
@@ -212,6 +212,29 @@ function registerTentacle() {
 	tentacle "${ARGS[@]}"
 }
 
+function registerAdditionalInstances() {
+
+	local ARGS=()
+
+	ARGS+=(
+		'poll-server'
+		'--instance' "$instanceName"
+		'--server' "$1"
+		)
+
+	if [[ ! -z "$ServerApiKey" ]]; then
+		echo "Registering Tentacle with API key"
+		ARGS+=('--apiKey' $ServerApiKey)
+	else
+		echo "Registering Tentacle with username/password"
+		ARGS+=(
+			'--username' "$ServerUsername"
+			'--password' "$ServerPassword")
+	fi
+
+	tentacle "${ARGS[@]}"
+}
+
 echo "==============================================="
 echo "Configuring Octopus Deploy Tentacle"
 
@@ -219,8 +242,19 @@ validateVariables
 
 echo "==============================================="
 
-configureTentacle
-registerTentacle
+if [[ ! -z "$ServerUrl" ]]; then
+	IFS=',' read -ra SERVERURLS <<<"$ServerUrl"
+	for i in "${SERVERURLS[@]}"; do
+		if [[ "${SERVERURLS[0]}" == $i ]]; then
+			echo "Configuring and registering tentacle with this server: $i"
+			configureTentacle
+			registerTentacle $i
+		else
+			echo "Registering additional server with this tentacle: $i"
+			registerAdditionalInstances $i
+		fi
+	done
+fi
 
 touch $alreadyConfiguredSemaphore
 
