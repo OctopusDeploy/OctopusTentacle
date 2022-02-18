@@ -178,8 +178,7 @@ partial class Build : NukeBuild
     ModifiableFileWithRestoreContentsOnDispose ModifyTemplatedVersionAndProductFilesWithValues()
     {
         var versionInfoFilePath = SourceDirectory / "Solution Items" / "VersionInfo.cs";
-        
-        
+
         var versionInfoFile = new ModifiableFileWithRestoreContentsOnDispose(versionInfoFilePath);
 
         versionInfoFile.ReplaceRegexInFiles("AssemblyVersion\\(\".*?\"\\)", $"AssemblyVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
@@ -194,7 +193,6 @@ partial class Build : NukeBuild
     ModifiableFileWithRestoreContentsOnDispose UpdateMsiProductVersion()
     {
         var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
-        var productWxsFile = new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
         
         var xmlDoc = new XmlDocument();
         xmlDoc.Load(productWxsFilePath);
@@ -205,14 +203,14 @@ partial class Build : NukeBuild
         var product = xmlDoc.SelectSingleNode("//wi:Product", namespaceManager);
 
         if (product == null) throw new Exception("Couldn't find Product Node in wxs file");
-        if (product.Attributes == null) throw new Exception("Couldn't find Version attribute in Product Node");
+        if (product.Attributes == null) throw new Exception("Couldn't find Attributes in Product Node");
+        if (product.Attributes["Version"] == null) throw new Exception("Couldn't find Version attribute in Product Node");
 
-        // ReSharper disable once PossibleNullReferenceException
         product.Attributes["Version"]!.Value = OctoVersionInfo.MajorMinorPatch;
 
         xmlDoc.Save(productWxsFilePath);
 
-        return productWxsFile;
+        return new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
     }
     
     void RunBuildFor(string framework, string runtimeId)
