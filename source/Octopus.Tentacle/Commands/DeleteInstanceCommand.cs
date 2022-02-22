@@ -7,8 +7,8 @@ namespace Octopus.Tentacle.Commands
 {
     public class DeleteInstanceCommand : AbstractStandardCommand
     {
-        readonly IApplicationInstanceSelector instanceSelector;
-        readonly IApplicationInstanceManager instanceManager;
+        private readonly IApplicationInstanceSelector instanceSelector;
+        private readonly IApplicationInstanceManager instanceManager;
 
         public DeleteInstanceCommand(IApplicationInstanceSelector instanceSelector, IApplicationInstanceManager instanceManager, ISystemLog log, ILogFileOnlyLogger logFileOnlyLogger)
             : base(instanceSelector, log, logFileOnlyLogger)

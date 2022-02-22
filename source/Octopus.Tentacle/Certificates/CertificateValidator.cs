@@ -14,9 +14,9 @@ namespace Octopus.Tentacle.Certificates
 {
     public class CertificateValidator : X509CertificateValidator
     {
-        readonly Func<IEnumerable<string>> trustedThumbprints;
-        readonly CertificateValidationDirection direction;
-        readonly ILog log;
+        private readonly Func<IEnumerable<string>> trustedThumbprints;
+        private readonly CertificateValidationDirection direction;
+        private readonly ILog log;
 
         public CertificateValidator(Func<IEnumerable<string>> trustedThumbprints, CertificateValidationDirection direction, ILog log)
         {

@@ -1,4 +1,5 @@
 // ReSharper disable RedundantUsingDirective
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,19 +32,25 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 [ShutdownDotNetAfterServerBuild]
 partial class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.Default);
+    const string NetFramework = "net452";
+    const string NetCore = "netcoreapp3.1";
 
-    [Solution] readonly Solution Solution = null!;
-    [NukeOctoVersion] readonly OctoVersionInfo OctoVersionInfo = null!;
-
-    [Parameter] string TestFramework = "";
-    [Parameter] string TestRuntime = "";
-    
     [PackageExecutable(
         packageId: "azuresigntool",
         packageExecutable: "azuresigntool.dll")]
     public static Tool AzureSignTool = null!;
-    
+
+    [Parameter] public static string AzureKeyVaultUrl = "";
+    [Parameter] public static string AzureKeyVaultAppId = "";
+    [Secret] [Parameter] public static string AzureKeyVaultAppSecret = "";
+    [Parameter] public static string AzureKeyVaultCertificateName = "";
+
+    [Parameter(Name = "signing_certificate_path")] public static string SigningCertificatePath = RootDirectory / "certificates" / "OctopusDevelopment.pfx";
+    [Secret] [Parameter(Name = "signing_certificate_password")] public static string SigningCertificatePassword = "Password01!";
+
+    [Solution] readonly Solution Solution = null!;
+    [NukeOctoVersion] readonly OctoVersionInfo OctoVersionInfo = null!;
+
     [PackageExecutable(
         packageId: "wix",
         packageExecutable: "heat.exe")]
@@ -54,23 +61,15 @@ partial class Build : NukeBuild
         packageExecutable: "octo.exe")]
     readonly Tool OctoCliTool = null!;
 
-    [Parameter] public static string AzureKeyVaultUrl = "";
-    [Parameter] public static string AzureKeyVaultAppId = "";
-    [Secret] [Parameter] public static string AzureKeyVaultAppSecret = "";
-    [Parameter] public static string AzureKeyVaultCertificateName = "";
-    
-    [Parameter(Name = "signing_certificate_path")] public static string SigningCertificatePath = RootDirectory / "certificates" / "OctopusDevelopment.pfx";
-    [Secret] [Parameter(Name = "signing_certificate_password")] public static string SigningCertificatePassword = "Password01!";
-
     readonly AbsolutePath SourceDirectory = RootDirectory / "source";
     readonly AbsolutePath ArtifactsDirectory = RootDirectory / "_artifacts";
     readonly AbsolutePath BuildDirectory = RootDirectory / "_build";
     readonly AbsolutePath LocalPackagesDirectory = RootDirectory / ".." / "LocalPackages";
     readonly AbsolutePath TestDirectory = RootDirectory / "_test";
-    
-    const string NetFramework = "net452";
-    const string NetCore = "netcoreapp3.1";
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
+
+    [Parameter] readonly string TestFramework = "";
+    [Parameter] readonly string TestRuntime = "";
 
     [PublicAPI]
     Target Clean => _ => _
@@ -100,18 +99,18 @@ partial class Build : NukeBuild
 
             RuntimeIds.Where(x => x.StartsWith("win"))
                 .ForEach(runtimeId => RunBuildFor(runtimeId.Equals("win") ? NetFramework : NetCore, runtimeId));
-            
+
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
-            
-            var winFolder = (BuildDirectory / "Tentacle" / NetFramework / "win");
+
+            var winFolder = BuildDirectory / "Tentacle" / NetFramework / "win";
             var hardenInstallationDirectoryScript = RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1";
             CopyFileToDirectory(hardenInstallationDirectoryScript, winFolder, FileExistsPolicy.Overwrite);
 
             // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
             // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
             // Decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
-            var windowsOnlyBuiltFileSpec = BuildDirectory.GlobDirectories($"**/win*/**");
+            var windowsOnlyBuiltFileSpec = BuildDirectory.GlobDirectories("**/win*/**");
 
             var filesToSign = windowsOnlyBuiltFileSpec
                 .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll", "**/Nevermore.dll", "**/*.ps1"))
@@ -131,7 +130,7 @@ partial class Build : NukeBuild
 
             RuntimeIds.Where(x => x.StartsWith("linux-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
-            
+
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
         });
@@ -146,11 +145,11 @@ partial class Build : NukeBuild
 
             RuntimeIds.Where(x => x.StartsWith("osx-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
-            
+
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
         });
-    
+
     [PublicAPI]
     Target BuildAll => _ => _
         .Description("Build all the framework/runtime combinations. Notional task - running this on a single host is possible but cumbersome.")
@@ -174,6 +173,8 @@ partial class Build : NukeBuild
         .DependsOn(Pack)
         .DependsOn(CopyToLocalPackages);
 
+    public static int Main() => Execute<Build>(x => x.Default);
+
     //Modifies the VersionInfo.cs and Product.wxs files to embed version information into the shipped product.
     ModifiableFileWithRestoreContentsOnDispose ModifyTemplatedVersionAndProductFilesWithValues()
     {
@@ -189,11 +190,11 @@ partial class Build : NukeBuild
 
         return versionInfoFile;
     }
-    
+
     ModifiableFileWithRestoreContentsOnDispose UpdateMsiProductVersion()
     {
         var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
-        
+
         var xmlDoc = new XmlDocument();
         xmlDoc.Load(productWxsFilePath);
 
@@ -212,11 +213,11 @@ partial class Build : NukeBuild
 
         return new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
     }
-    
+
     void RunBuildFor(string framework, string runtimeId)
     {
         var configuration = $"Release-{framework}-{runtimeId}";
-        
+
         DotNetPublish(p => p
             .SetProject(SourceDirectory / "Tentacle.sln")
             .SetConfiguration(configuration)
@@ -228,13 +229,11 @@ partial class Build : NukeBuild
 
     // We need to use tar directly, because .NET utilities aren't able to preserve the file permissions
     // Importantly, the Tentacle executable needs to be +x in the tar.gz file
-    void TarGZipCompress(AbsolutePath inputDirectory, string fileSpec, AbsolutePath outputDirectory, string outputFile)
-    {
+    void TarGZipCompress(AbsolutePath inputDirectory, string fileSpec, AbsolutePath outputDirectory, string outputFile) =>
         DockerTasks.DockerRun(settings => settings
             .EnableRm()
             .EnableTty()
             .SetVolume($"{inputDirectory}:/input", $"{outputDirectory}:/output")
             .SetCommand("debian")
             .SetArgs("tar", "-C", "/input", "-czvf", $"/output/{outputFile}", fileSpec, "--preserve-permissions"));
-    }
 }

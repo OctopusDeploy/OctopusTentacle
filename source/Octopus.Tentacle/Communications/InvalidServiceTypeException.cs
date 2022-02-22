@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Communications
         {
             InvalidType = invalidType;
         }
-        
+
         public Type InvalidType { get; }
     }
 }

@@ -7,7 +7,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Proxy
 {
     public class ProxyPasswordMaskValuesProviderFixture
     {
-        ProxyPasswordMaskValuesProvider sut;
+        private ProxyPasswordMaskValuesProvider sut;
 
         [SetUp]
         public void SetUp()
@@ -21,39 +21,26 @@ namespace Octopus.Tentacle.Tests.Configuration.Proxy
         {
             sut.GetProxyPasswordMaskValues(password).Should().BeEmpty();
         }
-        
+
         [Test]
         public void GetProxyPasswordMaskValues_NoSpecialCharacters_JustPassword()
         {
-            string password = "Some-sTAr";
-            sut.GetProxyPasswordMaskValues(password).Should().BeEquivalentTo(new []
-            {
-                "Some-sTAr"
-            });
+            var password = "Some-sTAr";
+            sut.GetProxyPasswordMaskValues(password).Should().BeEquivalentTo("Some-sTAr");
         }
-        
+
         [Test]
         public void GetProxyPasswordMaskValues_HasSpecialCharacters_EncodedWithBothCases()
         {
-            string password = "Some@sT:r/";
-            sut.GetProxyPasswordMaskValues(password).Should().BeEquivalentTo(new []
-            {
-                "Some@sT:r/",
-                "Some%40sT%3Ar%2F", //WebUtility.UrlEncode generates uppercase hex characters
-                "Some%40sT%3ar%2f"  //HttpUtility.UrlEncode generates lowercase hex characters
-            });
+            var password = "Some@sT:r/";
+            sut.GetProxyPasswordMaskValues(password).Should().BeEquivalentTo("Some@sT:r/", "Some%40sT%3Ar%2F", "Some%40sT%3ar%2f");
         }
-        
+
         [Test]
         public void GetProxyPasswordMaskValues_HasSpecialCharactersWithHexCharactersFollowing_HexCharacterCasingPreserved()
         {
-            string password = "Some@sT:Ar/";
-            sut.GetProxyPasswordMaskValues(password).Should().BeEquivalentTo(new []
-            {
-                "Some@sT:Ar/",
-                "Some%40sT%3AAr%2F", //WebUtility.UrlEncode generates uppercase hex characters
-                "Some%40sT%3aAr%2f"  //HttpUtility.UrlEncode generates lowercase hex characters
-            });
+            var password = "Some@sT:Ar/";
+            sut.GetProxyPasswordMaskValues(password).Should().BeEquivalentTo("Some@sT:Ar/", "Some%40sT%3AAr%2F", "Some%40sT%3aAr%2f");
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using Autofac;
 using Module = Autofac.Module;
 
@@ -6,7 +7,7 @@ namespace Octopus.Tentacle.Versioning
 {
     public class VersioningModule : Module
     {
-        readonly Assembly versionedAssembly;
+        private readonly Assembly versionedAssembly;
 
         public VersioningModule(Assembly versionedAssembly)
         {

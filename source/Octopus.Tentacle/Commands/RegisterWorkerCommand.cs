@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Commands
 {
     public class RegisterWorkerCommand : RegisterMachineCommandBase<IRegisterWorkerOperation>
     {
-        readonly List<string> workerpoolNames = new List<string>();
+        private readonly List<string> workerpoolNames = new();
 
         public RegisterWorkerCommand(Lazy<IRegisterWorkerOperation> lazyRegisterMachineOperation,
             Lazy<IWritableTentacleConfiguration> configuration,

@@ -1,67 +1,87 @@
-﻿<shell:TabView 
+﻿<shell:TabView
     x:Class="Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views.OctopusServerConnectionTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
-    xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
-    xmlns:proxy="clr-namespace:Octopus.Manager.Tentacle.Proxy"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-    xmlns:validators="clr-namespace:Octopus.Manager.Tentacle.Validators"
     xmlns:util="clr-namespace:Octopus.Manager.Tentacle.Util"
-    mc:Ignorable="d" 
+    mc:Ignorable="d"
     d:DesignHeight="500" d:DesignWidth="650"
     Header="Octopus Server"
     RuleSet="TentacleActive"
     Visibility="{Binding Path=CommunicationStyle, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=TentacleActive}"
-    Style="{StaticResource TabView.Normal}"
-    >
+    Style="{StaticResource TabView.Normal}">
     <materialDesign:DialogHost Identifier="ServerConnectionRootDialog">
         <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,0,50">
-        <Grid>
+            <Grid>
                 <StackPanel>
                     <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Octopus Credentials" />
                     <TextBlock Style="{StaticResource TextBlock.Big}">
                         <Run FontWeight="Bold">Enter your Octopus Server details</Run>
                     </TextBlock>
                     <TextBlock Style="{StaticResource TextBlock.Big}">
-                        <Run>In this mode, Tentacle will periodically poll your Octopus Deploy server for commands. The machine will be automatically 
-                            registered with your Octopus Server.</Run>
+                        <Run>
+                            In this mode, Tentacle will periodically poll your Octopus Deploy server for commands. The machine will be automatically
+                            registered with your Octopus Server.
+                        </Run>
                     </TextBlock>
 
                     <StackPanel Width="400" HorizontalAlignment="Left">
 
-                        <TextBox Text="{Binding Path=OctopusServerUrl, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Name="OctopusServerUrlTextBox" Margin="0,10,0,20" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Octopus Server URL"/>
+                        <TextBox
+                            Text="{Binding Path=OctopusServerUrl, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                            Name="OctopusServerUrlTextBox" Margin="0,10,0,20"
+                            materialDesign:ValidationAssist.Background="Transparent"
+                            materialDesign:HintAssist.Hint="Octopus Server URL" />
 
 
                         <ComboBox
-                    Margin="0,0,0,20"
-                    materialDesign:HintAssist.Hint="Authentication Mode"
-                    SelectedValue="{Binding AuthMode, Mode=TwoWay}"
-                    ItemsSource="{Binding AuthModes, Mode=OneTime}"
-                    SelectedValuePath="Key" DisplayMemberPath="Value" Width="150" HorizontalAlignment="Left"/>
+                            Margin="0,0,0,20"
+                            materialDesign:HintAssist.Hint="Authentication Mode"
+                            SelectedValue="{Binding AuthMode, Mode=TwoWay}"
+                            ItemsSource="{Binding AuthModes, Mode=OneTime}"
+                            SelectedValuePath="Key" DisplayMemberPath="Value" Width="150" HorizontalAlignment="Left" />
 
 
-                        <StackPanel Visibility="{Binding Path=AuthMode, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=UsernamePassword}" Width="400" HorizontalAlignment="Left">
+                        <StackPanel
+                            Visibility="{Binding Path=AuthMode, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=UsernamePassword}"
+                            Width="400" HorizontalAlignment="Left">
 
-                            <TextBox Margin="0,0,0,20" Text="{Binding Path=Username, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" Name="UsernameTextBox" materialDesign:HintAssist.Hint="Username"/>
+                            <TextBox Margin="0,0,0,20"
+                                     Text="{Binding Path=Username, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                                     materialDesign:ValidationAssist.Background="Transparent" Name="UsernameTextBox"
+                                     materialDesign:HintAssist.Hint="Username" />
 
-                            <PasswordBox util:PasswordBoxAssistant.BindPassword="true" util:PasswordBoxAssistant.BoundPassword="{Binding Path=Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" Name="PasswordTextBox" Style="{DynamicResource MaterialDesignFloatingHintPasswordBox}" materialDesign:HintAssist.Hint="Password"/>
-                            <TextBlock Margin="0,15,0,0" Style="{StaticResource TextBlock.Small}" Foreground="Gray"><Run>This account is only used for registering the Tentacle and is never used again (nor stored). Alternatively you may use an API key.</Run></TextBlock>
+                            <PasswordBox util:PasswordBoxAssistant.BindPassword="true"
+                                         util:PasswordBoxAssistant.BoundPassword="{Binding Path=Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                                         materialDesign:ValidationAssist.Background="Transparent"
+                                         Name="PasswordTextBox"
+                                         Style="{DynamicResource MaterialDesignFloatingHintPasswordBox}"
+                                         materialDesign:HintAssist.Hint="Password" />
+                            <TextBlock Margin="0,15,0,0" Style="{StaticResource TextBlock.Small}" Foreground="Gray">
+                                <Run>This account is only used for registering the Tentacle and is never used again (nor stored). Alternatively you may use an API key.</Run>
+                            </TextBlock>
                         </StackPanel>
 
-                        <StackPanel Visibility="{Binding Path=AuthMode, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=APIKey}" Width="400">
+                        <StackPanel
+                            Visibility="{Binding Path=AuthMode, Converter={StaticResource Converter.EnumToVisibilityConverter}, ConverterParameter=APIKey}"
+                            Width="400">
 
-                            <TextBox Text="{Binding Path=ApiKey, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}" Name="ApiKeyTextBox" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="API Key"/>
+                            <TextBox
+                                Text="{Binding Path=ApiKey, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                                Name="ApiKeyTextBox" Style="{DynamicResource MaterialDesignFloatingHintTextBox}"
+                                materialDesign:ValidationAssist.Background="Transparent"
+                                materialDesign:HintAssist.Hint="API Key" />
                             <TextBlock Style="{StaticResource TextBlock.Small}" Foreground="Gray" Margin="0,20,0,0">
-                                        <Run>This API key is only used for registering the Tentacle and is never used again (nor stored).</Run>
-                                        <Hyperlink NavigateUri="http://g.octopushq.com/ApiKey" RequestNavigate="Navigate">Learn about creating an API key here.</Hyperlink>
+                                <Run>This API key is only used for registering the Tentacle and is never used again (nor stored).</Run>
+                                <Hyperlink NavigateUri="http://g.octopushq.com/ApiKey" RequestNavigate="Navigate">Learn about creating an API key here.</Hyperlink>
                             </TextBlock>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
     </materialDesign:DialogHost>
 </shell:TabView>

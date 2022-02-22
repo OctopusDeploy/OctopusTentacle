@@ -9,7 +9,7 @@ namespace Octopus.Manager.Tentacle.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string parameterString = parameter as string;
+            var parameterString = parameter as string;
             if (parameterString == null || value == null)
                 return Visibility.Collapsed;
 

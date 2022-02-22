@@ -7,13 +7,6 @@ namespace Octopus.Tentacle.Commands.OptionSets
 {
     public class ApiEndpointOptions : ICommandOptions
     {
-        public string Server { get; private set; }
-        public string ApiKey { get; private set; }
-        public string Username { get; private set; }
-        public string Password { get; private set; }
-
-        public bool Optional { private get; set; }
-
         public ApiEndpointOptions(OptionSet options)
         {
             options.Add("server=", "The Octopus Server - e.g., 'http://octopus'", s => Server = s);
@@ -22,7 +15,14 @@ namespace Octopus.Tentacle.Commands.OptionSets
             options.Add("p|password=", "If not using API keys, your password", s => Password = s, sensitive: true);
         }
 
-        public Uri ServerUri => new Uri(Server);
+        public string Server { get; private set; }
+        public string ApiKey { get; private set; }
+        public string Username { get; private set; }
+        public string Password { get; private set; }
+
+        public bool Optional { private get; set; }
+
+        public Uri ServerUri => new(Server);
 
         public bool IsSupplied => !string.IsNullOrWhiteSpace(Server) && (!string.IsNullOrEmpty(Username) || !string.IsNullOrEmpty(ApiKey));
 

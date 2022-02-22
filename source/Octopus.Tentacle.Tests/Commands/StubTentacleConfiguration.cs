@@ -3,22 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Diagnostics;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
-using IPollingProxyConfiguration = Octopus.Tentacle.Configuration.IPollingProxyConfiguration;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
-    class StubTentacleConfiguration : IWritableTentacleConfiguration
+    internal class StubTentacleConfiguration : IWritableTentacleConfiguration
     {
-        IList<OctopusServerConfiguration> servers = new List<OctopusServerConfiguration>();
+        private IList<OctopusServerConfiguration> servers = new List<OctopusServerConfiguration>();
 
         public string TentacleSquid { get; private set; }
 
-        public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers
-        {
-            get { return servers; }
-        }
+        public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers => servers;
 
         public IEnumerable<string> TrustedOctopusThumbprints
         {
@@ -108,7 +105,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
         public X509Certificate2 GenerateNewCertificate()
         {
-            var cert = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew("cn=foo");
+            var cert = new CertificateGenerator(new NullLog()).GenerateNew("cn=foo");
             TentacleCertificate = cert;
             return cert;
         }
@@ -122,7 +119,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
         }
 
-        static bool AreEqual(OctopusServerConfiguration left, OctopusServerConfiguration right)
+        private static bool AreEqual(OctopusServerConfiguration left, OctopusServerConfiguration right)
         {
             var thumbprintsMatch = string.Compare(left.Thumbprint, right.Thumbprint, StringComparison.OrdinalIgnoreCase) == 0;
             var addressesMatch = Uri.Compare(left.Address, right.Address, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase) == 0;

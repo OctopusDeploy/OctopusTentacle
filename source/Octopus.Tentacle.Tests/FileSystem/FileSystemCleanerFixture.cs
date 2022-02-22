@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Tests.FileSystem
             Assert.That(directoriesThatShouldntBeDeleted, Is.Empty);
         }
 
-        static IReadOnlyList<string> GetPathsThatWillBeDeleted()
+        private static IReadOnlyList<string> GetPathsThatWillBeDeleted()
         {
             var assembly = typeof(FileSystemCleaner).Assembly;
 
@@ -40,15 +40,12 @@ namespace Octopus.Tentacle.Tests.FileSystem
             {
                 string line;
                 var allLines = new List<string>();
-                while ((line = reader.ReadLine()) != null)
-                {
-                    allLines.Add(line);
-                }
+                while ((line = reader.ReadLine()) != null) allLines.Add(line);
                 return allLines;
             }
         }
 
-        static void OutputPathsThatShouldntBeDeleted(IEnumerable<string> paths, string pathType)
+        private static void OutputPathsThatShouldntBeDeleted(IEnumerable<string> paths, string pathType)
         {
             if (!paths.Any())
                 return;

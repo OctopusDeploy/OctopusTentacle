@@ -1,4 +1,5 @@
 ﻿// ReSharper disable RedundantUsingDirective
+
 using System;
 
 public static class Git

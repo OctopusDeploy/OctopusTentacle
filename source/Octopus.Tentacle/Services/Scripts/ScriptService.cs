@@ -14,13 +14,13 @@ namespace Octopus.Tentacle.Services.Scripts
     [Service]
     public class ScriptService : IScriptService
     {
-        readonly IShell shell;
-        readonly IScriptWorkspaceFactory workspaceFactory;
-        readonly IOctopusFileSystem fileSystem;
-        readonly SensitiveValueMasker sensitiveValueMasker;
-        readonly ISystemLog log;
-        readonly ConcurrentDictionary<string, RunningScript> running = new ConcurrentDictionary<string, RunningScript>(StringComparer.OrdinalIgnoreCase);
-        readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
+        private readonly IShell shell;
+        private readonly IScriptWorkspaceFactory workspaceFactory;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly SensitiveValueMasker sensitiveValueMasker;
+        private readonly ISystemLog log;
+        private readonly ConcurrentDictionary<string, RunningScript> running = new(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new(StringComparer.OrdinalIgnoreCase);
 
         public ScriptService(IShell shell, IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem, SensitiveValueMasker sensitiveValueMasker, ISystemLog log)
         {
@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Services.Scripts
             return ticket;
         }
 
-        IScriptWorkspace PrepareWorkspace(StartScriptCommand command, ScriptTicket ticket)
+        private IScriptWorkspace PrepareWorkspace(StartScriptCommand command, ScriptTicket ticket)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket);
             workspace.IsolationLevel = command.Isolation;
@@ -51,30 +51,23 @@ namespace Octopus.Tentacle.Services.Scripts
             workspace.ScriptMutexName = command.IsolationMutexName;
 
             if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
-            {
                 //TODO: This could be better
                 workspace.BootstrapScript(command.Scripts.ContainsKey(ScriptType.Bash)
                     ? command.Scripts[ScriptType.Bash]
                     : command.ScriptBody);
-            }
             else
-            {
                 workspace.BootstrapScript(command.ScriptBody);
-            }
 
             command.Files.ForEach(file => SaveFileToDisk(workspace, file));
 
             return workspace;
         }
 
-        void SaveFileToDisk(IScriptWorkspace workspace, ScriptFile scriptFile)
+        private void SaveFileToDisk(IScriptWorkspace workspace, ScriptFile scriptFile)
         {
             if (scriptFile.EncryptionPassword == null)
-            {
                 scriptFile.Contents.Receiver().SaveTo(workspace.ResolvePath(scriptFile.Name));
-            }
             else
-            {
                 scriptFile.Contents.Receiver().Read(stream =>
                 {
                     using (var reader = new StreamReader(stream))
@@ -82,18 +75,17 @@ namespace Octopus.Tentacle.Services.Scripts
                         fileSystem.WriteAllBytes(workspace.ResolvePath(scriptFile.Name), new AesEncryption(scriptFile.EncryptionPassword).Encrypt(reader.ReadToEnd()));
                     }
                 });
-            }
         }
 
-        IScriptLog CreateLog(IScriptWorkspace workspace)
+        private IScriptLog CreateLog(IScriptWorkspace workspace)
         {
             return new ScriptLog(workspace.ResolvePath("Output.log"), fileSystem, sensitiveValueMasker);
         }
 
-        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
+        private RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
         {
             var runningScript = new RunningScript(shell, workspace, CreateLog(workspace), serverTaskId, cancel.Token, log);
-            var thread = new Thread(runningScript.Execute) {Name = "Executing PowerShell script for " + ticket.TaskId};
+            var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell script for " + ticket.TaskId };
             thread.Start();
             return runningScript;
         }
@@ -108,10 +100,7 @@ namespace Octopus.Tentacle.Services.Scripts
         public ScriptStatusResponse CancelScript(CancelScriptCommand command)
         {
             CancellationTokenSource cancel;
-            if (cancellationTokens.TryGetValue(command.Ticket.TaskId, out cancel))
-            {
-                cancel.Cancel();
-            }
+            if (cancellationTokens.TryGetValue(command.Ticket.TaskId, out cancel)) cancel.Cancel();
 
             RunningScript script;
             running.TryGetValue(command.Ticket.TaskId, out script);
@@ -130,7 +119,7 @@ namespace Octopus.Tentacle.Services.Scripts
             return response;
         }
 
-        ScriptStatusResponse GetResponse(ScriptTicket ticket, RunningScript script, long lastLogSequence)
+        private ScriptStatusResponse GetResponse(ScriptTicket ticket, RunningScript script, long lastLogSequence)
         {
             var exitCode = script != null ? script.ExitCode : 0;
             var state = script != null ? script.State : ProcessState.Complete;

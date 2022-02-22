@@ -9,7 +9,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 {
     public static class UnhandledErrorTrapper
     {
-        static ISystemLog systemLog;
+        private static ISystemLog systemLog;
 
         public static void Initialize(ISystemLog log)
         {
@@ -19,7 +19,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             Application.Current.DispatcherUnhandledException += HandleDispatcherException;
         }
 
-        static void HandleDispatcherException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        private static void HandleDispatcherException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             if (Application.Current.MainWindow != null && Application.Current.MainWindow.IsVisible)
             {
@@ -39,12 +39,12 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             }
         }
 
-        static void HandleAppDomainException(object sender, UnhandledExceptionEventArgs e)
+        private static void HandleAppDomainException(object sender, UnhandledExceptionEventArgs e)
         {
             systemLog.Error((Exception)e.ExceptionObject);
         }
 
-        static void HandleTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        private static void HandleTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             e.SetObserved();
             systemLog.Error(e.Exception);

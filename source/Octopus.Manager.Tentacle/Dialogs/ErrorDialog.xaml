@@ -1,28 +1,30 @@
-﻿<Window 
+﻿<Window
     x:Class="Octopus.Manager.Tentacle.Dialogs.ErrorDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-    mc:Ignorable="d" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="300"
     TextOptions.TextFormattingMode="Ideal"
     Width="600"
     Height="500"
     Title="Unhandled error"
     Background="White"
-    WindowStartupLocation="CenterScreen"
-    >
+    WindowStartupLocation="CenterScreen">
     <Grid Margin="20, 10, 20, 10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        
-        <TextBlock Grid.Row="0" Text="Unhandled error" Name="title" Style="{StaticResource TextBlock.Heading}" Margin="0,10,0,0" />
+
+        <TextBlock Grid.Row="0" Text="Unhandled error" Name="title" Style="{StaticResource TextBlock.Heading}"
+                   Margin="0,10,0,0" />
         <TextBlock Grid.Row="1" Name="errorSummary" Style="{StaticResource TextBlock.Big}" Margin="0,10,0,0" />
 
-        <TextBox Grid.Row="2" Name="ErrorTextBox" Background="White" Foreground="Red" TextWrapping="NoWrap" Margin="10" FontSize="9pt" IsReadOnly="True" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" />
+        <TextBox Grid.Row="2" Name="ErrorTextBox" Background="White" Foreground="Red" TextWrapping="NoWrap" Margin="10"
+                 FontSize="9pt" IsReadOnly="True" HorizontalScrollBarVisibility="Visible"
+                 VerticalScrollBarVisibility="Visible" />
     </Grid>
 </Window>

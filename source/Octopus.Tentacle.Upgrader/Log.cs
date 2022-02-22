@@ -8,9 +8,9 @@ namespace Octopus.Tentacle.Upgrader
         public static readonly Log Upgrade = new Log("UpgradeLog");
         public static readonly Log ExitCode = new Log("ExitCode");
 
-        readonly string logFile;
+        private readonly string logFile;
 
-        Log(string prefix)
+        private Log(string prefix)
         {
             logFile = Path.Combine(Environment.CurrentDirectory, prefix + "-" + DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid().ToString().Substring(0, 5) + ".log");
         }

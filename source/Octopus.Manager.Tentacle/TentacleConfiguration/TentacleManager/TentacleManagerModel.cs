@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Octopus.Client.Model;
 using Octopus.Configuration;
@@ -15,18 +16,18 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 {
     public class TentacleManagerModel : ViewModel
     {
-        string configurationFilePath;
-        string homeDirectory;
-        string logsDirectory;
-        ServiceWatcher serviceWatcher;
-        string proxyStatus;
-        string communicationMode;
-        string thumbprint;
-        string trust;
-        bool pollsServers;
-
-        IOctopusFileSystem fileSystem;
         private readonly IApplicationInstanceSelector selector;
+        private string configurationFilePath;
+        private string homeDirectory;
+        private string logsDirectory;
+        private ServiceWatcher serviceWatcher;
+        private string proxyStatus;
+        private string communicationMode;
+        private string thumbprint;
+        private string trust;
+        private bool pollsServers;
+
+        private readonly IOctopusFileSystem fileSystem;
 
         public TentacleManagerModel(IOctopusFileSystem fileSystem, IApplicationInstanceSelector selector)
         {
@@ -135,7 +136,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             Reload(applicationInstance);
         }
 
-        void Reload(ApplicationInstanceRecord applicationInstance)
+        private void Reload(ApplicationInstanceRecord applicationInstance)
         {
             var keyStore = LoadConfiguration();
 
@@ -188,6 +189,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                         : $"The Tentacle polls the Octopus Servers with thumbprints {addresses}.");
                 }
             }
+
             Trust = string.Join(" ", describeTrust);
 
             ProxyConfiguration = new ProxyConfiguration(keyStore);
@@ -197,12 +199,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             if (pollsServers)
             {
                 PollingProxyConfiguration = new PollingProxyConfiguration(keyStore);
-                ProxyStatus += BuildProxyStatus(PollingProxyConfiguration, polling: true) + " to poll the Octopus Server";
+                ProxyStatus += BuildProxyStatus(PollingProxyConfiguration, true) + " to poll the Octopus Server";
             }
+
             ProxyStatus += ".";
         }
 
-        static string BuildProxyStatus(IProxyConfiguration config, bool polling = false)
+        private static string BuildProxyStatus(IProxyConfiguration config, bool polling = false)
         {
             var start = polling ? ", and" : "Tentacle";
 
@@ -213,7 +216,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
                     : $"{start} is using the default proxy server" + (string.IsNullOrWhiteSpace(config.CustomProxyUsername) ? "" : " with custom credentials");
         }
 
-        IWritableKeyValueStore LoadConfiguration()
+        private IWritableKeyValueStore LoadConfiguration()
         {
             return new XmlFileKeyValueStore(fileSystem, ConfigurationFilePath);
         }

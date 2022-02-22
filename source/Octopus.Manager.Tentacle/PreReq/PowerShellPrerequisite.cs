@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Octopus.Shared.Diagnostics;
+using Octopus.Shared.Util;
 
 namespace Octopus.Manager.Tentacle.PreReq
 {
@@ -18,7 +19,7 @@ namespace Octopus.Manager.Tentacle.PreReq
                     commandLineOutput: commandLineOutput);
         }
 
-        static bool CheckPowerShellIsInstalled(out string commandLineOutput)
+        private static bool CheckPowerShellIsInstalled(out string commandLineOutput)
         {
             var stdOut = new StringWriter();
             var stdErr = new StringWriter();
@@ -32,7 +33,7 @@ namespace Octopus.Manager.Tentacle.PreReq
             // to detect 3.0, it failed to detect 4. Going the direct route:
             try
             {
-                Octopus.Shared.Util.SilentProcessRunner.ExecuteCommand(
+                SilentProcessRunner.ExecuteCommand(
                     powerShellExe,
                     arguments,
                     ".",

@@ -1,4 +1,6 @@
-﻿namespace Octopus.Manager.Tentacle.DeleteWizard.Views
+﻿using System;
+
+namespace Octopus.Manager.Tentacle.DeleteWizard.Views
 {
     /// <summary>
     /// Interaction logic for DeleteWelcome.xaml

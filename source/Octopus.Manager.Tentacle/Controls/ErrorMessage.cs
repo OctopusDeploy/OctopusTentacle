@@ -8,11 +8,20 @@ namespace Octopus.Manager.Tentacle.Controls
 {
     public class ErrorMessage : Control
     {
-        bool isAttached;
+        public static readonly DependencyProperty ErrorProperty = DependencyProperty.Register("Error", typeof(string), typeof(ErrorMessage), new PropertyMetadata(null, ErrorPropertySet));
+        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register("ViewModel", typeof(object), typeof(ErrorMessage), new PropertyMetadata(null, ViewModelSet));
+
+        public static readonly DependencyProperty HasErrorProperty =
+            DependencyProperty.Register("HasError", typeof(bool), typeof(ErrorMessage), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty ErrorPathProperty =
+            DependencyProperty.Register("ErrorPath", typeof(string), typeof(ErrorMessage), new PropertyMetadata(null, ErrorPathSet));
+
+        private bool isAttached;
 
         static ErrorMessage()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof (ErrorMessage), new FrameworkPropertyMetadata(typeof (ErrorMessage)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ErrorMessage), new FrameworkPropertyMetadata(typeof(ErrorMessage)));
         }
 
         public ErrorMessage()
@@ -45,7 +54,7 @@ namespace Octopus.Manager.Tentacle.Controls
             set => SetValue(ErrorPathProperty, value);
         }
 
-        void DetachFromPropertyChanged()
+        private void DetachFromPropertyChanged()
         {
             var inpc = ViewModel as INotifyPropertyChanged;
             if (inpc != null)
@@ -55,7 +64,7 @@ namespace Octopus.Manager.Tentacle.Controls
             }
         }
 
-        void AttachToPropertyChanged()
+        private void AttachToPropertyChanged()
         {
             var inpc = ViewModel as INotifyPropertyChanged;
             if (inpc != null)
@@ -66,23 +75,20 @@ namespace Octopus.Manager.Tentacle.Controls
             }
         }
 
-        void OnModelPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+        private void OnModelPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
         {
             Refresh();
         }
 
-        void Refresh()
+        private void Refresh()
         {
             if (!Dispatcher.CheckAccess())
             {
-                Dispatcher.Invoke(new Action(Refresh));
+                Dispatcher.Invoke(Refresh);
                 return;
             }
 
-            if (IsLoaded && !isAttached)
-            {
-                AttachToPropertyChanged();
-            }
+            if (IsLoaded && !isAttached) AttachToPropertyChanged();
 
             if (!string.IsNullOrWhiteSpace(ErrorPath))
             {
@@ -95,29 +101,20 @@ namespace Octopus.Manager.Tentacle.Controls
             }
         }
 
-        static void ErrorPathSet(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void ErrorPathSet(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((ErrorMessage)d).Refresh();
         }
 
-        static void ViewModelSet(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void ViewModelSet(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((ErrorMessage)d).Refresh();
         }
 
-        static void ErrorPropertySet(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void ErrorPropertySet(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var control = (ErrorMessage) d;
+            var control = (ErrorMessage)d;
             control.HasError = !string.IsNullOrWhiteSpace(control.Error);
         }
-
-        public static readonly DependencyProperty ErrorProperty = DependencyProperty.Register("Error", typeof (string), typeof (ErrorMessage), new PropertyMetadata(null, ErrorPropertySet));
-        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register("ViewModel", typeof (object), typeof (ErrorMessage), new PropertyMetadata(null, ViewModelSet));
-
-        public static readonly DependencyProperty HasErrorProperty =
-            DependencyProperty.Register("HasError", typeof (bool), typeof (ErrorMessage), new PropertyMetadata(false));
-
-        public static readonly DependencyProperty ErrorPathProperty =
-            DependencyProperty.Register("ErrorPath", typeof (string), typeof (ErrorMessage), new PropertyMetadata(null, ErrorPathSet));
     }
 }

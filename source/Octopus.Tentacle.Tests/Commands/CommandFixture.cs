@@ -1,4 +1,5 @@
-﻿using NSubstitute;
+﻿using System;
+using NSubstitute;
 using NUnit.Framework;
 using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Startup;

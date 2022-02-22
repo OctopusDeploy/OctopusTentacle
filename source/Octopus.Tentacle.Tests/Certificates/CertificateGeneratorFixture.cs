@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Tests.Certificates
     [TestFixture]
     public class CertificateGeneratorFixture
     {
-        readonly CertificateGenerator generator = new CertificateGenerator(new InMemoryLog());
+        private readonly CertificateGenerator generator = new CertificateGenerator(new InMemoryLog());
 
         [Test]
         public void CanGenerateExportableCertificates()

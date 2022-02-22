@@ -14,12 +14,12 @@ namespace Octopus.Tentacle.Commands
 {
     public class ConfigureCommand : AbstractStandardCommand
     {
-        readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
-        readonly ISystemLog log;
-        readonly List<string> octopusToAdd = new List<string>();
-        readonly List<string> octopusToRemove = new List<string>();
-        readonly List<Action> operations = new List<Action>();
-        bool resetTrust;
+        private readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
+        private readonly ISystemLog log;
+        private readonly List<string> octopusToAdd = new();
+        private readonly List<string> octopusToRemove = new();
+        private readonly List<Action> operations = new();
+        private bool resetTrust;
 
         public ConfigureCommand(
             Lazy<IWritableTentacleConfiguration> tentacleConfiguration,
@@ -79,6 +79,7 @@ namespace Octopus.Tentacle.Commands
                     tentacleConfiguration.Value.SetListenIpAddress(v);
                     log.Info("Listen on IP address: " + parsed);
                 }
+
                 VoteForRestart();
             }));
             Options.Add("trust=", "The thumbprint of the Octopus Server to trust", v => octopusToAdd.Add(v));
@@ -121,7 +122,7 @@ namespace Octopus.Tentacle.Commands
             foreach (var operation in operations) operation();
         }
 
-        void QueueOperation(Action action)
+        private void QueueOperation(Action action)
         {
             operations.Add(action);
         }

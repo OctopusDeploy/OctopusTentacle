@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using MaterialDesignThemes.Wpf;
 
@@ -13,7 +14,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
 
         public string Password => password.Password;
 
-        void SaveClicked(object sender, RoutedEventArgs e)
+        private void SaveClicked(object sender, RoutedEventArgs e)
         {
             DialogHost.CloseDialogCommand.Execute(true, null);
         }

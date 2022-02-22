@@ -8,18 +8,18 @@ using Octopus.Shared;
 using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Security.Certificates;
 using Octopus.Shared.Startup;
+using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
-using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
 
 namespace Octopus.Tentacle.Commands
 {
     public class ImportCertificateCommand : AbstractStandardCommand
     {
-        readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
-        readonly ISystemLog log;
-        bool fromRegistry;
-        string importFile;
-        string importPfxPassword;
+        private readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
+        private readonly ISystemLog log;
+        private bool fromRegistry;
+        private string importFile;
+        private string importPfxPassword;
 
         public ImportCertificateCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector, ILogFileOnlyLogger logFileOnlyLogger)
             : base(selector, log, logFileOnlyLogger)
@@ -46,11 +46,8 @@ namespace Octopus.Tentacle.Commands
             {
                 log.Info("Importing the Octopus 1.x certificate stored in the Windows registry...");
 
-                string encoded = GetEncodedCertificate();
-                if (string.IsNullOrWhiteSpace(encoded))
-                {
-                    throw new ControlledFailureException("No Octopus 1.x Tentacle certificate was found.");
-                }
+                var encoded = GetEncodedCertificate();
+                if (string.IsNullOrWhiteSpace(encoded)) throw new ControlledFailureException("No Octopus 1.x Tentacle certificate was found.");
                 x509Certificate = CertificateEncoder.FromBase64String(encoded, log);
             }
             else if (!string.IsNullOrWhiteSpace(importFile))
@@ -62,7 +59,6 @@ namespace Octopus.Tentacle.Commands
 
                 //We assume if the file does not end in .pfx that it is the legacy base64 encoded certificate, however if this fails we should still attempt to read as the PFX format.
                 if (fileExtension.ToLower() != ".pfx")
-                {
                     try
                     {
                         log.Info($"Importing the certificate stored in {importFile}...");
@@ -73,11 +69,8 @@ namespace Octopus.Tentacle.Commands
                     {
                         x509Certificate = CertificateEncoder.FromPfxFile(importFile, importPfxPassword, log);
                     }
-                }
                 else
-                {
                     x509Certificate = CertificateEncoder.FromPfxFile(importFile, importPfxPassword, log);
-                }
             }
 
             if (x509Certificate == null)
@@ -92,7 +85,7 @@ namespace Octopus.Tentacle.Commands
             log.Info($"Certificate with thumbprint {x509Certificate.Thumbprint} imported successfully.");
         }
 
-        string GetEncodedCertificate()
+        private string GetEncodedCertificate()
         {
             const RegistryHive Hive = RegistryHive.LocalMachine;
             const RegistryView View = RegistryView.Registry64;
@@ -102,10 +95,7 @@ namespace Octopus.Tentacle.Commands
             using (var key = RegistryKey.OpenBaseKey(Hive, View))
             using (var subkey = key.OpenSubKey(KeyName, false))
             {
-                if (subkey != null)
-                {
-                    return (string)subkey.GetValue("Cert-cn=Octopus Tentacle", null);
-                }
+                if (subkey != null) return (string)subkey.GetValue("Cert-cn=Octopus Tentacle", null);
 
                 return null;
             }

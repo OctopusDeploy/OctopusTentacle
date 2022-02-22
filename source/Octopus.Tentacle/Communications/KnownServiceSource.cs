@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Communications
         {
             ServiceTypes = serviceTypes;
         }
-        
+
         public IEnumerable<Type> ServiceTypes { get; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using Autofac;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views;
@@ -10,7 +11,7 @@ namespace Octopus.Manager.Tentacle.Proxy
 {
     public class ProxyWizardLauncher
     {
-        readonly IComponentContext container;
+        private readonly IComponentContext container;
 
         public ProxyWizardLauncher(IComponentContext container)
         {
@@ -32,12 +33,12 @@ namespace Octopus.Manager.Tentacle.Proxy
                 wrapper.AddPollingModel(pollingWizardModel);
             }
 
-            wizard.AddTab(new InstallTab(wrapper, container.Resolve<ICommandLineRunner>()) {ReadyMessage = "That's all the information we need. When you click the button below, your proxy settings will be saved and the service will be restarted.", SuccessMessage = "Happy deployments!", ExecuteButtonText = "APPLY", Title = "Apply", Header = "Apply"});
+            wizard.AddTab(new InstallTab(wrapper, container.Resolve<ICommandLineRunner>()) { ReadyMessage = "That's all the information we need. When you click the button below, your proxy settings will be saved and the service will be restarted.", SuccessMessage = "Happy deployments!", ExecuteButtonText = "APPLY", Title = "Apply", Header = "Apply" });
 
             return BuildShell(owner, wizard).ShowDialog();
         }
 
-        ShellView BuildShell(Window owner, TabbedWizard wizard)
+        private ShellView BuildShell(Window owner, TabbedWizard wizard)
         {
             var shellModel = container.Resolve<ShellViewModel>();
             var shell = new ShellView("Proxy Configuration Wizard", shellModel)
@@ -50,7 +51,7 @@ namespace Octopus.Manager.Tentacle.Proxy
             return shell;
         }
 
-        static ProxyWizardModel LoadModel(ApplicationName application, IProxyConfiguration proxyConfiguration, string selectedInstance)
+        private static ProxyWizardModel LoadModel(ApplicationName application, IProxyConfiguration proxyConfiguration, string selectedInstance)
         {
             var wizardModel = proxyConfiguration is IPollingProxyConfiguration
                 ? new PollingProxyWizardModel(selectedInstance, application) { ShowProxySettings = true, ToggleService = false }
@@ -81,6 +82,7 @@ namespace Octopus.Manager.Tentacle.Proxy
                     wizardModel.ProxyConfigType = ProxyConfigType.DefaultProxy;
                 }
             }
+
             return wizardModel;
         }
     }

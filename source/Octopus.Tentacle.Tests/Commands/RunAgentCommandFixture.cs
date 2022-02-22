@@ -4,13 +4,14 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Certificates;
-using Octopus.Tentacle.Versioning;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Versioning;
 using Octopus.Time;
 
 namespace Octopus.Tentacle.Tests.Commands
@@ -18,11 +19,11 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class RunAgentCommandFixture : CommandFixture<RunAgentCommand>
     {
-        IHalibutInitializer halibut;
-        IWritableTentacleConfiguration tentacleConfiguration;
-        ISleep sleep;
-        IHomeConfiguration home;
-        IApplicationInstanceSelector selector;
+        private IHalibutInitializer halibut;
+        private IWritableTentacleConfiguration tentacleConfiguration;
+        private ISleep sleep;
+        private IHomeConfiguration home;
+        private IApplicationInstanceSelector selector;
 
         [SetUp]
         public override void SetUp()
@@ -31,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
             halibut = Substitute.For<IHalibutInitializer>();
             tentacleConfiguration = Substitute.For<IWritableTentacleConfiguration>();
-            var certificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew("cn=Test.Cert.For.Octopus.Tests");
+            var certificate = new CertificateGenerator(new NullLog()).GenerateNew("cn=Test.Cert.For.Octopus.Tests");
             tentacleConfiguration.TentacleCertificate.Returns(certificate);
             home = Substitute.For<IHomeConfiguration>();
             sleep = Substitute.For<ISleep>();

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -13,6 +12,7 @@ using Octopus.Client.Repositories.Async;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
@@ -25,13 +25,13 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class RegisterWorkerCommandFixture : CommandFixture<RegisterWorkerCommand>
     {
-        IWritableTentacleConfiguration configuration;
-        ISystemLog log;
-        X509Certificate2 certificate;
-        IRegisterWorkerOperation operation;
-        IOctopusServerChecker serverChecker;
-        IOctopusAsyncRepository repository;
-        string serverThumbprint;
+        private IWritableTentacleConfiguration configuration;
+        private ISystemLog log;
+        private X509Certificate2 certificate;
+        private IRegisterWorkerOperation operation;
+        private IOctopusServerChecker serverChecker;
+        private IOctopusAsyncRepository repository;
+        private string serverThumbprint;
 
         [SetUp]
         public void BeforeEachTest()
@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 Substitute.For<ILogFileOnlyLogger>());
 
             configuration.ServicesPortNumber.Returns(90210);
-            certificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew("CN=Hello");
+            certificate = new CertificateGenerator(new NullLog()).GenerateNew("CN=Hello");
             configuration.TentacleCertificate.Returns(certificate);
         }
 

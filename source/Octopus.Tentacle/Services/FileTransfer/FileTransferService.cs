@@ -4,7 +4,6 @@ using Halibut;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Contracts;
-
 using Octopus.Shared.Util;
 
 namespace Octopus.Tentacle.Services.FileTransfer
@@ -12,9 +11,9 @@ namespace Octopus.Tentacle.Services.FileTransfer
     [Service]
     public class FileTransferService : IFileTransferService
     {
-        readonly ISystemLog log;
-        readonly IOctopusFileSystem fileSystem;
-        readonly IHomeConfiguration home;
+        private readonly ISystemLog log;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly IHomeConfiguration home;
 
         public FileTransferService(IOctopusFileSystem fileSystem, IHomeConfiguration home, ISystemLog log)
         {
@@ -40,7 +39,8 @@ namespace Octopus.Tentacle.Services.FileTransfer
             // close in the DataStream lambda, but that risks leaving
             // the file open if the lambda isn't executed.
             using (fileSystem.OpenFile(fullPath, FileAccess.Read, FileShare.ReadWrite))
-            {}
+            {
+            }
 
             return new DataStream(fileSize, writer =>
             {
@@ -72,22 +72,20 @@ namespace Octopus.Tentacle.Services.FileTransfer
             return new UploadResult(fullPath, HashFile(fullPath), fileSystem.GetFileSize(fullPath));
         }
 
-        string HashFile(string fullPath)
+        private string HashFile(string fullPath)
         {
             string hash;
-            using (var destinationStream = fileSystem.OpenFile(fullPath, FileAccess.Read, FileShare.Read))
+            using (var destinationStream = fileSystem.OpenFile(fullPath, FileAccess.Read))
             {
                 hash = HashCalculator.Hash(destinationStream);
             }
+
             return hash;
         }
 
-        string ResolvePath(string path)
+        private string ResolvePath(string path)
         {
-            if (!PlatformDetection.IsRunningOnWindows)
-            {
-                path = path.Replace('\\', Path.DirectorySeparatorChar);
-            }
+            if (!PlatformDetection.IsRunningOnWindows) path = path.Replace('\\', Path.DirectorySeparatorChar);
 
             if (Path.IsPathRooted(path))
                 return fileSystem.GetFullPath(path);

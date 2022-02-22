@@ -1,7 +1,5 @@
 using System;
-using System.ComponentModel;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Octopus.Client.Model;
 using Octopus.Shared.Util;
 
@@ -12,7 +10,7 @@ namespace Octopus.Tentacle.Configuration
     /// </summary>
     public class OctopusServerConfiguration
     {
-        string thumbprint;
+        private string thumbprint;
 
         /// <summary>
         /// Create a new OctopusServerConfiguration.
@@ -28,7 +26,7 @@ namespace Octopus.Tentacle.Configuration
         /// </summary>
         public string Thumbprint
         {
-            get { return thumbprint; }
+            get => thumbprint;
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
@@ -64,10 +62,12 @@ namespace Octopus.Tentacle.Configuration
             return ObjectFormatter.Format(this);
         }
 
-        class CommunicationStyleConverter : JsonConverter
+        private class CommunicationStyleConverter : JsonConverter
         {
             public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-                =>  writer.WriteValue((int) value);
+            {
+                writer.WriteValue((int)value);
+            }
 
             public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
@@ -76,12 +76,14 @@ namespace Octopus.Tentacle.Configuration
 
                 if (reader.Value is string str)
                     return Enum.Parse(typeof(CommunicationStyle), str);
-                
-                return (CommunicationStyle) Convert.ToInt32(reader.Value);
+
+                return (CommunicationStyle)Convert.ToInt32(reader.Value);
             }
 
             public override bool CanConvert(Type objectType)
-                => objectType == typeof(CommunicationStyle);
+            {
+                return objectType == typeof(CommunicationStyle);
+            }
         }
     }
 }

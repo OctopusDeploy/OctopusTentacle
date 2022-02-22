@@ -1,22 +1,20 @@
-﻿<shell:TabView 
+﻿<shell:TabView
     x:Class="Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views.StorageTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
-    xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-    mc:Ignorable="d" 
+    mc:Ignorable="d"
     d:DesignHeight="500" d:DesignWidth="650"
     Header="Storage"
     RuleSet="Storage"
-    Style="{StaticResource TabView.Normal}"
-    >
+    Style="{StaticResource TabView.Normal}">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel>
             <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Storage" />
@@ -26,18 +24,26 @@
         </StackPanel>
         <Grid Grid.Row="1" Margin="0,10,0,0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <TextBox Grid.Column="0" Grid.Row="0" Text="{Binding Path=HomeDirectory, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Tentacle configuration and logs directory" />
-            <Button Grid.Column="1" Grid.Row="0" Margin="10,0,0,0" Content="BROWSE" Width="100" Height="30" Click="BrowseHomeDirButtonClicked" VerticalAlignment="Bottom" />
-            <TextBox Grid.Column="0" Margin="0,20,0,0" Grid.Row="1" Text="{Binding Path=ApplicationInstallDirectory, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Tentacle will install applications to (by default)"/>
-            <Button Grid.Column="1" Grid.Row="1" Margin="10,0,0,0" Content="BROWSE" Width="100" Height="30" Click="BrowseAppDirButtonClicked" VerticalAlignment="Bottom" />
+            <TextBox Grid.Column="0" Grid.Row="0"
+                     Text="{Binding Path=HomeDirectory, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                     materialDesign:ValidationAssist.Background="Transparent"
+                     materialDesign:HintAssist.Hint="Tentacle configuration and logs directory" />
+            <Button Grid.Column="1" Grid.Row="0" Margin="10,0,0,0" Content="BROWSE" Width="100" Height="30"
+                    Click="BrowseHomeDirButtonClicked" VerticalAlignment="Bottom" />
+            <TextBox Grid.Column="0" Margin="0,20,0,0" Grid.Row="1"
+                     Text="{Binding Path=ApplicationInstallDirectory, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                     materialDesign:ValidationAssist.Background="Transparent"
+                     materialDesign:HintAssist.Hint="Tentacle will install applications to (by default)" />
+            <Button Grid.Column="1" Grid.Row="1" Margin="10,0,0,0" Content="BROWSE" Width="100" Height="30"
+                    Click="BrowseAppDirButtonClicked" VerticalAlignment="Bottom" />
         </Grid>
     </Grid>
 </shell:TabView>

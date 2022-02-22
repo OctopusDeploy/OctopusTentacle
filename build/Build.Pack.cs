@@ -1,4 +1,5 @@
 ﻿// ReSharper disable RedundantUsingDirective
+
 using System;
 using System.IO.Compression;
 using System.Linq;
@@ -205,9 +206,13 @@ partial class Build
         .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
         .Executes(() =>
         {
-            string ConstructDebianPackageFilename(string packageName, string architecture) => $"{packageName}_{OctoVersionInfo.FullSemVer}_{architecture}.deb";
+            string ConstructDebianPackageFilename(string packageName, string architecture)
+            {
+                return $"{packageName}_{OctoVersionInfo.FullSemVer}_{architecture}.deb";
+            }
 
-            string ConstructRedHatPackageFilename(string packageName, string architecture) {
+            string ConstructRedHatPackageFilename(string packageName, string architecture)
+            {
                 var transformedVersion = OctoVersionInfo.FullSemVer.Replace("-", "_");
                 var filename = $"{packageName}-{transformedVersion}-1.{architecture}.rpm";
                 return filename;
@@ -237,17 +242,15 @@ partial class Build
             FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmArm32PackageFilename, workingDirectory / rpmArm32PackageFilename);
             FileSystemTasks.CopyFile(ArtifactsDirectory / "rpm" / rpmx64PackageFilename, workingDirectory / rpmx64PackageFilename);
 
-            foreach (var framework in new[] {NetFramework, NetCore})
+            foreach (var framework in new[] { NetFramework, NetCore })
+            foreach (var runtimeId in RuntimeIds)
             {
-                foreach (var runtimeId in RuntimeIds)
-                {
-                    if (runtimeId == "win" && framework != "net452"
-                        || runtimeId != "win" && framework == "net452") continue;
+                if (runtimeId == "win" && framework != "net452"
+                    || runtimeId != "win" && framework == "net452") continue;
 
-                    var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
-                    FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{OctoVersionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}",
-                        workingDirectory / $"tentacle-{framework}-{runtimeId}.{fileExtension}");
-                }
+                var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
+                FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{OctoVersionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}",
+                    workingDirectory / $"tentacle-{framework}-{runtimeId}.{fileExtension}");
             }
 
             ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / "Octopus.Tentacle.msi"), "Missing Octopus.Tentacle.msi");
@@ -303,7 +306,7 @@ partial class Build
                 FileSystemTasks.EnsureCleanDirectory(workingDirectory);
                 FileSystemTasks.EnsureCleanDirectory(workingTentacleDirectory);
 
-                (BuildDirectory / "Tentacle" / framework / runtimeId).GlobFiles($"*")
+                (BuildDirectory / "Tentacle" / framework / runtimeId).GlobFiles("*")
                     .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingTentacleDirectory));
 
                 ZipFile.CreateFromDirectory(

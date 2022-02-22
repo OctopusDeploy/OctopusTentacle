@@ -1,20 +1,22 @@
 ﻿using System;
 using System.IO;
-using Octopus.Shared.Packages;
-using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared;
+using Octopus.Shared.Packages;
+using Octopus.Shared.Startup;
+using Octopus.Shared.Util;
 
 namespace Octopus.Tentacle.Commands
 {
     public class ExtractCommand : AbstractCommand
     {
-        readonly Lazy<IPackageInstaller> packageInstaller;
-        readonly ISystemLog log;
-        string packageFile;
-        string destinationDirectory;
+        private const int ExtractRetries = 10;
+        private const int ExtractRetryDelay = 5000;
+        private readonly Lazy<IPackageInstaller> packageInstaller;
+        private readonly ISystemLog log;
+        private string packageFile;
+        private string destinationDirectory;
 
         public ExtractCommand(Lazy<IPackageInstaller> packageInstaller, Lazy<IOctopusFileSystem> fileSystem, ISystemLog log, ILogFileOnlyLogger logFileOnlyLogger)
             : base(logFileOnlyLogger)
@@ -40,9 +42,6 @@ namespace Octopus.Tentacle.Commands
             });
         }
 
-        const int ExtractRetries = 10;
-        const int ExtractRetryDelay = 5000;
-
         protected override void Start()
         {
             if (string.IsNullOrWhiteSpace(packageFile))
@@ -50,8 +49,7 @@ namespace Octopus.Tentacle.Commands
             if (string.IsNullOrWhiteSpace(destinationDirectory))
                 throw new ControlledFailureException("Please specify the destination directory via the --destination argument.");
 
-            for (int tryCount = 0; tryCount < ExtractRetries; tryCount++)
-            {
+            for (var tryCount = 0; tryCount < ExtractRetries; tryCount++)
                 try
                 {
                     var extracted = packageInstaller.Value.Install(packageFile, destinationDirectory, log, true);
@@ -61,13 +59,9 @@ namespace Octopus.Tentacle.Commands
                 catch (Exception ex)
                 {
                     log.Warn(ex, $"Failed to extract package to '{destinationDirectory}'");
-                    if (tryCount == ExtractRetries - 1)
-                    {
-                        throw;
-                    }
+                    if (tryCount == ExtractRetries - 1) throw;
                     Thread.Sleep(ExtractRetryDelay);
                 }
-            }
         }
     }
 }

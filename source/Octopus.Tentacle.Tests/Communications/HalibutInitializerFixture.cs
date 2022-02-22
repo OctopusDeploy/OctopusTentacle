@@ -12,10 +12,10 @@ namespace Octopus.Tentacle.Tests.Communications
     [TestFixture]
     public class HalibutInitializerFixture
     {
-        string defaultProxyHost = "127.0.0.1";
-        int defaultProxyPort = 1111;
-        string defaultProxyUsername = "username";
-        string defaultProxyPassword = "password";
+        private readonly string defaultProxyHost = "127.0.0.1";
+        private readonly int defaultProxyPort = 1111;
+        private readonly string defaultProxyUsername = "username";
+        private readonly string defaultProxyPassword = "password";
 #if NET452
         [Test]
         public void UseDefaultProxyShouldUseTheDefaultWebProxy()
@@ -68,14 +68,14 @@ namespace Octopus.Tentacle.Tests.Communications
             proxy.UserName.Should().Be("username");
         }
 
-        ProxyDetails BuildHalibutProxy(bool useDefaultProxy, string username, string password, string host, int port)
+        private ProxyDetails BuildHalibutProxy(bool useDefaultProxy, string username, string password, string host, int port)
         {
             var config = new StubProxyConfiguration(useDefaultProxy, username, password, host, port);
             var parser = new ProxyConfigParser { GetSystemWebProxy = BuildDefaultProxy };
             return parser.ParseToHalibutProxy(config, new Uri("http://octopus.com"), Substitute.For<ISystemLog>());
         }
 
-        WebProxy BuildDefaultProxy()
+        private WebProxy BuildDefaultProxy()
         {
             var proxy = new WebProxy
             {
@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Tests.Communications
             return proxy;
         }
 
-        class StubProxyConfiguration : IProxyConfiguration
+        private class StubProxyConfiguration : IProxyConfiguration
         {
             public StubProxyConfiguration(bool useDefaultProxy, string customProxyUsername, string customProxyPassword, string customProxyHost, int customProxyPort)
             {
@@ -96,16 +96,16 @@ namespace Octopus.Tentacle.Tests.Communications
                 CustomProxyPort = customProxyPort;
             }
 
+            public bool UseDefaultProxy { get; }
+            public string CustomProxyUsername { get; }
+            public string CustomProxyPassword { get; }
+            public string CustomProxyHost { get; }
+            public int CustomProxyPort { get; }
+
             public void Save()
             {
                 throw new NotImplementedException();
             }
-
-            public bool UseDefaultProxy { get; set; }
-            public string CustomProxyUsername { get; set; }
-            public string CustomProxyPassword { get; set; }
-            public string CustomProxyHost { get; set; }
-            public int CustomProxyPort { get; set; }
         }
     }
 }

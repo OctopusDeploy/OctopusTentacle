@@ -1,3 +1,4 @@
+using System;
 using Octopus.Diagnostics;
 
 namespace Octopus.Manager.Tentacle.Infrastructure

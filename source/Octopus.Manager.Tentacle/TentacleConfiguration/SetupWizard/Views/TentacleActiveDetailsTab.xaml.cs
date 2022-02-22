@@ -10,7 +10,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class TentacleActiveDetailsTab
     {
-        readonly TentacleSetupWizardModel model;
+        private readonly TentacleSetupWizardModel model;
 
         public TentacleActiveDetailsTab(TentacleSetupWizardModel model)
         {
@@ -32,7 +32,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             model.SkipServerRegistration = true;
         }
 
-        async void RefreshClicked(object sender, RoutedEventArgs e)
+        private async void RefreshClicked(object sender, RoutedEventArgs e)
         {
             await model.RefreshSpaceData();
         }

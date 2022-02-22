@@ -11,6 +11,7 @@ using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
@@ -23,10 +24,10 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class DeregisterMachineCommandFixture : CommandFixture<DeregisterMachineCommand>
     {
-        ISystemLog log;
-        IProxyConfigParser proxyConfig;
-        IOctopusSpaceAsyncRepository asyncRepository;
-        IApplicationInstanceSelector selector;
+        private ISystemLog log;
+        private IProxyConfigParser proxyConfig;
+        private IOctopusSpaceAsyncRepository asyncRepository;
+        private IApplicationInstanceSelector selector;
 
         [SetUp]
         public override void SetUp()
@@ -48,15 +49,15 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
-                TentacleCertificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
             Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
-                                                   log,
-                                                   selector,
-                                                   proxyConfig,
-                                                   Substitute.For<IOctopusClientInitializer>(),
-                                                   new SpaceRepositoryFactory(),
-                                                   Substitute.For<ILogFileOnlyLogger>());
+                log,
+                selector,
+                proxyConfig,
+                Substitute.For<IOctopusClientInitializer>(),
+                new SpaceRepositoryFactory(),
+                Substitute.For<ILogFileOnlyLogger>());
 
             var matchingMachines = new List<MachineResource>
             {
@@ -77,16 +78,16 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
-                TentacleCertificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
 
             Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
-                                                   log,
-                                                   selector,
-                                                   proxyConfig,
-                                                   Substitute.For<IOctopusClientInitializer>(),
-                                                   new SpaceRepositoryFactory(),
-                                                   Substitute.For<ILogFileOnlyLogger>());
+                log,
+                selector,
+                proxyConfig,
+                Substitute.For<IOctopusClientInitializer>(),
+                new SpaceRepositoryFactory(),
+                Substitute.For<ILogFileOnlyLogger>());
 
             asyncRepository.Certificates.GetOctopusCertificate()
                 .ReturnsForAnyArgs(new CertificateConfigurationResource { Thumbprint = expectedThumbPrint }.AsTask());
@@ -111,16 +112,16 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { expectedThumbPrint },
-                TentacleCertificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
 
             Command = new DeregisterMachineCommand(new Lazy<ITentacleConfiguration>(() => configuration),
-                                                   log,
-                                                   selector,
-                                                   proxyConfig,
-                                                   Substitute.For<IOctopusClientInitializer>(),
-                                                   new SpaceRepositoryFactory(),
-                                                   Substitute.For<ILogFileOnlyLogger>());
+                log,
+                selector,
+                proxyConfig,
+                Substitute.For<IOctopusClientInitializer>(),
+                new SpaceRepositoryFactory(),
+                Substitute.For<ILogFileOnlyLogger>());
 
             asyncRepository.Certificates.GetOctopusCertificate()
                 .ReturnsForAnyArgs(new CertificateConfigurationResource { Thumbprint = expectedThumbPrint }.AsTask());

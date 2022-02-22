@@ -10,7 +10,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class StorageTab
     {
-        readonly TentacleSetupWizardModel model;
+        private readonly TentacleSetupWizardModel model;
 
         public StorageTab(TentacleSetupWizardModel model)
         {
@@ -19,36 +19,29 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             DataContext = this.model = model;
         }
 
-        void BrowseHomeDirButtonClicked(object sender, RoutedEventArgs e)
+        private void BrowseHomeDirButtonClicked(object sender, RoutedEventArgs e)
         {
             DoBrowse("Select a Tentacle home directory", model.HomeDirectory, s => model.HomeDirectory = s);
         }
 
-        void BrowseAppDirButtonClicked(object sender, RoutedEventArgs e)
+        private void BrowseAppDirButtonClicked(object sender, RoutedEventArgs e)
         {
             DoBrowse("Select where Tentacle should install applications", model.ApplicationInstallDirectory, s => model.ApplicationInstallDirectory = s);
         }
 
-        void DoBrowse(string description, string currentDirectory, Action<string> store)
+        private void DoBrowse(string description, string currentDirectory, Action<string> store)
         {
             var currentDir = Environment.CurrentDirectory;
             var folderBrowser = new FolderBrowserDialog();
             folderBrowser.ShowNewFolderButton = true;
             folderBrowser.Description = description;
             if (Directory.Exists(currentDirectory))
-            {
                 folderBrowser.SelectedPath = model.HomeDirectory;
-            }
             else
-            {
                 folderBrowser.RootFolder = Environment.SpecialFolder.MyComputer;
-            }
 
             var result = folderBrowser.ShowDialog();
-            if (result == DialogResult.Cancel)
-            {
-                return;
-            }
+            if (result == DialogResult.Cancel) return;
 
             store(folderBrowser.SelectedPath);
 

@@ -17,9 +17,9 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class ConfigureCommandFixture : CommandFixture<ConfigureCommand>
     {
-        StubTentacleConfiguration tentacleConfiguration;
-        IOctopusFileSystem fileSystem;
-        ISystemLog log;
+        private StubTentacleConfiguration tentacleConfiguration;
+        private IOctopusFileSystem fileSystem;
+        private ISystemLog log;
 
         [SetUp]
         public override void SetUp()
@@ -78,7 +78,6 @@ namespace Octopus.Tentacle.Tests.Commands
             Start("--noListen=false", "--trust=GHI789");
             tentacleConfiguration.TrustedOctopusServers.First().CommunicationStyle.Should().Be(CommunicationStyle.TentaclePassive);
         }
-
 
         [Test]
         public void ShouldSetCommunicationStyleToActiveIfNoListenIsTrue()

@@ -9,7 +9,7 @@ namespace Octopus.Manager.Tentacle.Controls
 {
     public class TaggingAutoCompleteBox : AutoCompleteBox
     {
-        public static readonly DependencyProperty TagsSourceProperty = DependencyProperty.Register("TagsSource", typeof (object), typeof (TaggingAutoCompleteBox), new PropertyMetadata(null));
+        public static readonly DependencyProperty TagsSourceProperty = DependencyProperty.Register("TagsSource", typeof(object), typeof(TaggingAutoCompleteBox), new PropertyMetadata(null));
 
         public TaggingAutoCompleteBox()
         {
@@ -32,7 +32,7 @@ namespace Octopus.Manager.Tentacle.Controls
             TextBox = Template.FindName("Text", this) as TextBox;
         }
 
-        void HandlePopulating(object sender, PopulatingEventArgs e)
+        private void HandlePopulating(object sender, PopulatingEventArgs e)
         {
             var possibleTags = (IEnumerable<string>)TagsSource;
             if (possibleTags == null)
@@ -88,10 +88,7 @@ namespace Octopus.Manager.Tentacle.Controls
             }
 
             var formatStringText = string.Join(" ", tokens);
-            if (!formatStringText.Contains("{0}"))
-            {
-                formatStringText += " {0}";
-            }
+            if (!formatStringText.Contains("{0}")) formatStringText += " {0}";
 
             formatStringText = formatStringText.Trim();
 
@@ -109,7 +106,7 @@ namespace Octopus.Manager.Tentacle.Controls
             PopulateComplete();
         }
 
-        class TagEntry
+        private class TagEntry
         {
             public string Value { get; set; }
             public string Name { get; set; }

@@ -1,5 +1,12 @@
+using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+
+ropServices;
+
+ropServices;
+
+ropServices;
 
 [assembly: AssemblyDescription("Octopus Deploy is a user-friendly release automation solution for professional .NET developers.")]
 [assembly: AssemblyCompany("Octopus Deploy Pty. Ltd.")]
@@ -10,7 +17,7 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyConfiguration("Debug")]
 #else
-[assembly: AssemblyConfiguration("Release")]
+[assembly: AssemblyConfiguration("Releas")]
 #endif
 
-[assembly: ComVisible(false)]
+[ssembly: ComVsible(false)]

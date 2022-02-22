@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 using Octopus.Client;
 using Octopus.Diagnostics;
@@ -16,18 +14,17 @@ namespace Octopus.Tentacle.Commands
 {
     public class DeregisterWorkerCommand : AbstractStandardCommand
     {
-        readonly Lazy<ITentacleConfiguration> configuration;
-        readonly ISystemLog log;
-        readonly IApplicationInstanceSelector selector;
-        readonly ApiEndpointOptions api;
-        bool allowMultiple;
-        readonly IProxyConfigParser proxyConfig;
-        readonly IOctopusClientInitializer octopusClientInitializer;
-        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
-        string spaceName;
-
         public const string DeregistrationSuccessMsg = "Worker deregistered successfully";
         public const string MultipleMatchErrorMsg = "The worker matches more than one machine on the server. To deregister all of these machines specify the --multiple flag.";
+        private readonly Lazy<ITentacleConfiguration> configuration;
+        private readonly ISystemLog log;
+        private readonly IApplicationInstanceSelector selector;
+        private readonly ApiEndpointOptions api;
+        private readonly IProxyConfigParser proxyConfig;
+        private readonly IOctopusClientInitializer octopusClientInitializer;
+        private readonly ISpaceRepositoryFactory spaceRepositoryFactory;
+        private bool allowMultiple;
+        private string spaceName;
 
         public DeregisterWorkerCommand(Lazy<ITentacleConfiguration> configuration,
             ISystemLog log,
@@ -56,7 +53,7 @@ namespace Octopus.Tentacle.Commands
             StartAsync().GetAwaiter().GetResult();
         }
 
-        async Task StartAsync()
+        private async Task StartAsync()
         {
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);

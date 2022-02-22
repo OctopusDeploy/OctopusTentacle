@@ -9,11 +9,11 @@ namespace Octopus.Tentacle.Commands
 {
     public class VersionCommand : AbstractCommand
     {
-        static readonly string TextFormat = "text";
-        static readonly string JsonFormat = "json";
-        static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
+        private static readonly string TextFormat = "text";
+        private static readonly string JsonFormat = "json";
+        private static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
 
-        string format = TextFormat;
+        private string format = TextFormat;
 
         public VersionCommand(ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
@@ -22,24 +22,20 @@ namespace Octopus.Tentacle.Commands
 
         protected override void Start()
         {
-            if (!Enumerable.Contains(SupportedFormats, format, StringComparer.OrdinalIgnoreCase))
+            if (!SupportedFormats.Contains(format, StringComparer.OrdinalIgnoreCase))
                 throw new ControlledFailureException($"The format '{format}' is not supported. Try {string.Join(" or ", SupportedFormats)}.");
 
             if (string.Equals(format, TextFormat, StringComparison.OrdinalIgnoreCase))
-            {
                 Console.Write(OctopusTentacle.InformationalVersion);
-            }
             else if (string.Equals(format, JsonFormat, StringComparison.OrdinalIgnoreCase))
-            {
                 Console.Write(JsonConvert.SerializeObject(new
                 {
-                    InformationalVersion = OctopusTentacle.InformationalVersion,
-                    MajorMinorPatch = OctopusTentacle.SemanticVersionInfo.MajorMinorPatch,
-                    NuGetVersion = OctopusTentacle.SemanticVersionInfo.NuGetVersion,
+                    OctopusTentacle.InformationalVersion,
+                    OctopusTentacle.SemanticVersionInfo.MajorMinorPatch,
+                    OctopusTentacle.SemanticVersionInfo.NuGetVersion,
                     SourceBranchName = OctopusTentacle.SemanticVersionInfo.BranchName,
-                    IsPrerelease = OctopusTentacle.Version.IsPrerelease
+                    OctopusTentacle.Version.IsPrerelease
                 }, Formatting.Indented));
-            }
         }
     }
 }

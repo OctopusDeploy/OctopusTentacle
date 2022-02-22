@@ -13,10 +13,10 @@ namespace Octopus.Tentacle.Communications
 {
     public class HalibutInitializer : IHalibutInitializer
     {
-        readonly IWritableTentacleConfiguration configuration;
-        readonly HalibutRuntime halibut;
-        readonly IProxyConfigParser proxyConfigParser;
-        readonly ISystemLog log;
+        private readonly IWritableTentacleConfiguration configuration;
+        private readonly HalibutRuntime halibut;
+        private readonly IProxyConfigParser proxyConfigParser;
+        private readonly ISystemLog log;
 
         public HalibutInitializer(IWritableTentacleConfiguration configuration, HalibutRuntime halibut, IProxyConfigParser proxyConfigParser, ISystemLog log)
         {
@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Communications
             }
         }
 
-        void TrustOctopusServers()
+        private void TrustOctopusServers()
         {
             var trust = GetTrustedOctopusThumbprints();
             foreach (var thumbprint in trust)
@@ -73,13 +73,11 @@ namespace Octopus.Tentacle.Communications
                 log.Info("Agent will trust Octopus Servers with the thumbprint: " + thumbprint);
                 halibut.Trust(thumbprint);
             }
-            if (trust.Count == 0)
-            {
-                log.Info("The agent is not configured to trust any Octopus Servers.");
-            }
+
+            if (trust.Count == 0) log.Info("The agent is not configured to trust any Octopus Servers.");
         }
 
-        void AddPollingEndpoints()
+        private void AddPollingEndpoints()
         {
             foreach (var pollingEndPoint in GetOctopusServersToPoll())
             {
@@ -99,26 +97,23 @@ namespace Octopus.Tentacle.Communications
             }
         }
 
-        List<string> GetTrustedOctopusThumbprints()
+        private List<string> GetTrustedOctopusThumbprints()
         {
             return configuration.TrustedOctopusServers.Select(t => t.Thumbprint).ToList();
         }
 
-        IEnumerable<OctopusServerConfiguration> GetOctopusServersToPoll()
+        private IEnumerable<OctopusServerConfiguration> GetOctopusServersToPoll()
         {
             return configuration.TrustedOctopusServers.Where(octopusServerConfiguration => octopusServerConfiguration.CommunicationStyle == CommunicationStyle.TentacleActive);
         }
 
-        IPEndPoint GetEndPointToListenOn()
+        private IPEndPoint GetEndPointToListenOn()
         {
             var address = Socket.OSSupportsIPv6
                 ? IPAddress.IPv6Any
                 : IPAddress.Any;
 
-            if (!string.IsNullOrWhiteSpace(configuration.ListenIpAddress))
-            {
-                address = IPAddress.Parse(configuration.ListenIpAddress);
-            }
+            if (!string.IsNullOrWhiteSpace(configuration.ListenIpAddress)) address = IPAddress.Parse(configuration.ListenIpAddress);
 
             return new IPEndPoint(address, configuration.ServicesPortNumber);
         }

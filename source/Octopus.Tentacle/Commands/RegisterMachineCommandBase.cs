@@ -22,25 +22,25 @@ namespace Octopus.Tentacle.Commands
 {
     public abstract class RegisterMachineCommandBase<TRegistrationOperationType> : AbstractStandardCommand where TRegistrationOperationType : IRegisterMachineOperationBase
     {
-        readonly Lazy<TRegistrationOperationType> lazyRegisterMachineOperation;
-        readonly Lazy<IWritableTentacleConfiguration> configuration;
-        readonly Lazy<IOctopusServerChecker> octopusServerChecker;
-        readonly IProxyConfigParser proxyConfig;
-        readonly IOctopusClientInitializer octopusClientInitializer;
-        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
+        private readonly Lazy<TRegistrationOperationType> lazyRegisterMachineOperation;
+        private readonly Lazy<IWritableTentacleConfiguration> configuration;
+        private readonly Lazy<IOctopusServerChecker> octopusServerChecker;
+        private readonly IProxyConfigParser proxyConfig;
+        private readonly IOctopusClientInitializer octopusClientInitializer;
+        private readonly ISpaceRepositoryFactory spaceRepositoryFactory;
 
-        readonly ISystemLog log;
-        readonly ApiEndpointOptions api;
-        string name;
-        string policy;
-        string publicName;
-        bool allowOverwrite;
-        string comms = "TentaclePassive";
-        int serverCommsPort = 10943;
-        string proxy;
-        string spaceName;
-        string serverWebSocketAddress;
-        int? tentacleCommsPort = null;
+        private readonly ISystemLog log;
+        private readonly ApiEndpointOptions api;
+        private string name;
+        private string policy;
+        private string publicName;
+        private bool allowOverwrite;
+        private string comms = "TentaclePassive";
+        private int serverCommsPort = 10943;
+        private string proxy;
+        private string spaceName;
+        private string serverWebSocketAddress;
+        private int? tentacleCommsPort;
 
         public RegisterMachineCommandBase(Lazy<TRegistrationOperationType> lazyRegisterMachineOperation,
             Lazy<IWritableTentacleConfiguration> configuration,
@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Commands
             StartAsync().GetAwaiter().GetResult();
         }
 
-        async Task StartAsync()
+        private async Task StartAsync()
         {
             CheckArgs();
 
@@ -121,7 +121,7 @@ namespace Octopus.Tentacle.Commands
             await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle);
         }
 
-        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri serverAddress, string sslThumbprint, CommunicationStyle communicationStyle)
+        private async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri serverAddress, string sslThumbprint, CommunicationStyle communicationStyle)
         {
             await ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(systemRepository);
 
@@ -181,7 +181,7 @@ namespace Octopus.Tentacle.Commands
         protected abstract void CheckArgs();
         protected abstract void EnhanceOperation(TRegistrationOperationType registerOperation);
 
-        async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri serverAddress, string sslThumbprint)
+        private async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri serverAddress, string sslThumbprint)
         {
             if (serverAddress != null && ServiceEndPoint.IsWebSocketAddress(serverAddress))
             {
@@ -194,7 +194,7 @@ namespace Octopus.Tentacle.Commands
             return certificate.Thumbprint;
         }
 
-        Uri GetActiveTentacleAddress()
+        private Uri GetActiveTentacleAddress()
         {
             if (string.IsNullOrWhiteSpace(serverWebSocketAddress))
                 return new Uri($"https://{api.ServerUri.Host}:{serverCommsPort}");
@@ -220,7 +220,7 @@ namespace Octopus.Tentacle.Commands
 
         #region Helpers
 
-        async Task ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusSystemAsyncRepository repository)
+        private async Task ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusSystemAsyncRepository repository)
         {
             var rootDocument = await repository.LoadRootDocument();
             // Eg. Check they're not trying to register a 3.* Tentacle with a 2.* API Server.

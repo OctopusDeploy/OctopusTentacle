@@ -1,12 +1,12 @@
-﻿<shell:TabView 
+﻿<shell:TabView
     x:Class="Octopus.Manager.Tentacle.Proxy.ProxyConfigurationTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
     xmlns:model="clr-namespace:Octopus.Manager.Tentacle.Proxy"
-    mc:Ignorable="d" 
+    mc:Ignorable="d"
     d:DesignHeight="500" d:DesignWidth="650"
     Header="{Binding Header}"
     RuleSet="ProxySettings"
@@ -14,4 +14,3 @@
     Style="{StaticResource TabView.Normal}" d:DataContext="{d:DesignInstance model:ProxyWizardModel}">
     <model:ProxyConfigurationControl />
 </shell:TabView>
-

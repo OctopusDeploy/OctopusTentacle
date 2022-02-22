@@ -7,8 +7,8 @@ namespace Octopus.Tentacle.Tests.Support
 {
     public class InMemoryLog : SystemLog
     {
-        readonly ISystemLog log;
-        readonly StringBuilder logText = new StringBuilder();
+        private readonly ISystemLog log;
+        private readonly StringBuilder logText = new StringBuilder();
 
         public InMemoryLog() : this(null)
         {

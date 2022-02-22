@@ -7,11 +7,11 @@ using System.Threading;
 
 namespace Octopus.Tentacle.Upgrader
 {
-    class Program
+    internal class Program
     {
-        static readonly string Version = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        private static readonly string Version = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             //we log this as early as possible as a canary to make sure the upgrader launches
             //if the upgrade log file doesn't exist, we assume that we couldn't launch the upgrader
@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Upgrader
             return exitCode;
         }
 
-        static int PerformUpgrade(string[] args)
+        private static int PerformUpgrade(string[] args)
         {
             LogStartupParameters(args);
             if (args.Length < 3)
@@ -76,18 +76,15 @@ namespace Octopus.Tentacle.Upgrader
             }
         }
 
-        static void LogStartupParameters(IList<string> args)
+        private static void LogStartupParameters(IList<string> args)
         {
             Log.Upgrade.Info("Octopus upgrader version " + typeof(Program).Assembly.GetName().Version);
             Log.Upgrade.Info("Current directory: " + Environment.CurrentDirectory);
             Log.Upgrade.Info("Arguments: ");
-            for (var i = 0; i < args.Count; i++)
-            {
-                Log.Upgrade.Info(" [" + i + "] = \"" + args[i] + "\"");
-            }
+            for (var i = 0; i < args.Count; i++) Log.Upgrade.Info(" [" + i + "] = \"" + args[i] + "\"");
         }
 
-        static string SelectAppropriateMsi(IList<string> args)
+        private static string SelectAppropriateMsi(IList<string> args)
         {
             var msi = Environment.Is64BitOperatingSystem ? args[2] : args[1];
             if (!File.Exists(msi))

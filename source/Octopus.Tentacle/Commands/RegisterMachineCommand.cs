@@ -3,35 +3,35 @@ using System.Collections.Generic;
 using System.Linq;
 using Octopus.Client.Model;
 using Octopus.Client.Operations;
+using Octopus.Diagnostics;
+using Octopus.Shared;
 using Octopus.Shared.Configuration;
+using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Startup;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
-using Octopus.Diagnostics;
-using Octopus.Shared;
 using Octopus.Tentacle.Configuration;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
     public class RegisterMachineCommand : RegisterMachineCommandBase<IRegisterMachineOperation>
     {
-        readonly List<string> environmentNames = new List<string>();
-        readonly List<string> roles = new List<string>();
-        readonly List<string> tenants = new List<string>();
-        readonly List<string> tenantTgs = new List<string>();
-        TenantedDeploymentMode tenantedDeploymentMode;
+        private readonly List<string> environmentNames = new();
+        private readonly List<string> roles = new();
+        private readonly List<string> tenants = new();
+        private readonly List<string> tenantTgs = new();
+        private TenantedDeploymentMode tenantedDeploymentMode;
 
         public RegisterMachineCommand(Lazy<IRegisterMachineOperation> lazyRegisterMachineOperation,
-                                      Lazy<IWritableTentacleConfiguration> configuration,
-                                      ISystemLog log,
-                                      IApplicationInstanceSelector selector,
-                                      Lazy<IOctopusServerChecker> octopusServerChecker,
-                                      IProxyConfigParser proxyConfig,
-                                      IOctopusClientInitializer octopusClientInitializer,
-                                      ISpaceRepositoryFactory spaceRepositoryFactory,
-                                      ILogFileOnlyLogger logFileOnlyLogger)
+            Lazy<IWritableTentacleConfiguration> configuration,
+            ISystemLog log,
+            IApplicationInstanceSelector selector,
+            Lazy<IOctopusServerChecker> octopusServerChecker,
+            IProxyConfigParser proxyConfig,
+            IOctopusClientInitializer octopusClientInitializer,
+            ISpaceRepositoryFactory spaceRepositoryFactory,
+            ILogFileOnlyLogger logFileOnlyLogger)
             : base(lazyRegisterMachineOperation, configuration, log, selector, octopusServerChecker, proxyConfig, octopusClientInitializer, spaceRepositoryFactory, logFileOnlyLogger)
         {
             Options.Add("env|environment=", "The environment name to add the machine to - e.g., 'Production'; specify this argument multiple times to add multiple environments", s => environmentNames.Add(s));

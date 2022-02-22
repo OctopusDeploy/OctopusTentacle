@@ -1,4 +1,5 @@
 ﻿// ReSharper disable RedundantUsingDirective
+
 using System;
 using Nuke.Common;
 using Nuke.Common.CI.TeamCity;
@@ -8,13 +9,9 @@ public static class Logging
     public static void InBlock(string block, Action action)
     {
         if (TeamCity.Instance != null)
-        {
             TeamCity.Instance.OpenBlock(block);
-        }
         else
-        {
             Logger.Info($"Starting {block}");
-        }
         try
         {
             action();
@@ -22,20 +19,16 @@ public static class Logging
         finally
         {
             if (TeamCity.Instance != null)
-            {
                 TeamCity.Instance.CloseBlock(block);
-            }
             else
-            {
                 Logger.Info($"Finished {block}");
-            }
         }
     }
 
     public static void InTest(string test, Action action)
     {
         var startTime = DateTimeOffset.UtcNow;
-        
+
         try
         {
             if (TeamCity.Instance != null) Console.WriteLine($"##teamcity[testStarted name='{test}' captureStandardOutput='true']");

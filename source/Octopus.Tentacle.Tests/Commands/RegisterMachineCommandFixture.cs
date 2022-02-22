@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -13,6 +12,7 @@ using Octopus.Client.Repositories.Async;
 using Octopus.Diagnostics;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
@@ -25,13 +25,13 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class RegisterMachineCommandFixture : CommandFixture<RegisterMachineCommand>
     {
-        IWritableTentacleConfiguration configuration;
-        ISystemLog log;
-        X509Certificate2 certificate;
-        IRegisterMachineOperation operation;
-        IOctopusServerChecker serverChecker;
-        IOctopusAsyncRepository repository;
-        string serverThumbprint;
+        private IWritableTentacleConfiguration configuration;
+        private ISystemLog log;
+        private X509Certificate2 certificate;
+        private IRegisterMachineOperation operation;
+        private IOctopusServerChecker serverChecker;
+        private IOctopusAsyncRepository repository;
+        private string serverThumbprint;
 
         [SetUp]
         public void BeforeEachTest()
@@ -60,17 +60,17 @@ namespace Octopus.Tentacle.Tests.Commands
             var selector = Substitute.For<IApplicationInstanceSelector>();
             selector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
             Command = new RegisterMachineCommand(new Lazy<IRegisterMachineOperation>(() => operation),
-                                                 new Lazy<IWritableTentacleConfiguration>(() => configuration),
-                                                 log,
-                                                 selector,
-                                                 new Lazy<IOctopusServerChecker>(() => serverChecker),
-                                                 new ProxyConfigParser(),
-                                                 octopusClientInitializer,
-                                                 new SpaceRepositoryFactory(),
-                                                 Substitute.For<ILogFileOnlyLogger>());
+                new Lazy<IWritableTentacleConfiguration>(() => configuration),
+                log,
+                selector,
+                new Lazy<IOctopusServerChecker>(() => serverChecker),
+                new ProxyConfigParser(),
+                octopusClientInitializer,
+                new SpaceRepositoryFactory(),
+                Substitute.For<ILogFileOnlyLogger>());
 
             configuration.ServicesPortNumber.Returns(90210);
-            certificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew("CN=Hello");
+            certificate = new CertificateGenerator(new NullLog()).GenerateNew("CN=Hello");
             configuration.TentacleCertificate.Returns(certificate);
         }
 
@@ -78,16 +78,16 @@ namespace Octopus.Tentacle.Tests.Commands
         public void ShouldRegisterListeningTentacle()
         {
             Start("--env=Development",
-                  "--server=http://localhost",
-                  "--name=MyMachine",
-                  "--publicHostName=mymachine.test",
-                  "--apiKey=ABC123",
-                  "--force",
-                  "--proxy=Proxy",
-                  "--role=app-server",
-                  "--role=web-server",
-                  "--tenant=Tenant1",
-                  "--tenantTag=CustomerType/VIP");
+                "--server=http://localhost",
+                "--name=MyMachine",
+                "--publicHostName=mymachine.test",
+                "--apiKey=ABC123",
+                "--force",
+                "--proxy=Proxy",
+                "--role=app-server",
+                "--role=web-server",
+                "--tenant=Tenant1",
+                "--tenantTag=CustomerType/VIP");
 
             Assert.That(operation.EnvironmentNames.Single(), Is.EqualTo("Development"));
             Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
@@ -106,8 +106,8 @@ namespace Octopus.Tentacle.Tests.Commands
 
             configuration.Received().AddOrUpdateTrustedOctopusServer(
                 Arg.Is<OctopusServerConfiguration>(x => x.Address == null &&
-                                                        x.CommunicationStyle == CommunicationStyle.TentaclePassive &&
-                                                        x.Thumbprint == serverThumbprint));
+                    x.CommunicationStyle == CommunicationStyle.TentaclePassive &&
+                    x.Thumbprint == serverThumbprint));
 
             operation.Received().ExecuteAsync(repository);
         }
@@ -116,17 +116,17 @@ namespace Octopus.Tentacle.Tests.Commands
         public void ShouldRegisterPollingTentacle()
         {
             Start("--env=Development",
-                  "--server=http://localhost",
-                  "--name=MyMachine",
-                  "--publicHostName=mymachine.test",
-                  "--apiKey=ABC123",
-                  "--force",
-                  "--role=app-server",
-                  "--role=web-server",
-                  "--tenant=Tenant1",
-                  "--tenantTag=CustomerType/VIP",
-                  "--comms-style=TentacleActive",
-                  "--server-comms-port=10943");
+                "--server=http://localhost",
+                "--name=MyMachine",
+                "--publicHostName=mymachine.test",
+                "--apiKey=ABC123",
+                "--force",
+                "--role=app-server",
+                "--role=web-server",
+                "--tenant=Tenant1",
+                "--tenantTag=CustomerType/VIP",
+                "--comms-style=TentacleActive",
+                "--server-comms-port=10943");
 
             Assert.That(operation.EnvironmentNames.Single(), Is.EqualTo("Development"));
             Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
@@ -144,9 +144,9 @@ namespace Octopus.Tentacle.Tests.Commands
 
             configuration.Received().AddOrUpdateTrustedOctopusServer(
                 Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://localhost:10943/" &&
-                                                   x.SubscriptionId == operation.SubscriptionId.ToString() &&
-                                                   x.CommunicationStyle == CommunicationStyle.TentacleActive &&
-                                                   x.Thumbprint == serverThumbprint));
+                    x.SubscriptionId == operation.SubscriptionId.ToString() &&
+                    x.CommunicationStyle == CommunicationStyle.TentacleActive &&
+                    x.Thumbprint == serverThumbprint));
 
             operation.Received().ExecuteAsync(repository);
         }
@@ -161,25 +161,25 @@ namespace Octopus.Tentacle.Tests.Commands
                 CommunicationStyle = CommunicationStyle.TentacleActive,
                 Address = new Uri("https://localhost:10943/")
             };
-            configuration.TrustedOctopusServers.Returns(new[] {octopusServerConfiguration});
+            configuration.TrustedOctopusServers.Returns(new[] { octopusServerConfiguration });
 
             Start("--env=Development",
-                  "--server=http://localhost",
-                  "--name=MyMachine",
-                  "--apiKey=ABC123",
-                  "--force",
-                  "--role=app-server",
-                  "--comms-style=TentacleActive",
-                  "--server-comms-port=10943");
+                "--server=http://localhost",
+                "--name=MyMachine",
+                "--apiKey=ABC123",
+                "--force",
+                "--role=app-server",
+                "--comms-style=TentacleActive",
+                "--server-comms-port=10943");
 
             Assert.That(operation.CommunicationStyle, Is.EqualTo(CommunicationStyle.TentacleActive));
             Assert.That(operation.SubscriptionId.ToString(), Is.EqualTo(subscriptionId));
 
             configuration.Received().AddOrUpdateTrustedOctopusServer(
                 Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://localhost:10943/" &&
-                                                   x.SubscriptionId == subscriptionId &&
-                                                   x.CommunicationStyle == CommunicationStyle.TentacleActive &&
-                                                   x.Thumbprint == serverThumbprint));
+                    x.SubscriptionId == subscriptionId &&
+                    x.CommunicationStyle == CommunicationStyle.TentacleActive &&
+                    x.Thumbprint == serverThumbprint));
 
             operation.Received().ExecuteAsync(repository);
         }
@@ -194,25 +194,25 @@ namespace Octopus.Tentacle.Tests.Commands
                 CommunicationStyle = CommunicationStyle.TentacleActive,
                 Address = new Uri("https://octopus.example.com:10943/")
             };
-            configuration.TrustedOctopusServers.Returns(new[] {octopusServerConfiguration});
+            configuration.TrustedOctopusServers.Returns(new[] { octopusServerConfiguration });
 
             Start("--env=Development",
-                  "--server=http://localhost", //different server
-                  "--name=MyMachine",
-                  "--apiKey=ABC123",
-                  "--force",
-                  "--role=app-server",
-                  "--comms-style=TentacleActive",
-                  "--server-comms-port=10943");
+                "--server=http://localhost", //different server
+                "--name=MyMachine",
+                "--apiKey=ABC123",
+                "--force",
+                "--role=app-server",
+                "--comms-style=TentacleActive",
+                "--server-comms-port=10943");
 
             Assert.That(operation.CommunicationStyle, Is.EqualTo(CommunicationStyle.TentacleActive));
             Assert.That(operation.SubscriptionId.ToString(), Is.Not.EqualTo(subscriptionId));
 
             configuration.Received().AddOrUpdateTrustedOctopusServer(
                 Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://localhost:10943/" &&
-                                                   x.SubscriptionId != subscriptionId &&
-                                                   x.CommunicationStyle == CommunicationStyle.TentacleActive &&
-                                                   x.Thumbprint == serverThumbprint));
+                    x.SubscriptionId != subscriptionId &&
+                    x.CommunicationStyle == CommunicationStyle.TentacleActive &&
+                    x.Thumbprint == serverThumbprint));
 
             operation.Received().ExecuteAsync(repository);
         }

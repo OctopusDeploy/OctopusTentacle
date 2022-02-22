@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,9 +10,12 @@ namespace Octopus.Manager.Tentacle.Controls
 {
     public class PasswordEditor : Control
     {
+        public static readonly DependencyProperty PasswordProperty = DependencyProperty.Register("Password", typeof(string), typeof(PasswordEditor), new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, PasswordChanged));
+        public static readonly DependencyProperty DisplayPasswordProperty = DependencyProperty.Register("DisplayPassword", typeof(string), typeof(PasswordEditor), new PropertyMetadata("Set password"));
+
         static PasswordEditor()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof (PasswordEditor), new FrameworkPropertyMetadata(typeof (PasswordEditor)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(PasswordEditor), new FrameworkPropertyMetadata(typeof(PasswordEditor)));
         }
 
         public PasswordEditor()
@@ -35,13 +36,13 @@ namespace Octopus.Manager.Tentacle.Controls
             set => SetValue(DisplayPasswordProperty, value);
         }
 
-        static void PasswordChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void PasswordChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var editor = (PasswordEditor)d;
             editor.DisplayPassword = string.IsNullOrWhiteSpace(editor.Password) ? "Set password" : "Change password";
         }
 
-        async void ChangePasswordClicked(object sender, ExecutedRoutedEventArgs e)
+        private async void ChangePasswordClicked(object sender, ExecutedRoutedEventArgs e)
         {
             var dialogHost = FindParent<DialogHost>(this);
             if (dialogHost == null) throw new Exception("Cannot find a parent DialogHost control.");
@@ -49,10 +50,7 @@ namespace Octopus.Manager.Tentacle.Controls
             var setPasswordDialog = new SetPasswordDialog();
             var result = await DialogHost.Show(setPasswordDialog, dialogHost.Identifier);
             if (!(result is bool typedResult)) return;
-            if (typedResult)
-            {
-                Password = setPasswordDialog.Password;
-            }
+            if (typedResult) Password = setPasswordDialog.Password;
         }
 
         public static T FindParent<T>(DependencyObject child) where T : DependencyObject
@@ -66,11 +64,7 @@ namespace Octopus.Manager.Tentacle.Controls
             //check if the parent matches the type we're looking for
             if (parentObject is T parent)
                 return parent;
-            else
-                return FindParent<T>(parentObject);
+            return FindParent<T>(parentObject);
         }
-
-        public static readonly DependencyProperty PasswordProperty = DependencyProperty.Register("Password", typeof (string), typeof (PasswordEditor), new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, PasswordChanged));
-        public static readonly DependencyProperty DisplayPasswordProperty = DependencyProperty.Register("DisplayPassword", typeof (string), typeof (PasswordEditor), new PropertyMetadata("Set password"));
     }
 }

@@ -7,7 +7,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class TentaclePassiveTab
     {
-        TentacleSetupWizardModel model;
+        private TentacleSetupWizardModel model;
 
         public TentaclePassiveTab(TentacleSetupWizardModel model)
         {

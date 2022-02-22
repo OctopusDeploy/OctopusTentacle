@@ -10,15 +10,14 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
-using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
-using CertificateValidator = Octopus.Tentacle.Certificates.CertificateValidator;
+using Octopus.Tentacle.Certificates;
 
 namespace Octopus.Tentacle.Tests.Certificates
 {
     [TestFixture]
     public class CertificateValidatorFixture
     {
-        readonly CertificateGenerator generator = new CertificateGenerator(new NullLog());
+        private readonly CertificateGenerator generator = new CertificateGenerator(new NullLog());
 
         [Test]
         public void AcceptsValidCertificate()

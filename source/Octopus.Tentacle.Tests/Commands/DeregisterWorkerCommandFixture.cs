@@ -11,6 +11,7 @@ using Octopus.Diagnostics;
 using Octopus.Shared;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Configuration.Instances;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
@@ -23,10 +24,10 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class DeregisterWorkerCommandFixture : CommandFixture<DeregisterWorkerCommand>
     {
-        ISystemLog log;
-        IProxyConfigParser proxyConfig;
-        IOctopusSpaceAsyncRepository asyncRepository;
-        IApplicationInstanceSelector selector;
+        private ISystemLog log;
+        private IProxyConfigParser proxyConfig;
+        private IOctopusSpaceAsyncRepository asyncRepository;
+        private IApplicationInstanceSelector selector;
 
         [SetUp]
         public override void SetUp()
@@ -48,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
-                TentacleCertificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
             Command = new DeregisterWorkerCommand(new Lazy<ITentacleConfiguration>(() => configuration),
                 log,
@@ -77,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
-                TentacleCertificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
 
             Command = new DeregisterWorkerCommand(new Lazy<ITentacleConfiguration>(() => configuration),
@@ -111,7 +112,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { expectedThumbPrint },
-                TentacleCertificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
 
             Command = new DeregisterWorkerCommand(new Lazy<ITentacleConfiguration>(() => configuration),

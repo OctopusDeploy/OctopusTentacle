@@ -10,24 +10,24 @@ using System.Reflection;
 [assembly: AssemblyNuGetVersion("0.0.0-local")]
 
 #if DEFINE_VERSION_ATTRIBUTES
-    [AttributeUsage(AttributeTargets.Assembly)]
-    public sealed class AssemblyGitBranchAttribute : Attribute
+[AttributeUsage(AttributeTargets.Assembly)]
+public sealed class AssemblyGitBranchAttribute : Attribute
+{
+    public AssemblyGitBranchAttribute(string branchName)
     {
-        public AssemblyGitBranchAttribute(string branchName)
-        {
-            BranchName = branchName;
-        }
-
-        public string BranchName { get; }
+        BranchName = branchName;
     }
 
-    public sealed class AssemblyNuGetVersionAttribute : Attribute
-    {
-        public AssemblyNuGetVersionAttribute(string nuGetVersion)
-        {
-            NuGetVersion = nuGetVersion;
-        }
+    public string BranchName { get; }
+}
 
-        public string NuGetVersion { get; }
+public sealed class AssemblyNuGetVersionAttribute : Attribute
+{
+    public AssemblyNuGetVersionAttribute(string nuGetVersion)
+    {
+        NuGetVersion = nuGetVersion;
     }
+
+    public string NuGetVersion { get; }
+}
 #endif

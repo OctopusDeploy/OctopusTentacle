@@ -7,7 +7,6 @@ using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Util;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Util;
-using IScriptableViewModel = Octopus.Manager.Tentacle.Infrastructure.IScriptableViewModel;
 
 namespace Octopus.Manager.Tentacle.Proxy
 {
@@ -16,8 +15,9 @@ namespace Octopus.Manager.Tentacle.Proxy
         NoProxy,
         DefaultProxy,
         DefaultProxyCustomCredentials,
-        CustomProxy,
+        CustomProxy
     }
+
     public class PollingProxyWizardModel : ProxyWizardModel
     {
         public PollingProxyWizardModel(string selectedInstance, ApplicationName application) : base(selectedInstance, application)
@@ -33,12 +33,12 @@ namespace Octopus.Manager.Tentacle.Proxy
 
     public class ProxyWizardModel : ViewModel, IScriptableViewModel
     {
-        ProxyConfigType proxyConfigType;
-        string proxyUsername;
-        string proxyPassword;
-        bool showProxySettings;
-        string proxyServerHost;
-        int proxyServerPort;
+        private ProxyConfigType proxyConfigType;
+        private string proxyUsername;
+        private string proxyPassword;
+        private bool showProxySettings;
+        private string proxyServerHost;
+        private int proxyServerPort;
 
         public ProxyWizardModel(string selectedInstance, ApplicationName application)
         {
@@ -139,17 +139,14 @@ namespace Octopus.Manager.Tentacle.Proxy
 
         public string Executable { get; set; }
 
-        CliBuilder Cli(string action)
+        private CliBuilder Cli(string action)
         {
             return CliBuilder.ForTool(Executable, action, InstanceName);
         }
 
         public IEnumerable<CommandLineInvocation> GenerateScript()
         {
-            if (ToggleService)
-            {
-                yield return Cli("service").Flag("stop").Build();
-            }
+            if (ToggleService) yield return Cli("service").Flag("stop").Build();
 
             if (ProxyConfigType == ProxyConfigType.NoProxy)
             {
@@ -195,10 +192,7 @@ namespace Octopus.Manager.Tentacle.Proxy
                     .Build();
             }
 
-            if (ToggleService)
-            {
-                yield return Cli("service").Flag("start").Build();
-            }
+            if (ToggleService) yield return Cli("service").Flag("start").Build();
         }
 
         public IEnumerable<CommandLineInvocation> GenerateRollbackScript()
@@ -206,7 +200,7 @@ namespace Octopus.Manager.Tentacle.Proxy
             yield break;
         }
 
-        static IValidator CreateValidator()
+        private static IValidator CreateValidator()
         {
             var validator = new InlineValidator<ProxyWizardModel>();
 
@@ -227,12 +221,12 @@ namespace Octopus.Manager.Tentacle.Proxy
             return validator;
         }
 
-        bool NotContainPortNumber(string host)
+        private bool NotContainPortNumber(string host)
         {
             return true;
         }
 
-        bool NotContainHttp(string host)
+        private bool NotContainHttp(string host)
         {
             return true;
         }

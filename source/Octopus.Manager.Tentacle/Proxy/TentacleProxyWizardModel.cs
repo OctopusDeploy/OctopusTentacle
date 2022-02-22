@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Shared.Util;
@@ -7,8 +8,8 @@ namespace Octopus.Manager.Tentacle.Proxy
 {
     public class ProxyWizardModelWrapper : ViewModel, IScriptableViewModel
     {
-        readonly ProxyWizardModel proxyWizardModel;
-        ProxyWizardModel pollingProxyWizardModel;
+        private readonly ProxyWizardModel proxyWizardModel;
+        private ProxyWizardModel pollingProxyWizardModel;
 
         public ProxyWizardModelWrapper(ProxyWizardModel proxyWizardModel)
         {
@@ -23,18 +24,11 @@ namespace Octopus.Manager.Tentacle.Proxy
         {
             yield return CliBuilder.ForTool(proxyWizardModel.Executable, "service", InstanceName).Flag("stop").Build();
 
-            foreach (var line in proxyWizardModel.GenerateScript())
-            {
-                yield return line;
-            }
+            foreach (var line in proxyWizardModel.GenerateScript()) yield return line;
 
             if (pollingProxyWizardModel != null)
-            {
                 foreach (var line in pollingProxyWizardModel.GenerateScript())
-                {
                     yield return line;
-                }
-            }
 
             yield return CliBuilder.ForTool(proxyWizardModel.Executable, "service", InstanceName).Flag("start").Build();
         }

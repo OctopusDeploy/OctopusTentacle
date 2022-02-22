@@ -15,29 +15,25 @@ namespace Octopus.Tentacle.Communications
     /// </summary>
     public class AutofacServiceFactory : IServiceFactory, IDisposable
     {
-        readonly ILifetimeScope scope;
-        readonly Dictionary<string, Type> serviceTypes = new Dictionary<string, Type>();
+        private readonly ILifetimeScope scope;
+        private readonly Dictionary<string, Type> serviceTypes = new();
 
         public AutofacServiceFactory(ILifetimeScope scope, IEnumerable<IAutofacServiceSource> sources)
         {
             this.scope = scope.BeginLifetimeScope(b =>
             {
-                foreach (var service in sources.SelectMany(x => x.ServiceTypes.EmptyIfNull()))
-                {
-                    BuildService(b, service);
-                }
+                foreach (var service in sources.SelectMany(x => x.ServiceTypes.EmptyIfNull())) BuildService(b, service);
             });
         }
 
-        void BuildService(ContainerBuilder builder, Type serviceType)
+        public IReadOnlyList<Type> RegisteredServiceTypes => serviceTypes.Values.ToList();
+
+        private void BuildService(ContainerBuilder builder, Type serviceType)
         {
             var registrationBuilder = builder.RegisterType(serviceType).SingleInstance();
             var interfaces = serviceType.GetInterfaces();
-            if (serviceType.IsInterface || interfaces.IsNullOrEmpty())
-            {
-                throw new InvalidServiceTypeException(serviceType);
-            }
-            
+            if (serviceType.IsInterface || interfaces.IsNullOrEmpty()) throw new InvalidServiceTypeException(serviceType);
+
             foreach (var face in interfaces)
             {
                 serviceTypes[face.Name] = face;
@@ -49,11 +45,8 @@ namespace Octopus.Tentacle.Communications
         {
             try
             {
-                if (serviceTypes.TryGetValue(serviceName, out var serviceType))
-                {
-                    return new Lease(scope.Resolve(serviceType));
-                }
-                
+                if (serviceTypes.TryGetValue(serviceName, out var serviceType)) return new Lease(scope.Resolve(serviceType));
+
                 throw new UnknownServiceNameException(serviceName);
             }
             catch (ObjectDisposedException)
@@ -62,9 +55,12 @@ namespace Octopus.Tentacle.Communications
             }
         }
 
-        public IReadOnlyList<Type> RegisteredServiceTypes => serviceTypes.Values.ToList();
+        public void Dispose()
+        {
+            scope.Dispose();
+        }
 
-        class Lease : IServiceLease
+        private class Lease : IServiceLease
         {
             public Lease(object service)
             {
@@ -78,11 +74,6 @@ namespace Octopus.Tentacle.Communications
                 if (Service is IDisposable disposable)
                     disposable.Dispose();
             }
-        }
-
-        public void Dispose()
-        {
-            scope.Dispose();
         }
     }
 }

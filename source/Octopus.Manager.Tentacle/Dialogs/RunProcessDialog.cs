@@ -13,10 +13,10 @@ namespace Octopus.Manager.Tentacle.Dialogs
 {
     public partial class RunProcessDialog : Window
     {
-        readonly IList<CommandLineInvocation> commandLines;
-        readonly string logsDirectory;
-        readonly ICommandLineRunner commandLineRunner;
-        readonly TextBoxLogger logger;
+        private readonly IList<CommandLineInvocation> commandLines;
+        private readonly string logsDirectory;
+        private readonly ICommandLineRunner commandLineRunner;
+        private readonly TextBoxLogger logger;
 
         public RunProcessDialog(IList<CommandLineInvocation> commandLines, string logsDirectory)
         {
@@ -34,15 +34,12 @@ namespace Octopus.Manager.Tentacle.Dialogs
                 Title = title,
                 Owner = owner
             };
-            if (dialog.Owner == null)
-            {
-                dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            }
+            if (dialog.Owner == null) dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             dialog.Run(showOutputLog);
             dialog.ShowDialog();
         }
 
-        void Run(bool showOutputLog)
+        private void Run(bool showOutputLog)
         {
             OutputLog.Visibility = Visibility.Collapsed;
             StatusProgressBar.Visibility = Visibility.Visible;
@@ -64,17 +61,15 @@ namespace Octopus.Manager.Tentacle.Dialogs
                 }
                 finally
                 {
-                    Dispatcher.Invoke<Task>(async () =>
+                    Dispatcher.Invoke(async () =>
                     {
                         SetStatusBarCompleted(success);
 
                         if (success)
                         {
                             if (OutputLog.Visibility == Visibility.Visible)
-                            {
                                 // Provide a small chance to see the end result if the output log is visible
                                 await Task.Delay(2000);
-                            }
 
                             if (AutoClose.IsChecked == true)
                             {
@@ -100,17 +95,14 @@ namespace Octopus.Manager.Tentacle.Dialogs
             });
         }
 
-        void SetStatusBarCompleted(bool success)
+        private void SetStatusBarCompleted(bool success)
         {
             StatusProgressBar.IsIndeterminate = false;
             StatusProgressBar.Value = 100;
-            if (!success)
-            {
-                StatusProgressBar.Foreground = Brushes.Red;
-            }
+            if (!success) StatusProgressBar.Foreground = Brushes.Red;
         }
 
-        void ShowOutputLog()
+        private void ShowOutputLog()
         {
             OutputLog.Visibility = Visibility.Visible;
             Width = 600;
@@ -118,7 +110,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
             ResizeMode = ResizeMode.CanResizeWithGrip;
         }
 
-        void LogsHyperlink_Click(object sender, RoutedEventArgs e)
+        private void LogsHyperlink_Click(object sender, RoutedEventArgs e)
         {
             Process.Start(logsDirectory);
         }

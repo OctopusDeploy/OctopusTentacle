@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 
 namespace Octopus.Manager.Tentacle.Dialogs
 {
@@ -7,7 +8,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
     /// </summary>
     public partial class ViewScriptDialog : Window
     {
-        ViewScriptDialog()
+        private ViewScriptDialog()
         {
             InitializeComponent();
         }
@@ -17,16 +18,15 @@ namespace Octopus.Manager.Tentacle.Dialogs
             var window = new ViewScriptDialog
             {
                 Owner = owner,
-                ScriptTextBox = {Text = code}
+                ScriptTextBox = { Text = code }
             };
 
             window.ShowDialog();
         }
 
-        void CopyToClipboardButton(object sender, RoutedEventArgs e)
+        private void CopyToClipboardButton(object sender, RoutedEventArgs e)
         {
             Clipboard.SetText(ScriptTextBox.Text);
-
         }
     }
 }

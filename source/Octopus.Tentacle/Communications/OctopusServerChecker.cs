@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
@@ -10,7 +9,7 @@ namespace Octopus.Tentacle.Communications
 {
     public class OctopusServerChecker : IOctopusServerChecker
     {
-        readonly ISystemLog log;
+        private readonly ISystemLog log;
 
         public OctopusServerChecker(ISystemLog log)
         {
@@ -30,6 +29,7 @@ namespace Octopus.Tentacle.Communications
                 handshake = new UriBuilder(serverAddress) { Path = "/handshake" }.Uri;
                 log.Info($"Checking connectivity on the server communications port {serverAddress.Port}...");
             }
+
             string thumbprint = null;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
             {
@@ -77,11 +77,10 @@ namespace Octopus.Tentacle.Communications
             return thumbprint;
         }
 
-         void Retry(string actionDescription, Action action, int retryCount, TimeSpan initialDelay, double backOffFactor = 1.5)
+        private void Retry(string actionDescription, Action action, int retryCount, TimeSpan initialDelay, double backOffFactor = 1.5)
         {
             var delay = initialDelay;
             for (var i = 1; i <= retryCount; i++)
-            {
                 try
                 {
                     action();
@@ -98,7 +97,6 @@ namespace Octopus.Tentacle.Communications
                     delay = new TimeSpan((long)(delay.Ticks * backOffFactor));
                     log.WarnFormat(ex, "{0} failed with message {1}. Retrying ({2}/{3}) in {4}.", actionDescription, ex.Message, i, retryCount, delay);
                 }
-            }
         }
     }
 }

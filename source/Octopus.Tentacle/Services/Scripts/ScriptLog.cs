@@ -12,10 +12,10 @@ namespace Octopus.Tentacle.Services.Scripts
 {
     public class ScriptLog : IScriptLog
     {
-        readonly string logFile;
-        readonly IOctopusFileSystem fileSystem;
-        readonly SensitiveValueMasker sensitiveValueMasker;
-        readonly object sync = new object();
+        private readonly string logFile;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly SensitiveValueMasker sensitiveValueMasker;
+        private readonly object sync = new();
 
         public ScriptLog(string logFile, IOctopusFileSystem fileSystem, SensitiveValueMasker sensitiveValueMasker)
         {
@@ -47,10 +47,7 @@ namespace Octopus.Tentacle.Services.Scripts
                             continue;
 
                         sequence++;
-                        if (sequence <= afterSequenceNumber)
-                        {
-                            continue;
-                        }
+                        if (sequence <= afterSequenceNumber) continue;
 
                         var source = StringToSource(json.ReadAsString());
                         var message = json.ReadAsString();
@@ -60,17 +57,14 @@ namespace Octopus.Tentacle.Services.Scripts
                         results.Add(new ProcessOutput(source, message, occurred.Value));
                     }
 
-                    if (sequence > nextSequenceNumber)
-                    {
-                        nextSequenceNumber = sequence;
-                    }
+                    if (sequence > nextSequenceNumber) nextSequenceNumber = sequence;
                 }
             }
 
             return results;
         }
 
-        static string SourceToString(ProcessOutputSource source)
+        private static string SourceToString(ProcessOutputSource source)
         {
             switch (source)
             {
@@ -85,7 +79,7 @@ namespace Octopus.Tentacle.Services.Scripts
             }
         }
 
-        static ProcessOutputSource StringToSource(string source)
+        private static ProcessOutputSource StringToSource(string source)
         {
             switch (source)
             {
@@ -100,13 +94,13 @@ namespace Octopus.Tentacle.Services.Scripts
             }
         }
 
-        class Writer : IScriptLogWriter
+        private class Writer : IScriptLogWriter
         {
-            readonly object sync;
-            readonly SensitiveValueMasker sensitiveValueMasker;
-            readonly JsonTextWriter json;
-            readonly StreamWriter writer;
-            readonly Stream writeStream;
+            private readonly object sync;
+            private readonly SensitiveValueMasker sensitiveValueMasker;
+            private readonly JsonTextWriter json;
+            private readonly StreamWriter writer;
+            private readonly Stream writeStream;
 
             public Writer(string logFile, IOctopusFileSystem fileSystem, object sync, SensitiveValueMasker sensitiveValueMasker)
             {
@@ -130,7 +124,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 }
             }
 
-            string MaskSensitiveValues(string rawMessage)
+            private string MaskSensitiveValues(string rawMessage)
             {
                 string maskedMessage = null;
                 sensitiveValueMasker.SafeSanitize(rawMessage, s => maskedMessage = s);

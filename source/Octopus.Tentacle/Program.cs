@@ -3,7 +3,6 @@ using System.Net;
 using Autofac;
 using Octopus.Shared.Configuration;
 using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Security;
 using Octopus.Shared.Startup;
 using Octopus.Shared.Time;
 using Octopus.Shared.Util;
@@ -34,7 +33,7 @@ namespace Octopus.Tentacle
 
         protected override ApplicationName ApplicationName => ApplicationName.Tentacle;
 
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             return new Program(args).Run();
         }

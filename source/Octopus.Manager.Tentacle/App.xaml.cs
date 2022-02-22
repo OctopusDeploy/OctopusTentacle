@@ -17,17 +17,15 @@ using Octopus.Shared.Internals.Options;
 using Octopus.Shared.Util;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
-using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
-using CertificatesModule = Octopus.Tentacle.Certificates.CertificatesModule;
 
 namespace Octopus.Manager.Tentacle
 {
     public partial class App
     {
-        const string EventLogSource = "Octopus Tentacle";
+        private const string EventLogSource = "Octopus Tentacle";
 
-        readonly OptionSet commonOptions = new OptionSet();
-        bool reconfigure;
+        private readonly OptionSet commonOptions = new OptionSet();
+        private bool reconfigure;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -56,10 +54,7 @@ namespace Octopus.Manager.Tentacle
 
             if (reconfigure)
             {
-                if (!EventLog.SourceExists(EventLogSource))
-                {
-                    EventLog.CreateEventSource(EventLogSource, "Application");
-                }
+                if (!EventLog.SourceExists(EventLogSource)) EventLog.CreateEventSource(EventLogSource, "Application");
 
                 ReconfigureTentacleService(container);
             }
@@ -67,7 +62,7 @@ namespace Octopus.Manager.Tentacle
             CreateAndShowShell(container);
         }
 
-        static IContainer ConfigureContainer()
+        private static IContainer ConfigureContainer()
         {
             var builder = new ContainerBuilder();
 
@@ -86,12 +81,12 @@ namespace Octopus.Manager.Tentacle
             return builder.Build();
         }
 
-        static bool HasPrerequisites(IPrerequisiteProfile profile)
+        private static bool HasPrerequisites(IPrerequisiteProfile profile)
         {
             return new PreReqWindow(profile).ShowDialog() == true;
         }
 
-        void ReconfigureTentacleService(IComponentContext container)
+        private void ReconfigureTentacleService(IComponentContext container)
         {
             var applicationInstanceLocator = container.Resolve<IApplicationInstanceStore>();
             var instances = applicationInstanceLocator.ListInstances();
@@ -103,11 +98,11 @@ namespace Octopus.Manager.Tentacle
                 model.Load(instance);
                 var isDefaultInstance = instance.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(ApplicationName.Tentacle);
                 var title = isDefaultInstance ? "Reconfiguring Tentacle..." : $"Reconfiguring Tentacle {instance.InstanceName}...";
-                RunProcessDialog.ShowDialog(MainWindow, model.ServiceWatcher.GetReconfigureCommands(), title, model.LogsDirectory, showOutputLog: true);
+                RunProcessDialog.ShowDialog(MainWindow, model.ServiceWatcher.GetReconfigureCommands(), title, model.LogsDirectory, true);
             }
         }
 
-        void CreateAndShowShell(IComponentContext container)
+        private void CreateAndShowShell(IComponentContext container)
         {
             var shell = container.Resolve<ShellView>();
             MainWindow = shell;

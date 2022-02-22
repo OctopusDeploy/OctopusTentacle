@@ -1,16 +1,16 @@
 ﻿using System;
-using Octopus.Manager.Tentacle.Dialogs;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using MaterialDesignThemes.Wpf;
+using Octopus.Manager.Tentacle.Dialogs;
 
 namespace Octopus.Manager.Tentacle.Shell
 {
     public partial class ShellView
     {
-        readonly ShellViewModel viewModel;
+        private readonly ShellViewModel viewModel;
 
         public ShellView(string title, ShellViewModel viewModel)
         {
@@ -35,17 +35,14 @@ namespace Octopus.Manager.Tentacle.Shell
             viewModel.InstanceSelectionModel.Refresh();
         }
 
-        async void OnAddNewInstance(object sender, ExecutedRoutedEventArgs e)
+        private async void OnAddNewInstance(object sender, ExecutedRoutedEventArgs e)
         {
             var result = await DialogHost.Show(new NewInstanceNameDialog(viewModel.InstanceSelectionModel.Instances.Select(q => q.InstanceName)), Title);
             /*
             var dialog = new NewInstanceNameDialog(viewModel.InstanceSelectionModel.Instances.Select(q => q.InstanceName));
             dialog.Owner = this;
             */
-            if (result is string typedResult)
-            {
-                viewModel.InstanceSelectionModel.New(typedResult);
-            }
+            if (result is string typedResult) viewModel.InstanceSelectionModel.New(typedResult);
         }
     }
 }

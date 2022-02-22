@@ -15,13 +15,13 @@ namespace Octopus.Tentacle.Commands
 {
     public class NewCertificateCommand : AbstractStandardCommand
     {
-        readonly Lazy<IWritableTentacleConfiguration> configuration;
-        readonly ISystemLog log;
-        readonly Lazy<ICertificateGenerator> generator;
-        bool preserve;
-        string exportFile;
-        string exportPfx;
-        string password;
+        private readonly Lazy<IWritableTentacleConfiguration> configuration;
+        private readonly ISystemLog log;
+        private readonly Lazy<ICertificateGenerator> generator;
+        private bool preserve;
+        private string exportFile;
+        private string exportPfx;
+        private string password;
 
         public NewCertificateCommand(
             Lazy<IWritableTentacleConfiguration> configuration,
@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Commands
                 throw new ControlledFailureException("Invalid command: --if-blank and --export-file cannot be specified together");
             if (preserve && !string.IsNullOrWhiteSpace(exportPfx))
                 throw new ControlledFailureException("Invalid command: --if-blank and --export-pfx cannot be specified together");
-            if (!string.IsNullOrWhiteSpace(exportFile)  && !string.IsNullOrWhiteSpace(exportPfx))
+            if (!string.IsNullOrWhiteSpace(exportFile) && !string.IsNullOrWhiteSpace(exportPfx))
                 throw new ControlledFailureException("Invalid command: --export-file and --export-pfx cannot be specified together");
 
             if (!string.IsNullOrWhiteSpace(exportFile))

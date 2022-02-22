@@ -36,43 +36,42 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
     public class TentacleSetupWizardModel : ViewModel, IScriptableViewModel, IHaveServices
     {
-        readonly ApplicationName applicationName;
-        CommunicationStyle communicationStyle;
-        MachineType machineType;
-        string octopusServerUrl;
-        AuthMode authMode;
-        string username;
-        string password;
-        string apiKey;
-        bool haveCredentialsBeenVerified;
-        bool isSpaceDataLoaded;
-        bool isLoadingSpaceData;
-        string spaceDataLoadError;
-        string selectedMachinePolicy;
-        string selectedSpace;
-        string[] potentialEnvironments;
-        string[] potentialRoles;
-        string[] potentialMachinePolicies;
-        string[] potentialTenantTags;
-        string[] potentialTenants;
-        string[] potentialWorkerPools;
-        string[] potentialSpaces;
-        string machineName;
-        bool overwriteExistingMachine;
-        string homeDirectory;
-        string applicationInstallDirectory;
-        string pathToConfig;
-        OctopusServerConfiguration handshake;
-        string listenPort;
-        string octopusThumbprint;
-        string serverCommsPort;
-        string serverWebSocket;
-        bool skipServerRegistration;
-        readonly ProxyWizardModel proxyWizardModel;
-        bool areTenantsSupported;
-        bool areTenantsAvailable;
-        bool areSpacesSupported;
-        bool areWorkersSupported;
+        private readonly ApplicationName applicationName;
+        private CommunicationStyle communicationStyle;
+        private MachineType machineType;
+        private string octopusServerUrl;
+        private AuthMode authMode;
+        private string username;
+        private string password;
+        private string apiKey;
+        private bool haveCredentialsBeenVerified;
+        private bool isSpaceDataLoaded;
+        private bool isLoadingSpaceData;
+        private string spaceDataLoadError;
+        private string selectedMachinePolicy;
+        private string selectedSpace;
+        private string[] potentialEnvironments;
+        private string[] potentialRoles;
+        private string[] potentialMachinePolicies;
+        private string[] potentialTenantTags;
+        private string[] potentialTenants;
+        private string[] potentialWorkerPools;
+        private string[] potentialSpaces;
+        private string machineName;
+        private bool overwriteExistingMachine;
+        private string homeDirectory;
+        private string applicationInstallDirectory;
+        private string pathToConfig;
+        private OctopusServerConfiguration handshake;
+        private string listenPort;
+        private string octopusThumbprint;
+        private string serverCommsPort;
+        private string serverWebSocket;
+        private bool skipServerRegistration;
+        private bool areTenantsSupported;
+        private bool areTenantsAvailable;
+        private bool areSpacesSupported;
+        private bool areWorkersSupported;
 
         public TentacleSetupWizardModel(string selectedInstance) : this(selectedInstance, ApplicationName.Tentacle, new ProxyWizardModel(selectedInstance, ApplicationName.Tentacle))
         {
@@ -92,7 +91,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             SelectedWorkerPools = new ObservableCollection<string>();
 
             this.applicationName = applicationName;
-            this.proxyWizardModel = proxyWizardModel;
+            this.ProxyWizardModel = proxyWizardModel;
 
             InstanceName = selectedInstance;
             var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
@@ -103,6 +102,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 HomeDirectory = Path.Combine(HomeDirectory, InstanceName);
                 ApplicationInstallDirectory = Path.Combine(ApplicationInstallDirectory, InstanceName);
             }
+
             OctopusServerUrl = "https://";
             ListenPort = "10933";
             Username = string.Empty;
@@ -114,7 +114,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             ServerCommsPort = "10943";
             CommunicationStyle = CommunicationStyle.TentaclePassive;
 
-
             // It would be nice to do this by sniffing for the advfirewall command, but doing
             // so would slow down showing the wizard. This check identifies and excludes Windows Server 2003.
             FirewallExceptionPossible = Environment.OSVersion.Platform != PlatformID.Win32NT ||
@@ -123,12 +122,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         public List<KeyValuePair<AuthMode, string>> AuthModes { get; }
 
-        public bool ShowMachinePolicySelection { get; private set; } = false;
-        public string InstanceName { get; private set; }
+        public bool ShowMachinePolicySelection { get; private set; }
+        public string InstanceName { get; }
         public bool FirewallException { get; set; }
         public bool FirewallExceptionPossible { get; set; }
 
-        string TentacleExe => string.IsNullOrEmpty(PathToTentacleExe) ? CommandLine.PathToTentacleExe() : PathToTentacleExe;
+        private string TentacleExe => string.IsNullOrEmpty(PathToTentacleExe) ? CommandLine.PathToTentacleExe() : PathToTentacleExe;
 
         public string PathToTentacleExe { get; set; }
 
@@ -206,7 +205,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 if (value == communicationStyle) return;
                 communicationStyle = value;
                 AreWorkersSupported = AreWorkersSupported && value == CommunicationStyle.TentacleActive;
-                ProxyWizardModel.ShowProxySettings = (value == CommunicationStyle.TentacleActive);
+                ProxyWizardModel.ShowProxySettings = value == CommunicationStyle.TentacleActive;
                 OnPropertyChanged();
                 OnPropertyChanged("IsTentacleActive");
                 OnPropertyChanged("IsTentaclePassive");
@@ -346,6 +345,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 OnPropertyChanged();
             }
         }
+
         public string[] PotentialMachinePolicies
         {
             get => potentialMachinePolicies;
@@ -556,7 +556,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             get { yield return new OctoService(TentacleExe, InstanceName); }
         }
 
-        public ProxyWizardModel ProxyWizardModel => proxyWizardModel;
+        public ProxyWizardModel ProxyWizardModel { get; }
 
         public async Task VerifyCredentials(ILog logger)
         {
@@ -613,7 +613,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
-        static async Task<SpaceResource[]> LoadAvailableSpaces(IOctopusSystemAsyncRepository repository)
+        private static async Task<SpaceResource[]> LoadAvailableSpaces(IOctopusSystemAsyncRepository repository)
         {
             var currentUser = await repository.Users.GetCurrent();
             return await repository.Users.GetSpaces(currentUser);
@@ -650,17 +650,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             });
         }
 
-        Task<IOctopusAsyncClient> CreateClient()
+        private Task<IOctopusAsyncClient> CreateClient()
         {
             OctopusServerEndpoint endpoint = null;
             if (authMode == AuthMode.APIKey)
-            {
-                endpoint = new OctopusServerEndpoint(OctopusServerUrl, apiKey, credentials: null);
-            }
+                endpoint = new OctopusServerEndpoint(OctopusServerUrl, apiKey, null);
             else
-            {
                 endpoint = new OctopusServerEndpoint(OctopusServerUrl);
-            }
 
             if (ProxyWizardModel.ProxyConfigType != ProxyConfigType.NoProxy)
             {
@@ -678,7 +674,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             return OctopusAsyncClient.Create(endpoint);
         }
 
-        async Task LoadSpaceSpecificData(IOctopusAsyncClient client)
+        private async Task LoadSpaceSpecificData(IOctopusAsyncClient client)
         {
             var spaceRepository = await new SpaceRepositoryFactory().CreateSpaceRepository(client, SelectedSpace);
             await LoadDataFromSpace(_ =>
@@ -687,14 +683,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }, spaceRepository);
         }
 
-        async Task LoadSpaceData(Func<IOctopusAsyncClient, Task> loadAction)
+        private async Task LoadSpaceData(Func<IOctopusAsyncClient, Task> loadAction)
         {
             if (IsLoadingSpaceData)
-            {
                 // Don't do anything, ignore the action to avoid race conditions
                 // A better alternative might be to cancel the current load, but this way is simpler :)
                 return;
-            }
             SpaceDataLoadError = null;
             IsLoadingSpaceData = true;
 
@@ -702,10 +696,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 using (var client = await CreateClient())
                 {
-                    if (AuthMode == AuthMode.UsernamePassword)
-                    {
-                        await client.SignIn(new LoginCommand { Username = username, Password = password });
-                    }
+                    if (AuthMode == AuthMode.UsernamePassword) await client.SignIn(new LoginCommand { Username = username, Password = password });
                     await loadAction(client);
                 }
             }
@@ -719,7 +710,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
-        async Task LoadDataFromSpace(Action<string> onProgress, IOctopusSpaceAsyncRepository repository)
+        private async Task LoadDataFromSpace(Action<string> onProgress, IOctopusSpaceAsyncRepository repository)
         {
             var spaceSpecificData = await SpaceSpecificData.LoadSpaceSpecificData(onProgress, repository);
             UpdateStateWithLoadedSpaceData(spaceSpecificData);
@@ -728,7 +719,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
         // This method should not load any data, and therefore should not be async
         // It should update all state synchronously to ensure that the UI receives only one update
-        void UpdateStateWithLoadedSpaceData(SpaceSpecificData spaceSpecificData)
+        private void UpdateStateWithLoadedSpaceData(SpaceSpecificData spaceSpecificData)
         {
             // Perform all pre-condition checks first, to avoid partially updating state to a newly selected space
             AssertLoadedDataIsValid(spaceSpecificData);
@@ -739,7 +730,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             UpdateTenants();
             UpdateMachinePolicies();
 
-            void UpdateRoles() => PotentialRoles = spaceSpecificData.RoleNames.ToArray();
+            void UpdateRoles()
+            {
+                PotentialRoles = spaceSpecificData.RoleNames.ToArray();
+            }
 
             void UpdateEnvironments()
             {
@@ -787,29 +781,20 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             }
         }
 
-        static void AssertLoadedDataIsValid(SpaceSpecificData spaceSpecificData)
+        private static void AssertLoadedDataIsValid(SpaceSpecificData spaceSpecificData)
         {
-            if (!spaceSpecificData.Environments.Any())
-            {
-                throw new Exception("No environments exist. Please use the Octopus web portal to create an environment, then try again.");
-            }
+            if (!spaceSpecificData.Environments.Any()) throw new Exception("No environments exist. Please use the Octopus web portal to create an environment, then try again.");
 
             var defaultMachinePolicy = spaceSpecificData.MachinePolicies.FirstOrDefault(x => x.IsDefault);
             if (spaceSpecificData.MachinePoliciesAreSupported)
             {
-                if (!spaceSpecificData.MachinePolicies.Any())
-                {
-                    throw new Exception("No machine policies exist. Please confirm your Octopus web portal contains at least one machine policy, then try again.");
-                }
+                if (!spaceSpecificData.MachinePolicies.Any()) throw new Exception("No machine policies exist. Please confirm your Octopus web portal contains at least one machine policy, then try again.");
 
-                if (defaultMachinePolicy == null)
-                {
-                    throw new Exception("Could not find a default machine policy. Ensure that the Tentacle user has access to machine policies, then try again.");
-                }
+                if (defaultMachinePolicy == null) throw new Exception("Could not find a default machine policy. Ensure that the Tentacle user has access to machine policies, then try again.");
             }
         }
 
-        IValidator CreateValidator()
+        private IValidator CreateValidator()
         {
             var validator = new InlineValidator<TentacleSetupWizardModel>();
             validator.RuleSet("TentacleActive", delegate
@@ -837,7 +822,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             return validator;
         }
 
-        bool BeAValidUrl(string s)
+        private bool BeAValidUrl(string s)
         {
             Uri uri;
             return !string.IsNullOrWhiteSpace(s)
@@ -845,10 +830,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 && (uri.Scheme == "http" || uri.Scheme == "https");
         }
 
-
         public IEnumerable<CommandLineInvocation> GenerateScript()
         {
-            pathToConfig = Path.Combine(HomeDirectory, ((ApplicationInstanceRecord.GetDefaultInstance(applicationName) != InstanceName) ? "Tentacle-" + InstanceName : InstanceName) + ".config");
+            pathToConfig = Path.Combine(HomeDirectory, (ApplicationInstanceRecord.GetDefaultInstance(applicationName) != InstanceName ? "Tentacle-" + InstanceName : InstanceName) + ".config");
 
             yield return Cli("create-instance").Argument("config", pathToConfig).Build();
             yield return Cli("new-certificate").Flag("if-blank").Build();
@@ -861,15 +845,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
             yield return config.Build();
 
-            if(!SkipServerRegistration && HaveCredentialsBeenVerified)
+            if (!SkipServerRegistration && HaveCredentialsBeenVerified)
             {
                 if (CommunicationStyle == CommunicationStyle.TentacleActive)
                 {
                     ProxyWizardModel.Executable = TentacleExe;
-                    foreach (var script in ProxyWizardModel.GenerateScript())
-                    {
-                        yield return script;
-                    }
+                    foreach (var script in ProxyWizardModel.GenerateScript()) yield return script;
                 }
 
                 var register = Cli(MachineType == MachineType.Worker ? "register-worker" : "register-with")
@@ -877,15 +858,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     .Argument("name", machineName)
                     .Argument("comms-style", CommunicationStyle);
 
-                if (overwriteExistingMachine)
-                {
-                    register = register.Flag("force");
-                }
+                if (overwriteExistingMachine) register = register.Flag("force");
 
-                if (CommunicationStyle == CommunicationStyle.TentacleActive)
-                {
-                    register = register.Argument("server-comms-port", serverCommsPort);
-                }
+                if (CommunicationStyle == CommunicationStyle.TentacleActive) register = register.Argument("server-comms-port", serverCommsPort);
 
                 if (!string.IsNullOrWhiteSpace(serverWebSocket))
                     register = register.Argument("server-web-socket", serverWebSocket);
@@ -916,7 +891,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     foreach (var role in SelectedRoles)
                         register.Argument("role", role);
                 }
-                else if(MachineType == MachineType.Worker)
+                else if (MachineType == MachineType.Worker)
                 {
                     foreach (var workerPool in SelectedWorkerPools)
                         register.Argument("workerpool", workerPool);
@@ -926,6 +901,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                 yield return register.Build();
             }
+
             if (IsTentaclePassive)
             {
                 if (!string.IsNullOrWhiteSpace(OctopusThumbprint))
@@ -943,7 +919,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             yield return Cli("delete-instance").Build();
         }
 
-        CliBuilder Cli(string action)
+        private CliBuilder Cli(string action)
         {
             return CliBuilder.ForTool(TentacleExe, action, InstanceName);
         }
@@ -959,6 +935,25 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
     public class SpaceSpecificData
     {
+        private SpaceSpecificData(List<string> roleNames,
+            List<EnvironmentResource> environments,
+            List<WorkerPoolResource> workerPools,
+            bool areTenantsSupported,
+            List<TagSetResource> tenantTags,
+            List<TenantResource> tenants,
+            bool machinePoliciesAreSupported,
+            List<MachinePolicyResource> machinePolicies)
+        {
+            RoleNames = roleNames;
+            Environments = environments;
+            WorkerPools = workerPools;
+            AreTenantsSupported = areTenantsSupported;
+            TenantTags = tenantTags;
+            Tenants = tenants;
+            MachinePoliciesAreSupported = machinePoliciesAreSupported;
+            MachinePolicies = machinePolicies;
+        }
+
         public List<string> RoleNames { get; }
         public List<EnvironmentResource> Environments { get; }
         public List<WorkerPoolResource> WorkerPools { get; }
@@ -1022,25 +1017,6 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     return (false, new List<MachinePolicyResource>());
                 }
             }
-        }
-
-        SpaceSpecificData(List<string> roleNames,
-            List<EnvironmentResource> environments,
-            List<WorkerPoolResource> workerPools,
-            bool areTenantsSupported,
-            List<TagSetResource> tenantTags,
-            List<TenantResource> tenants,
-            bool machinePoliciesAreSupported,
-            List<MachinePolicyResource> machinePolicies)
-        {
-            RoleNames = roleNames;
-            Environments = environments;
-            WorkerPools = workerPools;
-            AreTenantsSupported = areTenantsSupported;
-            TenantTags = tenantTags;
-            Tenants = tenants;
-            MachinePoliciesAreSupported = machinePoliciesAreSupported;
-            MachinePolicies = machinePolicies;
         }
     }
 }

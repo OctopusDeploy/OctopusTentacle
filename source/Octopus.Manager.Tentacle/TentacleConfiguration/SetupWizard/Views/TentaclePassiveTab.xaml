@@ -1,19 +1,17 @@
-﻿<shell:TabView 
+﻿<shell:TabView
     x:Class="Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views.TentaclePassiveTab"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
-    xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-    mc:Ignorable="d" 
+    mc:Ignorable="d"
     d:DesignHeight="500" d:DesignWidth="650"
     Header="Listening Tentacle"
     RuleSet="TentaclePassive"
     Style="{StaticResource TabView.Normal}"
-    Visibility="{Binding Path=IsTentaclePassive, Converter={StaticResource Converter.BooleanToVisibility}}"
-    >
+    Visibility="{Binding Path=IsTentaclePassive, Converter={StaticResource Converter.BooleanToVisibility}}">
     <Grid>
         <StackPanel>
             <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Listening Tentacle" />
@@ -25,11 +23,22 @@
             </TextBlock>
 
             <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                <TextBox Text="{Binding Path=ListenPort, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Listen port" Name="ListenPortTextBox" Width="80" />
-                <CheckBox Style="{StaticResource MaterialDesignCheckBox}" IsChecked="{Binding Path=FirewallException}" Visibility="{Binding Path=FirewallExceptionPossible, Converter={StaticResource Converter.BooleanToVisibilityConverter}}" Margin="20,0,0,0" VerticalAlignment="Bottom">Add Windows Firewall exception</CheckBox>
+                <TextBox
+                    Text="{Binding Path=ListenPort, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                    materialDesign:ValidationAssist.Background="Transparent"
+                    materialDesign:HintAssist.Hint="Listen port" Name="ListenPortTextBox" Width="80" />
+                <CheckBox Style="{StaticResource MaterialDesignCheckBox}" IsChecked="{Binding Path=FirewallException}"
+                          Visibility="{Binding Path=FirewallExceptionPossible, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"
+                          Margin="20,0,0,0" VerticalAlignment="Bottom">
+                    Add Windows Firewall exception
+                </CheckBox>
             </StackPanel>
             <StackPanel MaxWidth="400" HorizontalAlignment="Left" Margin="0,20,0,0">
-                <TextBox Text="{Binding Path=OctopusThumbprint, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Octopus thumbprint" Name="OctopusThumbprintTextBox"  />
+                <TextBox
+                    Text="{Binding Path=OctopusThumbprint, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                    Style="{DynamicResource MaterialDesignFloatingHintTextBox}"
+                    materialDesign:ValidationAssist.Background="Transparent"
+                    materialDesign:HintAssist.Hint="Octopus thumbprint" Name="OctopusThumbprintTextBox" />
                 <TextBlock Style="{StaticResource TextBlock.Big}" Margin="0,15,0,0" FontSize="10" Foreground="Gray">
                     <Run>The Tentacle will only accept connections from an Octopus Server that identifies with the thumbprint above. The thumbprint can be found in the Listening Tentacle set up within your Octopus Instance.</Run>
                 </TextBlock>
