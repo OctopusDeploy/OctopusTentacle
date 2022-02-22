@@ -15,7 +15,6 @@ FSharp.Core.xml
 GeoAPI.dll
 ICSharpCode.NRefactory.CSharp.dll
 ICSharpCode.NRefactory.dll
-ICSharpCode.SharpZipLib.dll
 Jint.Raven.dll
 Jint.Raven.pdb
 local.config
