@@ -27,7 +27,7 @@ namespace Octopus.Shared.Startup
             this.logFileOnlyLogger = logFileOnlyLogger;
             this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
         }
-        
+
         public void ConfigureServiceByInstanceName(string thisServiceName,
             string exePath,
             string instance,
@@ -286,14 +286,14 @@ namespace Octopus.Shared.Startup
         {
             if (controller == null)
                 throw new ControlledFailureException($"Start requested for service {thisServiceName}, but no service with this name was found.");
-            
+
             if (controller.Status != ServiceControllerStatus.Running)
             {
                 if (controller.Status != ServiceControllerStatus.StartPending)
                 {
                     Policy
                         .Handle<Exception>()
-                        .WaitAndRetry(5, i => TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), (_, span) => log.Warn($"Failed to start the Octopus Server windows service. Trying again in...{span} "))
+                        .WaitAndRetry(5, i => TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), (_, span) => log.Warn($"Failed to start the Tentancle windows service. Trying again in...{span} "))
                         .Execute(
                             () =>
                             {
