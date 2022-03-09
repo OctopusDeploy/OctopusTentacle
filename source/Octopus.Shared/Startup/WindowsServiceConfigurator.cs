@@ -293,7 +293,7 @@ namespace Octopus.Shared.Startup
                 {
                     Policy
                         .Handle<Exception>()
-                        .WaitAndRetry(5, i => TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), (_, span) => log.Warn($"Failed to start the Tentancle windows service. Trying again in...{span} "))
+                        .WaitAndRetry(5, i => TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), (_, span) => log.Warn($"Failed to start the windows service. Trying again in...{span} "))
                         .Execute(
                             () =>
                             {
