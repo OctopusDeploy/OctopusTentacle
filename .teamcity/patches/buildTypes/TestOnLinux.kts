@@ -16,6 +16,9 @@ changeBuildType(RelativeId("TestOnLinux")) {
         add {
             exists("system.Octopus.Docker", "RQ_1")
         }
+        add {
+            equals("system.Octopus.OS", "Ubuntu")
+        }
     }
 
     expectDisabledSettings()
