@@ -8,6 +8,7 @@ using System.Threading;
 using Octopus.CoreUtilities.Extensions;
 using Octopus.Diagnostics;
 using Octopus.Shared.Util;
+using Polly;
 
 namespace Octopus.Shared.Startup
 {
@@ -26,7 +27,7 @@ namespace Octopus.Shared.Startup
             this.logFileOnlyLogger = logFileOnlyLogger;
             this.windowsLocalAdminRightsChecker = windowsLocalAdminRightsChecker;
         }
-        
+
         public void ConfigureServiceByInstanceName(string thisServiceName,
             string exePath,
             string instance,
@@ -285,11 +286,20 @@ namespace Octopus.Shared.Startup
         {
             if (controller == null)
                 throw new ControlledFailureException($"Start requested for service {thisServiceName}, but no service with this name was found.");
-            
+
             if (controller.Status != ServiceControllerStatus.Running)
             {
                 if (controller.Status != ServiceControllerStatus.StartPending)
-                    controller.Start();
+                {
+                    Policy
+                        .Handle<Exception>()
+                        .WaitAndRetry(5, i => TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), (_, span) => log.Warn($"Failed to start the windows service. Trying again in...{span} "))
+                        .Execute(
+                            () =>
+                            {
+                                controller.Start();
+                            });
+                }
 
                 WaitForControllerStatus(controller, ServiceControllerStatus.Running);
 
