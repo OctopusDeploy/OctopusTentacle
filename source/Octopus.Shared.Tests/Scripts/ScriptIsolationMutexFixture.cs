@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using FluentAssertions;
-using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 using Octopus.Shared.Contracts;
 using Octopus.Shared.Scripts;
@@ -27,7 +26,7 @@ namespace Octopus.Shared.Tests.Scripts
                 taskLock.GetBusyMessage("ServerTask-2", true).Should().Be("Waiting for the script in task [ServerTask-1](~/app#/tasks/ServerTask-1) to finish as this script requires that no other Octopus scripts are executing on this target at the same time.");
                 taskLock.GetTimedOutMessage(TimeSpan.FromMinutes(15), "ServerTask-2").Should().Be("This task waited more than 15 minutes and timed out. Task [ServerTask-1](~/app#/tasks/ServerTask-1) is still running.");
                 taskLock.GetCanceledMessage("ServerTask-2").Should().Be("This task was canceled before it could start. Task [ServerTask-1](~/app#/tasks/ServerTask-1) is still running.");
-                lockReleaser.Dispose();
+                lockReleaser?.Dispose();
             }
 
             [Test]
@@ -42,7 +41,7 @@ namespace Octopus.Shared.Tests.Scripts
                 taskLock.GetTimedOutMessage(TimeSpan.FromMinutes(15), "ServerTask-2").Should().Be("This task waited more than 15 minutes and timed out. Task [ServerTask-1](~/app#/tasks/ServerTask-1) is still running.");
                 taskLock.GetBusyMessage("ServerTask-2", true).Should().Be("Waiting for the script in task [ServerTask-1](~/app#/tasks/ServerTask-1) to finish as this script requires that no other Octopus scripts are executing on this target at the same time.");
                 taskLock.GetCanceledMessage("ServerTask-2").Should().Be("This task was canceled before it could start. Task [ServerTask-1](~/app#/tasks/ServerTask-1) is still running.");
-                lockReleaser.Dispose();
+                lockReleaser?.Dispose();
             }
 
             [Test]
@@ -59,8 +58,8 @@ namespace Octopus.Shared.Tests.Scripts
                 taskLock.GetBusyMessage("ServerTask-3", true).Should().Be("Waiting on scripts in tasks [ServerTask-1](~/app#/tasks/ServerTask-1) and [ServerTask-2](~/app#/tasks/ServerTask-2) to finish. This script requires that no other Octopus scripts are executing on this target at the same time.");
                 taskLock.GetTimedOutMessage(TimeSpan.FromMinutes(15), "ServerTask-3").Should().Be("This task waited more than 15 minutes and timed out. Tasks [ServerTask-1](~/app#/tasks/ServerTask-1) and [ServerTask-2](~/app#/tasks/ServerTask-2) are still running.");
                 taskLock.GetCanceledMessage("ServerTask-3").Should().Be("This task was canceled before it could start. Tasks [ServerTask-1](~/app#/tasks/ServerTask-1) and [ServerTask-2](~/app#/tasks/ServerTask-2) are still running.");
-                lockReleaser.Dispose();
-                lockReleaser2.Dispose();
+                lockReleaser?.Dispose();
+                lockReleaser2?.Dispose();
             }
 
             [Test]
@@ -79,9 +78,26 @@ namespace Octopus.Shared.Tests.Scripts
                 taskLock.GetBusyMessage("ServerTask-4", true).Should().Be("Waiting on scripts in tasks [ServerTask-1](~/app#/tasks/ServerTask-1), [ServerTask-2](~/app#/tasks/ServerTask-2) and [ServerTask-3](~/app#/tasks/ServerTask-3) to finish. This script requires that no other Octopus scripts are executing on this target at the same time.");
                 taskLock.GetTimedOutMessage(TimeSpan.FromMinutes(15), "ServerTask-4").Should().Be("This task waited more than 15 minutes and timed out. Tasks [ServerTask-1](~/app#/tasks/ServerTask-1), [ServerTask-2](~/app#/tasks/ServerTask-2) and [ServerTask-3](~/app#/tasks/ServerTask-3) are still running.");
                 taskLock.GetCanceledMessage("ServerTask-4").Should().Be("This task was canceled before it could start. Tasks [ServerTask-1](~/app#/tasks/ServerTask-1), [ServerTask-2](~/app#/tasks/ServerTask-2) and [ServerTask-3](~/app#/tasks/ServerTask-3) are still running.");
-                lockReleaser.Dispose();
-                lockReleaser2.Dispose();
-                lockReleaser3.Dispose();
+                lockReleaser?.Dispose();
+                lockReleaser2?.Dispose();
+                lockReleaser3?.Dispose();
+            }
+            
+            [Test]
+            public void ReportsWhenMultipleLocksTakenAndReleasedBySameTaskAreCorrect()
+            {
+                var taskLock = new ScriptIsolationMutex.TaskLock();
+                taskLock.TryEnterReadLock("ServerTask-1", TimeSpan.FromSeconds(1), CancellationToken.None, out var lockReleaser);
+                taskLock.TryEnterReadLock("ServerTask-1", TimeSpan.FromSeconds(1), CancellationToken.None, out var lockReleaser2);
+
+                taskLock.RemoveLock("ServerTask-1");
+                taskLock.Report().Should().Be("\"ServerTask-1\" (has a read lock)");
+
+                taskLock.RemoveLock("ServerTask-1");
+                taskLock.Report().Should().Be("no locks");
+
+                lockReleaser?.Dispose();
+                lockReleaser2?.Dispose();
             }
 
             [Test]
