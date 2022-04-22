@@ -23,10 +23,11 @@ partial class Build
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldstable-slim", "deb"),
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:stable-slim", "deb"),
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "linuxmintd/mint19.3-amd64", "deb"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:latest", "deb"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:rolling", "deb"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:trusty", "deb"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:xenial", "deb"),
+        // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:latest", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
+        // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:rolling", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
+        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:focal", "deb"), // 20.04
+        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:trusty", "deb"), // 14.04
+        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:xenial", "deb"), // 16.04
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "centos:7", "rpm"),
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:latest", "rpm"),
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel7", "rpm"),
