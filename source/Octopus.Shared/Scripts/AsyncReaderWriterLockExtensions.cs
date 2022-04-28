@@ -7,39 +7,27 @@ namespace Octopus.Shared.Scripts
 {
     public static class AsyncReaderWriterLockExtensions
     {
-        public static bool TryEnterReadLock(this AsyncReaderWriterLock @lock, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable? releaseLock)
+        public static AcquireLockResult TryEnterReadLock(this AsyncReaderWriterLock @lock, CancellationToken cancellationToken)
         {
-            releaseLock = null;
-            using (var timeoutSource = new CancellationTokenSource(timeout))
-            using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token))
+            try
             {
-                try
-                {
-                    releaseLock = @lock.ReaderLock(linkedCancellationTokenSource.Token);
-                    return true;
-                }
-                catch (TaskCanceledException)
-                {
-                    return false;
-                }
+                return AcquireLockResult.Success(@lock.ReaderLock(cancellationToken));
+            }
+            catch (TaskCanceledException)
+            {
+                return AcquireLockResult.Fail();
             }
         }
 
-        public static bool TryEnterWriteLock(this AsyncReaderWriterLock @lock, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable? releaseLock)
+        public static AcquireLockResult TryEnterWriteLock(this AsyncReaderWriterLock @lock, CancellationToken cancellationToken)
         {
-            releaseLock = null;
-            using (var timeoutSource = new CancellationTokenSource(timeout))
-            using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token))
+            try
             {
-                try
-                {
-                    releaseLock = @lock.WriterLock(linkedCancellationTokenSource.Token);
-                    return true;
-                }
-                catch (TaskCanceledException)
-                {
-                    return false;
-                }
+                return AcquireLockResult.Success(@lock.WriterLock(cancellationToken));
+            }
+            catch (TaskCanceledException)
+            {
+                return AcquireLockResult.Fail();
             }
         }
     }

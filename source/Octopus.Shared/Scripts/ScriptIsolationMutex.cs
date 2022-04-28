@@ -10,7 +10,7 @@ using Octopus.Shared.Util;
 
 namespace Octopus.Shared.Scripts
 {
-    public class ScriptIsolationMutex
+    public static class ScriptIsolationMutex
     {
         // Reader-writer locks allow multiple readers, but only one writer which blocks readers. This is perfect for our scenario, because
         // we want to allow lots of scripts to run with the 'no' isolation level, but nothing should be running under the 'full' isolation level.
@@ -18,6 +18,7 @@ namespace Octopus.Shared.Scripts
         //       Hopefully in a future version of .NET there will be a fully supported ReaderWriterLock with cooperative cancellation support so we can remove this dependency.
         static readonly ConcurrentDictionary<string, TaskLock> ReaderWriterLocks = new ConcurrentDictionary<string, TaskLock>();
         static readonly TimeSpan InitialWaitTime = TimeSpan.FromMilliseconds(100);
+        static readonly TimeSpan SubsequentWaitTime = TimeSpan.FromMinutes(1);
 
         public static readonly TimeSpan NoTimeout = TimeSpan.FromMilliseconds(int.MaxValue);
 
@@ -102,44 +103,34 @@ namespace Octopus.Shared.Scripts
                 lockReleaser?.Dispose();
             }
 
-            void EnterWriteLock()
-            {
-                if (taskLock.TryEnterWriteLock(taskId, InitialWaitTime, cancellationToken, out lockReleaser))
-                {
-                    WriteToSystemLog("Lock taken.");
-                    return;
-                }
+            void EnterWriteLock() => PollForLock((taskId, cancellationToken) => taskLock.TryEnterWriteLock(taskId, cancellationToken));
 
-                WriteToSystemLog($"Failed to acquire lock within {InitialWaitTime}.");
+            void EnterReadLock() => PollForLock((taskId, cancellationToken) => taskLock.TryEnterReadLock(taskId, cancellationToken));
 
-                Busy(true);
-
-                EnterWriteLockWithTimeout();
-            }
-
-            void EnterReadLock()
-            {
-                if (taskLock.TryEnterReadLock(taskId, InitialWaitTime, cancellationToken, out lockReleaser))
-                {
-                    WriteToSystemLog("Lock taken.");
-                    return;
-                }
-
-                WriteToSystemLog($"Failed to acquire lock within {InitialWaitTime}.");
-
-                Busy(false);
-
-                EnterReadLockWithTimeout();
-            }
-
-            void EnterReadLockWithTimeout()
+            void PollForLock(Func<string, CancellationToken, AcquireLockResult> acquireLock)
             {
                 WriteToSystemLog($"Trying to acquire lock with wait time of {mutexAcquireTimeout}.");
+                var pollingInterval = InitialWaitTime;
 
-                if (taskLock.TryEnterReadLock(taskId, mutexAcquireTimeout, cancellationToken, out lockReleaser))
+                using var timeoutSource = new CancellationTokenSource(mutexAcquireTimeout);
+                while (!cancellationToken.IsCancellationRequested && !timeoutSource.IsCancellationRequested)
                 {
-                    WriteToSystemLog("Lock taken.");
-                    return;
+                    using var pollingIntervalSource = new CancellationTokenSource(pollingInterval);
+                    using var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                        cancellationToken,
+                        timeoutSource.Token,
+                        pollingIntervalSource.Token);
+                    var result = acquireLock(taskId, linkedCancellationTokenSource.Token);
+                    if (result.Acquired)
+                    {
+                        lockReleaser = result.LockReleaser;
+                        WriteToSystemLog("Lock taken.");
+                        return;
+                    }
+
+                    WriteToSystemLog($"Failed to acquire lock within {pollingInterval}.");
+                    Busy(false);
+                    pollingInterval = SubsequentWaitTime;
                 }
 
                 if (cancellationToken.IsCancellationRequested)
@@ -150,34 +141,13 @@ namespace Octopus.Shared.Scripts
                     throw new OperationCanceledException(cancellationToken);
                 }
 
-                WriteToSystemLog($"Failed to acquire lock within {mutexAcquireTimeout}.");
-
-                TimedOut(mutexAcquireTimeout);
-                throw new TimeoutException($"Could not acquire read mutex within timeout {mutexAcquireTimeout}.");
-            }
-
-            void EnterWriteLockWithTimeout()
-            {
-                WriteToSystemLog($"Trying to acquire lock with wait time of {mutexAcquireTimeout}.");
-
-                if (taskLock.TryEnterWriteLock(taskId, mutexAcquireTimeout, cancellationToken, out lockReleaser))
+                if (timeoutSource.IsCancellationRequested)
                 {
-                    WriteToSystemLog("Lock taken.");
-                    return;
+                    WriteToSystemLog($"Failed to acquire lock within {mutexAcquireTimeout}.");
+
+                    TimedOut(mutexAcquireTimeout);
+                    throw new TimeoutException($"Could not acquire read mutex within timeout {mutexAcquireTimeout}.");
                 }
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    WriteToSystemLog("Lock acquire canceled.");
-
-                    Canceled();
-                    throw new OperationCanceledException(cancellationToken);
-                }
-
-                WriteToSystemLog($"Failed to acquire lock within {mutexAcquireTimeout}.");
-
-                TimedOut(mutexAcquireTimeout);
-                throw new TimeoutException($"Could not acquire write mutex within timeout {mutexAcquireTimeout}.");
             }
 
             void Busy(bool isWaitingOnWrite)
@@ -214,22 +184,24 @@ namespace Octopus.Shared.Scripts
                 asyncReaderWriterLock = new AsyncReaderWriterLock();
             }
 
-            public bool TryEnterWriteLock(string taskId, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable? releaseLock)
+            public AcquireLockResult TryEnterWriteLock(string taskId, CancellationToken cancellationToken)
             {
-                if (!asyncReaderWriterLock.TryEnterWriteLock(timeout, cancellationToken, out releaseLock))
+                var result = asyncReaderWriterLock.TryEnterWriteLock(cancellationToken);
+                if (!result.Acquired)
                 {
-                    return false;
+                    return result;
                 }
 
                 writerTaskId = taskId;
-                return true;
+                return result;
             }
 
-            public bool TryEnterReadLock(string taskId, TimeSpan timeout, CancellationToken cancellationToken, out IDisposable? releaseLock)
+            public AcquireLockResult TryEnterReadLock(string taskId, CancellationToken cancellationToken)
             {
-                if (!asyncReaderWriterLock.TryEnterReadLock(timeout, cancellationToken, out releaseLock))
+                var result = asyncReaderWriterLock.TryEnterReadLock(cancellationToken);
+                if (!result.Acquired)
                 {
-                    return false;
+                    return result;
                 }
 
                 lock (stateLock)
@@ -244,7 +216,7 @@ namespace Octopus.Shared.Scripts
                     }
                 }
 
-                return true;
+                return result;
             }
 
             public void RemoveLock(string taskId)
