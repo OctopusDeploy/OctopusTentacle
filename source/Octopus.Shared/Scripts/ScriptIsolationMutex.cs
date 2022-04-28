@@ -128,7 +128,6 @@ namespace Octopus.Shared.Scripts
                         return;
                     }
 
-                    WriteToSystemLog($"Failed to acquire lock within {pollingInterval}.");
                     Busy(false);
                     pollingInterval = SubsequentWaitTime;
                 }
