@@ -128,7 +128,7 @@ namespace Octopus.Shared.Scripts
                         return;
                     }
 
-                    Busy(false);
+                    Busy();
                     pollingInterval = SubsequentWaitTime;
                 }
 
@@ -149,9 +149,9 @@ namespace Octopus.Shared.Scripts
                 }
             }
 
-            void Busy(bool isWaitingOnWrite)
+            void Busy()
             {
-                taskLog.WriteWait(taskLock.GetBusyMessage(taskId, isWaitingOnWrite));
+                taskLog.WriteWait(taskLock.GetBusyMessage(taskId, isolationLevel == ScriptIsolationLevel.FullIsolation));
             }
 
             void Canceled()
