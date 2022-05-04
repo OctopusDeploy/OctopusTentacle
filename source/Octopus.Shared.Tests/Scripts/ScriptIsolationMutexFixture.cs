@@ -136,19 +136,16 @@ namespace Octopus.Shared.Tests.Scripts
             [Test]
             public void LocksBlockOthersThatShareAName()
             {
-                var lock1 = AcquireNamedLock("Lock 1");
+                using var lock1 = AcquireNamedLock("Lock 1");
                 Action a = () => AcquireNamedLock("Lock 1");
                 a.Should().Throw<TimeoutException>();
-                lock1.Dispose();
             }
 
             [Test]
             public void LocksWithDifferentNamesCanBeHeldAtTheSameTime()
             {
-                var lock1 = AcquireNamedLock("Lock 1");
-                var lock2 = AcquireNamedLock("Lock 2");
-                lock1.Dispose();
-                lock2.Dispose();
+                using var lock1 = AcquireNamedLock("Lock 1");
+                using var lock2 = AcquireNamedLock("Lock 2");
             }
 
             static IDisposable AcquireNamedLock(string name) => ScriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
