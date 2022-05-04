@@ -103,9 +103,9 @@ namespace Octopus.Shared.Scripts
                 lockReleaser?.Dispose();
             }
 
-            void EnterWriteLock() => PollForLock((taskId, cancellationToken) => taskLock.TryEnterWriteLock(taskId, cancellationToken));
+            void EnterWriteLock() => PollForLock(taskLock.TryEnterWriteLock);
 
-            void EnterReadLock() => PollForLock((taskId, cancellationToken) => taskLock.TryEnterReadLock(taskId, cancellationToken));
+            void EnterReadLock() => PollForLock(taskLock.TryEnterReadLock);
 
             void PollForLock(Func<string, CancellationToken, AcquireLockResult> acquireLock)
             {
@@ -124,7 +124,7 @@ namespace Octopus.Shared.Scripts
                     if (result.Acquired)
                     {
                         lockReleaser = result.LockReleaser;
-                        WriteToSystemLog("Lock taken.");
+                        WriteToSystemLog("Lock acquired.");
                         return;
                     }
 
