@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Shared.Contracts;
@@ -110,6 +111,26 @@ namespace Octopus.Shared.Tests.Scripts
 
                 lock1.LockReleaser?.Dispose();
                 lock2.LockReleaser?.Dispose();
+            }
+
+            [Test]
+            public void AcquireCanBeCancelled()
+            {
+                var cancellationToken = new CancellationTokenSource();
+
+                IDisposable AcquireMutex() => ScriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
+                    TimeSpan.FromDays(1),
+                    nameof(AcquireCanBeCancelled),
+                    _ => { },
+                    "Task-1",
+                    cancellationToken.Token,
+                    new TestConsoleLog());
+
+                using var mutex = AcquireMutex();
+                Action acquire = () => AcquireMutex();
+
+                cancellationToken.CancelAfter(TimeSpan.FromSeconds(1));
+                acquire.Should().Throw<OperationCanceledException>();
             }
 
             [Test]
