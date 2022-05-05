@@ -128,7 +128,7 @@ namespace Octopus.Shared.Tests.Scripts
                     nameof(ReportsLockHolderChanges),
                     s => log?.Write(LogCategory.Info, s),
                     taskId,
-                    CancellationToken.None,
+                    timeoutToken,
                     new TestConsoleLog());
 
                 var firstMutexAcquired = new ManualResetEvent(false);
