@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using FluentAssertions;
+using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Diagnostics;
 
@@ -29,23 +32,32 @@ namespace Octopus.Shared.Tests.Support
             log.Write(logEvent.Category, logEvent.Error, logEvent.MessageText);
         }
 
-        public IReadOnlyCollection<LogEvent> GetLogEvents() => events.ToArray();
-
         public string GetLog()
         {
             return events.Aggregate(new StringBuilder(), (sb, e) => sb.AppendLine($"{e.Category} {e.MessageText} {e.Error}"), sb => sb.ToString());
         }
 
-        public void AssertContains(LogCategory category, string partialString)
-        {
-            var match = events.FirstOrDefault(e => e.Category == category && CultureInfo.CurrentCulture.CompareInfo.IndexOf(e.MessageText, partialString, CompareOptions.IgnoreCase) >= 0);
-            if (match == null) throw new Exception($"The log does not contain any {category} entry containing the substring {partialString}.");
-        }
-
         public void AssertContains(string partialString)
         {
-            var match = events.FirstOrDefault(e => CultureInfo.CurrentCulture.CompareInfo.IndexOf(e.MessageText, partialString, CompareOptions.IgnoreCase) >= 0);
-            if (match == null) throw new Exception($"The log does not contain any entry containing the substring {partialString}.");
+            events.Should().Contain(e => CultureInfo.CurrentCulture.CompareInfo.IndexOf(e.MessageText, partialString, CompareOptions.IgnoreCase) >= 0);
+        }
+
+        public void AssertEventuallyContains(string partialString, CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    AssertContains(partialString);
+                    return;
+                }
+                catch (AssertionException)
+                {
+                    Thread.Sleep(100);
+                }
+            }
+
+            throw new TimeoutException();
         }
 
         public override void Flush()

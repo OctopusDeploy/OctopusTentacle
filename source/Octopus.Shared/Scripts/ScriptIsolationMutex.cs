@@ -18,7 +18,7 @@ namespace Octopus.Shared.Scripts
         //       Hopefully in a future version of .NET there will be a fully supported ReaderWriterLock with cooperative cancellation support so we can remove this dependency.
         static readonly ConcurrentDictionary<string, TaskLock> ReaderWriterLocks = new ConcurrentDictionary<string, TaskLock>();
         static readonly TimeSpan InitialWaitTime = TimeSpan.FromMilliseconds(100);
-        static readonly TimeSpan SubsequentWaitTime = TimeSpan.FromMinutes(10);
+        internal static TimeSpan SubsequentWaitTime = TimeSpan.FromMinutes(10);
 
         public static readonly TimeSpan NoTimeout = TimeSpan.FromMilliseconds(int.MaxValue);
 

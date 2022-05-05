@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
+using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Scripts;
 using Octopus.Shared.Tests.Support;
 
@@ -111,6 +114,52 @@ namespace Octopus.Shared.Tests.Scripts
 
                 lock1.LockReleaser?.Dispose();
                 lock2.LockReleaser?.Dispose();
+            }
+
+            [Test]
+            public void ReportsLockHolderChanges()
+            {
+                var task3Log = new InMemoryLog();
+                ScriptIsolationMutex.SubsequentWaitTime = TimeSpan.FromMilliseconds(100);
+                var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+
+                IDisposable AcquireMutex(string taskId, ILog log) => ScriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
+                    TimeSpan.FromDays(1),
+                    nameof(ReportsLockHolderChanges),
+                    s => log?.Write(LogCategory.Info, s),
+                    taskId,
+                    CancellationToken.None,
+                    new TestConsoleLog());
+
+                var firstMutexAcquired = new ManualResetEvent(false);
+                var releaseFirstMutex = new ManualResetEvent(false);
+                var releaseSecondMutex = new ManualResetEvent(false);
+                var t1 = Task.Run(() =>
+                    {
+                        using var mutex = AcquireMutex("Task-1", null);
+                        firstMutexAcquired.Set();
+                        releaseFirstMutex.WaitOne();
+                    },
+                    timeoutToken);
+                var t2 = Task.Run(() =>
+                    {
+                        firstMutexAcquired.WaitOne();
+                        using var mutex = AcquireMutex("Task-2", null);
+                        releaseSecondMutex.WaitOne();
+                    },
+                    timeoutToken);
+                firstMutexAcquired.WaitOne();
+                var t3 = Task.Run(() =>
+                    {
+                        using var mutex = AcquireMutex("Task-3", task3Log);
+                    },
+                    timeoutToken);
+
+                task3Log.AssertEventuallyContains("Waiting for the script in task [Task-1]", timeoutToken);
+                releaseFirstMutex.Set();
+                task3Log.AssertEventuallyContains("Waiting for the script in task [Task-2]", timeoutToken);
+                releaseSecondMutex.Set();
+                Task.WaitAll(new [] {t1, t2, t3}, timeoutToken);
             }
 
             [Test]
