@@ -24,10 +24,6 @@ namespace Octopus.Shared.Scripts
 
         protected virtual string BootstrapScriptName => "Bootstrap.ps1";
 
-        public NetworkCredential? RunAs { get; set; }
-
-        public IDictionary<string, string> CustomEnvironmentVariables { get; set; } = new Dictionary<string, string>();
-
         public ScriptIsolationLevel IsolationLevel { get; set; }
 
         public TimeSpan ScriptMutexAcquireTimeout

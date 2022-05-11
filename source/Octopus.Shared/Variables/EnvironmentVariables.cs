@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace Octopus.Shared.Variables
 {
@@ -20,8 +19,5 @@ namespace Octopus.Shared.Variables
         public const string TentacleExecutablePath = "TentacleExecutablePath";
         public const string TentacleProgramDirectoryPath = "TentacleProgramDirectoryPath";
         public const string AgentProgramDirectoryPath = "AgentProgramDirectoryPath";
-
-        public static readonly string[] AllWellKnownEnvironmentVariables
-            = typeof(EnvironmentVariables).GetFields().Select(f => (string)f.GetValue(null)!).ToArray();
     }
 }

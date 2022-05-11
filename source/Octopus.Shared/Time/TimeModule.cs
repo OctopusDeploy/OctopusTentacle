@@ -12,7 +12,6 @@ namespace Octopus.Shared.Time
 
             builder.RegisterType<SystemClock>().AsSelf().As<IClock>().SingleInstance();
             builder.RegisterType<Sleep>().As<ISleep>().SingleInstance();
-            builder.RegisterType<StopWatch>().As<IStopWatch>();
         }
     }
 }

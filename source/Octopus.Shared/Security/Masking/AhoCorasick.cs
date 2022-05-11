@@ -181,25 +181,6 @@ namespace Octopus.Shared.Security.Masking
                 {
                     this.node = node;
                 }
-
-                [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-                public Node[] Children
-                {
-                    get
-                    {
-                        if (node.children != null)
-                            return node.children.Values.ToArray();
-                        if (node.singleNode != null)
-                            return new[] { node.singleNode };
-                        return new Node[0];
-                    }
-                }
-
-                public string Value => node.Value;
-
-                public Node Parent => node.Parent;
-
-                public Node Fail => node.Fail;
             }
         }
 

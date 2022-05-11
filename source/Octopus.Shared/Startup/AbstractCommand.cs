@@ -13,19 +13,6 @@ namespace Octopus.Shared.Startup
             this.LogFileOnlyLogger = logFileOnlyLogger;
         }
         protected ILogFileOnlyLogger LogFileOnlyLogger { get; }
-        static readonly Lazy<List<string>> SpecialLocations = new Lazy<List<string>>(() =>
-        {
-            var result = new List<string>();
-            foreach (var specialLocation in Enum.GetValues(typeof(Environment.SpecialFolder)))
-            {
-                var location = Environment.GetFolderPath((Environment.SpecialFolder)specialLocation!, Environment.SpecialFolderOption.None);
-                result.Add(location);
-            }
-
-            result.Add("C:");
-            result.Add("C:\\");
-            return result;
-        });
 
         readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
         ICommandRuntime? runtime;
@@ -115,37 +102,6 @@ namespace Octopus.Shared.Startup
         void ICommand.Stop()
         {
             Stop();
-        }
-
-        protected void AssertNotNullOrWhitespace(string value, string name, string? errorMessage = null)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                throw new ControlledFailureException(errorMessage ?? $"--{name} must be supplied");
-        }
-
-        protected void AssertFileExists(string path, string? errorMessage = null)
-        {
-            if (!File.Exists(path))
-                throw new ControlledFailureException(errorMessage ?? $"File '{path}' cannot be found");
-        }
-
-        protected void AssertFileDoesNotExist(string path, string? errorMessage = null)
-        {
-            if (File.Exists(path))
-                throw new ControlledFailureException(errorMessage ?? $"A file already exists at '{path}'");
-        }
-
-        protected void AssertDirectoryExists(string path, string? errorMessage = null)
-        {
-            if (!Directory.Exists(path))
-                throw new ControlledFailureException(errorMessage ?? $"Directory '{path}' cannot be found");
-        }
-
-        protected void AssertNotSpecialLocation(string path)
-        {
-            foreach (var specialLocation in SpecialLocations.Value)
-                if (string.Equals(path, specialLocation, StringComparison.OrdinalIgnoreCase))
-                    throw new ControlledFailureException($"Directory '{path}' is not a good place, pick a safe subdirectory");
         }
     }
 }

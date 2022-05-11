@@ -10,8 +10,6 @@ namespace Octopus.Shared.Scripts
         string WorkingDirectory { get; }
         string BootstrapScriptFilePath { get; }
         string[]? ScriptArguments { get; set; }
-        NetworkCredential? RunAs { get; set; }
-        IDictionary<string, string> CustomEnvironmentVariables { get; set; }
         ScriptIsolationLevel IsolationLevel { get; set; }
         TimeSpan ScriptMutexAcquireTimeout { get; set; }
         string? ScriptMutexName { get; set; }

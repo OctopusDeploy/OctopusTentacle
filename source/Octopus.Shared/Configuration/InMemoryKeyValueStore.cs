@@ -15,9 +15,6 @@ namespace Octopus.Shared.Configuration
             this.mapper = mapper;
         }
 
-        public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
-            => mapper.GetConfigurationValue(name);
-
         public (bool foundResult, TData? value) TryGet<TData>(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             object? data = mapper.GetConfigurationValue(name);
@@ -39,17 +36,5 @@ namespace Octopus.Shared.Configuration
 
             return (true, JsonConvert.DeserializeObject<TData>((string)data));
         }
-
-        public bool Set(string name, string? value, ProtectionLevel protectionLevel = ProtectionLevel.None)
-            => false;
-
-        public bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None)
-            => false;
-
-        public bool Remove(string name)
-            => false;
-
-        public bool Save()
-            => false;
     }
 }

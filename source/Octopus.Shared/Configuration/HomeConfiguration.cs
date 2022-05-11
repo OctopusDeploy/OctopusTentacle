@@ -34,15 +34,6 @@ namespace Octopus.Shared.Configuration
             }
         }
 
-        public string? CacheDirectory
-        {
-            get
-            {
-                var value = settings.Get<string?>(OctopusNodeCacheSettingName);
-                return value == null ? ApplicationSpecificHomeDirectory : EnsureRootedPath(value);
-            }
-        }
-
         string? EnsureRootedPath(string path)
         {
             if (Path.IsPathRooted(path))
@@ -80,8 +71,5 @@ namespace Octopus.Shared.Configuration
 
         public bool SetHomeDirectory(string? homeDirectory)
             => settings.Set(OctopusHomeSettingName, homeDirectory);
-
-        public bool SetCacheDirectory(string? cacheDirectory)
-            => settings.Set(OctopusNodeCacheSettingName, cacheDirectory);
     }
 }

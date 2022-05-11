@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Octopus.Shared.Util
 {
@@ -12,22 +11,6 @@ namespace Octopus.Shared.Util
             using (var hasher = new SHA1CryptoServiceProvider())
             {
                 return Sanitize(hasher.ComputeHash(stream));
-            }
-        }
-
-        public static string Hash(byte[] bytes)
-        {
-            using (var hasher = new SHA1CryptoServiceProvider())
-            {
-                return Sanitize(hasher.ComputeHash(bytes));
-            }
-        }
-
-        public static string Hash(string input)
-        {
-            using (var hasher = new SHA1CryptoServiceProvider())
-            {
-                return Sanitize(hasher.ComputeHash(Encoding.UTF8.GetBytes(input)));
             }
         }
 

@@ -96,8 +96,6 @@ namespace Octopus.Shared.Scripts
                     output => writer.WriteOutput(ProcessOutputSource.Debug, output),
                     output => writer.WriteOutput(ProcessOutputSource.StdOut, output),
                     output => writer.WriteOutput(ProcessOutputSource.StdErr, output),
-                    workspace.RunAs,
-                    workspace.CustomEnvironmentVariables,
                     token);
 
                 ExitCode = exitCode;

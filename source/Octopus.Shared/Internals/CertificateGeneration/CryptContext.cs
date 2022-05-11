@@ -26,8 +26,6 @@ namespace Octopus.Shared.Internals.CertificateGeneration
             Flags = 8; // create new keyset
         }
 
-        public IntPtr Handle => handle;
-
         public string ContainerName { get; set; }
         public string ProviderName { get; set; }
         public int ProviderType { get; set; }
@@ -174,20 +172,6 @@ namespace Octopus.Shared.Internals.CertificateGeneration
                 Win32ErrorHelper.ThrowExceptionIfGetLastErrorIsNotZero();
 
             return new KeyExchangeKey(this, keyHandle);
-        }
-
-        SignatureKey GenerateSignatureKey(bool exportable, int keyBitLength)
-        {
-            ThrowIfDisposedOrNotOpen();
-
-            var flags = (exportable ? 1U : 0U) | ((uint)keyBitLength << 16);
-
-            IntPtr keyHandle;
-            var result = Win32Native.CryptGenKey(handle, (int)KeyType.Signature, flags, out keyHandle);
-            if (!result)
-                Win32ErrorHelper.ThrowExceptionIfGetLastErrorIsNotZero();
-
-            return new SignatureKey(this, keyHandle);
         }
 
         internal void DestroyKey(CryptKey key)
