@@ -18,11 +18,6 @@ namespace Octopus.Shared
         public string ParameterName { get; }
     }
 
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
-    public sealed class DisallowNullAttribute : Attribute
-    {
-    }
-
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.ReturnValue)]
     public sealed class MaybeNullAttribute : Attribute
     {

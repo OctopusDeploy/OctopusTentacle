@@ -31,15 +31,6 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             });
         }
 
-        public ExceptionKnowledgeBuilder ExceptionIs<T>()
-            where T : Exception
-        {
-            return ExceptionIs<T>(ex => true,
-                delegate
-                {
-                });
-        }
-
         public ExceptionKnowledgeBuilder ExceptionIs<T>(Func<T, bool> predicate)
             where T : Exception
         {
@@ -47,12 +38,6 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
                 delegate
                 {
                 });
-        }
-
-        public ExceptionKnowledgeBuilder ExceptionIs<T>(Action<T, IDictionary<string, object>> getState)
-            where T : Exception
-        {
-            return ExceptionIs(ex => true, getState);
         }
 
         public ExceptionKnowledgeBuilder ExceptionIs<T>(Func<T, bool> predicate, Action<T, IDictionary<string, object>> getState)
@@ -75,15 +60,6 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
             return this;
         }
 
-        public ExceptionKnowledgeBuilder HasInnerException<T>()
-            where T : Exception
-        {
-            return HasInnerException<T>(ex => true,
-                delegate
-                {
-                });
-        }
-
         public ExceptionKnowledgeBuilder HasInnerException<T>(Func<T, bool> predicate)
             where T : Exception
         {
@@ -91,12 +67,6 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
                 delegate
                 {
                 });
-        }
-
-        public ExceptionKnowledgeBuilder HasInnerException<T>(Action<T, IDictionary<string, object>> getState)
-            where T : Exception
-        {
-            return HasInnerException(ex => true, getState);
         }
 
         public ExceptionKnowledgeBuilder HasInnerException<T>(Func<T, bool> predicate, Action<T, IDictionary<string, object>> getState)
@@ -160,12 +130,6 @@ namespace Octopus.Shared.Diagnostics.KnowledgeBase
         public ExceptionKnowledgeBuilder EntryHelpTextIs(string help)
         {
             return EntryHelpTextIs(s => help);
-        }
-
-        public ExceptionKnowledgeBuilder SuppressException()
-        {
-            logException = false;
-            return this;
         }
 
         public ExceptionKnowledgeBuilder EntryHelpTextIs(Func<IDictionary<string, object>, string> getHelp)

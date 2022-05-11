@@ -10,11 +10,6 @@ namespace Octopus.Shared.Internals.Options
     {
         static readonly char[] NameTerminator = { '=', ':' };
 
-        protected Option(string prototype, string? description)
-            : this(prototype, description, 1)
-        {
-        }
-
         protected Option(string prototype, string? description, int maxValueCount)
         {
             if (prototype == null)
@@ -65,13 +60,6 @@ namespace Octopus.Shared.Internals.Options
 
         public string[] GetNames()
             => (string[])Names.Clone();
-
-        public string[] GetValueSeparators()
-        {
-            if (ValueSeparators == null)
-                return new string[0];
-            return (string[])ValueSeparators.Clone();
-        }
 
         [return: NotNullIfNotNull("value")]
         [return: MaybeNull]

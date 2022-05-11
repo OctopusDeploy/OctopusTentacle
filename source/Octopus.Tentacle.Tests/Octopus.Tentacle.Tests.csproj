@@ -42,6 +42,7 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
   </ItemGroup>
+
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
     <Reference Include="System.IdentityModel" />
   </ItemGroup>

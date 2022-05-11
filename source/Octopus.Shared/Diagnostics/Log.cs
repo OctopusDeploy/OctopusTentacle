@@ -246,21 +246,6 @@ namespace Octopus.Shared.Diagnostics
             WriteFormat(LogCategory.Fatal, exception, format, args);
         }
 
-        public void UpdateProgress(int progressPercentage, string messageText)
-        {
-            SensitiveValueMasker.SafeSanitize(messageText,
-                sanitized => WriteEvent(new LogEvent(CorrelationId,
-                    LogCategory.Progress,
-                    sanitized,
-                    null,
-                    progressPercentage)));
-        }
-
-        public void UpdateProgressFormat(int progressPercentage, string messageFormat, params object[] args)
-        {
-            UpdateProgress(progressPercentage, string.Format(messageFormat, args));
-        }
-
         public virtual void Flush()
         {
             foreach (var appender in GetThreadSafeAppenderCollection())

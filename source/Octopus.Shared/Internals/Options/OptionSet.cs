@@ -15,8 +15,6 @@ namespace Octopus.Shared.Internals.Options
         readonly Regex ValueOption = new Regex(
             @"^(?<flag>--|-|/)(?<name>[^:=]+)((?<sep>[:=])(?<value>.*))?$");
 
-        Action<string[]>? leftovers;
-
         public OptionSet()
             : this(delegate(string f)
             {
@@ -129,44 +127,11 @@ namespace Octopus.Shared.Internals.Options
             return this;
         }
 
-        public OptionSet Add(string prototype, OptionAction<string?, string?> action)
-            => Add(prototype, null, action);
-
-        public OptionSet Add(string prototype, string? description, OptionAction<string?, string?> action)
-        {
-            if (action == null)
-                throw new ArgumentNullException("action");
-            Option p = new ActionOption(prototype,
-                description,
-                2,
-                delegate(OptionValueCollection v)
-                {
-                    action(v[0], v[1]);
-                });
-            base.Add(p);
-            return this;
-        }
-
-        public OptionSet Add<T>(string prototype, Action<T> action)
-            => Add(prototype, null, action);
-
         public OptionSet Add<T>(string prototype, string? description, Action<T> action)
             => Add(new ActionOption<T>(prototype, description, action));
 
-        public OptionSet Add<TKey, TValue>(string prototype, OptionAction<TKey, TValue> action)
-            => Add(prototype, null, action);
-
-        public OptionSet Add<TKey, TValue>(string prototype, string? description, OptionAction<TKey, TValue> action)
-            => Add(new ActionOption<TKey, TValue>(prototype, description, action));
-
         protected virtual OptionContext CreateOptionContext()
             => new OptionContext(this);
-
-        public OptionSet WithExtras(Action<string[]> leftovers)
-        {
-            this.leftovers = leftovers;
-            return this;
-        }
 
         public List<string> Parse(IEnumerable<string> arguments)
         {
@@ -193,9 +158,6 @@ namespace Octopus.Shared.Internals.Options
             var r = unprocessed.ToList();
 
             c.Option?.Invoke(c);
-
-            if (leftovers != null && r.Count > 0)
-                leftovers(r.ToArray());
 
             return r;
         }
@@ -636,26 +598,6 @@ namespace Octopus.Shared.Internals.Options
             protected override void OnParseComplete(OptionContext c)
             {
                 action(Parse<T>(c.OptionValues[0], c));
-            }
-        }
-
-        sealed class ActionOption<TKey, TValue> : Option
-        {
-            readonly OptionAction<TKey, TValue> action;
-
-            public ActionOption(string prototype, string? description, OptionAction<TKey, TValue> action)
-                : base(prototype, description, 2)
-            {
-                if (action == null)
-                    throw new ArgumentNullException("action");
-                this.action = action;
-            }
-
-            protected override void OnParseComplete(OptionContext c)
-            {
-                action(
-                    Parse<TKey>(c.OptionValues[0], c),
-                    Parse<TValue>(c.OptionValues[1], c));
             }
         }
     }

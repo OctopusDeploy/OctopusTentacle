@@ -15,8 +15,6 @@ namespace Octopus.Shared.Internals.CertificateGeneration
 
         internal IntPtr Handle { get; }
 
-        public abstract KeyType Type { get; }
-
         protected override void CleanUp(bool viaDispose)
         {
             // keys are invalid once CryptContext is closed,

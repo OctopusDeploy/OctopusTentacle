@@ -1,11 +1,9 @@
 ﻿#if FULL_FRAMEWORK
-using System.Data.SqlClient;
 #else
 using Microsoft.Data.SqlClient;
 #endif
 using System;
 using System.Linq;
-using System.Text;
 using Autofac;
 using Octopus.Diagnostics;
 using Octopus.Shared.Startup;
@@ -24,23 +22,4 @@ namespace Octopus.Shared.Diagnostics
             builder.Register(c => new LogFileOnlyLogger()).As<ILogFileOnlyLogger>().InstancePerLifetimeScope();
         }
     }
-
-    class SqlPrettyPrintHandler : ICustomPrettyPrintHandler<SqlException>
-    {
-        public bool Handle(StringBuilder sb, SqlException ex)
-        {
-            var number = ex.Number;
-            sb.AppendLine($"SQL Error {number} - {ex.Message}");
-            return true;
-        }
-    }
-    class ControlledFailureExceptionPrettyPrintHandler : ICustomPrettyPrintHandler<ControlledFailureException>
-    {
-        public bool Handle(StringBuilder sb, ControlledFailureException ex)
-        {
-            sb.AppendLine(ex.Message);
-            return false;
-        }
-    }
-
 }

@@ -29,9 +29,6 @@ namespace Octopus.Shared.Internals.Options
 
         #endregion
 
-        public List<string?> ToList()
-            => new List<string?>(values);
-
         public string?[] ToArray()
             => values.ToArray();
 

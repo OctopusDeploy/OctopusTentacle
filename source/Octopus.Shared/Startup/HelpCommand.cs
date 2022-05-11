@@ -29,10 +29,6 @@ namespace Octopus.Shared.Startup
 
         public string Format { get; set; } = TextFormat;
 
-        public void WriteHelp(TextWriter writer)
-        {
-        }
-
         public override void Start(string[] commandLineArguments, ICommandRuntime commandRuntime, OptionSet commonOptions)
         {
             base.Start(commandLineArguments, commandRuntime, commonOptions);

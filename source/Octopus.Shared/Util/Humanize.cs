@@ -1,27 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Octopus.Shared.Util
 {
     public static class Humanize
     {
-        public static string FriendlyDuration(this TimeSpan time)
-        {
-            if (time.TotalSeconds < 1) return "less than a second";
-            if (time.TotalMinutes < 1) return Format(time.TotalSeconds, "second");
-            if (time.TotalHours < 1) return Format(time.TotalMinutes, "minute");
-            if (time.TotalDays < 1) return Format(time.TotalHours, "hour");
-            return Format(time.TotalDays, "day");
-        }
-
-        static string Format(double totalUnits, string unit)
-        {
-            var floor = (int)Math.Round(totalUnits);
-            return string.Format("{0:n0} {1}", floor, unit.Plural(floor));
-        }
-
         public static string Plural(this string simpleNoun, int count = 2)
         {
             if (simpleNoun == null) throw new ArgumentNullException("simpleNoun");
@@ -76,8 +60,5 @@ namespace Octopus.Shared.Util
 
             return result.ToString();
         }
-
-        public static string SplitPascalCase(string name)
-            => Regex.Replace(name, "([a-z])([A-Z])", "$1 $2");
     }
 }

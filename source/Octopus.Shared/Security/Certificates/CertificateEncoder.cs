@@ -42,17 +42,6 @@ namespace Octopus.Shared.Security.Certificates
             return x509Certificate;
         }
 
-        public static X509Certificate2 FromBase64StringPublicKeyOnly(string certificateString)
-        {
-            var raw = Convert.FromBase64String(certificateString);
-            // If the certificateString really is a public key then nothing is written to disk no matter the flags.
-            // However if this is given a non public key then we would write it to disk using the default
-            // ctor that just takes byte[].
-            // By using the keySet flag, if we are wrongly given a private key we wont write to disk
-            // if the framework supports that.
-            return newX509Certificate2(raw, (string) null!, keySet);
-        }
-
         public static byte[] Export(X509Certificate2 certificate)
             => certificate.Export(X509ContentType.Pfx);
 
@@ -74,25 +63,6 @@ namespace Octopus.Shared.Security.Certificates
             return FromBase64String(thumbprint, certificateString, password, log, false);
         }
 
-        /// <summary>
-        /// Decodes a certificate and writes it to the store.
-        /// </summary>
-        /// <remarks>
-        /// Ideally this behaviour wouldn't be in this class, however all FromBase64String methods used to write the certificate
-        /// to the store. This method remains so it is possible to make use of that exact behaviour.
-        /// </remarks>
-        /// <param name="thumbprint"></param>
-        /// <param name="certificateStringBase64"></param>
-        /// <param name="password"></param>
-        /// <param name="log"></param>
-        /// <returns></returns>
-        public static X509Certificate2 WriteCertificateToStore(string? thumbprint, string certificateStringBase64, string? password, ILog log)
-        {
-            return FromBase64String(thumbprint, certificateStringBase64, password, log, true);
-        }
-        
-        
-        
         static X509Certificate2 FromBase64String(string? thumbprint, string certificateString, string? password, ILog log, bool storeInKeyStore)
         {
             if (certificateString == null) throw new ArgumentNullException(nameof(certificateString));

@@ -13,8 +13,6 @@ namespace Octopus.Shared.Startup
     {
         void Info(string message);
         void Warn(string message);
-        void Error(string message);
-        void Error(Exception ex, string message);
         void Fatal(string message);
         void AddSensitiveValues(string[] values);
     }
@@ -57,8 +55,6 @@ namespace Octopus.Shared.Startup
 
         public void Info(string message) => Masker.SafeSanitize(message, s => Log.Info(s));
         public void Warn(string message) => Masker.SafeSanitize(message, s => Log.Warn(s));
-        public void Error(string message) => Masker.SafeSanitize(message, s => Log.Error(s));
-        public void Error(Exception ex, string message) => Masker.SafeSanitize(message, s => Log.Error(ex, s));
         public void Fatal(string message) => Masker.SafeSanitize(message, s => Log.Fatal(s));
 
         public void AddSensitiveValues(string[] values)
