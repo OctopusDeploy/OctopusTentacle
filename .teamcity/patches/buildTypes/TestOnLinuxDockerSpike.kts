@@ -62,7 +62,7 @@ create(DslContext.projectId, BuildType({
             publisher = github {
                 githubUrl = "https://api.github.com"
                 authType = personalToken {
-                    token = "credentialsJSON:70b760a0-25e3-406b-9ed2-d73026115dc1"
+                    token = "credentialsJSON:7416c240-5c67-48ed-97a3-f5fe49d0e744"
                 }
             }
         }
