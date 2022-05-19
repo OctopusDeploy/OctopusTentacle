@@ -1,6 +1,8 @@
 package patches.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.v2019_2.*
+import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.CommitStatusPublisher
+import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.commitStatusPublisher
 import jetbrains.buildServer.configs.kotlin.v2019_2.ui.*
 
 /*
@@ -12,6 +14,25 @@ changeBuildType(RelativeId("Build")) {
     params {
         add {
             param("env.Git_Branch", "${DslContext.settingsRoot.paramRefs.buildVcsBranch}")
+        }
+    }
+
+    features {
+        val feature1 = find<CommitStatusPublisher> {
+            commitStatusPublisher {
+                publisher = github {
+                    githubUrl = "https://api.github.com"
+                    authType = password {
+                        userName = "bob@octopus.com"
+                        password = "credentialsJSON:3ff28a52-158e-4221-ad49-1075f1762644"
+                    }
+                }
+                param("github_oauth_provider_id", "PROJECT_EXT_17")
+                param("github_oauth_user", "Octobob")
+            }
+        }
+        feature1.apply {
+            param("secure:github_access_token", "credentialsJSON:7416c240-5c67-48ed-97a3-f5fe49d0e744")
         }
     }
 
