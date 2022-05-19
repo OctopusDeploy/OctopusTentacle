@@ -1,6 +1,8 @@
 package patches.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.v2019_2.*
+import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.CommitStatusPublisher
+import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.commitStatusPublisher
 import jetbrains.buildServer.configs.kotlin.v2019_2.ui.*
 
 /*
@@ -9,6 +11,27 @@ To apply the patch, change the buildType with id = 'TestOnWindows'
 accordingly, and delete the patch script.
 */
 changeBuildType(RelativeId("TestOnWindows")) {
+    features {
+        val feature1 = find<CommitStatusPublisher> {
+            commitStatusPublisher {
+                publisher = github {
+                    githubUrl = "https://api.github.com"
+                    authType = personalToken {
+                        token = "credentialsJSON:70b760a0-25e3-406b-9ed2-d73026115dc1"
+                    }
+                }
+            }
+        }
+        feature1.apply {
+            publisher = github {
+                githubUrl = "https://api.github.com"
+                authType = personalToken {
+                    token = "credentialsJSON:7416c240-5c67-48ed-97a3-f5fe49d0e744"
+                }
+            }
+        }
+    }
+
     requirements {
         add {
             exists("system.Octopus.DotnetSdk3.1")
