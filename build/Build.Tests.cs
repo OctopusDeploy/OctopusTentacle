@@ -29,7 +29,8 @@ partial class Build
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:trusty", "deb"), // 14.04
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:xenial", "deb"), // 16.04
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "centos:7", "rpm"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:latest", "rpm"),
+        // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:latest", "rpm"), // Fedora 36 doesn't support netcore, related https://github.com/dotnet/core/issues/7467 (there is no issue for Fedora 36)
+        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:35", "rpm"),
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel7", "rpm"),
         new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel8", "rpm"),
     };
