@@ -7,6 +7,7 @@ using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.SignTool;
+using Serilog;
 
 public static class Signing
 {
@@ -27,7 +28,7 @@ public static class Signing
 
                 if (fileInfo.IsReadOnly)
                 {
-                    Logger.Info($"{file} is readonly. Making it writeable.");
+                    Log.Information($"{file} is readonly. Making it writeable.");
                     fileInfo.IsReadOnly = false;
                 }
             }
@@ -37,12 +38,12 @@ public static class Signing
                 && string.IsNullOrEmpty(Build.AzureKeyVaultAppSecret)
                 && string.IsNullOrEmpty(Build.AzureKeyVaultCertificateName))
             { 
-                Logger.Info("Signing files using signtool and the self-signed development code signing certificate.");
+                Log.Information("Signing files using signtool and the self-signed development code signing certificate.");
                 SignWithSignTool(files);
             }
             else
             {
-                Logger.Info("Signing files using azuresigntool and the production code signing certificate.");
+                Log.Information("Signing files using azuresigntool and the production code signing certificate.");
                 SignWithAzureSignTool(files);
             }
         });
@@ -116,7 +117,7 @@ public static class Signing
 
                     Build.AzureSignTool(arguments);
         
-                    Logger.Info($"Finished signing {files.Length} files.");
+                    Log.Information($"Finished signing {files.Length} files.");
                 }
                 catch (Exception e)
                 {

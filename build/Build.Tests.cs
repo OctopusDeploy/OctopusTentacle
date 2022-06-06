@@ -12,6 +12,7 @@ using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Docker;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Utilities.Collections;
+using Serilog;
 
 partial class Build
 {
@@ -71,11 +72,11 @@ partial class Build
                     if (string.IsNullOrEmpty(archSuffix)) throw new NotSupportedException();
 
                     var searchForTestFileDirectory = ArtifactsDirectory / testConfiguration.PackageType;
-                    Logger.Info($"Searching for files in {searchForTestFileDirectory}");
+                    Log.Information($"Searching for files in {searchForTestFileDirectory}");
                     var packageTypeFilePath = searchForTestFileDirectory.GlobFiles($"*{archSuffix}.{testConfiguration.PackageType}")
                         .Single();
                     var packageFile = Path.GetFileName(packageTypeFilePath);
-                    Logger.Info($"Testing Linux package file {packageFile}");
+                    Log.Information($"Testing Linux package file {packageFile}");
 
                     var testScriptsBindMountPoint = RootDirectory / "linux-packages" / "test-scripts";
 
@@ -129,17 +130,17 @@ partial class Build
                     UninstallMsi(installerPath);
                 }
                 
-                Logger.Info($"BUILTIN\\Users do not have write access to {destination}. Hooray!");
+                Log.Information($"BUILTIN\\Users do not have write access to {destination}. Hooray!");
             }
 
             void InstallMsi(AbsolutePath installerPath, AbsolutePath destination)
             {
                 var installLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.install.log");
 
-                Logger.Info($"Installing {installerPath} to {destination}");
+                Log.Information($"Installing {installerPath} to {destination}");
 
                 var arguments = $"/i {installerPath} /QN INSTALLLOCATION={destination} /L*V {installLogName}";
-                Logger.Info($"Running msiexec {arguments}");
+                Log.Information($"Running msiexec {arguments}");
                 var installationProcess = ProcessTasks.StartProcess("msiexec", arguments);
                 installationProcess.WaitForExit();
                 FileSystemTasks.CopyFileToDirectory(installLogName, ArtifactsDirectory);
@@ -150,11 +151,11 @@ partial class Build
             
             void UninstallMsi(AbsolutePath installerPath)
             {
-                Logger.Info($"Uninstalling {installerPath}");
+                Log.Information($"Uninstalling {installerPath}");
                 var uninstallLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.uninstall.log");
 
                 var arguments = $"/x {installerPath} /QN /L*V {uninstallLogName}";
-                Logger.Info($"Running msiexec {arguments}");
+                Log.Information($"Running msiexec {arguments}");
                 var uninstallProcess = ProcessTasks.StartProcess("msiexec", arguments);
                 uninstallProcess.WaitForExit();
                 FileSystemTasks.CopyFileToDirectory(uninstallLogName, ArtifactsDirectory);
@@ -194,7 +195,7 @@ partial class Build
     
     void RunTests(string testFramework, string testRuntime)
     {
-        Logger.Info($"Running test for Framework: {testFramework} and Runtime: {testRuntime}");
+        Log.Information($"Running test for Framework: {testFramework} and Runtime: {testRuntime}");
 
         FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
             

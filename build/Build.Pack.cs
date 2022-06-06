@@ -10,9 +10,33 @@ using Nuke.Common.Tools.Chocolatey;
 using Nuke.Common.Tools.Docker;
 using Nuke.Common.Tools.MSBuild;
 using Nuke.Common.Utilities.Collections;
+using Serilog;
 
 partial class Build
 {
+    [PublicAPI]
+    Target PackOsxTarballs => _ => _
+        .Description("Packs the OS/X tarballs containing the published binaries.")
+        .DependsOn(BuildOsx)
+        .Executes(() =>
+        {
+            RuntimeIds.Where(x => x.StartsWith("osx-")).ForEach(PackTarballs);
+        });
+
+    [PublicAPI]
+    Target PackOsx => _ => _
+        .Description("Packs all the OSX targets.")
+        .DependsOn(PackOsxTarballs);
+
+    [PublicAPI]
+    Target PackLinuxTarballs => _ => _
+        .Description("Packs the Linux tarballs containing the published binaries.")
+        .DependsOn(BuildLinux)
+        .Executes(() =>
+        {
+            RuntimeIds.Where(x => x.StartsWith("linux-")).ForEach(PackTarballs);
+        });
+
     [PublicAPI]
     Target PackLinuxPackagesLegacy => _ => _
         .Description("Legacy task until we can split creation of .rpm and .deb packages into their own tasks")
@@ -89,32 +113,36 @@ partial class Build
         .DependsOn(PackLinuxPackagesLegacy);
 
     [PublicAPI]
-    Target PackChocolateyPackage => _ => _
-        .Description("Packs the Chocolatey installer.")
-        .DependsOn(PackWindowsInstallers)
+    Target PackLinux => _ => _
+        .Description("Packs all the Linux targets.")
+        .DependsOn(PackDebianPackage)
+        .DependsOn(PackRedHatPackage);
+
+    [PublicAPI]
+    Target PackWindowsZips => _ => _
+        .Description("Packs the Windows .zip files containing the published binaries.")
+        .DependsOn(BuildWindows)
         .Executes(() =>
         {
-            FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "chocolatey");
+            FileSystemTasks.EnsureCleanDirectory(ArtifactsDirectory / "zip");
 
-            var md5Checksum = FileSystemTasks.GetFileHash(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}.msi");
-            Logger.Info($"MD5 Checksum: Octopus.Tentacle.msi = {md5Checksum}");
+            foreach (var runtimeId in RuntimeIds.Where(x => x.StartsWith("win")))
+            {
+                var framework = runtimeId.Equals("win") ? NetFramework : NetCore;
 
-            var md5ChecksumX64 = FileSystemTasks.GetFileHash(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-x64.msi");
-            Logger.Info($"Checksum: Octopus.Tentacle-x64.msi = {md5ChecksumX64}");
+                var workingDirectory = BuildDirectory / "zip" / framework / runtimeId;
+                var workingTentacleDirectory = workingDirectory / "tentacle";
 
-            var chocolateyInstallScriptPath = SourceDirectory / "Chocolatey" / "chocolateyInstall.ps1";
-            using var chocolateyInstallScriptFile = new ModifiableFileWithRestoreContentsOnDispose(chocolateyInstallScriptPath);
+                FileSystemTasks.EnsureCleanDirectory(workingDirectory);
+                FileSystemTasks.EnsureCleanDirectory(workingTentacleDirectory);
 
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("0.0.0", OctoVersionInfo.FullSemVer);
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum>", md5Checksum);
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype>", "md5");
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum64>", md5ChecksumX64);
-            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype64>", "md5");
+                (BuildDirectory / "Tentacle" / framework / runtimeId).GlobFiles($"*")
+                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingTentacleDirectory));
 
-            ChocolateyTasks.ChocolateyPack(settings => settings
-                .SetPathToNuspec(SourceDirectory / "Chocolatey" / "OctopusDeploy.Tentacle.nuspec")
-                .SetVersion(OctoVersionInfo.NuGetVersion)
-                .SetOutputDirectory(ArtifactsDirectory / "chocolatey"));
+                ZipFile.CreateFromDirectory(
+                    workingDirectory,
+                    ArtifactsDirectory / "zip" / $"tentacle-{OctoVersionInfo.FullSemVer}-{framework}-{runtimeId}.zip");
+            }
         });
 
     [PublicAPI]
@@ -201,6 +229,41 @@ partial class Build
         });
 
     [PublicAPI]
+    Target PackChocolateyPackage => _ => _
+        .Description("Packs the Chocolatey installer.")
+        .DependsOn(PackWindowsInstallers)
+        .Executes(() =>
+        {
+            FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "chocolatey");
+
+            var md5Checksum = FileSystemTasks.GetFileHash(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}.msi");
+            Log.Information($"MD5 Checksum: Octopus.Tentacle.msi = {md5Checksum}");
+
+            var md5ChecksumX64 = FileSystemTasks.GetFileHash(ArtifactsDirectory / "msi" / $"Octopus.Tentacle.{OctoVersionInfo.FullSemVer}-x64.msi");
+            Log.Information($"Checksum: Octopus.Tentacle-x64.msi = {md5ChecksumX64}");
+
+            var chocolateyInstallScriptPath = SourceDirectory / "Chocolatey" / "chocolateyInstall.ps1";
+            using var chocolateyInstallScriptFile = new ModifiableFileWithRestoreContentsOnDispose(chocolateyInstallScriptPath);
+
+            chocolateyInstallScriptFile.ReplaceRegexInFiles("0.0.0", OctoVersionInfo.FullSemVer);
+            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum>", md5Checksum);
+            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype>", "md5");
+            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksum64>", md5ChecksumX64);
+            chocolateyInstallScriptFile.ReplaceRegexInFiles("<checksumtype64>", "md5");
+
+            ChocolateyTasks.ChocolateyPack(settings => settings
+                .SetPathToNuspec(SourceDirectory / "Chocolatey" / "OctopusDeploy.Tentacle.nuspec")
+                .SetVersion(OctoVersionInfo.NuGetVersion)
+                .SetOutputDirectory(ArtifactsDirectory / "chocolatey"));
+        });
+
+    [PublicAPI]
+    Target PackWindows => _ => _
+        .Description("Packs all the Windows targets.")
+        .DependsOn(PackWindowsZips)
+        .DependsOn(PackChocolateyPackage);
+
+    [PublicAPI]
     Target PackCrossPlatformBundle => _ => _
         .Description("Packs the cross-platform Tentacle.nupkg used by Octopus Server to dynamically upgrade Tentacles.")
         .Executes(() =>
@@ -250,93 +313,26 @@ partial class Build
                 }
             }
 
-            ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / "Octopus.Tentacle.msi"), "Missing Octopus.Tentacle.msi");
-            ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / "Octopus.Tentacle-x64.msi"), "Missing Octopus.Tentacle-x64.msi");
-            ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / "Octopus.Tentacle.Upgrader.exe"), "Missing Octopus.Tentacle.Upgrader.exe");
-            ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / debAmd64PackageFilename), $"Missing {debAmd64PackageFilename}");
-            ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / debArm64PackageFilename), $"Missing {debArm64PackageFilename}");
-            ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / debArm32PackageFilename), $"Missing {debArm32PackageFilename}");
-            ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / rpmArm64PackageFilename), $"Missing {rpmArm64PackageFilename}");
-            ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / rpmArm32PackageFilename), $"Missing {rpmArm32PackageFilename}");
-            ControlFlow.Assert(FileSystemTasks.FileExists(workingDirectory / rpmx64PackageFilename), $"Missing {rpmx64PackageFilename}");
+            Assert.True((workingDirectory / "Octopus.Tentacle.msi").FileExists(), "Missing Octopus.Tentacle.msi");
+            Assert.True((workingDirectory / "Octopus.Tentacle-x64.msi").FileExists(), "Missing Octopus.Tentacle-x64.msi");
+            Assert.True((workingDirectory / "Octopus.Tentacle.Upgrader.exe").FileExists(), "Missing Octopus.Tentacle.Upgrader.exe");
+            Assert.True((workingDirectory / debAmd64PackageFilename).FileExists(), $"Missing {debAmd64PackageFilename}");
+            Assert.True((workingDirectory / debArm64PackageFilename).FileExists(), $"Missing {debArm64PackageFilename}");
+            Assert.True((workingDirectory / debArm32PackageFilename).FileExists(), $"Missing {debArm32PackageFilename}");
+            Assert.True((workingDirectory / rpmArm64PackageFilename).FileExists(), $"Missing {rpmArm64PackageFilename}");
+            Assert.True((workingDirectory / rpmArm32PackageFilename).FileExists(), $"Missing {rpmArm32PackageFilename}");
+            Assert.True((workingDirectory / rpmx64PackageFilename).FileExists(), $"Missing {rpmx64PackageFilename}");
 
-            var description = "The deployment agent that is installed on each machine you plan to deploy to using Octopus.";
-            var author = "Octopus Deploy";
-            var title = "Octopus Tentacle cross platform bundle";
+            const string description = "The deployment agent that is installed on each machine you plan to deploy to using Octopus.";
+            const string author = "Octopus Deploy";
+            const string title = "Octopus Tentacle cross platform bundle";
             OctoCliTool($@"pack --id=Octopus.Tentacle.CrossPlatformBundle --version={OctoVersionInfo.FullSemVer} --basePath={workingDirectory} --outFolder={ArtifactsDirectory / "nuget"} --author=""{author}"" --title=""{title}"" --description=""{description}""");
         });
-
-    [PublicAPI]
-    Target PackWindows => _ => _
-        .Description("Packs all the Windows targets.")
-        .DependsOn(BuildWindows)
-        .DependsOn(PackWindowsZips)
-        .DependsOn(PackChocolateyPackage)
-        .DependsOn(PackWindowsInstallers);
-
-    [PublicAPI]
-    Target PackOsx => _ => _
-        .Description("Packs all the OSX targets.")
-        .DependsOn(BuildOsx)
-        .DependsOn(PackOsxTarballs);
 
     [PublicAPI]
     Target Pack => _ => _
         .Description("Pack all the artifacts. Notional task - running this on a single host is possible but cumbersome.")
         .DependsOn(PackCrossPlatformBundle);
-
-    [PublicAPI]
-    Target PackWindowsZips => _ => _
-        .Description("Packs the Windows .zip files containing the published binaries.")
-        .DependsOn(BuildWindows)
-        .Executes(() =>
-        {
-            FileSystemTasks.EnsureCleanDirectory(ArtifactsDirectory / "zip");
-
-            foreach (var runtimeId in RuntimeIds.Where(x => x.StartsWith("win")))
-            {
-                var framework = runtimeId.Equals("win") ? NetFramework : NetCore;
-
-                var workingDirectory = BuildDirectory / "zip" / framework / runtimeId;
-                var workingTentacleDirectory = workingDirectory / "tentacle";
-
-                FileSystemTasks.EnsureCleanDirectory(workingDirectory);
-                FileSystemTasks.EnsureCleanDirectory(workingTentacleDirectory);
-
-                (BuildDirectory / "Tentacle" / framework / runtimeId).GlobFiles($"*")
-                    .ForEach(x => FileSystemTasks.CopyFileToDirectory(x, workingTentacleDirectory));
-
-                ZipFile.CreateFromDirectory(
-                    workingDirectory,
-                    ArtifactsDirectory / "zip" / $"tentacle-{OctoVersionInfo.FullSemVer}-{framework}-{runtimeId}.zip");
-            }
-        });
-
-    [PublicAPI]
-    Target PackLinuxTarballs => _ => _
-        .Description("Packs the Linux tarballs containing the published binaries.")
-        .DependsOn(BuildLinux)
-        .Executes(() =>
-        {
-            RuntimeIds.Where(x => x.StartsWith("linux-")).ForEach(PackTarballs);
-        });
-
-    [PublicAPI]
-    Target PackOsxTarballs => _ => _
-        .Description("Packs the OS/X tarballs containing the published binaries.")
-        .DependsOn(BuildOsx)
-        .Executes(() =>
-        {
-            RuntimeIds.Where(x => x.StartsWith("osx-")).ForEach(PackTarballs);
-        });
-
-    [PublicAPI]
-    Target PackLinux => _ => _
-        .Description("Packs all the Linux targets.")
-        .DependsOn(BuildLinux)
-        .DependsOn(PackLinuxTarballs)
-        .DependsOn(PackDebianPackage)
-        .DependsOn(PackRedHatPackage);
 
     void PackTarballs(string runtimeId)
     {
