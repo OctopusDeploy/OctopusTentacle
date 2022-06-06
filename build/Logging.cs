@@ -45,7 +45,7 @@ public static class Logging
         catch (Exception ex)
         {
             if (TeamCity.Instance != null) Console.WriteLine($"##teamcity[testFailed name='{test}' message='{ex.Message}']");
-            Logger.Error(ex.ToString());
+            Log.Error(ex.ToString());
         }
         finally
         {
