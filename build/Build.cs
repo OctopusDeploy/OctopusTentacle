@@ -35,8 +35,6 @@ partial class Build : NukeBuild
     /// - JetBrains Rider            https://nuke.build/rider
     /// - Microsoft VisualStudio     https://nuke.build/visualstudio
     /// - Microsoft VSCode           https://nuke.build/vscode
-    [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
-    readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
     [Solution(GenerateProjects = true)] readonly Solution Solution = null!;
 
@@ -231,10 +229,10 @@ partial class Build : NukeBuild
 
     void RunBuildFor(string framework, string runtimeId)
     {
-        var configuration = $"{Configuration}-{framework}-{runtimeId}";
+        var configuration = $"Release-{framework}-{runtimeId}";
         
         DotNetPublish(p => p
-            .SetProject(Solution.Octopus_Tentacle)
+            .SetProject(SourceDirectory / "Tentacle.sln")
             .SetConfiguration(configuration)
             .SetFramework(framework)
             .SetRuntime(runtimeId)
