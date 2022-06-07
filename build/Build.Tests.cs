@@ -34,7 +34,7 @@ partial class Build
     [PublicAPI]
     Target TestLinuxPackages => _ => _
         .Description("Tests installing the .deb and .rpm packages onto all of the Linux target distributions.")
-        .DependsOn(BuildLinux)
+        .DependsOn(PackLinux)
         .Executes(() =>
         {
             void RunLinuxPackageTestsFor(TestConfigurationOnLinuxDistribution testConfiguration)
@@ -106,7 +106,7 @@ partial class Build
     [PublicAPI]
     //todo: move this out of the build script to a proper test project ("smoke tests"?)
     Target TestWindowsInstallerPermissions => _ => _
-        .DependsOn(BuildWindows)
+        .DependsOn(PackWindowsInstallers)
         .Executes(() =>
         {
             string GetTestName(AbsolutePath installerPath) => Path.GetFileName(installerPath).Replace(".msi", "");
