@@ -34,6 +34,7 @@ partial class Build
     [PublicAPI]
     Target TestLinuxPackages => _ => _
         .Description("Tests installing the .deb and .rpm packages onto all of the Linux target distributions.")
+        .DependsOn(BuildLinux)
         .Executes(() =>
         {
             void RunLinuxPackageTestsFor(TestConfigurationOnLinuxDistribution testConfiguration)
@@ -84,13 +85,13 @@ partial class Build
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldstable-slim", "deb"),
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:stable-slim", "deb"),
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "linuxmintd/mint19.3-amd64", "deb"),
-                // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:latest", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
-                // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:rolling", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:latest", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:rolling", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:focal", "deb"), // 20.04
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:trusty", "deb"), // 14.04
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:xenial", "deb"), // 16.04
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "centos:7", "rpm"),
-                // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:latest", "rpm"), // Fedora 36 doesn't support netcore, related https://github.com/dotnet/core/issues/7467 (there is no issue for Fedora 36)
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:latest", "rpm"), // Fedora 36 doesn't support netcore, related https://github.com/dotnet/core/issues/7467 (there is no issue for Fedora 36)
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:35", "rpm"),
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel7", "rpm"),
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel8", "rpm"),
@@ -105,6 +106,7 @@ partial class Build
     [PublicAPI]
     //todo: move this out of the build script to a proper test project ("smoke tests"?)
     Target TestWindowsInstallerPermissions => _ => _
+        .DependsOn(BuildWindows)
         .Executes(() =>
         {
             string GetTestName(AbsolutePath installerPath) => Path.GetFileName(installerPath).Replace(".msi", "");
