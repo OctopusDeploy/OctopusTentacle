@@ -48,7 +48,7 @@ FPM_OPTS=(
   --before-remove "$INPUT_PATH/before-uninstall.sh"
 )
 FPM_DEB_OPTS=(
-  --depends 'libssl1.0.0 | libssl1.0.2 | libssl1.1'
+  --depends 'libssl1.0.0 | libssl1.0.2 | libssl1.1 | libssl3'
   --architecture "$DEB_PACKAGE_ARCHITECTURE"
 )
 FPM_RPM_OPTS=(
