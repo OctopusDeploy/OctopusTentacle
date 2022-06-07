@@ -48,7 +48,9 @@ FPM_OPTS=(
   --before-remove "$INPUT_PATH/before-uninstall.sh"
 )
 FPM_DEB_OPTS=(
+  --depends 'liblttng-ust0 | liblttng-ust1'
   --depends 'libssl1.0.0 | libssl1.0.2 | libssl1.1 | libssl3'
+  --depends 'libicu52 | libicu55 | libicu57 | libicu60 | libicu63 | libicu66 | libicu67 | libicu70'
   --architecture "$DEB_PACKAGE_ARCHITECTURE"
 )
 FPM_RPM_OPTS=(
