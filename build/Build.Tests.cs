@@ -12,29 +12,10 @@ using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Docker;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Utilities.Collections;
+using Serilog;
 
 partial class Build
 {
-
-    readonly List<TestConfigurationOnLinuxDistribution> TestOnLinuxDistributions = new()
-    {
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:buster", "deb"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldoldstable-slim", "deb"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldstable-slim", "deb"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:stable-slim", "deb"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "linuxmintd/mint19.3-amd64", "deb"),
-        // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:latest", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
-        // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:rolling", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:focal", "deb"), // 20.04
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:trusty", "deb"), // 14.04
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:xenial", "deb"), // 16.04
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "centos:7", "rpm"),
-        // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:latest", "rpm"), // Fedora 36 doesn't support netcore, related https://github.com/dotnet/core/issues/7467 (there is no issue for Fedora 36)
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:35", "rpm"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel7", "rpm"),
-        new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel8", "rpm"),
-    };
-
     [PublicAPI]
     Target TestWindows => _ => _
         .DependsOn(BuildWindows)
@@ -71,11 +52,11 @@ partial class Build
                     if (string.IsNullOrEmpty(archSuffix)) throw new NotSupportedException();
 
                     var searchForTestFileDirectory = ArtifactsDirectory / testConfiguration.PackageType;
-                    Logger.Info($"Searching for files in {searchForTestFileDirectory}");
+                    Log.Information($"Searching for files in {searchForTestFileDirectory}");
                     var packageTypeFilePath = searchForTestFileDirectory.GlobFiles($"*{archSuffix}.{testConfiguration.PackageType}")
                         .Single();
                     var packageFile = Path.GetFileName(packageTypeFilePath);
-                    Logger.Info($"Testing Linux package file {packageFile}");
+                    Log.Information($"Testing Linux package file {packageFile}");
 
                     var testScriptsBindMountPoint = RootDirectory / "linux-packages" / "test-scripts";
 
@@ -96,7 +77,27 @@ partial class Build
                 });
             }
             
-            foreach (var testConfiguration in TestOnLinuxDistributions)
+            List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions = new()
+            {
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:buster", "deb"),
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldoldstable-slim", "deb"),
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldstable-slim", "deb"),
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:stable-slim", "deb"),
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "linuxmintd/mint19.3-amd64", "deb"),
+                // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:latest", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
+                // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:rolling", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:focal", "deb"), // 20.04
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:bionic", "deb"), // 18.04
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:xenial", "deb"), // 16.04
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:trusty", "deb"), // 14.04
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "centos:7", "rpm"),
+                // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:latest", "rpm"), // Fedora 36 doesn't support netcore, related https://github.com/dotnet/core/issues/7467 (there is no issue for Fedora 36)
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:35", "rpm"),
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel7", "rpm"),
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel8", "rpm"),
+            };
+            
+            foreach (var testConfiguration in testOnLinuxDistributions)
             {
                 RunLinuxPackageTestsFor(testConfiguration);
             }
@@ -129,17 +130,17 @@ partial class Build
                     UninstallMsi(installerPath);
                 }
                 
-                Logger.Info($"BUILTIN\\Users do not have write access to {destination}. Hooray!");
+                Log.Information($"BUILTIN\\Users do not have write access to {destination}. Hooray!");
             }
 
             void InstallMsi(AbsolutePath installerPath, AbsolutePath destination)
             {
                 var installLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.install.log");
 
-                Logger.Info($"Installing {installerPath} to {destination}");
+                Log.Information($"Installing {installerPath} to {destination}");
 
                 var arguments = $"/i {installerPath} /QN INSTALLLOCATION={destination} /L*V {installLogName}";
-                Logger.Info($"Running msiexec {arguments}");
+                Log.Information($"Running msiexec {arguments}");
                 var installationProcess = ProcessTasks.StartProcess("msiexec", arguments);
                 installationProcess.WaitForExit();
                 FileSystemTasks.CopyFileToDirectory(installLogName, ArtifactsDirectory);
@@ -150,11 +151,11 @@ partial class Build
             
             void UninstallMsi(AbsolutePath installerPath)
             {
-                Logger.Info($"Uninstalling {installerPath}");
+                Log.Information($"Uninstalling {installerPath}");
                 var uninstallLogName = Path.Combine(TestDirectory, $"{GetTestName(installerPath)}.uninstall.log");
 
                 var arguments = $"/x {installerPath} /QN /L*V {uninstallLogName}";
-                Logger.Info($"Running msiexec {arguments}");
+                Log.Information($"Running msiexec {arguments}");
                 var uninstallProcess = ProcessTasks.StartProcess("msiexec", arguments);
                 uninstallProcess.WaitForExit();
                 FileSystemTasks.CopyFileToDirectory(uninstallLogName, ArtifactsDirectory);
@@ -194,7 +195,7 @@ partial class Build
     
     void RunTests(string testFramework, string testRuntime)
     {
-        Logger.Info($"Running test for Framework: {testFramework} and Runtime: {testRuntime}");
+        Log.Information($"Running test for Framework: {testFramework} and Runtime: {testRuntime}");
 
         FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
             
@@ -220,7 +221,7 @@ partial class Build
         }
         catch (Exception e)
         {
-            Logger.Warn($"{e.Message}: {e}");
+            Log.Warning($"{e.Message}: {e}");
         }
     }
 }

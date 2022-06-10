@@ -2,6 +2,7 @@
 using System;
 using Nuke.Common;
 using Nuke.Common.CI.TeamCity;
+using Serilog;
 
 public static class Logging
 {
@@ -13,7 +14,7 @@ public static class Logging
         }
         else
         {
-            Logger.Info($"Starting {block}");
+            Log.Information($"Starting {block}");
         }
         try
         {
@@ -27,7 +28,7 @@ public static class Logging
             }
             else
             {
-                Logger.Info($"Finished {block}");
+                Log.Information($"Finished {block}");
             }
         }
     }
@@ -44,7 +45,7 @@ public static class Logging
         catch (Exception ex)
         {
             if (TeamCity.Instance != null) Console.WriteLine($"##teamcity[testFailed name='{test}' message='{ex.Message}']");
-            Logger.Error(ex.ToString());
+            Log.Error(ex.ToString());
         }
         finally
         {

@@ -20,10 +20,9 @@ using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Docker;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.MSBuild;
+using Nuke.Common.Tools.OctoVersion;
 using Nuke.Common.Tools.SignTool;
 using Nuke.Common.Utilities.Collections;
-using Nuke.OctoVersion;
-using OctoVersion.Core;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
@@ -31,19 +30,33 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 [ShutdownDotNetAfterServerBuild]
 partial class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.Default);
+    /// Support plugins are available for:
+    /// - JetBrains ReSharper        https://nuke.build/resharper
+    /// - JetBrains Rider            https://nuke.build/rider
+    /// - Microsoft VisualStudio     https://nuke.build/visualstudio
+    /// - Microsoft VSCode           https://nuke.build/vscode
 
-    [Solution] readonly Solution Solution = null!;
-    [NukeOctoVersion] readonly OctoVersionInfo OctoVersionInfo = null!;
+    [Solution(GenerateProjects = true)] readonly Solution Solution = null!;
+
+    [Parameter("Branch name for OctoVersion to use to calculate the version number. Can be set via the environment variable OCTOVERSION_CurrentBranch.",
+        Name = "OCTOVERSION_CurrentBranch")]
+    readonly string BranchName = null!;
+
+    [Parameter("Whether to auto-detect the branch name - this is okay for a local build, but should not be used under CI.")]
+    readonly bool AutoDetectBranch = IsLocalBuild;
+
+    [OctoVersion(UpdateBuildNumber = true, BranchParameter = nameof(BranchName),
+        AutoDetectBranchParameter = nameof(AutoDetectBranch), Framework = "net6.0")]
+    readonly OctoVersionInfo OctoVersionInfo = null!;
 
     [Parameter] string TestFramework = "";
     [Parameter] string TestRuntime = "";
-    
+
     [PackageExecutable(
         packageId: "azuresigntool",
         packageExecutable: "azuresigntool.dll")]
     public static Tool AzureSignTool = null!;
-    
+
     [PackageExecutable(
         packageId: "wix",
         packageExecutable: "heat.exe")]
@@ -58,7 +71,7 @@ partial class Build : NukeBuild
     [Parameter] public static string AzureKeyVaultAppId = "";
     [Secret] [Parameter] public static string AzureKeyVaultAppSecret = "";
     [Parameter] public static string AzureKeyVaultCertificateName = "";
-    
+
     [Parameter(Name = "signing_certificate_path")] public static string SigningCertificatePath = RootDirectory / "certificates" / "OctopusDevelopment.pfx";
     [Secret] [Parameter(Name = "signing_certificate_password")] public static string SigningCertificatePassword = "Password01!";
 
@@ -67,7 +80,7 @@ partial class Build : NukeBuild
     readonly AbsolutePath BuildDirectory = RootDirectory / "_build";
     readonly AbsolutePath LocalPackagesDirectory = RootDirectory / ".." / "LocalPackages";
     readonly AbsolutePath TestDirectory = RootDirectory / "_test";
-    
+
     const string NetFramework = "net452";
     const string NetCore = "netcoreapp3.1";
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
@@ -86,7 +99,7 @@ partial class Build : NukeBuild
         .DependsOn(Clean)
         .Executes(() =>
         {
-            DotNetRestore(s => s
+            DotNetRestore(_ => _
                 .SetProjectFile(Solution));
         });
 
@@ -111,7 +124,7 @@ partial class Build : NukeBuild
             // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
             // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
             // Decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
-            var windowsOnlyBuiltFileSpec = BuildDirectory.GlobDirectories($"**/win*/**");
+            var windowsOnlyBuiltFileSpec = BuildDirectory.GlobDirectories("**/win*/**");
 
             var filesToSign = windowsOnlyBuiltFileSpec
                 .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll", "**/Nevermore.dll", "**/*.ps1"))
@@ -150,7 +163,7 @@ partial class Build : NukeBuild
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
         });
-    
+
     [PublicAPI]
     Target BuildAll => _ => _
         .Description("Build all the framework/runtime combinations. Notional task - running this on a single host is possible but cumbersome.")
@@ -174,7 +187,7 @@ partial class Build : NukeBuild
         .DependsOn(Pack)
         .DependsOn(CopyToLocalPackages);
 
-    //Modifies the VersionInfo.cs and Product.wxs files to embed version information into the shipped product.
+    //Modifies VersionInfo.cs to embed version information into the shipped product.
     ModifiableFileWithRestoreContentsOnDispose ModifyTemplatedVersionAndProductFilesWithValues()
     {
         var versionInfoFilePath = SourceDirectory / "Solution Items" / "VersionInfo.cs";
@@ -183,13 +196,14 @@ partial class Build : NukeBuild
 
         versionInfoFile.ReplaceRegexInFiles("AssemblyVersion\\(\".*?\"\\)", $"AssemblyVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
         versionInfoFile.ReplaceRegexInFiles("AssemblyFileVersion\\(\".*?\"\\)", $"AssemblyFileVersion(\"{OctoVersionInfo.MajorMinorPatch}\")");
-        versionInfoFile.ReplaceRegexInFiles("AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{OctoVersionInfo.FullSemVer}\")");
+        versionInfoFile.ReplaceRegexInFiles("AssemblyInformationalVersion\\(\".*?\"\\)", $"AssemblyInformationalVersion(\"{OctoVersionInfo.InformationalVersion}\")");
         versionInfoFile.ReplaceRegexInFiles("AssemblyGitBranch\\(\".*?\"\\)", $"AssemblyGitBranch(\"{Git.DeriveGitBranch()}\")");
         versionInfoFile.ReplaceRegexInFiles("AssemblyNuGetVersion\\(\".*?\"\\)", $"AssemblyNuGetVersion(\"{OctoVersionInfo.FullSemVer}\")");
 
         return versionInfoFile;
     }
-    
+
+    //Modifies Product.wxs to embed version information into the shipped product.
     ModifiableFileWithRestoreContentsOnDispose UpdateMsiProductVersion()
     {
         var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
@@ -212,7 +226,7 @@ partial class Build : NukeBuild
 
         return new ModifiableFileWithRestoreContentsOnDispose(productWxsFilePath);
     }
-    
+
     void RunBuildFor(string framework, string runtimeId)
     {
         var configuration = $"Release-{framework}-{runtimeId}";
@@ -237,4 +251,6 @@ partial class Build : NukeBuild
             .SetCommand("debian")
             .SetArgs("tar", "-C", "/input", "-czvf", $"/output/{outputFile}", fileSpec, "--preserve-permissions"));
     }
+
+    public static int Main () => Execute<Build>(x => x.Default);
 }

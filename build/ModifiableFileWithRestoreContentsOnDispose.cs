@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using Nuke.Common;
 using Nuke.Common.IO;
+using Serilog;
 
 public class ModifiableFileWithRestoreContentsOnDispose : IDisposable
 {
@@ -20,7 +21,7 @@ public class ModifiableFileWithRestoreContentsOnDispose : IDisposable
         
     public void Dispose()
     {
-        Logger.Info($"Restoring file {FilePath}");
+        Log.Information($"Restoring file {FilePath}");
         File.WriteAllText(FilePath, OriginalFileText);
     }
         
