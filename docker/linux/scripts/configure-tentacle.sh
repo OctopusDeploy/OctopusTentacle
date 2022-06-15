@@ -212,15 +212,25 @@ function registerTentacle() {
 	tentacle "${ARGS[@]}"
 }
 
-echo "==============================================="
-echo "Configuring Octopus Deploy Tentacle"
-
-validateVariables
-
-echo "==============================================="
-
-configureTentacle
-registerTentacle
+if [[ -z "${ConfigDir}" ]]; then
+  echo "==============================================="
+  echo "Configuring Octopus Deploy Tentacle"
+  validateVariables
+  echo "==============================================="
+  configureTentacle
+  registerTentacle
+else
+  echo "==============================================="
+  echo "Configuring Octopus Deploy Tentacle"
+  echo "==============================================="
+  configureTentacle
+  for filename in $(realpath ${CONFIG_DIR}/*.conf); do
+    echo "processing $filename"
+	. $filename
+    validateVariables
+    registerTentacle
+  done  
+fi
 
 touch $alreadyConfiguredSemaphore
 
