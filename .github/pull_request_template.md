@@ -1,35 +1,44 @@
+**_Are you a customer of Octopus Deploy? Please contact [our support team](https://octopus.com/support) so we can triage your PR, so that we can make sure it's handled appropriately._**
+
 # Background
 
-<!-- Why does this PR exist? Describe it here or link to an issue. -->
+<!-- Why does this PR exist? -->
 
-Fixes https://github.com/OctopusDeploy/OctopusTentacle/issues/...
+# Results
 
-<!-- Consider adding a before/after log excerpt or screen capture. -->
+<!-- Describe the result of the change -->
+
+Fixes https://github.com/OctopusDeploy/Issues/issues/... _(optional public issue)_
+
+Fixes https://github.com/OctopusDeploy/ResearchAndDevelopment/issues/... _(optional private issue)_
+
+See [How we use GitHub Issues](https://github.com/OctopusDeploy/Issues/blob/master/docs/CONTRIBUTING.internal.md) (including [this flowchart](https://whimsical.com/r-d-incoming-work-workflow-aug-21-NsDnGQXcwBLwU66a88Zhue) 
 
 ## Before
 
-![Before](https://www.fillmurray.com/g/300/150)
+<!-- Consider adding a log excerpt or screen capture. -->
+
+![Before](https://user-images.githubusercontent.com/5088479/120727281-72762180-c51d-11eb-9776-85363dc084e2.png)
 
 ## After
 
-![After](https://www.fillmurray.com/300/150)
+<!-- Consider adding a log excerpt or screen capture. -->
 
-# Testing
+![After](https://user-images.githubusercontent.com/5088479/120727258-67bb8c80-c51d-11eb-8d2a-e047095b2d01.png)
 
-Here are the steps I used to test this pull request:
+# How to review this PR
 
-- 
+<!--
+Describe how you want people to review the pull request.
+Perhaps you just want an "in principal" review to prove an idea.
+Perhaps you want specific people to test the resulting changes.
+-->
 
-# Review
+Quality :heavy_check_mark:
+<!-- Describe focus areas (if any): Review tests/ Exploratory testing/ Smoke testing? -->
 
-Firstly, thanks for reviewing this pull request! :tada:
+# Pre-requisites
 
-<!-- Describe the outcomes you want from a review. In-principle? Exploratory testing? Add inline comments calling out important changes. -->
-
-# Checks
-
-- [ ] :green_heart: All automated builds and tests are passing
-- [ ] Scripts that automate Tentacle installation and configuration will continue working after updating to this version of Tentacle
-- [ ] Existing installations will continue working after updating to this version of Tentacle
-- [ ] I have considered the changes to public documentation needed to reflect this change
-- [ ] I have considered the changes to the project wiki needed to reflect this change
+- [ ] I have read [How we use GitHub Issues](https://github.com/OctopusDeploy/Issues/blob/master/docs/CONTRIBUTING.internal.md) for help deciding when and where it's appropriate to make an issue.
+- [ ] I have considered informing or consulting the right people, according to the [ownership map](https://whimsical.com/ownership-map-NzbiD4HJyvhC9jNJNfS6TG).
+- [ ] I have considered appropriate testing for my change.
