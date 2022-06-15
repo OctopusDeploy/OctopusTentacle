@@ -299,6 +299,15 @@ function Register-Tentacle(){
   Execute-Command $TentacleExe $arg $mask;
 }
 
+function ConfigureFromFile($content) {
+    Get-Content $_ | Foreach-Object{
+    $var = $_.Split('=')
+      New-Variable -Name $var[0] -Value $var[1] -Force
+    }
+    Validate-Variables
+    Register-Tentacle
+}
+
 try
 {
   Write-Log "==============================================="
@@ -309,11 +318,23 @@ try
     exit 0
   }
 
-  Validate-Variables
-  Write-Log "==============================================="
+  if($ConfigDir -eq $null) {
+    Validate-Variables
+    Write-Log "==============================================="
 
-  Configure-Tentacle
-  Register-Tentacle
+    Configure-Tentacle
+    Register-Tentacle
+  } else {
+    if (!(Test-Path -Path $ConfigDir)) {
+      throw "Config directory ($ConfigDir) doesn't exist!"
+    }
+    Configure-Tentacle
+    Get-ChildItem $ConfigDir -Filter *.conf | 
+      Foreach-Object {
+        ConfigureFromFile $_
+      }
+  }
+
   "Configuration complete." | Set-Content "c:\octopus-configuration.initstate"
 
   Write-Log "Configuration successful."
