@@ -86,6 +86,13 @@ partial class Build : NukeBuild
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
 
     [PublicAPI]
+    Target CalculateVersion => _ => _
+        .Executes(() =>
+        {
+            // This is here just so that TeamCity has a target to call. The OctoVersion attribute generates the version for us
+        });
+
+    [PublicAPI]
     Target Clean => _ => _
         .Executes(() =>
         {
