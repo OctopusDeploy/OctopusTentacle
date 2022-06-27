@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageDownload Include="AzureSignTool" Version="[2.0.17]" />
+    <PackageDownload Include="AzureSignTool" Version="[3.0.0]" />
     <PackageDownload Include="Chocolatey" Version="[0.10.14]" />
     <PackageDownload Include="WiX" Version="[3.11.2]" />
     <PackageDownload Include="OctopusTools" Version="[7.4.3289]" />

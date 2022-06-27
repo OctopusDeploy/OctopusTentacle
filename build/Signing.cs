@@ -35,6 +35,7 @@ public static class Signing
 
             if (string.IsNullOrEmpty(Build.AzureKeyVaultUrl)
                 && string.IsNullOrEmpty(Build.AzureKeyVaultAppId)
+                && string.IsNullOrEmpty(Build.AzureKeyVaultTenantId)
                 && string.IsNullOrEmpty(Build.AzureKeyVaultAppSecret)
                 && string.IsNullOrEmpty(Build.AzureKeyVaultCertificateName))
             { 
@@ -108,6 +109,7 @@ public static class Signing
                     var arguments = "sign " +
                         $"--azure-key-vault-url \"{Build.AzureKeyVaultUrl}\" " +
                         $"--azure-key-vault-client-id \"{Build.AzureKeyVaultAppId}\" " +
+                        $"--azure-key-vault-tenant-id \"{Build.AzureKeyVaultTenantId}\" " +
                         $"--azure-key-vault-client-secret \"{Build.AzureKeyVaultAppSecret}\" " +
                         $"--azure-key-vault-certificate \"{Build.AzureKeyVaultCertificateName}\" " +
                         "--file-digest sha256 " +
