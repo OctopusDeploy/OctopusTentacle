@@ -62,6 +62,9 @@
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
 		<RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
 	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+		<Reference Include="System.IdentityModel" />
+	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Octopus.Shared\Octopus.Shared.csproj" />
 	</ItemGroup>
