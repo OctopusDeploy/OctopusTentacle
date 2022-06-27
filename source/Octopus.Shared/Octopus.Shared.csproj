@@ -96,9 +96,6 @@
     <Compile Include="..\Solution Items\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>
     </Compile>
-    <Compile Include="..\Solution Items\VersionInfo.cs">
-      <Link>Properties\VersionInfo.cs</Link>
-    </Compile>
     <EmbeddedResource Include="Internals\Options\_Readme.txt" />
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
     <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
