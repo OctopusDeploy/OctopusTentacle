@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Octopus.Tentacle.Upgrader</AssemblyName>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <IsPublishable>false</IsPublishable>
+    <OutputPath>bin</OutputPath>
+    <OutputType>Exe</OutputType>
+    <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
+    <RootNamespace>Octopus.Tentacle.Upgrader</RootNamespace>
+    <RuntimeIdentifiers>win</RuntimeIdentifiers>
+    <TargetFrameworks>net452</TargetFrameworks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net452' AND '$(RuntimeIdentifier)'=='win'">
+    <IsPublishable>true</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\Solution Items\SolutionInfo.cs">
+			<Link>Properties\SolutionInfo.cs</Link>
+		</Compile>
+		<Compile Include="..\Solution Items\VersionInfo.cs">
+			<Link>Properties\VersionInfo.cs</Link>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="System.ServiceProcess" />
+	</ItemGroup>
+
+</Project>

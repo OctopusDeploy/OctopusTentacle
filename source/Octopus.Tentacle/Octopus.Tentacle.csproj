@@ -1,0 +1,66 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AppConfig Condition="'$(TargetFramework)' == 'netcoreapp3.1'">app.netcore.config</AppConfig>
+		<ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
+		<AssemblyName>Tentacle</AssemblyName>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<IsPublishable>true</IsPublishable>
+		<NoWin32Manifest>true</NoWin32Manifest>
+		<OutputPath>bin</OutputPath>
+		<OutputType>Exe</OutputType>
+		<PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
+		<RootNamespace>Octopus.Tentacle</RootNamespace>
+		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<LangVersion>9</LangVersion>
+	</PropertyGroup>
+
+	<Choose>
+		<When Condition="'$(TargetFramework)' == 'net452'">
+			<PropertyGroup>
+				<RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
+			</PropertyGroup>
+		</When>
+		<Otherwise>
+			<PropertyGroup>
+				<RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
+			</PropertyGroup>
+		</Otherwise>
+	</Choose>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Halibut" Version="4.4.10" />
+		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
+		<PackageReference Include="Octopus.Shared" Version="10.6.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\Solution Items\SolutionInfo.cs">
+			<Link>Properties\SolutionInfo.cs</Link>
+		</Compile>
+		<Compile Include="..\Solution Items\VersionInfo.cs">
+			<Link>Properties\VersionInfo.cs</Link>
+		</Compile>
+		<None Include="Tentacle.exe.nlog">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<Content Include="Tentacle.exe.manifest">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
+		<RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
+	</ItemGroup>
+</Project>

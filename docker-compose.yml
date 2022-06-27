@@ -1,0 +1,67 @@
+version: "3"
+
+services:
+  db:
+    image: docker.packages.octopushq.com/octopusdeploy/mssql-server-windows-express
+    environment:
+      sa_password: "${SA_PASSWORD}"
+      ACCEPT_EULA: "Y"
+    healthcheck:
+      test: [ "CMD", "sqlcmd", "-U", "sa", "-P", "${SA_PASSWORD}", "-Q", "select 1" ]
+      interval: 10s
+      retries: 10
+    restart: always
+
+  octopus-server:
+    image: docker.packages.octopushq.com/octopusdeploy/octopusdeploy:${OCTOPUS_VERSION}
+    environment:
+      ADMIN_USERNAME: "${OCTOPUS_ADMIN_USERNAME}"
+      ADMIN_PASSWORD: "${OCTOPUS_ADMIN_PASSWORD}"
+      DB_CONNECTION_STRING: "Server=db,1433;Initial Catalog=Octopus;Persist Security Info=False;User ID=sa;Password=${SA_PASSWORD};MultipleActiveResultSets=False;Connection Timeout=30;"
+      SKIP_IMPORT_VERSION_CHECK: "${OCTOPUS_SKIP_IMPORT_VERSION_CHECK}"
+      IMPORT_PASSWORD: "${OCTOPUS_IMPORT_PASSWORD}"
+      ACCEPT_EULA: "Y"
+    ports:
+     - "8080"
+     - "10943"
+    depends_on:
+      - db
+    stdin_open: true #Process sits and waits for ReadLine
+    volumes:
+      - "./docker/Volumes/octopus-server/Import:C:/Import"
+      - "./docker/Volumes/octopus-server/Repository:C:/Repository"
+      - "./docker/Volumes/octopus-server/MasterKey:C:/MasterKey"
+    restart: always
+
+  listening-tentacle:
+    image: docker.packages.octopushq.com/octopusdeploy/tentacle:${TENTACLE_VERSION}
+    depends_on:
+      - octopus-server
+    environment:
+      ServerUsername: "${OCTOPUS_ADMIN_USERNAME}"
+      ServerPassword: "${OCTOPUS_ADMIN_PASSWORD}"
+      TargetEnvironment: "Development"
+      TargetRole: "app-server"
+      ServerUrl: "http://octopus-server:8080"
+    stdin_open: true #Process sits and waits for ReadLine
+    volumes:
+      - "./docker/Volumes/listening-tentacle/Applications:C:/Applications"
+      - "./docker/Volumes/listening-tentacle/TentacleHome:C:/TentacleHome"
+    restart: always
+
+  polling-tentacle:
+    image: docker.packages.octopushq.com/octopusdeploy/tentacle:${TENTACLE_VERSION}
+    depends_on:
+      - octopus-server
+    environment:
+      ServerUsername: "${OCTOPUS_ADMIN_USERNAME}"
+      ServerPassword: "${OCTOPUS_ADMIN_PASSWORD}"
+      TargetEnvironment: "Development"
+      TargetRole: "web-server"
+      ServerUrl: "http://octopus-server:8080"
+      ServerPort: "10943"
+    stdin_open: true #Process sits and waits for ReadLine
+    volumes:
+      - "./docker/Volumes/polling-tentacle/Applications:C:/Applications"
+      - "./docker/Volumes/polling-tentacle/TentacleHome:C:/TentacleHome"
+    restart: always

@@ -1,0 +1,51 @@
+﻿<shell:TabView 
+    x:Class="Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views.InstallTab"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
+    xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
+    mc:Ignorable="d" 
+    d:DesignWidth="650" d:DesignHeight="500"
+    Header="Install"
+    x:Name="self"
+    Style="{StaticResource TabView.Normal}"    
+    RuleSet="Install">
+    <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        
+        <StackPanel Grid.Row="0">
+            <TextBlock Style="{StaticResource TextBlock.Heading}" Text="{Binding ElementName=self, Path=Title}" />
+
+            <StackPanel Name="readyMessage" Visibility="Visible">
+                <TextBlock Style="{StaticResource TextBlock.Big}" FontWeight="Bold" Text="{Binding ElementName=self, Path=ReadyMessage}" />
+
+                <ContentControl Name="extraContent" />
+
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                    <Button Click="StartClicked" Style="{StaticResource Button.Success}" Padding="18,8,18,8" Width="120" Margin="20" Name="startButton" Content="{Binding ElementName=self, Path=ExecuteButtonText}" />
+                    <TextBlock VerticalAlignment="Center" Margin="10,0,0,0">
+                        <Hyperlink Click="GenerateScriptClicked">Show script</Hyperlink>
+                    </TextBlock>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Name="successMessage" Visibility="Collapsed">
+                <DockPanel HorizontalAlignment="Center">
+                    <controls:RetinaImage BigImage="/Resources/Images/ok_button@4x.png" SmallImage="/Resources/Images/ok_button@2x.png" Width="32" Height="32" Margin="10" DockPanel.Dock="Left" />
+
+                    <TextBlock Style="{StaticResource TextBlock.Heading}" Foreground="SeaGreen" VerticalAlignment="Center" Text="{Binding ElementName=self, Path=SuccessMessage}" TextWrapping="NoWrap" />
+                </DockPanel>
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,20">
+                    <Hyperlink Click="GenerateScriptClicked">Show script</Hyperlink>
+                </TextBlock>
+            </StackPanel>
+        </StackPanel>
+
+        <TextBox Grid.Row="1" Margin="0,0,0,40" Style="{x:Null}" Padding="5" Name="outputLog" IsReadOnly="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Foreground="#333333" FontFamily="Consolas" TextWrapping="NoWrap" VerticalAlignment="Stretch"/>
+    </Grid>
+</shell:TabView>

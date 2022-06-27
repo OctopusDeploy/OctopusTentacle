@@ -19,27 +19,19 @@ UpgradeLog*.*
 _UpgradeReport_Files
 _[Rr]e[Ss]harper.*/
 lint.db
-/build
-source/packages/NHibernateProfiler*/tools/log.txt
-tools/TestResult.xml
-source/packages/Online.*.nupkg
+source/Octopus.Tentacle/Applications
+source/Applications
+source/Data
 _NCrunch*
 desktop.ini
 source/packages
-tools/Octopus.Dependencies*
-tools/NUnit*
 *.orig
 
 /.idea/
 *.ncrunchproject
 *.ncrunchsolution
-*.ncrunchsolution
-*.ncrunchsolution
 source/Octopus.v2.ncrunchsolution
-source/_ReSharper**
 source/_ReSharper*
-tools/Tentacle
-tools/Calamari
 
 *.sublime-project
 *.sublime-workspace
@@ -50,8 +42,10 @@ tools/Calamari
 *.received.*
 source/.idea
 source/Octopus.sln.iml
-launchSettings.json
-.cr/
 
-/tools/
-.idea
+launchSettings.json
+
+tools
+
+_artifacts
+_build

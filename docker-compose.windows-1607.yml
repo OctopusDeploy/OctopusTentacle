@@ -1,0 +1,10 @@
+version: "3"
+
+networks:
+  # Windows Server 2016 doesn't support multiple NAT networks so we rely on the existence of Docker's
+  # default "nat" network rather than creating one per docker-compose project. We do this here rather
+  # than in the main docker-compose.yml so that when we sunset Windows Server 2016 support we can
+  # remove it again cleanly.
+  default:
+    external:
+      name: nat

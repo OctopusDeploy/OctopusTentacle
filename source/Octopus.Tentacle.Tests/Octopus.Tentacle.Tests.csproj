@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Octopus.Tentacle.Tests</AssemblyName>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <IsPublishable>true</IsPublishable>
+    <OutputPath>bin</OutputPath>
+    <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
+    <RootNamespace>Octopus.Tentacle.Tests</RootNamespace>
+    <RuntimeIdentifiers>win;win-x86;win-x64;linux-x64;osx-x64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>8</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
+    <TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
+    <DefineConstants>$(DefineConstants);DEFAULT_PROXY_IS_AVAILABLE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" />
+    <PackageReference Include="Halibut" Version="4.4.10" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
+    <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.15" />
+    <PackageReference Include="FluentAssertions" Version="5.10.3" />
+    <PackageReference Include="NSubstitute" Version="4.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Solution Items\SolutionInfo.cs">
+      <Link>Properties\SolutionInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Solution Items\VersionInfo.cs">
+      <Link>Properties\VersionInfo.cs</Link>
+    </Compile>
+  </ItemGroup>
+  
+  
+</Project>

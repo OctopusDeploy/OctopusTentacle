@@ -51,3 +51,5 @@
 *.approved.* -text
 
 *.pem -text 
+
+*.sh text eol=lf

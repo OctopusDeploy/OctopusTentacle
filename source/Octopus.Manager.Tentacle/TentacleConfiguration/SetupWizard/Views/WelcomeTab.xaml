@@ -1,0 +1,23 @@
+﻿<shell:TabView 
+    x:Class="Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views.WelcomeTab"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
+    mc:Ignorable="d" 
+    d:DesignHeight="500" d:DesignWidth="650"
+    Header="Welcome"
+    RuleSet="Welcome"
+    Style="{StaticResource TabView.Normal}"
+    >
+    <Grid>
+        <StackPanel>
+            <TextBlock Style="{StaticResource TextBlock.Heading}" Text="Welcome" />
+
+            <TextBlock Style="{StaticResource TextBlock.Big}">
+                <Run>This wizard will help you to configure your Tentacle deployment agent service for Octopus Deploy.</Run>
+            </TextBlock>
+        </StackPanel>
+    </Grid>
+</shell:TabView>

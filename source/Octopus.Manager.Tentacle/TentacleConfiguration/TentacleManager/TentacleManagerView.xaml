@@ -1,0 +1,391 @@
+﻿<UserControl 
+    x:Class="Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager.TentacleManagerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    mc:Ignorable="d" 
+    Foreground="#333333"
+    d:DesignHeight="450" d:DesignWidth="800"
+    >
+    <Grid Grid.IsSharedSizeScope="True">
+        <Border Name="findingInstallation">
+            <StackPanel Margin="10" Height="300" VerticalAlignment="Center">
+                <TextBlock Margin="10" TextAlignment="Center" Text="Searching for Octopus Tentacle installation..." />
+            </StackPanel>
+        </Border>
+
+        <Border Name="newInstallation" Margin="30" VerticalAlignment="Center">
+            <StackPanel>
+                <TextBlock Text="Welcome!" FontSize="13pt" Margin="10" TextAlignment="Center" />
+                <TextBlock Margin="10" TextAlignment="Center" TextWrapping="Wrap" Text="Our getting started wizard will guide you through configuring your Tentacle deployment agent." />
+                <Button Click="SetupTentacle" Margin="20" HorizontalAlignment="Center" Padding="18,8,18,8" Style="{StaticResource Button.Success}">GET STARTED</Button>
+            </StackPanel>
+        </Border>
+
+        <Border Name="existingInstallation" Background="White">
+            <StackPanel>
+                <Border Background="White">
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" Direction="280" ShadowDepth="3" BlurRadius="5" Opacity="0.2"/>
+                    </Border.Effect>
+                    <Grid Margin="20,10">
+                        <Button Content="ADD NEW TENTACLE" FontSize="12" FontWeight="Medium" HorizontalAlignment="Right" Style="{StaticResource Button.Success}" VerticalAlignment="Center" Click="CreateNewInstance"/>
+                        <TextBlock Text="Tentacle Windows Service" Style="{StaticResource MaterialDesignHeadlineTextBlock}" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    </Grid>
+                </Border>
+                <ScrollViewer Margin="20" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Grid>
+                            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                                <Viewbox Stretch="Uniform" Height="38">
+                                    <Canvas Name="svg26" Width="23" Height="25">
+                                        <Canvas.Resources>
+                                            <Path Name="a" Fill="#000000" x:Key="a">
+                                                <Path.Data>
+                                                    <PathGeometry Figures="M0 0h17v11H0z" FillRule="NonZero"/>
+                                                </Path.Data>
+                                            </Path>
+                                        </Canvas.Resources>
+                                        <Canvas Name="g24">
+                                            <Canvas Name="g13">
+                                                <Canvas.RenderTransform>
+                                                    <TranslateTransform X="6" Y="17"/>
+                                                </Canvas.RenderTransform>
+                                                <Path Name="path7" Stroke="#FF0F2535" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                                                    <Path.Data>
+                                                        <PathGeometry Figures="M0 5h12" FillRule="EvenOdd"/>
+                                                    </Path.Data>
+                                                </Path>
+                                                <Ellipse Canvas.Left="4" Canvas.Top="3" Width="4" Height="4" Name="circle9" Fill="#FF0F2535"/>
+                                                <Path Name="path11" Stroke="#FF0F2535" StrokeStartLineCap="Square" StrokeEndLineCap="Square">
+                                                    <Path.Data>
+                                                        <PathGeometry Figures="M6 0v5" FillRule="EvenOdd"/>
+                                                    </Path.Data>
+                                                </Path>
+                                            </Canvas>
+                                            <Rectangle Canvas.Left="2" Canvas.Top="1" Width="19" Height="16" RadiusX="1" RadiusY="1">
+                                                <Rectangle.Style>
+                                                    <Style TargetType="{x:Type Rectangle}">
+                                                        <Setter Value="#388838" Property="Fill"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="True">
+                                                                <Setter Property="Fill" Value="#747474" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Rectangle.Style>
+                                            </Rectangle>
+                                            <Canvas Name="g22">
+                                                <Canvas.RenderTransform>
+                                                    <TranslateTransform X="2" Y="3"/>
+                                                </Canvas.RenderTransform>
+                                                <Path Name="path20" Fill="#FFFFFFFF">
+                                                    <Path.Data>
+                                                        <PathGeometry Figures="M15.458 2.699a.536.536 0 0 1-.357.124c-.24 0-.506-.128-.715-.343-.345-.356-.405-.798-.138-1.028a.536.536 0 0 1 .357-.125c.239 0 .506.128.715.344.146.15.247.327.286.498.048.214-.006.407-.148.53m-1.605-1.65c-.022.081-.116.27-.512.27-.107 0-.226-.016-.343-.044-.437-.107-.697-.349-.632-.588.022-.081.116-.27.512-.27.107 0 .226.016.343.044.437.107.697.349.632.588m-2.647.225a.99.99 0 0 1-.395.097c-.22 0-.304-.117-.33-.167-.1-.195.058-.428.393-.58a.99.99 0 0 1 .395-.097c.22 0 .304.117.33.167.099.195-.059.428-.393.58M9.718 7.945a1.138 1.138 0 0 1-.229.024c-.243 0-.41-.093-.446-.25-.013-.057-.024-.206.172-.337a1.13 1.13 0 0 1 .569-.158c.243 0 .41.094.446.25.049.208-.157.397-.512.471m-1.904-.694c-.028.195-.256.312-.61.312-.057 0-.116-.003-.175-.01-.281-.03-.51-.123-.615-.25a.282.282 0 0 1-.067-.22c.03-.196.257-.312.61-.312.057 0 .116.003.176.01.28.03.51.123.615.25a.282.282 0 0 1 .066.22m-2.96-1.023c-.038.069-.139.183-.384.183-.172 0-.378-.055-.58-.156-.438-.218-.653-.534-.522-.768.038-.068.14-.183.384-.183.172 0 .378.056.58.157.438.218.653.533.522.767m-2.796-1.36a.404.404 0 0 1-.302.116c-.232 0-.534-.142-.807-.378-.509-.44-.55-.838-.373-1.02A.404.404 0 0 1 .88 3.47c.232 0 .533.141.806.378.51.44.55.837.373 1.02m14.72-1.646C14.68-2.196 8.326.236 7.398 3.131c-.525 1.635.78 1.351 1.94.545 1.984-1.379 4.293-.916 3.943 1.132-.375 2.195-3.523 2.287-6.772 1.044C2.478 4.31 0 1.82 0 1.82v7.2s7.92 4.238 14.085.314c1.87-1.19 3.528-3.957 2.693-6.112" FillRule="EvenOdd"/>
+                                                    </Path.Data>
+                                                </Path>
+                                            </Canvas>
+                                        </Canvas>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="{Binding InstanceName}" Style="{StaticResource MaterialDesignTitleTextBlock}" FontSize="24"  VerticalAlignment="Center" Margin="7,0,0,0"/>
+                            </StackPanel>
+                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Content="START SERVICE" Click="StartServiceClicked" Visibility="{Binding Path=ServiceWatcher.CanStart, Mode=OneWay, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"/>
+                                <Button Content="STOP SERVICE" Click="StopServiceClicked" Visibility="{Binding Path=ServiceWatcher.CanStop, Mode=OneWay, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"/>
+                                <materialDesign:PopupBox
+                                    DockPanel.Dock="Right"
+                                    PlacementMode="BottomAndAlignRightEdges">
+                                    <StackPanel>
+                                        <Button Content="Restart" IsEnabled="{Binding Path=ServiceWatcher.CanRestart, Mode=OneWay}" Click="RestartServiceClicked"/>
+                                        <Button Content="Reinstall" Click="RepairServiceClicked"/>
+                                        <Separator/>
+                                        <Button Content="Delete" Click="DeleteInstance"/>
+                                    </StackPanel>
+                                </materialDesign:PopupBox>
+                            </StackPanel>
+                        </Grid>
+                        <Grid HorizontalAlignment="Stretch" Margin="0,20,0,0">
+                            <Grid.Resources>
+                            </Grid.Resources>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <!-- Status -->
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Status:" HorizontalAlignment="Right" Margin="0,1,20,10" FontWeight="Bold"/>
+                            <Grid Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
+                                    <Viewbox Stretch="Uniform" Height="16">
+                                        <Canvas Width="16" Height="16">
+                                            <Canvas>
+                                                <Ellipse Canvas.Left="0" Canvas.Top="0" Width="16" Height="16">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="{x:Type Ellipse}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="True">
+                                                                    <Setter Property="Fill" Value="#DB4437" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="False">
+                                                                    <Setter Property="Fill" Value="#FF53B953" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                                <Path Fill="#FFFFFFFF" StrokeThickness=".5" Stroke="#FFFFFFFF">
+                                                    <Path.Style>
+                                                        <Style TargetType="{x:Type Path}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="False">
+                                                                    <Setter Property="Data">
+                                                                        <Setter.Value>
+                                                                            <PathGeometry Figures="M6.88804 11.083024L12.12 5.851064 11.296838 5 6.88804 9.42275 4.823163 7.343916 4 8.16708z" FillRule="EvenOdd"/>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="True">
+                                                                    <Setter Property="Data">
+                                                                        <Setter.Value>
+                                                                            <PathGeometry Figures="M11.53 10.037728L9.007273 7.515 11.53 4.992273 10.537728 4 8.015 6.522727 5.492273 4 4.5 4.992273 7.022727 7.515 4.5 10.037728l.992273.992272L8.015 8.507273 10.537728 11.03z" FillRule="EvenOdd"/>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Path.Style>
+                                                </Path>
+                                            </Canvas>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <TextBlock Text="{Binding Path=ServiceWatcher.StatusSummary, Converter={StaticResource Converter.CapitalizeFirstLetterConverter}}" VerticalAlignment="Top">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}">
+                                                <Setter Property="Foreground" Value="Green"/>
+                                                <Setter Property="Margin" Value="5,-1,0,0"/>
+                                                <Setter Property="FontWeight" Value="Medium"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="True">
+                                                        <Setter Property="Foreground" Value="#db4437" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                                <Rectangle Fill="Transparent">
+                                    <Rectangle.Style>
+                                        <Style TargetType="{x:Type Rectangle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Path=ServiceWatcher.IsNotRunning}" Value="True">
+                                                    <Setter Property="ToolTip">
+                                                        <Setter.Value>
+                                                            <TextBlock>
+                                                                The Tentacle Windows Service (<Run Text="{Binding Path=ServiceWatcher.ServiceName, Mode=OneWay}"/>) is 
+                                                                <Run Text="{Binding Path=ServiceWatcher.StatusSummary}" />.
+                                                            </TextBlock>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Rectangle.Style>
+                                </Rectangle>
+                            </Grid>
+
+                            <!-- Communication Mode -->
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Communication Mode:" HorizontalAlignment="Right" Margin="0,0,20,25" FontWeight="Bold"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding CommunicationMode}" VerticalAlignment="Top"/>
+
+                            <!-- Home Directory -->
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Home Directory:" HorizontalAlignment="Right" Margin="0,0,20,10" FontWeight="Bold"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" VerticalAlignment="Top"><Hyperlink Click="BrowseHome"><Run Text="{Binding Path=HomeDirectory}" /></Hyperlink></TextBlock>
+                            <!-- Logs Directory -->
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Logs Directory:" HorizontalAlignment="Right" Margin="0,0,20,23" FontWeight="Bold"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" VerticalAlignment="Top"><Hyperlink Click="BrowseLogs"><Run Text="{Binding Path=LogsDirectory}" /></Hyperlink></TextBlock>
+
+                            <!-- Thumbprint -->
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Thumbprint:" HorizontalAlignment="Right" Margin="0,2,20,10" FontWeight="Bold"/>
+                            <Grid Grid.Row="4" Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="0,0,0,25">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Viewbox Stretch="Uniform" Height="18">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="#333333" StrokeThickness="1.1604681">
+                                            <Path.Data>
+                                                <PathGeometry Figures="m 18.824628 3.2841118 c -0.09284 0 -0.185675 -0.023209 -0.266908 -0.069628 -2.228098 -1.1488635 -4.154476 -1.6362602 -6.463807 -1.6362602 -2.2977271 0 -4.4794074 0.5454201 -6.4638079 1.6362602 C 5.3515927 3.3653446 5.0034523 3.2609024 4.8409868 2.98239 4.6901259 2.7038777 4.794568 2.3441325 5.0730803 2.1932717 7.2315511 1.0211988 9.5989069 0.4177554 12.093913 0.4177554 c 2.471797 0 4.630268 0.54542004 6.997623 1.7639116 0.290117 0.1508609 0.394559 0.4990013 0.243698 0.7775137 -0.104442 0.2088843 -0.301722 0.3249311 -0.510606 0.3249311 z M 2.2183287 9.3765696 c -0.1160468 0 -0.2320936 -0.034814 -0.3365358 -0.104442 C 1.6148853 9.0864526 1.5568618 8.7267075 1.7425367 8.4597998 2.8914002 6.8351443 4.3535901 5.5586294 6.0942924 4.6650689 9.7381619 2.7851104 14.403244 2.7735057 18.058719 4.6534641 19.799421 5.5470247 21.261612 6.811935 22.410475 8.4249857 22.59615 8.6802887 22.538126 9.0516385 22.271218 9.2373134 22.004311 9.4229883 21.644566 9.3649649 21.458891 9.0980573 20.41447 7.6358674 19.091536 6.4870039 17.524903 5.6862808 14.19436 3.9803926 9.9354419 3.9803926 6.616503 5.6978855 5.0382663 6.5102132 3.7153326 7.6706814 2.6709113 9.1328712 2.5780738 9.2953369 2.4040036 9.3765696 2.2183287 9.3765696 Z M 9.4712539 23.38342 c -0.15086 0 -0.301721 -0.05802 -0.406163 -0.174069 C 8.0554835 22.199743 7.5100635 21.549881 6.7325498 20.145714 5.9318267 18.718338 5.5140582 16.977636 5.5140582 15.109282 c 0 -3.44659 2.9475897 -6.2549231 6.5682498 -6.2549231 3.620661 0 6.56825 2.8083331 6.56825 6.2549231 0 0.324932 -0.255304 0.580234 -0.580234 0.580234 -0.324931 0 -0.580234 -0.255302 -0.580234 -0.580234 0 -2.808332 -2.425379 -5.094455 -5.407782 -5.094455 -2.9824031 0 -5.4077816 2.286123 -5.4077816 5.094455 0 1.671075 0.3713498 3.214497 1.0792353 4.467802 0.7427002 1.334539 1.2533062 1.903168 2.1468662 2.808334 0.2204891 0.232093 0.2204891 0.591838 0 0.823933 -0.127651 0.116046 -0.278512 0.174069 -0.429374 0.174069 z m 8.3205571 -2.146866 c -1.380956 0 -2.599448 -0.34814 -3.597451 -1.032816 -1.729097 -1.172073 -2.761914 -3.075241 -2.761914 -5.094456 0 -0.324931 0.255303 -0.580234 0.580234 -0.580234 0.324932 0 0.580234 0.255303 0.580234 0.580234 0 1.63626 0.835537 3.179683 2.251308 4.131267 0.823933 0.557025 1.787121 0.823932 2.947589 0.823932 0.278513 0 0.7427 -0.03481 1.206888 -0.116047 0.313326 -0.05803 0.615047 0.150862 0.673071 0.475792 0.05803 0.313327 -0.150861 0.615049 -0.475792 0.673072 -0.661467 0.127652 -1.241701 0.139256 -1.404167 0.139256 z m -2.33254 2.390565 c -0.04642 0 -0.104442 -0.0116 -0.150861 -0.02321 -1.845144 -0.510607 -3.052031 -1.195283 -4.316942 -2.436984 -1.6246561 -1.613051 -2.5182161 -3.759917 -2.5182161 -6.057644 0 -1.879958 1.6014461 -3.411776 3.5742431 -3.411776 1.972795 0 3.574241 1.531818 3.574241 3.411776 0 1.241701 1.079236 2.251309 2.413774 2.251309 1.334538 0 2.413773 -1.009608 2.413773 -2.251309 0 -4.374965 -3.771521 -7.9259971 -8.413394 -7.9259971 -3.2957291 0 -6.3129465 1.8335397 -7.6706943 4.6766871 -0.4525825 0.939979 -0.6846762 2.042424 -0.6846762 3.24931 0 0.905166 0.081233 2.332542 0.7775137 4.18929 0.1160468 0.301723 -0.034814 0.638258 -0.3365357 0.7427 -0.3017218 0.11605 -0.6382576 -0.04641 -0.7426997 -0.336532 -0.5686294 -1.520214 -0.8471417 -3.028822 -0.8471417 -4.595455 0 -1.392561 0.2669076 -2.657472 0.7891183 -3.759916 1.5434227 -3.2377065 4.9668035 -5.338154 8.7151156 -5.338154 5.28013 0 9.573862 4.073243 9.573862 9.086466 0 1.879958 -1.601446 3.411776 -3.574241 3.411776 -1.972796 0 -3.574242 -1.531818 -3.574242 -3.411776 0 -1.241701 -1.079235 -2.251309 -2.413773 -2.251309 -1.334539 0 -2.4137751 1.009608 -2.4137751 2.251309 0 1.9844 0.7659091 3.84115 2.1700761 5.233711 1.102445 1.090841 2.158471 1.694284 3.794731 2.146866 0.313326 0.08124 0.487396 0.406164 0.406163 0.707886 -0.05802 0.266905 -0.301721 0.440976 -0.545419 0.440976 z" FillRule="NonZero"/>
+                                            </Path.Data>
+                                        </Path>
+                                    </Canvas>
+                                </Viewbox>
+                                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                                    <TextBox Style="{x:Null}" Foreground="#333333" FontFamily="{StaticResource MaterialDesignFont}" FontWeight="Bold" Margin="5,2,5,0" Text="{Binding Path=Thumbprint, Mode=OneWay}" BorderThickness="0" IsReadOnly="True" TextWrapping="Wrap" Background="Transparent"/>
+                                    <Button Style="{StaticResource CopyToClipboardButton}" Padding="0" Height="18" Width="18" ToolTip="Copy to clipboard" Click="CopyThumbprintToClipboard">
+
+                                    </Button>
+                                </StackPanel>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Foreground="Gray">
+                                    <Run Text="{Binding Path=Trust, Mode=OneWay}"/>
+                                    <LineBreak/>
+                                    <Run>This should match the value shown on the Machine configuration page in the Octopus web portal.</Run>
+                                </TextBlock>
+                            </Grid>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Proxy Server Settings:" HorizontalAlignment="Right" Margin="0,0,20,23" FontWeight="Bold"/>
+                            <StackPanel Grid.Row="5" Grid.Column="1">
+                                <TextBlock VerticalAlignment="Top" TextWrapping="Wrap"  Text="{Binding Path=ProxyStatus}"/>
+                                <Button Content="CHANGE" HorizontalAlignment="Left" Margin="0,5,0,0" Click="ShowProxy"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
+        <!--
+        <Border Name="existingInstallation">
+            <ScrollViewer HorizontalScrollBarVisibility="Hidden" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalScrollBarVisibility="Auto">
+
+                <Border Width="{Binding ElementName=existingInstallation, Path=ActualWidth}">
+
+                    <StackPanel>
+
+                        <StackPanel Grid.Column="0"  Margin="10,0,10,0">
+
+                            <StackPanel Margin="10">
+                                <Border Style="{StaticResource Border.BorderedHeader}">
+                                    <TextBlock Margin="0,0,0,5" Padding="0" Text="Tentacle Windows Service" Style="{StaticResource TextBlock.Heading}" />
+                                </Border>
+
+                                <Grid Margin="20,0,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="Links" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="1" >
+
+                                        <TextBlock Margin="0,10,0,0">
+                                        The Tentacle Windows Service (<Run FontWeight="Bold" Text="{Binding Path=ServiceWatcher.ServiceName, Mode=OneWay}"/>) is 
+                                        <Run Text="{Binding Path=ServiceWatcher.StatusSummary}" />.
+                                        </TextBlock>
+
+                                        <TextBlock Margin="0,10,0,0" FontSize="9pt" Foreground="Gray" TextWrapping="Wrap">Home directory: <Hyperlink Click="BrowseHome"><Run Text="{Binding Path=HomeDirectory}" /></Hyperlink></TextBlock>
+                                        <TextBlock Margin="0,2,0,0" FontSize="9pt" Foreground="Gray" TextWrapping="Wrap">Logs directory: <Hyperlink Click="BrowseLogs"><Run Text="{Binding Path=LogsDirectory}" /></Hyperlink></TextBlock>
+
+                                        <StackPanel>
+                                            <TextBlock Margin="0,10,0,0" TextWrapping="Wrap">The thumbprint of the certificate that securely identifies this Tentacle is shown below. This should match the value shown on the Machine configuration page in the Octopus web portal.</TextBlock>
+                                            <TextBox FontWeight="Bold" IsReadOnly="True" Margin="0,10,10,0" Text="{Binding Path=Thumbprint, Mode=OneWay}"/>
+                                            <TextBlock Margin="0,10,0,0" FontSize="9pt" Foreground="Gray" Text="{Binding Path=Trust, Mode=OneWay}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,10,0" DataContext="{Binding Path=ServiceWatcher}">
+                                        <controls:ImageLink
+                                            BigImage="/Resources/Images/button_rounded_green_next@2x.png"
+                                            SmallImage="/Resources/Images/button_rounded_green_next.png"
+                                            Text="Start"
+                                            Margin="0,10,0,0"
+                                            IsEnabled="{Binding Path=CanStart, Mode=OneWay}"
+                                            Click="StartServiceClicked"
+                                            Visibility="{Binding Path=CanStart, Mode=OneWay, Converter={StaticResource Converter.InverseBooleanToVisibilityConverter}}"
+                                            />
+                                        <controls:ImageLink
+                                            BigImage="/Resources/Images/button_rounded_green_next@2x.png"
+                                            SmallImage="/Resources/Images/button_rounded_green_next.png"
+                                            Text="Start"
+                                            Margin="0,10,0,0"
+                                            IsEnabled="{Binding Path=CanStart, Mode=OneWay}"
+                                            Click="StartServiceClicked"
+                                            FontWeight="Bold"
+                                            Visibility="{Binding Path=CanStart, Mode=OneWay, Converter={StaticResource Converter.BooleanToVisibilityConverter}}"
+                                            />
+                                        <controls:ImageLink
+                                            BigImage="/Resources/Images/button_rounded_green_last@2x.png"
+                                            SmallImage="/Resources/Images/button_rounded_green_last.png"
+                                            Text="Restart"
+                                            Click="RestartServiceClicked"
+                                            IsEnabled="{Binding Path=CanRestart, Mode=OneWay}"
+                                            Margin="0,10,0,0" 
+                                            />
+                                        <controls:ImageLink
+                                            BigImage="/Resources/Images/button_rounded_green_delete@2x.png"
+                                            SmallImage="/Resources/Images/button_rounded_green_delete.png"
+                                            Text="Stop"
+                                            Click="StopServiceClicked"
+                                            IsEnabled="{Binding Path=CanStop}"
+                                            Margin="0,10,0,0" 
+                                            />
+                                        <controls:ImageLink
+                                            BigImage="/Resources/Images/button_rounded_orange_next@2x.png"
+                                            SmallImage="/Resources/Images/button_rounded_orange_next.png"
+                                            Text="Reinstall"
+                                            Click="RepairServiceClicked"
+                                            Margin="0,10,0,0" 
+                                            />
+                                    </StackPanel>
+                                </Grid>
+
+
+                            </StackPanel>
+
+                            <StackPanel Margin="10,10,10,30">
+                                <Border Style="{StaticResource Border.BorderedHeader}">
+                                    <TextBlock Margin="0,0,0,5" Padding="0" Text="Other tasks" Style="{StaticResource TextBlock.Heading}" />
+                                </Border>
+
+                                <Grid Margin="20,0,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="Links" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="1" >
+                                        <TextBlock Margin="0,10,0,0" TextWrapping="Wrap"  Text="{Binding Path=ProxyStatus}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,10,0">
+                                        <controls:ImageLink
+                                        BigImage="/Resources/Images/server_network-internet@2x.png"
+                                        SmallImage="/Resources/Images/server_network-internet.png"
+                                        Text="Change proxy server settings..."
+                                        Margin="0,10,0,0" 
+                                        Click="ShowProxy"
+                                        />
+                                        <controls:ImageLink
+                                        BigImage="/Resources/Images/delete@2x.png"
+                                        SmallImage="/Resources/Images/delete.png"
+                                        Text="Delete this Tentacle instance..."
+                                        Margin="0,10,0,0" 
+                                        Click="DeleteInstance"
+                                        />
+                                    </StackPanel>
+                                </Grid>
+
+
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+
+                </Border>
+            </ScrollViewer>
+        </Border>-->
+    </Grid>
+</UserControl>
