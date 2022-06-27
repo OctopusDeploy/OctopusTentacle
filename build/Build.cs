@@ -69,6 +69,7 @@ partial class Build : NukeBuild
 
     [Parameter] public static string AzureKeyVaultUrl = "";
     [Parameter] public static string AzureKeyVaultAppId = "";
+    [Parameter] public static string AzureKeyVaultTenantId = "";
     [Secret] [Parameter] public static string AzureKeyVaultAppSecret = "";
     [Parameter] public static string AzureKeyVaultCertificateName = "";
 
