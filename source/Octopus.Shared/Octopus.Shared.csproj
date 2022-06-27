@@ -18,6 +18,18 @@
     <LangVersion>9</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <Choose>
+    <When Condition="'$(TargetFramework)' == 'net452'">
+      <PropertyGroup>
+        <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
     <NoWarn>8601</NoWarn>
     <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
@@ -88,9 +100,6 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Solution Items\SolutionInfo.cs">
-      <Link>Properties\SolutionInfo.cs</Link>
-    </Compile>
     <EmbeddedResource Include="Internals\Options\_Readme.txt" />
     <EmbeddedResource Include="Internals\DiffMatchPatch\_Readme.txt" />
     <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
