@@ -6,16 +6,19 @@ namespace Octopus.Shared.Util
 {
     public class CmdResult
     {
+        readonly List<string> infos;
         readonly List<string> errors;
 
-        public CmdResult(int exitCode, List<string> errors)
+        public CmdResult(int exitCode, List<string> infos, List<string> errors)
         {
             ExitCode = exitCode;
+            this.infos = infos;
             this.errors = errors;
         }
 
         public int ExitCode { get; }
 
+        public IList<string> Infos => infos;
         public IList<string> Errors => errors;
 
         public void Validate()

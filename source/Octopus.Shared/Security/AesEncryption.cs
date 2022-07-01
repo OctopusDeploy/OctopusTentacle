@@ -18,6 +18,24 @@ namespace Octopus.Shared.Security
             key = GetEncryptionKey(password);
         }
 
+        public string Decrypt(byte[] encrypted)
+        {
+            using (var ms = new MemoryStream(encrypted))
+            {
+                var iv = new byte[16];
+                ms.Position = IvPrefix.Length;
+                ms.Read(iv, 0, iv.Length);
+
+                using (var algorithm = GetCryptoProvider(iv))
+                using (var dec = algorithm.CreateDecryptor())
+                using (var cs = new CryptoStream(ms, dec, CryptoStreamMode.Read))
+                using (var sr = new StreamReader(cs, Encoding.UTF8))
+                {
+                    return sr.ReadToEnd();
+                }
+            }
+        }
+
         public byte[] Encrypt(string plaintext)
         {
             var plainTextBytes = Encoding.UTF8.GetBytes(plaintext);

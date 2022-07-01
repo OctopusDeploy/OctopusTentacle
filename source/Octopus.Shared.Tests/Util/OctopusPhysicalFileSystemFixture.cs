@@ -26,20 +26,6 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        public void DiskHasEnoughFreeSpace_UncPath_ShouldReturnTrue()
-        {
-            var actual = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>()).DiskHasEnoughFreeSpace(@"\\does\not\exist");
-            Assert.AreEqual(true, actual);
-        }
-
-        [Test]
-        public void DiskHasEnoughFreeSpace_MaxValue_ShouldReturnFalse()
-        {
-            var actual = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>()).DiskHasEnoughFreeSpace(Path.GetTempPath(), long.MaxValue);
-            Assert.AreEqual(false, actual);
-        }
-
-        [Test]
         public void DeleteDirectory_WithReadOnlyFiles_ShouldSucceed()
         {
             // Arrange

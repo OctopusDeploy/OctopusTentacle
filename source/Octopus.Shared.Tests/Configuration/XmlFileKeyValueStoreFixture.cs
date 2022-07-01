@@ -20,6 +20,25 @@ using Formatting = System.Xml.Formatting;
 
 namespace Octopus.Shared.Tests.Configuration
 {
+    class MyNestedObject
+    {
+        public int Id { get; set; }
+    }
+
+    enum SomeEnum
+    {
+        SomeEnumValue,
+        SomeOtherEnumValue
+    }
+
+    class MyObject
+    {
+        public bool BooleanField { get; set; }
+        public int IntField { get; set; }
+        public SomeEnum EnumField { get; set; }
+        public MyNestedObject[] ArrayField { get; set; }
+    }
+    
     [TestFixture]
     class XmlFileKeyValueStoreFixture
     {

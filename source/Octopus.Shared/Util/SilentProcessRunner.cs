@@ -34,7 +34,7 @@ namespace Octopus.Shared.Util
                 errors.Add
             );
 
-            return new CmdResult(exitCode, errors);
+            return new CmdResult(exitCode, infos, errors);
         }
 
         public static int ExecuteCommand(
@@ -111,7 +111,7 @@ namespace Octopus.Shared.Util
 
                 var encoding = EncodingDetector.GetOEMEncoding();
 
-                debug($"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding");
+                debug($"Starting {exeFileNameOrFullPath} in working directory '{workingDirectory}' using '{encoding.EncodingName}' encoding running as '{ProcessIdentity.CurrentUserName}'");
 
                 using (var outputResetEvent = new ManualResetEventSlim(false))
                 using (var errorResetEvent = new ManualResetEventSlim(false))

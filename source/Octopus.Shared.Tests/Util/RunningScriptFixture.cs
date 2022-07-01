@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using FluentAssertions;
 using NSubstitute;
@@ -15,7 +16,6 @@ namespace Octopus.Shared.Tests.Util
     // These tests are flakey on the build server.
     // Sometimes powershell just returns -1 when running these scripts.
     // That's why every test has a retry attribute.
-
     [TestFixture]
     public class RunningScriptFixture
     {
@@ -146,32 +146,6 @@ namespace Octopus.Shared.Tests.Util
         }
 
         [Test]
-        [Retry(3)]
-        [WindowsTest]
-        public void RunAsDifferentUser_ShouldWork()
-        {
-            workspace.BootstrapScript("Write-Host $env:userdomain\\$env:username");
-            workspace.RunAs = user.GetCredential();
-            runningScript.Execute();
-            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
-            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
-            scriptLog.StdOut.ToString().Should().ContainEquivalentOf($@"{user.DomainName}\{user.UserName}");
-        }
-
-        [Test]
-        [Retry(3)]
-        [WindowsTest]
-        public void RunAsDifferentUser_ShouldWork_TempPath()
-        {
-            workspace.BootstrapScript("Write-Host Attempting to create a file in $env:temp\n\"hello\" | Out-File $env:temp\\hello.txt\ndir $env:temp");
-            workspace.RunAs = user.GetCredential();
-            runningScript.Execute();
-            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
-            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
-            scriptLog.StdOut.ToString().Should().ContainEquivalentOf("hello.txt", "the dir command should have logged the presence of the file we just wrote");
-        }
-
-        [Test]
         [Retry(5)]
         public void CancellationToken_ShouldKillTheProcess()
         {
@@ -195,32 +169,6 @@ namespace Octopus.Shared.Tests.Util
                 scriptLog.StdOut.ToString().Should().ContainEquivalentOf("Starting", "the starting message should be written to stdout");
                 scriptLog.StdOut.ToString().Should().NotContainEquivalentOf("Finito", "the script should have canceled before writing the finish message");
             }
-        }
-
-        [Test]
-        [Retry(5)]
-        public void RunAsCurrentUser_ShouldCopyCustomEnvironmentVariables()
-        {
-            workspace.CustomEnvironmentVariables.Add("customenvironmentvariable", "customvalue");
-            workspace.BootstrapScript($"echo {EchoEnvironmentVariable("customenvironmentvariable")}");
-            runningScript.Execute();
-            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
-            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
-            scriptLog.StdOut.ToString().Should().ContainEquivalentOf("customvalue");
-        }
-
-        [Test]
-        [Retry(5)]
-        [WindowsTest]
-        public void RunAsDifferentUser_ShouldCopyCustomEnvironmentVariables()
-        {
-            workspace.RunAs = user.GetCredential();
-            workspace.CustomEnvironmentVariables.Add("customenvironmentvariable", "customvalue");
-            workspace.BootstrapScript($"echo {EchoEnvironmentVariable("customenvironmentvariable")}");
-            runningScript.Execute();
-            runningScript.ExitCode.Should().Be(0, "the script should have run to completion");
-            scriptLog.StdErr.Length.Should().Be(0, "the script shouldn't have written to stderr");
-            scriptLog.StdOut.ToString().Should().ContainEquivalentOf("customvalue");
         }
 
         static string EchoEnvironmentVariable(string varName)
