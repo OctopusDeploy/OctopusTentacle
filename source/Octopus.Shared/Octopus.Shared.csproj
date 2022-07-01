@@ -7,12 +7,6 @@
     <OutputPath>bin\</OutputPath>
     <TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
     <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
-    <Description>The library shared by Octopus Server and Octopus Tentacle.</Description>
-    <Authors>Octopus Deploy</Authors>
-    <PackageIcon>icon.png</PackageIcon>
-    <PackageProjectUrl>https://github.com/OctopusDeploy/OctopusShared</PackageProjectUrl>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/OctopusDeploy/OctopusShared</RepositoryUrl>
     <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>9</LangVersion>
@@ -106,9 +100,5 @@
     <Compile Update="Startup\WindowsServiceAdapter.cs">
       <SubType>Component</SubType>
     </Compile>
-    <None Include="icon.png" Pack="true" PackagePath="" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Messages\Deploy\Steps" />
   </ItemGroup>
 </Project>
