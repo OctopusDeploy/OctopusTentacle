@@ -4,7 +4,12 @@ ARG BUILD_NUMBER
 ARG BUILD_DATE
 
 RUN apt-get update && \
-    apt-get install -y curl sudo dos2unix jq && \
+    apt-get install -y \
+        curl \
+        dos2unix \
+        jq \
+        sudo \
+        && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
