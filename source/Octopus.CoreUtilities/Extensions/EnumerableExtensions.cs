@@ -10,18 +10,6 @@ namespace Octopus.CoreUtilities.Extensions
 {
     public static class EnumerableExtensions
     {
-#if NET40 || NET452 // ToHashSet was added to System.Linq in 4.7.2, NetStandard 2.1
-        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
-        {
-            return new HashSet<T>(source);
-        }
-
-        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source, IEqualityComparer<T> comparer)
-        {
-            return new HashSet<T>(source, comparer);
-        }
-#endif
-
        public static bool Any<T>(this ICollection<T> collection)
             => collection.Count > 0;
 
@@ -45,14 +33,6 @@ namespace Octopus.CoreUtilities.Extensions
         public static bool Any<T>(this HashSet<T> list)
             => list.Count > 0;
 
-#if !NET40
-        public static bool Any<T>(this IReadOnlyList<T> list)
-            => list.Count > 0;
-
-        public static bool Any<T>(this IReadOnlyCollection<T> list)
-            => list.Count > 0;
-#endif
-
         public static bool None<T>(this ICollection<T> collection)
             => collection.Count == 0;
 
@@ -75,14 +55,6 @@ namespace Octopus.CoreUtilities.Extensions
 
         public static bool None<T>(this HashSet<T> list)
             => list.Count == 0;
-
-#if !NET40
-        public static bool None<T>(this IReadOnlyList<T> list)
-            => list.Count == 0;
-
-        public static bool None<T>(this IReadOnlyCollection<T> list)
-            => list.Count == 0;
-#endif
 
         public static bool None<T>(this IEnumerable<T> items)
             => !items.Any();
@@ -117,13 +89,6 @@ namespace Octopus.CoreUtilities.Extensions
         {
             yield return item;
         }
-
-#if !NET40
-        public static IReadOnlyCollection<T> AsReadOnly<T>(this IEnumerable<T> items)
-        {
-            return new ReadOnlyCollection<T>(items.ToList());
-        }
-#endif
 
         public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
             where TKey : notnull
