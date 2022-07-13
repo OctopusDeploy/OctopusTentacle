@@ -32,6 +32,12 @@ namespace Octopus.CoreUtilities.Extensions
 
         public static bool Any<T>(this HashSet<T> list)
             => list.Count > 0;
+        
+        public static bool Any<T>(this IReadOnlyList<T> list)
+            => list.Count > 0;
+
+        public static bool Any<T>(this IReadOnlyCollection<T> list)
+            => list.Count > 0;
 
         public static bool None<T>(this ICollection<T> collection)
             => collection.Count == 0;
@@ -54,6 +60,12 @@ namespace Octopus.CoreUtilities.Extensions
             => list.Count == 0;
 
         public static bool None<T>(this HashSet<T> list)
+            => list.Count == 0;
+
+        public static bool None<T>(this IReadOnlyList<T> list)
+            => list.Count == 0;
+
+        public static bool None<T>(this IReadOnlyCollection<T> list)
             => list.Count == 0;
 
         public static bool None<T>(this IEnumerable<T> items)
@@ -88,6 +100,11 @@ namespace Octopus.CoreUtilities.Extensions
         public static IEnumerable<TSource> Yield<TSource>(this TSource item)
         {
             yield return item;
+        }
+
+        public static IReadOnlyCollection<T> AsReadOnly<T>(this IEnumerable<T> items)
+        {
+            return new ReadOnlyCollection<T>(items.ToList());
         }
 
         public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
