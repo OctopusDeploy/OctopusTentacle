@@ -35,7 +35,7 @@ namespace Octopus.Tentacle.Upgrader
         static int PerformUpgrade(string[] args)
         {
             LogStartupParameters(args);
-            if (args.Length < 3)
+            if (args.Length < 2)
             {
                 Log.Upgrade.Info("Error: Invalid arguments");
                 return 1;
