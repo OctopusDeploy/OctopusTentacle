@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net40;net452;net5.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;</TargetFrameworks>
     <AssemblyName>Octopus.CoreUtilities</AssemblyName>
     <PackageId>Octopus.CoreUtilities</PackageId>
     <PackageIcon>icon.png</PackageIcon>
