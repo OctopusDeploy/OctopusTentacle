@@ -10,7 +10,18 @@ namespace Octopus.CoreUtilities.Extensions
 {
     public static class EnumerableExtensions
     {
-       public static bool Any<T>(this ICollection<T> collection)
+#if NETSTANDARD2_0 // ToHashSet was added to System.Linq in 4.7.2, NetStandard 2.1
+        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
+        {
+            return new HashSet<T>(source);
+        }
+
+        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source, IEqualityComparer<T> comparer)
+        {
+            return new HashSet<T>(source, comparer);
+        }
+#endif
+        public static bool Any<T>(this ICollection<T> collection)
             => collection.Count > 0;
 
         public static bool Any<T>(this List<T> list)
