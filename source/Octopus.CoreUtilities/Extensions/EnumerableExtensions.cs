@@ -21,6 +21,7 @@ namespace Octopus.CoreUtilities.Extensions
             return new HashSet<T>(source, comparer);
         }
 #endif
+      
         public static bool Any<T>(this ICollection<T> collection)
             => collection.Count > 0;
 
