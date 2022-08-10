@@ -1,16 +1,15 @@
 ﻿using System;
-using Octopus.Shared;
-using Octopus.Shared.Internals.Options;
-using Octopus.Shared.Startup;
+using Octopus.Tentacle.Internals.Options;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands.OptionSets
 {
     public class ApiEndpointOptions : ICommandOptions
     {
-        public string Server { get; private set; }
-        public string ApiKey { get; private set; }
-        public string Username { get; private set; }
-        public string Password { get; private set; }
+        public string Server { get; private set; } = null!;
+        public string ApiKey { get; private set; } = null!;
+        public string Username { get; private set; } = null!;
+        public string Password { get; private set; } = null!;
 
         public bool Optional { private get; set; }
 

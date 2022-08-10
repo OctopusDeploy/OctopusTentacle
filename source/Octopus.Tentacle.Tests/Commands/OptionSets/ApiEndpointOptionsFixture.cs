@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Shared;
-using Octopus.Shared.Internals.Options;
 using Octopus.Tentacle.Commands.OptionSets;
+using Octopus.Tentacle.Internals.Options;
 
 namespace Octopus.Tentacle.Tests.Commands.OptionSets
 {

@@ -56,13 +56,13 @@
     <Content Include="Startup\Packages\**\*.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="Resources\TestCertificateNoPassword.pfx" />
-    <EmbeddedResource Include="Resources\TestCertificateNoPrivateKey.pfx" />
-    <EmbeddedResource Include="Resources\TestCertificateWithPassword.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.DirectoryServices.AccountManagement" Condition="'$(TargetFramework)' == 'net452'" />
     <Reference Include="System.IdentityModel" Condition="'$(TargetFramework)' == 'net452'" />
     <Reference Include="System.ServiceProcess" Condition="'$(TargetFramework)' == 'net452'" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Support" />
   </ItemGroup>
 </Project>

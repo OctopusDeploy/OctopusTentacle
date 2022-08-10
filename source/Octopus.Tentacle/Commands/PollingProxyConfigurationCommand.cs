@@ -1,9 +1,8 @@
 using System;
 using Octopus.Diagnostics;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {

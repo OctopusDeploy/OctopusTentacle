@@ -4,11 +4,10 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Microsoft.Win32;
 using Octopus.Diagnostics;
-using Octopus.Shared;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Security.Certificates;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Security.Certificates;
+using Octopus.Tentacle.Startup;
 using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
 
 namespace Octopus.Tentacle.Commands
@@ -18,8 +17,8 @@ namespace Octopus.Tentacle.Commands
         readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
         readonly ISystemLog log;
         bool fromRegistry;
-        string importFile;
-        string importPfxPassword;
+        string importFile = null!;
+        string importPfxPassword = null!;
 
         public ImportCertificateCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector, ILogFileOnlyLogger logFileOnlyLogger)
             : base(selector, log, logFileOnlyLogger)
@@ -41,13 +40,13 @@ namespace Octopus.Tentacle.Commands
             if (fromRegistry && !string.IsNullOrWhiteSpace(importFile))
                 throw new ControlledFailureException("Please specify only one of either from-registry or from-file.");
 
-            X509Certificate2 x509Certificate = null;
+            X509Certificate2? x509Certificate = null;
             if (fromRegistry)
             {
                 log.Info("Importing the Octopus 1.x certificate stored in the Windows registry...");
 
-                string encoded = GetEncodedCertificate();
-                if (string.IsNullOrWhiteSpace(encoded))
+                var encoded = GetEncodedCertificate();
+                if (encoded == null || string.IsNullOrWhiteSpace(encoded))
                 {
                     throw new ControlledFailureException("No Octopus 1.x Tentacle certificate was found.");
                 }
@@ -92,7 +91,7 @@ namespace Octopus.Tentacle.Commands
             log.Info($"Certificate with thumbprint {x509Certificate.Thumbprint} imported successfully.");
         }
 
-        string GetEncodedCertificate()
+        string? GetEncodedCertificate()
         {
             const RegistryHive Hive = RegistryHive.LocalMachine;
             const RegistryView View = RegistryView.Registry64;

@@ -4,9 +4,9 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 using Octopus.Shared.Contracts;
-using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Scripts;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Services.Scripts
                         var source = StringToSource(json.ReadAsString());
                         var message = json.ReadAsString();
                         var occurred = json.ReadAsDateTimeOffset();
-                        if (occurred == null) continue;
+                        if (occurred == null || message == null) continue;
 
                         results.Add(new ProcessOutput(source, message, occurred.Value));
                     }
@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Services.Scripts
             }
         }
 
-        static ProcessOutputSource StringToSource(string source)
+        static ProcessOutputSource StringToSource(string? source)
         {
             switch (source)
             {
@@ -132,7 +132,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
             string MaskSensitiveValues(string rawMessage)
             {
-                string maskedMessage = null;
+                string? maskedMessage = null;
                 sensitiveValueMasker.SafeSanitize(rawMessage, s => maskedMessage = s);
                 return maskedMessage ?? rawMessage;
             }

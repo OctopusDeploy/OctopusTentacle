@@ -3,13 +3,12 @@ using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Octopus.Diagnostics;
-using Octopus.Shared;
-using Octopus.Shared.Configuration.Instances;
 using Octopus.Shared.Security;
-using Octopus.Shared.Security.Certificates;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Security.Certificates;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -19,9 +18,9 @@ namespace Octopus.Tentacle.Commands
         readonly ISystemLog log;
         readonly Lazy<ICertificateGenerator> generator;
         bool preserve;
-        string exportFile;
-        string exportPfx;
-        string password;
+        string exportFile = null!;
+        string exportPfx = null!;
+        string password = null!;
 
         public NewCertificateCommand(
             Lazy<IWritableTentacleConfiguration> configuration,

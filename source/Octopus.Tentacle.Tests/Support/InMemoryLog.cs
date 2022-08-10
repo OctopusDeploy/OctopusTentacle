@@ -1,42 +1,66 @@
 using System;
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Linq;
 using System.Text;
+using System.Threading;
+using FluentAssertions;
+using NUnit.Framework;
 using Octopus.Diagnostics;
-using Octopus.Shared.Diagnostics;
+using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Tests.Support
 {
     public class InMemoryLog : SystemLog
     {
-        readonly ISystemLog log;
-        readonly StringBuilder logText = new StringBuilder();
+        readonly ILog log;
+        readonly BlockingCollection<LogEvent> events = new BlockingCollection<LogEvent>(1000);
 
         public InMemoryLog() : this(null)
         {
         }
 
-        public InMemoryLog(ISystemLog log)
+        public InMemoryLog(ILog? log)
         {
-            this.log = log ?? new SystemLog();
+            this.log = log ?? new TestConsoleLog();
         }
 
         protected override void WriteEvent(LogEvent logEvent)
         {
-            logText.AppendLine(logEvent.Category + " " + logEvent.MessageText + " " + logEvent.Error);
-            log.Write(logEvent.Category, logEvent.Error, logEvent.MessageText);
-        }
-
-        public override void Flush()
-        {
-        }
-
-        public override bool IsEnabled(LogCategory category)
-        {
-            return true;
+            events.Add(logEvent);
+            log.Write(logEvent.Category, logEvent.Error!, logEvent.MessageText);
         }
 
         public string GetLog()
         {
-            return logText.ToString();
+            return events.Aggregate(new StringBuilder(), (sb, e) => sb.AppendLine($"{e.Category} {e.MessageText} {e.Error}"), sb => sb.ToString());
+        }
+
+        public void AssertContains(string partialString)
+        {
+            events.Should().Contain(e => CultureInfo.CurrentCulture.CompareInfo.IndexOf(e.MessageText, partialString, CompareOptions.IgnoreCase) >= 0);
+        }
+
+        public void AssertEventuallyContains(string partialString, CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    AssertContains(partialString);
+                    return;
+                }
+                catch (AssertionException)
+                {
+                    Thread.Sleep(100);
+                }
+            }
+
+            throw new TimeoutException();
+        }
+
+        public override void Flush()
+        {
         }
     }
 }

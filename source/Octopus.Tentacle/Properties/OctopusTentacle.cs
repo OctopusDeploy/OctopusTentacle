@@ -1,6 +1,6 @@
 using System.Reflection;
 using Octopus.Client.Model;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Versioning;
 using AssemblyExtensions = Octopus.Tentacle.Versioning.AssemblyExtensions;
 

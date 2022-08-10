@@ -4,9 +4,9 @@ using System.Linq;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Shared.Configuration.EnvironmentVariableMappings;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.EnvironmentVariableMappings;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {

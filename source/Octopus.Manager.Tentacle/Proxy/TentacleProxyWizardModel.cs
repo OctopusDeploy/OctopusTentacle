@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.Proxy
 {

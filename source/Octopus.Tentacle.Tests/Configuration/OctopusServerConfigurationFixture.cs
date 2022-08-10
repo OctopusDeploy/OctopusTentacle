@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         }
 
         static JsonSerializerSettings GetSettings()
-            => Octopus.Shared.Configuration.JsonSerialization.GetDefaultSerializerSettings();
+            => JsonSerialization.GetDefaultSerializerSettings();
 
         [Test]
         public void CommunicationStyleRoundtripsCorrectly()

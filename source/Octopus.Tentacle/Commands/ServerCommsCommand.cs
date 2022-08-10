@@ -3,11 +3,10 @@ using System.Linq;
 using Octopus.Client.Model;
 using Octopus.CoreUtilities.Extensions;
 using Octopus.Diagnostics;
-using Octopus.Shared;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -15,11 +14,11 @@ namespace Octopus.Tentacle.Commands
     {
         readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
         readonly ISystemLog log;
-        string serverThumbprint;
-        string style;
-        string serverHost;
+        string serverThumbprint = null!;
+        string style = null!;
+        string serverHost = null!;
         int serverPort = 10943;
-        string webSocket;
+        string webSocket = null!;
 
         public ServerCommsCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector, ILogFileOnlyLogger logFileOnlyLogger)
             : base(selector, log, logFileOnlyLogger)

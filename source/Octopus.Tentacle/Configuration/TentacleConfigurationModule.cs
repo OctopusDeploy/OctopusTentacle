@@ -1,6 +1,6 @@
 using System;
 using Autofac;
-using Octopus.Shared.Configuration.EnvironmentVariableMappings;
+using Octopus.Tentacle.Configuration.EnvironmentVariableMappings;
 
 namespace Octopus.Tentacle.Configuration
 {

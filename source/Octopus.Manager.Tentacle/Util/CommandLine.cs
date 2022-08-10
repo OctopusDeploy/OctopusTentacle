@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.Util
 {

@@ -2,19 +2,19 @@
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
     [TestFixture]
     public class NewCertificateCommandFixture : CommandFixture<NewCertificateCommand>
     {
-        StubTentacleConfiguration configuration;
-        ISystemLog log;
+        StubTentacleConfiguration configuration = null!;
+        ISystemLog log = null!;
 
         [SetUp]
         public override void SetUp()

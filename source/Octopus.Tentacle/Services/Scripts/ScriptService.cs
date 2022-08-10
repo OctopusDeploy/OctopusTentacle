@@ -4,10 +4,10 @@ using System.IO;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
-using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Scripts;
 using Octopus.Shared.Security;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
@@ -100,37 +100,32 @@ namespace Octopus.Tentacle.Services.Scripts
 
         public ScriptStatusResponse GetStatus(ScriptStatusRequest request)
         {
-            RunningScript script;
-            running.TryGetValue(request.Ticket.TaskId, out script);
+            running.TryGetValue(request.Ticket.TaskId, out var script);
             return GetResponse(request.Ticket, script, request.LastLogSequence);
         }
 
         public ScriptStatusResponse CancelScript(CancelScriptCommand command)
         {
-            CancellationTokenSource cancel;
-            if (cancellationTokens.TryGetValue(command.Ticket.TaskId, out cancel))
+            if (cancellationTokens.TryGetValue(command.Ticket.TaskId, out var cancel))
             {
                 cancel.Cancel();
             }
 
-            RunningScript script;
-            running.TryGetValue(command.Ticket.TaskId, out script);
+            running.TryGetValue(command.Ticket.TaskId, out var script);
             return GetResponse(command.Ticket, script, command.LastLogSequence);
         }
 
         public ScriptStatusResponse CompleteScript(CompleteScriptCommand command)
         {
-            RunningScript script;
-            CancellationTokenSource cancellation;
-            running.TryRemove(command.Ticket.TaskId, out script);
-            cancellationTokens.TryRemove(command.Ticket.TaskId, out cancellation);
+            running.TryRemove(command.Ticket.TaskId, out var script);
+            cancellationTokens.TryRemove(command.Ticket.TaskId, out _);
             var response = GetResponse(command.Ticket, script, command.LastLogSequence);
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
             workspace.Delete();
             return response;
         }
 
-        ScriptStatusResponse GetResponse(ScriptTicket ticket, RunningScript script, long lastLogSequence)
+        ScriptStatusResponse GetResponse(ScriptTicket ticket, RunningScript? script, long lastLogSequence)
         {
             var exitCode = script != null ? script.ExitCode : 0;
             var state = script != null ? script.State : ProcessState.Complete;

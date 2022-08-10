@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
 using Autofac;
-using Octopus.Shared.Diagnostics;
 using Octopus.Tentacle.Configuration.Proxy;
+using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Configuration
 {

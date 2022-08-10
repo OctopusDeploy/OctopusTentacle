@@ -2,8 +2,8 @@
 using Autofac;
 using Octopus.Manager.Tentacle.Shell;
 using Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Util;
 using DeleteWelcome = Octopus.Manager.Tentacle.DeleteWizard.Views.DeleteWelcome;
 
 namespace Octopus.Manager.Tentacle.DeleteWizard

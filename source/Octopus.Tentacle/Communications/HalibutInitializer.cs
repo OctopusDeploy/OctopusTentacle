@@ -6,7 +6,6 @@ using System.Net.Sockets;
 using Halibut;
 using Octopus.Client.Model;
 using Octopus.Diagnostics;
-using Octopus.Shared.Configuration;
 using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Tentacle.Communications
@@ -90,7 +89,7 @@ namespace Octopus.Tentacle.Communications
                 }
 
 #pragma warning disable 618
-                pollingEndPoint.SubscriptionId ??= "poll://" + configuration.TentacleSquid.ToLowerInvariant() + "/";
+                pollingEndPoint.SubscriptionId ??= "poll://" + configuration.TentacleSquid?.ToLowerInvariant() + "/";
 #pragma warning restore 618
 
                 log.Info($"Agent will poll Octopus Server at {pollingEndPoint.Address} for subscription {pollingEndPoint.SubscriptionId} expecting thumbprint {pollingEndPoint.Thumbprint}");

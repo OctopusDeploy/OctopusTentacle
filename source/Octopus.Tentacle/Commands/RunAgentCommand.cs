@@ -3,13 +3,12 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using Octopus.Diagnostics;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
 using Octopus.Shared.Variables;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Versioning;
 using Octopus.Time;
 
@@ -102,7 +101,8 @@ namespace Octopus.Tentacle.Commands
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProgramDirectoryPath, Path.GetDirectoryName(exePath));
             Environment.SetEnvironmentVariable(EnvironmentVariables.AgentProgramDirectoryPath, Path.GetDirectoryName(exePath));
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleVersion, appVersion.ToString());
-            Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, configuration.Value.TentacleCertificate.SignatureAlgorithm.FriendlyName);
+            if (configuration.Value.TentacleCertificate != null)
+                Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleCertificateSignatureAlgorithm, configuration.Value.TentacleCertificate.SignatureAlgorithm.FriendlyName);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleUseDefaultProxy, proxyConfiguration.Value.UseDefaultProxy.ToString());
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyUsername, proxyConfiguration.Value.CustomProxyUsername);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleProxyPassword, proxyConfiguration.Value.CustomProxyPassword);

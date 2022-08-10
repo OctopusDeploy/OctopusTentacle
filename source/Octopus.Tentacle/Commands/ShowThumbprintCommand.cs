@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using Octopus.Diagnostics;
-using Octopus.Shared;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -19,7 +18,7 @@ namespace Octopus.Tentacle.Commands
 
         readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
         readonly ISystemLog log;
-        string exportFile;
+        string exportFile = null!;
 
         public string Format { get; set; } = TextFormat;
 
@@ -43,7 +42,7 @@ namespace Octopus.Tentacle.Commands
             if (!SupportedFormats.Contains(Format, StringComparer.OrdinalIgnoreCase))
                 throw new ControlledFailureException($"The format '{Format}' is not supported. Try {string.Join(" or ", SupportedFormats)}.");
 
-            var thumbprint = tentacleConfiguration.Value.TentacleCertificate.Thumbprint;
+            var thumbprint = tentacleConfiguration.Value.TentacleCertificate?.Thumbprint;
 
             var content = string.Equals(Format, JsonFormat, StringComparison.OrdinalIgnoreCase)
                 ? JsonConvert.SerializeObject(new { Thumbprint = thumbprint })

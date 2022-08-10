@@ -1,9 +1,8 @@
 ﻿using System;
 using Octopus.Diagnostics;
-using Octopus.Shared;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -11,8 +10,8 @@ namespace Octopus.Tentacle.Commands
     {
         readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
         readonly ISystemLog log;
-        string oldThumbprint;
-        string newThumbprint;
+        string oldThumbprint = null!;
+        string newThumbprint = null!;
 
         public UpdateTrustCommand(
             Lazy<IWritableTentacleConfiguration> tentacleConfiguration,

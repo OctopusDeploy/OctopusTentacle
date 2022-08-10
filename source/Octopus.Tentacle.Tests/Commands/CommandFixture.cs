@@ -1,13 +1,13 @@
 ﻿using NSubstitute;
 using NUnit.Framework;
-using Octopus.Shared.Internals.Options;
-using Octopus.Shared.Startup;
+using Octopus.Tentacle.Internals.Options;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
     public class CommandFixture<TCommand> where TCommand : ICommand
     {
-        protected TCommand Command { get; set; }
+        protected TCommand Command { get; set; } = default!;
 
         [SetUp]
         public virtual void SetUp()

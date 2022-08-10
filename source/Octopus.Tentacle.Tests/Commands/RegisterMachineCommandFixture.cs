@@ -11,14 +11,14 @@ using Octopus.Client.Model;
 using Octopus.Client.Operations;
 using Octopus.Client.Repositories.Async;
 using Octopus.Diagnostics;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Tests.Commands
                                                  Substitute.For<ILogFileOnlyLogger>());
 
             configuration.ServicesPortNumber.Returns(90210);
-            certificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew("CN=Hello");
+            certificate = new CertificateGenerator(new NullLog()).GenerateNew("CN=Hello");
             configuration.TentacleCertificate.Returns(certificate);
         }
 

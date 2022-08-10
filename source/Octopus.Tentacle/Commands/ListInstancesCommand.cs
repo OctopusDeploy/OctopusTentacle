@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
-using Octopus.Shared;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {

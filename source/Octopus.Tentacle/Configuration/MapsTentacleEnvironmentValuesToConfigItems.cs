@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using System;
-using Octopus.Shared.Configuration.EnvironmentVariableMappings;
-using Octopus.Shared.Startup;
+using Octopus.Tentacle.Configuration.EnvironmentVariableMappings;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Configuration
 {

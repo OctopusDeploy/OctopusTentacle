@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using Octopus.Shared.Configuration;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Diagnostics;
 using IPollingProxyConfiguration = Octopus.Tentacle.Configuration.IPollingProxyConfiguration;
 
 namespace Octopus.Tentacle.Tests.Commands
@@ -27,17 +27,17 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         public int ServicesPortNumber { get; set; }
-        public string ApplicationDirectory { get; set; }
-        public string PackagesDirectory { get; private set; }
-        public string LogsDirectory { get; private set; }
-        public string JournalFilePath { get; private set; }
-        public string PackageRetentionJournalPath { get; private set; }
-        public X509Certificate2 TentacleCertificate { get; set; }
-        public string ListenIpAddress { get; set; }
+        public string ApplicationDirectory { get; set; } = null!;
+        public string PackagesDirectory { get; private set; } = null!;
+        public string LogsDirectory { get; private set; } = null!;
+        public string JournalFilePath { get; private set; } = null!;
+        public string PackageRetentionJournalPath { get; private set; } = null!;
+        public X509Certificate2 TentacleCertificate { get; set; } = null!;
+        public string? ListenIpAddress { get; set; } = null!;
         public bool NoListen { get; set; }
-        public OctopusServerConfiguration LastReceivedHandshake { get; set; }
-        public IProxyConfiguration ProxyConfiguration { get; set; }
-        public IPollingProxyConfiguration PollingProxyConfiguration { get; set; }
+        public OctopusServerConfiguration LastReceivedHandshake { get; set; } = null!;
+        public IProxyConfiguration ProxyConfiguration { get; set; } = null!;
+        public IPollingProxyConfiguration PollingProxyConfiguration { get; set; } = null!;
 
         public bool SetApplicationDirectory(string directory)
         {
@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Commands
             return true;
         }
 
-        public bool SetListenIpAddress(string address)
+        public bool SetListenIpAddress(string? address)
         {
             ListenIpAddress = address;
             return true;
@@ -108,7 +108,7 @@ namespace Octopus.Tentacle.Tests.Commands
 
         public X509Certificate2 GenerateNewCertificate()
         {
-            var cert = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew("cn=foo");
+            var cert = new CertificateGenerator(new NullLog()).GenerateNew("cn=foo");
             TentacleCertificate = cert;
             return cert;
         }

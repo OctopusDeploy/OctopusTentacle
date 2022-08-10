@@ -8,15 +8,15 @@ namespace Octopus.Tentacle.Commands.OptionSets
 {
     public class OctopusClientInitializer : IOctopusClientInitializer
     {
-        public async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, IWebProxy overrideProxy)
+        public async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, IWebProxy? overrideProxy)
             => await CreateClient(apiEndpointOptions, overrideProxy, false);
 
         public async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, bool useDefaultProxy)
             => await CreateClient(apiEndpointOptions, null, useDefaultProxy);
 
-        async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, IWebProxy overrideProxy, bool useDefaultProxy)
+        async Task<IOctopusAsyncClient> CreateClient(ApiEndpointOptions apiEndpointOptions, IWebProxy? overrideProxy, bool useDefaultProxy)
         {
-            IOctopusAsyncClient client = null;
+            IOctopusAsyncClient? client = null;
             try
             {
                 var endpoint = GetEndpoint(apiEndpointOptions, overrideProxy);
@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Commands.OptionSets
             }
         }
 
-        OctopusServerEndpoint GetEndpoint(ApiEndpointOptions apiEndpointOptions, IWebProxy overrideProxy)
+        OctopusServerEndpoint GetEndpoint(ApiEndpointOptions apiEndpointOptions, IWebProxy? overrideProxy)
         {
             OctopusServerEndpoint endpoint;
             if (string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey))

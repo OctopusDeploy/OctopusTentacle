@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
@@ -17,7 +16,7 @@ namespace Octopus.Tentacle.Communications
             this.log = log;
         }
 
-        public string CheckServerCommunicationsIsOpen(Uri serverAddress, IWebProxy proxyOverride)
+        public string CheckServerCommunicationsIsOpen(Uri serverAddress, IWebProxy? proxyOverride)
         {
             Uri handshake;
             if (ServiceEndPoint.IsWebSocketAddress(serverAddress))
@@ -30,7 +29,7 @@ namespace Octopus.Tentacle.Communications
                 handshake = new UriBuilder(serverAddress) { Path = "/handshake" }.Uri;
                 log.Info($"Checking connectivity on the server communications port {serverAddress.Port}...");
             }
-            string thumbprint = null;
+            string? thumbprint = null;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
             {
                 thumbprint = (certificate as X509Certificate2)?.Thumbprint;
@@ -74,6 +73,8 @@ namespace Octopus.Tentacle.Communications
 
             log.Info("Connected successfully");
 
+            if (thumbprint == null)
+                throw new Exception("Unable to determine the thumbprint of the Octopus Server");
             return thumbprint;
         }
 
