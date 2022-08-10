@@ -1,15 +1,15 @@
 using System;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {
     public class CreateInstanceCommand : AbstractCommand
     {
         readonly IApplicationInstanceManager instanceManager;
-        string instanceName;
-        string config;
-        string home;
+        string instanceName = null!;
+        string config = null!;
+        string home = null!;
 
         public CreateInstanceCommand(IApplicationInstanceManager instanceManager, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {

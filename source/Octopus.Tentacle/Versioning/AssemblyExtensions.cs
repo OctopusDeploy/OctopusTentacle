@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Versioning
 {

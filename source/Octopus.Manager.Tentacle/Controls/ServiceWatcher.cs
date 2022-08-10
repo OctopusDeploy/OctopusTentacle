@@ -5,8 +5,8 @@ using System.ServiceProcess;
 using System.Timers;
 using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.Controls
 {
@@ -28,7 +28,7 @@ namespace Octopus.Manager.Tentacle.Controls
         public ServiceWatcher(ApplicationName application, string instanceName, string executablePath)
         {
             this.instanceName = instanceName;
-            ServiceName = Shared.Configuration.ServiceName.GetWindowsServiceName(application, instanceName);
+            ServiceName = Octopus.Tentacle.Configuration.ServiceName.GetWindowsServiceName(application, instanceName);
             this.executablePath = executablePath;
 
             timer = new Timer(500);

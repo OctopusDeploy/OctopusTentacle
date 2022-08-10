@@ -5,8 +5,8 @@ using System.Linq;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
-using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.FileSystem
 {

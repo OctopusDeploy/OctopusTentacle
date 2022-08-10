@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Certificates
         }
 
         [Test]
-        [WindowsTest]
+        [Support.TestAttributes.WindowsTest]
         public void CanGenerateNonExportableCertificates()
         {
             var cert = generator.GenerateNewNonExportable("CN=test");

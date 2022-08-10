@@ -8,15 +8,13 @@ using Octopus.Client.Exceptions;
 using Octopus.Client.Model;
 using Octopus.Client.Operations;
 using Octopus.Diagnostics;
-using Octopus.Shared;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Properties;
+using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -31,15 +29,15 @@ namespace Octopus.Tentacle.Commands
 
         readonly ISystemLog log;
         readonly ApiEndpointOptions api;
-        string name;
-        string policy;
-        string publicName;
+        string name = null!;
+        string policy = null!;
+        string publicName = null!;
         bool allowOverwrite;
         string comms = "TentaclePassive";
         int serverCommsPort = 10943;
-        string proxy;
-        string spaceName;
-        string serverWebSocketAddress;
+        string proxy = null!;
+        string spaceName = null!;
+        string serverWebSocketAddress = null!;
         int? tentacleCommsPort = null;
 
         public RegisterMachineCommandBase(Lazy<TRegistrationOperationType> lazyRegisterMachineOperation,
@@ -95,15 +93,15 @@ namespace Octopus.Tentacle.Commands
             if (communicationStyle == CommunicationStyle.TentacleActive && !string.IsNullOrWhiteSpace(proxy))
                 throw new ControlledFailureException("Option --proxy can only be used with --comms-style=TentaclePassive.  To set a proxy for a polling Tentacle use the polling-proxy command first and then register the Tentacle with register-with.");
 
-            Uri serverAddress = null;
+            Uri? serverAddress = null;
 
             var useDefaultProxy = communicationStyle == CommunicationStyle.TentacleActive
                 ? configuration.Value.PollingProxyConfiguration.UseDefaultProxy
                 : configuration.Value.ProxyConfiguration.UseDefaultProxy;
 
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
-            IWebProxy proxyOverride = null;
-            string sslThumbprint = null;
+            IWebProxy? proxyOverride = null;
+            string? sslThumbprint = null;
             if (communicationStyle == CommunicationStyle.TentacleActive)
             {
                 serverAddress = GetActiveTentacleAddress();
@@ -121,13 +119,13 @@ namespace Octopus.Tentacle.Commands
             await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle);
         }
 
-        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri serverAddress, string sslThumbprint, CommunicationStyle communicationStyle)
+        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri? serverAddress, string? sslThumbprint, CommunicationStyle communicationStyle)
         {
             await ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(systemRepository);
 
             var server = new OctopusServerConfiguration(await GetServerThumbprint(systemRepository, serverAddress, sslThumbprint))
             {
-                Address = serverAddress,
+                Address = serverAddress!,
                 CommunicationStyle = communicationStyle
             };
 
@@ -155,7 +153,7 @@ namespace Octopus.Tentacle.Commands
             registerMachineOperation.MachinePolicy = policy;
             registerMachineOperation.AllowOverwrite = allowOverwrite;
             registerMachineOperation.CommunicationStyle = communicationStyle;
-            registerMachineOperation.TentacleThumbprint = configuration.Value.TentacleCertificate.Thumbprint;
+            registerMachineOperation.TentacleThumbprint = configuration.Value.TentacleCertificate!.Thumbprint;
 
             EnhanceOperation(registerMachineOperation);
 
@@ -181,7 +179,7 @@ namespace Octopus.Tentacle.Commands
         protected abstract void CheckArgs();
         protected abstract void EnhanceOperation(TRegistrationOperationType registerOperation);
 
-        async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri serverAddress, string sslThumbprint)
+        async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri? serverAddress, string? sslThumbprint)
         {
             if (serverAddress != null && ServiceEndPoint.IsWebSocketAddress(serverAddress))
             {

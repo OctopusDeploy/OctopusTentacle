@@ -1,19 +1,17 @@
 using System;
 using System.Net;
 using Autofac;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Security;
-using Octopus.Shared.Startup;
 using Octopus.Shared.Time;
-using Octopus.Shared.Util;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Properties;
 using Octopus.Tentacle.Services;
+using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Versioning;
 
 namespace Octopus.Tentacle

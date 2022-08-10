@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
-using Octopus.Shared.Configuration;
 
 namespace Octopus.Tentacle.Configuration
 {

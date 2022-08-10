@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Octopus.Client.Model;
 using Octopus.Client.Operations;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Diagnostics;
-using Octopus.Shared;
 using Octopus.Tentacle.Configuration;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Commands
 {

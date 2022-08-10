@@ -5,8 +5,8 @@ using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Controls;
 using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Manager.Tentacle.Util;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Util;
 using IScriptableViewModel = Octopus.Manager.Tentacle.Infrastructure.IScriptableViewModel;
 
 namespace Octopus.Manager.Tentacle.Proxy

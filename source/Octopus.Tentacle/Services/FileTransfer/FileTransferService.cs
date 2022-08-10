@@ -2,10 +2,9 @@
 using System.IO;
 using Halibut;
 using Octopus.Diagnostics;
-using Octopus.Shared.Configuration;
 using Octopus.Shared.Contracts;
-
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.FileTransfer
 {
@@ -29,7 +28,7 @@ namespace Octopus.Tentacle.Services.FileTransfer
             if (!fileSystem.FileExists(fullPath))
             {
                 log.Trace("Client requested a file download, but the file does not exist: " + fullPath);
-                return null;
+                return null!;
             }
 
             var fileSize = fileSystem.GetFileSize(fullPath);
@@ -59,11 +58,13 @@ namespace Octopus.Tentacle.Services.FileTransfer
             if (upload == null)
             {
                 log.Trace("Client requested a file upload, but no content stream was provided.");
-                return new UploadResult(ResolvePath(remotePath), null, 0);
+                return new UploadResult(ResolvePath(remotePath), null!, 0);
             }
 
             var fullPath = ResolvePath(remotePath);
             var parentDirectory = Path.GetDirectoryName(fullPath);
+            if (parentDirectory == null)
+                throw new InvalidOperationException($"Unable to determine parent directory from path {fullPath}");
             fileSystem.EnsureDirectoryExists(parentDirectory);
             fileSystem.EnsureDiskHasEnoughFreeSpace(parentDirectory, upload.Length);
 
@@ -92,6 +93,8 @@ namespace Octopus.Tentacle.Services.FileTransfer
             if (Path.IsPathRooted(path))
                 return fileSystem.GetFullPath(path);
 
+            if (home.HomeDirectory == null)
+                throw new InvalidOperationException("The Tentacle home directory has not been set.");
             return fileSystem.GetFullPath(Path.Combine(home.HomeDirectory, path));
         }
     }

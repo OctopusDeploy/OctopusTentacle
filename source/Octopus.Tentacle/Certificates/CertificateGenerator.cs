@@ -2,11 +2,12 @@ using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Diagnostics;
-using Octopus.Shared.Security;
+
+using Octopus.Tentacle.Util;
+
 #if NETFRAMEWORK
-using Octopus.Shared.Internals.CertificateGeneration;
+using Octopus.Tentacle.Internals.CertificateGeneration;
 #else
-using Octopus.Shared.Util;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;

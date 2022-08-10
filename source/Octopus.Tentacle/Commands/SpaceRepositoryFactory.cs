@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Octopus.Client;
 using Octopus.Client.Model;
-using Octopus.Shared;
 using Octopus.Shared.Properties;
 
 namespace Octopus.Tentacle.Commands

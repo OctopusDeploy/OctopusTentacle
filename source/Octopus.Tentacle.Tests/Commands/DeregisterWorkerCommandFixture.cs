@@ -9,13 +9,13 @@ using Octopus.Client.Model;
 using Octopus.Configuration;
 using Octopus.Diagnostics;
 using Octopus.Shared;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Tests.Support;
 
 namespace Octopus.Tentacle.Tests.Commands
@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
-                TentacleCertificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
             Command = new DeregisterWorkerCommand(new Lazy<ITentacleConfiguration>(() => configuration),
                 log,
@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { "NON-MATCHING-THUMBPRINT" },
-                TentacleCertificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
 
             Command = new DeregisterWorkerCommand(new Lazy<ITentacleConfiguration>(() => configuration),
@@ -111,7 +111,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var configuration = new StubTentacleConfiguration
             {
                 TrustedOctopusThumbprints = new List<string> { expectedThumbPrint },
-                TentacleCertificate = new CertificateGenerator(new Shared.Diagnostics.NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
+                TentacleCertificate = new CertificateGenerator(new NullLog()).GenerateNew($"CN={Guid.NewGuid()}")
             };
 
             Command = new DeregisterWorkerCommand(new Lazy<ITentacleConfiguration>(() => configuration),

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.Infrastructure
 {

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
-using Octopus.Shared.Diagnostics;
+using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.PreReq
 {
@@ -32,7 +33,7 @@ namespace Octopus.Manager.Tentacle.PreReq
             // to detect 3.0, it failed to detect 4. Going the direct route:
             try
             {
-                Octopus.Shared.Util.SilentProcessRunner.ExecuteCommand(
+                SilentProcessRunner.ExecuteCommand(
                     powerShellExe,
                     arguments,
                     ".",

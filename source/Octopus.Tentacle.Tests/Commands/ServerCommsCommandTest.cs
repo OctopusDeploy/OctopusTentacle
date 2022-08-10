@@ -6,11 +6,11 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Client.Model;
 using Octopus.Shared;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Internals.Options;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Internals.Options;
+using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Tests.Support;
 
 namespace Octopus.Tentacle.Tests.Commands
@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 );
         }
 
-        void Execute(string thumbprint, CommunicationStyle style, string host = null, string port = null)
+        void Execute(string thumbprint, CommunicationStyle style, string? host = null, string? port = null)
         {
             var parameters = new List<string>
             {

@@ -5,14 +5,12 @@ using Halibut;
 using Octopus.Client;
 using Octopus.Client.Model;
 using Octopus.Diagnostics;
-using Octopus.Shared;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -26,7 +24,7 @@ namespace Octopus.Tentacle.Commands
         readonly IApplicationInstanceSelector selector;
         readonly ApiEndpointOptions api;
         int commsPort = 10943;
-        string serverWebSocketAddress;
+        string serverWebSocketAddress = null!;
 
         public PollCommand(Lazy<IWritableTentacleConfiguration> configuration,
                            ISystemLog log,
@@ -63,7 +61,7 @@ namespace Octopus.Tentacle.Commands
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
 
-            string sslThumbprint = octopusServerChecker.Value.CheckServerCommunicationsIsOpen(serverAddress, proxyOverride);
+            var sslThumbprint = octopusServerChecker.Value.CheckServerCommunicationsIsOpen(serverAddress, proxyOverride);
 
             log.Info($"Configuring Tentacle to poll the server at {api.ServerUri}");
 

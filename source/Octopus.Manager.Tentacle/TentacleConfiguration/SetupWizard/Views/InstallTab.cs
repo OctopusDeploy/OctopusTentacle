@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Octopus.Manager.Tentacle.Dialogs;
 using Octopus.Manager.Tentacle.Infrastructure;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
 {

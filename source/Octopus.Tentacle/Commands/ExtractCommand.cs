@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
-using Octopus.Shared.Packages;
-using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
 using System.Threading;
 using Octopus.Diagnostics;
-using Octopus.Shared;
+using Octopus.Tentacle.Packages;
+using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -13,8 +12,8 @@ namespace Octopus.Tentacle.Commands
     {
         readonly Lazy<IPackageInstaller> packageInstaller;
         readonly ISystemLog log;
-        string packageFile;
-        string destinationDirectory;
+        string packageFile = null!;
+        string destinationDirectory = null!;
 
         public ExtractCommand(Lazy<IPackageInstaller> packageInstaller, Lazy<IOctopusFileSystem> fileSystem, ISystemLog log, ILogFileOnlyLogger logFileOnlyLogger)
             : base(logFileOnlyLogger)
@@ -24,7 +23,10 @@ namespace Octopus.Tentacle.Commands
             Options.Add("package=", "Package file", v =>
             {
                 var fullPath = fileSystem.Value.GetFullPath(v);
-                fileSystem.Value.EnsureDirectoryExists(Path.GetDirectoryName(fullPath));
+                var directory = Path.GetDirectoryName(fullPath);
+                if (directory == null)
+                    throw new InvalidOperationException($"Unable to determine directory name from path {fullPath}");
+                fileSystem.Value.EnsureDirectoryExists(directory);
                 if (!fileSystem.Value.FileExists(fullPath))
                     throw new ControlledFailureException("Package not found: " + fullPath);
 

@@ -5,9 +5,9 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Shared.Contracts;
-using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Services.Scripts;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {

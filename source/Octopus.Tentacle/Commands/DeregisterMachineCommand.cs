@@ -1,16 +1,12 @@
 ﻿using System;
-using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Client;
-using Octopus.Shared;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Commands
 {
@@ -24,7 +20,7 @@ namespace Octopus.Tentacle.Commands
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly ISpaceRepositoryFactory spaceRepositoryFactory;
-        string spaceName;
+        string spaceName = null!;
 
         public const string DeregistrationSuccessMsg = "Machine deregistered successfully";
         public const string MultipleMatchErrorMsg = "The Tentacle matches more than one machine on the server. To deregister all of these machines specify the --multiple flag.";
@@ -69,6 +65,10 @@ namespace Octopus.Tentacle.Commands
 
         public async Task Deregister(IOctopusSpaceAsyncRepository repository)
         {
+            if (configuration.Value.TentacleCertificate?.Thumbprint == null)
+            {
+                throw new ControlledFailureException("This Tentacle does not have a thumbprint. The Tentacle must have a thumbprint in order to deregister it.");
+            }
             // 1. do the machine count/allowMultiple checks
             var matchingMachines = await repository.Machines.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
 

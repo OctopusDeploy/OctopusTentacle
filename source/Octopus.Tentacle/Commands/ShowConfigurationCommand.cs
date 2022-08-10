@@ -7,15 +7,13 @@ using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Configuration;
 using Octopus.Diagnostics;
-using Octopus.Shared;
-using Octopus.Shared.Configuration;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Diagnostics;
-using Octopus.Shared.Services;
-using Octopus.Shared.Startup;
-using Octopus.Shared.Util;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Util;
+using Octopus.Tentacle.Watchdog;
 using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
 
 namespace Octopus.Tentacle.Commands
@@ -26,13 +24,13 @@ namespace Octopus.Tentacle.Commands
         readonly IOctopusFileSystem fileSystem;
         readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
         readonly Lazy<IWatchdog> watchdog;
-        string file;
+        string file = null!;
         readonly ApiEndpointOptions apiEndpointOptions;
         readonly IProxyConfigParser proxyConfig;
         readonly IOctopusClientInitializer octopusClientInitializer;
         readonly ISystemLog log;
         readonly ISpaceRepositoryFactory spaceRepositoryFactory;
-        string spaceName;
+        string spaceName = null!;
 
         public override bool SuppressConsoleLogging => true;
 
@@ -90,7 +88,7 @@ namespace Octopus.Tentacle.Commands
         {
             var configStore = instanceSelector.Current.Configuration;
 
-            var oldHomeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, configStore, instanceSelector);
+            var oldHomeConfiguration = new HomeConfiguration(ApplicationName.Tentacle, configStore!, instanceSelector);
             var homeConfiguration = new WritableHomeConfiguration(ApplicationName.Tentacle, outputStore, instanceSelector);
             homeConfiguration.SetHomeDirectory(oldHomeConfiguration.HomeDirectory);
 
@@ -104,7 +102,7 @@ namespace Octopus.Tentacle.Commands
             newTentacleConfiguration.SetTrustedOctopusServers(tentacleConfiguration.Value.TrustedOctopusServers);
 
             //we dont want the actual certificate, as its encrypted, and we get a different output everytime
-            outputStore.Set<string>("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate?.Thumbprint);
+            outputStore.Set<string>("Tentacle.CertificateThumbprint", tentacleConfiguration.Value.TentacleCertificate?.Thumbprint ?? string.Empty);
 
             var watchdogConfiguration = watchdog.Value.GetConfiguration();
             watchdogConfiguration.WriteTo(outputStore);
@@ -137,12 +135,12 @@ namespace Octopus.Tentacle.Commands
                             log.Error($"No machines or workers were found on the specified server with the thumbprint '{tentacleConfiguration.Value.TentacleCertificate.Thumbprint}'. Unable to retrieve server side configuration.");
                             break;
 
-                        case 1 when matches.First() is MachineResource:
-                            await CollectionServerSideConfigurationFromMachine(outputStore, repository, matches.First() as MachineResource);
+                        case 1 when matches.First() is MachineResource machine:
+                            await CollectionServerSideConfigurationFromMachine(outputStore, repository, machine);
                             break;
 
-                        case 1 when matches.First() is WorkerResource:
-                            await CollectionServerSideConfigurationFromWorker(outputStore, repository, matches.First() as WorkerResource);
+                        case 1 when matches.First() is WorkerResource worker:
+                            await CollectionServerSideConfigurationFromWorker(outputStore, repository, worker);
                             break;
 
                         default:

@@ -8,8 +8,8 @@ using System;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
-using Octopus.Shared.Diagnostics;
 using Octopus.Shared.Security;
+using Octopus.Tentacle.Diagnostics;
 using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
 using CertificateValidator = Octopus.Tentacle.Certificates.CertificateValidator;
 

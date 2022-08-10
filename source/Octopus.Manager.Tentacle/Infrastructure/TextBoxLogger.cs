@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Controls;
 using Octopus.Diagnostics;
-using Octopus.Shared.Diagnostics;
+using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Manager.Tentacle.Infrastructure
 {

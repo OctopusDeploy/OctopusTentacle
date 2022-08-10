@@ -1,5 +1,5 @@
 ﻿#nullable enable
-using Octopus.Shared.Configuration;
+using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Tentacle.Tests.Commands
 {

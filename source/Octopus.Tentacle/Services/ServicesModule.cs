@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 using Autofac;
-using Octopus.Shared.Packages;
-using Octopus.Shared.Scripts;
 using Octopus.Tentacle.Communications;
+using Octopus.Tentacle.Packages;
+using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.Services
 {

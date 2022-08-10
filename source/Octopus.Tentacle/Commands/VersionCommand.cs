@@ -1,9 +1,8 @@
 using System;
 using System.Linq;
 using Newtonsoft.Json;
-using Octopus.Shared;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Properties;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Commands
 {

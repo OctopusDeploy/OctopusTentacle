@@ -1,6 +1,5 @@
 using System;
 using Autofac;
-using Octopus.Shared.Security;
 
 namespace Octopus.Tentacle.Certificates
 {

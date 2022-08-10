@@ -94,9 +94,6 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Internals\Options\_Readme.txt" />
-    <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
-    <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
     <Compile Update="Startup\WindowsServiceAdapter.cs">
       <SubType>Component</SubType>
     </Compile>

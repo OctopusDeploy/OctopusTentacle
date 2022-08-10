@@ -5,7 +5,7 @@ using Halibut;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
-using Octopus.Shared.Configuration;
+using Octopus.Tentacle.Configuration;
 
 namespace Octopus.Tentacle.Tests.Communications
 {
@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Tests.Communications
             proxy.UserName.Should().Be("username");
         }
 
-        ProxyDetails BuildHalibutProxy(bool useDefaultProxy, string username, string password, string host, int port)
+        ProxyDetails BuildHalibutProxy(bool useDefaultProxy, string? username, string? password, string? host, int port)
         {
             var config = new StubProxyConfiguration(useDefaultProxy, username, password, host, port);
             var parser = new ProxyConfigParser { GetSystemWebProxy = BuildDefaultProxy };
@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Tests.Communications
 
         class StubProxyConfiguration : IProxyConfiguration
         {
-            public StubProxyConfiguration(bool useDefaultProxy, string customProxyUsername, string customProxyPassword, string customProxyHost, int customProxyPort)
+            public StubProxyConfiguration(bool useDefaultProxy, string? customProxyUsername, string? customProxyPassword, string? customProxyHost, int customProxyPort)
             {
                 UseDefaultProxy = useDefaultProxy;
                 CustomProxyUsername = customProxyUsername;
@@ -102,9 +102,9 @@ namespace Octopus.Tentacle.Tests.Communications
             }
 
             public bool UseDefaultProxy { get; set; }
-            public string CustomProxyUsername { get; set; }
-            public string CustomProxyPassword { get; set; }
-            public string CustomProxyHost { get; set; }
+            public string? CustomProxyUsername { get; set; }
+            public string? CustomProxyPassword { get; set; }
+            public string? CustomProxyHost { get; set; }
             public int CustomProxyPort { get; set; }
         }
     }

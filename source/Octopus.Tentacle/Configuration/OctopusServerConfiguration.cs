@@ -1,9 +1,7 @@
 using System;
-using System.ComponentModel;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Octopus.Client.Model;
-using Octopus.Shared.Util;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration
 {
@@ -12,7 +10,7 @@ namespace Octopus.Tentacle.Configuration
     /// </summary>
     public class OctopusServerConfiguration
     {
-        string thumbprint;
+        string thumbprint = null!;
 
         /// <summary>
         /// Create a new OctopusServerConfiguration.
@@ -47,14 +45,14 @@ namespace Octopus.Tentacle.Configuration
         /// <summary>
         /// The URL used when connecting to the server, if available.
         /// </summary>
-        public Uri Address { get; set; }
+        public Uri Address { get; set; } = null!;
 
         /// <summary>
         /// The server's unique identifier.
         /// </summary>
-        public string Squid { get; set; }
+        public string Squid { get; set; } = null!;
 
-        public string SubscriptionId { get; set; }
+        public string SubscriptionId { get; set; } = null!;
 
         /// <summary>
         /// Returns a string that represents the current object.
@@ -66,10 +64,10 @@ namespace Octopus.Tentacle.Configuration
 
         class CommunicationStyleConverter : JsonConverter
         {
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-                =>  writer.WriteValue((int) value);
+            public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+                =>  writer.WriteValue((int) (value ?? throw new ArgumentNullException(nameof(value))));
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
             {
                 if (reader.Value == null)
                     return CommunicationStyle.None;

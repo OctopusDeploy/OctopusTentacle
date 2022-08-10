@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
-using Octopus.Shared.Configuration.Instances;
-using Octopus.Shared.Startup;
 using Octopus.Tentacle.Commands;
+using Octopus.Tentacle.Configuration.Instances;
+using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Commands
             var json = Command.GetOutput(new List<ApplicationInstanceRecord> { new ApplicationInstanceRecord("MyInstance", "MyConfigPath") });
             var definition = new[] { new { InstanceName = "", ConfigurationFilePath = "" } };
             var reconstituted = JsonConvert.DeserializeAnonymousType(json, definition);
-            Assert.That(reconstituted.Length, Is.EqualTo(1));
+            Assert.That(reconstituted!.Length, Is.EqualTo(1));
             Assert.That(reconstituted[0].InstanceName, Is.EqualTo("MyInstance"));
             Assert.That(reconstituted[0].ConfigurationFilePath, Is.EqualTo("MyConfigPath"));
         }
