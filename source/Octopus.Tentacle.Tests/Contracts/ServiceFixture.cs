@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Security.Cryptography.X509Certificates;
-using Halibut;
 using Halibut.Transport.Protocol;
 using NUnit.Framework;
 using Octopus.Shared.Contracts;
 
-namespace Octopus.Shared.Tests.Contracts
+namespace Octopus.Tentacle.Tests.Contracts
 {
     public class ServiceFixture
     {
