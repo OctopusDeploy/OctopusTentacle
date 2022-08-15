@@ -89,10 +89,21 @@ namespace Octopus.Tentacle.Upgrader
 
         static string SelectAppropriateMsi(IList<string> args)
         {
-            var msi = args.Count == 2 ? args[1] : Environment.Is64BitOperatingSystem ? args[2] : args[1];
+            var msi = IsMoreThanOneMsiProvided(args) ? GetMsiBasedOnArchitecture(args) : args[1];
+
             if (!File.Exists(msi))
                 throw new FileNotFoundException("Expected to find an MSI at " + msi);
             return msi;
+        }
+
+        static bool IsMoreThanOneMsiProvided(IList<string> args)
+        {
+            return args.Count > 2;
+        }
+
+        static string GetMsiBasedOnArchitecture(IList<string> args)
+        {
+            return Environment.Is64BitOperatingSystem ? args[2] : args[1];
         }
     }
 }
