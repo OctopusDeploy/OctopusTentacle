@@ -18,17 +18,14 @@ partial class Build
 {
     [PublicAPI]
     Target TestWindows => _ => _
-        .DependsOn(BuildWindows)
         .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
     Target TestLinux => _ => _
-        .DependsOn(BuildLinux)
         .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
     Target TestOsx => _ => _
-        .DependsOn(BuildOsx)
         .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
