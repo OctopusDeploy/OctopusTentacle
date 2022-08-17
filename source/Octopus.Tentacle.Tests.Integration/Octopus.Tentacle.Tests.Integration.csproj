@@ -34,4 +34,9 @@
         <Reference Include="System.IdentityModel" Condition="'$(TargetFramework)' == 'net452'" />
         <Reference Include="System.ServiceProcess" Condition="'$(TargetFramework)' == 'net452'" />
     </ItemGroup>
+    <ItemGroup>
+      <Content Include="Startup\Packages\Acme.Service\Acme.Service.exe">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
 </Project>

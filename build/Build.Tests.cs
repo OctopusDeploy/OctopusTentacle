@@ -32,6 +32,10 @@ partial class Build
         .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
+    Target TestIntegration => _ => _
+        .Executes(() => RunIntegrationTests(TestFramework, TestRuntime));
+
+    [PublicAPI]
     Target TestLinuxPackages => _ => _
         .Description("Tests installing the .deb and .rpm packages onto all of the Linux target distributions.")
         .Executes(() =>
@@ -207,6 +211,38 @@ partial class Build
         var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests.dll");
         var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-{testFramework}-{testRuntime}.xml";
         
+        try
+        {
+            // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
+            // when the test runner is being asked to build things, not when they're already built.
+            // Framework is still relevant because it tells dotnet which flavour of test runner to launch.
+            testAssembliesPath.ForEach(projectPath =>
+                DotNetTasks.DotNetTest(settings => settings
+                    .SetProjectFile(projectPath)
+                    .SetFramework(testFramework)
+                    .SetLoggers($"trx;LogFileName={testResultsPath}"))
+            );
+        }
+        catch (Exception e)
+        {
+            Log.Warning($"{e.Message}: {e}");
+        }
+    }
+
+    void RunIntegrationTests(string testFramework, string testRuntime)
+    {
+        Log.Information($"Running test for Framework: {testFramework} and Runtime: {testRuntime}");
+
+        FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
+
+        // We call dotnet test against the assemblies directly here because calling it against the .sln requires
+        // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
+        // have to shunt them all around the place.
+        // By doing things this way, we can have a seamless experience between local and remote builds.
+        var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests.Integration" / testFramework / testRuntime;
+        var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests*.dll");
+        var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-{testFramework}-{testRuntime}.xml";
+
         try
         {
             // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply
