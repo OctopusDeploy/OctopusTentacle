@@ -43,7 +43,6 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
-		<PackageReference Include="Octopus.Shared" Version="10.6.2" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -62,5 +61,11 @@
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
 		<RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+		<Reference Include="System.IdentityModel" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Octopus.Shared\Octopus.Shared.csproj" />
 	</ItemGroup>
 </Project>

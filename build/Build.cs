@@ -69,6 +69,7 @@ partial class Build : NukeBuild
 
     [Parameter] public static string AzureKeyVaultUrl = "";
     [Parameter] public static string AzureKeyVaultAppId = "";
+    [Parameter] public static string AzureKeyVaultTenantId = "";
     [Secret] [Parameter] public static string AzureKeyVaultAppSecret = "";
     [Parameter] public static string AzureKeyVaultCertificateName = "";
 
@@ -84,6 +85,13 @@ partial class Build : NukeBuild
     const string NetFramework = "net452";
     const string NetCore = "netcoreapp3.1";
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
+
+    [PublicAPI]
+    Target CalculateVersion => _ => _
+        .Executes(() =>
+        {
+            // This is here just so that TeamCity has a target to call. The OctoVersion attribute generates the version for us
+        });
 
     [PublicAPI]
     Target Clean => _ => _

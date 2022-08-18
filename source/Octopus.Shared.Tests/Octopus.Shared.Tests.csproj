@@ -1,0 +1,68 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Octopus.Shared.Tests</RootNamespace>
+    <AssemblyName>Octopus.Shared.Tests</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
+    <RuntimeIdentifiers>win;win-x86;win-x64;linux-x64;osx-x64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
+    <LangVersion>8</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
+    <TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
+    <DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;FULL_FRAMEWORK</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <DefineConstants>$(DefineConstants);DEFAULT_PROXY_IS_NOT_AVAILABLE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
+    <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.21" />
+    <ProjectReference Include="..\Octopus.Shared\Octopus.Shared.csproj" />
+    <PackageReference Include="NSubstitute" Version="4.2.1" />
+    <PackageReference Include="FluentAssertions" Version="5.10.3" />
+    <PackageReference Include="Assent" Version="1.6.0" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
+    <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+  </ItemGroup>
+  <Target Name="ChangeAliasesOfStrongNameAssemblies" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+    <!--
+      the PackageReference doesnt support aliases, so we need to hook in later
+      in the pipeline to add the alias.
+      In pre 4.5.2 versions of the TaskScheduler package, it has interfaces for
+      IReadOnlyCollection and IReadOnlyList, which were added in 4.5.
+      As we are targeting 4.5.1, we fall back to the 4.0 package, which means
+      we have a clash on those types with this dll and mscorlib
+      see http://taskscheduler.codeplex.com/workitem/12473
+      see https://github.com/NuGet/Home/issues/4989#issuecomment-311042085
+    -->
+    <ItemGroup>
+      <ReferencePath Condition="'%(FileName)' == 'Microsoft.Win32.TaskScheduler'">
+        <Aliases>TaskScheduler</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+  <ItemGroup>
+    <Content Include="Bcl\IO\*.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Startup\Packages\**\*.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <EmbeddedResource Include="Resources\TestCertificateNoPassword.pfx" />
+    <EmbeddedResource Include="Resources\TestCertificateNoPrivateKey.pfx" />
+    <EmbeddedResource Include="Resources\TestCertificateWithPassword.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.DirectoryServices.AccountManagement" Condition="'$(TargetFramework)' == 'net452'" />
+    <Reference Include="System.IdentityModel" Condition="'$(TargetFramework)' == 'net452'" />
+    <Reference Include="System.ServiceProcess" Condition="'$(TargetFramework)' == 'net452'" />
+  </ItemGroup>
+</Project>
