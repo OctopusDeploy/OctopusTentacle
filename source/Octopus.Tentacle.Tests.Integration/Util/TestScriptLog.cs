@@ -4,7 +4,7 @@ using System.Text;
 using Octopus.Shared.Contracts;
 using Octopus.Tentacle.Scripts;
 
-namespace Octopus.Tentacle.Tests.Util
+namespace Octopus.Tentacle.Tests.Integration.Util
 {
     public class TestScriptLog : IScriptLog, IScriptLogWriter
     {

@@ -8,12 +8,12 @@ using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Startup;
-using Octopus.Tentacle.Tests.Support;
-using Octopus.Tentacle.Tests.Support.TestAttributes;
-using Octopus.Tentacle.Tests.Util;
+using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
+using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Tests.Startup
+namespace Octopus.Tentacle.Tests.Integration.Startup
 {
     [TestFixture]
     [WindowsTest]

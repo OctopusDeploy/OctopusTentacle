@@ -1,7 +1,7 @@
 using System;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Tests.Util
+namespace Octopus.Tentacle.Tests.Integration.Util
 {
     class LinuxTestUserPrincipal
     {

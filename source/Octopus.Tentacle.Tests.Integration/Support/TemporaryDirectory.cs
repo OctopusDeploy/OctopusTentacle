@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Tests.Support
+namespace Octopus.Tentacle.Tests.Integration.Support
 {
     class TemporaryDirectory : IDisposable
     {
