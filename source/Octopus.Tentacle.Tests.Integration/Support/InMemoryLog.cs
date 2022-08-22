@@ -9,7 +9,7 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Diagnostics;
 
-namespace Octopus.Tentacle.Tests.Support
+namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class InMemoryLog : SystemLog
     {

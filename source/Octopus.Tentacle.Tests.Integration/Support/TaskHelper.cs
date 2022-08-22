@@ -1,8 +1,7 @@
-﻿
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
-namespace Octopus.Tentacle.Tests.Support
+namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public static class TaskHelper
     {

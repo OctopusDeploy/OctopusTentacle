@@ -4,7 +4,7 @@ using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Tests.Support.TestAttributes
+namespace Octopus.Tentacle.Tests.Integration.Support.TestAttributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public class WindowsTestAttribute : NUnitAttribute, IApplyToTest

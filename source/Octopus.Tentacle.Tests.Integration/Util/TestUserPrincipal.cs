@@ -3,7 +3,7 @@ using System.DirectoryServices.AccountManagement;
 using System.Net;
 using System.Security.Principal;
 
-namespace Octopus.Tentacle.Tests.Util
+namespace Octopus.Tentacle.Tests.Integration.Util
 {
     class TestUserPrincipal
     {

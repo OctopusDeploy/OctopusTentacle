@@ -4,10 +4,10 @@ using System.Text;
 using System.Threading;
 using FluentAssertions;
 using NUnit.Framework;
-using Octopus.Tentacle.Tests.Support.TestAttributes;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Tests.Util
+namespace Octopus.Tentacle.Tests.Integration.Util
 {
     [TestFixture]
     public class SilentProcessRunnerFixture

@@ -6,7 +6,7 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Tests.Util
+namespace Octopus.Tentacle.Tests.Integration.Util
 {
     public class OctopusPhysicalFileSystemFixture
     {

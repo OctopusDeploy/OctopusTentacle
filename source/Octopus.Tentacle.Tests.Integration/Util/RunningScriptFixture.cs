@@ -7,11 +7,11 @@ using NUnit.Framework;
 using Octopus.Shared.Contracts;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Tests.Support;
-using Octopus.Tentacle.Tests.Support.TestAttributes;
+using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Tests.Util
+namespace Octopus.Tentacle.Tests.Integration.Util
 {
     // These tests are flakey on the build server.
     // Sometimes powershell just returns -1 when running these scripts.
