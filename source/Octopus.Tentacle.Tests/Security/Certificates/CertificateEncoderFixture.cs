@@ -66,6 +66,7 @@ namespace Octopus.Tentacle.Tests.Security.Certificates
         }
 
         [Test]
+        [NotMacTest] // macOS cannot load a pfx without a password
         public void GivenPfxWithOneCertWithPrivateKeyAndEmptyPasswordThenReturnsCertificate()
         {
             // Given
