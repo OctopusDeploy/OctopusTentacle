@@ -8,7 +8,7 @@
   internalLogToConsole="true">
 
   <extensions>
-    <add assembly="Octopus.Shared"/>
+    <add assembly="Tentacle"/>
   </extensions>
 
   <variable name="appName" value="Octopus Tentacle" />
