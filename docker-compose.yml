@@ -2,7 +2,7 @@ version: "3"
 
 services:
   db:
-    image: docker.packages.octopushq.com/octopusdeploy/mssql-server-windows-express
+    image: docker.packages.octopushq.com/octopusdeploy/mssql-server-windows-express:${MSSQL_SERVER_VERSION}
     environment:
       sa_password: "${SA_PASSWORD}"
       ACCEPT_EULA: "Y"
