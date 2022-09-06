@@ -1,10 +1,10 @@
 using System;
 
-namespace Octopus.Shared.Contracts
+namespace Octopus.Tentacle.Contracts
 {
-    public class CancelScriptCommand
+    public class ScriptStatusRequest
     {
-        public CancelScriptCommand(ScriptTicket ticket, long lastLogSequence)
+        public ScriptStatusRequest(ScriptTicket ticket, long lastLogSequence)
         {
             Ticket = ticket;
             LastLogSequence = lastLogSequence;

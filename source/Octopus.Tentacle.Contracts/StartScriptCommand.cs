@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Octopus.CoreUtilities.Extensions;
 
-namespace Octopus.Shared.Contracts
+namespace Octopus.Tentacle.Contracts
 {
     public class StartScriptCommand
     {

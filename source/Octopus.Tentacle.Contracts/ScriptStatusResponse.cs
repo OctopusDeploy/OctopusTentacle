@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Octopus.Shared.Contracts
+namespace Octopus.Tentacle.Contracts
 {
     public enum ProcessState
     {

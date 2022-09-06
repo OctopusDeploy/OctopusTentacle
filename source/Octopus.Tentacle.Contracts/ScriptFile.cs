@@ -2,7 +2,7 @@ using System;
 using Halibut;
 using Newtonsoft.Json;
 
-namespace Octopus.Shared.Contracts
+namespace Octopus.Tentacle.Contracts
 {
     public class ScriptFile
     {

@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Octopus.Shared.Security
+namespace Octopus.Tentacle.Security
 {
     public class AesEncryption
     {

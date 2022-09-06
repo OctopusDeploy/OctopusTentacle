@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using Nito.AsyncEx;
 using Octopus.Diagnostics;
-using Octopus.Shared.Contracts;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts

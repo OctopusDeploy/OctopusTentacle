@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Octopus.Shared.Security.Masking;
+using Octopus.Tentacle.Security.Masking;
 
 namespace Octopus.Tentacle.Diagnostics
 {

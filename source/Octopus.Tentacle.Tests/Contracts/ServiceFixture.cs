@@ -1,7 +1,7 @@
 ﻿using System;
 using Halibut.Transport.Protocol;
 using NUnit.Framework;
-using Octopus.Shared.Contracts;
+using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Tests.Contracts
 {

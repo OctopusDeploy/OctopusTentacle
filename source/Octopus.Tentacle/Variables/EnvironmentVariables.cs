@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Octopus.Shared.Variables
+namespace Octopus.Tentacle.Variables
 {
     public static class EnvironmentVariables
     {

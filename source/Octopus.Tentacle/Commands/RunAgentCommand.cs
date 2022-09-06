@@ -3,12 +3,12 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using Octopus.Diagnostics;
-using Octopus.Shared.Variables;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
+using Octopus.Tentacle.Variables;
 using Octopus.Tentacle.Versioning;
 using Octopus.Time;
 

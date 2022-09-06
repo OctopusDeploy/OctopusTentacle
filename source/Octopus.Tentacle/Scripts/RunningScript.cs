@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Octopus.Diagnostics;
-using Octopus.Shared.Contracts;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts

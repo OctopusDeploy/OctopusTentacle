@@ -1,7 +1,7 @@
 using System;
 using Halibut;
 
-namespace Octopus.Shared.Contracts
+namespace Octopus.Tentacle.Contracts
 {
     public interface IFileTransferService
     {

@@ -3,10 +3,10 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using Octopus.Diagnostics;
-using Octopus.Shared.Contracts;
-using Octopus.Shared.Security;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.Scripts
