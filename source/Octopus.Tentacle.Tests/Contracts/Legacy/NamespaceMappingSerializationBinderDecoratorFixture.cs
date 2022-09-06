@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.Legacy;
 
 namespace Octopus.Tentacle.Tests.Communications
 {

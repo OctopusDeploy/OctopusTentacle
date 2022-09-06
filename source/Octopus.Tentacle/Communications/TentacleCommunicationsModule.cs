@@ -4,6 +4,7 @@ using Autofac;
 using Halibut;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Contracts.Legacy;
 
 namespace Octopus.Tentacle.Communications
 {
@@ -23,12 +24,7 @@ namespace Octopus.Tentacle.Communications
                 var halibutRuntime = new HalibutRuntimeBuilder()
                     .WithServiceFactory(services)
                     .WithServerCertificate(configuration.TentacleCertificate)
-                    .WithMessageSerializer(serializerBuilder => serializerBuilder.WithSerializerSettings(settings =>
-                    {
-                        var namespaceMappingBinder = new NamespaceMappingSerializationBinderDecorator(settings.SerializationBinder, "Octopus.Shared.Contracts", "Octopus.Tentacle.Contracts");
-                        var assemblyMappingBinder = new AssemblyMappingSerializationBinderDecorator(namespaceMappingBinder, "Octopus.Shared", "Octopus.Tentacle.Contracts");
-                        settings.SerializationBinder = assemblyMappingBinder;
-                    }))
+                    .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
                     .Build();
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
                 halibutRuntime.SetFriendlyHtmlPageHeaders(FriendlyHtmlPageHeaders);
