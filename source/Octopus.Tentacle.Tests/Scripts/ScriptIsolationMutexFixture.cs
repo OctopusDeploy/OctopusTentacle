@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Diagnostics;
-using Octopus.Shared.Contracts;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Tests.Support;
 

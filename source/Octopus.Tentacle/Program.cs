@@ -1,7 +1,6 @@
 using System;
 using System.Net;
 using Autofac;
-using Octopus.Shared.Time;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Commands.OptionSets;
@@ -11,6 +10,7 @@ using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Properties;
 using Octopus.Tentacle.Services;
 using Octopus.Tentacle.Startup;
+using Octopus.Tentacle.Time;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Versioning;
 

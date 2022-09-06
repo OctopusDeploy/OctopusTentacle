@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
-using Octopus.Shared.Security.Masking;
+using Octopus.Tentacle.Security.Masking;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Security

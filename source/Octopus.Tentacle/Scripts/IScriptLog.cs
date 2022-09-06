@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Octopus.Shared.Contracts;
+using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Scripts
 {

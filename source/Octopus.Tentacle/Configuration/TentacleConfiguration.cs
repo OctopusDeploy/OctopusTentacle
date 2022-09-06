@@ -8,8 +8,8 @@ using Newtonsoft.Json;
 using Octopus.Client.Model;
 using Octopus.Configuration;
 using Octopus.Diagnostics;
-using Octopus.Shared.Security;
 using Octopus.Tentacle.Certificates;
+using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Security.Certificates;
 using Octopus.Tentacle.Util;
 

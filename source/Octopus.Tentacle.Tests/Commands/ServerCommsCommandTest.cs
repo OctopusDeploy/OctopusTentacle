@@ -5,7 +5,6 @@ using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Client.Model;
-using Octopus.Shared;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;

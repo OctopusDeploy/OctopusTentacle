@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <RootNamespace>Octopus.Shared</RootNamespace>
-    <AssemblyName>Octopus.Shared</AssemblyName>
+    <RootNamespace>Octopus.Tentacle.Contracts</RootNamespace>
+    <AssemblyName>Octopus.Tentacle.Contracts</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
@@ -48,7 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.6.2" />
-    <PackageReference Include="Halibut" Version="4.4.7" />
+    <PackageReference Include="Halibut" Version="4.5.86" />
     <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />

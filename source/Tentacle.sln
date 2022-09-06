@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Upgrader",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.csproj", "{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Shared", "Octopus.Shared\Octopus.Shared.csproj", "{407551C4-B4DF-4665-96B1-BFF6A6A74D36}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Contracts", "Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj", "{407551C4-B4DF-4665-96B1-BFF6A6A74D36}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Tests.Integration", "Octopus.Tentacle.Tests.Integration\Octopus.Tentacle.Tests.Integration.csproj", "{86C4288E-9982-4DC6-994F-461C95640C7D}"
 EndProject

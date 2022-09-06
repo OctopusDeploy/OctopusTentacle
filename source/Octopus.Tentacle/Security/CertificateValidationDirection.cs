@@ -1,6 +1,6 @@
 using System;
 
-namespace Octopus.Shared.Security
+namespace Octopus.Tentacle.Security
 {
     public enum CertificateValidationDirection
     {

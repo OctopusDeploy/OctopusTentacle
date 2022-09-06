@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace Octopus.Shared.Contracts
+namespace Octopus.Tentacle.Contracts
 {
     public class ScriptTicket : IEquatable<ScriptTicket>
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Octopus.Shared.Contracts;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Scripts;
 
 namespace Octopus.Tentacle.Tests.Integration.Util

@@ -1,6 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
-using Octopus.Shared.Security;
+using Octopus.Tentacle.Security;
 
 namespace Octopus.Tentacle.Tests.Security
 {

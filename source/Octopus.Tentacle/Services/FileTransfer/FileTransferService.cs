@@ -2,8 +2,8 @@
 using System.IO;
 using Halibut;
 using Octopus.Diagnostics;
-using Octopus.Shared.Contracts;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.FileTransfer

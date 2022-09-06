@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using FluentValidation;
 using FluentValidation.Internal;
-using Octopus.Manager.Tentacle.Annotations;
+using Octopus.Manager.Tentacle.Properties;
 
 namespace Octopus.Manager.Tentacle.Infrastructure
 {

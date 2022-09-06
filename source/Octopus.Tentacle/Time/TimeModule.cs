@@ -2,7 +2,7 @@ using System;
 using Autofac;
 using Octopus.Time;
 
-namespace Octopus.Shared.Time
+namespace Octopus.Tentacle.Time
 {
     public class TimeModule : Module
     {

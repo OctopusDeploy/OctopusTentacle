@@ -1,6 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
-using Octopus.Shared.Security.Masking;
+using Octopus.Tentacle.Security.Masking;
 
 namespace Octopus.Tentacle.Tests.Security
 {

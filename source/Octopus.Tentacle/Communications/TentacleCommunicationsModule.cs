@@ -20,7 +20,16 @@ namespace Octopus.Tentacle.Communications
             {
                 var configuration = c.Resolve<ITentacleConfiguration>();
                 var services = c.Resolve<IServiceFactory>();
-                var halibutRuntime = new HalibutRuntimeBuilder().WithServiceFactory(services).WithServerCertificate(configuration.TentacleCertificate).Build();
+                var halibutRuntime = new HalibutRuntimeBuilder()
+                    .WithServiceFactory(services)
+                    .WithServerCertificate(configuration.TentacleCertificate)
+                    .WithMessageSerializer(serializerBuilder => serializerBuilder.WithSerializerSettings(settings =>
+                    {
+                        var namespaceMappingBinder = new NamespaceMappingSerializationBinderDecorator(settings.SerializationBinder, "Octopus.Shared.Contracts", "Octopus.Tentacle.Contracts");
+                        var assemblyMappingBinder = new AssemblyMappingSerializationBinderDecorator(namespaceMappingBinder, "Octopus.Shared", "Octopus.Tentacle.Contracts");
+                        settings.SerializationBinder = assemblyMappingBinder;
+                    }))
+                    .Build();
                 halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
                 halibutRuntime.SetFriendlyHtmlPageHeaders(FriendlyHtmlPageHeaders);
                 return halibutRuntime;

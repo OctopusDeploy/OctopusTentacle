@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using Octopus.Manager.Tentacle.Annotations;
+using Octopus.Manager.Tentacle.Properties;
 using Octopus.Manager.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.Controls

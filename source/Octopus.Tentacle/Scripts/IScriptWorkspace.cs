@@ -1,5 +1,5 @@
 using System;
-using Octopus.Shared.Contracts;
+using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Scripts
 {
