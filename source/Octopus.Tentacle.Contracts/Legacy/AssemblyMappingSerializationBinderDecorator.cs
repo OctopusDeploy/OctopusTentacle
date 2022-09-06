@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json.Serialization;
 
-namespace Octopus.Tentacle.Communications
+namespace Octopus.Tentacle.Contracts.Legacy
 {
     public class AssemblyMappingSerializationBinderDecorator : ISerializationBinder
     {
