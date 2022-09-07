@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
-using Octopus.CoreUtilities.Extensions;
 
 namespace Octopus.Tentacle.Contracts
 {
@@ -57,8 +57,13 @@ namespace Octopus.Tentacle.Contracts
                 taskId,
                 additionalFiles)
         {
-            if (!additionalScripts.IsNullOrEmpty())
-                Scripts.AddRange(additionalScripts);
+            if (additionalScripts == null || !additionalScripts.Any())
+                return;
+
+            foreach (var additionalScript in additionalScripts)
+            {
+                Scripts.Add(additionalScript.Key, additionalScript.Value);
+            }
         }
 
         public string ScriptBody { get; }
