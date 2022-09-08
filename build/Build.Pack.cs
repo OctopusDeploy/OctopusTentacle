@@ -8,9 +8,11 @@ using Nuke.Common.IO;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Chocolatey;
 using Nuke.Common.Tools.Docker;
+using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.MSBuild;
 using Nuke.Common.Utilities.Collections;
 using Serilog;
+using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 partial class Build
 {
@@ -258,10 +260,25 @@ partial class Build
         });
 
     [PublicAPI]
+    Target PackContracts => _ => _
+        .Description("Packs the NuGet package for Tentacle contracts.")
+        .Executes(() =>
+        {
+            DotNetPack(p => p
+                .SetProject(RootDirectory / "source/Octopus.Tentacle.Contracts/Octopus.Tentacle.Contracts.csproj")
+                .SetVersion(OctoVersionInfo.FullSemVer)
+                .SetOutputDirectory(ArtifactsDirectory)
+                .DisableIncludeSymbols()
+                .SetVerbosity(DotNetVerbosity.Normal)
+                .SetProcessArgumentConfigurator(_ => _ .Add("/p:NoWarn=NU5104")));
+        });
+
+    [PublicAPI]
     Target PackWindows => _ => _
         .Description("Packs all the Windows targets.")
         .DependsOn(PackWindowsZips)
-        .DependsOn(PackChocolateyPackage);
+        .DependsOn(PackChocolateyPackage)
+        .DependsOn(PackContracts);
 
     [PublicAPI]
     Target PackCrossPlatformBundle => _ => _
