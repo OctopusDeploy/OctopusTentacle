@@ -265,20 +265,18 @@ partial class Build
         .Executes(() =>
         {
             DotNetPack(p => p
-                .SetProject(RootDirectory / "source/Octopus.Tentacle.Contracts/Octopus.Tentacle.Contracts.csproj")
+                .SetProject(RootDirectory / "source" / "Octopus.Tentacle.Contracts" / "Octopus.Tentacle.Contracts.csproj")
                 .SetVersion(OctoVersionInfo.FullSemVer)
                 .SetOutputDirectory(ArtifactsDirectory)
                 .DisableIncludeSymbols()
-                .SetVerbosity(DotNetVerbosity.Normal)
-                .SetProcessArgumentConfigurator(_ => _ .Add("/p:NoWarn=NU5104")));
+                .SetVerbosity(DotNetVerbosity.Normal));
         });
 
     [PublicAPI]
     Target PackWindows => _ => _
         .Description("Packs all the Windows targets.")
         .DependsOn(PackWindowsZips)
-        .DependsOn(PackChocolateyPackage)
-        .DependsOn(PackContracts);
+        .DependsOn(PackChocolateyPackage);
 
     [PublicAPI]
     Target PackCrossPlatformBundle => _ => _
@@ -349,7 +347,8 @@ partial class Build
     [PublicAPI]
     Target Pack => _ => _
         .Description("Pack all the artifacts. Notional task - running this on a single host is possible but cumbersome.")
-        .DependsOn(PackCrossPlatformBundle);
+        .DependsOn(PackCrossPlatformBundle)
+        .DependsOn(PackContracts);
 
     void PackTarballs(string runtimeId)
     {
