@@ -1,4 +1,5 @@
 ﻿// ReSharper disable RedundantUsingDirective
+
 using System;
 using System.IO.Compression;
 using System.Linq;
@@ -264,10 +265,12 @@ partial class Build
         .Description("Packs the NuGet package for Tentacle contracts.")
         .Executes(() =>
         {
+            FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "nuget");
+
             DotNetPack(p => p
                 .SetProject(RootDirectory / "source" / "Octopus.Tentacle.Contracts" / "Octopus.Tentacle.Contracts.csproj")
                 .SetVersion(OctoVersionInfo.FullSemVer)
-                .SetOutputDirectory(ArtifactsDirectory)
+                .SetOutputDirectory(ArtifactsDirectory / "nuget")
                 .DisableIncludeSymbols()
                 .SetVerbosity(DotNetVerbosity.Normal));
         });
@@ -285,7 +288,8 @@ partial class Build
         {
             string ConstructDebianPackageFilename(string packageName, string architecture) => $"{packageName}_{OctoVersionInfo.FullSemVer}_{architecture}.deb";
 
-            string ConstructRedHatPackageFilename(string packageName, string architecture) {
+            string ConstructRedHatPackageFilename(string packageName, string architecture)
+            {
                 var transformedVersion = OctoVersionInfo.FullSemVer.Replace("-", "_");
                 var filename = $"{packageName}-{transformedVersion}-1.{architecture}.rpm";
                 return filename;
