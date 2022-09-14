@@ -199,7 +199,7 @@ namespace Octopus.Tentacle.Commands
         Uri GetActiveTentacleAddress()
         {
             if (string.IsNullOrWhiteSpace(serverWebSocketAddress))
-                return new Uri($"https://{new Uri(serverCommsAddress!).Host}:{serverCommsPort}");
+                return new Uri($"https://{new Uri(serverCommsAddress).Host}:{serverCommsPort}");
 
             if (!HalibutRuntime.OSSupportsWebSockets)
                 throw new ControlledFailureException("Websockets is only supported on Windows Server 2012 and later");
