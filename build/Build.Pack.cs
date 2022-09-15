@@ -271,6 +271,8 @@ partial class Build
                 .SetProject(RootDirectory / "source" / "Octopus.Tentacle.Contracts" / "Octopus.Tentacle.Contracts.csproj")
                 .SetVersion(OctoVersionInfo.FullSemVer)
                 .SetOutputDirectory(ArtifactsDirectory / "nuget")
+                .SetAssemblyVersion(OctoVersionInfo.FullSemVer)
+                .SetInformationalVersion(OctoVersionInfo.FullSemVer)
                 .DisableIncludeSymbols()
                 .SetVerbosity(DotNetVerbosity.Normal));
         });
