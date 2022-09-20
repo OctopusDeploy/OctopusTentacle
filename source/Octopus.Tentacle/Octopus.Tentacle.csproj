@@ -33,9 +33,6 @@
 		<Optimize>True</Optimize>
 	</PropertyGroup>
 
-	<PropertyGroup>
-		<DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
-	</PropertyGroup>
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
 		<NoWarn>8601</NoWarn>
 		<DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>

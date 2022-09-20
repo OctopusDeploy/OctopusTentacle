@@ -266,6 +266,7 @@ partial class Build
         .Executes(() =>
         {
             FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "nuget");
+            using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
 
             DotNetPack(p => p
                 .SetProject(RootDirectory / "source" / "Octopus.Tentacle.Contracts" / "Octopus.Tentacle.Contracts.csproj")
