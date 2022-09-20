@@ -12,6 +12,9 @@
     <LangVersion>9</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
+  </PropertyGroup>
   <Choose>
     <When Condition="'$(TargetFramework)' == 'net452'">
       <PropertyGroup>
@@ -26,5 +29,13 @@
   </Choose>
   <ItemGroup>
     <PackageReference Include="Halibut" Version="4.5.86" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Solution Items\SolutionInfo.cs">
+      <Link>SolutionInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Solution Items\VersionInfo.cs">
+      <Link>VersionInfo.cs</Link>
+    </Compile>
   </ItemGroup>
 </Project>
