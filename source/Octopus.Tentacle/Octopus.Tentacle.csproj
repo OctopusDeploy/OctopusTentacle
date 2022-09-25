@@ -41,7 +41,7 @@
 		<DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Halibut" Version="4.5.86" />
+		<PackageReference Include="Halibut" Version="5.0.56" />
 		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
 	</ItemGroup>
 	<ItemGroup>
@@ -90,7 +90,6 @@
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.0" />
 		<PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
 		<PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0" />
-		<PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.5.0" />
 		<PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
 		<PackageReference Include="NLog" Version="4.7.6" />
 		<PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
