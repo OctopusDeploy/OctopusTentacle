@@ -16,10 +16,10 @@ namespace Octopus.Tentacle.Util
         }
 
         public bool Execute(IEnumerable<CommandLineInvocation> commandLineInvocations,
-                Action<string> debug,
-                Action<string> info,
-                Action<string> error,
-                Action<Exception, string> exception)
+            Action<string> debug,
+            Action<string> info,
+            Action<string> error,
+            Action<Exception, string> exception)
         {
             foreach (var invocation in commandLineInvocations)
                 if (!Execute(invocation, debug, info, error, exception))
@@ -29,11 +29,13 @@ namespace Octopus.Tentacle.Util
         }
 
         public bool Execute(CommandLineInvocation invocation, ILog log)
-            => Execute(invocation,
+        {
+            return Execute(invocation,
                 log.Info,
                 log.Info,
                 log.Error,
                 log.Error);
+        }
 
         public bool Execute(CommandLineInvocation invocation,
             Action<string> debug,

@@ -1,4 +1,5 @@
-﻿using System.Windows.Navigation;
+﻿using System;
+using System.Windows.Navigation;
 using Octopus.Manager.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
@@ -8,7 +9,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class CommunicationStyleTab
     {
-        readonly TentacleSetupWizardModel model;
+        private readonly TentacleSetupWizardModel model;
 
         public CommunicationStyleTab(TentacleSetupWizardModel model)
         {
@@ -17,7 +18,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             DataContext = this.model = model;
         }
 
-        void Navigate(object sender, RequestNavigateEventArgs e)
+        private void Navigate(object sender, RequestNavigateEventArgs e)
         {
             BrowserHelper.Open(e.Uri);
             e.Handled = true;

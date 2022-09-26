@@ -3,9 +3,9 @@ using System.Threading;
 
 namespace Octopus.Tentacle.Startup
 {
-    class NoninteractiveHost : ICommandHost, ICommandRuntime
+    internal class NoninteractiveHost : ICommandHost, ICommandRuntime
     {
-        readonly ManualResetEvent mre = new ManualResetEvent(false);
+        private readonly ManualResetEvent mre = new(false);
 
         public void Run(Action<ICommandRuntime> start, Action shutdown)
         {

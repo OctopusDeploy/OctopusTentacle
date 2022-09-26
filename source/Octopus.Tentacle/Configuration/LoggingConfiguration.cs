@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Configuration
 {
     public class LoggingConfiguration : ILoggingConfiguration
     {
-        readonly IHomeConfiguration home;
+        private readonly IHomeConfiguration home;
 
         public LoggingConfiguration(IHomeConfiguration home)
         {

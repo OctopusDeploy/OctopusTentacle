@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Octopus.Configuration;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
-    class AggregatedKeyValueStore : IKeyValueStore
+    internal class AggregatedKeyValueStore : IKeyValueStore
     {
-        readonly IAggregatableKeyValueStore[] configurations;
+        private readonly IAggregatableKeyValueStore[] configurations;
 
         public AggregatedKeyValueStore(IAggregatableKeyValueStore[] configurations)
         {
@@ -15,7 +14,9 @@ namespace Octopus.Tentacle.Configuration.Instances
         }
 
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
-            => Get(name, default(string?), protectionLevel);
+        {
+            return Get(name, default(string?), protectionLevel);
+        }
 
         [return: NotNullIfNotNull("defaultValue")]
         public TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None)

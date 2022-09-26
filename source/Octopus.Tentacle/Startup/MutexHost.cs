@@ -8,20 +8,20 @@ using Octopus.Tentacle.Diagnostics;
 
 namespace Octopus.Tentacle.Startup
 {
-    class MutexHost : ICommandHost, ICommandRuntime
+    internal class MutexHost : ICommandHost, ICommandRuntime
     {
-        static readonly int[] FriendlyExitCodes =
+        private static readonly int[] FriendlyExitCodes =
         {
             (int)OctopusProgram.ExitCode.Success,
             (int)OctopusProgram.ExitCode.UnknownCommand,
             (int)OctopusProgram.ExitCode.ControlledFailureException
         };
 
-        readonly string monitorMutexHost;
-        readonly ISystemLog log;
-        readonly CancellationTokenSource sourceToken = new CancellationTokenSource();
-        readonly ManualResetEventSlim shutdownTrigger = new ManualResetEventSlim(false);
-        Task? task;
+        private readonly string monitorMutexHost;
+        private readonly ISystemLog log;
+        private readonly CancellationTokenSource sourceToken = new();
+        private readonly ManualResetEventSlim shutdownTrigger = new(false);
+        private Task? task;
 
         public MutexHost(string monitorMutexHost, ISystemLog log)
         {

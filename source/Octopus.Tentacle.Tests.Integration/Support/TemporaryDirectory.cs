@@ -5,9 +5,9 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    class TemporaryDirectory : IDisposable
+    internal class TemporaryDirectory : IDisposable
     {
-        readonly IOctopusFileSystem fileSystem;
+        private readonly IOctopusFileSystem fileSystem;
 
         public TemporaryDirectory(IOctopusFileSystem fileSystem, string? directoryPath = null)
         {
@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public string DirectoryPath { get; }
 
-        string GetTempBasePath()
+        private string GetTempBasePath()
         {
             var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
             fileSystem.EnsureDirectoryExists(path);
@@ -26,12 +26,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return Path.Combine(path, "Temp");
         }
 
-        string CreateTemporaryDirectory()
+        private string CreateTemporaryDirectory()
         {
             var path = Path.Combine(GetTempBasePath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(path);
             return path;
         }
+
         public void Dispose()
         {
             fileSystem.DeleteDirectory(DirectoryPath, DeletionOptions.TryThreeTimesIgnoreFailure);

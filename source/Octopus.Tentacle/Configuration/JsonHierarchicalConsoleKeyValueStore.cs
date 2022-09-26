@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Configuration
 {
     public class JsonHierarchicalConsoleKeyValueStore : JsonHierarchicalKeyValueStore
     {
-        readonly Action<string> writer;
+        private readonly Action<string> writer;
 
         public JsonHierarchicalConsoleKeyValueStore()
             : this(Console.WriteLine)
@@ -25,7 +25,9 @@ namespace Octopus.Tentacle.Configuration
         }
 
         public override TData? Get<TData>(string name, TData? defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None) where TData : default
-            => throw new NotSupportedException($"This store is a write-only store, because it is only intended for displaying formatted content to the console. Please use {nameof(JsonHierarchicalFileKeyValueStore)} if you need a readable store.");
+        {
+            throw new NotSupportedException($"This store is a write-only store, because it is only intended for displaying formatted content to the console. Please use {nameof(JsonHierarchicalFileKeyValueStore)} if you need a readable store.");
+        }
 
         protected override void LoadSettings(IDictionary<string, object?> settingsToFill)
         {

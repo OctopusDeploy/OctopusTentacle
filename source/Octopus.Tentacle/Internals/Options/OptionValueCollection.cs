@@ -1,14 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Octopus.Tentacle.Internals.Options
 {
     public class OptionValueCollection : IList, IList<string?>
     {
-        readonly List<string?> values = new List<string?>();
-        readonly OptionContext c;
+        private readonly List<string?> values = new();
+        private readonly OptionContext c;
 
         internal OptionValueCollection(OptionContext c)
         {
@@ -18,22 +17,30 @@ namespace Octopus.Tentacle.Internals.Options
         #region IEnumerable
 
         IEnumerator IEnumerable.GetEnumerator()
-            => values.GetEnumerator();
+        {
+            return values.GetEnumerator();
+        }
 
         #endregion
 
         #region IEnumerable<T>
 
         public IEnumerator<string> GetEnumerator()
-            => values.GetEnumerator();
+        {
+            return values.GetEnumerator();
+        }
 
         #endregion
 
         public string?[] ToArray()
-            => values.ToArray();
+        {
+            return values.ToArray();
+        }
 
         public override string ToString()
-            => string.Join(", ", values.ToArray());
+        {
+            return string.Join(", ", values.ToArray());
+        }
 
         #region ICollection
 
@@ -61,7 +68,9 @@ namespace Octopus.Tentacle.Internals.Options
         }
 
         public bool Contains(string? item)
-            => values.Contains(item);
+        {
+            return values.Contains(item);
+        }
 
         public void CopyTo(string?[] array, int arrayIndex)
         {
@@ -69,7 +78,9 @@ namespace Octopus.Tentacle.Internals.Options
         }
 
         public bool Remove(string? item)
-            => values.Remove(item);
+        {
+            return values.Remove(item);
+        }
 
         public int Count => values.Count;
 
@@ -80,13 +91,19 @@ namespace Octopus.Tentacle.Internals.Options
         #region IList
 
         int IList.Add(object? value)
-            => (values as IList).Add(value);
+        {
+            return (values as IList).Add(value);
+        }
 
         bool IList.Contains(object? value)
-            => (values as IList).Contains(value);
+        {
+            return (values as IList).Contains(value);
+        }
 
         int IList.IndexOf(object? value)
-            => (values as IList).IndexOf(value);
+        {
+            return (values as IList).IndexOf(value);
+        }
 
         void IList.Insert(int index, object? value)
         {
@@ -116,7 +133,9 @@ namespace Octopus.Tentacle.Internals.Options
         #region IList<T>
 
         public int IndexOf(string? item)
-            => values.IndexOf(item);
+        {
+            return values.IndexOf(item);
+        }
 
         public void Insert(int index, string? item)
         {
@@ -128,7 +147,7 @@ namespace Octopus.Tentacle.Internals.Options
             values.RemoveAt(index);
         }
 
-        void AssertValid(int index)
+        private void AssertValid(int index)
         {
             if (c.Option == null)
                 throw new InvalidOperationException("OptionContext.Option is null.");

@@ -10,17 +10,21 @@ namespace Octopus.Tentacle.Diagnostics
 {
     public abstract class Log : ILog, IDisposable
     {
-        public static ConcurrentBag<ILogAppender> Appenders { get; } = new ConcurrentBag<ILogAppender>();
-        static IEnumerable<ILogAppender> GetThreadSafeAppenderCollection() => Appenders.ToArray();
-
         protected Log(string[]? sensitiveValues = null)
         {
             SensitiveValueMasker = new SensitiveValueMasker(sensitiveValues);
         }
 
+        public static ConcurrentBag<ILogAppender> Appenders { get; } = new();
+
         public abstract string CorrelationId { get; }
 
         protected SensitiveValueMasker SensitiveValueMasker { get; }
+
+        private static IEnumerable<ILogAppender> GetThreadSafeAppenderCollection()
+        {
+            return Appenders.ToArray();
+        }
 
         public virtual void Dispose()
         {
@@ -44,9 +48,10 @@ namespace Octopus.Tentacle.Diagnostics
                 appender.WriteEvent(logEvent);
         }
 
-
         public virtual bool IsEnabled(LogCategory category)
-            => true;
+        {
+            return true;
+        }
 
         public void Write(LogCategory category, string messageText)
         {
@@ -84,7 +89,7 @@ namespace Octopus.Tentacle.Diagnostics
                 sanitized => WriteEvent(new LogEvent(CorrelationId, category, sanitized, error?.UnpackFromContainers())));
         }
 
-        static string SafeFormat(string messageFormat, object[] args)
+        private static string SafeFormat(string messageFormat, object[] args)
         {
             try
             {
@@ -251,6 +256,5 @@ namespace Octopus.Tentacle.Diagnostics
             foreach (var appender in GetThreadSafeAppenderCollection())
                 appender.Flush();
         }
-
     }
 }

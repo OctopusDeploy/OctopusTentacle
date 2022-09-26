@@ -6,13 +6,13 @@ using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
-    class EnvironmentConfigurationContributor : IApplicationConfigurationContributor
+    internal class EnvironmentConfigurationContributor : IApplicationConfigurationContributor
     {
-        readonly ILogFileOnlyLogger log;
-        readonly IMapEnvironmentValuesToConfigItems mapper;
-        readonly IEnvironmentVariableReader reader;
-        bool loaded;
-        bool foundValues;
+        private readonly ILogFileOnlyLogger log;
+        private readonly IMapEnvironmentValuesToConfigItems mapper;
+        private readonly IEnvironmentVariableReader reader;
+        private bool loaded;
+        private bool foundValues;
 
         public EnvironmentConfigurationContributor(ILogFileOnlyLogger log,
             IMapEnvironmentValuesToConfigItems mapper,
@@ -24,22 +24,17 @@ namespace Octopus.Tentacle.Configuration.Instances
         }
 
         public int Priority => 1;
+
         public IAggregatableKeyValueStore? LoadContributedConfiguration()
         {
-            if (!ApplicationConfigurationContributionFlag.CanContributeSettings)
-            {
-                return null;
-            }
-            
+            if (!ApplicationConfigurationContributionFlag.CanContributeSettings) return null;
+
             EnsureLoaded();
-            if (foundValues)
-            {
-                return new InMemoryKeyValueStore(mapper);
-            }
+            if (foundValues) return new InMemoryKeyValueStore(mapper);
             return null;
         }
 
-        void EnsureLoaded()
+        private void EnsureLoaded()
         {
             if (!loaded)
             {

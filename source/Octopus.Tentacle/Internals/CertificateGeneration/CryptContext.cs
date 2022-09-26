@@ -1,5 +1,5 @@
-﻿
-#nullable disable
+﻿#nullable disable
+using System;
 #if NETFRAMEWORK
 using System;
 using System.Runtime.InteropServices;
@@ -12,8 +12,8 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
     // In the future, I may expand it to do other things.
     public class CryptContext : FinalizableObject
     {
-        readonly ISystemLog log;
-        IntPtr handle = IntPtr.Zero;
+        private readonly ISystemLog log;
+        private IntPtr handle = IntPtr.Zero;
 
         /// <summary>
         /// By default, sets up to create a new randomly named key container
@@ -35,10 +35,10 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
         {
             ThrowIfDisposed();
             if (!Win32Native.CryptAcquireContext(out handle,
-                ContainerName,
-                ProviderName,
-                ProviderType,
-                Flags))
+                    ContainerName,
+                    ProviderName,
+                    ProviderType,
+                    Flags))
                 Win32ErrorHelper.ThrowExceptionIfGetLastErrorIsNotZero();
         }
 
@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
             }
         }
 
-        X509Certificate2 CreateSha256SelfSignedCertificate(SelfSignedCertProperties properties)
+        private X509Certificate2 CreateSha256SelfSignedCertificate(SelfSignedCertProperties properties)
         {
             ThrowIfDisposedOrNotOpen();
 
@@ -106,7 +106,7 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
             return cert;
         }
 
-        X509Certificate2 CreateSha1SelfSignedCertificate(SelfSignedCertProperties properties)
+        private X509Certificate2 CreateSha1SelfSignedCertificate(SelfSignedCertProperties properties)
         {
             ThrowIfDisposedOrNotOpen();
 
@@ -145,7 +145,7 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
             return cert;
         }
 
-        static bool Is32BitWindows2008()
+        private static bool Is32BitWindows2008()
 #pragma warning disable DE0009
             => Environment.OSVersion.Platform == PlatformID.Win32NT &&
                 Environment.OSVersion.Version.Major == 6 &&
@@ -153,7 +153,7 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
                 !Environment.Is64BitOperatingSystem;
 #pragma warning restore DE0009
 
-        Win32Native.SystemTime ToSystemTime(DateTime dateTime)
+        private Win32Native.SystemTime ToSystemTime(DateTime dateTime)
         {
             var fileTime = dateTime.ToFileTime();
             var systemTime = new Win32Native.SystemTime();
@@ -162,7 +162,7 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
             return systemTime;
         }
 
-        KeyExchangeKey GenerateKeyExchangeKey(bool exportable, int keyBitLength)
+        private KeyExchangeKey GenerateKeyExchangeKey(bool exportable, int keyBitLength)
         {
             ThrowIfDisposedOrNotOpen();
 
@@ -192,13 +192,13 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
                         Win32ErrorHelper.ThrowExceptionIfGetLastErrorIsNotZero();
         }
 
-        void ThrowIfDisposedOrNotOpen()
+        private void ThrowIfDisposedOrNotOpen()
         {
             ThrowIfDisposed();
             ThrowIfNotOpen();
         }
 
-        void ThrowIfNotOpen()
+        private void ThrowIfNotOpen()
         {
             if (IntPtr.Zero == handle)
                 throw new InvalidOperationException("You must call CryptContext.Open first.");

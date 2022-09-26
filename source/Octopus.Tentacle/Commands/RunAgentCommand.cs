@@ -16,20 +16,18 @@ namespace Octopus.Tentacle.Commands
 {
     public class RunAgentCommand : AbstractStandardCommand
     {
-        readonly Lazy<IHalibutInitializer> halibut;
-        readonly Lazy<IWritableTentacleConfiguration> configuration;
-        readonly Lazy<IHomeConfiguration> home;
-        readonly Lazy<IProxyConfiguration> proxyConfiguration;
-        readonly ISleep sleep;
-        readonly ISystemLog log;
-        readonly IApplicationInstanceSelector selector;
-        readonly Lazy<IProxyInitializer> proxyInitializer;
-        readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
-        readonly AppVersion appVersion;
-        int wait;
-        bool halibutHasStarted;
-
-        public override bool CanRunAsService => true;
+        private readonly Lazy<IHalibutInitializer> halibut;
+        private readonly Lazy<IWritableTentacleConfiguration> configuration;
+        private readonly Lazy<IHomeConfiguration> home;
+        private readonly Lazy<IProxyConfiguration> proxyConfiguration;
+        private readonly ISleep sleep;
+        private readonly ISystemLog log;
+        private readonly IApplicationInstanceSelector selector;
+        private readonly Lazy<IProxyInitializer> proxyInitializer;
+        private readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
+        private readonly AppVersion appVersion;
+        private int wait;
+        private bool halibutHasStarted;
 
         public RunAgentCommand(
             Lazy<IHalibutInitializer> halibut,
@@ -62,6 +60,8 @@ namespace Octopus.Tentacle.Commands
                 // This option is added to show help
             });
         }
+
+        public override bool CanRunAsService => true;
 
         protected override void Start()
         {
@@ -119,7 +119,7 @@ namespace Octopus.Tentacle.Commands
             Runtime.WaitForUserToExit();
         }
 
-        void LogWarningIfNotRunningAsAdministrator()
+        private void LogWarningIfNotRunningAsAdministrator()
         {
             if (PlatformDetection.IsRunningOnWindows)
             {

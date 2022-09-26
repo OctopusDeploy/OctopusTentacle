@@ -12,14 +12,14 @@ namespace Octopus.Tentacle.Configuration.Instances
     /// This is here for legacy purposes, we need it to read the old entries in order to migrate them to the new file based index.
     /// </summary>
     [SuppressMessage("Usage", "PC001:API not supported on all platforms")]
-    class WindowsRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
+    internal class WindowsRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
-        const RegistryHive Hive = RegistryHive.LocalMachine;
-        const RegistryView View = RegistryView.Registry64;
-        const string KeyName = "Software\\Octopus";
+        private const RegistryHive Hive = RegistryHive.LocalMachine;
+        private const RegistryView View = RegistryView.Registry64;
+        private const string KeyName = "Software\\Octopus";
 
         private readonly ApplicationName applicationName;
-        readonly ISystemLog log;
+        private readonly ISystemLog log;
 
         public WindowsRegistryApplicationInstanceStore(ApplicationName applicationName, ISystemLog log)
         {
@@ -54,7 +54,6 @@ namespace Octopus.Tentacle.Configuration.Instances
                     var instanceNames = applicationNameKey.GetSubKeyNames();
 
                     foreach (var instanceName in instanceNames)
-                    {
                         using (var instanceKey = applicationNameKey.OpenSubKey(instanceName, false))
                         {
                             if (instanceKey == null)
@@ -63,7 +62,6 @@ namespace Octopus.Tentacle.Configuration.Instances
                             var path = instanceKey.GetValue("ConfigurationFilePath");
                             results.Add(new ApplicationInstanceRecord(instanceName, (string)path));
                         }
-                    }
                 }
             }
 

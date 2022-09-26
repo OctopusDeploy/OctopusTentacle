@@ -6,7 +6,7 @@ using Octopus.Tentacle.Startup;
 namespace Octopus.Tentacle.Tests
 {
     [TestFixture]
-    class ArgsParsing
+    internal class ArgsParsing
     {
         [Test]
         public void Test()

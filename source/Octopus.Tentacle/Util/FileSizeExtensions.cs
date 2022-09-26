@@ -5,7 +5,9 @@ namespace Octopus.Tentacle.Util
     public static class FileSizeExtensions
     {
         public static string ToFileSizeString(this long bytes)
-            => ToFileSizeString(bytes <= 0 ? 0 : (ulong)bytes);
+        {
+            return ToFileSizeString(bytes <= 0 ? 0 : (ulong)bytes);
+        }
 
         // Returns the human-readable file size for an arbitrary, 64-bit file size.
         // The default format is "0.### XB", e.g. "4.2 KB" or "1.434 GB".

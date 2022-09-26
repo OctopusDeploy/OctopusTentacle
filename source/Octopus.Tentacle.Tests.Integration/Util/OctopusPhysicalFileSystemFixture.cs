@@ -12,11 +12,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util
     {
         [Test]
         public void EnsureDiskHasEnoughFreeSpaceShouldWorkForStandardPath()
-            => new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>()).EnsureDiskHasEnoughFreeSpace(Path.GetTempPath(), 0);
+        {
+            new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>()).EnsureDiskHasEnoughFreeSpace(Path.GetTempPath(), 0);
+        }
 
         [Test]
         public void EnsureDiskHasEnoughFreeSpaceShouldWorkButNotCheckForUncPaths()
-            => new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>()).EnsureDiskHasEnoughFreeSpace(@"\\does\not\exist", long.MaxValue);
+        {
+            new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>()).EnsureDiskHasEnoughFreeSpace(@"\\does\not\exist", long.MaxValue);
+        }
 
         [Test]
         public void EnsureDiskHasEnoughFreeSpaceThrowsAndExceptionIfThereIsNotEnoughSpace()

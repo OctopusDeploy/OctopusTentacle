@@ -11,34 +11,34 @@ namespace Octopus.Tentacle.Tests.Communications
 {
     public class AutofacServiceFactoryFixture
     {
-        readonly IAutofacServiceSource simpleSource = new KnownServiceSource(typeof(SimpleService));
-        readonly IAutofacServiceSource pieSource = new KnownServiceSource(typeof(PieService));
-        readonly IAutofacServiceSource emptySource = new KnownServiceSource(new Type[] {});
-        readonly IAutofacServiceSource nullSource = new KnownServiceSource();
-        readonly IAutofacServiceSource invalidInterfaceSource = new KnownServiceSource(typeof(ISimpleService));
-        readonly IAutofacServiceSource invalidClassSource = new KnownServiceSource(typeof(PlainClass));
-        
+        private readonly IAutofacServiceSource simpleSource = new KnownServiceSource(typeof(SimpleService));
+        private readonly IAutofacServiceSource pieSource = new KnownServiceSource(typeof(PieService));
+        private readonly IAutofacServiceSource emptySource = new KnownServiceSource();
+        private readonly IAutofacServiceSource nullSource = new KnownServiceSource();
+        private readonly IAutofacServiceSource invalidInterfaceSource = new KnownServiceSource(typeof(ISimpleService));
+        private readonly IAutofacServiceSource invalidClassSource = new KnownServiceSource(typeof(PlainClass));
+
         [Test]
         public void Resolved_WithNoSources_WorksAsExpected()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
-            
+
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(0);
         }
-        
+
         [Test]
         public void Resolved_WithSingleSource_CanCreateServices()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
             builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
-            
+
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(1);
             factory.RegisteredServiceTypes.Select(x => x.Name).Should().Contain(nameof(ISimpleService));
@@ -55,15 +55,15 @@ namespace Octopus.Tentacle.Tests.Communications
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
             builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
             builder.RegisterInstance(pieSource).AsImplementedInterfaces();
-            
+
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(2);
             var types = factory.RegisteredServiceTypes.Select(x => x.Name).ToList();
             types.Should().Contain(nameof(ISimpleService));
             types.Should().Contain(nameof(IPieService));
-            
+
             var service = factory.CreateService(nameof(ISimpleService));
             var greeting = (service.Service as ISimpleService)?.Greet("Fred");
             greeting.Should().Be("Hello Fred!");
@@ -80,11 +80,11 @@ namespace Octopus.Tentacle.Tests.Communications
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
             builder.RegisterInstance(nullSource).AsImplementedInterfaces();
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(0);
         }
-        
+
         [Test]
         public void Resolved_WithEmptySource_DoesNotThrow()
         {
@@ -92,11 +92,11 @@ namespace Octopus.Tentacle.Tests.Communications
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
             builder.RegisterInstance(emptySource).AsImplementedInterfaces();
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(0);
         }
-        
+
         [Test]
         public void Resolved_WithInvalidInterfaceSource_ThrowsExpectedException()
         {
@@ -117,7 +117,7 @@ namespace Octopus.Tentacle.Tests.Communications
                 (baseEx as InvalidServiceTypeException)?.InvalidType.Name.Should().Be(nameof(ISimpleService));
             }
         }
-        
+
         [Test]
         public void Resolved_WithInvalidClassSource_ThrowsExpectedException()
         {
@@ -138,16 +138,16 @@ namespace Octopus.Tentacle.Tests.Communications
                 (baseEx as InvalidServiceTypeException)?.InvalidType.Name.Should().Be(nameof(PlainClass));
             }
         }
-                
+
         [Test]
         public void CreateService_WithMissingService_ThrowsExpectedException()
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<AutofacServiceFactory>().AsImplementedInterfaces().SingleInstance();
             builder.RegisterInstance(simpleSource).AsImplementedInterfaces();
-            
+
             var container = builder.Build();
-            
+
             var factory = container.Resolve<IServiceFactory>();
             factory.RegisteredServiceTypes.Count.Should().Be(1);
 
@@ -162,26 +162,26 @@ namespace Octopus.Tentacle.Tests.Communications
                 (ex as UnknownServiceNameException)?.ServiceName.Should().Be(missingService);
             }
         }
-        
-        interface IPieService
+
+        private interface IPieService
         {
             float GetPie();
         }
 
-        class PieService : IPieService
+        private class PieService : IPieService
         {
             public float GetPie()
             {
                 return 3.14159f;
             }
         }
-        
-        interface ISimpleService
+
+        private interface ISimpleService
         {
             string Greet(string name);
         }
 
-        class SimpleService : ISimpleService
+        private class SimpleService : ISimpleService
         {
             public string Greet(string name)
             {
@@ -190,7 +190,7 @@ namespace Octopus.Tentacle.Tests.Communications
         }
 
         // No interface, this will not be register-able
-        class PlainClass
+        private class PlainClass
         {
             // ReSharper disable once UnusedMember.Local
             public string Greet(string name)

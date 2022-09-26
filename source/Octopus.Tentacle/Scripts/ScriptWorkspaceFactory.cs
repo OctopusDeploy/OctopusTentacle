@@ -8,8 +8,8 @@ namespace Octopus.Tentacle.Scripts
 {
     public class ScriptWorkspaceFactory : IScriptWorkspaceFactory
     {
-        readonly IOctopusFileSystem fileSystem;
-        readonly IHomeConfiguration home;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly IHomeConfiguration home;
 
         public ScriptWorkspaceFactory(IOctopusFileSystem fileSystem, IHomeConfiguration home)
         {
@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Scripts
             return new ScriptWorkspace(FindWorkingDirectory(ticket), fileSystem);
         }
 
-        string FindWorkingDirectory(ScriptTicket ticket)
+        private string FindWorkingDirectory(ScriptTicket ticket)
         {
             var work = fileSystem.GetFullPath(Path.Combine(home.HomeDirectory ?? "", "Work", ticket.TaskId));
             fileSystem.EnsureDirectoryExists(work);

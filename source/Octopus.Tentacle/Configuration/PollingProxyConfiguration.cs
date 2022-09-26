@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using Octopus.Configuration;
 
 namespace Octopus.Tentacle.Configuration
@@ -11,7 +12,7 @@ namespace Octopus.Tentacle.Configuration
         public const string ProxyHostSettingName = "Octopus.Server.Proxy.ProxyHost";
         public const string ProxyPortSettingName = "Octopus.Server.Proxy.ProxyPort";
 
-        readonly IKeyValueStore settings;
+        private readonly IKeyValueStore settings;
 
         public PollingProxyConfiguration(IKeyValueStore settings)
         {
@@ -29,9 +30,9 @@ namespace Octopus.Tentacle.Configuration
         public int CustomProxyPort => settings.Get(ProxyPortSettingName, 80);
     }
 
-    class WritablePollingProxyConfiguration : PollingProxyConfiguration, IWritablePollingProxyConfiguration
+    internal class WritablePollingProxyConfiguration : PollingProxyConfiguration, IWritablePollingProxyConfiguration
     {
-        readonly IWritableKeyValueStore settings;
+        private readonly IWritableKeyValueStore settings;
 
         public WritablePollingProxyConfiguration(IWritableKeyValueStore settings) : base(settings)
         {

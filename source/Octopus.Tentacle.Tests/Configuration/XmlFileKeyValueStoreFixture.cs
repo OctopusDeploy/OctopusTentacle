@@ -20,27 +20,27 @@ using Formatting = System.Xml.Formatting;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
-    class MyNestedObject
+    internal class MyNestedObject
     {
         public int Id { get; set; }
     }
 
-    enum SomeEnum
+    internal enum SomeEnum
     {
         SomeEnumValue,
         SomeOtherEnumValue
     }
 
-    class MyObject
+    internal class MyObject
     {
         public bool BooleanField { get; set; }
         public int IntField { get; set; }
         public SomeEnum EnumField { get; set; }
         public MyNestedObject[] ArrayField { get; set; }
     }
-    
+
     [TestFixture]
-    class XmlFileKeyValueStoreFixture
+    internal class XmlFileKeyValueStoreFixture
     {
         [Test]
         public void WritesSortedXmlUsingCorrectTypes()
@@ -110,7 +110,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         /// where it json serialized a lot of things
         /// </summary>
         [TestFixture]
-        class BackwardsCompatFixture : RoundTripTestBaseFixture
+        private class BackwardsCompatFixture : RoundTripTestBaseFixture
         {
             protected override IKeyValueStore SetupKeyValueStore()
             {
@@ -152,17 +152,17 @@ namespace Octopus.Tentacle.Tests.Configuration
             /// <summary>
             /// a rough copy of the implementation from around https://github.com/OctopusDeploy/OctopusShared/tree/fac3c1dbdb51d3cf71ec5513f2c24d76b18568ee
             /// </summary>
-            class OldImplementation
+            private class OldImplementation
             {
-                readonly string configurationFile;
-                readonly IDictionary<string, object> settings = new Dictionary<string, object>();
+                private readonly string configurationFile;
+                private readonly IDictionary<string, object> settings = new Dictionary<string, object>();
 
                 public OldImplementation(string configurationFile)
                 {
                     this.configurationFile = configurationFile;
                 }
 
-                void SetInternal(string name,
+                private void SetInternal(string name,
                     string value,
                     ProtectionLevel protectionLevel = ProtectionLevel.None)
                 {
@@ -192,7 +192,7 @@ namespace Octopus.Tentacle.Tests.Configuration
                         SetInternal(name, JsonConvert.SerializeObject(value), protectionLevel);
                 }
 
-                void Write(string key, object value)
+                private void Write(string key, object value)
                 {
                     settings[key] = value;
                 }
@@ -224,7 +224,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         /// <summary>
         /// Tests to make sure we can read & write all the types correctly
         /// </summary>
-        abstract class XmlRoundTripTestBase : CurrentRoundTripTestBase
+        private abstract class XmlRoundTripTestBase : CurrentRoundTripTestBase
         {
             protected IKeyValueStore SetupData()
             {
@@ -268,7 +268,7 @@ namespace Octopus.Tentacle.Tests.Configuration
                 return settings;
             }
 
-            static byte[] GenerateValue()
+            private static byte[] GenerateValue()
             {
                 var key = new byte[16];
                 using (var provider = new RNGCryptoServiceProvider())
@@ -281,14 +281,16 @@ namespace Octopus.Tentacle.Tests.Configuration
         }
 
         [TestFixture]
-        class XmlRoundTripTestsWithoutReReadFromFile : XmlRoundTripTestBase
+        private class XmlRoundTripTestsWithoutReReadFromFile : XmlRoundTripTestBase
         {
             protected override IKeyValueStore SetupKeyValueStore()
-                => SetupData();
+            {
+                return SetupData();
+            }
         }
 
         [TestFixture]
-        class XmlRoundTripTestsWithReReadFromFile : XmlRoundTripTestBase
+        private class XmlRoundTripTestsWithReReadFromFile : XmlRoundTripTestBase
         {
             protected override IKeyValueStore SetupKeyValueStore()
             {

@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Util
 {
     public static class RandomStringGenerator
     {
-        static readonly object GeneratorLock = new object();
+        private static readonly object GeneratorLock = new();
 
         public static string Generate(int length)
         {
@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Util
             }
         }
 
-        static byte Next(RandomNumberGenerator rngCsp, int numberSides)
+        private static byte Next(RandomNumberGenerator rngCsp, int numberSides)
         {
             if (numberSides <= 0)
                 throw new ArgumentOutOfRangeException("numberSides");
@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Util
             return (byte)(randomNumber[0] % numberSides + 1);
         }
 
-        static bool IsFairRoll(byte roll, int numSides)
+        private static bool IsFairRoll(byte roll, int numSides)
         {
             var fullSetsOfValues = byte.MaxValue / numSides;
             return roll < numSides * fullSetsOfValues;

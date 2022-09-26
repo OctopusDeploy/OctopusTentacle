@@ -8,14 +8,14 @@ namespace Octopus.Tentacle.Tests.Security
     [TestFixture]
     public class AhoCorasickMemoryPerfTests
     {
-        const int wordCount = 200;
-        const int wordLength = 2000;
-        const int searchCount = 20;
+        private const int wordCount = 200;
+        private const int wordLength = 2000;
+        private const int searchCount = 20;
 
-        readonly string[] words;
-        readonly Random random;
-        readonly string[] toSearch;
-        readonly bool[] result;
+        private readonly string[] words;
+        private readonly Random random;
+        private readonly string[] toSearch;
+        private readonly bool[] result;
 
         public AhoCorasickMemoryPerfTests()
         {
@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Security
                 .ToArray();
         }
 
-        string RandomString(int length)
+        private string RandomString(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
             return new string(Enumerable.Repeat(chars, length)

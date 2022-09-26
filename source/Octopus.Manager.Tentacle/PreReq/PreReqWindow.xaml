@@ -1,34 +1,40 @@
-﻿<Window 
+﻿<Window
     x:Class="Octopus.Manager.Tentacle.PreReq.PreReqWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-    mc:Ignorable="d" 
-    Title="Octopus Prerequisites" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
+    Title="Octopus Prerequisites"
     UseLayoutRounding="True"
     FontSize="9pt" TextOptions.TextFormattingMode="Ideal"
     WindowStartupLocation="CenterScreen"
-    SizeToContent="Height" 
+    SizeToContent="Height"
     MaxWidth="510"
     ResizeMode="NoResize">
     <StackPanel Margin="10">
-        <TextBlock Name="statusText" Text="Checking whether required Windows features and roles are enabled..." TextWrapping="Wrap" Margin="7" />
+        <TextBlock Name="statusText" Text="Checking whether required Windows features and roles are enabled..."
+                   TextWrapping="Wrap" Margin="7" />
         <ProgressBar Name="progressBar" IsIndeterminate="true" Height="20" Margin="7" />
-        <TextBox IsReadOnly="True" Name="correctTextBox" FontSize="10pt" Margin="7" Height="100" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible" />
+        <TextBox IsReadOnly="True" Name="correctTextBox" FontSize="10pt" Margin="7" Height="100" TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Visible" />
         <TextBlock Margin="7" TextWrapping="Wrap" Name="correctLinkBlock" />
         <TextBlock Margin="7" TextWrapping="Wrap" Name="moreInfoLinkBlock" Visibility="Collapsed">
             <Hyperlink Click="MoreInfoClicked">More Info</Hyperlink>
         </TextBlock>
-        <TextBox IsReadOnly="True" Name="commandLineOutputTextBox" FontFamily="Courier New" FontSize="8pt" Margin="7" Height="100" TextWrapping="NoWrap" VerticalScrollBarVisibility="Hidden" Visibility="Collapsed"></TextBox>
+        <TextBox IsReadOnly="True" Name="commandLineOutputTextBox" FontFamily="Courier New" FontSize="8pt" Margin="7"
+                 Height="100" TextWrapping="NoWrap" VerticalScrollBarVisibility="Hidden" Visibility="Collapsed" />
         <Grid>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                <Button x:Name="copyToClipboard" Style="{StaticResource Button.Default}" Click="CopyToClipboardClicked" Margin="7" Visibility="Collapsed">COPY TO CLIPBOARD</Button>
+                <Button x:Name="copyToClipboard" Style="{StaticResource Button.Default}" Click="CopyToClipboardClicked"
+                        Margin="7" Visibility="Collapsed">
+                    COPY TO CLIPBOARD
+                </Button>
             </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="reCheckButton" Content="CHECK AGAIN" Width="110" Margin="7" Click="ReCheckClicked" />
-            <Button x:Name="cancelButton" Content="CANCEL" Width="110" Margin="7" Click="CancelClicked" />
-        </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="reCheckButton" Content="CHECK AGAIN" Width="110" Margin="7" Click="ReCheckClicked" />
+                <Button x:Name="cancelButton" Content="CANCEL" Width="110" Margin="7" Click="CancelClicked" />
+            </StackPanel>
         </Grid>
     </StackPanel>
 </Window>

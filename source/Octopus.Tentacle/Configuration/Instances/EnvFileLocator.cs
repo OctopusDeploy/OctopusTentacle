@@ -12,9 +12,9 @@ namespace Octopus.Tentacle.Configuration.Instances
 
     public class EnvFileLocator : IEnvFileLocator
     {
-        readonly IOctopusFileSystem fileSystem;
-        readonly ILogFileOnlyLogger log;
-        string? envFile;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly ILogFileOnlyLogger log;
+        private string? envFile;
 
         public EnvFileLocator(IOctopusFileSystem fileSystem, ILogFileOnlyLogger log)
         {

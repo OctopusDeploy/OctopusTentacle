@@ -16,23 +16,23 @@ namespace Octopus.Tentacle.Commands
 {
     public class PollCommand : AbstractStandardCommand
     {
-        readonly Lazy<IWritableTentacleConfiguration> configuration;
-        readonly Lazy<IOctopusServerChecker> octopusServerChecker;
-        readonly IProxyConfigParser proxyConfig;
-        readonly IOctopusClientInitializer octopusClientInitializer;
-        readonly ISystemLog log;
-        readonly IApplicationInstanceSelector selector;
-        readonly ApiEndpointOptions api;
-        int commsPort = 10943;
-        string serverWebSocketAddress = null!;
+        private readonly Lazy<IWritableTentacleConfiguration> configuration;
+        private readonly Lazy<IOctopusServerChecker> octopusServerChecker;
+        private readonly IProxyConfigParser proxyConfig;
+        private readonly IOctopusClientInitializer octopusClientInitializer;
+        private readonly ISystemLog log;
+        private readonly IApplicationInstanceSelector selector;
+        private readonly ApiEndpointOptions api;
+        private int commsPort = 10943;
+        private string serverWebSocketAddress = null!;
 
         public PollCommand(Lazy<IWritableTentacleConfiguration> configuration,
-                           ISystemLog log,
-                           IApplicationInstanceSelector selector,
-                           Lazy<IOctopusServerChecker> octopusServerChecker,
-                           IProxyConfigParser proxyConfig,
-                           IOctopusClientInitializer octopusClientInitializer,
-                           ILogFileOnlyLogger logFileOnlyLogger)
+            ISystemLog log,
+            IApplicationInstanceSelector selector,
+            Lazy<IOctopusServerChecker> octopusServerChecker,
+            IProxyConfigParser proxyConfig,
+            IOctopusClientInitializer octopusClientInitializer,
+            ILogFileOnlyLogger logFileOnlyLogger)
             : base(selector, log, logFileOnlyLogger)
         {
             this.configuration = configuration;
@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Commands
             StartAsync().GetAwaiter().GetResult();
         }
 
-        async Task StartAsync()
+        private async Task StartAsync()
         {
             var serverAddress = GetAddress();
 
@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Commands
             }
         }
 
-        OctopusServerConfiguration GetAlreadyConfiguredServerInCluster(string serverThumbprint)
+        private OctopusServerConfiguration GetAlreadyConfiguredServerInCluster(string serverThumbprint)
         {
             var alreadyConfiguredServersInCluster = configuration.Value.TrustedOctopusServers
                 .Where(s => s.Thumbprint == serverThumbprint)
@@ -97,25 +97,21 @@ namespace Octopus.Tentacle.Commands
             var instanceArg = selector.Current.InstanceName == null ? "" : $" --instance {selector.Current.InstanceName}";
 
             if (!alreadyConfiguredServersInCluster.Any())
-            {
                 throw new ControlledFailureException($"The Octopus Server with the thumbprint '{serverThumbprint}' is not yet trusted. " + Environment.NewLine +
                     $"Trust this Octopus Server using '{executable} configure --trust=\"{serverThumbprint}\"{instanceArg}'");
-            }
 
             var pollingServerConfiguration = alreadyConfiguredServersInCluster
                 .FirstOrDefault(c => c.CommunicationStyle == CommunicationStyle.TentacleActive && c.SubscriptionId != null);
             if (pollingServerConfiguration == null)
-            {
                 throw new ControlledFailureException("This Tentacle has not been configured to connect to the specified Octopus Server as a polling Tentacle. " + Environment.NewLine +
-                    $"Reconfigure this Tentacle to poll the server using either:" + Environment.NewLine +
+                    "Reconfigure this Tentacle to poll the server using either:" + Environment.NewLine +
                     $"'{executable} server-comms --thumbprint=\"{serverThumbprint}\" --style=TentacleActive{instanceArg} --host {new Uri(api.Server).Host}' or " + Environment.NewLine +
                     $"'{executable} server-comms --thumbprint=\"{serverThumbprint}\" --style=TentacleActive{instanceArg} --web-socket <web-socket-address>'");
-            }
 
             return pollingServerConfiguration;
         }
 
-        async Task<string> GetServerThumbprint(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint)
+        private async Task<string> GetServerThumbprint(IOctopusAsyncRepository repository, Uri serverAddress, string sslThumbprint)
         {
             if (serverAddress != null && ServiceEndPoint.IsWebSocketAddress(serverAddress))
             {
@@ -123,10 +119,11 @@ namespace Octopus.Tentacle.Commands
                     throw new ControlledFailureException($"Could not determine thumbprint of the SSL Certificate at {serverAddress}");
                 return sslThumbprint;
             }
+
             return (await repository.CertificateConfiguration.GetOctopusCertificate()).Thumbprint;
         }
 
-        Uri GetAddress()
+        private Uri GetAddress()
         {
             if (string.IsNullOrWhiteSpace(serverWebSocketAddress))
                 return new Uri("https://" + api.ServerUri.Host + ":" + commsPort);

@@ -8,8 +8,8 @@ namespace Octopus.Tentacle.Configuration
 {
     public class XmlFileKeyValueStore : XmlKeyValueStore
     {
-        readonly IOctopusFileSystem fileSystem;
-        readonly string configurationFile;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly string configurationFile;
 
         public XmlFileKeyValueStore(IOctopusFileSystem fileSystem,
             string configurationFile,
@@ -22,19 +22,20 @@ namespace Octopus.Tentacle.Configuration
 
         protected override void LoadSettings(IDictionary<string, object?> settingsToFill)
         {
-            if (!ExistsForReading())
-            {
-                throw new Exception($"Configuration file {configurationFile} could not be found.");
-            }
+            if (!ExistsForReading()) throw new Exception($"Configuration file {configurationFile} could not be found.");
 
             base.LoadSettings(settingsToFill);
         }
 
         protected override bool ExistsForReading()
-            => File.Exists(configurationFile);
+        {
+            return File.Exists(configurationFile);
+        }
 
         protected override Stream OpenForReading()
-            => new FileStream(configurationFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+        {
+            return new FileStream(configurationFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+        }
 
         protected override Stream OpenForWriting()
         {

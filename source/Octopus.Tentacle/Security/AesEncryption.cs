@@ -7,11 +7,11 @@ namespace Octopus.Tentacle.Security
 {
     public class AesEncryption
     {
-        const int PasswordSaltIterations = 1000;
-        static readonly byte[] PasswordPaddingSalt = Encoding.UTF8.GetBytes("Octopuss");
-        static readonly byte[] IvPrefix = Encoding.UTF8.GetBytes("IV__");
+        private const int PasswordSaltIterations = 1000;
+        private static readonly byte[] PasswordPaddingSalt = Encoding.UTF8.GetBytes("Octopuss");
+        private static readonly byte[] IvPrefix = Encoding.UTF8.GetBytes("IV__");
 
-        readonly byte[] key;
+        private readonly byte[] key;
 
         public AesEncryption(string password)
         {
@@ -62,7 +62,7 @@ namespace Octopus.Tentacle.Security
             }
         }
 
-        AesCryptoServiceProvider GetCryptoProvider(byte[]? iv = null)
+        private AesCryptoServiceProvider GetCryptoProvider(byte[]? iv = null)
         {
             var provider = new AesCryptoServiceProvider
             {

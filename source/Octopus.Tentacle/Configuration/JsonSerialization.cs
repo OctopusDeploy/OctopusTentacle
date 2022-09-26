@@ -7,12 +7,14 @@ namespace Octopus.Tentacle.Configuration
     public static class JsonSerialization
     {
         public static JsonSerializerSettings GetDefaultSerializerSettings()
-            => new JsonSerializerSettings
+        {
+            return new JsonSerializerSettings
             {
                 Converters = new JsonConverterCollection
                 {
                     new StringEnumConverter()
                 }
             };
+        }
     }
 }

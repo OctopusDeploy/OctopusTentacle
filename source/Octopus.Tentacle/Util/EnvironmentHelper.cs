@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Util
     public static class EnvironmentHelper
     {
 #pragma warning disable PC001 // API not supported on all platforms
-        static string CurrentUserName => PlatformDetection.IsRunningOnWindows ? WindowsIdentity.GetCurrent().Name : Environment.UserName;
+        private static string CurrentUserName => PlatformDetection.IsRunningOnWindows ? WindowsIdentity.GetCurrent().Name : Environment.UserName;
 #pragma warning restore PC001 // API not supported on all platforms
         public static string[] SafelyGetEnvironmentInformation()
         {
@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Util
             return envVars.ToArray();
         }
 
-        static string SafelyGet(Func<string> thingToGet)
+        private static string SafelyGet(Func<string> thingToGet)
         {
             try
             {
@@ -33,7 +33,7 @@ namespace Octopus.Tentacle.Util
             }
         }
 
-        static IEnumerable<string> GetEnvironmentVars()
+        private static IEnumerable<string> GetEnvironmentVars()
         {
             yield return SafelyGet(() => $"OperatingSystem: {RuntimeInformation.OSDescription}");
             yield return SafelyGet(() => $"OsBitVersion: {(Environment.Is64BitOperatingSystem ? "x64" : "x86")}");
@@ -43,13 +43,13 @@ namespace Octopus.Tentacle.Util
             yield return SafelyGet(() => $"ProcessorCount: {Environment.ProcessorCount}");
         }
 
-        static IEnumerable<string> GetPathVars()
+        private static IEnumerable<string> GetPathVars()
         {
             yield return SafelyGet(() => $"CurrentDirectory: {Directory.GetCurrentDirectory()}");
             yield return SafelyGet(() => $"TempDirectory: {Path.GetTempPath()}");
         }
 
-        static IEnumerable<string> GetProcessVars()
+        private static IEnumerable<string> GetProcessVars()
         {
             yield return SafelyGet(() => $"HostProcessName: {Process.GetCurrentProcess().ProcessName}");
             yield return SafelyGet(() => $"PID: {Process.GetCurrentProcess().Id}");

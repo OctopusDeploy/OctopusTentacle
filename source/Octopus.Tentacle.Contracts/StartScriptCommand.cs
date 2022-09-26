@@ -60,19 +60,16 @@ namespace Octopus.Tentacle.Contracts
             if (additionalScripts == null || !additionalScripts.Any())
                 return;
 
-            foreach (var additionalScript in additionalScripts)
-            {
-                Scripts.Add(additionalScript.Key, additionalScript.Value);
-            }
+            foreach (var additionalScript in additionalScripts) Scripts.Add(additionalScript.Key, additionalScript.Value);
         }
 
         public string ScriptBody { get; }
 
         public ScriptIsolationLevel Isolation { get; }
 
-        public Dictionary<ScriptType, string> Scripts { get; } = new Dictionary<ScriptType, string>();
+        public Dictionary<ScriptType, string> Scripts { get; } = new();
 
-        public List<ScriptFile> Files { get; } = new List<ScriptFile>();
+        public List<ScriptFile> Files { get; } = new();
 
         public string[] Arguments { get; }
 

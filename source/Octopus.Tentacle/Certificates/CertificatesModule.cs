@@ -3,7 +3,7 @@ using Autofac;
 
 namespace Octopus.Tentacle.Certificates
 {
-    public class CertificatesModule: Module
+    public class CertificatesModule : Module
     {
         protected override void Load(ContainerBuilder builder)
         {

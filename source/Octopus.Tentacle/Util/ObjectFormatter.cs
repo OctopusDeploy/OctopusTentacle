@@ -6,6 +6,8 @@ namespace Octopus.Tentacle.Util
     public static class ObjectFormatter
     {
         public static string Format(object o)
-            => JsonConvert.SerializeObject(o);
+        {
+            return JsonConvert.SerializeObject(o);
+        }
     }
 }

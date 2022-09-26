@@ -15,7 +15,9 @@ namespace Octopus.Tentacle.Util
     public static class SilentProcessRunner
     {
         public static CmdResult ExecuteCommand(this CommandLineInvocation invocation)
-            => ExecuteCommand(invocation, Environment.CurrentDirectory);
+        {
+            return ExecuteCommand(invocation, Environment.CurrentDirectory);
+        }
 
         public static CmdResult ExecuteCommand(this CommandLineInvocation invocation, string workingDirectory)
         {
@@ -44,13 +46,15 @@ namespace Octopus.Tentacle.Util
             Action<string> info,
             Action<string> error,
             CancellationToken cancel = default)
-            => ExecuteCommand(executable,
+        {
+            return ExecuteCommand(executable,
                 arguments,
                 workingDirectory,
                 LogFileOnlyLogger.Current.Info,
                 info,
                 error,
                 cancel);
+        }
 
         public static int ExecuteCommand(
             string executable,
@@ -145,9 +149,9 @@ namespace Octopus.Tentacle.Util
                     var running = true;
 
                     using (cancel.Register(() =>
-                    {
-                        if (running) DoOurBestToCleanUp(process, error);
-                    }))
+                           {
+                               if (running) DoOurBestToCleanUp(process, error);
+                           }))
                     {
                         if (cancel.IsCancellationRequested)
                             DoOurBestToCleanUp(process, error);
@@ -177,21 +181,21 @@ namespace Octopus.Tentacle.Util
             }
         }
 
-        static int SafelyGetExitCode(Process process)
+        private static int SafelyGetExitCode(Process process)
         {
             try
             {
                 return process.ExitCode;
             }
-            catch (InvalidOperationException ex) 
-                when (ex.Message == "No process is associated with this object." || 
-                        ex.Message == "Process was not started by this object, so requested information cannot be determined.")
+            catch (InvalidOperationException ex)
+                when (ex.Message == "No process is associated with this object." ||
+                      ex.Message == "Process was not started by this object, so requested information cannot be determined.")
             {
                 return -1;
             }
         }
 
-        static void SafelyWaitForAllOutput(ManualResetEventSlim outputResetEvent,
+        private static void SafelyWaitForAllOutput(ManualResetEventSlim outputResetEvent,
             CancellationToken cancel,
             Action<string> debug)
         {
@@ -206,7 +210,7 @@ namespace Octopus.Tentacle.Util
             }
         }
 
-        static void SafelyCancelRead(Action action, Action<string> debug)
+        private static void SafelyCancelRead(Action action, Action<string> debug)
         {
             try
             {
@@ -218,7 +222,7 @@ namespace Octopus.Tentacle.Util
             }
         }
 
-        static void DoOurBestToCleanUp(Process process, Action<string> error)
+        private static void DoOurBestToCleanUp(Process process, Action<string> error)
         {
             try
             {
@@ -240,14 +244,12 @@ namespace Octopus.Tentacle.Util
 
         [DllImport("kernel32.dll", SetLastError = true)]
 #pragma warning disable PC003 // Native API not available in UWP
-        static extern bool GetCPInfoEx([MarshalAs(UnmanagedType.U4)]
-            int codePage,
-            [MarshalAs(UnmanagedType.U4)]
-            int dwFlags,
+        private static extern bool GetCPInfoEx([MarshalAs(UnmanagedType.U4)] int codePage,
+            [MarshalAs(UnmanagedType.U4)] int dwFlags,
             out CPINFOEX lpCPInfoEx);
 #pragma warning restore PC003 // Native API not available in UWP
 
-        class Hitman
+        private class Hitman
         {
             public static void TryKillProcessAndChildrenRecursively(Process process)
             {
@@ -259,7 +261,7 @@ namespace Octopus.Tentacle.Util
                     throw new Exception("Unknown platform, unable to kill process");
             }
 
-            static void TryKillLinuxProcessAndChildrenRecursively(Process process)
+            private static void TryKillLinuxProcessAndChildrenRecursively(Process process)
             {
                 var result = ExecuteCommand(new CommandLineInvocation("/bin/bash", $"-c \"kill -TERM {process.Id}\""));
                 result.Validate();
@@ -270,7 +272,7 @@ namespace Octopus.Tentacle.Util
                     process.Close();
             }
 
-            static void TryKillWindowsProcessAndChildrenRecursively(int pid)
+            private static void TryKillWindowsProcessAndChildrenRecursively(int pid)
             {
                 try
                 {
@@ -343,17 +345,16 @@ namespace Octopus.Tentacle.Util
         }
 
         // ReSharper disable InconsistentNaming
-        const int MAX_DEFAULTCHAR = 2;
-        const int MAX_LEADBYTES = 12;
-        const int MAX_PATH = 260;
+        private const int MAX_DEFAULTCHAR = 2;
+        private const int MAX_LEADBYTES = 12;
+        private const int MAX_PATH = 260;
 
         // ReSharper disable MemberCanBePrivate.Local
         // ReSharper disable once StructCanBeMadeReadOnly
         [StructLayout(LayoutKind.Sequential)]
-        struct CPINFOEX
+        private struct CPINFOEX
         {
-            [MarshalAs(UnmanagedType.U4)]
-            public readonly int MaxCharSize;
+            [MarshalAs(UnmanagedType.U4)] public readonly int MaxCharSize;
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_DEFAULTCHAR)]
             public readonly byte[] DefaultChar;
@@ -363,8 +364,7 @@ namespace Octopus.Tentacle.Util
 
             public readonly char UnicodeDefaultChar;
 
-            [MarshalAs(UnmanagedType.U4)]
-            public readonly int CodePage;
+            [MarshalAs(UnmanagedType.U4)] public readonly int CodePage;
 
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MAX_PATH)]
             public readonly string CodePageName;

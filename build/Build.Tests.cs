@@ -1,4 +1,5 @@
 ﻿// ReSharper disable RedundantUsingDirective
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -46,13 +47,8 @@ partial class Build
                 {
                     string? archSuffix = null;
                     if (testConfiguration.PackageType == "deb" && testConfiguration.RuntimeId == "linux-x64")
-                    {
                         archSuffix = "_amd64";
-                    }
-                    else if (testConfiguration.PackageType == "rpm" && testConfiguration.RuntimeId == "linux-x64")
-                    {
-                        archSuffix = ".x86_64";
-                    }
+                    else if (testConfiguration.PackageType == "rpm" && testConfiguration.RuntimeId == "linux-x64") archSuffix = ".x86_64";
                     if (string.IsNullOrEmpty(archSuffix)) throw new NotSupportedException();
 
                     var searchForTestFileDirectory = ArtifactsDirectory / testConfiguration.PackageType;
@@ -80,7 +76,7 @@ partial class Build
                         .SetArgs("bash", "/test-scripts/test-linux-package.sh", $"/artifacts/{testConfiguration.PackageType}/{packageFile}"));
                 });
             }
-            
+
             List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions = new()
             {
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:buster", "deb"),
@@ -98,13 +94,10 @@ partial class Build
                 // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:latest", "rpm"), // Fedora 36 doesn't support netcore, related https://github.com/dotnet/core/issues/7467 (there is no issue for Fedora 36)
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "fedora:35", "rpm"),
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel7", "rpm"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel8", "rpm"),
+                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "roboxes/rhel8", "rpm")
             };
-            
-            foreach (var testConfiguration in testOnLinuxDistributions)
-            {
-                RunLinuxPackageTestsFor(testConfiguration);
-            }
+
+            foreach (var testConfiguration in testOnLinuxDistributions) RunLinuxPackageTestsFor(testConfiguration);
         });
 
     [PublicAPI]
@@ -112,8 +105,11 @@ partial class Build
     Target TestWindowsInstallerPermissions => _ => _
         .Executes(() =>
         {
-            string GetTestName(AbsolutePath installerPath) => Path.GetFileName(installerPath).Replace(".msi", "");
-            
+            string GetTestName(AbsolutePath installerPath)
+            {
+                return Path.GetFileName(installerPath).Replace(".msi", "");
+            }
+
             void TestInstallerPermissions(AbsolutePath installerPath)
             {
                 var destination = TestDirectory / "install" / GetTestName(installerPath);
@@ -124,16 +120,13 @@ partial class Build
                 try
                 {
                     var builtInUsersHaveWriteAccess = DoesSidHaveRightsToDirectory(destination, WellKnownSidType.BuiltinUsersSid, FileSystemRights.AppendData, FileSystemRights.CreateFiles);
-                    if (builtInUsersHaveWriteAccess)
-                    {
-                        throw new Exception($"The installation destination {destination} has write permissions for the user BUILTIN\\Users. Expected write permissions to be removed by the installer.");
-                    }
+                    if (builtInUsersHaveWriteAccess) throw new Exception($"The installation destination {destination} has write permissions for the user BUILTIN\\Users. Expected write permissions to be removed by the installer.");
                 }
                 finally
                 {
                     UninstallMsi(installerPath);
                 }
-                
+
                 Log.Information($"BUILTIN\\Users do not have write access to {destination}. Hooray!");
             }
 
@@ -148,11 +141,9 @@ partial class Build
                 var installationProcess = ProcessTasks.StartProcess("msiexec", arguments);
                 installationProcess.WaitForExit();
                 FileSystemTasks.CopyFileToDirectory(installLogName, ArtifactsDirectory);
-                if (installationProcess.ExitCode != 0) {
-                    throw new Exception($"The installation process exited with a non-zero exit code ({installationProcess.ExitCode}). Check the log {installLogName} for details.");
-                }
+                if (installationProcess.ExitCode != 0) throw new Exception($"The installation process exited with a non-zero exit code ({installationProcess.ExitCode}). Check the log {installLogName} for details.");
             }
-            
+
             void UninstallMsi(AbsolutePath installerPath)
             {
                 Log.Information($"Uninstalling {installerPath}");
@@ -164,7 +155,7 @@ partial class Build
                 uninstallProcess.WaitForExit();
                 FileSystemTasks.CopyFileToDirectory(uninstallLogName, ArtifactsDirectory);
             }
-            
+
             bool DoesSidHaveRightsToDirectory(string directory, WellKnownSidType sid, params FileSystemRights[] rights)
             {
                 var destinationInfo = new DirectoryInfo(directory);
@@ -185,24 +176,18 @@ partial class Build
 
                 var installers = (ArtifactsDirectory / "msi").GlobFiles("*x64.msi");
 
-                if (!installers.Any())
-                {
-                    throw new Exception($"Expected to find at least one installer in the directory {ArtifactsDirectory}");
-                }
-            
-                foreach (var installer in installers)
-                {
-                    TestInstallerPermissions(installer);
-                }
+                if (!installers.Any()) throw new Exception($"Expected to find at least one installer in the directory {ArtifactsDirectory}");
+
+                foreach (var installer in installers) TestInstallerPermissions(installer);
             });
         });
-    
+
     void RunTests(string testFramework, string testRuntime)
     {
         Log.Information($"Running test for Framework: {testFramework} and Runtime: {testRuntime}");
 
         FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
-            
+
         // We call dotnet test against the assemblies directly here because calling it against the .sln requires
         // the existence of the obj/* generated artifacts as well as the bin/* artifacts and we don't want to
         // have to shunt them all around the place.
@@ -210,7 +195,7 @@ partial class Build
         var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests" / testFramework / testRuntime;
         var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests.dll");
         var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-{testFramework}-{testRuntime}.xml";
-        
+
         try
         {
             // NOTE: Configuration, NoRestore, NoBuild and Runtime parameters are meaningless here as they only apply

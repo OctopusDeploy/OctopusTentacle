@@ -34,8 +34,7 @@ namespace Octopus.Tentacle.Tests.Security.Certificates
                 File.Delete(pfxFilePath);
             }
         }
-        
-        
+
         [Test]
         public void WhenGivenABase64StringOfACertificate_ACertificateCanBeCreated()
         {
@@ -106,7 +105,7 @@ namespace Octopus.Tentacle.Tests.Security.Certificates
             }
         }
 
-        static string GetPfxFilePath(string pfxFileName)
+        private static string GetPfxFilePath(string pfxFileName)
         {
             var assembly = Assembly.GetExecutingAssembly();
             var resourceName = "Octopus.Tentacle.Tests.Resources." + pfxFileName;
@@ -125,8 +124,8 @@ namespace Octopus.Tentacle.Tests.Security.Certificates
                 return ms.ToArray();
             }
         }
-        
-        static X509Certificate2 Certificate()
+
+        private static X509Certificate2 Certificate()
         {
             var pfxFilePath = GetPfxFilePath("TestCertificateWithPassword.pfx");
             try

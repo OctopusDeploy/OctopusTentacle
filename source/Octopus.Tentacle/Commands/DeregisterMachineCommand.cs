@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Octopus.Diagnostics;
 using Octopus.Client;
+using Octopus.Diagnostics;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
@@ -12,26 +12,25 @@ namespace Octopus.Tentacle.Commands
 {
     public class DeregisterMachineCommand : AbstractStandardCommand
     {
-        readonly Lazy<ITentacleConfiguration> configuration;
-        readonly ISystemLog log;
-        readonly IApplicationInstanceSelector selector;
-        readonly ApiEndpointOptions api;
-        bool allowMultiple;
-        readonly IProxyConfigParser proxyConfig;
-        readonly IOctopusClientInitializer octopusClientInitializer;
-        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
-        string spaceName = null!;
-
         public const string DeregistrationSuccessMsg = "Machine deregistered successfully";
         public const string MultipleMatchErrorMsg = "The Tentacle matches more than one machine on the server. To deregister all of these machines specify the --multiple flag.";
+        private readonly Lazy<ITentacleConfiguration> configuration;
+        private readonly ISystemLog log;
+        private readonly IApplicationInstanceSelector selector;
+        private readonly ApiEndpointOptions api;
+        private readonly IProxyConfigParser proxyConfig;
+        private readonly IOctopusClientInitializer octopusClientInitializer;
+        private readonly ISpaceRepositoryFactory spaceRepositoryFactory;
+        private bool allowMultiple;
+        private string spaceName = null!;
 
         public DeregisterMachineCommand(Lazy<ITentacleConfiguration> configuration,
-                                        ISystemLog log,
-                                        IApplicationInstanceSelector selector,
-                                        IProxyConfigParser proxyConfig,
-                                        IOctopusClientInitializer octopusClientInitializer,
-                                        ISpaceRepositoryFactory spaceRepositoryFactory,
-                                        ILogFileOnlyLogger logFileOnlyLogger)
+            ISystemLog log,
+            IApplicationInstanceSelector selector,
+            IProxyConfigParser proxyConfig,
+            IOctopusClientInitializer octopusClientInitializer,
+            ISpaceRepositoryFactory spaceRepositoryFactory,
+            ILogFileOnlyLogger logFileOnlyLogger)
             : base(selector, log, logFileOnlyLogger)
         {
             this.configuration = configuration;
@@ -52,7 +51,7 @@ namespace Octopus.Tentacle.Commands
             StartAsync().GetAwaiter().GetResult();
         }
 
-        async Task StartAsync()
+        private async Task StartAsync()
         {
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
@@ -65,10 +64,7 @@ namespace Octopus.Tentacle.Commands
 
         public async Task Deregister(IOctopusSpaceAsyncRepository repository)
         {
-            if (configuration.Value.TentacleCertificate?.Thumbprint == null)
-            {
-                throw new ControlledFailureException("This Tentacle does not have a thumbprint. The Tentacle must have a thumbprint in order to deregister it.");
-            }
+            if (configuration.Value.TentacleCertificate?.Thumbprint == null) throw new ControlledFailureException("This Tentacle does not have a thumbprint. The Tentacle must have a thumbprint in order to deregister it.");
             // 1. do the machine count/allowMultiple checks
             var matchingMachines = await repository.Machines.FindByThumbprint(configuration.Value.TentacleCertificate.Thumbprint);
 

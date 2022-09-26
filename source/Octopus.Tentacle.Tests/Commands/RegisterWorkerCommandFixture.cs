@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -25,13 +24,13 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class RegisterWorkerCommandFixture : CommandFixture<RegisterWorkerCommand>
     {
-        IWritableTentacleConfiguration configuration;
-        ISystemLog log;
-        X509Certificate2 certificate;
-        IRegisterWorkerOperation operation;
-        IOctopusServerChecker serverChecker;
-        IOctopusAsyncRepository repository;
-        string serverThumbprint;
+        private IWritableTentacleConfiguration configuration;
+        private ISystemLog log;
+        private X509Certificate2 certificate;
+        private IRegisterWorkerOperation operation;
+        private IOctopusServerChecker serverChecker;
+        private IOctopusAsyncRepository repository;
+        private string serverThumbprint;
 
         [SetUp]
         public void BeforeEachTest()

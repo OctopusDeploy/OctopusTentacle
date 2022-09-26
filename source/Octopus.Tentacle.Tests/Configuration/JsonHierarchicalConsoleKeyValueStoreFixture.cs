@@ -5,7 +5,7 @@ using Octopus.Tentacle.Configuration;
 namespace Octopus.Tentacle.Tests.Configuration
 {
     [TestFixture]
-    class JsonHierarchicalConsoleKeyValueStoreFixture
+    internal class JsonHierarchicalConsoleKeyValueStoreFixture
     {
         [Test]
         public void WritesSortedJsonUsingCorrectTypes()

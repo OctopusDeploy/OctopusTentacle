@@ -4,7 +4,7 @@ using Octopus.Tentacle.Configuration.Instances;
 
 namespace Octopus.Tentacle.Configuration
 {
-    interface IRegistryApplicationInstanceStore
+    internal interface IRegistryApplicationInstanceStore
     {
         ApplicationInstanceRecord? GetInstanceFromRegistry(string instanceName);
 

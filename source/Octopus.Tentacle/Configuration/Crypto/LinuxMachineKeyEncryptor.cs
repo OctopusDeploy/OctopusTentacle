@@ -8,8 +8,8 @@ namespace Octopus.Tentacle.Configuration.Crypto
 {
     public class LinuxMachineKeyEncryptor : IMachineKeyEncryptor
     {
-        readonly ISystemLog log;
-        readonly IEnumerable<ICryptoKeyNixSource> keySources;
+        private readonly ISystemLog log;
+        private readonly IEnumerable<ICryptoKeyNixSource> keySources;
 
         public LinuxMachineKeyEncryptor(ISystemLog log, IEnumerable<ICryptoKeyNixSource> keySources)
         {
@@ -47,11 +47,10 @@ namespace Octopus.Tentacle.Configuration.Crypto
             });
         }
 
-        string IterateKeySourcesUntilCryptoSuccess(Func<(byte[] Key, byte[] IV), string> cipherOp)
+        private string IterateKeySourcesUntilCryptoSuccess(Func<(byte[] Key, byte[] IV), string> cipherOp)
         {
             var ex = new List<Exception>();
             foreach (var source in keySources)
-            {
                 try
                 {
                     return cipherOp(source.Load());
@@ -61,7 +60,6 @@ namespace Octopus.Tentacle.Configuration.Crypto
                     log.Verbose(e.Message);
                     ex.Add(e);
                 }
-            }
 
             throw new AggregateException(ex);
         }

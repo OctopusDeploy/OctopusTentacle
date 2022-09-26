@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using FluentValidation;
 using Octopus.Diagnostics;
 using Octopus.Manager.Tentacle.Infrastructure;
@@ -34,7 +35,7 @@ namespace Octopus.Manager.Tentacle.DeleteWizard
             yield break;
         }
 
-        static IValidator CreateValidator()
+        private static IValidator CreateValidator()
         {
             var validator = new InlineValidator<DeleteWizardModel>();
 

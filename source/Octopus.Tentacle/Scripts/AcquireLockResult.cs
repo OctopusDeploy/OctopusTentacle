@@ -4,14 +4,14 @@ namespace Octopus.Tentacle.Scripts
 {
     public class AcquireLockResult
     {
-        public bool Acquired { get; }
-        public IDisposable? LockReleaser { get; }
-
-        AcquireLockResult(bool acquired, IDisposable? lockReleaser)
+        private AcquireLockResult(bool acquired, IDisposable? lockReleaser)
         {
             Acquired = acquired;
             LockReleaser = lockReleaser;
         }
+
+        public bool Acquired { get; }
+        public IDisposable? LockReleaser { get; }
 
         public static AcquireLockResult Success(IDisposable lockReleaser)
         {

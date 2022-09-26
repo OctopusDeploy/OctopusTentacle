@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
@@ -13,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Configuration
     [TestFixture]
     public class EnvironmentValuesFixture
     {
-        MapsTentacleEnvironmentValuesToConfigItems mapper = null!;
+        private MapsTentacleEnvironmentValuesToConfigItems mapper = null!;
 
         [SetUp]
         public void SetUp()
@@ -24,17 +25,17 @@ namespace Octopus.Tentacle.Tests.Configuration
         [Test]
         public void HomeDirectoryCanBeMapped()
         {
-            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_HOME", @"c:\MyHome" }});
+            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { "OCTOPUS_HOME", @"c:\MyHome" } });
             var result = mapper.GetConfigurationValue("Octopus.Home");
-            result.Should().Be(@"c:\MyHome", because: "Values provided by Shared are mapped");
+            result.Should().Be(@"c:\MyHome", "Values provided by Shared are mapped");
         }
 
         [Test]
         public void ValueCanBeMappedDirectly()
         {
-            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { MapsTentacleEnvironmentValuesToConfigItems.ProxyHost.Name, "Data Source=.;Initial Catalog=OctopusDeploy-master;Trusted_connection=true" }});
+            mapper.SetEnvironmentValues(new Dictionary<string, string?> { { MapsTentacleEnvironmentValuesToConfigItems.ProxyHost.Name, "Data Source=.;Initial Catalog=OctopusDeploy-master;Trusted_connection=true" } });
             var result = mapper.GetConfigurationValue(PollingProxyConfiguration.ProxyHostSettingName);
-            result.Should().Be("Data Source=.;Initial Catalog=OctopusDeploy-master;Trusted_connection=true", because: "Raw SQL connection string gets passed directly through");
+            result.Should().Be("Data Source=.;Initial Catalog=OctopusDeploy-master;Trusted_connection=true", "Raw SQL connection string gets passed directly through");
         }
 
         [Test]
@@ -50,7 +51,8 @@ namespace Octopus.Tentacle.Tests.Configuration
                 .OrderBy(x => x);
 
             //This list contains the supported environment value names, which is a public contract.
-            var expected = new[] {
+            var expected = new[]
+            {
                 "TENTACLE_APPLICATION_DIRECTORY",
                 "TENTACLE_CERTIFICATE",
                 "TENTACLE_CERTIFICATE_THUMBPRINT",

@@ -12,11 +12,19 @@ namespace Octopus.Tentacle.Tests.Integration.Util
     [TestFixture]
     public class SilentProcessRunnerFixture
     {
-        const int SIG_TERM = 143;
-        const int SIG_KILL = 137;
-        TestUserPrincipal user;
-        string command;
-        string commandParam;
+        private const int SIG_TERM = 143;
+        private const int SIG_KILL = 137;
+        private TestUserPrincipal user;
+        private string command;
+        private string commandParam;
+
+        public static string CurrentUserName => PlatformDetection.IsRunningOnWindows
+            ?
+#pragma warning disable PC001 // API not supported on all platforms
+            WindowsIdentity.GetCurrent().Name
+            :
+#pragma warning restore PC001 // API not supported on all platforms
+            Environment.UserName;
 
         [SetUp]
         public void SetUp()
@@ -207,7 +215,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             }
         }
 
-        static string EchoEnvironmentVariable(string varName)
+        private static string EchoEnvironmentVariable(string varName)
         {
             if (PlatformDetection.IsRunningOnWindows)
                 return $"%{varName}%";
@@ -215,7 +223,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             return $"${varName}";
         }
 
-        static int Execute(
+        private static int Execute(
             string command,
             string arguments,
             string workingDirectory,
@@ -254,13 +262,5 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
             return exitCode;
         }
-        
-        public static string CurrentUserName => PlatformDetection.IsRunningOnWindows
-            ?
-#pragma warning disable PC001 // API not supported on all platforms
-            WindowsIdentity.GetCurrent().Name
-            :
-#pragma warning restore PC001 // API not supported on all platforms
-            Environment.UserName;
     }
 }

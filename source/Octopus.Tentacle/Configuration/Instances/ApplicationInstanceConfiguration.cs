@@ -3,7 +3,8 @@ using Octopus.Configuration;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
-    public class ApplicationInstanceConfiguration {
+    public class ApplicationInstanceConfiguration
+    {
         public ApplicationInstanceConfiguration(
             string? instanceName,
             string? configurationPath,
@@ -16,8 +17,8 @@ namespace Octopus.Tentacle.Configuration.Instances
             WritableConfiguration = writableConfiguration;
         }
 
-        public string? ConfigurationPath { get;  }
-        public string? InstanceName { get;  }
+        public string? ConfigurationPath { get; }
+        public string? InstanceName { get; }
 
         public IKeyValueStore? Configuration { get; }
 

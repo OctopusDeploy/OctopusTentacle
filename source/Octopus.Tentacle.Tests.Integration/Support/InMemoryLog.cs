@@ -13,8 +13,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class InMemoryLog : SystemLog
     {
-        readonly ILog log;
-        readonly BlockingCollection<LogEvent> events = new BlockingCollection<LogEvent>(1000);
+        private readonly ILog log;
+        private readonly BlockingCollection<LogEvent> events = new BlockingCollection<LogEvent>(1000);
 
         public InMemoryLog() : this(null)
         {
@@ -44,7 +44,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public void AssertEventuallyContains(string partialString, CancellationToken token)
         {
             while (!token.IsCancellationRequested)
-            {
                 try
                 {
                     AssertContains(partialString);
@@ -54,7 +53,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 {
                     Thread.Sleep(100);
                 }
-            }
 
             throw new TimeoutException();
         }

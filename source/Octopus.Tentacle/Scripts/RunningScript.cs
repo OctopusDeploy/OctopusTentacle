@@ -13,11 +13,11 @@ namespace Octopus.Tentacle.Scripts
         public const int CanceledExitCode = -43;
         public const int TimeoutExitCode = -44;
 
-        readonly IScriptWorkspace workspace;
-        readonly IShell shell;
-        readonly string taskId;
-        readonly CancellationToken token;
-        readonly ILog log;
+        private readonly IScriptWorkspace workspace;
+        private readonly IShell shell;
+        private readonly string taskId;
+        private readonly CancellationToken token;
+        private readonly ILog log;
 
         public RunningScript(IShell shell,
             IScriptWorkspace workspace,
@@ -51,12 +51,12 @@ namespace Octopus.Tentacle.Scripts
                     try
                     {
                         using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
-                            workspace.ScriptMutexAcquireTimeout,
-                            workspace.ScriptMutexName ?? nameof(RunningScript),
-                            message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
-                            taskId,
-                            token,
-                            log))
+                                   workspace.ScriptMutexAcquireTimeout,
+                                   workspace.ScriptMutexName ?? nameof(RunningScript),
+                                   message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
+                                   taskId,
+                                   token,
+                                   log))
                         {
                             RunScript(shellPath, writer);
                         }
@@ -83,7 +83,7 @@ namespace Octopus.Tentacle.Scripts
             }
         }
 
-        void RunScript(string shellPath, IScriptLogWriter writer)
+        private void RunScript(string shellPath, IScriptLogWriter writer)
         {
             try
             {

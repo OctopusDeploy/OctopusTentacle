@@ -10,7 +10,9 @@ namespace Octopus.Tentacle.Util
         public static string FullProcessPath(this Assembly assembly)
         {
             string GetProcessFileName(string path)
-                => PlatformDetection.IsRunningOnWindows ? Path.GetFileNameWithoutExtension(path) : Path.GetFileName(path);
+            {
+                return PlatformDetection.IsRunningOnWindows ? Path.GetFileNameWithoutExtension(path) : Path.GetFileName(path);
+            }
 
             var fileName = assembly.GetName().Name;
             string processFileName;

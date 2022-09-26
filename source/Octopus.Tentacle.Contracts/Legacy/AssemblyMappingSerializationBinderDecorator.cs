@@ -5,9 +5,9 @@ namespace Octopus.Tentacle.Contracts.Legacy
 {
     public class AssemblyMappingSerializationBinderDecorator : ISerializationBinder
     {
-        readonly ISerializationBinder inner;
-        readonly string fromAssembly;
-        readonly string toAssembly;
+        private readonly ISerializationBinder inner;
+        private readonly string fromAssembly;
+        private readonly string toAssembly;
 
         public AssemblyMappingSerializationBinderDecorator(ISerializationBinder inner, string fromAssembly, string toAssembly)
         {
@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Contracts.Legacy
             this.fromAssembly = fromAssembly;
             this.toAssembly = toAssembly;
         }
-        
+
         public Type BindToType(string? assemblyName, string typeName)
         {
             var mappedNamespace = assemblyName?.Replace(fromAssembly, toAssembly);

@@ -10,9 +10,9 @@ namespace Octopus.Tentacle.Internals.Options
 {
     public class OptionSet : KeyedCollection<string, Option>
     {
-        const int OptionWidth = 29;
+        private const int OptionWidth = 29;
 
-        readonly Regex ValueOption = new Regex(
+        private readonly Regex ValueOption = new(
             @"^(?<flag>--|-|/)(?<name>[^:=]+)((?<sep>[:=])(?<value>.*))?$");
 
         public OptionSet()
@@ -75,7 +75,7 @@ namespace Octopus.Tentacle.Internals.Options
             AddImpl(item);
         }
 
-        void AddImpl(Option option)
+        private void AddImpl(Option option)
         {
             if (option == null)
                 throw new ArgumentNullException("option");
@@ -104,7 +104,9 @@ namespace Octopus.Tentacle.Internals.Options
         }
 
         public OptionSet Add(string prototype, Action<string?> action)
-            => Add(prototype, null, action);
+        {
+            return Add(prototype, null, action);
+        }
 
         public OptionSet Add(string prototype,
             string? description,
@@ -128,10 +130,14 @@ namespace Octopus.Tentacle.Internals.Options
         }
 
         public OptionSet Add<T>(string prototype, string? description, Action<T> action)
-            => Add(new ActionOption<T>(prototype, description, action));
+        {
+            return Add(new ActionOption<T>(prototype, description, action));
+        }
 
         protected virtual OptionContext CreateOptionContext()
-            => new OptionContext(this);
+        {
+            return new OptionContext(this);
+        }
 
         public List<string> Parse(IEnumerable<string> arguments)
         {
@@ -162,7 +168,7 @@ namespace Octopus.Tentacle.Internals.Options
             return r;
         }
 
-        static bool Unprocessed(Option def, OptionContext c, string argument)
+        private static bool Unprocessed(Option def, OptionContext c, string argument)
         {
             if (def == null)
                 return false;
@@ -236,12 +242,12 @@ namespace Octopus.Tentacle.Internals.Options
             return false;
         }
 
-        void ParseValue(string? option, OptionContext c)
+        private void ParseValue(string? option, OptionContext c)
         {
             if (option != null)
                 foreach (var o in c.Option?.ValueSeparators != null
-                    ? option.Split(c.Option.ValueSeparators, StringSplitOptions.None)
-                    : new[] { option })
+                             ? option.Split(c.Option.ValueSeparators, StringSplitOptions.None)
+                             : new[] { option })
                     c.OptionValues.Add(o);
             if (c.OptionValues.Count == c.Option?.MaxValueCount ||
                 c.Option?.OptionValueType == OptionValueType.Optional)
@@ -254,7 +260,7 @@ namespace Octopus.Tentacle.Internals.Options
                     c.OptionName ?? string.Empty);
         }
 
-        bool ParseBool(string option, string n, OptionContext c)
+        private bool ParseBool(string option, string n, OptionContext c)
         {
             string rn;
             if (n.Length >= 1 && (n[n.Length - 1] == '+' || n[n.Length - 1] == '-') &&
@@ -272,7 +278,7 @@ namespace Octopus.Tentacle.Internals.Options
             return false;
         }
 
-        bool ParseBundledValue(string f, string n, OptionContext c)
+        private bool ParseBundledValue(string f, string n, OptionContext c)
         {
             if (f != "-")
                 return false;
@@ -314,7 +320,7 @@ namespace Octopus.Tentacle.Internals.Options
             return true;
         }
 
-        static void Invoke(OptionContext c, string name, string value, Option option)
+        private static void Invoke(OptionContext c, string name, string value, Option option)
         {
             c.OptionName = name;
             c.Option = option;
@@ -351,7 +357,7 @@ namespace Octopus.Tentacle.Internals.Options
             }
         }
 
-        bool WriteOptionPrototype(TextWriter o, Option p, ref int written)
+        private bool WriteOptionPrototype(TextWriter o, Option p, ref int written)
         {
             var names = p.Names;
 
@@ -371,8 +377,8 @@ namespace Octopus.Tentacle.Internals.Options
             }
 
             for (i = GetNextOptionIndex(names, i + 1);
-                i < names.Length;
-                i = GetNextOptionIndex(names, i + 1))
+                 i < names.Length;
+                 i = GetNextOptionIndex(names, i + 1))
             {
                 Write(o, ref written, ", ");
                 Write(o, ref written, names[i].Length == 1 ? "-" : "--");
@@ -397,20 +403,20 @@ namespace Octopus.Tentacle.Internals.Options
             return true;
         }
 
-        static int GetNextOptionIndex(string[] names, int i)
+        private static int GetNextOptionIndex(string[] names, int i)
         {
             while (i < names.Length && names[i] == "<>")
                 ++i;
             return i;
         }
 
-        static void Write(TextWriter o, ref int n, string s)
+        private static void Write(TextWriter o, ref int n, string s)
         {
             n += s.Length;
             o.Write(s);
         }
 
-        static string GetArgumentName(int index, int maxIndex, string? description)
+        private static string GetArgumentName(int index, int maxIndex, string? description)
         {
             if (description == null)
                 return maxIndex == 1 ? "VALUE" : "VALUE" + (index + 1);
@@ -438,7 +444,7 @@ namespace Octopus.Tentacle.Internals.Options
             return maxIndex == 1 ? "VALUE" : "VALUE" + (index + 1);
         }
 
-        static string GetDescription(string? description)
+        private static string GetDescription(string? description)
         {
             if (description == null)
                 return string.Empty;
@@ -488,7 +494,7 @@ namespace Octopus.Tentacle.Internals.Options
             return sb.ToString();
         }
 
-        static List<string> GetLines(string description)
+        private static List<string> GetLines(string description)
         {
             var lines = new List<string>();
             if (string.IsNullOrEmpty(description))
@@ -506,7 +512,7 @@ namespace Octopus.Tentacle.Internals.Options
                 if (end < description.Length)
                 {
                     var c = description[end];
-                    if (c == '-' || char.IsWhiteSpace(c) && c != '\n')
+                    if (c == '-' || (char.IsWhiteSpace(c) && c != '\n'))
                     {
                         ++end;
                     }
@@ -528,7 +534,7 @@ namespace Octopus.Tentacle.Internals.Options
             return lines;
         }
 
-        static int GetLineEnd(int start, int length, string description)
+        private static int GetLineEnd(int start, int length, string description)
         {
             var end = Math.Min(start + length, description.Length);
             var sep = -1;
@@ -567,9 +573,9 @@ namespace Octopus.Tentacle.Internals.Options
             public string? Value { get; set; }
         }
 
-        sealed class ActionOption : Option
+        private sealed class ActionOption : Option
         {
-            readonly Action<OptionValueCollection> action;
+            private readonly Action<OptionValueCollection> action;
 
             public ActionOption(string prototype, string? description, int count, Action<OptionValueCollection> action)
                 : base(prototype, description, count)
@@ -583,9 +589,9 @@ namespace Octopus.Tentacle.Internals.Options
             }
         }
 
-        sealed class ActionOption<T> : Option
+        private sealed class ActionOption<T> : Option
         {
-            readonly Action<T> action;
+            private readonly Action<T> action;
 
             public ActionOption(string prototype, string? description, Action<T> action)
                 : base(prototype, description, 1)

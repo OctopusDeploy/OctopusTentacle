@@ -8,8 +8,8 @@ namespace Octopus.Tentacle.Configuration
 {
     public class JsonHierarchicalFileKeyValueStore : JsonHierarchicalKeyValueStore
     {
-        readonly string configurationFile;
-        readonly IOctopusFileSystem fileSystem;
+        private readonly string configurationFile;
+        private readonly IOctopusFileSystem fileSystem;
 
         public JsonHierarchicalFileKeyValueStore(string configurationFile, IOctopusFileSystem fileSystem, bool autoSaveOnSet, bool isWriteOnly = false) : base(autoSaveOnSet, JsonSerialization.GetDefaultSerializerSettings(), isWriteOnly)
         {
@@ -30,10 +30,8 @@ namespace Octopus.Tentacle.Configuration
             }
 
             if (deserializedData?.Count > 0)
-            {
                 foreach (var kvp in deserializedData)
                     settingsToFill.Add(kvp.Key, kvp.Value);
-            }
         }
 
         protected override void WriteSerializedData(string serializedData)

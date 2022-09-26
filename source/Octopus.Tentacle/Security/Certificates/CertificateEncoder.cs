@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Security.Certificates
     {
         public static X509Certificate2 FromPfxFile(string pfxFilePath, string password, ILog log)
         {
-            X509Certificate2Collection certificates = new X509Certificate2Collection();
+            var certificates = new X509Certificate2Collection();
             if (string.IsNullOrEmpty(password))
             {
                 log.Info($"Importing the certificate stored in PFX file in {pfxFilePath}...");
@@ -43,7 +43,9 @@ namespace Octopus.Tentacle.Security.Certificates
         }
 
         public static byte[] Export(X509Certificate2 certificate)
-            => certificate.Export(X509ContentType.Pfx);
+        {
+            return certificate.Export(X509ContentType.Pfx);
+        }
 
         public static string ToBase64String(X509Certificate2 certificate)
         {
@@ -53,17 +55,21 @@ namespace Octopus.Tentacle.Security.Certificates
         }
 
         public static X509Certificate2 FromBase64String(string certificateString, ILog log)
-            => FromBase64String(null, certificateString, null, log);
+        {
+            return FromBase64String(null, certificateString, null, log);
+        }
 
         public static X509Certificate2 FromBase64String(string thumbprint, string certificateString, ILog log)
-            => FromBase64String(thumbprint, certificateString, null, log);
+        {
+            return FromBase64String(thumbprint, certificateString, null, log);
+        }
 
         public static X509Certificate2 FromBase64String(string? thumbprint, string certificateString, string? password, ILog log)
         {
             return FromBase64String(thumbprint, certificateString, password, log, false);
         }
 
-        static X509Certificate2 FromBase64String(string? thumbprint, string certificateString, string? password, ILog log, bool storeInKeyStore)
+        private static X509Certificate2 FromBase64String(string? thumbprint, string certificateString, string? password, ILog log, bool storeInKeyStore)
         {
             if (certificateString == null) throw new ArgumentNullException(nameof(certificateString));
             var store = new X509Store(PlatformDetection.IsRunningOnWindows ? "Octopus" : "My", StoreLocation.CurrentUser);
@@ -102,39 +108,39 @@ namespace Octopus.Tentacle.Security.Certificates
                 store.Close();
             }
         }
-        
+
 #if NET472_OR_GREATER || NETCOREAPP || NETSTANDARD
         // Mac doesn't appear to support EphemeralKeySet 
         // see: https://github.com/dotnet/runtime/blob/a2af6294767b4a3f4c2ce787c5dda2abeeda7a00/src/libraries/System.Security.Cryptography.X509Certificates/src/Internal/Cryptography/Pal.OSX/StorePal.cs#L38
-        static X509KeyStorageFlags keySet = PlatformDetection.IsRunningOnMac ? X509KeyStorageFlags.PersistKeySet : X509KeyStorageFlags.EphemeralKeySet;
+        private static readonly X509KeyStorageFlags keySet = PlatformDetection.IsRunningOnMac ? X509KeyStorageFlags.PersistKeySet : X509KeyStorageFlags.EphemeralKeySet;
 
-        static bool HasFlagEphemeralKeySet(X509KeyStorageFlags flags)
+        private static bool HasFlagEphemeralKeySet(X509KeyStorageFlags flags)
         {
             return flags.HasFlag(X509KeyStorageFlags.EphemeralKeySet);
         }
 #else
-        static X509KeyStorageFlags keySet = X509KeyStorageFlags.PersistKeySet;
+        private static readonly X509KeyStorageFlags keySet = X509KeyStorageFlags.PersistKeySet;
 
-        static bool HasFlagEphemeralKeySet(X509KeyStorageFlags flags)
+        private static bool HasFlagEphemeralKeySet(X509KeyStorageFlags flags)
         {
             return false;
         }
 #endif
 
-        static X509Certificate2 LoadCertificateWithPrivateKey(byte[] rawData, string? password, bool storeInKeyStore)
+        private static X509Certificate2 LoadCertificateWithPrivateKey(byte[] rawData, string? password, bool storeInKeyStore)
         {
             var keySetToUse = storeInKeyStore ? X509KeyStorageFlags.PersistKeySet : keySet;
-            
-            return  TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | keySetToUse, true)
+
+            return TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | keySetToUse, true)
                 ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | keySetToUse, true)
                 ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | keySetToUse, true)
                 ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | keySetToUse, false)
                 ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | keySetToUse, false)
                 ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | keySetToUse, false)
-                ?? throw new InvalidOperationException($"Unable to load certificate");
+                ?? throw new InvalidOperationException("Unable to load certificate");
         }
 
-        static bool CheckThatCertificateWasLoadedWithPrivateKey(X509Certificate2 certificate, ILog log)
+        private static bool CheckThatCertificateWasLoadedWithPrivateKey(X509Certificate2 certificate, ILog log)
         {
             try
             {
@@ -182,7 +188,7 @@ namespace Octopus.Tentacle.Security.Certificates
             }
         }
 
-        static bool HasPrivateKey(X509Certificate2 certificate2)
+        private static bool HasPrivateKey(X509Certificate2 certificate2)
         {
             try
             {
@@ -194,11 +200,11 @@ namespace Octopus.Tentacle.Security.Certificates
             }
         }
 
-        static X509Certificate2? TryLoadCertificate(byte[] rawData, string? password, X509KeyStorageFlags flags, bool requirePrivateKey)
+        private static X509Certificate2? TryLoadCertificate(byte[] rawData, string? password, X509KeyStorageFlags flags, bool requirePrivateKey)
         {
             try
             {
-                X509Certificate2 cert = newX509Certificate2(rawData, password, flags);
+                var cert = newX509Certificate2(rawData, password, flags);
 
                 if (!HasPrivateKey(cert) && requirePrivateKey)
                     return null;
@@ -223,29 +229,24 @@ namespace Octopus.Tentacle.Security.Certificates
         /// <param name="password"></param>
         /// <param name="flags"></param>
         /// <returns></returns>
-        static X509Certificate2 newX509Certificate2(byte[] rawData, string? password, X509KeyStorageFlags flags)
+        private static X509Certificate2 newX509Certificate2(byte[] rawData, string? password, X509KeyStorageFlags flags)
         {
-            if (HasFlagEphemeralKeySet(flags) && !flags.HasFlag(X509KeyStorageFlags.PersistKeySet))
+            if (HasFlagEphemeralKeySet(flags) && !flags.HasFlag(X509KeyStorageFlags.PersistKeySet)) return new X509Certificate2(rawData, password, flags);
+
+            // We have to write it to temp ourselves otherwise the framework will create and never delete the tmp file.
+            var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
+            try
             {
-                return new X509Certificate2(rawData, password, flags);
+                File.WriteAllBytes(file, rawData);
+                return new X509Certificate2(file, password, flags);
             }
-            else
+            finally
             {
-                // We have to write it to temp ourselves otherwise the framework will create and never delete the tmp file.
-                var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
-                try
-                {
-                    File.WriteAllBytes(file, rawData);
-                    return new X509Certificate2(file, password, flags);
-                }
-                finally
-                {
-                    File.Delete(file);
-                }
+                File.Delete(file);
             }
         }
 
-        static void GrantCurrentUserAccessToPrivateKeyDirectory(string privateKeyPath)
+        private static void GrantCurrentUserAccessToPrivateKeyDirectory(string privateKeyPath)
         {
             var folderPath = Path.GetDirectoryName(privateKeyPath);
             if (folderPath == null)
@@ -269,7 +270,7 @@ namespace Octopus.Tentacle.Security.Certificates
         #region Nested type: CryptUtils
 
         // This code is from a Microsoft sample that resolves the path to a certificate's private key
-        static class CryptUtils
+        private static class CryptUtils
         {
             public static string GetKeyFilePath(X509Certificate2 certificate2)
             {
@@ -279,7 +280,7 @@ namespace Octopus.Tentacle.Security.Certificates
                 return Path.Combine(keyFileDirectory, keyFileName);
             }
 
-            static string GetKeyFileName(X509Certificate2 cert)
+            private static string GetKeyFileName(X509Certificate2 cert)
             {
                 var zero = IntPtr.Zero;
                 var flag = false;
@@ -287,28 +288,28 @@ namespace Octopus.Tentacle.Security.Certificates
                 var num = 0;
                 string text = null;
                 if (CryptAcquireCertificatePrivateKey(cert.Handle,
-                    dwFlags,
-                    IntPtr.Zero,
-                    ref zero,
-                    ref num,
-                    ref flag))
+                        dwFlags,
+                        IntPtr.Zero,
+                        ref zero,
+                        ref num,
+                        ref flag))
                 {
                     var intPtr = IntPtr.Zero;
                     var num2 = 0;
                     try
                     {
                         if (CryptGetProvParam(zero,
-                            CryptGetProvParamType.PP_UNIQUE_CONTAINER,
-                            IntPtr.Zero,
-                            ref num2,
-                            0u))
+                                CryptGetProvParamType.PP_UNIQUE_CONTAINER,
+                                IntPtr.Zero,
+                                ref num2,
+                                0u))
                         {
                             intPtr = Marshal.AllocHGlobal(num2);
                             if (CryptGetProvParam(zero,
-                                CryptGetProvParamType.PP_UNIQUE_CONTAINER,
-                                intPtr,
-                                ref num2,
-                                0u))
+                                    CryptGetProvParamType.PP_UNIQUE_CONTAINER,
+                                    intPtr,
+                                    ref num2,
+                                    0u))
                             {
                                 var array = new byte[num2];
                                 Marshal.Copy(intPtr, array, 0, num2);
@@ -330,7 +331,7 @@ namespace Octopus.Tentacle.Security.Certificates
                 return text;
             }
 
-            static string GetKeyFileDirectory(string keyFileName)
+            private static string GetKeyFileDirectory(string keyFileName)
             {
                 var folderPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                 var text = folderPath + "\\Microsoft\\Crypto\\RSA\\MachineKeys";

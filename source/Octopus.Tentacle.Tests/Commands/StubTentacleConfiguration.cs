@@ -5,20 +5,16 @@ using System.Security.Cryptography.X509Certificates;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Diagnostics;
-using IPollingProxyConfiguration = Octopus.Tentacle.Configuration.IPollingProxyConfiguration;
 
 namespace Octopus.Tentacle.Tests.Commands
 {
-    class StubTentacleConfiguration : IWritableTentacleConfiguration
+    internal class StubTentacleConfiguration : IWritableTentacleConfiguration
     {
-        IList<OctopusServerConfiguration> servers = new List<OctopusServerConfiguration>();
+        private IList<OctopusServerConfiguration> servers = new List<OctopusServerConfiguration>();
 
         public string TentacleSquid { get; private set; }
 
-        public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers
-        {
-            get { return servers; }
-        }
+        public IEnumerable<OctopusServerConfiguration> TrustedOctopusServers => servers;
 
         public IEnumerable<string> TrustedOctopusThumbprints
         {
@@ -28,12 +24,12 @@ namespace Octopus.Tentacle.Tests.Commands
 
         public int ServicesPortNumber { get; set; }
         public string ApplicationDirectory { get; set; } = null!;
-        public string PackagesDirectory { get; private set; } = null!;
-        public string LogsDirectory { get; private set; } = null!;
-        public string JournalFilePath { get; private set; } = null!;
-        public string PackageRetentionJournalPath { get; private set; } = null!;
+        public string PackagesDirectory { get; } = null!;
+        public string LogsDirectory { get; } = null!;
+        public string JournalFilePath { get; } = null!;
+        public string PackageRetentionJournalPath { get; } = null!;
         public X509Certificate2 TentacleCertificate { get; set; } = null!;
-        public string? ListenIpAddress { get; set; } = null!;
+        public string? ListenIpAddress { get; set; }
         public bool NoListen { get; set; }
         public OctopusServerConfiguration LastReceivedHandshake { get; set; } = null!;
         public IProxyConfiguration ProxyConfiguration { get; set; } = null!;
@@ -122,7 +118,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
         }
 
-        static bool AreEqual(OctopusServerConfiguration left, OctopusServerConfiguration right)
+        private static bool AreEqual(OctopusServerConfiguration left, OctopusServerConfiguration right)
         {
             var thumbprintsMatch = string.Compare(left.Thumbprint, right.Thumbprint, StringComparison.OrdinalIgnoreCase) == 0;
             var addressesMatch = Uri.Compare(left.Address, right.Address, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase) == 0;

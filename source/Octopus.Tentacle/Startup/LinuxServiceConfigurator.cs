@@ -10,8 +10,8 @@ namespace Octopus.Tentacle.Startup
 {
     public class LinuxServiceConfigurator : IServiceConfigurator
     {
-        readonly ISystemLog log;
-        readonly SystemCtlHelper systemCtlHelper;
+        private readonly ISystemLog log;
+        private readonly SystemCtlHelper systemCtlHelper;
 
         public LinuxServiceConfigurator(ISystemLog log)
         {
@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Startup
                 serviceConfigurationState);
         }
 
-        void ConfigureService(string thisServiceName, string exePath, string? instance, string? configPath, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
+        private void ConfigureService(string thisServiceName, string exePath, string? instance, string? configPath, string serviceDescription, ServiceConfigurationState serviceConfigurationState)
         {
             //Check if system has bash and systemd
             CheckSystemPrerequisites();
@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Startup
                 UninstallService(cleanedInstanceName, systemdUnitFilePath);
 
             var serviceDependencies = new List<string>();
-            serviceDependencies.AddRange(new[] {"network.target"});
+            serviceDependencies.AddRange(new[] { "network.target" });
 
             if (serviceConfigurationState.DependOn != null && !string.IsNullOrWhiteSpace(serviceConfigurationState.DependOn))
                 serviceDependencies.Add(serviceConfigurationState.DependOn);
@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Startup
                 StartService(cleanedInstanceName);
         }
 
-        void RestartService(string serviceName)
+        private void RestartService(string serviceName)
         {
             log.Info($"Restarting service: {serviceName}");
             if (systemCtlHelper.RestartService(serviceName))
@@ -104,7 +104,7 @@ namespace Octopus.Tentacle.Startup
                 log.Error("The service could not be restarted");
         }
 
-        void StopService(string serviceName)
+        private void StopService(string serviceName)
         {
             log.Info($"Stopping service: {serviceName}");
             if (systemCtlHelper.StopService(serviceName))
@@ -113,7 +113,7 @@ namespace Octopus.Tentacle.Startup
                 log.Error("The service could not be stopped");
         }
 
-        void StartService(string serviceName)
+        private void StartService(string serviceName)
         {
             if (systemCtlHelper.StartService(serviceName, true))
                 log.Info($"Service started: {serviceName}");
@@ -121,7 +121,7 @@ namespace Octopus.Tentacle.Startup
                 log.Error($"Could not start the systemd service: {serviceName}");
         }
 
-        void UninstallService(string instance, string systemdUnitFilePath)
+        private void UninstallService(string instance, string systemdUnitFilePath)
         {
             log.Info($"Removing systemd service: {instance}");
             try
@@ -138,7 +138,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        void InstallService(string serviceName, 
+        private void InstallService(string serviceName,
             string? instance,
             string? configPath,
             string exePath,
@@ -160,7 +160,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        void ReconfigureService(string serviceName,
+        private void ReconfigureService(string serviceName,
             string? instance,
             string? configPath,
             string exePath,
@@ -189,7 +189,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        void WriteUnitFile(string path, string contents)
+        private void WriteUnitFile(string path, string contents)
         {
             File.WriteAllText(path, contents);
 
@@ -201,7 +201,7 @@ namespace Octopus.Tentacle.Startup
             result.Validate();
         }
 
-        void CheckSystemPrerequisites()
+        private void CheckSystemPrerequisites()
         {
             if (!File.Exists("/bin/bash"))
                 throw new ControlledFailureException(
@@ -216,21 +216,21 @@ namespace Octopus.Tentacle.Startup
                     "Could not detect systemd. systemd is required to run Tentacle as a service");
         }
 
-        bool IsSystemdInstalled()
+        private bool IsSystemdInstalled()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"command -v systemctl >/dev/null\"");
             var result = commandLineInvocation.ExecuteCommand();
             return result.ExitCode == 0;
         }
 
-        bool HaveSudoPrivileges()
+        private bool HaveSudoPrivileges()
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", "-c \"sudo -vn 2> /dev/null\"");
             var result = commandLineInvocation.ExecuteCommand();
             return result.ExitCode == 0;
         }
 
-        string GenerateSystemdUnitFile(string? instance, 
+        private string GenerateSystemdUnitFile(string? instance,
             string? configPath,
             string serviceDescription, string exePath, string userName, IEnumerable<string> serviceDependencies)
         {
@@ -244,17 +244,11 @@ namespace Octopus.Tentacle.Startup
             stringBuilder.AppendLine($"User={userName}");
             stringBuilder.Append($"ExecStart={exePath} run");
             if (!string.IsNullOrEmpty(instance))
-            {
                 stringBuilder.Append($" --instance={instance}");
-            } 
             else if (!string.IsNullOrEmpty(configPath))
-            {
                 stringBuilder.Append($" --config={configPath}");
-            }
             else
-            {
                 throw new ControlledFailureException("Either the instance name of configuration path must be provided to configure a service");
-            }
             stringBuilder.AppendLine(" --noninteractive");
             stringBuilder.AppendLine("Restart=always");
             stringBuilder.AppendLine();
@@ -264,7 +258,9 @@ namespace Octopus.Tentacle.Startup
             return stringBuilder.ToString();
         }
 
-        static string SanitizeString(string str)
-            => Regex.Replace(str.Replace("/", ""), @"\s+", "-");
+        private static string SanitizeString(string str)
+        {
+            return Regex.Replace(str.Replace("/", ""), @"\s+", "-");
+        }
     }
 }

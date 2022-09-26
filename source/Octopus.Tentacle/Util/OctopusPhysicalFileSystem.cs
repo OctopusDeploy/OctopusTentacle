@@ -13,20 +13,26 @@ namespace Octopus.Tentacle.Util
 {
     public class OctopusPhysicalFileSystem : IOctopusFileSystem
     {
-        const long FiveHundredMegabytes = 500 * 1024 * 1024;
+        private const long FiveHundredMegabytes = 500 * 1024 * 1024;
+
+        private static readonly CancellationToken DefaultCancellationToken = CancellationToken.None;
 
         public OctopusPhysicalFileSystem(ISystemLog log)
         {
             Log = log;
         }
 
-        ISystemLog Log { get; }
+        private ISystemLog Log { get; }
 
         public bool FileExists(string path)
-            => File.Exists(path);
+        {
+            return File.Exists(path);
+        }
 
         public bool DirectoryExists(string path)
-            => Directory.Exists(path);
+        {
+            return Directory.Exists(path);
+        }
 
         public bool DirectoryIsEmpty(string path)
         {
@@ -78,7 +84,7 @@ namespace Octopus.Tentacle.Util
             await PurgeDirectoryAsync(
                 path,
                 cancellationToken,
-                includeTarget: true,
+                true,
                 options);
         }
 
@@ -98,7 +104,9 @@ namespace Octopus.Tentacle.Util
         }
 
         public long GetFileSize(string path)
-            => new FileInfo(path).Length;
+        {
+            return new FileInfo(path).Length;
+        }
 
         public string ReadFile(string path)
         {
@@ -125,7 +133,9 @@ namespace Octopus.Tentacle.Util
         }
 
         public Stream OpenFile(string path, FileAccess access, FileShare share)
-            => OpenFile(path, FileMode.OpenOrCreate, access, share);
+        {
+            return OpenFile(path, FileMode.OpenOrCreate, access, share);
+        }
 
         public Stream OpenFile(string path, FileMode mode, FileAccess access, FileShare share)
         {
@@ -144,7 +154,7 @@ namespace Octopus.Tentacle.Util
             }
         }
 
-        string GetTempBasePath()
+        private string GetTempBasePath()
         {
             var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
             EnsureDirectoryExists(path);
@@ -167,14 +177,12 @@ namespace Octopus.Tentacle.Util
             return path;
         }
 
-        static readonly CancellationToken DefaultCancellationToken = CancellationToken.None;
-
-        IEnumerable<string> DefaultFileEnumerationFunc(string target)
+        private IEnumerable<string> DefaultFileEnumerationFunc(string target)
         {
             return EnumerateFiles(target);
         }
 
-        async Task PurgeDirectoryAsync(
+        private async Task PurgeDirectoryAsync(
             string targetDirectory,
             CancellationToken? cancel,
             bool? includeTarget,
@@ -187,10 +195,7 @@ namespace Octopus.Tentacle.Util
             includeTarget ??= false;
             options ??= DeletionOptions.TryThreeTimes;
 
-            foreach (var file in DefaultFileEnumerationFunc(targetDirectory))
-            {
-                await DeleteFile(file, cancel.Value, options);
-            }
+            foreach (var file in DefaultFileEnumerationFunc(targetDirectory)) await DeleteFile(file, cancel.Value, options);
 
             foreach (var directory in EnumerateDirectories(targetDirectory))
             {
@@ -211,7 +216,6 @@ namespace Octopus.Tentacle.Util
             }
 
             if (includeTarget.Value)
-            {
                 await TryToDoSomethingMultipleTimes(
                     _ =>
                     {
@@ -228,7 +232,6 @@ namespace Octopus.Tentacle.Util
                     options.SleepBetweenAttemptsMilliseconds,
                     options.ThrowOnFailure,
                     cancel.Value);
-            }
         }
 
         public void WriteAllBytes(string filePath, byte[] data)
@@ -283,15 +286,21 @@ namespace Octopus.Tentacle.Util
         }
 
         public string ReadAllText(string scriptFile)
-            => File.ReadAllText(scriptFile);
+        {
+            return File.ReadAllText(scriptFile);
+        }
 
         public string[] ReadAllLines(string scriptFile)
-            => File.ReadAllLines(scriptFile);
+        {
+            return File.ReadAllLines(scriptFile);
+        }
 
-        static bool IsUncPath(string directoryPath)
-            => Uri.TryCreate(directoryPath, UriKind.Absolute, out var uri) && uri.IsUnc;
+        private static bool IsUncPath(string directoryPath)
+        {
+            return Uri.TryCreate(directoryPath, UriKind.Absolute, out var uri) && uri.IsUnc;
+        }
 
-        async Task TryToDoSomethingMultipleTimes(
+        private async Task TryToDoSomethingMultipleTimes(
             Action<int> thingToDo,
             int numberAttempts,
             int sleepTime,

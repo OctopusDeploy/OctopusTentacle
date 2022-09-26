@@ -1,7 +1,7 @@
+using System;
 using System.Linq;
 using FluentAssertions;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Octopus.Client.Model;
 using Octopus.Tentacle.Configuration;
@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             var settings = GetSettings();
             settings.Formatting = Formatting.Indented;
 
-            var config = new OctopusServerConfiguration("ABC") {CommunicationStyle = style};
+            var config = new OctopusServerConfiguration("ABC") { CommunicationStyle = style };
             var json = JsonConvert.SerializeObject(config, settings);
             var result = json.Split('\n')
                 .First(l => l.Trim().StartsWith(comStyleProperty))
@@ -31,20 +31,21 @@ namespace Octopus.Tentacle.Tests.Configuration
             result.Should().Be(expected.ToString());
         }
 
-        static JsonSerializerSettings GetSettings()
-            => JsonSerialization.GetDefaultSerializerSettings();
+        private static JsonSerializerSettings GetSettings()
+        {
+            return JsonSerialization.GetDefaultSerializerSettings();
+        }
 
         [Test]
         public void CommunicationStyleRoundtripsCorrectly()
         {
             var settings = GetSettings();
-            var config = new OctopusServerConfiguration("ABC") {CommunicationStyle = CommunicationStyle.TentacleActive};
+            var config = new OctopusServerConfiguration("ABC") { CommunicationStyle = CommunicationStyle.TentacleActive };
             var json = JsonConvert.SerializeObject(config, settings);
             var result = JsonConvert.DeserializeObject<OctopusServerConfiguration>(json, settings);
             result.CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
         }
-        
-        
+
         [Test]
         public void CommunicationStyleAsStringCanBeRead()
         {
@@ -52,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             var result = JsonConvert.DeserializeObject<OctopusServerConfiguration>(@"{""CommunicationStyle"": ""TentacleActive"", ""Thumbprint"": ""A""}", settings);
             result.CommunicationStyle.Should().Be(CommunicationStyle.TentacleActive);
         }
-        
+
         [Test]
         public void CommunicationStyleAsIntCanBeRead()
         {

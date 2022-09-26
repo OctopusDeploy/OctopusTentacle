@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Tests.Startup
             }
         }
 
-        static IEnumerable<string> LoadPaths()
+        private static IEnumerable<string> LoadPaths()
         {
             var assembly = typeof(FileSystemCleaner).Assembly;
             var root = Path.GetDirectoryName(assembly.FullLocalPath());

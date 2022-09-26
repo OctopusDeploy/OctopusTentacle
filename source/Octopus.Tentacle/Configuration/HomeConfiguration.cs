@@ -10,9 +10,9 @@ namespace Octopus.Tentacle.Configuration
         internal const string OctopusHomeSettingName = "Octopus.Home";
         internal const string OctopusNodeCacheSettingName = "Octopus.Node.Cache";
 
-        readonly ApplicationName application;
-        readonly IKeyValueStore settings;
-        readonly IApplicationInstanceSelector applicationInstanceSelector;
+        private readonly ApplicationName application;
+        private readonly IKeyValueStore settings;
+        private readonly IApplicationInstanceSelector applicationInstanceSelector;
 
         public HomeConfiguration(ApplicationName application,
             IKeyValueStore settings,
@@ -34,35 +34,26 @@ namespace Octopus.Tentacle.Configuration
             }
         }
 
-        string? EnsureRootedPath(string path)
+        private string? EnsureRootedPath(string path)
         {
-            if (Path.IsPathRooted(path))
-            {
-                return path;
-            }
+            if (Path.IsPathRooted(path)) return path;
 
             // Its possible that this code path is being run before there is any instance yet configured.
             // Rather than making assumptions, fall back to missing.
-            if (!applicationInstanceSelector.CanLoadCurrentInstance())
-            {
-                return null;
-            }
-            
+            if (!applicationInstanceSelector.CanLoadCurrentInstance()) return null;
+
             var relativeRoot = Path.GetDirectoryName(applicationInstanceSelector.Current.ConfigurationPath);
             if (relativeRoot == null)
-            {
-                throw new Exception($"Unable to load configuration directory details. "
+                throw new Exception("Unable to load configuration directory details. "
                     + $"Unable to determine path from configuration path '{applicationInstanceSelector.Current.ConfigurationPath}'");
-            }
-            
+
             return Path.Combine(relativeRoot, path);
         }
     }
-    
 
     public class WritableHomeConfiguration : HomeConfiguration, IWritableHomeConfiguration
     {
-        readonly IWritableKeyValueStore settings;
+        private readonly IWritableKeyValueStore settings;
 
         public WritableHomeConfiguration(ApplicationName application, IWritableKeyValueStore writableConfiguration, IApplicationInstanceSelector applicationInstanceSelector) : base(application, writableConfiguration, applicationInstanceSelector)
         {
@@ -70,6 +61,8 @@ namespace Octopus.Tentacle.Configuration
         }
 
         public bool SetHomeDirectory(string? homeDirectory)
-            => settings.Set(OctopusHomeSettingName, homeDirectory);
+        {
+            return settings.Set(OctopusHomeSettingName, homeDirectory);
+        }
     }
 }

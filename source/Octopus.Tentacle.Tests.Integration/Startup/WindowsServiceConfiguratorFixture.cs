@@ -55,6 +55,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
                     Assert.NotNull(installedService, "Service is installed");
                     Assert.AreEqual(ServiceControllerStatus.Running, installedService.Status);
                 }
+
                 localAdminRightsChecker.Received(1).AssertIsRunningElevated();
             }
             finally
@@ -92,12 +93,13 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
                 serviceConfigurationState));
             ex.Message.Should().Be("Unable to set dependency on service 'ServiceThatDoesNotExist' as no service was found with that name.");
         }
-        ServiceController GetInstalledService(string serviceName)
+
+        private ServiceController GetInstalledService(string serviceName)
         {
             return ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == serviceName);
         }
 
-        void DeleteExistingService(string serviceName)
+        private void DeleteExistingService(string serviceName)
         {
             var service = GetInstalledService(serviceName);
             if (service != null)

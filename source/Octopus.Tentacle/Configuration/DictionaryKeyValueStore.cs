@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Configuration
 {
     public abstract class DictionaryKeyValueStore : KeyValueStoreBase
     {
-        Lazy<IDictionary<string, object?>> settings;
+        private Lazy<IDictionary<string, object?>> settings;
 
         protected DictionaryKeyValueStore(bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet)
         {
@@ -19,7 +19,9 @@ namespace Octopus.Tentacle.Configuration
         }
 
         protected object? Read(string key)
-            => settings.Value.TryGetValue(key, out var result) ? result : null;
+        {
+            return settings.Value.TryGetValue(key, out var result) ? result : null;
+        }
 
         protected override void Delete(string key)
         {
@@ -38,7 +40,7 @@ namespace Octopus.Tentacle.Configuration
             return true;
         }
 
-        IDictionary<string, object?> Load()
+        private IDictionary<string, object?> Load()
         {
             var dictionary = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
             LoadSettings(dictionary);

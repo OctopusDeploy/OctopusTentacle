@@ -1,12 +1,12 @@
 ﻿using System;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Tests.Support;
+using Octopus.Tentacle.Tests.Support.TestAttributes;
 
 namespace Octopus.Tentacle.Tests.Configuration.Crypto
 {
     [TestFixture]
-    [Support.TestAttributes.WindowsTest]
+    [WindowsTest]
     public class WindowsMachineKeyEncryptorFixture
     {
         [Test]

@@ -5,13 +5,14 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Tests.Support;
+using Octopus.Tentacle.Tests.Support.TestAttributes;
 
 namespace Octopus.Tentacle.Tests.Certificates
 {
     [TestFixture]
     public class CertificateGeneratorFixture
     {
-        readonly CertificateGenerator generator = new CertificateGenerator(new InMemoryLog());
+        private readonly CertificateGenerator generator = new CertificateGenerator(new InMemoryLog());
 
         [Test]
         public void CanGenerateExportableCertificates()
@@ -30,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Certificates
         }
 
         [Test]
-        [Support.TestAttributes.WindowsTest]
+        [WindowsTest]
         public void CanGenerateNonExportableCertificates()
         {
             var cert = generator.GenerateNewNonExportable("CN=test");

@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Startup
 {
     public class CommandLocator : ICommandLocator
     {
-        readonly IEnumerable<Lazy<ICommand, CommandMetadata>> commands;
+        private readonly IEnumerable<Lazy<ICommand, CommandMetadata>> commands;
 
         public CommandLocator(IEnumerable<Lazy<ICommand, CommandMetadata>> commands)
         {

@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Diagnostics
                 raw = "This contains a sensitive value",
                 expected = "This contains a ******** value";
 
-            var masker = new SensitiveValueMasker(sensitiveValues: new[] { sensitive });
+            var masker = new SensitiveValueMasker(new[] { sensitive });
             string? result = null;
             masker.SafeSanitize(raw, sanitized => result = sanitized);
 
@@ -29,9 +29,11 @@ namespace Octopus.Tentacle.Tests.Diagnostics
                 raw = "This contains a sensitive value and &3avh3#dhe@",
                 expected = "This contains a ******** value and ********";
 
-            var masker = new SensitiveValueMasker(sensitiveValues: new[] { sensitive });
+            var masker = new SensitiveValueMasker(new[] { sensitive });
             string? result = null;
-            masker.SafeSanitize(raw, sanitized => { });
+            masker.SafeSanitize(raw, sanitized =>
+            {
+            });
 
             masker.WithSensitiveValue(anotherSensitive);
             masker.SafeSanitize(raw, sanitized => result = sanitized);

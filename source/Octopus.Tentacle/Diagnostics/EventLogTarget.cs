@@ -1,4 +1,5 @@
 #nullable disable
+using System;
 #if !NLOG_HAS_EVENT_LOG_TARGET
 using System;
 using System.ComponentModel;
@@ -41,26 +42,26 @@ namespace Octopus.Tentacle.Diagnostics
     /// <seealso href="https://github.com/nlog/nlog/wiki/EventLog-target">Documentation on NLog Wiki</seealso>
     /// <example>
     ///     <p>
-    /// To set up the target in the <a href="config.html">configuration file</a>,
-    /// use the following syntax:
+    ///     To set up the target in the <a href="config.html">configuration file</a>,
+    ///     use the following syntax:
     ///     </p>
     ///     <code lang="XML" source="examples/targets/Configuration File/EventLog/NLog.config" />
     ///     <p>
-    /// This assumes just one target and a single rule. More configuration
-    /// options are described <a href="config.html">here</a>.
+    ///     This assumes just one target and a single rule. More configuration
+    ///     options are described <a href="config.html">here</a>.
     ///     </p>
     ///     <p>
-    /// To set up the log target programmatically use code like this:
+    ///     To set up the log target programmatically use code like this:
     ///     </p>
     ///     <code lang="C#" source="examples/targets/Configuration API/EventLog/Simple/Example.cs" />
     /// </example>
     public class EventLogTarget : TargetWithLayout, IInstallable
     {
-        EventLog eventLogInstance;
+        private EventLog eventLogInstance;
 
-        int maxMessageLength;
+        private int maxMessageLength;
 
-        long? maxKilobytes;
+        private long? maxKilobytes;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EventLogTarget" /> class.
@@ -154,9 +155,7 @@ namespace Octopus.Tentacle.Diagnostics
 
         /// <summary>
         /// Gets or sets the maximum Event log size in kilobytes.
-        /// 
         /// If <c>null</c>, the value won't be set.
-        /// 
         /// Default is 512 Kilobytes as specified by Eventlog API
         /// </summary>
         /// <remarks>
@@ -315,7 +314,7 @@ namespace Octopus.Tentacle.Diagnostics
         /// </summary>
         /// <param name="logEvent">The logging event - for rendering the <see cref="EntryType" /></param>
         /// <returns></returns>
-        EventLogEntryType GetEntryType(LogEventInfo logEvent)
+        private EventLogEntryType GetEntryType(LogEventInfo logEvent)
         {
             if (EntryType != null)
             {
@@ -342,7 +341,7 @@ namespace Octopus.Tentacle.Diagnostics
         /// </summary>
         /// <returns><c>null</c> when not <see cref="SimpleLayout.IsFixedText" /></returns>
         /// <remarks>Internal for unit tests</remarks>
-        string GetFixedSource()
+        private string GetFixedSource()
         {
             if (Source == null)
                 return null;
@@ -359,7 +358,7 @@ namespace Octopus.Tentacle.Diagnostics
         /// </summary>
         /// <param name="logEvent">Event if the source needs to be rendered.</param>
         /// <returns></returns>
-        EventLog GetEventLog(LogEventInfo logEvent)
+        private EventLog GetEventLog(LogEventInfo logEvent)
         {
             var renderedSource = RenderSource(logEvent);
             var isCacheUpToDate = eventLogInstance != null && renderedSource == eventLogInstance.Source &&
@@ -376,14 +375,16 @@ namespace Octopus.Tentacle.Diagnostics
         }
 
         internal string RenderSource(LogEventInfo logEvent)
-            => Source != null ? RenderLogEvent(Source, logEvent) : null;
+        {
+            return Source != null ? RenderLogEvent(Source, logEvent) : null;
+        }
 
         /// <summary>
         /// (re-)create a event source, if it isn't there. Works only with fixed sourcenames.
         /// </summary>
         /// <param name="fixedSource">sourcenaam. If source is not fixed (see <see cref="SimpleLayout.IsFixedText" />, then pass <c>null</c> or emptystring.</param>
         /// <param name="alwaysThrowError">always throw an Exception when there is an error</param>
-        void CreateEventSourceIfNeeded(string fixedSource, bool alwaysThrowError)
+        private void CreateEventSourceIfNeeded(string fixedSource, bool alwaysThrowError)
         {
             if (string.IsNullOrEmpty(fixedSource))
             {
@@ -429,7 +430,7 @@ namespace Octopus.Tentacle.Diagnostics
         }
     }
 
-    static class LayoutHelpers
+    internal static class LayoutHelpers
     {
         /// <summary>
         /// Render the event info as parse as <c>short</c>

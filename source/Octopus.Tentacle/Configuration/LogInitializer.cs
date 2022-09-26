@@ -5,10 +5,10 @@ using Octopus.Tentacle.Startup;
 
 namespace Octopus.Tentacle.Configuration
 {
-    class LogInitializer
+    internal class LogInitializer
     {
-        readonly ILoggingConfiguration configuration;
-        readonly ILogFileOnlyLogger logFileOnlyLogger;
+        private readonly ILoggingConfiguration configuration;
+        private readonly ILogFileOnlyLogger logFileOnlyLogger;
 
         public LogInitializer(ILoggingConfiguration configuration, ILogFileOnlyLogger logFileOnlyLogger)
         {
@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Configuration
             InitializeLogs();
         }
 
-        void InitializeLogs()
+        private void InitializeLogs()
         {
             // If the LogsDirectory isn't configured yet (probably because the HomeDirectory isn't configured yet) continue logging to the fallback directory
             var logDirectory = configuration.LogsDirectory;

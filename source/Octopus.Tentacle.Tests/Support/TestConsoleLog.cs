@@ -7,8 +7,12 @@ namespace Octopus.Tentacle.Tests.Support
 {
     public class TestConsoleLog : Log
     {
+        public override string CorrelationId => "system/" + Environment.MachineName;
+
         public override bool IsEnabled(LogCategory category)
-            => true;
+        {
+            return true;
+        }
 
         protected override void WriteEvent(LogEvent logEvent)
         {
@@ -19,7 +23,5 @@ namespace Octopus.Tentacle.Tests.Support
         public override void Flush()
         {
         }
-
-        public override string CorrelationId => "system/" + Environment.MachineName;
     }
 }

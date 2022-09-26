@@ -8,10 +8,10 @@ namespace Octopus.Tentacle.Security.Masking
     public class SensitiveDataMask
     {
         public static readonly string Mask = "********";
-        static readonly object sync = new object();
-        readonly StringBuilder builder = new StringBuilder();
-        readonly Queue<DeferredAction> deferred = new Queue<DeferredAction>();
-        string? lastSearchPath;
+        private static readonly object sync = new();
+        private readonly StringBuilder builder = new();
+        private readonly Queue<DeferredAction> deferred = new();
+        private string? lastSearchPath;
 
         /// <summary>
         /// Masks instances of sensitive values and invokes the supplied action with the sanitized string.
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Security.Masking
             }
         }
 
-        void MaskSectionsAndPerformAction(string raw, Action<string> action, IEnumerable<Tuple<int, int>> maskedSections)
+        private void MaskSectionsAndPerformAction(string raw, Action<string> action, IEnumerable<Tuple<int, int>> maskedSections)
         {
             builder.Clear();
             builder.EnsureCapacity(raw.Length);
@@ -90,11 +90,11 @@ namespace Octopus.Tentacle.Security.Masking
         /// The possible scenarios then are:
         /// 1) There were no matches within a deferred action.  Easy, just invoke the action with the original text.
         /// 2) The action is completely spanned by a match.  In this case we want to discard the action. For example,
-        ///    a private-key in PEM format may be logged across many lines.  We don't want to write a mask for each line.
+        /// a private-key in PEM format may be logged across many lines.  We don't want to write a mask for each line.
         /// 3) There are one or more matches that start or end within the action.  In this case we need to mask the appropriate
         /// // sections.
         /// </summary>
-        void ProcessDeferred(AhoCorasick trie)
+        private void ProcessDeferred(AhoCorasick trie)
         {
             // Concatenate all the deferred actions into one string and find matches in it
             builder.Clear();
@@ -160,7 +160,7 @@ namespace Octopus.Tentacle.Security.Masking
 
         // Gets the start and end indexes of the masked sections
         // If the matches overlap, this will combine them
-        static IEnumerable<Tuple<int, int>> GetMaskedSections(IEnumerable<KeyValuePair<int, string>> found)
+        private static IEnumerable<Tuple<int, int>> GetMaskedSections(IEnumerable<KeyValuePair<int, string>> found)
         {
             var sections = new List<Tuple<int, int>>();
 
@@ -191,7 +191,7 @@ namespace Octopus.Tentacle.Security.Masking
             }
         }
 
-        class DeferredAction
+        private class DeferredAction
         {
             public DeferredAction(string text, Action<string> action)
             {

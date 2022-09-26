@@ -12,17 +12,13 @@ namespace Octopus.Tentacle.Commands
 {
     public class ShowThumbprintCommand : AbstractStandardCommand
     {
-        static readonly string TextFormat = "text";
-        static readonly string JsonFormat = "json";
-        static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
+        private static readonly string TextFormat = "text";
+        private static readonly string JsonFormat = "json";
+        private static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
 
-        readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
-        readonly ISystemLog log;
-        string exportFile = null!;
-
-        public string Format { get; set; } = TextFormat;
-
-        public override bool SuppressConsoleLogging => true;
+        private readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
+        private readonly ISystemLog log;
+        private string exportFile = null!;
 
         public ShowThumbprintCommand(Lazy<ITentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector, ILogFileOnlyLogger logFileOnlyLogger) : base(selector, log, logFileOnlyLogger)
         {
@@ -31,9 +27,15 @@ namespace Octopus.Tentacle.Commands
 
             Options.Add("e|export-file=", "Exports the Tentacle thumbprint to a file", v => exportFile = v);
             // See https://github.com/OctopusDeploy/OctopusTentacle/issues/23
-            Options.Add("thumbprint-only", "DEPRECATED: Only print out the thumbprint, with no additional text. This switch has been deprecated and will be removed in Octopus 4.0 since it is no longer needed.", s => { });
+            Options.Add("thumbprint-only", "DEPRECATED: Only print out the thumbprint, with no additional text. This switch has been deprecated and will be removed in Octopus 4.0 since it is no longer needed.", s =>
+            {
+            });
             Options.Add("format=", $"The format of the output ({string.Join(",", SupportedFormats)}). Defaults to {Format}.", v => Format = v);
         }
+
+        public string Format { get; set; } = TextFormat;
+
+        public override bool SuppressConsoleLogging => true;
 
         protected override void Start()
         {

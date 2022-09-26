@@ -1,12 +1,10 @@
 using System;
-using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Octopus.Diagnostics;
 
-using Octopus.Tentacle.Util;
-
 #if NETFRAMEWORK
 using Octopus.Tentacle.Internals.CertificateGeneration;
+
 #else
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
@@ -31,7 +29,7 @@ namespace Octopus.Tentacle.Certificates
     public class CertificateGenerator : ICertificateGenerator
     {
         public const int RecommendedKeyBitLength = 2048;
-        readonly ISystemLog log;
+        private readonly ISystemLog log;
 
         public CertificateGenerator(ISystemLog log)
         {
@@ -39,13 +37,17 @@ namespace Octopus.Tentacle.Certificates
         }
 
         public X509Certificate2 GenerateNew(string fullName)
-            => Generate(fullName, true);
+        {
+            return Generate(fullName, true);
+        }
 
         public X509Certificate2 GenerateNewNonExportable(string fullName)
-            => Generate(fullName, false);
+        {
+            return Generate(fullName, false);
+        }
 
 #if NETFRAMEWORK
-        X509Certificate2 Generate(string fullName, bool exportable)
+        private X509Certificate2 Generate(string fullName, bool exportable)
         {
             using (var cryptography = new CryptContext(log))
             {
@@ -63,7 +65,7 @@ namespace Octopus.Tentacle.Certificates
             }
         }
 #else
-        X509Certificate2 Generate(string fullName, bool exportable)
+        private X509Certificate2 Generate(string fullName, bool exportable)
         {
             var random = new SecureRandom();
             var certificateGenerator = new X509V3CertificateGenerator();

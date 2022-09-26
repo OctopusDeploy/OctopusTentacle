@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Diagnostics
 {
     public class NLogAppender : ILogAppender
     {
-        readonly OctopusNLogger logger;
+        private readonly OctopusNLogger logger;
 
         public NLogAppender()
         {
@@ -31,7 +31,9 @@ namespace Octopus.Tentacle.Diagnostics
         {
             if (LogManager.Configuration != null)
                 foreach (var target in LogManager.Configuration.AllTargets)
-                    target.Flush(e => { });
+                    target.Flush(e =>
+                    {
+                    });
         }
 
         public void Flush(string correlationId)
@@ -40,9 +42,12 @@ namespace Octopus.Tentacle.Diagnostics
                 Flush();
         }
 
-        static bool ShouldHandle(string logEventCorrelationId) => logEventCorrelationId.StartsWith("system/");
+        private static bool ShouldHandle(string logEventCorrelationId)
+        {
+            return logEventCorrelationId.StartsWith("system/");
+        }
 
-        static LogLevel LogCategoryToLogLevel(LogCategory category)
+        private static LogLevel LogCategoryToLogLevel(LogCategory category)
         {
             switch (category)
             {
@@ -63,19 +68,21 @@ namespace Octopus.Tentacle.Diagnostics
             }
         }
 
-        class OctopusNLogger : Logger
+        private class OctopusNLogger : Logger
         {
             public void WriteEvent(LogLevel category, Exception? error, string messageText)
             {
                 Log(typeof(OctopusNLogger), GetLogEvent(category, error, messageText));
             }
 
-            LogEventInfo GetLogEvent(LogLevel level, Exception? exception, string message)
-                => LogEventInfo.Create(level,
+            private LogEventInfo GetLogEvent(LogLevel level, Exception? exception, string message)
+            {
+                return LogEventInfo.Create(level,
                     Name,
                     exception,
                     CultureInfo.InvariantCulture,
                     message);
+            }
         }
     }
 }

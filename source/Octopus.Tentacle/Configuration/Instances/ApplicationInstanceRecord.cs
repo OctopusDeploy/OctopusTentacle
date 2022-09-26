@@ -14,6 +14,9 @@ namespace Octopus.Tentacle.Configuration.Instances
 
         public string ConfigurationFilePath { get; }
 
-        public static string GetDefaultInstance(ApplicationName application) => application.ToString();
+        public static string GetDefaultInstance(ApplicationName application)
+        {
+            return application.ToString();
+        }
     }
 }

@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Startup
 {
     public class WindowsServiceHost : ICommandHost, ICommandRuntime
     {
-        readonly ISystemLog log;
+        private readonly ISystemLog log;
 
         public WindowsServiceHost(ISystemLog log)
         {

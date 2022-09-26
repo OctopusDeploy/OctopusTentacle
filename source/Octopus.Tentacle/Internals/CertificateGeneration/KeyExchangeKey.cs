@@ -1,4 +1,5 @@
-﻿#if NETFRAMEWORK
+﻿using System;
+#if NETFRAMEWORK
 using System;
 
 namespace Octopus.Tentacle.Internals.CertificateGeneration

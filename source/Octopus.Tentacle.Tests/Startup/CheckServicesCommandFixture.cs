@@ -14,9 +14,9 @@ namespace Octopus.Tentacle.Tests.Startup
 {
     public class CheckServicesCommandFixture
     {
-        IApplicationInstanceStore instanceStore;
-        IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
-        CheckServicesCommand command;
+        private IApplicationInstanceStore instanceStore;
+        private IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
+        private CheckServicesCommand command;
 
         [SetUp]
         public void Setup()

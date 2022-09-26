@@ -6,11 +6,11 @@ namespace Octopus.Tentacle.Util
 {
     public class CliBuilder
     {
-        readonly string executable;
-        readonly List<string> arguments = new List<string>();
-        readonly List<string> systemArguments = new List<string>();
-        string? action;
-        bool ignoreFailedExitCode;
+        private readonly string executable;
+        private readonly List<string> arguments = new();
+        private readonly List<string> systemArguments = new();
+        private string? action;
+        private bool ignoreFailedExitCode;
 
         public CliBuilder(string executable)
         {
@@ -19,16 +19,24 @@ namespace Octopus.Tentacle.Util
         }
 
         public static CliBuilder ForTool(string executable, string action, string instance)
-            => new CliBuilder(executable).Action(action).Console().NoLogo().Instance(instance);
+        {
+            return new CliBuilder(executable).Action(action).Console().NoLogo().Instance(instance);
+        }
 
         public static CliBuilder StopService(string executable, string instance)
-            => ForTool(executable, "service", instance).Flag("stop");
+        {
+            return ForTool(executable, "service", instance).Flag("stop");
+        }
 
         public static CliBuilder StartService(string executable, string instance)
-            => ForTool(executable, "service", instance).Flag("start");
+        {
+            return ForTool(executable, "service", instance).Flag("start");
+        }
 
         public static CliBuilder RestartService(string executable, string instance)
-            => StopService(executable, instance).Flag("start");
+        {
+            return StopService(executable, instance).Flag("start");
+        }
 
         public CliBuilder Action(string actionName)
         {
@@ -63,19 +71,26 @@ namespace Octopus.Tentacle.Util
             return this;
         }
 
-        public CliBuilder Console()
+        public CliBuilder Console() // adding it does make a lot of clutter though.
             // Omitting this breaks remote script runs, so we may want to include it in exported scripts;
-            // adding it does make a lot of clutter though.
-            => SystemFlag("console");
+        {
+            return SystemFlag("console");
+        }
 
         public CliBuilder NoLogo()
-            => SystemFlag("nologo");
+        {
+            return SystemFlag("nologo");
+        }
 
         public CliBuilder Instance(string instance)
-            => Argument("instance", instance);
+        {
+            return Argument("instance", instance);
+        }
 
-        string MakeFlag(string flagName)
-            => "--" + Normalize(flagName);
+        private string MakeFlag(string flagName)
+        {
+            return "--" + Normalize(flagName);
+        }
 
         public CliBuilder PositionalArgument(object argValue)
         {
@@ -95,7 +110,7 @@ namespace Octopus.Tentacle.Util
             return this;
         }
 
-        static string MakePositionalArg(object argValue)
+        private static string MakePositionalArg(object argValue)
         {
             var sval = "";
             var f = argValue as IFormattable;
@@ -107,7 +122,7 @@ namespace Octopus.Tentacle.Util
             return string.Format("{0}", Escape(sval ?? ""));
         }
 
-        static string MakeArg(string argName, object argValue, bool unescaped = false)
+        private static string MakeArg(string argName, object argValue, bool unescaped = false)
         {
             var sval = "";
             var f = argValue as IFormattable;
@@ -147,7 +162,7 @@ namespace Octopus.Tentacle.Util
             return "\"" + argValue.Replace("\"", "\\\"") + "\"";
         }
 
-        static string Normalize(string s)
+        private static string Normalize(string s)
         {
             if (s == null) throw new ArgumentNullException("s");
             return s.Trim();

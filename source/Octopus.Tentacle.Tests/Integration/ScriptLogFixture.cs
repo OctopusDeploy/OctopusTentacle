@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using FluentAssertions;
 using NSubstitute;
@@ -14,9 +15,9 @@ namespace Octopus.Tentacle.Tests.Integration
     [TestFixture]
     public class ScriptLogFixture
     {
-        string logFile;
-        ScriptLog sut;
-        SensitiveValueMasker sensitiveValueMasker;
+        private string logFile;
+        private ScriptLog sut;
+        private SensitiveValueMasker sensitiveValueMasker;
 
         [SetUp]
         public void SetUp()
@@ -36,7 +37,6 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public void ShouldAppend()
         {
-
             using (var appender = sut.CreateWriter())
             {
                 appender.WriteOutput(ProcessOutputSource.StdOut, "Hello");
@@ -69,12 +69,12 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public void MaskSensitiveValues_SingleMessage_Masked()
         {
-            sensitiveValueMasker.WithSensitiveValues(new[] {"abcde"});
+            sensitiveValueMasker.WithSensitiveValues(new[] { "abcde" });
             using (var writer = sut.CreateWriter())
             {
                 writer.WriteOutput(ProcessOutputSource.Debug, "hello abcde123");
 
-                var logs = sut.GetOutput(0, out long next);
+                var logs = sut.GetOutput(0, out var next);
 
                 logs.Should().ContainSingle().Subject.Text.Should().Be("hello ********123");
             }
@@ -95,13 +95,13 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public void MaskSensitiveValues_MultiMessage_2ndMessageMasked()
         {
-            sensitiveValueMasker.WithSensitiveValues(new[] {"abcde12345"});
+            sensitiveValueMasker.WithSensitiveValues(new[] { "abcde12345" });
             using (var writer = sut.CreateWriter())
             {
                 writer.WriteOutput(ProcessOutputSource.Debug, "hello abcde");
                 writer.WriteOutput(ProcessOutputSource.Debug, "12345 bye");
 
-                var logs = sut.GetOutput(0, out long next);
+                var logs = sut.GetOutput(0, out var next);
 
                 logs.Select(l => l.Text).Should().ContainInOrder("hello abcde", "******** bye");
             }

@@ -8,16 +8,8 @@ namespace Octopus.Manager.Tentacle.Dialogs
 {
     public partial class NewInstanceNameDialog : UserControl
     {
-        public string InstanceName
-        {
-            get => (string)GetValue(InstanceNameProperty);
-            set => SetValue(InstanceNameProperty, value);
-        }
-
         public static readonly DependencyProperty InstanceNameProperty = DependencyProperty.Register(
             "InstanceName", typeof(string), typeof(NewInstanceNameDialog), new PropertyMetadata(string.Empty));
-
-        public HashSet<string> ExistingInstanceNames { get; set; }
 
         public NewInstanceNameDialog(IEnumerable<string> existing)
         {
@@ -26,5 +18,13 @@ namespace Octopus.Manager.Tentacle.Dialogs
 
             InitializeComponent();
         }
+
+        public string InstanceName
+        {
+            get => (string)GetValue(InstanceNameProperty);
+            set => SetValue(InstanceNameProperty, value);
+        }
+
+        public HashSet<string> ExistingInstanceNames { get; set; }
     }
 }

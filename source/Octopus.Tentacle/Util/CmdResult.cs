@@ -6,8 +6,8 @@ namespace Octopus.Tentacle.Util
 {
     public class CmdResult
     {
-        readonly List<string> infos;
-        readonly List<string> errors;
+        private readonly List<string> infos;
+        private readonly List<string> errors;
 
         public CmdResult(int exitCode, List<string> infos, List<string> errors)
         {
@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Util
 
     public class CommandLineException : Exception
     {
-        readonly int exitCode;
+        private readonly int exitCode;
 
         public CommandLineException(int exitCode, List<string> errors)
         {

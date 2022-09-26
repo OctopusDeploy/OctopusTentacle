@@ -1,4 +1,6 @@
-﻿namespace Octopus.Manager.Tentacle.Infrastructure
+﻿using System;
+
+namespace Octopus.Manager.Tentacle.Infrastructure
 {
     public class OctoService
     {

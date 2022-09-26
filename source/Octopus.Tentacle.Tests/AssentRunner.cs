@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Tests
 {
     public class AssentRunner
     {
-        readonly Assent.Configuration configuration;
+        private readonly Assent.Configuration configuration;
 
         public AssentRunner(Assent.Configuration configuration)
         {
@@ -15,10 +15,8 @@ namespace Octopus.Tentacle.Tests
 
         public void Assent(object testFixture,
             string recieved,
-            [CallerMemberName]
-            string? testName = null,
-            [CallerFilePath]
-            string? filePath = null)
+            [CallerMemberName] string? testName = null,
+            [CallerFilePath] string? filePath = null)
         {
             try
             {
@@ -42,7 +40,7 @@ namespace Octopus.Tentacle.Tests
             SendMessage("publishArtifacts", $"'{file}'");
         }
 
-        static void SendMessage(string type, string value)
+        private static void SendMessage(string type, string value)
         {
             if (!TestExecutionContext.IsRunningInTeamCity)
                 return;

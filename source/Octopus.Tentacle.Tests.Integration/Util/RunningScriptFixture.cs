@@ -19,13 +19,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util
     [TestFixture]
     public class RunningScriptFixture
     {
-        TemporaryDirectory temporaryDirectory;
-        CancellationTokenSource cancellationTokenSource;
-        string taskId;
-        IScriptWorkspace workspace;
-        TestScriptLog scriptLog;
-        RunningScript runningScript;
-        TestUserPrincipal user;
+        private TemporaryDirectory temporaryDirectory;
+        private CancellationTokenSource cancellationTokenSource;
+        private string taskId;
+        private IScriptWorkspace workspace;
+        private TestScriptLog scriptLog;
+        private RunningScript runningScript;
+        private TestUserPrincipal user;
 
         [SetUp]
         public void SetUp()
@@ -171,7 +171,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             }
         }
 
-        static string EchoEnvironmentVariable(string varName)
+        private static string EchoEnvironmentVariable(string varName)
         {
             if (PlatformDetection.IsRunningOnWindows)
                 return $"$env:{varName}";

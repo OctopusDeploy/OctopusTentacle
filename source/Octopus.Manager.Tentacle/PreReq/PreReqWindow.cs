@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Documents;
@@ -11,8 +12,8 @@ namespace Octopus.Manager.Tentacle.PreReq
     /// </summary>
     public partial class PreReqWindow : Window
     {
-        readonly IPrerequisiteProfile profile;
-        bool hasCompletedSuccessfully;
+        private readonly IPrerequisiteProfile profile;
+        private bool hasCompletedSuccessfully;
 
         public PreReqWindow(IPrerequisiteProfile profile)
         {
@@ -27,7 +28,7 @@ namespace Octopus.Manager.Tentacle.PreReq
 
         public string ExitButtonText { get; set; }
 
-        void Start()
+        private void Start()
         {
             DispatchHelper.Foreground(() =>
             {
@@ -106,30 +107,27 @@ namespace Octopus.Manager.Tentacle.PreReq
             });
         }
 
-        void OnClosing(object sender, CancelEventArgs cancelEventArgs)
+        private void OnClosing(object sender, CancelEventArgs cancelEventArgs)
         {
-            if (!hasCompletedSuccessfully)
-            {
-                DialogResult = false;
-            }
+            if (!hasCompletedSuccessfully) DialogResult = false;
         }
 
-        void NavigateTo(string helpLink)
+        private void NavigateTo(string helpLink)
         {
             Process.Start(helpLink);
         }
 
-        void CancelClicked(object sender, RoutedEventArgs e)
+        private void CancelClicked(object sender, RoutedEventArgs e)
         {
             Close();
         }
-        
-        void CopyToClipboardClicked(object sender, RoutedEventArgs e)
+
+        private void CopyToClipboardClicked(object sender, RoutedEventArgs e)
         {
             Clipboard.SetText(commandLineOutputTextBox.Text);
         }
 
-        void ReCheckClicked(object sender, RoutedEventArgs e)
+        private void ReCheckClicked(object sender, RoutedEventArgs e)
         {
             commandLineOutputTextBox.Visibility = Visibility.Collapsed;
             moreInfoLinkBlock.Visibility = Visibility.Collapsed;
@@ -137,7 +135,7 @@ namespace Octopus.Manager.Tentacle.PreReq
             Start();
         }
 
-        void MoreInfoClicked(object sender, RoutedEventArgs e)
+        private void MoreInfoClicked(object sender, RoutedEventArgs e)
         {
             commandLineOutputTextBox.Visibility = Visibility.Visible;
             moreInfoLinkBlock.Visibility = Visibility.Collapsed;

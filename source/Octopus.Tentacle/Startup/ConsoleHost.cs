@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Startup
 {
     public class ConsoleHost : ICommandHost, ICommandRuntime
     {
-        static readonly int[] FriendlyExitCodes =
+        private static readonly int[] FriendlyExitCodes =
         {
             (int)OctopusProgram.ExitCode.Success,
             (int)OctopusProgram.ExitCode.UnknownCommand,
@@ -18,8 +18,8 @@ namespace Octopus.Tentacle.Startup
 
         public static readonly string ConsoleSwitchPrototype = "console";
         public static readonly string ConsoleSwitchExample = $"--{ConsoleSwitchPrototype}";
-        readonly ISystemLog log = new SystemLog();
-        readonly string displayName;
+        private readonly ISystemLog log = new SystemLog();
+        private readonly string displayName;
 
         public ConsoleHost(string displayName)
         {
@@ -106,7 +106,7 @@ namespace Octopus.Tentacle.Startup
             return options.Any(o => o.Prototype == ConsoleSwitchPrototype);
         }
 
-        static void SafelySetConsoleTitle(string title)
+        private static void SafelySetConsoleTitle(string title)
         {
             if (Environment.UserInteractive)
                 Console.Title = title;

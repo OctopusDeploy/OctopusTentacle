@@ -9,10 +9,10 @@ namespace Octopus.Tentacle.Startup
 {
     public class WindowsServiceAdapter : ServiceBase
     {
-        readonly Action execute;
-        readonly Action shutdown;
-        readonly ISystemLog systemLog;
-        Thread? workerThread;
+        private readonly Action execute;
+        private readonly Action shutdown;
+        private readonly ISystemLog systemLog;
+        private Thread? workerThread;
 
         public WindowsServiceAdapter(Action execute, Action shutdown, ISystemLog systemLog)
         {
@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Startup
             workerThread.Start();
         }
 
-        void RunService()
+        private void RunService()
         {
             try
             {

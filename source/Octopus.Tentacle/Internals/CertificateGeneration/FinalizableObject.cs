@@ -1,4 +1,5 @@
-﻿#if NETFRAMEWORK
+﻿using System;
+#if NETFRAMEWORK
 using System;
 using System.Runtime.InteropServices;
 
@@ -7,7 +8,7 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
     [StructLayout(LayoutKind.Sequential)]
     public abstract class FinalizableObject : IDisposable
     {
-        bool disposed;
+        private bool disposed;
 
         ~FinalizableObject()
         {

@@ -1,4 +1,5 @@
 // ReSharper disable RedundantUsingDirective
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,32 +31,40 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 [ShutdownDotNetAfterServerBuild]
 partial class Build : NukeBuild
 {
-    /// Support plugins are available for:
-    /// - JetBrains ReSharper        https://nuke.build/resharper
-    /// - JetBrains Rider            https://nuke.build/rider
-    /// - Microsoft VisualStudio     https://nuke.build/visualstudio
-    /// - Microsoft VSCode           https://nuke.build/vscode
-
-    [Solution(GenerateProjects = true)] readonly Solution Solution = null!;
-
-    [Parameter("Branch name for OctoVersion to use to calculate the version number. Can be set via the environment variable OCTOVERSION_CurrentBranch.",
-        Name = "OCTOVERSION_CurrentBranch")]
-    readonly string BranchName = null!;
-
-    [Parameter("Whether to auto-detect the branch name - this is okay for a local build, but should not be used under CI.")]
-    readonly bool AutoDetectBranch = IsLocalBuild;
-
-    [OctoVersion(UpdateBuildNumber = true, BranchParameter = nameof(BranchName),
-        AutoDetectBranchParameter = nameof(AutoDetectBranch), Framework = "net6.0")]
-    readonly OctoVersionInfo OctoVersionInfo = null!;
-
-    [Parameter] string TestFramework = "";
-    [Parameter] string TestRuntime = "";
+    const string NetFramework = "net452";
+    const string NetCore = "netcoreapp3.1";
 
     [PackageExecutable(
         packageId: "azuresigntool",
         packageExecutable: "azuresigntool.dll")]
     public static Tool AzureSignTool = null!;
+
+    [Parameter] public static string AzureKeyVaultUrl = "";
+    [Parameter] public static string AzureKeyVaultAppId = "";
+    [Parameter] public static string AzureKeyVaultTenantId = "";
+    [Secret] [Parameter] public static string AzureKeyVaultAppSecret = "";
+    [Parameter] public static string AzureKeyVaultCertificateName = "";
+
+    [Parameter(Name = "signing_certificate_path")] public static string SigningCertificatePath = RootDirectory / "certificates" / "OctopusDevelopment.pfx";
+    [Secret] [Parameter(Name = "signing_certificate_password")] public static string SigningCertificatePassword = "Password01!";
+
+    /// Support plugins are available for:
+    /// - JetBrains ReSharper        https://nuke.build/resharper
+    /// - JetBrains Rider            https://nuke.build/rider
+    /// - Microsoft VisualStudio     https://nuke.build/visualstudio
+    /// - Microsoft VSCode           https://nuke.build/vscode
+    [Solution(GenerateProjects = true)]
+    readonly Solution Solution = null!;
+
+    [Parameter("Branch name for OctoVersion to use to calculate the version number. Can be set via the environment variable OCTOVERSION_CurrentBranch.",
+        Name = "OCTOVERSION_CurrentBranch")]
+    readonly string BranchName = null!;
+
+    [Parameter("Whether to auto-detect the branch name - this is okay for a local build, but should not be used under CI.")] readonly bool AutoDetectBranch = IsLocalBuild;
+
+    [OctoVersion(UpdateBuildNumber = true, BranchParameter = nameof(BranchName),
+        AutoDetectBranchParameter = nameof(AutoDetectBranch), Framework = "net6.0")]
+    readonly OctoVersionInfo OctoVersionInfo = null!;
 
     [PackageExecutable(
         packageId: "wix",
@@ -67,24 +76,15 @@ partial class Build : NukeBuild
         packageExecutable: "octo.exe")]
     readonly Tool OctoCliTool = null!;
 
-    [Parameter] public static string AzureKeyVaultUrl = "";
-    [Parameter] public static string AzureKeyVaultAppId = "";
-    [Parameter] public static string AzureKeyVaultTenantId = "";
-    [Secret] [Parameter] public static string AzureKeyVaultAppSecret = "";
-    [Parameter] public static string AzureKeyVaultCertificateName = "";
-
-    [Parameter(Name = "signing_certificate_path")] public static string SigningCertificatePath = RootDirectory / "certificates" / "OctopusDevelopment.pfx";
-    [Secret] [Parameter(Name = "signing_certificate_password")] public static string SigningCertificatePassword = "Password01!";
-
     readonly AbsolutePath SourceDirectory = RootDirectory / "source";
     readonly AbsolutePath ArtifactsDirectory = RootDirectory / "_artifacts";
     readonly AbsolutePath BuildDirectory = RootDirectory / "_build";
     readonly AbsolutePath LocalPackagesDirectory = RootDirectory / ".." / "LocalPackages";
     readonly AbsolutePath TestDirectory = RootDirectory / "_test";
-
-    const string NetFramework = "net452";
-    const string NetCore = "netcoreapp3.1";
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
+
+    [Parameter] readonly string TestFramework = "";
+    [Parameter] readonly string TestRuntime = "";
 
     [PublicAPI]
     Target CalculateVersion => _ => _
@@ -121,11 +121,11 @@ partial class Build : NukeBuild
 
             RuntimeIds.Where(x => x.StartsWith("win"))
                 .ForEach(runtimeId => RunBuildFor(runtimeId.Equals("win") ? NetFramework : NetCore, runtimeId));
-            
+
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
-            
-            var winFolder = (BuildDirectory / "Tentacle" / NetFramework / "win");
+
+            var winFolder = BuildDirectory / "Tentacle" / NetFramework / "win";
             var hardenInstallationDirectoryScript = RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1";
             CopyFileToDirectory(hardenInstallationDirectoryScript, winFolder, FileExistsPolicy.Overwrite);
 
@@ -152,7 +152,7 @@ partial class Build : NukeBuild
 
             RuntimeIds.Where(x => x.StartsWith("linux-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
-            
+
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
         });
@@ -167,7 +167,7 @@ partial class Build : NukeBuild
 
             RuntimeIds.Where(x => x.StartsWith("osx-"))
                 .ForEach(runtimeId => RunBuildFor(NetCore, runtimeId));
-            
+
             versionInfoFile.Dispose();
             productWxsFile.Dispose();
         });
@@ -215,7 +215,7 @@ partial class Build : NukeBuild
     ModifiableFileWithRestoreContentsOnDispose UpdateMsiProductVersion()
     {
         var productWxsFilePath = RootDirectory / "installer" / "Octopus.Tentacle.Installer" / "Product.wxs";
-        
+
         var xmlDoc = new XmlDocument();
         xmlDoc.Load(productWxsFilePath);
 
@@ -238,7 +238,7 @@ partial class Build : NukeBuild
     void RunBuildFor(string framework, string runtimeId)
     {
         var configuration = $"Release-{framework}-{runtimeId}";
-        
+
         DotNetPublish(p => p
             .SetProject(SourceDirectory / "Tentacle.sln")
             .SetConfiguration(configuration)
@@ -250,15 +250,13 @@ partial class Build : NukeBuild
 
     // We need to use tar directly, because .NET utilities aren't able to preserve the file permissions
     // Importantly, the Tentacle executable needs to be +x in the tar.gz file
-    void TarGZipCompress(AbsolutePath inputDirectory, string fileSpec, AbsolutePath outputDirectory, string outputFile)
-    {
+    void TarGZipCompress(AbsolutePath inputDirectory, string fileSpec, AbsolutePath outputDirectory, string outputFile) =>
         DockerTasks.DockerRun(settings => settings
             .EnableRm()
             .EnableTty()
             .SetVolume($"{inputDirectory}:/input", $"{outputDirectory}:/output")
             .SetCommand("debian")
             .SetArgs("tar", "-C", "/input", "-czvf", $"/output/{outputFile}", fileSpec, "--preserve-permissions"));
-    }
 
-    public static int Main () => Execute<Build>(x => x.Default);
+    public static int Main() => Execute<Build>(x => x.Default);
 }

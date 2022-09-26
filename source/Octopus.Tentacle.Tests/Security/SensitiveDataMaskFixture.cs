@@ -135,7 +135,9 @@ namespace Octopus.Tentacle.Tests.Security
                 if (i % 100 == 0)
                     raw += sensitiveValues[rng.Next(0, 999)];
 
-                sdm.ApplyTo(trie, raw, sensitive => { });
+                sdm.ApplyTo(trie, raw, sensitive =>
+                {
+                });
             }
 
             watch.Stop();
@@ -164,7 +166,9 @@ namespace Octopus.Tentacle.Tests.Security
             var count = 0;
             while (watch.ElapsedMilliseconds < 5000)
             {
-                sdm.ApplyTo(trie, line, sanitized => { });
+                sdm.ApplyTo(trie, line, sanitized =>
+                {
+                });
                 count++;
             }
 
@@ -185,7 +189,9 @@ namespace Octopus.Tentacle.Tests.Security
             var count = 0;
             while (watch.ElapsedMilliseconds < 5000)
             {
-                sdm.ApplyTo(trie, line, sanitized => { });
+                sdm.ApplyTo(trie, line, sanitized =>
+                {
+                });
                 count++;
             }
 
@@ -193,7 +199,7 @@ namespace Octopus.Tentacle.Tests.Security
             Assert.That(count, Is.GreaterThan(1000));
         }
 
-        AhoCorasick CreateTrie(params string[] args)
+        private AhoCorasick CreateTrie(params string[] args)
         {
             var trie = new AhoCorasick();
             foreach (var instance in args)

@@ -7,9 +7,9 @@ namespace Octopus.Tentacle.Startup
 {
     public abstract class AbstractStandardCommand : AbstractCommand
     {
-        readonly IApplicationInstanceSelector instanceSelector;
+        private readonly IApplicationInstanceSelector instanceSelector;
 
-        bool voteForRestart;
+        private bool voteForRestart;
 
         protected AbstractStandardCommand(IApplicationInstanceSelector instanceSelector, ISystemLog systemLog, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
@@ -29,7 +29,10 @@ namespace Octopus.Tentacle.Startup
 
         protected ISystemLog SystemLog { get; }
 
-        protected void VoteForRestart() => voteForRestart = true;
+        protected void VoteForRestart()
+        {
+            voteForRestart = true;
+        }
 
         protected override void Start()
         {
@@ -52,8 +55,12 @@ namespace Octopus.Tentacle.Startup
 
         public static OptionSet AddInstanceOption(OptionSet options, Action<string>? instanceAction = null, Action<string>? configFileAction = null)
         {
-            return options.Add("instance=", "Name of the instance to use", instanceAction ?? (v => { }))
-                .Add("config=", "Configuration file to use", configFileAction ?? (v => { }));
+            return options.Add("instance=", "Name of the instance to use", instanceAction ?? (v =>
+                {
+                }))
+                .Add("config=", "Configuration file to use", configFileAction ?? (v =>
+                {
+                }));
         }
     }
 }

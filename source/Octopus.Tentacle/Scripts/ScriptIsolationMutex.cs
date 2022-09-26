@@ -16,8 +16,8 @@ namespace Octopus.Tentacle.Scripts
         // we want to allow lots of scripts to run with the 'no' isolation level, but nothing should be running under the 'full' isolation level.
         // NOTE: Changed from ReaderWriterLockSlim to AsyncReaderWriterLock to enable cooperative cancellation whilst waiting for the lock.
         //       Hopefully in a future version of .NET there will be a fully supported ReaderWriterLock with cooperative cancellation support so we can remove this dependency.
-        static readonly ConcurrentDictionary<string, TaskLock> ReaderWriterLocks = new ConcurrentDictionary<string, TaskLock>();
-        static readonly TimeSpan InitialWaitTime = TimeSpan.FromMilliseconds(100);
+        private static readonly ConcurrentDictionary<string, TaskLock> ReaderWriterLocks = new();
+        private static readonly TimeSpan InitialWaitTime = TimeSpan.FromMilliseconds(100);
         internal static TimeSpan SubsequentWaitTime = TimeSpan.FromMinutes(10);
 
         public static readonly TimeSpan NoTimeout = TimeSpan.FromMilliseconds(int.MaxValue);
@@ -43,18 +43,18 @@ namespace Octopus.Tentacle.Scripts
                 log).EnterLock();
         }
 
-        class ScriptIsolationMutexReleaser : IDisposable
+        private class ScriptIsolationMutexReleaser : IDisposable
         {
-            readonly TimeSpan mutexAcquireTimeout;
-            readonly string lockName;
-            readonly string taskId;
-            readonly ScriptIsolationLevel isolationLevel;
-            readonly Action<string> taskLog;
-            readonly TaskLock taskLock;
-            readonly CancellationToken cancellationToken;
-            readonly ILog systemLog;
-            readonly string lockType;
-            IDisposable? lockReleaser;
+            private readonly TimeSpan mutexAcquireTimeout;
+            private readonly string lockName;
+            private readonly string taskId;
+            private readonly ScriptIsolationLevel isolationLevel;
+            private readonly Action<string> taskLog;
+            private readonly TaskLock taskLock;
+            private readonly CancellationToken cancellationToken;
+            private readonly ILog systemLog;
+            private readonly string lockType;
+            private IDisposable? lockReleaser;
 
             public ScriptIsolationMutexReleaser(ScriptIsolationLevel isolationLevel,
                 Action<string> taskLog,
@@ -103,11 +103,17 @@ namespace Octopus.Tentacle.Scripts
                 lockReleaser?.Dispose();
             }
 
-            void EnterWriteLock() => PollForLock(taskLock.TryEnterWriteLock);
+            private void EnterWriteLock()
+            {
+                PollForLock(taskLock.TryEnterWriteLock);
+            }
 
-            void EnterReadLock() => PollForLock(taskLock.TryEnterReadLock);
+            private void EnterReadLock()
+            {
+                PollForLock(taskLock.TryEnterReadLock);
+            }
 
-            void PollForLock(Func<string, CancellationToken, AcquireLockResult> acquireLock)
+            private void PollForLock(Func<string, CancellationToken, AcquireLockResult> acquireLock)
             {
                 WriteToSystemLog($"Trying to acquire lock with wait time of {mutexAcquireTimeout}.");
                 var pollingInterval = InitialWaitTime;
@@ -149,22 +155,22 @@ namespace Octopus.Tentacle.Scripts
                 }
             }
 
-            void Busy()
+            private void Busy()
             {
                 taskLog.WriteWait(taskLock.GetBusyMessage(taskId, isolationLevel == ScriptIsolationLevel.FullIsolation));
             }
 
-            void Canceled()
+            private void Canceled()
             {
                 taskLog(taskLock.GetCanceledMessage(taskId));
             }
 
-            void TimedOut(TimeSpan timeout)
+            private void TimedOut(TimeSpan timeout)
             {
                 taskLog(taskLock.GetTimedOutMessage(timeout, taskId));
             }
 
-            void WriteToSystemLog(string message)
+            private void WriteToSystemLog(string message)
             {
                 var lockTaken = $" [{taskLock.Report()}]";
                 systemLog.Trace($"[{taskId}] [{lockName}] [{lockType}]{lockTaken} {message}");
@@ -173,10 +179,10 @@ namespace Octopus.Tentacle.Scripts
 
         internal class TaskLock
         {
-            readonly object stateLock = new();
-            readonly IDictionary<string, int> readersTaskIds = new Dictionary<string, int>();
-            readonly AsyncReaderWriterLock asyncReaderWriterLock;
-            string? writerTaskId;
+            private readonly object stateLock = new();
+            private readonly IDictionary<string, int> readersTaskIds = new Dictionary<string, int>();
+            private readonly AsyncReaderWriterLock asyncReaderWriterLock;
+            private string? writerTaskId;
 
             public TaskLock()
             {
@@ -186,10 +192,7 @@ namespace Octopus.Tentacle.Scripts
             public AcquireLockResult TryEnterWriteLock(string taskId, CancellationToken cancellationToken)
             {
                 var result = asyncReaderWriterLock.TryEnterWriteLock(cancellationToken);
-                if (!result.Acquired)
-                {
-                    return result;
-                }
+                if (!result.Acquired) return result;
 
                 writerTaskId = taskId;
                 return result;
@@ -198,21 +201,14 @@ namespace Octopus.Tentacle.Scripts
             public AcquireLockResult TryEnterReadLock(string taskId, CancellationToken cancellationToken)
             {
                 var result = asyncReaderWriterLock.TryEnterReadLock(cancellationToken);
-                if (!result.Acquired)
-                {
-                    return result;
-                }
+                if (!result.Acquired) return result;
 
                 lock (stateLock)
                 {
                     if (readersTaskIds.ContainsKey(taskId))
-                    {
                         readersTaskIds[taskId]++;
-                    }
                     else
-                    {
                         readersTaskIds[taskId] = 1;
-                    }
                 }
 
                 return result;
@@ -228,10 +224,7 @@ namespace Octopus.Tentacle.Scripts
 
                 lock (stateLock)
                 {
-                    if (!readersTaskIds.ContainsKey(taskId))
-                    {
-                        return;
-                    }
+                    if (!readersTaskIds.ContainsKey(taskId)) return;
 
                     if (readersTaskIds[taskId] > 1)
                     {
@@ -245,19 +238,13 @@ namespace Octopus.Tentacle.Scripts
 
             public string Report()
             {
-                if (writerTaskId != null)
-                {
-                    return $"\"{writerTaskId}\" (has a write lock)";
-                }
+                if (writerTaskId != null) return $"\"{writerTaskId}\" (has a write lock)";
 
                 lock (stateLock)
                 {
                     var ids = readersTaskIds.Keys.ToArray();
 
-                    if (ids.Length == 0)
-                    {
-                        return "no locks";
-                    }
+                    if (ids.Length == 0) return "no locks";
 
                     var readerTaskIds = string.Join(", ", ids);
 
@@ -272,7 +259,7 @@ namespace Octopus.Tentacle.Scripts
                 }
             }
 
-            (string message, bool multiple, bool thisTaskAlreadyHasLock) ListTasksWithMarkdownLinks(string taskId)
+            private (string message, bool multiple, bool thisTaskAlreadyHasLock) ListTasksWithMarkdownLinks(string taskId)
             {
                 var localWriterTaskId = writerTaskId; // This could change during the execution of the method
                 if (localWriterTaskId != null)
@@ -295,14 +282,9 @@ namespace Octopus.Tentacle.Scripts
                 var (message, multiple, thisTaskAlreadyHasLock) = ListTasksWithMarkdownLinks(taskId);
 
                 if (multiple) // Waiting on multiple, that means they are all read and this is a write
-                {
                     return $"Waiting on scripts in tasks {message} to finish. This script requires that no other Octopus scripts are executing on this target at the same time.";
-                }
 
-                if (thisTaskAlreadyHasLock)
-                {
-                    return $"Waiting on another script in this task to finish as {(isWaitingOnWrite ? "this" : "another")} task requires that no other Octopus scripts are executing on this target at the same time.";
-                }
+                if (thisTaskAlreadyHasLock) return $"Waiting on another script in this task to finish as {(isWaitingOnWrite ? "this" : "another")} task requires that no other Octopus scripts are executing on this target at the same time.";
 
                 return $"Waiting for the script in task {message} to finish as {(isWaitingOnWrite ? "this" : "that")} script requires that no other Octopus scripts are executing on this target at the same time.";
             }

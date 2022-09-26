@@ -14,9 +14,9 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class ProxyConfigurationCommandFixture : CommandFixture<ProxyConfigurationCommand>
     {
-        string homeDirectory;
-        string configFile;
-        OctopusPhysicalFileSystem octopusFileSystem;
+        private string homeDirectory;
+        private string configFile;
+        private OctopusPhysicalFileSystem octopusFileSystem;
         private IApplicationInstanceSelector applicationInstanceSelector;
 
         [SetUp]
@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Commands
             octopusFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
             homeDirectory = octopusFileSystem.CreateTemporaryDirectory();
             configFile = $"{homeDirectory}\\File.config";
-            
+
             applicationInstanceSelector = Substitute.For<IApplicationInstanceSelector>();
             applicationInstanceSelector.Current.Returns(info => new ApplicationInstanceConfiguration(null, null!, null!, null!));
 
@@ -38,12 +38,8 @@ namespace Octopus.Tentacle.Tests.Commands
         [TearDown]
         public void TearDownAfterEachTest()
         {
-            if (File.Exists(configFile))
-            {
-                File.Delete(configFile);
-            }
+            if (File.Exists(configFile)) File.Delete(configFile);
         }
-
 
         [Test]
         public void ToggleTheProxy()
@@ -57,19 +53,19 @@ namespace Octopus.Tentacle.Tests.Commands
             Command = new ProxyConfigurationCommand(config, applicationInstanceSelector, Substitute.For<ISystemLog>(), Substitute.For<ILogFileOnlyLogger>());
 
             EnableACustomProxy();
-            config.Value.UseDefaultProxy.Should().BeFalse(because: "we're using a custom proxy now");
-            config.Value.CustomProxyHost.Should().Be(expectedProxyHost, because: "we've supplied a proxy host");
-            config.Value.CustomProxyPort.Should().Be(expectedProxyPort, because: "we've supplied a proxy port");
-            config.Value.CustomProxyUsername.Should().Be(expectedUsername, because: "we've supplied a proxy username");
-            config.Value.CustomProxyPassword.Should().Be(expectedPassword, because: "we've supplied a proxy password");
+            config.Value.UseDefaultProxy.Should().BeFalse("we're using a custom proxy now");
+            config.Value.CustomProxyHost.Should().Be(expectedProxyHost, "we've supplied a proxy host");
+            config.Value.CustomProxyPort.Should().Be(expectedProxyPort, "we've supplied a proxy port");
+            config.Value.CustomProxyUsername.Should().Be(expectedUsername, "we've supplied a proxy username");
+            config.Value.CustomProxyPassword.Should().Be(expectedPassword, "we've supplied a proxy password");
 
             DisableTheProxy();
-            config.Value.UseDefaultProxy.Should().BeFalse(because: "we've disabled the proxy altogether");
-            config.Value.CustomProxyHost.Should().BeNullOrEmpty(because: "the proxyHost setting should be cleared when we disable the proxy");
-            config.Value.CustomProxyPort.Should().Be(expectedProxyPort, because: "the port is now ignored");
+            config.Value.UseDefaultProxy.Should().BeFalse("we've disabled the proxy altogether");
+            config.Value.CustomProxyHost.Should().BeNullOrEmpty("the proxyHost setting should be cleared when we disable the proxy");
+            config.Value.CustomProxyPort.Should().Be(expectedProxyPort, "the port is now ignored");
 
             EnableTheDefaultProxy();
-            config.Value.CustomProxyPort.Should().Be(expectedProxyPort, because: "the port is still ignored, even though we're enabling the default proxy");
+            config.Value.CustomProxyPort.Should().Be(expectedProxyPort, "the port is still ignored, even though we're enabling the default proxy");
 
             void EnableACustomProxy()
             {
@@ -90,9 +86,9 @@ namespace Octopus.Tentacle.Tests.Commands
 
             EnableTheDefaultProxy();
 
-            config.Value.UseDefaultProxy.Should().BeTrue(because: "we've enabled the proxy without supplying any proxy settings, so we should use the default one");
-            config.Value.CustomProxyHost.Should().BeNullOrEmpty(because: "we haven't supplied a proxy host");
-            config.Value.CustomProxyPort.Should().Be(80, because: "we haven't supplied a port number, so use the default value of 80");
+            config.Value.UseDefaultProxy.Should().BeTrue("we've enabled the proxy without supplying any proxy settings, so we should use the default one");
+            config.Value.CustomProxyHost.Should().BeNullOrEmpty("we haven't supplied a proxy host");
+            config.Value.CustomProxyPort.Should().Be(80, "we haven't supplied a port number, so use the default value of 80");
         }
 
         [Test]
@@ -103,9 +99,9 @@ namespace Octopus.Tentacle.Tests.Commands
 
             EnableAnIncorrectlySuppliedProxyHost();
 
-            config.Value.UseDefaultProxy.Should().BeFalse(because: "we're using a custom proxy now");
-            config.Value.CustomProxyHost.Should().Be("127.0.0.1", because: "we supplied a valid URL, however it should be stripped of protocol and port information");
-            config.Value.CustomProxyPort.Should().Be(80, because: "we haven't supplied a port number, so use the default value of 80");
+            config.Value.UseDefaultProxy.Should().BeFalse("we're using a custom proxy now");
+            config.Value.CustomProxyHost.Should().Be("127.0.0.1", "we supplied a valid URL, however it should be stripped of protocol and port information");
+            config.Value.CustomProxyPort.Should().Be(80, "we haven't supplied a port number, so use the default value of 80");
 
             void EnableAnIncorrectlySuppliedProxyHost()
             {
@@ -113,7 +109,7 @@ namespace Octopus.Tentacle.Tests.Commands
             }
         }
 
-        void EnableTheDefaultProxy()
+        private void EnableTheDefaultProxy()
         {
             Start("--proxyEnable=true");
         }

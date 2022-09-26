@@ -11,13 +11,13 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
     [TestFixture]
     public class LinuxMachineKeyEncryptorFixture
     {
-        readonly InMemoryCryptoKeyNixSource validKey = new InMemoryCryptoKeyNixSource();
-        readonly ISystemLog systemLog = Substitute.For<ISystemLog>();
-    
+        private readonly InMemoryCryptoKeyNixSource validKey = new InMemoryCryptoKeyNixSource();
+        private readonly ISystemLog systemLog = Substitute.For<ISystemLog>();
+
         [Test]
         public void GivenValidKeysAvailable_ThenEncryptsAndDecrypts()
         {
-            var lme = new LinuxMachineKeyEncryptor(systemLog,new[] { validKey });
+            var lme = new LinuxMachineKeyEncryptor(systemLog, new[] { validKey });
 
             var encrypted = lme.Encrypt("FooBar");
             var decrypted = lme.Decrypt(encrypted);
@@ -29,15 +29,15 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         [Test]
         public void GivenCorruptKeyProvided_ThenThrowsException()
         {
-            var lme = new LinuxMachineKeyEncryptor(systemLog, new []{DodgyKey()});
-            
+            var lme = new LinuxMachineKeyEncryptor(systemLog, new[] { DodgyKey() });
+
             Assert.Throws<AggregateException>(() => lme.Encrypt("FooBar"));
         }
-        
+
         [Test]
         public void GivenCorruptKeyProvided_WhenFallbackKeyAvailable_ThenEncrypts()
         {
-            var lme = new LinuxMachineKeyEncryptor(systemLog, new []{DodgyKey(), validKey});
+            var lme = new LinuxMachineKeyEncryptor(systemLog, new[] { DodgyKey(), validKey });
 
             var roundTrip = lme.Decrypt(lme.Encrypt("FooBar"));
 
@@ -49,25 +49,26 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
         {
             var firstDodgyKey = DodgyKey();
             var lastDodgyKey = DodgyKey();
-            
-            var lme = new LinuxMachineKeyEncryptor(systemLog, new []{firstDodgyKey, validKey, lastDodgyKey});
-            
+
+            var lme = new LinuxMachineKeyEncryptor(systemLog, new[] { firstDodgyKey, validKey, lastDodgyKey });
+
             lme.Encrypt("FooBar").Should().NotBeEmpty();
             firstDodgyKey.Received(1).Load();
             lastDodgyKey.Received(0).Load();
         }
 
-        static ICryptoKeyNixSource DodgyKey()
+        private static ICryptoKeyNixSource DodgyKey()
         {
             var dodgyKey = Substitute.For<ICryptoKeyNixSource>();
-            dodgyKey.Load().Returns(callInfo => (new byte[] {77}, new byte[]{43, 11}));
+            dodgyKey.Load().Returns(callInfo => (new byte[] { 77 }, new byte[] { 43, 11 }));
             return dodgyKey;
         }
 
-        class InMemoryCryptoKeyNixSource : ICryptoKeyNixSource
+        private class InMemoryCryptoKeyNixSource : ICryptoKeyNixSource
         {
-            readonly byte[] key;
-            readonly byte[] iv;
+            private readonly byte[] key;
+            private readonly byte[] iv;
+
             public InMemoryCryptoKeyNixSource()
             {
                 var d = new RijndaelManaged();
@@ -76,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
                 key = d.Key;
                 iv = d.IV;
             }
-            
+
             public (byte[] Key, byte[] IV) Load()
             {
                 return (key, iv);

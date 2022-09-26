@@ -7,6 +7,7 @@ namespace Octopus.Tentacle.Tests.Communications
     {
         public string? AssemblyName { get; private set; }
         public string TypeName { get; private set; }
+
         public override Type BindToType(string? assemblyName, string typeName)
         {
             AssemblyName = assemblyName;

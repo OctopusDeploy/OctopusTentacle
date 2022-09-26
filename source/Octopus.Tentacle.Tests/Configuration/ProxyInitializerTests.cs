@@ -4,12 +4,12 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Tests.Support;
+using Octopus.Tentacle.Tests.Support.TestAttributes;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
     [TestFixture]
-    [Support.TestAttributes.WindowsTest]
+    [WindowsTest]
     public class ProxyInitializerTests
     {
         [Test]
@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             Assert.AreEqual("", credentials.UserName);
         }
 
-        ProxyInitializer BuildProxyInitializer(bool useDefaultProxy,
+        private ProxyInitializer BuildProxyInitializer(bool useDefaultProxy,
             string username,
             string password,
             string host,
@@ -116,7 +116,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             return new ProxyInitializer(config, parser, Substitute.For<ISystemLog>());
         }
 
-        class StubProxyConfiguration : IProxyConfiguration
+        private class StubProxyConfiguration : IProxyConfiguration
         {
             public StubProxyConfiguration(bool useDefaultProxy,
                 string customProxyUsername,

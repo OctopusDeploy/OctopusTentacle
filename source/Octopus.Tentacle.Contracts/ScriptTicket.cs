@@ -5,7 +5,7 @@ namespace Octopus.Tentacle.Contracts
 {
     public class ScriptTicket : IEquatable<ScriptTicket>
     {
-        static long nextTaskId;
+        private static long nextTaskId;
 
         public ScriptTicket(string taskId)
         {
@@ -35,16 +35,24 @@ namespace Octopus.Tentacle.Contracts
         }
 
         public override int GetHashCode()
-            => TaskId != null ? TaskId.GetHashCode() : 0;
+        {
+            return TaskId != null ? TaskId.GetHashCode() : 0;
+        }
 
         public static bool operator ==(ScriptTicket left, ScriptTicket right)
-            => Equals(left, right);
+        {
+            return Equals(left, right);
+        }
 
         public static bool operator !=(ScriptTicket left, ScriptTicket right)
-            => !Equals(left, right);
+        {
+            return !Equals(left, right);
+        }
 
         public override string ToString()
-            => TaskId;
+        {
+            return TaskId;
+        }
 
         public static ScriptTicket Create(string? serverTaskId)
         {

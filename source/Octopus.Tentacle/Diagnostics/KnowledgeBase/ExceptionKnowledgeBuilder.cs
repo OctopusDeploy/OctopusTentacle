@@ -6,11 +6,11 @@ namespace Octopus.Tentacle.Diagnostics.KnowledgeBase
 {
     public class ExceptionKnowledgeBuilder
     {
-        readonly List<Func<Exception, IDictionary<string, object>, bool>> clauses = new List<Func<Exception, IDictionary<string, object>, bool>>();
-        Func<IDictionary<string, object>, string?> entrySummary = s => null;
-        Func<IDictionary<string, object>, string?> entryHelpText = s => null;
-        Func<IDictionary<string, object>, string?> entryHelpLink = s => null;
-        bool logException = true;
+        private readonly List<Func<Exception, IDictionary<string, object>, bool>> clauses = new();
+        private readonly bool logException = true;
+        private Func<IDictionary<string, object>, string?> entrySummary = s => null;
+        private Func<IDictionary<string, object>, string?> entryHelpText = s => null;
+        private Func<IDictionary<string, object>, string?> entryHelpLink = s => null;
 
         public ExceptionKnowledge Build()
         {
@@ -97,7 +97,7 @@ namespace Octopus.Tentacle.Diagnostics.KnowledgeBase
             return this;
         }
 
-        IEnumerable<Exception> Enumerate(Exception exception)
+        private IEnumerable<Exception> Enumerate(Exception exception)
         {
             yield return exception;
 

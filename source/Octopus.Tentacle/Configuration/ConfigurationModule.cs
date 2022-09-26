@@ -12,9 +12,9 @@ namespace Octopus.Tentacle.Configuration
     public class ConfigurationModule : Module
     {
         private readonly ApplicationName applicationName;
-        readonly StartUpInstanceRequest startUpInstanceRequest;
+        private readonly StartUpInstanceRequest startUpInstanceRequest;
 
-        public ConfigurationModule(ApplicationName applicationName,StartUpInstanceRequest startUpInstanceRequest)
+        public ConfigurationModule(ApplicationName applicationName, StartUpInstanceRequest startUpInstanceRequest)
         {
             this.applicationName = applicationName;
             this.startUpInstanceRequest = startUpInstanceRequest;
@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Configuration
 
             builder.RegisterInstance(startUpInstanceRequest).As<StartUpInstanceRequest>();
             builder.Register(_ => applicationName).As<ApplicationName>();
-            builder.Register((c) => c.Resolve<IApplicationInstanceSelector>().Current).AsSelf();
+            builder.Register(c => c.Resolve<IApplicationInstanceSelector>().Current).AsSelf();
 
             if (PlatformDetection.IsRunningOnWindows)
             {
@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Configuration
             RegisterWatchdog(builder);
         }
 
-        void RegisterWatchdog(ContainerBuilder builder)
+        private void RegisterWatchdog(ContainerBuilder builder)
         {
             if (PlatformDetection.IsRunningOnWindows)
                 builder.RegisterType<Watchdog.Watchdog>().As<IWatchdog>();
@@ -112,7 +112,7 @@ namespace Octopus.Tentacle.Configuration
     /// </summary>
     public class ManagerConfigurationModule : Module
     {
-        readonly ApplicationName applicationName;
+        private readonly ApplicationName applicationName;
 
         public ManagerConfigurationModule(ApplicationName applicationName)
         {
@@ -133,13 +133,12 @@ namespace Octopus.Tentacle.Configuration
 
             builder.RegisterType<ApplicationInstanceStore>()
                 .As<IApplicationInstanceStore>();
-            
+
             builder.RegisterType<ApplicationInstanceManager>()
                 .As<IApplicationInstanceManager>();
-            
+
             builder.RegisterType<ApplicationInstanceSelector>()
                 .As<IApplicationInstanceSelector>();
-            
         }
     }
 }

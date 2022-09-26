@@ -7,18 +7,18 @@ namespace Octopus.Tentacle.Configuration.EnvironmentVariableMappings
 {
     public abstract class MapsEnvironmentValuesToConfigItems : IMapEnvironmentValuesToConfigItems
     {
-        static readonly EnvironmentVariable Home = EnvironmentVariable.PlaintText("OCTOPUS_HOME");
-        static readonly EnvironmentVariable NodeCache = EnvironmentVariable.PlaintText("OCTOPUS_NODE_CACHE");
-        static readonly EnvironmentVariable UseDefaultProxy = EnvironmentVariable.PlaintText("OCTOPUS_USE_DEFAULT_PROXY");
-        static readonly EnvironmentVariable ProxyHost = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_HOST");
-        static readonly EnvironmentVariable ProxyPort = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_PORT");
-        static readonly EnvironmentVariable ProxyUser = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_USER");
-        static readonly SensitiveEnvironmentVariable ProxyPassword = EnvironmentVariable.Sensitive("OCTOPUS_PROXY_PASSWORD", "proxy password");
+        private static readonly EnvironmentVariable Home = EnvironmentVariable.PlaintText("OCTOPUS_HOME");
+        private static readonly EnvironmentVariable NodeCache = EnvironmentVariable.PlaintText("OCTOPUS_NODE_CACHE");
+        private static readonly EnvironmentVariable UseDefaultProxy = EnvironmentVariable.PlaintText("OCTOPUS_USE_DEFAULT_PROXY");
+        private static readonly EnvironmentVariable ProxyHost = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_HOST");
+        private static readonly EnvironmentVariable ProxyPort = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_PORT");
+        private static readonly EnvironmentVariable ProxyUser = EnvironmentVariable.PlaintText("OCTOPUS_PROXY_USER");
+        private static readonly SensitiveEnvironmentVariable ProxyPassword = EnvironmentVariable.Sensitive("OCTOPUS_PROXY_PASSWORD", "proxy password");
 
         // There are no required settings/variables in Shared. The
         // following are the name of the environment variables that
         // align with the above settings.
-        static readonly EnvironmentVariable[] SharedOptionalEnvironmentVariables =
+        private static readonly EnvironmentVariable[] SharedOptionalEnvironmentVariables =
         {
             Home,
             NodeCache,
@@ -29,11 +29,11 @@ namespace Octopus.Tentacle.Configuration.EnvironmentVariableMappings
             ProxyPassword
         };
 
-        readonly ILogFileOnlyLogger log;
-        readonly Dictionary<string, string?> environmentVariableValues;
+        private readonly ILogFileOnlyLogger log;
+        private readonly Dictionary<string, string?> environmentVariableValues;
 
         // These are the settings that calling code can ask for a value for
-        readonly string[] sharedConfigurationSettingNames =
+        private readonly string[] sharedConfigurationSettingNames =
         {
             HomeConfiguration.OctopusHomeSettingName,
             HomeConfiguration.OctopusNodeCacheSettingName,
@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Configuration.EnvironmentVariableMappings
             ProxyConfiguration.ProxyPasswordSettingName
         };
 
-        bool valuesHaveBeenSet;
+        private bool valuesHaveBeenSet;
 
         protected MapsEnvironmentValuesToConfigItems(ILogFileOnlyLogger log,
             string[] supportedConfigurationKeys,
@@ -62,9 +62,9 @@ namespace Octopus.Tentacle.Configuration.EnvironmentVariableMappings
                 environmentVariableValues.Add(variable.Name, null);
         }
 
-        HashSet<string> SupportedConfigurationKeys { get; }
+        private HashSet<string> SupportedConfigurationKeys { get; }
 
-        HashSet<EnvironmentVariable> RequiredEnvironmentVariables { get; }
+        private HashSet<EnvironmentVariable> RequiredEnvironmentVariables { get; }
         public HashSet<EnvironmentVariable> SupportedEnvironmentVariables { get; }
 
         protected IReadOnlyDictionary<string, string?> EnvironmentValues => environmentVariableValues;

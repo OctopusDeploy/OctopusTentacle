@@ -15,29 +15,29 @@ namespace Octopus.Tentacle.Tests.Configuration
     [TestFixture]
     public class EnvironmentConfigurationContributorFixture
     {
-        IEnvironmentVariableReader reader = null!;
-        IMapEnvironmentValuesToConfigItems mapper = null!;
+        private IEnvironmentVariableReader reader = null!;
+        private IMapEnvironmentValuesToConfigItems mapper = null!;
+
         [SetUp]
         public void Setup()
         {
-            
             reader = Substitute.For<IEnvironmentVariableReader>();
             mapper = Substitute.For<IMapEnvironmentValuesToConfigItems>();
         }
-        
+
         [Test]
         public void LoadsExpectedResultsForSupportedVariables()
         {
             reader.Get("OCTOPUS_HOME").Returns(".");
             reader.Get("Foo").Returns((string?)null);
             SetSupportedEnvironmentVariables("OCTOPUS_HOME", "Foo");
-            
+
             var results = EnvironmentConfigurationContributor.LoadFromEnvironment(Substitute.For<ILogFileOnlyLogger>(), reader, mapper);
             results.Count.Should().Be(2, "a value for all supported variables is returned, even if it is set to null");
             results!["OCTOPUS_HOME"].Should().Be(".", "values should be able to contain an equals sign");
             results!["Foo"].Should().BeNull("values should be able to contain an equals sign");
         }
-        
+
         [Test]
         public void IsNotConfiguredWhenEnvFileIsEmpty()
         {
@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             var subject = new EnvironmentConfigurationContributor(Substitute.For<ILogFileOnlyLogger>(), mapper, reader);
             subject.LoadContributedConfiguration().Should().BeNull();
         }
-        
+
         [Test]
         public void IsConfiguredWhenEnvironmentVariablesAreCompleteAndFlagIsPresent()
         {
@@ -69,10 +69,10 @@ namespace Octopus.Tentacle.Tests.Configuration
                 mapper.Received(1).SetEnvironmentValues(Arg.Is<Dictionary<string, string?>>(v => v.Count() == 1 && v["OCTOPUS_HOME"] == "."));
             }
         }
-        
-        void SetSupportedEnvironmentVariables(params string[] environmentVariableName)
+
+        private void SetSupportedEnvironmentVariables(params string[] environmentVariableName)
         {
-            var hashSet = new HashSet<EnvironmentVariable>(environmentVariableName.Select(c =>  EnvironmentVariable.PlaintText(c)));
+            var hashSet = new HashSet<EnvironmentVariable>(environmentVariableName.Select(c => EnvironmentVariable.PlaintText(c)));
             mapper.SupportedEnvironmentVariables.Returns(hashSet);
         }
     }

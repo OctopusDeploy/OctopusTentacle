@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Configuration
 {
     public class InMemoryKeyValueStore : IAggregatableKeyValueStore
     {
-        readonly IMapEnvironmentValuesToConfigItems mapper;
+        private readonly IMapEnvironmentValuesToConfigItems mapper;
 
         public InMemoryKeyValueStore(IMapEnvironmentValuesToConfigItems mapper)
         {

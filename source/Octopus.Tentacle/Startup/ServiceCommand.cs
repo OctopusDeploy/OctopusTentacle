@@ -10,18 +10,18 @@ namespace Octopus.Tentacle.Startup
 {
     public class ServiceCommand : AbstractCommand
     {
-        readonly string serviceDescription;
-        readonly Assembly assemblyContainingService;
-        readonly ApplicationName applicationName;
-        readonly IApplicationInstanceStore instanceLocator;
-        readonly IApplicationInstanceSelector instanceSelector;
-        readonly ServiceConfigurationState serviceConfigurationState;
-        readonly IServiceConfigurator serviceConfigurator;
+        private readonly string serviceDescription;
+        private readonly Assembly assemblyContainingService;
+        private readonly ApplicationName applicationName;
+        private readonly IApplicationInstanceStore instanceLocator;
+        private readonly IApplicationInstanceSelector instanceSelector;
+        private readonly ServiceConfigurationState serviceConfigurationState;
+        private readonly IServiceConfigurator serviceConfigurator;
         private readonly ISystemLog log;
-        readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
-        readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
+        private readonly string ServicePasswordEnvVar = "OCTOPUS_SERVICE_PASSWORD";
+        private readonly string ServiceUsernameEnvVar = "OCTOPUS_SERVICE_USERNAME";
 
-        string? instanceName;
+        private string? instanceName;
 
         public ServiceCommand(ApplicationName applicationName,
             IApplicationInstanceStore instanceLocator,
@@ -47,13 +47,13 @@ namespace Octopus.Tentacle.Startup
                 Password = Environment.GetEnvironmentVariable(ServicePasswordEnvVar)
             };
 
-            Options.Add("start", $"Start the service if it is not already running", v => serviceConfigurationState.Start = true);
-            Options.Add("stop", $"Stop the service if it is running", v => serviceConfigurationState.Stop = true);
-            Options.Add("restart", $"Restart the service if it is running", v => serviceConfigurationState.Restart = true);
-            Options.Add("reconfigure", $"Reconfigure the service", v => serviceConfigurationState.Reconfigure = true);
-            Options.Add("install", $"Install the service", v => serviceConfigurationState.Install = true);
+            Options.Add("start", "Start the service if it is not already running", v => serviceConfigurationState.Start = true);
+            Options.Add("stop", "Stop the service if it is running", v => serviceConfigurationState.Stop = true);
+            Options.Add("restart", "Restart the service if it is running", v => serviceConfigurationState.Restart = true);
+            Options.Add("reconfigure", "Reconfigure the service", v => serviceConfigurationState.Reconfigure = true);
+            Options.Add("install", "Install the service", v => serviceConfigurationState.Install = true);
             Options.Add("username=|user=", $"Username to run the service under (DOMAIN\\Username format for Windows). Only used when --install or --reconfigure are used.  Can also be passed via an environment variable {ServiceUsernameEnvVar}. Defaults to 'root' for Systemd services.", v => serviceConfigurationState.Username = v);
-            Options.Add("uninstall", $"Uninstall the service", v => serviceConfigurationState.Uninstall = true);
+            Options.Add("uninstall", "Uninstall the service", v => serviceConfigurationState.Uninstall = true);
             Options.Add("password=",
                 $"Password for the username specified with --username. Only used when --install or --reconfigure are used. Can also be passed via an environment variable {ServicePasswordEnvVar}.",
                 v =>
@@ -77,7 +77,6 @@ namespace Octopus.Tentacle.Startup
                 var exceptions = new List<Exception>();
 
                 foreach (var instance in instanceLocator.ListInstances())
-                {
                     try
                     {
                         var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, instance.InstanceName);
@@ -91,7 +90,6 @@ namespace Octopus.Tentacle.Startup
                     {
                         exceptions.Add(ex);
                     }
-                }
 
                 if (exceptions.Count > 0)
                     throw new AggregateException(exceptions);
@@ -102,10 +100,7 @@ namespace Octopus.Tentacle.Startup
                 var thisServiceName = ServiceName.GetWindowsServiceName(applicationName, currentName);
                 if (currentName == null)
                 {
-                    if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure)
-                    {
-                        log.Warn("Please note, currently there can only be one un-named instance configured as a service on a machine at a time.");    
-                    }
+                    if (serviceConfigurationState.Install || serviceConfigurationState.Reconfigure) log.Warn("Please note, currently there can only be one un-named instance configured as a service on a machine at a time.");
                     serviceConfigurator.ConfigureServiceByConfigPath(thisServiceName,
                         exePath,
                         instanceSelector.Current.ConfigurationPath!,

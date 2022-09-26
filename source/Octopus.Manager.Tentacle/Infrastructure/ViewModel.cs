@@ -11,9 +11,9 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 {
     public class ViewModel : IDataErrorInfo, INotifyPropertyChanged
     {
-        readonly HashSet<string> activeRuleSets = new HashSet<string>();
-        readonly IDictionary<string, string> errors = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        bool isValid;
+        private readonly HashSet<string> activeRuleSets = new HashSet<string>();
+        private readonly IDictionary<string, string> errors = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private bool isValid;
 
         public ViewModel()
         {
@@ -63,10 +63,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
                 foreach (var errorByProperty in errorsByProperty)
                 {
                     var errorMessage = new StringBuilder();
-                    foreach (var error in errorByProperty)
-                    {
-                        errorMessage.AppendLine(error.ErrorMessage);
-                    }
+                    foreach (var error in errorByProperty) errorMessage.AppendLine(error.ErrorMessage);
 
                     errors[errorByProperty.Key] = errorMessage.ToString().Trim();
                 }
@@ -80,10 +77,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged(string propertyName = null)
         {
-            if (propertyName != "IsValid")
-            {
-                Validate();
-            }
+            if (propertyName != "IsValid") Validate();
 
             var handler = PropertyChanged;
             handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));

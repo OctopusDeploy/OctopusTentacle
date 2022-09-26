@@ -1,12 +1,10 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using Octopus.Configuration;
 
 namespace Octopus.Tentacle.Configuration
 {
     /// <summary>
     /// See https://github.com/OctopusDeploy/Configuration/blob/master/source/Octopus.Configuration/IWritableKeyValueStore.cs
-    ///
     /// The set methods in this class all return true, because Set is supported.
     /// </summary>
     public abstract class KeyValueStoreBase : IWritableKeyValueStore
@@ -22,7 +20,9 @@ namespace Octopus.Tentacle.Configuration
 
         [Obsolete("Please use the generic overload instead")]
         public string? Get(string name, ProtectionLevel protectionLevel = ProtectionLevel.None)
-            => Get(name, default(string), protectionLevel);
+        {
+            return Get(name, default(string), protectionLevel);
+        }
 
         [return: NotNullIfNotNull("defaultValue")]
         public abstract TData? Get<TData>(string name, TData? defaultValue = default, ProtectionLevel protectionLevel = ProtectionLevel.None);

@@ -1,4 +1,5 @@
-﻿using Octopus.Manager.Tentacle.Infrastructure;
+﻿using System;
+using Octopus.Manager.Tentacle.Infrastructure;
 using Octopus.Tentacle.Versioning;
 
 namespace Octopus.Manager.Tentacle.Shell
@@ -7,7 +8,7 @@ namespace Octopus.Manager.Tentacle.Shell
     {
         public ShellViewModel(InstanceSelectionModel instanceSelectionModel)
         {
-            this.InstanceSelectionModel = instanceSelectionModel;
+            InstanceSelectionModel = instanceSelectionModel;
             VersionNumber = TentacleManager.SemanticVersionInfo.NuGetVersion;
             ShowEAPVersion = TentacleManager.SemanticVersionInfo.IsEarlyAccessProgram();
         }

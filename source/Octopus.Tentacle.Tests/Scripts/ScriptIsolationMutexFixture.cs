@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
-using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Tests.Support;
@@ -16,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Scripts
         [TestFixture]
         public class TaskLockFixture
         {
-            CancellationToken oneSecondCancellationToken;
+            private CancellationToken oneSecondCancellationToken;
 
             [SetUp]
             public void SetUp()
@@ -119,13 +117,18 @@ namespace Octopus.Tentacle.Tests.Scripts
             {
                 var cancellationToken = new CancellationTokenSource();
 
-                IDisposable AcquireMutex() => ScriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
-                    TimeSpan.FromDays(1),
-                    nameof(AcquireCanBeCancelled),
-                    _ => { },
-                    "Task-1",
-                    cancellationToken.Token,
-                    new TestConsoleLog());
+                IDisposable AcquireMutex()
+                {
+                    return ScriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
+                        TimeSpan.FromDays(1),
+                        nameof(AcquireCanBeCancelled),
+                        _ =>
+                        {
+                        },
+                        "Task-1",
+                        cancellationToken.Token,
+                        new TestConsoleLog());
+                }
 
                 using var mutex = AcquireMutex();
                 Action acquire = () => AcquireMutex();
@@ -149,15 +152,18 @@ namespace Octopus.Tentacle.Tests.Scripts
                 using var lock2 = AcquireNamedLock("Lock 2");
             }
 
-            static IDisposable AcquireNamedLock(string name) => ScriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
-                TimeSpan.FromSeconds(1),
-                name,
-                s =>
-                {
-                },
-                "Task-1",
-                CancellationToken.None,
-                new TestConsoleLog());
+            private static IDisposable AcquireNamedLock(string name)
+            {
+                return ScriptIsolationMutex.Acquire(ScriptIsolationLevel.FullIsolation,
+                    TimeSpan.FromSeconds(1),
+                    name,
+                    s =>
+                    {
+                    },
+                    "Task-1",
+                    CancellationToken.None,
+                    new TestConsoleLog());
+            }
         }
     }
 }

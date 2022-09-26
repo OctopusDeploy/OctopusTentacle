@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Startup
     public class LsaUtility
     {
         [DllImport("advapi32.dll", PreserveSig = true)]
-        static extern uint LsaOpenPolicy(
+        private static extern uint LsaOpenPolicy(
             ref LSA_UNICODE_STRING SystemName,
             ref LSA_OBJECT_ATTRIBUTES ObjectAttributes,
             int DesiredAccess,
@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Startup
         );
 
         [DllImport("advapi32.dll", SetLastError = true, PreserveSig = true)]
-        static extern int LsaAddAccountRights(
+        private static extern int LsaAddAccountRights(
             IntPtr PolicyHandle,
             IntPtr AccountSid,
             LSA_UNICODE_STRING[] UserRights,
@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Startup
         public static extern void FreeSid(IntPtr pSid);
 
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true, PreserveSig = true)]
-        static extern bool LookupAccountName(
+        private static extern bool LookupAccountName(
             string lpSystemName,
             string lpAccountName,
             IntPtr psid,
@@ -39,16 +39,16 @@ namespace Octopus.Tentacle.Startup
             ref int use);
 
         [DllImport("advapi32.dll")]
-        static extern bool IsValidSid(IntPtr pSid);
+        private static extern bool IsValidSid(IntPtr pSid);
 
         [DllImport("advapi32.dll")]
-        static extern int LsaClose(IntPtr ObjectHandle);
+        private static extern int LsaClose(IntPtr ObjectHandle);
 
         [DllImport("kernel32.dll")]
-        static extern int GetLastError();
+        private static extern int GetLastError();
 
         [DllImport("advapi32.dll")]
-        static extern int LsaNtStatusToWinError(long status);
+        private static extern int LsaNtStatusToWinError(long status);
 
         /// <summary>Adds a privilege to an account</summary>
         /// <param name="accountName">Name of an account - "domain\account" or only "account"</param>
@@ -168,7 +168,7 @@ namespace Octopus.Tentacle.Startup
         // define the structures
 
         [StructLayout(LayoutKind.Sequential)]
-        struct LSA_UNICODE_STRING
+        private struct LSA_UNICODE_STRING
         {
             public ushort Length;
             public ushort MaximumLength;
@@ -176,7 +176,7 @@ namespace Octopus.Tentacle.Startup
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        struct LSA_OBJECT_ATTRIBUTES
+        private struct LSA_OBJECT_ATTRIBUTES
         {
             public int Length;
             public IntPtr RootDirectory;
@@ -188,7 +188,7 @@ namespace Octopus.Tentacle.Startup
 
         // enum all policies
 
-        enum LSA_AccessPolicy : long
+        private enum LSA_AccessPolicy : long
         {
             POLICY_VIEW_LOCAL_INFORMATION = 0x00000001L,
             POLICY_VIEW_AUDIT_INFORMATION = 0x00000002L,

@@ -12,12 +12,12 @@ namespace Octopus.Tentacle.Startup
 {
     public class HelpCommand : AbstractCommand
     {
-        static readonly string TextFormat = "text";
-        static readonly string JsonFormat = "json";
-        static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
+        private static readonly string TextFormat = "text";
+        private static readonly string JsonFormat = "json";
+        private static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
 
-        readonly ICommandLocator commands;
-        readonly ISystemLog log;
+        private readonly ICommandLocator commands;
+        private readonly ISystemLog log;
 
         public HelpCommand(ICommandLocator commands, ISystemLog log, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
@@ -61,8 +61,10 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        bool LooksLikeCommand(string candidate)
-            => candidate.Length > 0 && char.IsLetter(candidate.First());
+        private bool LooksLikeCommand(string candidate)
+        {
+            return candidate.Length > 0 && char.IsLetter(candidate.First());
+        }
 
         protected override void UnrecognizedArguments(IList<string> arguments)
         {
@@ -73,7 +75,7 @@ namespace Octopus.Tentacle.Startup
         {
         }
 
-        void PrintCommandHelp(string executable, ICommand command, CommandMetadata metadata, OptionSet commonOptions)
+        private void PrintCommandHelp(string executable, ICommand command, CommandMetadata metadata, OptionSet commonOptions)
         {
             if (string.Equals(Format, JsonFormat, StringComparison.OrdinalIgnoreCase))
                 PrintCommandHelpAsJson(command, metadata, commonOptions);
@@ -81,7 +83,7 @@ namespace Octopus.Tentacle.Startup
                 PrintCommandHelpAsText(executable, command, metadata, commonOptions);
         }
 
-        void PrintCommandHelpAsJson(ICommand command, CommandMetadata metadata, OptionSet commonOptions)
+        private void PrintCommandHelpAsJson(ICommand command, CommandMetadata metadata, OptionSet commonOptions)
         {
             Console.Write(JsonConvert.SerializeObject(new
                 {
@@ -106,7 +108,7 @@ namespace Octopus.Tentacle.Startup
                 Formatting.Indented));
         }
 
-        static void PrintCommandHelpAsText(string executable, ICommand command, CommandMetadata metadata, OptionSet commonOptions)
+        private static void PrintCommandHelpAsText(string executable, ICommand command, CommandMetadata metadata, OptionSet commonOptions)
         {
             Console.ResetColor();
             Console.Write("Usage: ");
@@ -129,7 +131,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        void PrintGeneralHelp(string executable)
+        private void PrintGeneralHelp(string executable)
         {
             if (string.Equals(Format, JsonFormat, StringComparison.OrdinalIgnoreCase))
                 PrintGeneralHelpAsJson();
@@ -137,7 +139,7 @@ namespace Octopus.Tentacle.Startup
                 PrintGeneralHelpAsText(executable);
         }
 
-        void PrintGeneralHelpAsJson()
+        private void PrintGeneralHelpAsJson()
         {
             Console.Write(JsonConvert.SerializeObject(new
                 {
@@ -153,7 +155,7 @@ namespace Octopus.Tentacle.Startup
                 Formatting.Indented));
         }
 
-        void PrintGeneralHelpAsText(string executable)
+        private void PrintGeneralHelpAsText(string executable)
         {
             Console.ResetColor();
             Console.Write("Usage: ");

@@ -22,11 +22,11 @@ namespace Octopus.Tentacle.Startup
     /// </summary>
     public class LogFileOnlyLogger : ILogFileOnlyLogger
     {
-        static readonly string LoggerName = nameof(LogFileOnlyLogger);
-        static readonly ILogger Log = LogManager.GetLogger(LoggerName);
-        static readonly string EntryExecutable;
+        private static readonly string LoggerName = nameof(LogFileOnlyLogger);
+        private static readonly ILogger Log = LogManager.GetLogger(LoggerName);
+        private static readonly string EntryExecutable;
 
-        static readonly string HelpMessage = $"The {EntryExecutable}.nlog file should have a rule matching the name {LoggerName} where log messages are restricted to the log file, never written to stdout or stderr.";
+        private static readonly string HelpMessage = $"The {EntryExecutable}.nlog file should have a rule matching the name {LoggerName} where log messages are restricted to the log file, never written to stdout or stderr.";
 
         static LogFileOnlyLogger()
         {
@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Startup
                 : $"{Path.GetFileName(fullProcessPath)}.exe";
         }
 
-        public SensitiveValueMasker Masker { get; set; } = new SensitiveValueMasker();
+        public SensitiveValueMasker Masker { get; set; } = new();
         public static ILogFileOnlyLogger Current { get; } = new LogFileOnlyLogger();
 
         public static void AssertConfigurationIsCorrect()
@@ -53,9 +53,20 @@ namespace Octopus.Tentacle.Startup
                 throw new Exception($"The {LoggerName} rule should write to a file target. {HelpMessage}");
         }
 
-        public void Info(string message) => Masker.SafeSanitize(message, s => Log.Info(s));
-        public void Warn(string message) => Masker.SafeSanitize(message, s => Log.Warn(s));
-        public void Fatal(string message) => Masker.SafeSanitize(message, s => Log.Fatal(s));
+        public void Info(string message)
+        {
+            Masker.SafeSanitize(message, s => Log.Info(s));
+        }
+
+        public void Warn(string message)
+        {
+            Masker.SafeSanitize(message, s => Log.Warn(s));
+        }
+
+        public void Fatal(string message)
+        {
+            Masker.SafeSanitize(message, s => Log.Fatal(s));
+        }
 
         public void AddSensitiveValues(string[] values)
         {

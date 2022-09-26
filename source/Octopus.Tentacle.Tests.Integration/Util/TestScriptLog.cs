@@ -13,10 +13,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         public readonly StringBuilder StdErr = new StringBuilder();
 
         public IScriptLogWriter CreateWriter()
-            => this;
+        {
+            return this;
+        }
 
         public List<ProcessOutput> GetOutput(long afterSequenceNumber, out long nextSequenceNumber)
-            => throw new NotImplementedException();
+        {
+            throw new NotImplementedException();
+        }
 
         public void Dispose()
         {

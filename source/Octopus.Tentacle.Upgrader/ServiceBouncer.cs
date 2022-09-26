@@ -11,8 +11,8 @@ namespace Octopus.Tentacle.Upgrader
 {
     public class ServiceBouncer
     {
-        readonly string servicePrefix;
-        readonly HashSet<string> servicesToStart = new HashSet<string>();
+        private readonly string servicePrefix;
+        private readonly HashSet<string> servicesToStart = new HashSet<string>();
 
         public ServiceBouncer(string servicePrefix)
         {
@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Upgrader
             }
         }
 
-        static void StopService(ServiceController service)
+        private static void StopService(ServiceController service)
         {
             Log.Upgrade.Info("Stopping service: " + service.ServiceName);
             if (service.Status != ServiceControllerStatus.Stopped && service.Status != ServiceControllerStatus.StopPending)
@@ -65,7 +65,6 @@ namespace Octopus.Tentacle.Upgrader
 
             var services = ServiceController.GetServices();
             foreach (var service in services.Where(service => servicesToStart.Contains(service.ServiceName)))
-            {
                 try
                 {
                     EnsureServiceExecutablePathIsCorrect(service);
@@ -75,15 +74,11 @@ namespace Octopus.Tentacle.Upgrader
                 {
                     exceptionsEncountered.Add(ex);
                 }
-            }
 
-            if (exceptionsEncountered.Any())
-            {
-                throw new AggregateException(exceptionsEncountered);
-            }
+            if (exceptionsEncountered.Any()) throw new AggregateException(exceptionsEncountered);
         }
 
-        void EnsureServiceExecutablePathIsCorrect(ServiceController service)
+        private void EnsureServiceExecutablePathIsCorrect(ServiceController service)
         {
             var serviceImagePath = GetRegistryValue($@"SYSTEM\CurrentControlSet\Services\{service.ServiceName}", "ImagePath");
             var tentacleInstallLocation = GetRegistryValue(@"SOFTWARE\Octopus\Tentacle", "InstallLocation") ?? $@"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}\Octopus Deploy\Tentacle";
@@ -112,7 +107,7 @@ namespace Octopus.Tentacle.Upgrader
             }
         }
 
-        string GetRegistryValue(string registryPath, string value)
+        private string GetRegistryValue(string registryPath, string value)
         {
             var hklm = Registry.LocalMachine;
             var key = hklm.OpenSubKey(registryPath);
@@ -126,16 +121,13 @@ namespace Octopus.Tentacle.Upgrader
             return keyValue;
         }
 
-        static void StartService(ServiceController service)
+        private static void StartService(ServiceController service)
         {
             Log.Upgrade.Info("Starting: " + service.ServiceName);
 
             try
             {
-                if (service.Status != ServiceControllerStatus.Running && service.Status != ServiceControllerStatus.StartPending)
-                {
-                    service.Start();
-                }
+                if (service.Status != ServiceControllerStatus.Running && service.Status != ServiceControllerStatus.StartPending) service.Start();
 
                 while (service.Status != ServiceControllerStatus.Running)
                 {
@@ -154,13 +146,13 @@ namespace Octopus.Tentacle.Upgrader
             }
         }
 
-        bool IsOurService(ServiceController service)
+        private bool IsOurService(ServiceController service)
         {
             return string.Equals(service.ServiceName, servicePrefix, StringComparison.OrdinalIgnoreCase)
                 || service.ServiceName.StartsWith(servicePrefix + ":", StringComparison.OrdinalIgnoreCase);
         }
 
-        string GetInstanceName(ServiceController service)
+        private string GetInstanceName(ServiceController service)
         {
             return string.Equals(service.ServiceName, servicePrefix, StringComparison.OrdinalIgnoreCase)
                 ? "Tentacle"

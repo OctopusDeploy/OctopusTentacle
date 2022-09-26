@@ -12,13 +12,13 @@ namespace Octopus.Tentacle.Commands
 {
     public class ServerCommsCommand : AbstractStandardCommand
     {
-        readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
-        readonly ISystemLog log;
-        string serverThumbprint = null!;
-        string style = null!;
-        string serverHost = null!;
-        int serverPort = 10943;
-        string webSocket = null!;
+        private readonly Lazy<IWritableTentacleConfiguration> tentacleConfiguration;
+        private readonly ISystemLog log;
+        private string serverThumbprint = null!;
+        private string style = null!;
+        private string serverHost = null!;
+        private int serverPort = 10943;
+        private string webSocket = null!;
 
         public ServerCommsCommand(Lazy<IWritableTentacleConfiguration> tentacleConfiguration, ISystemLog log, IApplicationInstanceSelector selector, ILogFileOnlyLogger logFileOnlyLogger)
             : base(selector, log, logFileOnlyLogger)
@@ -56,7 +56,6 @@ namespace Octopus.Tentacle.Commands
             if (servers.None())
                 throw new ControlledFailureException("No trusted server was found with the supplied thumbprint");
 
-
             if (communicationStyle == CommunicationStyle.TentacleActive)
                 SetupActive(servers);
             else
@@ -67,7 +66,7 @@ namespace Octopus.Tentacle.Commands
             log.Info("Updated server communications configuration");
         }
 
-        void SetupPassive(OctopusServerConfiguration[] servers)
+        private void SetupPassive(OctopusServerConfiguration[] servers)
         {
             var server = servers.FirstOrDefault(s => s.Address == null)
                 ?? new OctopusServerConfiguration(serverThumbprint);
@@ -75,7 +74,7 @@ namespace Octopus.Tentacle.Commands
             tentacleConfiguration.Value.AddOrUpdateTrustedOctopusServer(server);
         }
 
-        void SetupActive(OctopusServerConfiguration[] servers)
+        private void SetupActive(OctopusServerConfiguration[] servers)
         {
             var address = GetActiveAddress();
 
@@ -91,13 +90,12 @@ namespace Octopus.Tentacle.Commands
                 var existingPollingConfiguration = servers.FirstOrDefault(s =>
                     s.CommunicationStyle == CommunicationStyle.TentacleActive && s.SubscriptionId != null);
                 server.SubscriptionId = existingPollingConfiguration?.SubscriptionId ?? new Uri($"poll://{RandomStringGenerator.Generate(20).ToLowerInvariant()}/").ToString();
-
             }
 
             tentacleConfiguration.Value.AddOrUpdateTrustedOctopusServer(server);
         }
 
-        Uri GetActiveAddress()
+        private Uri GetActiveAddress()
         {
             var hasHost = !string.IsNullOrWhiteSpace(serverHost);
             var hasWebSocket = !string.IsNullOrWhiteSpace(webSocket);

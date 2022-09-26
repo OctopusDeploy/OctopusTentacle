@@ -26,15 +26,13 @@ namespace Octopus.Tentacle.Configuration
         internal const string CertificateThumbprintSettingName = "Tentacle.CertificateThumbprint";
         internal const string LastReceivedHandshakeSettingName = "Tentacle.Communication.LastReceivedHandshake";
 
-        readonly IKeyValueStore settings;
-        readonly IHomeConfiguration home;
-        readonly IProxyConfiguration proxyConfiguration;
-        readonly IPollingProxyConfiguration pollingProxyConfiguration;
-        readonly ISystemLog log;
-
         // these are held in memory for when running without a config file.
         protected static X509Certificate2? CachedCertificate;
         protected static OctopusServerConfiguration? OctopusServerConfiguration;
+
+        private readonly IKeyValueStore settings;
+        private readonly IHomeConfiguration home;
+        private readonly ISystemLog log;
 
         public TentacleConfiguration(
             IKeyValueStore settings,
@@ -45,8 +43,8 @@ namespace Octopus.Tentacle.Configuration
         {
             this.settings = settings;
             this.home = home;
-            this.proxyConfiguration = proxyConfiguration;
-            this.pollingProxyConfiguration = pollingProxyConfiguration;
+            ProxyConfiguration = proxyConfiguration;
+            PollingProxyConfiguration = pollingProxyConfiguration;
             this.log = log;
         }
 
@@ -60,9 +58,9 @@ namespace Octopus.Tentacle.Configuration
             get { return TrustedOctopusServers.Select(s => s.Thumbprint); }
         }
 
-        public IProxyConfiguration ProxyConfiguration => proxyConfiguration;
+        public IProxyConfiguration ProxyConfiguration { get; }
 
-        public IPollingProxyConfiguration PollingProxyConfiguration => pollingProxyConfiguration;
+        public IPollingProxyConfiguration PollingProxyConfiguration { get; }
 
         public int ServicesPortNumber => settings.Get(ServicesPortSettingName, 10933);
 
@@ -90,11 +88,9 @@ namespace Octopus.Tentacle.Configuration
             }
         }
 
-        public string PackagesDirectory
-        {
+        public string PackagesDirectory =>
             // TODO: Still needed?
-            get { return Path.Combine(ApplicationDirectory, "Packages"); }
-        }
+            Path.Combine(ApplicationDirectory, "Packages");
 
         public string JournalFilePath => Path.Combine(home.HomeDirectory ?? ".", "DeploymentJournal.xml");
         public string PackageRetentionJournalPath => Path.Combine(home.HomeDirectory ?? ".", "PackageRetentionJournal.json");
@@ -107,10 +103,7 @@ namespace Octopus.Tentacle.Configuration
                     return CachedCertificate;
 
                 var thumbprint = settings.Get<string?>(CertificateThumbprintSettingName);
-                if (string.IsNullOrWhiteSpace(thumbprint))
-                {
-                    return null;
-                }
+                if (string.IsNullOrWhiteSpace(thumbprint)) return null;
 
                 var encoded = settings.Get<string>(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
                 return encoded is null || string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint!, encoded, log);
@@ -135,11 +128,11 @@ namespace Octopus.Tentacle.Configuration
         }
     }
 
-    class WritableTentacleConfiguration : TentacleConfiguration, IWritableTentacleConfiguration
+    internal class WritableTentacleConfiguration : TentacleConfiguration, IWritableTentacleConfiguration
     {
-        readonly IWritableKeyValueStore settings;
-        readonly ICertificateGenerator certificateGenerator;
-        readonly ISystemLog log;
+        private readonly IWritableKeyValueStore settings;
+        private readonly ICertificateGenerator certificateGenerator;
+        private readonly ISystemLog log;
 
         public WritableTentacleConfiguration(
             IWritableKeyValueStore settings,
@@ -186,7 +179,7 @@ namespace Octopus.Tentacle.Configuration
             return settings.Set(TrustedServersSettingName, servers ?? new OctopusServerConfiguration[0]);
         }
 
-        bool SetTentacleCertificate(X509Certificate2 certificate)
+        private bool SetTentacleCertificate(X509Certificate2 certificate)
         {
             return settings.Set(CertificateSettingName, CertificateEncoder.ToBase64String(certificate), ProtectionLevel.MachineKey) &&
                 settings.Set(CertificateThumbprintSettingName, certificate.Thumbprint);
@@ -216,7 +209,7 @@ namespace Octopus.Tentacle.Configuration
             return result;
         }
 
-        static bool AreEqual(OctopusServerConfiguration left, OctopusServerConfiguration right)
+        private static bool AreEqual(OctopusServerConfiguration left, OctopusServerConfiguration right)
         {
             var thumbprintsMatch = string.Compare(left.Thumbprint, right.Thumbprint, StringComparison.OrdinalIgnoreCase) == 0;
             var addressesMatch = Uri.Compare(left.Address, right.Address, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase) == 0;
@@ -224,7 +217,7 @@ namespace Octopus.Tentacle.Configuration
             return thumbprintsMatch && addressesMatch;
         }
 
-        static string NormalizeSquid(string squid)
+        private static string NormalizeSquid(string squid)
         {
             return squid.ToUpperInvariant();
         }
@@ -257,7 +250,7 @@ namespace Octopus.Tentacle.Configuration
             }));
         }
 
-        static string CommTypeToString(CommunicationStyle communicationStyle)
+        private static string CommTypeToString(CommunicationStyle communicationStyle)
         {
             if (communicationStyle == CommunicationStyle.TentacleActive)
                 return "polling tentacle";

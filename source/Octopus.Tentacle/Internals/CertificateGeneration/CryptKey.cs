@@ -1,16 +1,17 @@
-﻿#if NETFRAMEWORK
+﻿using System;
+#if NETFRAMEWORK
 using System;
 
 namespace Octopus.Tentacle.Internals.CertificateGeneration
 {
     public abstract class CryptKey : FinalizableObject
     {
-        readonly CryptContext ctx;
+        private readonly CryptContext ctx;
 
         internal CryptKey(CryptContext ctx, IntPtr handle)
         {
             this.ctx = ctx;
-            this.Handle = handle;
+            Handle = handle;
         }
 
         internal IntPtr Handle { get; }

@@ -6,9 +6,9 @@ namespace Octopus.Tentacle.Diagnostics
 {
     public class SensitiveValueMasker
     {
-        readonly object sensitiveDataMaskLock = new object();
-        Lazy<AhoCorasick?> trie;
-        SensitiveDataMask? sensitiveDataMask;
+        private readonly object sensitiveDataMaskLock = new();
+        private Lazy<AhoCorasick?> trie;
+        private SensitiveDataMask? sensitiveDataMask;
 
         public SensitiveValueMasker(string[]? sensitiveValues = null)
         {
@@ -79,7 +79,7 @@ namespace Octopus.Tentacle.Diagnostics
                 sensitiveDataMask?.Flush(trie.Value);
         }
 
-        AhoCorasick? CreateTrie()
+        private AhoCorasick? CreateTrie()
         {
             if (SensitiveValues.Length == 0)
                 return null;

@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Octopus.Tentacle.Internals.Options
 {
     public abstract class Option
     {
-        static readonly char[] NameTerminator = { '=', ':' };
+        private static readonly char[] NameTerminator = { '=', ':' };
 
         protected Option(string prototype, string? description, int maxValueCount)
         {
@@ -35,8 +34,8 @@ namespace Octopus.Tentacle.Internals.Options
                     string.Format("Cannot provide maxValueCount of {0} for OptionValueType.None.", maxValueCount),
                     "maxValueCount");
             if (Array.IndexOf(Names, "<>") >= 0 &&
-                (Names.Length == 1 && OptionValueType != OptionValueType.None ||
-                    Names.Length > 1 && MaxValueCount > 1))
+                ((Names.Length == 1 && OptionValueType != OptionValueType.None) ||
+                    (Names.Length > 1 && MaxValueCount > 1)))
                 throw new ArgumentException(
                     "The default option handler '<>' cannot require values.",
                     "prototype");
@@ -59,7 +58,9 @@ namespace Octopus.Tentacle.Internals.Options
         public string?[] Values { get; private set; } = new string?[0];
 
         public string[] GetNames()
-            => (string[])Names.Clone();
+        {
+            return (string[])Names.Clone();
+        }
 
         [return: NotNullIfNotNull("value")]
         [return: MaybeNull]
@@ -87,7 +88,7 @@ namespace Octopus.Tentacle.Internals.Options
             return t;
         }
 
-        OptionValueType ParsePrototype()
+        private OptionValueType ParsePrototype()
         {
             var type = '\0';
             var seps = new List<string>();
@@ -130,7 +131,7 @@ namespace Octopus.Tentacle.Internals.Options
             return type == '=' ? OptionValueType.Required : OptionValueType.Optional;
         }
 
-        static void AddSeparators(string name, int end, ICollection<string> seps)
+        private static void AddSeparators(string name, int end, ICollection<string> seps)
         {
             var start = -1;
             for (var i = end + 1; i < name.Length; ++i)
@@ -175,6 +176,8 @@ namespace Octopus.Tentacle.Internals.Options
         protected abstract void OnParseComplete(OptionContext c);
 
         public override string ToString()
-            => Prototype;
+        {
+            return Prototype;
+        }
     }
 }

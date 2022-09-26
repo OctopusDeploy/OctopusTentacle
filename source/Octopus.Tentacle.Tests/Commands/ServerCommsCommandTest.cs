@@ -16,11 +16,11 @@ namespace Octopus.Tentacle.Tests.Commands
 {
     public class ServerCommsCommandTest
     {
-        const string Thumb1 = "Thumbprint1";
-        const string Thumb2 = "Thumbprint2";
+        private const string Thumb1 = "Thumbprint1";
+        private const string Thumb2 = "Thumbprint2";
 
-        ICommand command;
-        StubTentacleConfiguration configuration;
+        private ICommand command;
+        private StubTentacleConfiguration configuration;
 
         [SetUp]
         public void SetUp()
@@ -33,10 +33,10 @@ namespace Octopus.Tentacle.Tests.Commands
                 new InMemoryLog(),
                 selector,
                 Substitute.For<ILogFileOnlyLogger>()
-                );
+            );
         }
 
-        void Execute(string thumbprint, CommunicationStyle style, string? host = null, string? port = null)
+        private void Execute(string thumbprint, CommunicationStyle style, string? host = null, string? port = null)
         {
             var parameters = new List<string>
             {
@@ -56,12 +56,12 @@ namespace Octopus.Tentacle.Tests.Commands
             );
         }
 
-        void AddTrusts(params string[] thumbprints)
+        private void AddTrusts(params string[] thumbprints)
         {
             configuration.TrustedOctopusThumbprints = thumbprints;
         }
 
-        static void Assert(OctopusServerConfiguration server, string thumbprint, CommunicationStyle style, Uri address)
+        private static void Assert(OctopusServerConfiguration server, string thumbprint, CommunicationStyle style, Uri address)
         {
             server.Thumbprint.Should().Be(thumbprint);
             server.CommunicationStyle.Should().Be(style);
@@ -70,7 +70,6 @@ namespace Octopus.Tentacle.Tests.Commands
             if (style == CommunicationStyle.TentacleActive)
                 server.SubscriptionId.Should().NotBeEmpty();
         }
-
 
         [Test]
         public void NoTrusts()
@@ -105,7 +104,7 @@ namespace Octopus.Tentacle.Tests.Commands
         {
             AddTrusts(Thumb1);
 
-            Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com", null);
+            Execute(Thumb1, CommunicationStyle.TentacleActive, "example.com");
 
             configuration.TrustedOctopusServers.Should().HaveCount(1);
             var server = configuration.TrustedOctopusServers.First();

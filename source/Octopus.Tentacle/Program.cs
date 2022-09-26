@@ -32,7 +32,7 @@ namespace Octopus.Tentacle
 
         protected override ApplicationName ApplicationName => ApplicationName.Tentacle;
 
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             return new Program(args).Run();
         }

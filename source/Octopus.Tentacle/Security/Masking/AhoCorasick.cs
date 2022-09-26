@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Security.Masking
 {
     public class AhoCorasick
     {
-        readonly Node root = new Node();
+        private readonly Node root = new();
 
         public void Add(string value)
         {
@@ -93,11 +93,11 @@ namespace Octopus.Tentacle.Security.Masking
 
         [DebuggerDisplay("{Prefix} | Children: {ChildCount}")]
         [DebuggerTypeProxy(typeof(NodeDebugView))]
-        class Node : IEnumerable<Node>
+        private class Node : IEnumerable<Node>
         {
-            Dictionary<char, Node> children;
-            char singleKey;
-            Node singleNode;
+            private Dictionary<char, Node> children;
+            private char singleKey;
+            private Node singleNode;
 
             public Node()
             {
@@ -169,13 +169,19 @@ namespace Octopus.Tentacle.Security.Masking
                 return Enumerable.Empty<Node>().GetEnumerator();
             }
 
-            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-            public override string ToString() => Prefix.ToString();
-
-            sealed class NodeDebugView
+            IEnumerator IEnumerable.GetEnumerator()
             {
-                readonly Node node;
+                return GetEnumerator();
+            }
+
+            public override string ToString()
+            {
+                return Prefix.ToString();
+            }
+
+            private sealed class NodeDebugView
+            {
+                private readonly Node node;
 
                 public NodeDebugView(Node node)
                 {

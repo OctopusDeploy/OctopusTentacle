@@ -5,7 +5,7 @@ using System.Security.Principal;
 
 namespace Octopus.Tentacle.Tests.Integration.Util
 {
-    class TestUserPrincipal
+    internal class TestUserPrincipal
     {
         public TestUserPrincipal(string username, string password = "Password01!")
         {
@@ -103,9 +103,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             }
         }
 
-        public NetworkCredential GetCredential() => new NetworkCredential(UserName, Password, DomainName);
+        public NetworkCredential GetCredential()
+        {
+            return new NetworkCredential(UserName, Password, DomainName);
+        }
 
         public override string ToString()
-            => NTAccountName;
+        {
+            return NTAccountName;
+        }
     }
 }

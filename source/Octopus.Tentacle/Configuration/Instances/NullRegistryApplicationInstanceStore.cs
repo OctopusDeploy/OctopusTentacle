@@ -7,10 +7,14 @@ namespace Octopus.Tentacle.Configuration.Instances
     public class NullRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
         public ApplicationInstanceRecord? GetInstanceFromRegistry(string instanceName)
-            => null;
+        {
+            return null;
+        }
 
         public IEnumerable<ApplicationInstanceRecord> GetListFromRegistry()
-            => Enumerable.Empty<ApplicationInstanceRecord>();
+        {
+            return Enumerable.Empty<ApplicationInstanceRecord>();
+        }
 
         public void DeleteFromRegistry(string instanceName)
         {

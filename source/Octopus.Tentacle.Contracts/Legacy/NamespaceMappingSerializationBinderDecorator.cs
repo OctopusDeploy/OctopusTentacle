@@ -5,9 +5,9 @@ namespace Octopus.Tentacle.Contracts.Legacy
 {
     public class NamespaceMappingSerializationBinderDecorator : ISerializationBinder
     {
-        readonly ISerializationBinder inner;
-        readonly string fromNamespace;
-        readonly string toNamespace;
+        private readonly ISerializationBinder inner;
+        private readonly string fromNamespace;
+        private readonly string toNamespace;
 
         public NamespaceMappingSerializationBinderDecorator(ISerializationBinder? inner, string fromNamespace, string toNamespace)
         {

@@ -1,8 +1,10 @@
+using System;
+
 namespace Octopus.Manager.Tentacle.PreReq
 {
     public class PrerequisiteCheckResult
     {
-        PrerequisiteCheckResult()
+        private PrerequisiteCheckResult()
         {
         }
 
@@ -29,7 +31,7 @@ namespace Octopus.Manager.Tentacle.PreReq
                 CommandLineSolution = commandLineSolution,
                 HelpLink = helpLink,
                 HelpLinkText = helpLinkText,
-				CommandLineOutput = commandLineOutput
+                CommandLineOutput = commandLineOutput
             };
             return result;
         }

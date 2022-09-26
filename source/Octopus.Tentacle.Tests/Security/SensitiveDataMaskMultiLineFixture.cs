@@ -120,7 +120,7 @@ namespace Octopus.Tentacle.Tests.Security
             Assert.AreEqual("multi" + SensitiveDataMask.Mask + "secret", result);
         }
 
-        AhoCorasick CreateTrie(params string[] args)
+        private AhoCorasick CreateTrie(params string[] args)
         {
             var trie = new AhoCorasick();
             foreach (var instance in args)

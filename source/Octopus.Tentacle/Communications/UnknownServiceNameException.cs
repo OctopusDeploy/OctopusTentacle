@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Communications
         {
             ServiceName = serviceName;
         }
-        
+
         public string ServiceName { get; }
     }
 }

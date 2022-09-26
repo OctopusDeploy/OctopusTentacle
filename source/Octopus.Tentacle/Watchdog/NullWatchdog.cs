@@ -5,7 +5,7 @@ namespace Octopus.Tentacle.Watchdog
 {
     public class NullWatchdog : IWatchdog
     {
-        static readonly WatchdogConfiguration EmptyWatchdogConfiguration = new WatchdogConfiguration(false, 0, "*");
+        private static readonly WatchdogConfiguration EmptyWatchdogConfiguration = new(false, 0, "*");
 
         public void Delete()
         {
@@ -17,8 +17,9 @@ namespace Octopus.Tentacle.Watchdog
             throw new ControlledFailureException("Watchdog is not supported on this operating system.");
         }
 
-        public WatchdogConfiguration GetConfiguration()
-            // nothing to see here
-            => EmptyWatchdogConfiguration;
+        public WatchdogConfiguration GetConfiguration() // nothing to see here
+        {
+            return EmptyWatchdogConfiguration;
+        }
     }
 }

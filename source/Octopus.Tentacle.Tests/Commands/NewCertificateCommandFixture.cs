@@ -13,8 +13,8 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class NewCertificateCommandFixture : CommandFixture<NewCertificateCommand>
     {
-        StubTentacleConfiguration configuration = null!;
-        ISystemLog log = null!;
+        private StubTentacleConfiguration configuration = null!;
+        private ISystemLog log = null!;
 
         [SetUp]
         public override void SetUp()

@@ -1,11 +1,12 @@
 ﻿#nullable disable
+using System;
 #if NETFRAMEWORK
 using System;
 using System.Runtime.InteropServices;
 
 namespace Octopus.Tentacle.Internals.CertificateGeneration
 {
-    class Win32Native
+    internal class Win32Native
     {
         [DllImport("AdvApi32.dll", ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -39,32 +40,23 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
         [DllImport("Crypt32.dll", ExactSpelling = true, SetLastError = true)]
         internal static extern IntPtr CertCreateSelfSignCertificate(
             IntPtr providerHandle,
-            [In]
-            CryptoApiBlob subjectIssuerBlob,
+            [In] CryptoApiBlob subjectIssuerBlob,
             int flags,
-            [In]
-            CryptKeyProviderInformation keyProviderInfo,
-            [In]
-            CryptoAlgorithmIdentifier signatureAlgorithm,
-            [In]
-            SystemTime startTime,
-            [In]
-            SystemTime endTime,
+            [In] CryptKeyProviderInformation keyProviderInfo,
+            [In] CryptoAlgorithmIdentifier signatureAlgorithm,
+            [In] SystemTime startTime,
+            [In] SystemTime endTime,
             IntPtr extensions);
 
         [DllImport("Crypt32.dll", ExactSpelling = true, SetLastError = true, EntryPoint = "CertCreateSelfSignCertificate")]
         internal static extern IntPtr CertCreateSelfSignCertificate_2008(
             IntPtr providerHandle,
-            [In]
-            CryptoApiBlob subjectIssuerBlob,
+            [In] CryptoApiBlob subjectIssuerBlob,
             int flags,
-            [In]
-            CryptKeyProviderInformation keyProviderInfo,
+            [In] CryptKeyProviderInformation keyProviderInfo,
             IntPtr signatureAlgorithm,
-            [In]
-            SystemTime startTime,
-            [In]
-            SystemTime endTime,
+            [In] SystemTime startTime,
+            [In] SystemTime endTime,
             IntPtr extensions);
 
         [DllImport("Crypt32.dll", ExactSpelling = true, SetLastError = true)]
@@ -74,10 +66,8 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool FileTimeToSystemTime(
-            [In]
-            ref long fileTime,
-            [Out]
-            SystemTime systemTime);
+            [In] ref long fileTime,
+            [Out] SystemTime systemTime);
 
         #region Nested type: CryptKeyProviderInformation
 
@@ -98,8 +88,7 @@ namespace Octopus.Tentacle.Internals.CertificateGeneration
         [StructLayout(LayoutKind.Sequential)]
         public class CryptoAlgorithmIdentifier
         {
-            [MarshalAs(UnmanagedType.LPStr)]
-            public string pszObjId;
+            [MarshalAs(UnmanagedType.LPStr)] public string pszObjId;
 
             public CryptoApiBlob parameters;
         }

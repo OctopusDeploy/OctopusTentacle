@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Diagnostics.Formatters
@@ -8,7 +7,9 @@ namespace Octopus.Tentacle.Diagnostics.Formatters
     {
         [return: NotNullIfNotNull("formatType")]
         public object? GetFormat(Type? formatType)
-            => formatType == typeof(ICustomFormatter) ? this : null;
+        {
+            return formatType == typeof(ICustomFormatter) ? this : null;
+        }
 
 #pragma warning disable 8766 // Though the signature says not to return null, if an empty string is returned it changes the behaviour
         public string? Format(string? format, object? arg, IFormatProvider? formatProvider)

@@ -15,9 +15,9 @@ namespace Octopus.Tentacle.Tests.Configuration
     [TestFixture]
     public class ApplicationInstanceStoreFixture
     {
-        IRegistryApplicationInstanceStore registryStore;
-        IOctopusFileSystem fileSystem;
-        ApplicationInstanceStore instanceStore;
+        private IRegistryApplicationInstanceStore registryStore;
+        private IOctopusFileSystem fileSystem;
+        private ApplicationInstanceStore instanceStore;
 
         [SetUp]
         public void Setup()
@@ -99,7 +99,7 @@ namespace Octopus.Tentacle.Tests.Configuration
 
             fileSystem.DirectoryExists(Arg.Any<string>()).Returns(true);
             fileSystem.FileExists(Arg.Any<string>()).Returns(true);
-            fileSystem.EnumerateFiles(instanceStore.InstancesFolder).Returns(new[] { configFilename});
+            fileSystem.EnumerateFiles(instanceStore.InstancesFolder).Returns(new[] { configFilename });
             fileSystem.ReadFile(Arg.Is(configFilename)).Returns("{\"Name\": \"instance 1\",\"ConfigurationFilePath\": \"fileConfigFilePath2\"}");
 
             var instance = instanceStore.LoadInstanceDetails("instance 1");

@@ -12,18 +12,18 @@ namespace Octopus.Manager.Tentacle.Controls
 {
     public class ServiceWatcher : ViewModel, IDisposable
     {
-        readonly string instanceName;
-        readonly string executablePath;
-        readonly Timer timer;
-        bool canRestart;
-        bool canStart;
-        bool canStop;
-        string statusSummary;
-        string runningAs;
-        bool isNotRunning;
-        bool isRunning;
-        bool isInstalled;
-        bool isBusy;
+        private readonly string instanceName;
+        private readonly string executablePath;
+        private readonly Timer timer;
+        private bool canRestart;
+        private bool canStart;
+        private bool canStop;
+        private string statusSummary;
+        private string runningAs;
+        private bool isNotRunning;
+        private bool isRunning;
+        private bool isInstalled;
+        private bool isBusy;
 
         public ServiceWatcher(ApplicationName application, string instanceName, string executablePath)
         {
@@ -164,10 +164,10 @@ namespace Octopus.Manager.Tentacle.Controls
         /// <param name="ignoreFailedExitCode">What it says on the box.</param>
         public CommandLineInvocation BuildCommand(string arguments, string systemArguments = null, bool ignoreFailedExitCode = false)
         {
-            return new CommandLineInvocation(executablePath, arguments.Replace("--instance", $"--instance \"{instanceName}\""), systemArguments) { IgnoreFailedExitCode = ignoreFailedExitCode};
+            return new CommandLineInvocation(executablePath, arguments.Replace("--instance", $"--instance \"{instanceName}\""), systemArguments) { IgnoreFailedExitCode = ignoreFailedExitCode };
         }
 
-        void OnTimerElapsed()
+        private void OnTimerElapsed()
         {
             if (isBusy)
                 return;

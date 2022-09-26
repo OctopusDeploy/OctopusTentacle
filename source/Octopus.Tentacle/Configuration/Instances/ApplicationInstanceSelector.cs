@@ -6,16 +6,16 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
-    class ApplicationInstanceSelector : IApplicationInstanceSelector
+    internal class ApplicationInstanceSelector : IApplicationInstanceSelector
     {
-        readonly IApplicationInstanceStore applicationInstanceStore;
-        readonly StartUpInstanceRequest startUpInstanceRequest;
-        readonly IApplicationConfigurationContributor[] instanceStrategies;
-        readonly IOctopusFileSystem fileSystem;
-        readonly ISystemLog log;
-        readonly object @lock = new object();
-        ApplicationInstanceConfiguration? current;
-        
+        private readonly IApplicationInstanceStore applicationInstanceStore;
+        private readonly StartUpInstanceRequest startUpInstanceRequest;
+        private readonly IApplicationConfigurationContributor[] instanceStrategies;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly ISystemLog log;
+        private readonly object @lock = new();
+        private ApplicationInstanceConfiguration? current;
+
         public ApplicationInstanceSelector(
             ApplicationName applicationName,
             IApplicationInstanceStore applicationInstanceStore,
@@ -32,6 +32,10 @@ namespace Octopus.Tentacle.Configuration.Instances
             ApplicationName = applicationName;
         }
 
+        public ApplicationInstanceConfiguration Current => LoadCurrentInstance();
+
+        public ApplicationName ApplicationName { get; }
+
         public bool CanLoadCurrentInstance()
         {
             try
@@ -45,36 +49,30 @@ namespace Octopus.Tentacle.Configuration.Instances
             }
         }
 
-        public ApplicationInstanceConfiguration Current => LoadCurrentInstance();
-
-        public ApplicationName ApplicationName { get; }
-
-        ApplicationInstanceConfiguration LoadCurrentInstance()
+        private ApplicationInstanceConfiguration LoadCurrentInstance()
         {
             if (current == null)
-            {
                 lock (@lock)
                 {
                     current ??= LoadInstance();
                 }
-            }
 
             return current;
         }
 
-        ApplicationInstanceConfiguration LoadInstance()
+        private ApplicationInstanceConfiguration LoadInstance()
         {
             var appInstance = LocateApplicationPrimaryConfiguration();
             EnsureConfigurationExists(appInstance.instanceName, appInstance.configurationpath);
 
             log.Verbose($"Loading configuration from {appInstance.configurationpath}");
             var writableConfig = new XmlFileKeyValueStore(fileSystem, appInstance.configurationpath);
-            
+
             var aggregatedKeyValueStore = ContributeAdditionalConfiguration(writableConfig);
             return new ApplicationInstanceConfiguration(appInstance.instanceName, appInstance.configurationpath, aggregatedKeyValueStore, writableConfig);
         }
 
-        void EnsureConfigurationExists(string? instanceName, string configurationPath)
+        private void EnsureConfigurationExists(string? instanceName, string configurationPath)
         {
             if (!fileSystem.FileExists(configurationPath))
             {
@@ -83,12 +81,12 @@ namespace Octopus.Tentacle.Configuration.Instances
                     "The file might have been manually removed without properly removing the instance and as such it is still listed as present." +
                     "The instance must be created again before you can interact with it."
                     : $"The configuration file at {configurationPath} could not be located at the specified location.";
-                    
+
                 throw new ControlledFailureException(message);
             }
         }
 
-        AggregatedKeyValueStore ContributeAdditionalConfiguration(XmlFileKeyValueStore writableConfig)
+        private AggregatedKeyValueStore ContributeAdditionalConfiguration(XmlFileKeyValueStore writableConfig)
         {
             // build composite configuration pulling values out of the environment
             var keyValueStores = instanceStrategies
@@ -99,34 +97,35 @@ namespace Octopus.Tentacle.Configuration.Instances
 
             // Allow contributed values to override the core writable values.
             keyValueStores.Add(writableConfig);
-            
+
             return new AggregatedKeyValueStore(keyValueStores.ToArray());
         }
 
-        (string? instanceName, string configurationpath) LocateApplicationPrimaryConfiguration()
+        private (string? instanceName, string configurationpath) LocateApplicationPrimaryConfiguration()
         {
             switch (startUpInstanceRequest)
             {
                 case StartUpRegistryInstanceRequest registryInstanceRequest:
-                {   //  `--instance` parameter provided. Use That
+                {
+                    //  `--instance` parameter provided. Use That
                     var indexInstance = applicationInstanceStore.LoadInstanceDetails(registryInstanceRequest.InstanceName);
                     return (indexInstance.InstanceName, indexInstance.ConfigurationFilePath);
                 }
-                case StartUpConfigFileInstanceRequest configFileInstanceRequest: 
-                {   // `--config` parameter provided. Use that 
+                case StartUpConfigFileInstanceRequest configFileInstanceRequest:
+                {
+                    // `--config` parameter provided. Use that 
                     return (null, configFileInstanceRequest.ConfigFile);
                 }
                 default:
-                {   // Look in CWD for config then fallback to Default Named Instance
+                {
+                    // Look in CWD for config then fallback to Default Named Instance
                     var rootPath = fileSystem.GetFullPath($"{ApplicationName}.config");
                     if (fileSystem.FileExists(rootPath))
                         return (null, rootPath);
 
                     if (!applicationInstanceStore.TryLoadInstanceDetails(null, out var indexDefaultInstance))
-                    {
                         throw new ControlledFailureException("There are no instances of OctopusServer configured on this machine. " +
                             "Please run the setup wizard, configure an instance using the command-line interface or specify a configuration file");
-                    }
 
                     return (indexDefaultInstance!.InstanceName, indexDefaultInstance!.ConfigurationFilePath);
                 }

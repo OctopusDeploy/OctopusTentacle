@@ -8,19 +8,20 @@ namespace Octopus.Tentacle.Startup
 {
     public abstract class AbstractCommand : ICommand
     {
+        private readonly List<ICommandOptions> optionSets = new();
+        private ICommandRuntime? runtime;
+
         protected AbstractCommand(ILogFileOnlyLogger logFileOnlyLogger)
         {
-            this.LogFileOnlyLogger = logFileOnlyLogger;
+            LogFileOnlyLogger = logFileOnlyLogger;
         }
-        protected ILogFileOnlyLogger LogFileOnlyLogger { get; }
 
-        readonly List<ICommandOptions> optionSets = new List<ICommandOptions>();
-        ICommandRuntime? runtime;
+        protected ILogFileOnlyLogger LogFileOnlyLogger { get; }
 
         public virtual bool SuppressConsoleLogging => false;
         public virtual bool CanRunAsService => false;
 
-        public OptionSet Options { get; } = new OptionSet();
+        public OptionSet Options { get; } = new();
 
         protected ICommandRuntime Runtime
         {
@@ -80,7 +81,7 @@ namespace Octopus.Tentacle.Startup
             Completed();
         }
 
-        void EnsureSensitiveParametersAreNotLoggedToLogFileOnlyLogger()
+        private void EnsureSensitiveParametersAreNotLoggedToLogFileOnlyLogger()
         {
             foreach (var sensitiveOption in Options.Where(x => x.Sensitive))
             foreach (var name in sensitiveOption.GetNames())

@@ -10,14 +10,11 @@ namespace Octopus.Tentacle.Commands
 {
     public class ListInstancesCommand : AbstractCommand
     {
-        static readonly string TextFormat = "text";
-        static readonly string JsonFormat = "json";
-        static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
+        private static readonly string TextFormat = "text";
+        private static readonly string JsonFormat = "json";
+        private static readonly string[] SupportedFormats = { TextFormat, JsonFormat };
 
-        readonly IApplicationInstanceStore instanceStore;
-        public string Format { get; set; } = TextFormat;
-
-        public override bool SuppressConsoleLogging => true;
+        private readonly IApplicationInstanceStore instanceStore;
 
         public ListInstancesCommand(IApplicationInstanceStore instanceStore, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
@@ -25,6 +22,10 @@ namespace Octopus.Tentacle.Commands
 
             Options.Add("format=", $"The format of the output ({string.Join(",", SupportedFormats)}). Defaults to {Format}.", v => Format = v);
         }
+
+        public string Format { get; set; } = TextFormat;
+
+        public override bool SuppressConsoleLogging => true;
 
         protected override void Start()
         {
@@ -46,16 +47,10 @@ namespace Octopus.Tentacle.Commands
             else if (string.Equals(Format, TextFormat, StringComparison.OrdinalIgnoreCase))
             {
                 if (instances.Any())
-                {
                     foreach (var instance in instances)
-                    {
                         results.AppendLine($"Instance '{instance.InstanceName}' uses configuration '{instance.ConfigurationFilePath}'.");
-                    }
-                }
                 else
-                {
                     results.Append("No instances installed");
-                }
             }
 
             return results.ToString();

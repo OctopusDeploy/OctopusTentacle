@@ -1,4 +1,5 @@
 ﻿// ReSharper disable RedundantUsingDirective
+
 using System;
 using System.IO;
 using System.Linq;
@@ -12,13 +13,13 @@ using Serilog;
 public static class Signing
 {
     // Keep this list in order by most likely to succeed
-    static readonly string[] SigningTimestampUrls = {
+    static readonly string[] SigningTimestampUrls =
+    {
         "http://timestamp.digicert.com?alg=sha256",
         "http://timestamp.comodoca.com"
     };
 
-    public static void Sign(params AbsolutePath[] files)
-    {
+    public static void Sign(params AbsolutePath[] files) =>
         Logging.InBlock("Signing and timestamping...", () =>
         {
             foreach (var file in files)
@@ -38,7 +39,7 @@ public static class Signing
                 && string.IsNullOrEmpty(Build.AzureKeyVaultTenantId)
                 && string.IsNullOrEmpty(Build.AzureKeyVaultAppSecret)
                 && string.IsNullOrEmpty(Build.AzureKeyVaultCertificateName))
-            { 
+            {
                 Log.Information("Signing files using signtool and the self-signed development code signing certificate.");
                 SignWithSignTool(files);
             }
@@ -48,8 +49,7 @@ public static class Signing
                 SignWithAzureSignTool(files);
             }
         });
-    }
-    
+
     public static bool HasAuthenticodeSignature(AbsolutePath fileInfo)
     {
         // note: Doesn't check if existing signatures are valid, only that one exists
@@ -89,16 +89,15 @@ public static class Signing
                     lastException = e;
                 }
             });
-            
+
             if (lastException == null) return;
         }
 
         if (lastException != null) throw lastException;
     }
-    
+
     static void SignWithAzureSignTool(AbsolutePath[] files)
     {
-        
         var lastException = default(Exception);
         foreach (var timestampUrl in SigningTimestampUrls)
         {
@@ -118,7 +117,7 @@ public static class Signing
                     arguments = files.Aggregate(arguments, (current, file) => current + $"\"{file}\" ");
 
                     Build.AzureSignTool(arguments);
-        
+
                     Log.Information($"Finished signing {files.Length} files.");
                 }
                 catch (Exception e)
@@ -126,7 +125,7 @@ public static class Signing
                     lastException = e;
                 }
             });
-            
+
             if (lastException == null) return;
         }
 

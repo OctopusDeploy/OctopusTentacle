@@ -6,10 +6,10 @@ namespace Octopus.Tentacle.Commands
 {
     public class CreateInstanceCommand : AbstractCommand
     {
-        readonly IApplicationInstanceManager instanceManager;
-        string instanceName = null!;
-        string config = null!;
-        string home = null!;
+        private readonly IApplicationInstanceManager instanceManager;
+        private string instanceName = null!;
+        private string config = null!;
+        private string home = null!;
 
         public CreateInstanceCommand(IApplicationInstanceManager instanceManager, ILogFileOnlyLogger logFileOnlyLogger) : base(logFileOnlyLogger)
         {
@@ -18,17 +18,13 @@ namespace Octopus.Tentacle.Commands
             Options.Add("config=", "Path to configuration file to create", v => config = v);
             Options.Add("home=", "[Optional] Path to the home directory - defaults to the same directory as the config file", v => home = v);
         }
-        
+
         protected override void Start()
         {
             if (string.IsNullOrWhiteSpace(instanceName))
-            {
                 instanceManager.CreateDefaultInstance(config, home);
-            }
             else
-            {
                 instanceManager.CreateInstance(instanceName, config, home);
-            }
         }
     }
 }

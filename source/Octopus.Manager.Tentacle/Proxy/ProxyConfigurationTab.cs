@@ -1,4 +1,6 @@
-﻿namespace Octopus.Manager.Tentacle.Proxy
+﻿using System;
+
+namespace Octopus.Manager.Tentacle.Proxy
 {
     /// <summary>
     /// Interaction logic for ProxyConfigurationTab.xaml

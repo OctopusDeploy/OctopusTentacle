@@ -1,4 +1,5 @@
-﻿using NSubstitute;
+﻿using System;
+using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Internals.Options;
 using Octopus.Tentacle.Startup;

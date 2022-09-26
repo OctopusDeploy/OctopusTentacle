@@ -9,7 +9,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
     /// </summary>
     public partial class ErrorDialog : Window
     {
-        ErrorDialog()
+        private ErrorDialog()
         {
             InitializeComponent();
         }
@@ -29,9 +29,9 @@ namespace Octopus.Manager.Tentacle.Dialogs
 
             var window = new ErrorDialog
             {
-                ErrorTextBox = {Text = errorAsString},
-                errorSummary = {Text = errorSummary},
-                title = {Text = title},
+                ErrorTextBox = { Text = errorAsString },
+                errorSummary = { Text = errorSummary },
+                title = { Text = title },
                 Title = title
             };
 
@@ -40,6 +40,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
                 window.ErrorTextBox.Visibility = Visibility.Collapsed;
                 window.Height = 230;
             }
+
             window.ShowDialog();
         }
 

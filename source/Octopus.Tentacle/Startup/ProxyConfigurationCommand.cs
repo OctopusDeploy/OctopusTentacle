@@ -8,13 +8,13 @@ namespace Octopus.Tentacle.Startup
 {
     public class ProxyConfigurationCommand : AbstractStandardCommand
     {
-        readonly Lazy<IWritableProxyConfiguration> proxyConfiguration;
-        readonly List<Action> operations = new List<Action>();
-        bool useAProxy;
-        string? host;
+        private readonly Lazy<IWritableProxyConfiguration> proxyConfiguration;
+        private readonly List<Action> operations = new();
+        private bool useAProxy;
+        private string? host;
 
         public ProxyConfigurationCommand(Lazy<IWritableProxyConfiguration> proxyConfiguration, IApplicationInstanceSelector instanceSelector, ISystemLog systemLog, ILogFileOnlyLogger logFileOnlyLogger)
-        : base(instanceSelector, systemLog, logFileOnlyLogger)
+            : base(instanceSelector, systemLog, logFileOnlyLogger)
         {
             this.proxyConfiguration = proxyConfiguration;
 
@@ -82,7 +82,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        void QueueOperation(Action action)
+        private void QueueOperation(Action action)
         {
             operations.Add(action);
         }

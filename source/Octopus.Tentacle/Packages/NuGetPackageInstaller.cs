@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Packages
 {
     public class NuGetPackageInstaller : IPackageInstaller
     {
-        readonly IOctopusFileSystem fileSystem;
+        private readonly IOctopusFileSystem fileSystem;
 
         public NuGetPackageInstaller(IOctopusFileSystem fileSystem)
         {
@@ -37,14 +37,16 @@ namespace Octopus.Tentacle.Packages
             return extracted.Count();
         }
 
-        class SuppliedDirectoryPackagePathResolver : PackagePathResolver
+        private class SuppliedDirectoryPackagePathResolver : PackagePathResolver
         {
             public SuppliedDirectoryPackagePathResolver(string packageDirectory) : base(packageDirectory, false)
             {
             }
 
             public override string GetInstallPath(PackageIdentity packageIdentity)
-                => Root;
+            {
+                return Root;
+            }
         }
     }
 }

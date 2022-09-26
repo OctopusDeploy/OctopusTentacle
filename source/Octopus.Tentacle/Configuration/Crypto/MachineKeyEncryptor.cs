@@ -13,7 +13,11 @@ namespace Octopus.Tentacle.Configuration.Crypto
             Current = PlatformDetection.IsRunningOnWindows ? new WindowsMachineKeyEncryptor() : LinuxEncryptor();
         }
 
-        static IMachineKeyEncryptor LinuxEncryptor()
+        private MachineKeyEncryptor()
+        {
+        }
+
+        private static IMachineKeyEncryptor LinuxEncryptor()
         {
             var log = new SystemLog();
             var filesystem = new OctopusPhysicalFileSystem(log);
@@ -25,17 +29,16 @@ namespace Octopus.Tentacle.Configuration.Crypto
             };
 
             return new LinuxMachineKeyEncryptor(log, keySources);
-
-        }
-
-        MachineKeyEncryptor()
-        {
         }
 
         public string Encrypt(string raw)
-            => Current.Encrypt(raw);
+        {
+            return Current.Encrypt(raw);
+        }
 
         public string Decrypt(string encrypted)
-            => Current.Decrypt(encrypted);
+        {
+            return Current.Decrypt(encrypted);
+        }
     }
 }

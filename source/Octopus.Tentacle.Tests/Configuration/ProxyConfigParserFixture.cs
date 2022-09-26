@@ -9,10 +9,10 @@ namespace Octopus.Tentacle.Tests.Configuration
 {
     public class ProxyConfigParserFixture
     {
-        const string Destination = "https://localhost";
+        private const string Destination = "https://localhost";
 
         [Test]
-        [Support.TestAttributes.WindowsTest]
+        [WindowsTest]
         public void ShouldParseToHalibutProxyOnWindows()
         {
             var log = new InMemoryLog();
@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             result.Should().BeNull();
         }
 
-        class StubProxyConfiguration : IProxyConfiguration
+        private class StubProxyConfiguration : IProxyConfiguration
         {
             public StubProxyConfiguration(bool useDefaultProxy,
                 string customProxyUsername,

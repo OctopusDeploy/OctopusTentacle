@@ -4,14 +4,14 @@ namespace Octopus.Tentacle.Util
 {
     public class DeletionOptions : IEquatable<DeletionOptions>
     {
-        DeletionOptions()
+        private DeletionOptions()
         {
             SleepBetweenAttemptsMilliseconds = 100;
         }
 
-        public static DeletionOptions TryThreeTimes => new DeletionOptions { RetryAttempts = 3, ThrowOnFailure = true };
+        public static DeletionOptions TryThreeTimes => new() { RetryAttempts = 3, ThrowOnFailure = true };
 
-        public static DeletionOptions TryThreeTimesIgnoreFailure => new DeletionOptions { RetryAttempts = 3, ThrowOnFailure = false };
+        public static DeletionOptions TryThreeTimesIgnoreFailure => new() { RetryAttempts = 3, ThrowOnFailure = false };
 
         public int RetryAttempts { get; private set; }
         public int SleepBetweenAttemptsMilliseconds { get; }
@@ -44,9 +44,13 @@ namespace Octopus.Tentacle.Util
         }
 
         public static bool operator ==(DeletionOptions left, DeletionOptions right)
-            => Equals(left, right);
+        {
+            return Equals(left, right);
+        }
 
         public static bool operator !=(DeletionOptions left, DeletionOptions right)
-            => !Equals(left, right);
+        {
+            return !Equals(left, right);
+        }
     }
 }

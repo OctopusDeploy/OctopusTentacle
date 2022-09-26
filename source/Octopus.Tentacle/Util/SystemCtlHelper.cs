@@ -5,7 +5,7 @@ namespace Octopus.Tentacle.Util
 {
     public class SystemCtlHelper
     {
-        readonly ISystemLog log;
+        private readonly ISystemLog log;
 
         public SystemCtlHelper(ISystemLog log)
         {
@@ -13,21 +13,31 @@ namespace Octopus.Tentacle.Util
         }
 
         public bool StartService(string serviceName, bool logFailureAsError = false)
-            => RunServiceCommand("start", serviceName, logFailureAsError);
+        {
+            return RunServiceCommand("start", serviceName, logFailureAsError);
+        }
 
         public bool RestartService(string serviceName, bool logFailureAsError = false)
-            => RunServiceCommand("restart", serviceName, logFailureAsError);
+        {
+            return RunServiceCommand("restart", serviceName, logFailureAsError);
+        }
 
         public bool StopService(string serviceName, bool logFailureAsError = false)
-            => RunServiceCommand("stop", serviceName, logFailureAsError);
+        {
+            return RunServiceCommand("stop", serviceName, logFailureAsError);
+        }
 
         public bool EnableService(string serviceName, bool logFailureAsError = false)
-            => RunServiceCommand("enable", serviceName, logFailureAsError);
+        {
+            return RunServiceCommand("enable", serviceName, logFailureAsError);
+        }
 
         public bool DisableService(string serviceName, bool logFailureAsError = false)
-            => RunServiceCommand("disable", serviceName, logFailureAsError);
+        {
+            return RunServiceCommand("disable", serviceName, logFailureAsError);
+        }
 
-        bool RunServiceCommand(string command, string serviceName, bool logFailureAsError)
+        private bool RunServiceCommand(string command, string serviceName, bool logFailureAsError)
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"systemctl {command} {serviceName}\"");
             var result = commandLineInvocation.ExecuteCommand();

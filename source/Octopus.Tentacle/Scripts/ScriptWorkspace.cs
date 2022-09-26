@@ -10,7 +10,7 @@ namespace Octopus.Tentacle.Scripts
     {
         protected readonly IOctopusFileSystem FileSystem;
 
-        TimeSpan scriptMutexAcquireTimeout = ScriptIsolationMutex.NoTimeout;
+        private TimeSpan scriptMutexAcquireTimeout = ScriptIsolationMutex.NoTimeout;
 
         public ScriptWorkspace(string workingDirectory, IOctopusFileSystem fileSystem)
         {

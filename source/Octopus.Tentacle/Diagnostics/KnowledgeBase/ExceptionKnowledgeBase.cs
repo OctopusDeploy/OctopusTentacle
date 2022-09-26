@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -10,7 +9,7 @@ namespace Octopus.Tentacle.Diagnostics.KnowledgeBase
 {
     public static class ExceptionKnowledgeBase
     {
-        static readonly List<ExceptionKnowledge> Rules = new List<ExceptionKnowledge>();
+        private static readonly List<ExceptionKnowledge> Rules = new();
 
         static ExceptionKnowledgeBase()
         {
@@ -86,8 +85,7 @@ namespace Octopus.Tentacle.Diagnostics.KnowledgeBase
         }
 
         public static bool TryInterpret(Exception exception,
-            [NotNullWhen(true)]
-            out ExceptionKnowledgeBaseEntry? entry)
+            [NotNullWhen(true)] out ExceptionKnowledgeBaseEntry? entry)
         {
             var unpacked = exception.UnpackFromContainers();
             try

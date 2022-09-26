@@ -69,15 +69,23 @@ namespace Octopus.Tentacle.Configuration
     public static class ProxyConfigurationExtensions
     {
         public static bool ProxyEnabled(this IProxyConfiguration config)
-            => config.UseDefaultProxy || config.UsingCustomProxy();
+        {
+            return config.UseDefaultProxy || config.UsingCustomProxy();
+        }
 
         public static bool ProxyDisabled(this IProxyConfiguration config)
-            => !config.ProxyEnabled();
+        {
+            return !config.ProxyEnabled();
+        }
 
         public static bool UsingCustomProxy(this IProxyConfiguration config)
-            => !string.IsNullOrWhiteSpace(config.CustomProxyHost);
+        {
+            return !string.IsNullOrWhiteSpace(config.CustomProxyHost);
+        }
 
         public static bool UsingDefaultCredentials(this IProxyConfiguration config)
-            => string.IsNullOrWhiteSpace(config.CustomProxyUsername);
+        {
+            return string.IsNullOrWhiteSpace(config.CustomProxyUsername);
+        }
     }
 }

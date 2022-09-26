@@ -19,7 +19,7 @@ namespace Octopus.Manager.Tentacle.PreReq
                     commandLineOutput: commandLineOutput);
         }
 
-        static bool CheckPowerShellIsInstalled(out string commandLineOutput)
+        private static bool CheckPowerShellIsInstalled(out string commandLineOutput)
         {
             var stdOut = new StringWriter();
             var stdErr = new StringWriter();

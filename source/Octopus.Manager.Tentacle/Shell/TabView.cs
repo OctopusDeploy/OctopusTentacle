@@ -9,17 +9,26 @@ namespace Octopus.Manager.Tentacle.Shell
 {
     public class TabView : TabItem, ITab
     {
-        public TabView()
-        {
-            if (DesignerProperties.GetIsInDesignMode(this))
-            {
-                Loaded += (sender, args) => { Header = Content; };
-            }
-        }
+        public static readonly DependencyProperty IsSkipEnabledProperty = DependencyProperty.Register("IsSkipEnabled", typeof(bool), typeof(TabView), new PropertyMetadata(false));
+        public static readonly DependencyProperty IsNextEnabledProperty = DependencyProperty.Register("IsNextEnabled", typeof(bool), typeof(TabView), new PropertyMetadata(true));
+        public static readonly DependencyProperty IsBackEnabledProperty = DependencyProperty.Register("IsBackEnabled", typeof(bool), typeof(TabView), new PropertyMetadata(true));
+        public static readonly DependencyProperty IsViewedProperty = DependencyProperty.Register("IsViewed", typeof(bool), typeof(TabView), new PropertyMetadata(false, IsViewedChanged));
+        public static readonly DependencyProperty RuleSetProperty = DependencyProperty.Register("RuleSet", typeof(string), typeof(TabView), new PropertyMetadata(null));
+        public static readonly DependencyProperty IsPreviousTabProperty = DependencyProperty.Register("IsPreviousTab", typeof(bool), typeof(TabView), new PropertyMetadata(false));
+        public static readonly DependencyProperty IsValidProperty = DependencyProperty.Register("IsValid", typeof(bool), typeof(TabView), new PropertyMetadata(false));
 
         static TabView()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof (TabView), new FrameworkPropertyMetadata(typeof (TabView)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(TabView), new FrameworkPropertyMetadata(typeof(TabView)));
+        }
+
+        public TabView()
+        {
+            if (DesignerProperties.GetIsInDesignMode(this))
+                Loaded += (sender, args) =>
+                {
+                    Header = Content;
+                };
         }
 
         public bool IsValid
@@ -34,7 +43,7 @@ namespace Octopus.Manager.Tentacle.Shell
             set => SetValue(RuleSetProperty, value);
         }
 
-        public ViewModel Model => ((ViewModel)DataContext);
+        public ViewModel Model => (ViewModel)DataContext;
 
         public bool IsSkipEnabled
         {
@@ -97,10 +106,7 @@ namespace Octopus.Manager.Tentacle.Shell
         {
             Model.PushRuleSet(RuleSet);
 
-            if (!Model.IsValid)
-            {
-                e.Cancel = true;
-            }
+            if (!Model.IsValid) e.Cancel = true;
             await Task.FromResult(0);
         }
 
@@ -109,21 +115,13 @@ namespace Octopus.Manager.Tentacle.Shell
             Model.PopRuleSet(RuleSet);
         }
 
-        static void IsViewedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void IsViewedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if ((bool)e.NewValue)
             {
-                var tab = (TabView) d;
+                var tab = (TabView)d;
                 tab.OnActivated();
             }
         }
-
-        public static readonly DependencyProperty IsSkipEnabledProperty = DependencyProperty.Register("IsSkipEnabled", typeof (bool), typeof (TabView), new PropertyMetadata(false));
-        public static readonly DependencyProperty IsNextEnabledProperty = DependencyProperty.Register("IsNextEnabled", typeof (bool), typeof (TabView), new PropertyMetadata(true));
-        public static readonly DependencyProperty IsBackEnabledProperty = DependencyProperty.Register("IsBackEnabled", typeof (bool), typeof (TabView), new PropertyMetadata(true));
-        public static readonly DependencyProperty IsViewedProperty = DependencyProperty.Register("IsViewed", typeof (bool), typeof (TabView), new PropertyMetadata(false, IsViewedChanged));
-        public static readonly DependencyProperty RuleSetProperty = DependencyProperty.Register("RuleSet", typeof (string), typeof (TabView), new PropertyMetadata(null));
-        public static readonly DependencyProperty IsPreviousTabProperty = DependencyProperty.Register("IsPreviousTab", typeof (bool), typeof (TabView), new PropertyMetadata(false));
-        public static readonly DependencyProperty IsValidProperty = DependencyProperty.Register("IsValid", typeof (bool), typeof (TabView), new PropertyMetadata(false));
     }
 }

@@ -6,11 +6,11 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Crypto
 {
-    public class LinuxGeneratedMachineKey: ICryptoKeyNixSource
+    public class LinuxGeneratedMachineKey : ICryptoKeyNixSource
     {
-        readonly ISystemLog log;
-        readonly IOctopusFileSystem fileSystem;
-        static string FileName = "/etc/octopus/machinekey";
+        private static readonly string FileName = "/etc/octopus/machinekey";
+        private readonly ISystemLog log;
+        private readonly IOctopusFileSystem fileSystem;
 
         public LinuxGeneratedMachineKey(ISystemLog log, IOctopusFileSystem fileSystem)
         {
@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             this.fileSystem = fileSystem;
         }
 
-        void Generate()
+        private void Generate()
         {
             log.Verbose("Machine key file does not yet exist. Generating key file that will be used to encrypt data on this machine");
             var d = new RijndaelManaged();
@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             fileSystem.WriteAllText(FileName, raw);
         }
 
-        (byte[] Key, byte[] IV) LoadFromFile()
+        private (byte[] Key, byte[] IV) LoadFromFile()
         {
             try
             {
@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Configuration.Crypto
             catch (Exception ex) when (ex is FormatException || ex is IndexOutOfRangeException)
             {
                 throw new InvalidOperationException($"Machine key file at `{FileName}` is corrupt and cannot be loaded. "
-                    + $"If this file previously contained a valid key to encrypt data, that data may no longer be retrievable."
+                    + "If this file previously contained a valid key to encrypt data, that data may no longer be retrievable."
                     + $"Remove the file `{FileName}` and allow Octopus to regenerate the key.");
             }
         }

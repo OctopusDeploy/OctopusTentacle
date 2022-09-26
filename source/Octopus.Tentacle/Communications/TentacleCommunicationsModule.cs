@@ -10,30 +10,7 @@ namespace Octopus.Tentacle.Communications
 {
     public class TentacleCommunicationsModule : Module
     {
-        protected override void Load(ContainerBuilder builder)
-        {
-            base.Load(builder);
-
-            builder.RegisterType<ProxyConfigParser>().As<IProxyConfigParser>();
-            builder.RegisterType<HalibutInitializer>().As<IHalibutInitializer>();
-            builder.RegisterType<AutofacServiceFactory>().As<IServiceFactory>();
-            builder.Register(c =>
-            {
-                var configuration = c.Resolve<ITentacleConfiguration>();
-                var services = c.Resolve<IServiceFactory>();
-                var halibutRuntime = new HalibutRuntimeBuilder()
-                    .WithServiceFactory(services)
-                    .WithServerCertificate(configuration.TentacleCertificate)
-                    .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
-                    .Build();
-                halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
-                halibutRuntime.SetFriendlyHtmlPageHeaders(FriendlyHtmlPageHeaders);
-                return halibutRuntime;
-            }).As<HalibutRuntime>().SingleInstance();
-            builder.RegisterType<OctopusServerChecker>().As<IOctopusServerChecker>();
-        }
-
-        static readonly string FriendlyHtmlPageContent = @"
+        private static readonly string FriendlyHtmlPageContent = @"
 <!doctype html>
 <html>
 <head>
@@ -61,14 +38,37 @@ namespace Octopus.Tentacle.Communications
 </body>
 </html>";
 
-        static readonly IEnumerable<KeyValuePair<string, string>> FriendlyHtmlPageHeaders = new List<KeyValuePair<string, string>>
+        private static readonly IEnumerable<KeyValuePair<string, string>> FriendlyHtmlPageHeaders = new List<KeyValuePair<string, string>>
         {
-            new KeyValuePair<string, string>("Content-Security-Policy", "default-src 'none'; style-src 'sha256-Og27Evh417GekW0LSWwdTR+KDPHniSjRY3CDgH5olCw='; img-src 'self'"),
-            new KeyValuePair<string, string>("Referrer-Policy", "no-referrer"),
-            new KeyValuePair<string, string>("X-Content-Type-Options", "nosniff"),
-            new KeyValuePair<string, string>("X-Frame-Options", "DENY"),
-            new KeyValuePair<string, string>("X-XSS-Protection",  "1; mode=block"),
-            new KeyValuePair<string, string>("Strict-Transport-Security",  "max-age=31536000")
+            new("Content-Security-Policy", "default-src 'none'; style-src 'sha256-Og27Evh417GekW0LSWwdTR+KDPHniSjRY3CDgH5olCw='; img-src 'self'"),
+            new("Referrer-Policy", "no-referrer"),
+            new("X-Content-Type-Options", "nosniff"),
+            new("X-Frame-Options", "DENY"),
+            new("X-XSS-Protection", "1; mode=block"),
+            new("Strict-Transport-Security", "max-age=31536000")
         };
+
+        protected override void Load(ContainerBuilder builder)
+        {
+            base.Load(builder);
+
+            builder.RegisterType<ProxyConfigParser>().As<IProxyConfigParser>();
+            builder.RegisterType<HalibutInitializer>().As<IHalibutInitializer>();
+            builder.RegisterType<AutofacServiceFactory>().As<IServiceFactory>();
+            builder.Register(c =>
+            {
+                var configuration = c.Resolve<ITentacleConfiguration>();
+                var services = c.Resolve<IServiceFactory>();
+                var halibutRuntime = new HalibutRuntimeBuilder()
+                    .WithServiceFactory(services)
+                    .WithServerCertificate(configuration.TentacleCertificate)
+                    .WithMessageSerializer(serializerBuilder => serializerBuilder.WithLegacyContractSupport())
+                    .Build();
+                halibutRuntime.SetFriendlyHtmlPageContent(FriendlyHtmlPageContent);
+                halibutRuntime.SetFriendlyHtmlPageHeaders(FriendlyHtmlPageHeaders);
+                return halibutRuntime;
+            }).As<HalibutRuntime>().SingleInstance();
+            builder.RegisterType<OctopusServerChecker>().As<IOctopusServerChecker>();
+        }
     }
 }

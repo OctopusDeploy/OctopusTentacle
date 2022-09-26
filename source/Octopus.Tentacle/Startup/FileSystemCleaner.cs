@@ -7,8 +7,8 @@ namespace Octopus.Tentacle.Startup
 {
     public class FileSystemCleaner
     {
-        readonly IOctopusFileSystem fileSystem;
-        readonly ISystemLog log;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly ISystemLog log;
 #if NETFX
         public const string PathsToDeleteOnStartupResource = "Octopus.Tentacle.Startup.PathsToDeleteOnStartup.netfx.txt";
 #else
@@ -29,14 +29,14 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        static Stream LoadStreamFromAssembly(string resource)
+        private static Stream LoadStreamFromAssembly(string resource)
         {
             var assembly = typeof(FileSystemCleaner).Assembly;
 
             return assembly.GetManifestResourceStream(resource) ?? throw new Exception($"Resource {resource} not found");
         }
 
-        void AttemptToDeleteEachEntryInStream(Stream stream)
+        private void AttemptToDeleteEachEntryInStream(Stream stream)
         {
             var root = Path.GetDirectoryName(typeof(FileSystemCleaner).Assembly.FullLocalPath()) ?? throw new Exception("Could not get directory");
             using (var reader = new StreamReader(stream))
@@ -62,7 +62,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        void DeleteFileOrDirectory(string path)
+        private void DeleteFileOrDirectory(string path)
         {
             if (fileSystem.DirectoryExists(path))
             {

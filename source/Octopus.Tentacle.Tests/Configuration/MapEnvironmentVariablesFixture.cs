@@ -150,7 +150,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             mapper.GetConfigurationValue("Octopus.Port").Should().Be("1234", "settings can only be set once, highest priority strategy will contribute first");
         }
 
-        class TestMapper : MapsEnvironmentValuesToConfigItems
+        private class TestMapper : MapsEnvironmentValuesToConfigItems
         {
             public TestMapper(string[] supportedConfigurationKeys, EnvironmentVariable[] requiredEnvironmentVariables, EnvironmentVariable[] optionalEnvironmentVariables, ILogFileOnlyLogger log) : base(log, supportedConfigurationKeys, requiredEnvironmentVariables, optionalEnvironmentVariables)
             {

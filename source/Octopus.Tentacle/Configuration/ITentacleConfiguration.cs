@@ -10,7 +10,6 @@ namespace Octopus.Tentacle.Configuration
     /// </summary>
     public interface ITentacleConfiguration
     {
-
         /// <summary>
         /// Gets the Squid for this tentacle.
         /// </summary>

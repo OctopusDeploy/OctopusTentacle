@@ -5,14 +5,14 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
-    class ApplicationInstanceManager : IApplicationInstanceManager
+    internal class ApplicationInstanceManager : IApplicationInstanceManager
     {
-        readonly IOctopusFileSystem fileSystem;
-        readonly ISystemLog log;
-        readonly IApplicationInstanceStore instanceStore;
-        readonly IApplicationInstanceSelector instanceSelector;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly ISystemLog log;
+        private readonly IApplicationInstanceStore instanceStore;
+        private readonly IApplicationInstanceSelector instanceSelector;
         private readonly ApplicationName applicationName;
-        readonly StartUpInstanceRequest startUpInstanceRequest;
+        private readonly StartUpInstanceRequest startUpInstanceRequest;
 
         public ApplicationInstanceManager(
             ApplicationName applicationName,
@@ -48,17 +48,17 @@ namespace Octopus.Tentacle.Configuration.Instances
             instanceStore.DeleteInstance(instanceName);
         }
 
-        void RegisterInstanceInIndex(string instanceName, string configurationFile)
+        private void RegisterInstanceInIndex(string instanceName, string configurationFile)
         {
             // If completely dynamic (no instance or configFile provided) then dont bother setting anything
             if (startUpInstanceRequest is StartUpDynamicInstanceRequest)
                 return;
-            
+
             var instance = new ApplicationInstanceRecord(instanceName, configurationFile);
             instanceStore.RegisterInstance(instance);
         }
 
-        void WriteHomeDirectory(string configurationFile, string homeDirectory)
+        private void WriteHomeDirectory(string configurationFile, string homeDirectory)
         {
             var keyValueStore = new XmlFileKeyValueStore(fileSystem, configurationFile);
             var homeConfig = new WritableHomeConfiguration(applicationName, keyValueStore, instanceSelector);
@@ -66,10 +66,10 @@ namespace Octopus.Tentacle.Configuration.Instances
             homeConfig.SetHomeDirectory(homeDirectory);
         }
 
-        void EnsureConfigurationFileExists(string configurationFile, string homeDirectory)
+        private void EnsureConfigurationFileExists(string configurationFile, string homeDirectory)
         {
             // Ensure we can write configuration file
-            string configurationDirectory = Path.GetDirectoryName(configurationFile) ?? homeDirectory;
+            var configurationDirectory = Path.GetDirectoryName(configurationFile) ?? homeDirectory;
             fileSystem.EnsureDirectoryExists(configurationDirectory);
             if (!fileSystem.FileExists(configurationFile))
             {
@@ -82,12 +82,10 @@ namespace Octopus.Tentacle.Configuration.Instances
             }
         }
 
-        (string ConfigurationFilePath, string HomeDirectory) ValidateConfigDirectory(string? configurationFile, string? homeDirectory)
+        private (string ConfigurationFilePath, string HomeDirectory) ValidateConfigDirectory(string? configurationFile, string? homeDirectory)
         {
             // If home directory is not provided, we should try use the config file path if provided, otherwise fallback to cwd
-            homeDirectory ??= (string.IsNullOrEmpty(configurationFile) ?
-                "." :
-                Path.GetDirectoryName(fileSystem.GetFullPath(configurationFile!)) ?? ".");
+            homeDirectory ??= string.IsNullOrEmpty(configurationFile) ? "." : Path.GetDirectoryName(fileSystem.GetFullPath(configurationFile!)) ?? ".";
 
             // Current "Indexed" installs require configuration file to be provided.
             // We can therefore assume that if its missing, it will end up being created in the cwd
@@ -96,14 +94,11 @@ namespace Octopus.Tentacle.Configuration.Instances
                 : configurationFile!;
 
             // If configuration File isn't rooted, root it to the home directory 
-            if (!Path.IsPathRooted(configurationFilePath))
-            {
-                configurationFilePath = Path.Combine(homeDirectory, configurationFilePath);
-            }
-            
+            if (!Path.IsPathRooted(configurationFilePath)) configurationFilePath = Path.Combine(homeDirectory, configurationFilePath);
+
             // get the configurationPath for writing, even if it is a relative path
             configurationFilePath = fileSystem.GetFullPath(configurationFilePath);
-            
+
             return (configurationFilePath, homeDirectory);
         }
     }

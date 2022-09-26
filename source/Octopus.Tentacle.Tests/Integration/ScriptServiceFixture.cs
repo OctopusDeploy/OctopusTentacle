@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration
     [TestFixture]
     public class ScriptServiceFixture
     {
-        IScriptService service;
+        private IScriptService service;
 
         [SetUp]
         public void SetUp()
@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var octopusPhysicalFileSystem = new OctopusPhysicalFileSystem(Substitute.For<ISystemLog>());
 
-            service = new ScriptService(PlatformDetection.IsRunningOnWindows ? (IShell) new PowerShell() : new Bash(),
+            service = new ScriptService(PlatformDetection.IsRunningOnWindows ? (IShell)new PowerShell() : new Bash(),
                 new ScriptWorkspaceFactory(octopusPhysicalFileSystem, homeConfiguration), octopusPhysicalFileSystem,
                 new SensitiveValueMasker(),
                 Substitute.For<ISystemLog>());
@@ -45,10 +45,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var ticket = service.StartScript(startScriptCommand);
 
-            while (service.GetStatus(new ScriptStatusRequest(ticket, 0)).State != ProcessState.Complete)
-            {
-                Thread.Sleep(100);
-            }
+            while (service.GetStatus(new ScriptStatusRequest(ticket, 0)).State != ProcessState.Complete) Thread.Sleep(100);
 
             var finalStatus = service.CompleteScript(new CompleteScriptCommand(ticket, 0));
             DumpLog(finalStatus);
@@ -71,10 +68,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var ticket = service.StartScript(startScriptCommand);
 
-            while (service.GetStatus(new ScriptStatusRequest(ticket, 0)).State != ProcessState.Complete)
-            {
-                Thread.Sleep(100);
-            }
+            while (service.GetStatus(new ScriptStatusRequest(ticket, 0)).State != ProcessState.Complete) Thread.Sleep(100);
 
             var finalStatus = service.CompleteScript(new CompleteScriptCommand(ticket, 0));
             DumpLog(finalStatus);
@@ -111,11 +105,12 @@ namespace Octopus.Tentacle.Tests.Integration
                     Thread.Sleep(pollInterval);
                     if (sw.Elapsed > safetyLimit) Assert.Fail("Did not start in a reasonable time");
                 }
+
                 Console.WriteLine("***" + state);
 
                 // Give it a chance to log something
                 Console.WriteLine("Waiting for something to get logged");
-                while ((service.GetStatus(new ScriptStatusRequest(ticket, 0)).State) == ProcessState.Running)
+                while (service.GetStatus(new ScriptStatusRequest(ticket, 0)).State == ProcessState.Running)
                 {
                     var status = service.GetStatus(new ScriptStatusRequest(ticket, 0));
                     Console.WriteLine($"{status.State} ({sw.Elapsed} elapsed)");
@@ -136,6 +131,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     Thread.Sleep(pollInterval);
                     if (sw.Elapsed > safetyLimit) Assert.Fail("Did not complete in a reasonable time");
                 }
+
                 Console.WriteLine("***" + state);
 
                 var finalStatus = service.CompleteScript(new CompleteScriptCommand(ticket, 0));
@@ -158,12 +154,9 @@ namespace Octopus.Tentacle.Tests.Integration
             }
         }
 
-        void DumpLog(ScriptStatusResponse finalStatus)
+        private void DumpLog(ScriptStatusResponse finalStatus)
         {
-            foreach (var log in finalStatus.Logs)
-            {
-                Console.WriteLine(log.Text);
-            }
+            foreach (var log in finalStatus.Logs) Console.WriteLine(log.Text);
         }
     }
 }

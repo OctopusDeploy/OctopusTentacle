@@ -7,7 +7,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 {
     public class TextBoxLogger : SystemLog
     {
-        readonly TextBox textBox;
+        private readonly TextBox textBox;
 
         public TextBoxLogger(TextBox textBox)
         {
@@ -30,16 +30,10 @@ namespace Octopus.Manager.Tentacle.Infrastructure
         protected override void WriteEvent(LogEvent logEvent)
         {
             var message = logEvent.MessageText;
-            if (logEvent.Category > LogCategory.Info)
-            {
-                message = logEvent.Category + ": " + logEvent.MessageText;
-            }
+            if (logEvent.Category > LogCategory.Info) message = logEvent.Category + ": " + logEvent.MessageText;
 
             WriteLine(message);
-            if (logEvent.Error != null)
-            {
-                WriteLine(logEvent.Error.ToString());
-            }
+            if (logEvent.Error != null) WriteLine(logEvent.Error.ToString());
         }
 
         public override void Flush()
@@ -51,7 +45,7 @@ namespace Octopus.Manager.Tentacle.Infrastructure
             return true;
         }
 
-        void WriteLine(string line)
+        private void WriteLine(string line)
         {
             if (textBox.Dispatcher.CheckAccess())
             {

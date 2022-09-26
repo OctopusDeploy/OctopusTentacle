@@ -1,7 +1,7 @@
 ﻿<UserControl x:Class="Octopus.Manager.Tentacle.Controls.AutoCompleteTagControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -9,12 +9,12 @@
              Margin="0,5,0,5"
              Name="Root" HorizontalAlignment="Stretch">
     <UserControl.Resources>
-        <controls:CustomIconDataTemplateSelector x:Key="CustomIconDataTemplateSelector"/>
-        <controls:CustomDataTemplateSelector x:Key="CustomDataTemplateSelector"/>
+        <controls:CustomIconDataTemplateSelector x:Key="CustomIconDataTemplateSelector" />
+        <controls:CustomDataTemplateSelector x:Key="CustomDataTemplateSelector" />
         <Style x:Key="RoundCorner" TargetType="{x:Type Button}">
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Padding" Value="1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="1" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Button}">
@@ -22,17 +22,18 @@
                             <Border x:Name="border" CornerRadius="10" Background="Transparent" Margin="1">
                                 <Viewbox Stretch="Uniform">
                                     <Canvas Name="svg4" Width="24" Height="24">
-                                        <Path Name="path2" Fill="#42000000" Data="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>
+                                        <Path Name="path2" Fill="#42000000"
+                                              Data="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" />
                                     </Canvas>
                                 </Viewbox>
                             </Border>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Fill" TargetName="path2" Value="#67000000"/>
+                                <Setter Property="Fill" TargetName="path2" Value="#67000000" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" TargetName="grid" Value="0.25"/>
+                                <Setter Property="Opacity" TargetName="grid" Value="0.25" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -42,55 +43,72 @@
     </UserControl.Resources>
     <Grid HorizontalAlignment="Stretch" Width="{Binding ElementName=Root, Path=Width}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <TextBlock Name="Label" Foreground="#2f93e0" FontSize="10" Text="{Binding Watermark, ElementName=Root}" Margin="0,5" Visibility="Hidden"/>
+        <TextBlock Name="Label" Foreground="#2f93e0" FontSize="10" Text="{Binding Watermark, ElementName=Root}"
+                   Margin="0,5" Visibility="Hidden" />
         <ItemsControl Grid.Row="1" ItemsSource="{Binding SelectedTags, ElementName=Root}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Border Background="#e7e7e7" CornerRadius="11" Margin="0,0,5,5">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Border Height="22" Width="22" Background="#42000000" CornerRadius="100">
-                                <ContentPresenter Content="{Binding TagName, ElementName=Root}" ContentTemplateSelector="{StaticResource CustomIconDataTemplateSelector}"/>
+                                <ContentPresenter Content="{Binding TagName, ElementName=Root}"
+                                                  ContentTemplateSelector="{StaticResource CustomIconDataTemplateSelector}" />
                             </Border>
-                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding}" Padding="5,2" Foreground="#333333" TextTrimming="CharacterEllipsis"/>
-                            <Button Style="{StaticResource RoundCorner}" Grid.Column="2" Width="22" Height="22" Command="{Binding RemoveCommand, ElementName=Root}" CommandParameter="{Binding}" Margin="0,0,2,0"/>
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding}" Padding="5,2"
+                                       Foreground="#333333" TextTrimming="CharacterEllipsis" />
+                            <Button Style="{StaticResource RoundCorner}" Grid.Column="2" Width="22" Height="22"
+                                    Command="{Binding RemoveCommand, ElementName=Root}" CommandParameter="{Binding}"
+                                    Margin="0,0,2,0" />
                         </Grid>
                     </Border>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <WrapPanel></WrapPanel>
+                    <WrapPanel />
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
         </ItemsControl>
         <Grid Grid.Row="2" HorizontalAlignment="Stretch">
-            <TextBox Name="TextBox" FontSize="12" Style="{DynamicResource MaterialDesignTextBox}" materialDesign:HintAssist.Hint="{Binding Watermark, ElementName=Root}" Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus" TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown" PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center" HorizontalAlignment="Stretch"/>
-            <Popup Name="SuggestionsPopup" AllowsTransparency="True" IsOpen="False" StaysOpen="True" PopupAnimation="Fade">
-                <Border BorderThickness="2" Width="{Binding ElementName=TextBox, Path=ActualWidth}" Background="White" CornerRadius="2">
+            <TextBox Name="TextBox" FontSize="12" Style="{DynamicResource MaterialDesignTextBox}"
+                     materialDesign:HintAssist.Hint="{Binding Watermark, ElementName=Root}"
+                     Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
+                     GotFocus="TextBox_OnGotFocus" LostFocus="TextBox_OnLostFocus"
+                     TextChanged="TextBoxBase_OnTextChanged" PreviewKeyDown="TextBox_OnPreviewKeyDown"
+                     PreviewMouseDown="TextBox_OnPreviewMouseDown" VerticalContentAlignment="Center"
+                     HorizontalAlignment="Stretch" />
+            <Popup Name="SuggestionsPopup" AllowsTransparency="True" IsOpen="False" StaysOpen="True"
+                   PopupAnimation="Fade">
+                <Border BorderThickness="2" Width="{Binding ElementName=TextBox, Path=ActualWidth}" Background="White"
+                        CornerRadius="2">
                     <Border.Effect>
-                        <DropShadowEffect BlurRadius="3" Opacity="0.8"  ShadowDepth="1" Color="Black"/>
+                        <DropShadowEffect BlurRadius="3" Opacity="0.8" ShadowDepth="1" Color="Black" />
                     </Border.Effect>
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <TextBlock Padding="5,2" Name="NoResultsTest" Text="No results found"/>
-                        <ListView Grid.Row="1" LostFocus="SuggestionsList_OnLostFocus" Name="SuggestionsList" ClipToBounds="False" Background="White" BorderThickness="0" ItemsSource="{Binding FilteredSuggestedTags.View, ElementName=Root}" SelectionMode="Single">
+                        <TextBlock Padding="5,2" Name="NoResultsTest" Text="No results found" />
+                        <ListView Grid.Row="1" LostFocus="SuggestionsList_OnLostFocus" Name="SuggestionsList"
+                                  ClipToBounds="False" Background="White" BorderThickness="0"
+                                  ItemsSource="{Binding FilteredSuggestedTags.View, ElementName=Root}"
+                                  SelectionMode="Single">
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem">
-                                    <Setter Property="ContentTemplateSelector" Value="{StaticResource CustomDataTemplateSelector}"/>
+                                    <Setter Property="ContentTemplateSelector"
+                                            Value="{StaticResource CustomDataTemplateSelector}" />
                                     <EventSetter Event="PreviewMouseLeftButtonDown" Handler="EventSetter_OnHandler" />
-                                    <EventSetter Event="KeyDown" Handler="EventSetter_OnHandler"/>
+                                    <EventSetter Event="KeyDown" Handler="EventSetter_OnHandler" />
                                 </Style>
                             </ListView.ItemContainerStyle>
                         </ListView>

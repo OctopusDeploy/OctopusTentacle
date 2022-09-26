@@ -15,10 +15,10 @@ namespace Octopus.Tentacle.Tests.Configuration
     [TestFixture]
     public class EnvFileConfigurationContributorFixture
     {
-        IOctopusFileSystem fileSystem = null!;
-        IEnvFileLocator fileLocator = null!;
-        IMapEnvironmentValuesToConfigItems mapper = null!;
-        
+        private IOctopusFileSystem fileSystem = null!;
+        private IEnvFileLocator fileLocator = null!;
+        private IMapEnvironmentValuesToConfigItems mapper = null!;
+
         [SetUp]
         public void SetUp()
         {
@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void CommentsGetIgnored()
         {
             fileLocator.LocateEnvFile().Returns("test");
-            SetTextContents( "", "# some comment to test", "OCTOPUS_HOME=.");
+            SetTextContents("", "# some comment to test", "OCTOPUS_HOME=.");
             SetSupportedEnvironmentVariables("OCTOPUS_HOME");
 
             var results = EnvFileConfigurationContributor.LoadFromEnvFile(fileLocator, fileSystem, mapper);
@@ -77,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Configuration
         public void IsNotConfiguredWhenNoEnvFile()
         {
             fileLocator.LocateEnvFile().Returns((string?)null);
-         
+
             var subject = new EnvFileConfigurationContributor(fileSystem, fileLocator, mapper);
             subject.LoadContributedConfiguration().Should().BeNull("there isn't an instance when there is no envFile");
         }
@@ -101,25 +101,24 @@ namespace Octopus.Tentacle.Tests.Configuration
                 fileLocator.LocateEnvFile().Returns("test");
                 SetTextContents("OCTOPUS_HOME=.");
                 SetSupportedEnvironmentVariables("OCTOPUS_HOME");
-          
 
                 var subject = new EnvFileConfigurationContributor(fileSystem, fileLocator, mapper);
                 subject.LoadContributedConfiguration().Should().NotBeNull("there is an instance when there is a file");
             }
         }
 
-        void SetSupportedEnvironmentVariables(params string[] environmentVariableName)
+        private void SetSupportedEnvironmentVariables(params string[] environmentVariableName)
         {
-            var hashSet = new HashSet<EnvironmentVariable>(environmentVariableName.Select(c =>  EnvironmentVariable.PlaintText(c)));
+            var hashSet = new HashSet<EnvironmentVariable>(environmentVariableName.Select(c => EnvironmentVariable.PlaintText(c)));
             mapper.SupportedEnvironmentVariables.Returns(hashSet);
         }
 
-        void SetTextContents(params string[] content)
+        private void SetTextContents(params string[] content)
         {
             fileSystem.ReadAllText("test").Returns(TestFileContent(content));
         }
-        
-        string TestFileContent(string[] content)
+
+        private string TestFileContent(string[] content)
         {
             var lines = content.ToArray();
             var textContent = string.Join(Environment.NewLine, lines);

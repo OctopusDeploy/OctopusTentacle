@@ -9,7 +9,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Configuration
 {
-    abstract class RoundTripTestBaseFixture
+    internal abstract class RoundTripTestBaseFixture
     {
         protected readonly string ConfigurationFile;
         protected readonly OctopusPhysicalFileSystem FileSystem;

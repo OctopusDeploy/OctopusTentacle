@@ -6,10 +6,14 @@ namespace Octopus.Tentacle.Scripts
     public class Bash : IShell
     {
         public string GetFullPath()
-            => GetFullBashPath();
+        {
+            return GetFullBashPath();
+        }
 
         public static string GetFullBashPath()
-            => "/bin/bash";
+        {
+            return "/bin/bash";
+        }
 
         public string FormatCommandArguments(string bootstrapFile, string[]? scriptArguments, bool allowInteractive)
         {

@@ -14,8 +14,8 @@ namespace Octopus.Tentacle.Tests.Startup
 {
     public class WatchdogCommandFixture
     {
-        IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
-        WatchdogCommand command;
+        private IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
+        private WatchdogCommand command;
 
         [SetUp]
         public void Setup()
@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Tests.Startup
         [WindowsTest]
         public void ChecksThatUserIsElevated()
         {
-            command.Start(new [] { "--create" }, Substitute.For<ICommandRuntime>(), new OptionSet());
+            command.Start(new[] { "--create" }, Substitute.For<ICommandRuntime>(), new OptionSet());
             windowsLocalAdminRightsChecker.Received(1).AssertIsRunningElevated();
         }
     }

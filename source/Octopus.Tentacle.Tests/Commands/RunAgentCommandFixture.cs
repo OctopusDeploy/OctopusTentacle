@@ -3,7 +3,6 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Certificates;
-using Octopus.Tentacle.Versioning;
 using Octopus.Tentacle.Commands;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
@@ -11,6 +10,7 @@ using Octopus.Tentacle.Configuration.Instances;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
+using Octopus.Tentacle.Versioning;
 using Octopus.Time;
 
 namespace Octopus.Tentacle.Tests.Commands
@@ -18,11 +18,11 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class RunAgentCommandFixture : CommandFixture<RunAgentCommand>
     {
-        IHalibutInitializer halibut = null!;
-        IWritableTentacleConfiguration tentacleConfiguration = null!;
-        ISleep sleep = null!;
-        IHomeConfiguration home = null!;
-        IApplicationInstanceSelector selector = null!;
+        private IHalibutInitializer halibut = null!;
+        private IWritableTentacleConfiguration tentacleConfiguration = null!;
+        private ISleep sleep = null!;
+        private IHomeConfiguration home = null!;
+        private IApplicationInstanceSelector selector = null!;
 
         [SetUp]
         public override void SetUp()

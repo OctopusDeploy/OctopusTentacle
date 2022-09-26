@@ -9,14 +9,14 @@ namespace Octopus.Tentacle.Startup
 {
     public class WatchdogCommand : AbstractCommand
     {
-        readonly ISystemLog log;
-        readonly ApplicationName applicationName;
-        readonly Lazy<IWatchdog> watchdog;
-        readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
-        int interval = 5;
-        bool createTask;
-        bool deleteTask;
-        HashSet<string> instances = new HashSet<string> { "*" };
+        private readonly ISystemLog log;
+        private readonly ApplicationName applicationName;
+        private readonly Lazy<IWatchdog> watchdog;
+        private readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
+        private int interval = 5;
+        private bool createTask;
+        private bool deleteTask;
+        private HashSet<string> instances = new() { "*" };
 
         public WatchdogCommand(
             ISystemLog log,

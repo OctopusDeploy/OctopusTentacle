@@ -22,6 +22,8 @@ namespace Octopus.Tentacle.Util
         public bool IgnoreFailedExitCode { get; set; }
 
         public override string ToString()
-            => "\"" + Executable + "\" " + Arguments;
+        {
+            return "\"" + Executable + "\" " + Arguments;
+        }
     }
 }

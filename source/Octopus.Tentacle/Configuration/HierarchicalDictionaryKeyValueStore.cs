@@ -7,7 +7,7 @@ namespace Octopus.Tentacle.Configuration
 {
     public abstract class HierarchicalDictionaryKeyValueStore : DictionaryKeyValueStore
     {
-        readonly JsonSerializerSettings jsonSerializerSettings;
+        private readonly JsonSerializerSettings jsonSerializerSettings;
 
         protected HierarchicalDictionaryKeyValueStore(JsonSerializerSettings jsonSerializerSettings, bool autoSaveOnSet = true, bool isWriteOnly = false) : base(autoSaveOnSet, isWriteOnly)
         {
@@ -15,13 +15,15 @@ namespace Octopus.Tentacle.Configuration
         }
 
         public override TData? Get<TData>(string name, TData? defaultValue, ProtectionLevel protectionLevel = ProtectionLevel.None) where TData : default
-            => throw new NotImplementedException("This ");
+        {
+            throw new NotImplementedException("This ");
+        }
 
         public override bool Set<TData>(string name, TData value, ProtectionLevel protectionLevel = ProtectionLevel.None)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
 
-            if (value == null || value is string s && string.IsNullOrWhiteSpace(s))
+            if (value == null || (value is string s && string.IsNullOrWhiteSpace(s)))
             {
                 Write(name, null);
                 if (AutoSaveOnSet)

@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Configuration
         public const string ProxyUsernameSettingName = "Octopus.Proxy.ProxyUsername";
         public const string ProxyPasswordSettingName = "Octopus.Proxy.ProxyPassword";
 
-        readonly IKeyValueStore settings;
+        private readonly IKeyValueStore settings;
 
         public ProxyConfiguration(IKeyValueStore settings)
         {
@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Configuration
 
     public class WritableProxyConfiguration : ProxyConfiguration, IWritableProxyConfiguration
     {
-        readonly IWritableKeyValueStore settings;
+        private readonly IWritableKeyValueStore settings;
 
         public WritableProxyConfiguration(IWritableKeyValueStore settings) : base(settings)
         {
@@ -36,18 +36,28 @@ namespace Octopus.Tentacle.Configuration
         }
 
         public bool SetUseDefaultProxy(bool useDefaultProxy)
-            => settings.Set(ProxyUseDefaultSettingName, useDefaultProxy);
+        {
+            return settings.Set(ProxyUseDefaultSettingName, useDefaultProxy);
+        }
 
         public bool SetCustomProxyUsername(string? username)
-            => settings.Set(ProxyUsernameSettingName, username);
+        {
+            return settings.Set(ProxyUsernameSettingName, username);
+        }
 
         public bool SetCustomProxyPassword(string? password)
-            => settings.Set(ProxyPasswordSettingName, password, ProtectionLevel.MachineKey);
+        {
+            return settings.Set(ProxyPasswordSettingName, password, ProtectionLevel.MachineKey);
+        }
 
         public bool SetCustomProxyHost(string? host)
-            => settings.Set(ProxyHostSettingName, host);
+        {
+            return settings.Set(ProxyHostSettingName, host);
+        }
 
         public bool SetCustomProxyPort(int port)
-            => settings.Set(ProxyPortSettingName, port);
+        {
+            return settings.Set(ProxyPortSettingName, port);
+        }
     }
 }

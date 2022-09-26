@@ -22,10 +22,10 @@ namespace Octopus.Tentacle.Tests.Commands
     [TestFixture]
     public class DeregisterWorkerCommandFixture : CommandFixture<DeregisterWorkerCommand>
     {
-        ISystemLog log;
-        IProxyConfigParser proxyConfig;
-        IOctopusSpaceAsyncRepository asyncRepository;
-        IApplicationInstanceSelector selector;
+        private ISystemLog log;
+        private IProxyConfigParser proxyConfig;
+        private IOctopusSpaceAsyncRepository asyncRepository;
+        private IApplicationInstanceSelector selector;
 
         [SetUp]
         public override void SetUp()

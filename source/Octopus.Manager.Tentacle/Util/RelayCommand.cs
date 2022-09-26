@@ -5,9 +5,9 @@ namespace Octopus.Manager.Tentacle.Util
 {
     public class RelayCommand<T> : ICommand
     {
-        readonly Action<T> execute;
+        private readonly Action<T> execute;
 
-        readonly Predicate<T> canExecute;
+        private readonly Predicate<T> canExecute;
 
         public RelayCommand(Action<T> execute) : this(execute, null)
         {
@@ -23,18 +23,12 @@ namespace Octopus.Manager.Tentacle.Util
         {
             add
             {
-                if (canExecute != null)
-                {
-                    CommandManager.RequerySuggested += value;
-                }
+                if (canExecute != null) CommandManager.RequerySuggested += value;
             }
 
             remove
             {
-                if (canExecute != null)
-                {
-                    CommandManager.RequerySuggested -= value;
-                }
+                if (canExecute != null) CommandManager.RequerySuggested -= value;
             }
         }
 

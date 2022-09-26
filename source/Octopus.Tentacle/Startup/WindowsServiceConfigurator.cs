@@ -14,9 +14,9 @@ namespace Octopus.Tentacle.Startup
 {
     public class WindowsServiceConfigurator : IServiceConfigurator
     {
-        readonly ISystemLog log;
-        readonly ILogFileOnlyLogger logFileOnlyLogger;
-        readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
+        private readonly ISystemLog log;
+        private readonly ILogFileOnlyLogger logFileOnlyLogger;
+        private readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
 
         public WindowsServiceConfigurator(
             ISystemLog log,
@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Startup
                 serviceConfigurationState);
         }
 
-        void ConfigureService(string thisServiceName,
+        private void ConfigureService(string thisServiceName,
             string exePath,
             string? instance,
             string? configPath,
@@ -67,20 +67,11 @@ namespace Octopus.Tentacle.Startup
             var services = ServiceController.GetServices();
             var controller = services.FirstOrDefault(s => s.ServiceName == thisServiceName);
 
-            if (serviceConfigurationState.Restart)
-            {
-                RestartService(thisServiceName, controller);
-            }
+            if (serviceConfigurationState.Restart) RestartService(thisServiceName, controller);
 
-            if (serviceConfigurationState.Stop)
-            {
-                StopService(thisServiceName, controller);
-            }
+            if (serviceConfigurationState.Stop) StopService(thisServiceName, controller);
 
-            if (serviceConfigurationState.Uninstall)
-            {
-                UninstallService(thisServiceName, controller);
-            }
+            if (serviceConfigurationState.Uninstall) UninstallService(thisServiceName, controller);
 
             var serviceDependencies = new List<string>();
             serviceDependencies.AddRange(new[] { "LanmanWorkstation", "TCPIP" });
@@ -93,28 +84,17 @@ namespace Octopus.Tentacle.Startup
             }
 
             if (serviceConfigurationState.Install)
-            {
                 controller = InstallService(thisServiceName, exePath, instance, configPath,
                     serviceDescription, serviceConfigurationState, controller, serviceDependencies);
-            }
 
-            if (serviceConfigurationState.Reconfigure)
-            {
-                ReconfigureService(thisServiceName, exePath, instance, configPath, serviceDescription, serviceDependencies);
-            }
+            if (serviceConfigurationState.Reconfigure) ReconfigureService(thisServiceName, exePath, instance, configPath, serviceDescription, serviceDependencies);
 
-            if ((serviceConfigurationState.Install || serviceConfigurationState.Reconfigure) && !string.IsNullOrWhiteSpace(serviceConfigurationState.Username))
-            {
-                ConfigureCredentialsForService(thisServiceName, serviceConfigurationState);
-            }
+            if ((serviceConfigurationState.Install || serviceConfigurationState.Reconfigure) && !string.IsNullOrWhiteSpace(serviceConfigurationState.Username)) ConfigureCredentialsForService(thisServiceName, serviceConfigurationState);
 
-            if (serviceConfigurationState.Start)
-            {
-                StartService(thisServiceName, controller);
-            }
+            if (serviceConfigurationState.Start) StartService(thisServiceName, controller);
         }
 
-        void ConfigureCredentialsForService(string thisServiceName, ServiceConfigurationState serviceConfigurationState)
+        private void ConfigureCredentialsForService(string thisServiceName, ServiceConfigurationState serviceConfigurationState)
         {
             if (!string.IsNullOrWhiteSpace(serviceConfigurationState.Password))
             {
@@ -141,7 +121,7 @@ namespace Octopus.Tentacle.Startup
             log.Info("Service credentials set");
         }
 
-        void ReconfigureService(string thisServiceName,
+        private void ReconfigureService(string thisServiceName,
             string exePath,
             string? instance,
             string? configPath,
@@ -158,7 +138,7 @@ namespace Octopus.Tentacle.Startup
             log.Info("Service reconfigured");
         }
 
-        ServiceController? InstallService(string thisServiceName,
+        private ServiceController? InstallService(string thisServiceName,
             string exePath,
             string? instance,
             string? configPath,
@@ -190,22 +170,16 @@ namespace Octopus.Tentacle.Startup
             return controller;
         }
 
-        static string InstanceIdentifier(string? instance, string? configPath)
+        private static string InstanceIdentifier(string? instance, string? configPath)
         {
-            if (!string.IsNullOrEmpty(instance))
-            {
-                return $"--instance=\\\"{instance}\\\"\"";
-            }
+            if (!string.IsNullOrEmpty(instance)) return $"--instance=\\\"{instance}\\\"\"";
 
-            if (!string.IsNullOrEmpty(configPath))
-            {
-                return $"--config=\\\"{configPath}\\\"\"";
-            }
+            if (!string.IsNullOrEmpty(configPath)) return $"--config=\\\"{configPath}\\\"\"";
 
             throw new InvalidOperationException("Either the instance name of configuration path must be provided to configure a service");
         }
 
-        void UninstallService(string thisServiceName, ServiceController? controller)
+        private void UninstallService(string thisServiceName, ServiceController? controller)
         {
             if (controller == null)
             {
@@ -219,7 +193,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        void StopService(string thisServiceName, ServiceController? controller)
+        private void StopService(string thisServiceName, ServiceController? controller)
         {
             if (controller == null)
                 logFileOnlyLogger.Info($"Stop requested for service {thisServiceName}, but service controller was not found. Skipping.");
@@ -227,7 +201,7 @@ namespace Octopus.Tentacle.Startup
                 TryStopService(controller);
         }
 
-        void RestartService(string thisServiceName, ServiceController? controller)
+        private void RestartService(string thisServiceName, ServiceController? controller)
         {
             if (controller == null)
             {
@@ -243,7 +217,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        bool TryStopService(ServiceController controller)
+        private bool TryStopService(ServiceController controller)
         {
             if (controller.Status != ServiceControllerStatus.Stopped && controller.Status != ServiceControllerStatus.StopPending)
             {
@@ -282,7 +256,7 @@ namespace Octopus.Tentacle.Startup
             return true;
         }
 
-        void StartService(string thisServiceName, ServiceController? controller)
+        private void StartService(string thisServiceName, ServiceController? controller)
         {
             if (controller == null)
                 throw new ControlledFailureException($"Start requested for service {thisServiceName}, but no service with this name was found.");
@@ -290,7 +264,6 @@ namespace Octopus.Tentacle.Startup
             if (controller.Status != ServiceControllerStatus.Running)
             {
                 if (controller.Status != ServiceControllerStatus.StartPending)
-                {
                     Policy
                         .Handle<Exception>()
                         .WaitAndRetry(5, i => TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), (_, span) => log.Warn($"Failed to start the windows service. Trying again in...{span} "))
@@ -299,7 +272,6 @@ namespace Octopus.Tentacle.Startup
                             {
                                 controller.Start();
                             });
-                }
 
                 WaitForControllerStatus(controller, ServiceControllerStatus.Running);
 
@@ -307,7 +279,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        void WaitForControllerToBeReadyToStop(ServiceController controller)
+        private void WaitForControllerToBeReadyToStop(ServiceController controller)
         {
             Retry(() =>
                 {
@@ -319,7 +291,7 @@ namespace Octopus.Tentacle.Startup
                 150);
         }
 
-        void WaitForControllerStatus(ServiceController controller, ServiceControllerStatus status)
+        private void WaitForControllerStatus(ServiceController controller, ServiceControllerStatus status)
         {
             Retry(() =>
                 {
@@ -331,7 +303,7 @@ namespace Octopus.Tentacle.Startup
                 150);
         }
 
-        void Sc(string arguments)
+        private void Sc(string arguments)
         {
             var outputBuilder = new StringBuilder();
             var argumentsToLog = string.Join(" ", arguments);
@@ -348,7 +320,7 @@ namespace Octopus.Tentacle.Startup
                 log.Error(outputBuilder.ToString());
         }
 
-        void Retry(Func<bool> func, int maxRetries)
+        private void Retry(Func<bool> func, int maxRetries)
         {
             var currentRetry = 0;
             while (!func())

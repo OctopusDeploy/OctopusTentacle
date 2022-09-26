@@ -8,13 +8,13 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Configuration.Instances
 {
-    class ApplicationInstanceStore : IApplicationInstanceStore
+    internal class ApplicationInstanceStore : IApplicationInstanceStore
     {
-        readonly IOctopusFileSystem fileSystem;
-        readonly ApplicationName applicationName;
-        readonly ISystemLog log;
-        readonly IRegistryApplicationInstanceStore registryApplicationInstanceStore;
-        readonly string machineConfigurationHomeDirectory;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly ApplicationName applicationName;
+        private readonly ISystemLog log;
+        private readonly IRegistryApplicationInstanceStore registryApplicationInstanceStore;
+        private readonly string machineConfigurationHomeDirectory;
 
         public ApplicationInstanceStore(
             ApplicationName applicationName,
@@ -32,6 +32,8 @@ namespace Octopus.Tentacle.Configuration.Instances
             if (!PlatformDetection.IsRunningOnWindows)
                 machineConfigurationHomeDirectory = "/etc/octopus";
         }
+
+        internal string InstancesFolder => Path.Combine(machineConfigurationHomeDirectory, applicationName.ToString(), "Instances");
 
         public bool TryLoadInstanceDetails(string? instanceName, out ApplicationInstanceRecord? instanceRecord)
         {
@@ -141,9 +143,9 @@ namespace Octopus.Tentacle.Configuration.Instances
             }
         }
 
-        ApplicationInstanceRecord? GetNamedRegistryRecord(string instanceName)
+        private ApplicationInstanceRecord? GetNamedRegistryRecord(string instanceName)
         {
-            var persistedApplicationInstanceRecords = this.ListInstances();
+            var persistedApplicationInstanceRecords = ListInstances();
 
             var possibleNamedInstances = persistedApplicationInstanceRecords
                 .Where(i => string.Equals(i.InstanceName, instanceName, StringComparison.InvariantCultureIgnoreCase))
@@ -165,15 +167,12 @@ namespace Octopus.Tentacle.Configuration.Instances
             return exactMatch;
         }
 
-        ApplicationInstanceRecord? GetDefaultRegistryRecord()
+        private ApplicationInstanceRecord? GetDefaultRegistryRecord()
         {
             var persistedApplicationInstanceRecords = ListInstances();
             // pick the default, if there is one
             var defaultInstance = persistedApplicationInstanceRecords.FirstOrDefault(i => i.InstanceName == ApplicationInstanceRecord.GetDefaultInstance(applicationName));
-            if (defaultInstance != null)
-            {
-                return defaultInstance;
-            }
+            if (defaultInstance != null) return defaultInstance;
 
             // if there is only a single instance, then pick it
             if (persistedApplicationInstanceRecords.Count == 1)
@@ -188,15 +187,15 @@ namespace Octopus.Tentacle.Configuration.Instances
             return null;
         }
 
-        string AvailableInstancesText()
+        private string AvailableInstancesText()
         {
             return string.Join(", ",
-                this.ListInstances()
+                ListInstances()
                     .OrderBy(x => x.InstanceName, StringComparer.InvariantCultureIgnoreCase)
                     .Select(x => x.InstanceName));
         }
 
-        void WriteInstanceConfiguration(Instance instance, string path)
+        private void WriteInstanceConfiguration(Instance instance, string path)
         {
             var data = JsonConvert.SerializeObject(instance, Formatting.Indented);
             try
@@ -210,12 +209,12 @@ namespace Octopus.Tentacle.Configuration.Instances
             }
         }
 
-        string InstanceFileName(string instanceName)
-            => Path.Combine(InstancesFolder, instanceName.Replace(' ', '-').ToLower() + ".config");
+        private string InstanceFileName(string instanceName)
+        {
+            return Path.Combine(InstancesFolder, instanceName.Replace(' ', '-').ToLower() + ".config");
+        }
 
-        internal string InstancesFolder => Path.Combine(machineConfigurationHomeDirectory, applicationName.ToString(), "Instances");
-
-        Instance LoadInstanceConfiguration(string path)
+        private Instance LoadInstanceConfiguration(string path)
         {
             var result = TryLoadInstanceConfiguration(path);
             if (result == null)
@@ -223,7 +222,7 @@ namespace Octopus.Tentacle.Configuration.Instances
             return result;
         }
 
-        Instance? TryLoadInstanceConfiguration(string path)
+        private Instance? TryLoadInstanceConfiguration(string path)
         {
             if (!fileSystem.FileExists(path))
                 return null;
@@ -236,7 +235,7 @@ namespace Octopus.Tentacle.Configuration.Instances
         /// <summary>
         /// Serialized details of instance in stored in registry file
         /// </summary>
-        class Instance
+        private class Instance
         {
             public Instance(string name, string configurationFilePath)
             {

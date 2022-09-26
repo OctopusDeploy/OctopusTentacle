@@ -12,8 +12,8 @@ namespace Octopus.Tentacle.Tests.Configuration
     [TestFixture]
     public class EnvFileLocatorFixture
     {
-        IOctopusFileSystem fileSystem;
-        ILogFileOnlyLogger log;
+        private IOctopusFileSystem fileSystem;
+        private ILogFileOnlyLogger log;
 
         [SetUp]
         public void SetUp()
@@ -73,7 +73,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             envFile.Should().Be(envPath, "the .env file is discoverable at the root of the directory tree");
         }
 
-        string GetParentPath(string path)
+        private string GetParentPath(string path)
         {
             var lastPathSeparator = path.LastIndexOf(Path.DirectorySeparatorChar);
             return path.Substring(0, lastPathSeparator);

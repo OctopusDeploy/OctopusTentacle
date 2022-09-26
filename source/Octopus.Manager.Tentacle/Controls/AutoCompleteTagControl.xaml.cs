@@ -16,13 +16,6 @@ namespace Octopus.Manager.Tentacle.Controls
 {
     internal class CustomIconDataTemplateSelector : DataTemplateSelector
     {
-        #region Data Templates
-        static readonly DataTemplate RoleIconDataTemplate = Application.Current.Resources["RoleIconDataTemplate"] as DataTemplate;
-        static readonly DataTemplate EnvironmentIconDataTemplate = Application.Current.Resources["EnvironmentIconDataTemplate"] as DataTemplate;
-        static readonly DataTemplate TenantIconDataTemplate = Application.Current.Resources["TenantIconDataTemplate"] as DataTemplate;
-        static readonly DataTemplate WorkerPoolIconDataTemplate = Application.Current.Resources["WorkerPoolIconDataTemplate"] as DataTemplate;
-        #endregion
-
         /// <summary>
         /// When overridden in a derived class, returns a <see cref="T:System.Windows.DataTemplate" /> based on custom logic.
         /// </summary>
@@ -50,16 +43,19 @@ namespace Octopus.Manager.Tentacle.Controls
                     return RoleIconDataTemplate;
             }
         }
+
+        #region Data Templates
+
+        private static readonly DataTemplate RoleIconDataTemplate = Application.Current.Resources["RoleIconDataTemplate"] as DataTemplate;
+        private static readonly DataTemplate EnvironmentIconDataTemplate = Application.Current.Resources["EnvironmentIconDataTemplate"] as DataTemplate;
+        private static readonly DataTemplate TenantIconDataTemplate = Application.Current.Resources["TenantIconDataTemplate"] as DataTemplate;
+        private static readonly DataTemplate WorkerPoolIconDataTemplate = Application.Current.Resources["WorkerPoolIconDataTemplate"] as DataTemplate;
+
+        #endregion
     }
 
     internal class CustomDataTemplateSelector : DataTemplateSelector
     {
-        #region Data Templates
-        static readonly DataTemplate CreateATagTemplate = Application.Current.Resources["CreateATagTemplate"] as DataTemplate;
-        static readonly DataTemplate SuggestedTagTemplate = Application.Current.Resources["SuggestedTagTemplate"] as DataTemplate;
-
-        #endregion
-
         /// <summary>
         /// When overridden in a derived class, returns a <see cref="T:System.Windows.DataTemplate" /> based on custom logic.
         /// </summary>
@@ -74,6 +70,13 @@ namespace Octopus.Manager.Tentacle.Controls
             if (tagContainer == null) return null;
             return tagContainer.IsCreateEntry ? CreateATagTemplate : SuggestedTagTemplate;
         }
+
+        #region Data Templates
+
+        private static readonly DataTemplate CreateATagTemplate = Application.Current.Resources["CreateATagTemplate"] as DataTemplate;
+        private static readonly DataTemplate SuggestedTagTemplate = Application.Current.Resources["SuggestedTagTemplate"] as DataTemplate;
+
+        #endregion
     }
 
     /// <summary>
@@ -81,76 +84,20 @@ namespace Octopus.Manager.Tentacle.Controls
     /// </summary>
     public partial class AutoCompleteTagControl : UserControl, INotifyPropertyChanged
     {
-        public ICommand RemoveCommand { get; }
-        public ICommand EnterCommand { get; }
-
-        public IEnumerable<string> SuggestedTags
-        {
-            get => (IEnumerable<string>)GetValue(SuggestedTagsProperty);
-            set => SetValue(SuggestedTagsProperty, value);
-        }
-
         public static readonly DependencyProperty SuggestedTagsProperty = DependencyProperty.Register("SuggestedTags",
             typeof(IEnumerable<string>), typeof(AutoCompleteTagControl), new PropertyMetadata(new List<string>(), PropertyChangedCallback));
-
-        private static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            (d as AutoCompleteTagControl)?.UpdateFilteredSource();
-        }
-
-        public ObservableCollection<string> SelectedTags
-        {
-            get => (ObservableCollection<string>)GetValue(SelectedTagsProperty);
-            set => SetValue(SelectedTagsProperty, value);
-        }
 
         public static readonly DependencyProperty SelectedTagsProperty = DependencyProperty.Register("SelectedTags",
             typeof(ObservableCollection<string>), typeof(AutoCompleteTagControl), new PropertyMetadata(new ObservableCollection<string>()));
 
-        public string Text
-        {
-            get => (string)GetValue(TextProperty);
-            set => SetValue(TextProperty, value);
-        }
-
         public static readonly DependencyProperty TextProperty = DependencyProperty.Register(
             "Text", typeof(string), typeof(AutoCompleteTagControl), new PropertyMetadata(string.Empty));
-
-
-        public string TagName
-        {
-            get => (string)GetValue(TagNameProperty);
-            set => SetValue(TagNameProperty, value);
-        }
 
         public static readonly DependencyProperty TagNameProperty = DependencyProperty.Register(
             "TagName", typeof(string), typeof(AutoCompleteTagControl), new PropertyMetadata("tag", TagPropertyChangedCallback));
 
-        static void TagPropertyChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
-        {
-            if (sender is AutoCompleteTagControl c)
-            {
-                c.OnAutoCompleteTagControl();
-            }
-        }
-
-        public bool CanCreateNewTags
-        {
-            get => canCreateNewTags;
-            set
-            {
-                if (value == canCreateNewTags) return;
-                canCreateNewTags = value;
-                OnPropertyChanged(nameof(Watermark));
-            }
-        }
-
-        public string Watermark => CanCreateNewTags ? $"{TagName.FirstCharToUpper()} (type to add new {TagName})" : $"Select {TagName.ToLower()}";
-
-        public CollectionViewSource FilteredSuggestedTags { get; }
-
-        List<SuggestedTagContainer> InternalSuggestedTags  = new List<SuggestedTagContainer>();
-        bool canCreateNewTags;
+        private readonly List<SuggestedTagContainer> InternalSuggestedTags = new List<SuggestedTagContainer>();
+        private bool canCreateNewTags;
 
         public AutoCompleteTagControl()
         {
@@ -168,13 +115,64 @@ namespace Octopus.Manager.Tentacle.Controls
             InitializeComponent();
         }
 
+        public ICommand RemoveCommand { get; }
+        public ICommand EnterCommand { get; }
+
+        public IEnumerable<string> SuggestedTags
+        {
+            get => (IEnumerable<string>)GetValue(SuggestedTagsProperty);
+            set => SetValue(SuggestedTagsProperty, value);
+        }
+
+        public ObservableCollection<string> SelectedTags
+        {
+            get => (ObservableCollection<string>)GetValue(SelectedTagsProperty);
+            set => SetValue(SelectedTagsProperty, value);
+        }
+
+        public string Text
+        {
+            get => (string)GetValue(TextProperty);
+            set => SetValue(TextProperty, value);
+        }
+
+        public string TagName
+        {
+            get => (string)GetValue(TagNameProperty);
+            set => SetValue(TagNameProperty, value);
+        }
+
+        public bool CanCreateNewTags
+        {
+            get => canCreateNewTags;
+            set
+            {
+                if (value == canCreateNewTags) return;
+                canCreateNewTags = value;
+                OnPropertyChanged(nameof(Watermark));
+            }
+        }
+
+        public string Watermark => CanCreateNewTags ? $"{TagName.FirstCharToUpper()} (type to add new {TagName})" : $"Select {TagName.ToLower()}";
+
+        public CollectionViewSource FilteredSuggestedTags { get; }
+
+        private static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            (d as AutoCompleteTagControl)?.UpdateFilteredSource();
+        }
+
+        private static void TagPropertyChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is AutoCompleteTagControl c) c.OnAutoCompleteTagControl();
+        }
 
         protected virtual void OnAutoCompleteTagControl()
         {
             OnPropertyChanged(nameof(Watermark));
         }
 
-        void ViewOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void ViewOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (FilteredSuggestedTags.View.IsEmpty)
             {
@@ -191,7 +189,7 @@ namespace Octopus.Manager.Tentacle.Controls
         private void UpdateFilteredSource()
         {
             InternalSuggestedTags.Clear();
-            if(CanCreateNewTags)
+            if (CanCreateNewTags)
                 InternalSuggestedTags.Add(new SuggestedTagContainer(string.Empty, true));
 
             if (SuggestedTags != null)
@@ -244,9 +242,8 @@ namespace Octopus.Manager.Tentacle.Controls
         private void ExecuteRemoveCommand(string stringValue)
         {
             SelectedTags.Remove(stringValue);
-            if(SelectedTags.Count == 0)
+            if (SelectedTags.Count == 0)
                 Label.Visibility = Visibility.Hidden;
-
         }
 
         private bool AddTag(string value)
@@ -257,7 +254,6 @@ namespace Octopus.Manager.Tentacle.Controls
 
             SelectedTags.Add(matchingSuggested ?? value);
             return true;
-
         }
 
         private void TextBox_OnGotFocus(object sender, RoutedEventArgs e)
@@ -266,7 +262,7 @@ namespace Octopus.Manager.Tentacle.Controls
             SuggestionsPopup.IsOpen = true;
         }
 
-        void TextBox_OnLostFocus(object sender, RoutedEventArgs e)
+        private void TextBox_OnLostFocus(object sender, RoutedEventArgs e)
         {
             if (!SuggestionsPopup.IsKeyboardFocusWithin && !TextBox.IsKeyboardFocusWithin)
             {
@@ -275,7 +271,7 @@ namespace Octopus.Manager.Tentacle.Controls
             }
         }
 
-        void SuggestionsList_OnLostFocus(object sender, RoutedEventArgs e)
+        private void SuggestionsList_OnLostFocus(object sender, RoutedEventArgs e)
         {
             if (!SuggestionsPopup.IsKeyboardFocusWithin && !TextBox.IsKeyboardFocusWithin)
                 SuggestionsPopup.IsOpen = false;
@@ -289,25 +285,19 @@ namespace Octopus.Manager.Tentacle.Controls
         private void EventSetter_OnHandler(object sender, MouseButtonEventArgs e)
         {
             if (sender is ListViewItem item)
-            {
                 if (item.DataContext is SuggestedTagContainer container)
-                {
                     ExecuteEnterCommand(container.IsCreateEntry ? Text : container.Value);
-                }
-            }
         }
 
         private void EventSetter_OnHandler(object sender, KeyEventArgs e)
         {
             if (e.Key != Key.Enter) return;
             if (sender is ListViewItem item)
-            {
                 if (item.DataContext is SuggestedTagContainer container)
                 {
                     e.Handled = true;
                     ExecuteEnterCommand(container.IsCreateEntry ? Text : container.Value);
                 }
-            }
         }
 
         private void TextBox_OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -320,7 +310,7 @@ namespace Octopus.Manager.Tentacle.Controls
             }
         }
 
-        void TextBox_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void TextBox_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             SuggestionsPopup.IsOpen = true;
         }
@@ -336,16 +326,15 @@ namespace Octopus.Manager.Tentacle.Controls
 
     internal class SuggestedTagContainer
     {
-        public bool IsCreateEntry { get; }
-
-        public string Value { get; }
-
         public SuggestedTagContainer(string value, bool isCreateEntry = false)
         {
             IsCreateEntry = isCreateEntry;
             Value = value;
         }
 
+        public bool IsCreateEntry { get; }
+
+        public string Value { get; }
     }
 
     public static class ExtensionMethods

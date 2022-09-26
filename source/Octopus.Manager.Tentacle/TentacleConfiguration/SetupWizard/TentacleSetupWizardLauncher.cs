@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using Autofac;
 using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Shell;
@@ -9,8 +10,8 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 {
     public class TentacleSetupWizardLauncher
     {
-        readonly IComponentContext container;
-        readonly InstanceSelectionModel instanceSelection;
+        private readonly IComponentContext container;
+        private readonly InstanceSelectionModel instanceSelection;
 
         public TentacleSetupWizardLauncher(IComponentContext container, InstanceSelectionModel instanceSelection)
         {
@@ -29,7 +30,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             wizard.AddTab(new Views.MachineType(wizardModel));
             wizard.AddTab(new TentacleActiveDetailsTab(wizardModel));
             wizard.AddTab(new TentaclePassiveTab(wizardModel));
-            wizard.AddTab(new InstallTab(wizardModel, container.Resolve<ICommandLineRunner>()) {ReadyMessage = "You're ready to install an Octopus Tentacle.", SuccessMessage = "Installation complete!"});
+            wizard.AddTab(new InstallTab(wizardModel, container.Resolve<ICommandLineRunner>()) { ReadyMessage = "You're ready to install an Octopus Tentacle.", SuccessMessage = "Installation complete!" });
 
             var shellModel = container.Resolve<ShellViewModel>();
             var shell = new ShellView("Tentacle Setup Wizard", shellModel)

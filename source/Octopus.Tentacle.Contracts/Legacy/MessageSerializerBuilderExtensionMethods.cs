@@ -1,11 +1,13 @@
-﻿using Halibut.Transport.Protocol;
+﻿using System;
+using Halibut.Transport.Protocol;
 
 namespace Octopus.Tentacle.Contracts.Legacy
 {
     public static class MessageSerializerBuilderExtensionMethods
     {
-        const string LegacyNamespace = "Octopus.Shared.Contracts";
-        const string LegacyAssembly = "Octopus.Shared";
+        private const string LegacyNamespace = "Octopus.Shared.Contracts";
+        private const string LegacyAssembly = "Octopus.Shared";
+
         public static MessageSerializerBuilder WithLegacyContractSupport(this MessageSerializerBuilder builder)
         {
             return builder.WithSerializerSettings(settings =>

@@ -12,11 +12,11 @@ namespace Octopus.Tentacle.Startup
 {
     public class CheckServicesCommand : AbstractCommand
     {
-        readonly ISystemLog log;
-        readonly IApplicationInstanceStore instanceLocator;
-        readonly ApplicationName applicationName;
+        private readonly ISystemLog log;
+        private readonly IApplicationInstanceStore instanceLocator;
+        private readonly ApplicationName applicationName;
+        private readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
         internal HashSet<string>? instances;
-        readonly IWindowsLocalAdminRightsChecker windowsLocalAdminRightsChecker;
 
         public CheckServicesCommand(ISystemLog log,
             IApplicationInstanceStore instanceLocator,

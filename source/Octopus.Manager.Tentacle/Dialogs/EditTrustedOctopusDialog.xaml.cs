@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Octopus.Client.Model;
@@ -32,7 +33,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
             set => address.Text = value;
         }
 
-        void SaveClicked(object sender, RoutedEventArgs e)
+        private void SaveClicked(object sender, RoutedEventArgs e)
         {
             thumbprintText.Text = new string((thumbprintText.Text ?? string.Empty).Where(char.IsLetterOrDigit).ToArray());
 
@@ -47,7 +48,7 @@ namespace Octopus.Manager.Tentacle.Dialogs
             }
         }
 
-        void Style_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void Style_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             address.Visibility = addressLabel.Visibility = CommunicationStyle == CommunicationStyle.TentacleActive
                 ? Visibility.Visible

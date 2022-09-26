@@ -10,12 +10,12 @@ namespace Octopus.Tentacle.Diagnostics
         {
         }
 
+        public override string CorrelationId => "system/" + Environment.MachineName;
+
         public ISystemLog ChildContext(string[] sensitiveValues)
         {
             // creates a child context that will mask the given values.
             return new SystemLog(SensitiveValueMasker.SensitiveValues.Concat(sensitiveValues).ToArray());
         }
-
-        public override string CorrelationId => "system/" + Environment.MachineName;
     }
 }

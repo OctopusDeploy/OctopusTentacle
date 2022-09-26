@@ -5,10 +5,8 @@ namespace Octopus.Tentacle.Configuration
 {
     public enum ApplicationName
     {
-        [Description("Octopus Server")]
-        OctopusServer,
+        [Description("Octopus Server")] OctopusServer,
 
-        [Description("Tentacle")]
-        Tentacle
+        [Description("Tentacle")] Tentacle
     }
 }

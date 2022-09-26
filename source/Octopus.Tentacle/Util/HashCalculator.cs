@@ -14,7 +14,9 @@ namespace Octopus.Tentacle.Util
             }
         }
 
-        static string Sanitize(byte[] hash)
-            => BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        private static string Sanitize(byte[] hash)
+        {
+            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        }
     }
 }

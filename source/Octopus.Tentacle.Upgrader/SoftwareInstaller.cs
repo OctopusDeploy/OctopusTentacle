@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Upgrader
             return InstallWithRetry(msiPath);
         }
 
-        static int InstallWithRetry(string msiPath)
+        private static int InstallWithRetry(string msiPath)
         {
             var guid = Guid.NewGuid();
             int exitCode;
@@ -49,12 +49,12 @@ namespace Octopus.Tentacle.Upgrader
             } while (exitCode != 0 && currentRetryCount < 5);
 
             if (exitCode != 0 && IsPendingServerRestart())
-                Log.Upgrade.Info($"Tentacle upgrade failed. This may be due to a pending reboot of this server.");
+                Log.Upgrade.Info("Tentacle upgrade failed. This may be due to a pending reboot of this server.");
 
             return exitCode;
         }
 
-        static bool IsPendingServerRestart()
+        private static bool IsPendingServerRestart()
         {
             try
             {

@@ -9,7 +9,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class MachineType
     {
-        readonly TentacleSetupWizardModel model;
+        private readonly TentacleSetupWizardModel model;
 
         public MachineType(TentacleSetupWizardModel model)
         {
@@ -18,7 +18,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             DataContext = this.model = model;
         }
 
-        void Navigate(object sender, RequestNavigateEventArgs e)
+        private void Navigate(object sender, RequestNavigateEventArgs e)
         {
             BrowserHelper.Open(e.Uri);
             e.Handled = true;

@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Autofac;
 using Autofac.Core;
 using NLog;
-using NLog.Config;
 using NLog.Targets;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
@@ -34,20 +33,20 @@ namespace Octopus.Tentacle.Startup
             GeneralException = 100
         }
 
-        static readonly string StdOutTargetName = "stdout";
-        static readonly string StdErrTargetName = "stderr";
+        private static readonly string StdOutTargetName = "stdout";
+        private static readonly string StdErrTargetName = "stderr";
 
-        readonly ISystemLog log = new SystemLog();
-        readonly string displayName;
-        readonly string version;
-        readonly string informationalVersion;
-        readonly string[] environmentInformation;
-        readonly OptionSet commonOptions;
-        IContainer? container;
-        ICommand? commandFromCommandLine;
-        ICommand? responsibleCommand;
-        string[] commandLineArguments;
-        bool helpSwitchProvidedInCommandArguments;
+        private readonly ISystemLog log = new SystemLog();
+        private readonly string displayName;
+        private readonly string version;
+        private readonly string informationalVersion;
+        private readonly string[] environmentInformation;
+        private readonly OptionSet commonOptions;
+        private IContainer? container;
+        private ICommand? commandFromCommandLine;
+        private ICommand? responsibleCommand;
+        private string[] commandLineArguments;
+        private bool helpSwitchProvidedInCommandArguments;
 
         protected OctopusProgram(string displayName,
             string version,
@@ -61,7 +60,9 @@ namespace Octopus.Tentacle.Startup
             this.informationalVersion = informationalVersion;
             this.environmentInformation = environmentInformation;
             commonOptions = new OptionSet();
-            commonOptions.Add("nologo", "DEPRECATED: Don't print title or version information. This switch is no longer required, but we want to leave it around so automation scripts don't break.", v => { }, true);
+            commonOptions.Add("nologo", "DEPRECATED: Don't print title or version information. This switch is no longer required, but we want to leave it around so automation scripts don't break.", v =>
+            {
+            }, true);
             commonOptions.Add("noconsolelogging",
                 "DEPRECATED: Don't log informational messages to the console (stdout) - errors are still logged to stderr. This switch has been deprecated since it is no longer required. We want to leave it around so automation scripts don't break.",
                 v =>
@@ -69,7 +70,10 @@ namespace Octopus.Tentacle.Startup
                     DisableConsoleLogging();
                 },
                 true);
-            commonOptions.Add("help", "Show detailed help for this command", v => { helpSwitchProvidedInCommandArguments = true; });
+            commonOptions.Add("help", "Show detailed help for this command", v =>
+            {
+                helpSwitchProvidedInCommandArguments = true;
+            });
         }
 
         protected abstract ApplicationName ApplicationName { get; }
@@ -184,7 +188,7 @@ namespace Octopus.Tentacle.Startup
             return exitCode;
         }
 
-        void RunHost(ICommandHost host)
+        private void RunHost(ICommandHost host)
         {
 #if FULL_FRAMEWORK
             /*
@@ -220,7 +224,7 @@ namespace Octopus.Tentacle.Startup
 #endif
         }
 
-        int HandleException(Exception ex)
+        private int HandleException(Exception ex)
         {
             var unpacked = ex.UnpackFromContainers();
 
@@ -257,7 +261,7 @@ namespace Octopus.Tentacle.Startup
             return (int)ExitCode.GeneralException;
         }
 
-        int HandleException(ReflectionTypeLoadException ex)
+        private int HandleException(ReflectionTypeLoadException ex)
         {
             log.Fatal(ex);
 
@@ -277,27 +281,27 @@ namespace Octopus.Tentacle.Startup
             return (int)ExitCode.ReflectionTypeLoadException;
         }
 
-        int HandleException(SecurityException ex)
+        private int HandleException(SecurityException ex)
         {
             log.Fatal(ex, "A security exception was encountered. Please try re-running the command as an Administrator from an elevated command prompt.");
             log.Fatal(ex);
             return (int)ExitCode.SecurityException;
         }
 
-        int HandleException(ControlledFailureException ex)
+        private int HandleException(ControlledFailureException ex)
         {
             log.Fatal(ex.Message);
             return (int)ExitCode.ControlledFailureException;
         }
 
-        static void CleanFileSystem(ISystemLog log)
+        private static void CleanFileSystem(ISystemLog log)
         {
             var fileSystem = new OctopusPhysicalFileSystem(log);
             var fileSystemCleaner = new FileSystemCleaner(fileSystem, log);
             fileSystemCleaner.Clean(FileSystemCleaner.PathsToDeleteOnStartupResource);
         }
 
-        void InitializeLogging()
+        private void InitializeLogging()
         {
 #if !NLOG_HAS_EVENT_LOG_TARGET
             if (PlatformDetection.IsRunningOnWindows)
@@ -310,11 +314,11 @@ namespace Octopus.Tentacle.Startup
             LogManager.ThrowConfigExceptions = true;
             LogManager.Configuration = new XmlLoggingConfiguration(nLogFile);
 #endif
-            SystemLog.Appenders.Add(new NLogAppender());
+            Log.Appenders.Add(new NLogAppender());
             AssertLoggingConfigurationIsCorrect();
         }
 
-        static void AssertLoggingConfigurationIsCorrect()
+        private static void AssertLoggingConfigurationIsCorrect()
         {
             var stdout = LogManager.Configuration.FindTargetByName(StdOutTargetName) as ColoredConsoleTarget;
             if (stdout == null)
@@ -331,7 +335,7 @@ namespace Octopus.Tentacle.Startup
             LogFileOnlyLogger.AssertConfigurationIsCorrect();
         }
 
-        void WriteDiagnosticsInfoToLogFile(StartUpInstanceRequest startupRequest)
+        private void WriteDiagnosticsInfoToLogFile(StartUpInstanceRequest startupRequest)
         {
             var persistedRequest = startupRequest as StartUpRegistryInstanceRequest;
             var fullProcessPath = Assembly.GetEntryAssembly()?.FullProcessPath() ?? throw new Exception("Could not get path of the entry assembly");
@@ -343,7 +347,7 @@ namespace Octopus.Tentacle.Startup
                 $"  {string.Join($"{Environment.NewLine}  ", environmentInformation)}");
         }
 
-        static void DisableConsoleLogging()
+        private static void DisableConsoleLogging()
         {
             // Suppress logging to the console by removing the console logger for stdout
             var c = LogManager.Configuration;
@@ -356,7 +360,7 @@ namespace Octopus.Tentacle.Startup
             LogManager.Configuration = c;
         }
 
-        StartUpInstanceRequest TryLoadInstanceNameFromCommandLineArguments(string[] commandLineArguments)
+        private StartUpInstanceRequest TryLoadInstanceNameFromCommandLineArguments(string[] commandLineArguments)
         {
             var instanceName = string.Empty;
             var configFile = string.Empty;
@@ -371,7 +375,7 @@ namespace Octopus.Tentacle.Startup
                 return new StartUpRegistryInstanceRequest(instanceName);
             if (!string.IsNullOrWhiteSpace(configFile))
                 return new StartUpConfigFileInstanceRequest(configFile);
-            
+
             return new StartUpDynamicInstanceRequest();
         }
 
@@ -397,7 +401,7 @@ namespace Octopus.Tentacle.Startup
             return remainingCommandLineArguments;
         }
 
-        void LogUnhandledException(object sender, UnhandledExceptionEventArgs args)
+        private void LogUnhandledException(object sender, UnhandledExceptionEventArgs args)
         {
             try
             {
@@ -421,7 +425,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        static void EnsureTempPathIsWriteable()
+        private static void EnsureTempPathIsWriteable()
         {
             var tempPath = Path.GetTempPath();
             if (!Directory.Exists(tempPath))
@@ -439,7 +443,7 @@ namespace Octopus.Tentacle.Startup
             }
         }
 
-        static ICommandHost SelectMostAppropriateHost(ICommand command,
+        private static ICommandHost SelectMostAppropriateHost(ICommand command,
             string displayName,
             ISystemLog log,
             bool forceConsoleHost,
@@ -484,7 +488,7 @@ namespace Octopus.Tentacle.Startup
             return new ConsoleHost(displayName);
         }
 
-        static bool IsRunningAsAWindowsService(ISystemLog log)
+        private static bool IsRunningAsAWindowsService(ISystemLog log)
         {
             if (PlatformDetection.IsRunningOnMac || PlatformDetection.IsRunningOnNix)
                 return false;
@@ -531,20 +535,20 @@ namespace Octopus.Tentacle.Startup
 #endif
         }
 
-        static string[] ProcessCommonOptions(OptionSet commonOptions, string[] commandLineArguments, ISystemLog log)
+        private static string[] ProcessCommonOptions(OptionSet commonOptions, string[] commandLineArguments, ISystemLog log)
         {
             log.Trace("Processing common command-line options");
             return commonOptions.Parse(commandLineArguments).ToArray();
         }
 
-        void Start(ICommandRuntime commandRuntime)
+        private void Start(ICommandRuntime commandRuntime)
         {
             if (responsibleCommand == null)
                 throw new InvalidOperationException("Responsible command not set");
             responsibleCommand.Start(commandLineArguments, commandRuntime, commonOptions);
         }
 
-        static string[] TryResolveCommand(
+        private static string[] TryResolveCommand(
             ICommandLocator commandLocator,
             string[] commandLineArguments,
             bool showHelpForCommand,
@@ -593,15 +597,15 @@ namespace Octopus.Tentacle.Startup
 #pragma warning restore 618
         }
 
-        static string ParseCommandName(string[] args)
+        private static string ParseCommandName(string[] args)
         {
             var first = (args.FirstOrDefault() ?? string.Empty).ToLowerInvariant().TrimStart('-', '/');
             return first;
         }
 
-        readonly object singleShutdownLock = new object();
+        private readonly object singleShutdownLock = new();
 
-        void Shutdown()
+        private void Shutdown()
         {
             if (!Monitor.TryEnter(singleShutdownLock)) return;
             if (responsibleCommand != null)
@@ -616,7 +620,7 @@ namespace Octopus.Tentacle.Startup
 
 #pragma warning disable PC003 // Native API not available in UWP
 #if USER_INTERACTIVE_DOES_NOT_WORK
-        static class Kernel32
+        private static class Kernel32
         {
             public static readonly uint TH32CS_SNAPPROCESS = 2;
 

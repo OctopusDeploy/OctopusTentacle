@@ -11,9 +11,9 @@ namespace Octopus.Tentacle.Watchdog
 {
     public class Watchdog : IWatchdog
     {
-        readonly ISystemLog log;
-        readonly string taskName;
-        readonly string argsPrefix = "checkservices --instances ";
+        private readonly ISystemLog log;
+        private readonly string taskName;
+        private readonly string argsPrefix = "checkservices --instances ";
 
         public Watchdog(ApplicationName applicationName, ISystemLog log)
         {

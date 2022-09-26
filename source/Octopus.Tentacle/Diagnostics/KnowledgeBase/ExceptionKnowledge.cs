@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Octopus.Tentacle.Diagnostics.KnowledgeBase
 {
     public class ExceptionKnowledge
     {
-        readonly Func<Exception, ExceptionKnowledgeBaseEntry?> tryMatch;
+        private readonly Func<Exception, ExceptionKnowledgeBaseEntry?> tryMatch;
 
         public ExceptionKnowledge(Func<Exception, ExceptionKnowledgeBaseEntry?> tryMatch)
         {
@@ -14,8 +13,7 @@ namespace Octopus.Tentacle.Diagnostics.KnowledgeBase
         }
 
         public bool TryMatch(Exception exception,
-            [NotNullWhen(true)]
-            out ExceptionKnowledgeBaseEntry? entry)
+            [NotNullWhen(true)] out ExceptionKnowledgeBaseEntry? entry)
         {
             var m = tryMatch(exception);
             if (m == null)

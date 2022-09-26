@@ -95,14 +95,7 @@ namespace Octopus.Tentacle.Tests.Configuration
             settings.value.Single().SomethingElse.Should().Be(12, "ints should get parsed");
         }
 
-        class TestConfig
-        {
-            public string SettingA { get; set; } = string.Empty;
-            public int SomethingElse { get; set; }
-        }
-
-
-        static byte[] GenerateValue()
+        private static byte[] GenerateValue()
         {
             var key = new byte[16];
             using (var provider = new RNGCryptoServiceProvider())
@@ -111,6 +104,12 @@ namespace Octopus.Tentacle.Tests.Configuration
             }
 
             return key;
+        }
+
+        private class TestConfig
+        {
+            public string SettingA { get; } = string.Empty;
+            public int SomethingElse { get; set; }
         }
     }
 }

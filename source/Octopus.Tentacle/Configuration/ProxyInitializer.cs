@@ -7,9 +7,9 @@ namespace Octopus.Tentacle.Configuration
 {
     public class ProxyInitializer : IProxyInitializer
     {
-        readonly IProxyConfiguration proxyConfiguration;
-        readonly IProxyConfigParser configParser;
-        readonly ISystemLog log;
+        private readonly IProxyConfiguration proxyConfiguration;
+        private readonly IProxyConfigParser configParser;
+        private readonly ISystemLog log;
 
         public ProxyInitializer(IProxyConfiguration proxyConfiguration, IProxyConfigParser configParser, ISystemLog log)
         {
@@ -37,6 +37,8 @@ namespace Octopus.Tentacle.Configuration
         }
 
         public IWebProxy GetProxy()
-            => WebRequest.DefaultWebProxy;
+        {
+            return WebRequest.DefaultWebProxy;
+        }
     }
 }

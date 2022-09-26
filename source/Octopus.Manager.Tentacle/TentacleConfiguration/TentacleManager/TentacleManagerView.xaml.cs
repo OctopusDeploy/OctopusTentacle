@@ -22,13 +22,13 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
     /// </summary>
     public partial class TentacleManagerView
     {
-        readonly InstanceSelectionModel instanceSelection;
-        readonly IApplicationInstanceManager instanceManager;
-        readonly IApplicationInstanceStore instanceStore;
-        readonly TentacleSetupWizardLauncher tentacleSetupWizardLauncher;
-        readonly ProxyWizardLauncher proxyWizardLauncher;
-        readonly DeleteWizardLauncher deleteWizardLaunchers;
-        readonly TentacleManagerModel model;
+        private readonly InstanceSelectionModel instanceSelection;
+        private readonly IApplicationInstanceManager instanceManager;
+        private readonly IApplicationInstanceStore instanceStore;
+        private readonly TentacleSetupWizardLauncher tentacleSetupWizardLauncher;
+        private readonly ProxyWizardLauncher proxyWizardLauncher;
+        private readonly DeleteWizardLauncher deleteWizardLaunchers;
+        private readonly TentacleManagerModel model;
 
         public TentacleManagerView(TentacleManagerModel model,
             InstanceSelectionModel instanceSelection,
@@ -55,12 +55,12 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             Loaded += ViewLoaded;
         }
 
-        void ViewLoaded(object sender, RoutedEventArgs e)
+        private void ViewLoaded(object sender, RoutedEventArgs e)
         {
             Refresh();
         }
 
-        void Refresh()
+        private void Refresh()
         {
             Dispatcher.BeginInvoke(new Action(delegate
             {
@@ -88,69 +88,66 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
             }));
         }
 
-        void SetupTentacle(object sender, RoutedEventArgs e)
+        private void SetupTentacle(object sender, RoutedEventArgs e)
         {
             tentacleSetupWizardLauncher.ShowDialog(Window.GetWindow(this), instanceSelection.SelectedInstance);
             instanceSelection.Refresh();
             Refresh();
         }
 
-        void StartServiceClicked(object sender, EventArgs e)
+        private void StartServiceClicked(object sender, EventArgs e)
         {
             RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetStartCommands(), "Starting Tentacle service...", model.LogsDirectory);
         }
 
-        void StopServiceClicked(object sender, EventArgs e)
+        private void StopServiceClicked(object sender, EventArgs e)
         {
             RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetStopCommands(), "Stopping Tentacle service...", model.LogsDirectory);
             Refresh();
         }
 
-        void RestartServiceClicked(object sender, EventArgs e)
+        private void RestartServiceClicked(object sender, EventArgs e)
         {
             RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetRestartCommands(), "Restarting Tentacle service...", model.LogsDirectory);
             Refresh();
         }
 
-        void RepairServiceClicked(object sender, EventArgs e)
+        private void RepairServiceClicked(object sender, EventArgs e)
         {
             RunProcessDialog.ShowDialog(Window.GetWindow(this), model.ServiceWatcher.GetRepairCommands(), "Reinstalling the Tentacle service...", model.LogsDirectory);
         }
 
-        void ShowProxy(object sender, EventArgs e)
+        private void ShowProxy(object sender, EventArgs e)
         {
             proxyWizardLauncher.ShowDialog(Window.GetWindow(this), ApplicationName.Tentacle, instanceSelection.SelectedInstance, model.ProxyConfiguration, model.PollingProxyConfiguration);
             Refresh();
         }
 
-        void DeleteInstance(object sender, EventArgs e)
+        private void DeleteInstance(object sender, EventArgs e)
         {
             deleteWizardLaunchers.ShowDialog(Window.GetWindow(this), ApplicationName.Tentacle, instanceSelection.SelectedInstance);
             instanceSelection.Refresh();
             Refresh();
         }
 
-        void BrowseLogs(object sender, RoutedEventArgs e)
+        private void BrowseLogs(object sender, RoutedEventArgs e)
         {
             Process.Start("explorer.exe", model.LogsDirectory);
         }
 
-        void BrowseHome(object sender, RoutedEventArgs e)
+        private void BrowseHome(object sender, RoutedEventArgs e)
         {
             Process.Start("explorer.exe", model.HomeDirectory);
         }
 
-        async void CreateNewInstance(object sender, RoutedEventArgs e)
+        private async void CreateNewInstance(object sender, RoutedEventArgs e)
         {
             var result = await DialogHost.Show(new NewInstanceNameDialog(instanceSelection.Instances.Select(q => q.InstanceName)), Window.GetWindow(this)?.Title);
 
-            if (result is string typedResult)
-            {
-                instanceSelection.New(typedResult);
-            }
+            if (result is string typedResult) instanceSelection.New(typedResult);
         }
 
-        void CopyThumbprintToClipboard(object sender, RoutedEventArgs e)
+        private void CopyThumbprintToClipboard(object sender, RoutedEventArgs e)
         {
             Clipboard.SetText(model.Thumbprint);
         }
@@ -158,9 +155,9 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.TentacleManager
 
     public class MultiStatusToColorValueConverter : IMultiValueConverter
     {
-        public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            return String.Format("{0} {1}", values[0], values[1]);
+            return string.Format("{0} {1}", values[0], values[1]);
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

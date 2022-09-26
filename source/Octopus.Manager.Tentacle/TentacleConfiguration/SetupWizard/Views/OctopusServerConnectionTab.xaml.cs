@@ -1,13 +1,9 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Navigation;
 using MaterialDesignThemes.Wpf;
 using Octopus.Manager.Tentacle.Dialogs;
-using Octopus.Manager.Tentacle.Infrastructure;
-using Octopus.Manager.Tentacle.Proxy;
 using Octopus.Manager.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
@@ -17,7 +13,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
     /// </summary>
     public partial class OctopusServerConnectionTab
     {
-        readonly TentacleSetupWizardModel model;
+        private readonly TentacleSetupWizardModel model;
 
         public OctopusServerConnectionTab(TentacleSetupWizardModel model)
         {
@@ -25,7 +21,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             DataContext = this.model = model;
         }
 
-        void Navigate(object sender, RequestNavigateEventArgs e)
+        private void Navigate(object sender, RequestNavigateEventArgs e)
         {
             BrowserHelper.Open(e.Uri);
             e.Handled = true;
@@ -43,13 +39,10 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard.Views
             }
 
             await ShowConnectionDialog();
-            if (!model.HaveCredentialsBeenVerified)
-            {
-                e.Cancel = true;
-            }
+            if (!model.HaveCredentialsBeenVerified) e.Cancel = true;
         }
 
-        async Task ShowConnectionDialog()
+        private async Task ShowConnectionDialog()
         {
             await DialogHost.Show(new ServerConnectionDialog(model) { DataContext = model }, "Tentacle Setup Wizard");
         }

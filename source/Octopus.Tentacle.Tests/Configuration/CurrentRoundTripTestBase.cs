@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Tests.Configuration
     /// <summary>
     /// Adds tests for property types that were not supported by the old implementation (c.f. <see cref="XmlFileKeyValueStoreFixture.BackwardsCompatFixture" />)
     /// </summary>
-    abstract class CurrentRoundTripTestBase : RoundTripTestBaseFixture
+    internal abstract class CurrentRoundTripTestBase : RoundTripTestBaseFixture
     {
         [Test]
         public void ReadsEnumValue()

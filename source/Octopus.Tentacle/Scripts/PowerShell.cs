@@ -6,11 +6,13 @@ namespace Octopus.Tentacle.Scripts
 {
     public class PowerShell : IShell
     {
-        const string EnvPowerShellPath = "PowerShell.exe";
-        static string? powerShellPath;
+        private const string EnvPowerShellPath = "PowerShell.exe";
+        private static string? powerShellPath;
 
         public string GetFullPath()
-            => GetFullPowerShellPath();
+        {
+            return GetFullPowerShellPath();
+        }
 
         public static string GetFullPowerShellPath()
         {

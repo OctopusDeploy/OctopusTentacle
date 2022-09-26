@@ -66,7 +66,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             result.Infos.Single().Should().Be("-rw-r--r--"); // Service file should only be writeable for the root user
         }
 
-        void CanInstallService(string username, string password)
+        private void CanInstallService(string username, string password)
         {
             const string serviceName = "OctopusShared.ServiceHelperTest";
             const string instance = "TestInstance";
@@ -132,7 +132,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             Assert.IsFalse(DoesServiceUnitFileExist(instance), "The service unit file still exists");
         }
 
-        void WriteUnixFile(string path)
+        private void WriteUnixFile(string path)
         {
             using (TextWriter writer = new StreamWriter(path, false, Encoding.ASCII))
             {
@@ -144,7 +144,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             }
         }
 
-        Dictionary<string, string> GetServiceStatus(string serviceName)
+        private Dictionary<string, string> GetServiceStatus(string serviceName)
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"systemctl show {serviceName}\"");
             var result = commandLineInvocation.ExecuteCommand();
@@ -152,29 +152,29 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             foreach (var info in result.Infos)
                 Console.WriteLine(info);
             return result.Infos
-                .Select(x => x.Split(new [] {'='}, 2, StringSplitOptions.RemoveEmptyEntries))
+                .Select(x => x.Split(new[] { '=' }, 2, StringSplitOptions.RemoveEmptyEntries))
                 .ToDictionary(x => x[0], x => x[1]);
         }
 
-        bool IsServiceRunning(string serviceName)
+        private bool IsServiceRunning(string serviceName)
         {
             var result = RunBashCommand($"systemctl is-active --quiet {serviceName}");
             return result.ExitCode == 0;
         }
 
-        bool IsServiceEnabled(string serviceName)
+        private bool IsServiceEnabled(string serviceName)
         {
             var result = RunBashCommand($"systemctl is-enabled --quiet {serviceName}");
             return result.ExitCode == 0;
         }
 
-        bool DoesServiceUnitFileExist(string serviceName)
+        private bool DoesServiceUnitFileExist(string serviceName)
         {
             var result = RunBashCommand($"ls /etc/systemd/system | grep {serviceName}.service");
             return result.ExitCode == 0;
         }
 
-        CmdResult RunBashCommand(string command)
+        private CmdResult RunBashCommand(string command)
         {
             var commandLineInvocation = new CommandLineInvocation("/bin/bash", $"-c \"{command}\"");
             return commandLineInvocation.ExecuteCommand();

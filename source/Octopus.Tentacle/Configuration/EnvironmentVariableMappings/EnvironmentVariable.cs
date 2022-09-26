@@ -12,13 +12,19 @@ namespace Octopus.Tentacle.Configuration.EnvironmentVariableMappings
         public string Name { get; }
 
         public static EnvironmentVariable PlaintText(string name)
-            => new EnvironmentVariable(name);
+        {
+            return new EnvironmentVariable(name);
+        }
 
         public static SensitiveEnvironmentVariable Sensitive(string name, string sensitiveWarningDescription)
-            => new SensitiveEnvironmentVariable(name, sensitiveWarningDescription);
+        {
+            return new SensitiveEnvironmentVariable(name, sensitiveWarningDescription);
+        }
 
         protected bool Equals(EnvironmentVariable other)
-            => Name == other.Name;
+        {
+            return Name == other.Name;
+        }
 
         public override bool Equals(object? obj)
         {
@@ -32,7 +38,9 @@ namespace Octopus.Tentacle.Configuration.EnvironmentVariableMappings
         }
 
         public override int GetHashCode()
-            => Name.GetHashCode();
+        {
+            return Name.GetHashCode();
+        }
 
         public int CompareTo(object? obj)
         {

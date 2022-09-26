@@ -7,6 +7,7 @@ using Octopus.Client.Model;
 using Octopus.Client.Model.Endpoints;
 using Octopus.Configuration;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands.OptionSets;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Configuration.Instances;
@@ -14,25 +15,22 @@ using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Startup;
 using Octopus.Tentacle.Util;
 using Octopus.Tentacle.Watchdog;
-using CertificateGenerator = Octopus.Tentacle.Certificates.CertificateGenerator;
 
 namespace Octopus.Tentacle.Commands
 {
     public class ShowConfigurationCommand : AbstractStandardCommand
     {
-        readonly IApplicationInstanceSelector instanceSelector;
-        readonly IOctopusFileSystem fileSystem;
-        readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
-        readonly Lazy<IWatchdog> watchdog;
-        string file = null!;
-        readonly ApiEndpointOptions apiEndpointOptions;
-        readonly IProxyConfigParser proxyConfig;
-        readonly IOctopusClientInitializer octopusClientInitializer;
-        readonly ISystemLog log;
-        readonly ISpaceRepositoryFactory spaceRepositoryFactory;
-        string spaceName = null!;
-
-        public override bool SuppressConsoleLogging => true;
+        private readonly IApplicationInstanceSelector instanceSelector;
+        private readonly IOctopusFileSystem fileSystem;
+        private readonly Lazy<ITentacleConfiguration> tentacleConfiguration;
+        private readonly Lazy<IWatchdog> watchdog;
+        private readonly ApiEndpointOptions apiEndpointOptions;
+        private readonly IProxyConfigParser proxyConfig;
+        private readonly IOctopusClientInitializer octopusClientInitializer;
+        private readonly ISystemLog log;
+        private readonly ISpaceRepositoryFactory spaceRepositoryFactory;
+        private string file = null!;
+        private string spaceName = null!;
 
         public ShowConfigurationCommand(
             IApplicationInstanceSelector instanceSelector,
@@ -59,25 +57,23 @@ namespace Octopus.Tentacle.Commands
             apiEndpointOptions = AddOptionSet(new ApiEndpointOptions(Options) { Optional = true });
         }
 
+        public override bool SuppressConsoleLogging => true;
+
         protected override void Start()
         {
             StartAsync().GetAwaiter().GetResult();
         }
 
-        async Task StartAsync()
+        private async Task StartAsync()
         {
             base.Start();
 
             DictionaryKeyValueStore outputFile;
 
             if (!string.IsNullOrWhiteSpace(file))
-            {
-                outputFile = new JsonHierarchicalFileKeyValueStore(file, fileSystem, autoSaveOnSet: false, isWriteOnly: true);
-            }
+                outputFile = new JsonHierarchicalFileKeyValueStore(file, fileSystem, false, true);
             else
-            {
                 outputFile = new JsonHierarchicalConsoleKeyValueStore();
-            }
 
             await CollectConfigurationSettings(outputFile);
 
@@ -108,13 +104,10 @@ namespace Octopus.Tentacle.Commands
             watchdogConfiguration.WriteTo(outputStore);
 
             //advanced settings
-            if (apiEndpointOptions.IsSupplied)
-            {
-                await CollectServerSideConfiguration(outputStore);
-            }
+            if (apiEndpointOptions.IsSupplied) await CollectServerSideConfiguration(outputStore);
         }
 
-        async Task CollectServerSideConfiguration(IWritableKeyValueStore outputStore)
+        private async Task CollectServerSideConfiguration(IWritableKeyValueStore outputStore)
         {
             if (tentacleConfiguration.Value.TentacleCertificate == null)
                 throw new ControlledFailureException("No certificate has been generated for this Tentacle. Unable to display configuration.");
@@ -160,7 +153,7 @@ namespace Octopus.Tentacle.Commands
             }
         }
 
-        async Task CollectionServerSideConfigurationFromMachine(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, MachineResource machine)
+        private async Task CollectionServerSideConfigurationFromMachine(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, MachineResource machine)
         {
             var environments = await repository.Environments.FindAll();
             outputStore.Set("Tentacle.Environments", environments.Where(x => machine.EnvironmentIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));
@@ -184,7 +177,7 @@ namespace Octopus.Tentacle.Commands
                 outputStore.Set<string>("Tentacle.Communication.PublicHostName", ((ListeningTentacleEndpointResource)machine.Endpoint).Uri);
         }
 
-        async Task CollectionServerSideConfigurationFromWorker(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, WorkerResource machine)
+        private async Task CollectionServerSideConfigurationFromWorker(IWritableKeyValueStore outputStore, IOctopusSpaceAsyncRepository repository, WorkerResource machine)
         {
             var workerPools = await repository.WorkerPools.FindAll();
             outputStore.Set("Tentacle.WorkerPools", workerPools.Where(x => machine.WorkerPoolIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }));

@@ -61,7 +61,7 @@ namespace Octopus.Manager.Tentacle.Shell
                 Orientation = Orientation.Horizontal,
                 Children =
                 {
-                    new TextBlock {Text = header, VerticalAlignment = VerticalAlignment.Center},
+                    new TextBlock { Text = header, VerticalAlignment = VerticalAlignment.Center },
                     badge
                 }
             };
@@ -69,7 +69,7 @@ namespace Octopus.Manager.Tentacle.Shell
             tabs.Items.Add(tabItem);
         }
 
-        async void SkipClicked(object sender, RoutedEventArgs e)
+        private async void SkipClicked(object sender, RoutedEventArgs e)
         {
             var current = tabs.SelectedItem as ITab;
             if (current != null)
@@ -96,7 +96,7 @@ namespace Octopus.Manager.Tentacle.Shell
             RefreshWizardButtons();
         }
 
-        async void NextClicked(object sender, EventArgs e)
+        private async void NextClicked(object sender, EventArgs e)
         {
             var current = tabs.SelectedItem as ITab;
             if (current != null)
@@ -123,7 +123,7 @@ namespace Octopus.Manager.Tentacle.Shell
             RefreshWizardButtons();
         }
 
-        void BackButtonClicked(object sender, EventArgs e)
+        private void BackButtonClicked(object sender, EventArgs e)
         {
             var current = tabs.SelectedItem as ITab;
             if (current != null)
@@ -141,15 +141,16 @@ namespace Octopus.Manager.Tentacle.Shell
             {
                 tabs.SelectedIndex--;
             } while (((TabView)tabs.SelectedItem).Visibility != Visibility.Visible && tabs.SelectedIndex > 0);
+
             RefreshWizardButtons();
         }
 
-        void TabsSelectedIndexChanged(object sender, EventArgs e)
+        private void TabsSelectedIndexChanged(object sender, EventArgs e)
         {
             RefreshWizardButtons();
         }
 
-        void RefreshWizardButtons()
+        private void RefreshWizardButtons()
         {
             nextButton.Content = "NEXT";
             backButton.Content = "BACK";
@@ -166,30 +167,21 @@ namespace Octopus.Manager.Tentacle.Shell
 
             backButton.Visibility = Visibility.Visible;
 
-            if (tabs.SelectedIndex == visibleTabIndexes.FirstOrDefault())
-            {
-                backButton.Visibility = Visibility.Collapsed;
-            }
+            if (tabs.SelectedIndex == visibleTabIndexes.FirstOrDefault()) backButton.Visibility = Visibility.Collapsed;
 
-            if (tabs.SelectedIndex == visibleTabIndexes.LastOrDefault())
-            {
-                nextButton.Content = "FINISH";
-            }
+            if (tabs.SelectedIndex == visibleTabIndexes.LastOrDefault()) nextButton.Content = "FINISH";
 
-            for (var i = 0; i < tabs.Items.Count; i++)
-            {
-                ((TabView)tabs.Items[i]).IsPreviousTab = i < tabs.SelectedIndex;
-            }
+            for (var i = 0; i < tabs.Items.Count; i++) ((TabView)tabs.Items[i]).IsPreviousTab = i < tabs.SelectedIndex;
         }
 
-        void OnOnNavigateNext()
+        private void OnOnNavigateNext()
         {
             NextClicked(null, EventArgs.Empty);
         }
 
-        List<int> GetVisibleTabIndexes()
+        private List<int> GetVisibleTabIndexes()
         {
-            var visibleTabIndexes = tabs.Items.OfType<TabItem>().Select((v, i) => new {Index = i, Tab = v}).Where(v => v.Tab.Visibility == Visibility.Visible).Select(v => v.Index).ToList();
+            var visibleTabIndexes = tabs.Items.OfType<TabItem>().Select((v, i) => new { Index = i, Tab = v }).Where(v => v.Tab.Visibility == Visibility.Visible).Select(v => v.Index).ToList();
             return visibleTabIndexes;
         }
     }

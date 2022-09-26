@@ -8,18 +8,18 @@ namespace Octopus.Tentacle.Tests.Integration
 {
     public class StartScriptCommandBuilder
     {
-        readonly List<ScriptFile> files = new List<ScriptFile>();
+        private readonly List<ScriptFile> files = new List<ScriptFile>();
 
-        readonly List<string> arguments = new List<string>();
+        private readonly List<string> arguments = new List<string>();
 
-        readonly Dictionary<ScriptType, string> additionalScripts = new Dictionary<ScriptType, string>();
-        StringBuilder scriptBody = new StringBuilder(string.Empty);
+        private readonly Dictionary<ScriptType, string> additionalScripts = new Dictionary<ScriptType, string>();
+        private StringBuilder scriptBody = new StringBuilder(string.Empty);
 
-        ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
+        private ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
 
-        TimeSpan scriptIsolationMutexTimeout = ScriptIsolationMutex.NoTimeout;
-        string scriptIsolationMutexName = nameof(RunningScript);
-        string? taskId;
+        private TimeSpan scriptIsolationMutexTimeout = ScriptIsolationMutex.NoTimeout;
+        private string scriptIsolationMutexName = nameof(RunningScript);
+        private string? taskId;
 
         public StartScriptCommandBuilder WithScriptBody(string scriptBody)
         {
@@ -87,7 +87,8 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         public StartScriptCommand Build()
-            => new StartScriptCommand(scriptBody.ToString(),
+        {
+            return new StartScriptCommand(scriptBody.ToString(),
                 isolation,
                 scriptIsolationMutexTimeout,
                 scriptIsolationMutexName,
@@ -95,5 +96,6 @@ namespace Octopus.Tentacle.Tests.Integration
                 taskId,
                 additionalScripts,
                 files.ToArray());
+        }
     }
 }

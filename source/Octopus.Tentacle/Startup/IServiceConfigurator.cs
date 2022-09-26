@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Startup
             string instance,
             string serviceDescription,
             ServiceConfigurationState serviceConfigurationState);
-        
+
         void ConfigureServiceByConfigPath(string thisServiceName,
             string exePath,
             string configPath,
