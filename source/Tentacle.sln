@@ -43,6 +43,7 @@ Global
 		Release-netcoreapp3.1-linux-x64|Any CPU = Release-netcoreapp3.1-linux-x64|Any CPU
 		Release-netcoreapp3.1-linux-arm|Any CPU = Release-netcoreapp3.1-linux-arm|Any CPU
 		Release-netcoreapp3.1-osx-x64|Any CPU = Release-netcoreapp3.1-osx-x64|Any CPU
+		Release-netcoreapp3.1-osx-arm64|Any CPU = Release-netcoreapp3.1-osx-arm64|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{5C47E1B4-F87A-4212-8C62-18AC2ECE789E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -67,6 +68,8 @@ Global
 		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Release-netcoreapp3.1-linux-arm|Any CPU.Build.0 = Release|Any CPU
 		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Release-netcoreapp3.1-osx-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Release-netcoreapp3.1-osx-x64|Any CPU.Build.0 = Release|Any CPU
+		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Release-netcoreapp3.1-osx-arm64|Any CPU.ActiveCfg = Release|Any CPU
+		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}.Release-netcoreapp3.1-osx-arm64|Any CPU.Build.0 = Release|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -80,6 +83,7 @@ Global
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release-netcoreapp3.1-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release-netcoreapp3.1-linux-arm|Any CPU.ActiveCfg = Release|Any CPU
 		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release-netcoreapp3.1-osx-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{A9E01394-4A21-418F-9ACC-D5A164E8491B}.Release-netcoreapp3.1-osx-arm64|Any CPU.ActiveCfg = Release|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -100,6 +104,8 @@ Global
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release-netcoreapp3.1-linux-arm|Any CPU.Build.0 = Release|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release-netcoreapp3.1-osx-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release-netcoreapp3.1-osx-x64|Any CPU.Build.0 = Release|Any CPU
+		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release-netcoreapp3.1-osx-arm64|Any CPU.ActiveCfg = Release|Any CPU
+		{8A33CADF-9D7F-4835-842C-B71700DB6A3B}.Release-netcoreapp3.1-osx-arm64|Any CPU.Build.0 = Release|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -113,6 +119,7 @@ Global
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-netcoreapp3.1-linux-x64|Any CPU.ActiveCfg = Release|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-netcoreapp3.1-linux-arm|Any CPU.ActiveCfg = Release|Any CPU
 		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-netcoreapp3.1-osx-x64|Any CPU.ActiveCfg = Release|Any CPU
+		{8F604C33-4137-4C00-A9B3-847FD403811D}.Release-netcoreapp3.1-osx-arm64|Any CPU.ActiveCfg = Release|Any CPU
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -133,6 +140,8 @@ Global
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Release-netcoreapp3.1-linux-arm|Any CPU.Build.0 = Debug|Any CPU
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Release-netcoreapp3.1-osx-x64|Any CPU.ActiveCfg = Debug|Any CPU
 		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Release-netcoreapp3.1-osx-x64|Any CPU.Build.0 = Debug|Any CPU
+		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Release-netcoreapp3.1-osx-arm64|Any CPU.ActiveCfg = Debug|Any CPU
+		{407551C4-B4DF-4665-96B1-BFF6A6A74D36}.Release-netcoreapp3.1-osx-arm64|Any CPU.Build.0 = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -153,6 +162,8 @@ Global
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-netcoreapp3.1-linux-arm|Any CPU.Build.0 = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-netcoreapp3.1-osx-x64|Any CPU.ActiveCfg = Debug|Any CPU
 		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-netcoreapp3.1-osx-x64|Any CPU.Build.0 = Debug|Any CPU
+		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-netcoreapp3.1-osx-arm64|Any CPU.ActiveCfg = Debug|Any CPU
+		{86C4288E-9982-4DC6-994F-461C95640C7D}.Release-netcoreapp3.1-osx-arm64|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
