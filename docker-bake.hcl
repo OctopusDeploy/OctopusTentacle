@@ -9,7 +9,7 @@ variable "BUILD_NUMBER" {
 target "octopusdeploy-tentacle-linux" {
   dockerfile = "./docker/linux/Dockerfile"
   tags = ["docker.packages.octopushq.com/octopusdeploy/tentacle:${BUILD_NUMBER}-linux"]
-  platforms = ["linux/amd64","linux/arm64"]
+  platforms = ["linux/arm64"]
   args = {
     BUILD_DATE = "${BUILD_DATE}"
     BUILD_NUMBER = "${BUILD_NUMBER}"
