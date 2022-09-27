@@ -84,7 +84,7 @@ partial class Build : NukeBuild
 
     const string NetFramework = "net452";
     const string NetCore = "netcoreapp3.1";
-    readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
+    readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64", "osx-arm64" };
 
     [PublicAPI]
     Target CalculateVersion => _ => _
