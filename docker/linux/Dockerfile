@@ -2,6 +2,8 @@ FROM mcr.microsoft.com/dotnet/core/runtime-deps:3.1
 
 ARG BUILD_NUMBER
 ARG BUILD_DATE
+ARG TARGETARCH
+ENV TARGETARCH=${TARGETARCH:amd64}
 
 RUN apt-get update && \
     apt-get install -y \
@@ -28,9 +30,9 @@ COPY docker/linux/scripts/dockerd-entrypoint.sh /usr/local/bin/
 RUN /install-scripts/install-docker.sh
 
 # Install Tentacle
-COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_amd64.deb /tmp/
+COPY _artifacts/deb/tentacle_${BUILD_NUMBER}_${TARGETARCH}.deb /tmp/
 RUN apt-get update && \
-    apt install ./tentacle_${BUILD_NUMBER}_amd64.deb && \
+    apt install ./tentacle_${BUILD_NUMBER}_${TARGETARCH}.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
