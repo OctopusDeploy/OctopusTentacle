@@ -2,8 +2,7 @@ FROM mcr.microsoft.com/dotnet/core/runtime-deps:3.1
 
 ARG BUILD_NUMBER
 ARG BUILD_DATE
-ARG TARGETARCH
-ENV TARGETARCH=${TARGETARCH:"amd64"}
+ARG TARGETARCH=amd64
 
 RUN apt-get update && \
     apt-get install -y \
