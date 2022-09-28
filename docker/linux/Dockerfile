@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/runtime-deps:3.1
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/core/runtime-deps:3.1
 
 ARG BUILD_NUMBER
 ARG BUILD_DATE
