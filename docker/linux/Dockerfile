@@ -4,6 +4,9 @@ ARG BUILD_NUMBER
 ARG BUILD_DATE
 ARG TARGETARCH=amd64
 
+RUN echo ${TARGETARCH}
+
+
 RUN apt-get update && \
     apt-get install -y \
         curl \
