@@ -14,7 +14,7 @@
         <Nullable>annotations</Nullable>
     </PropertyGroup>
     <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
-        <TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
+        <TargetFrameworks>net48;netcoreapp3.1</TargetFrameworks>
     </PropertyGroup>
     <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
         <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -30,9 +30,9 @@
         <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
         <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
         <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.15" />
-        <Reference Include="System.DirectoryServices.AccountManagement" Condition="'$(TargetFramework)' == 'net452'" />
-        <Reference Include="System.IdentityModel" Condition="'$(TargetFramework)' == 'net452'" />
-        <Reference Include="System.ServiceProcess" Condition="'$(TargetFramework)' == 'net452'" />
+        <Reference Include="System.DirectoryServices.AccountManagement" Condition="'$(TargetFramework)' == 'net48'" />
+        <Reference Include="System.IdentityModel" Condition="'$(TargetFramework)' == 'net48'" />
+        <Reference Include="System.ServiceProcess" Condition="'$(TargetFramework)' == 'net48'" />
     </ItemGroup>
     <ItemGroup>
       <Content Include="Startup\Packages\Acme.Service\Acme.Service.exe">

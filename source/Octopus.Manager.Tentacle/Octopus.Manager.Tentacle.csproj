@@ -6,7 +6,7 @@
     <OutputType>WinExe</OutputType>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
-    <TargetFramework>net452</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -16,7 +16,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net452'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
     <IsPublishable>true</IsPublishable>
   </PropertyGroup>
 

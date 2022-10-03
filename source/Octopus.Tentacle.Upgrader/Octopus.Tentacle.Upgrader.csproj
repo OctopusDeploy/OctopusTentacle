@@ -9,7 +9,7 @@
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <RootNamespace>Octopus.Tentacle.Upgrader</RootNamespace>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
-    <TargetFrameworks>net452</TargetFrameworks>
+    <TargetFrameworks>net48</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -17,7 +17,7 @@
     <Optimize>True</Optimize>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net452' AND '$(RuntimeIdentifier)'=='win'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net48' AND '$(RuntimeIdentifier)'=='win'">
     <IsPublishable>true</IsPublishable>
   </PropertyGroup>
 

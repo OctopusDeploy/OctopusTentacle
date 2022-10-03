@@ -14,13 +14,13 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
-    <TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net48;netcoreapp3.1</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
     <DefineConstants>$(DefineConstants);DEFAULT_PROXY_IS_AVAILABLE;HAS_SYSTEM_IDENTITYMODEL_TOKENS;FULL_FRAMEWORK</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
@@ -64,9 +64,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="System.DirectoryServices.AccountManagement" Condition="'$(TargetFramework)' == 'net452'" />
-    <Reference Include="System.IdentityModel" Condition="'$(TargetFramework)' == 'net452'" />
-    <Reference Include="System.ServiceProcess" Condition="'$(TargetFramework)' == 'net452'" />
+    <Reference Include="System.DirectoryServices.AccountManagement" Condition="'$(TargetFramework)' == 'net48'" />
+    <Reference Include="System.IdentityModel" Condition="'$(TargetFramework)' == 'net48'" />
+    <Reference Include="System.ServiceProcess" Condition="'$(TargetFramework)' == 'net48'" />
   </ItemGroup>
 
 

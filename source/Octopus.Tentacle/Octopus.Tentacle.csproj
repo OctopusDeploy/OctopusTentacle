@@ -10,14 +10,14 @@
 		<OutputType>Exe</OutputType>
 		<PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
-		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net48;netcoreapp3.1</TargetFrameworks>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<Choose>
-		<When Condition="'$(TargetFramework)' == 'net452'">
+		<When Condition="'$(TargetFramework)' == 'net48'">
 			<PropertyGroup>
 				<RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
 			</PropertyGroup>
@@ -33,7 +33,7 @@
 		<Optimize>True</Optimize>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
 		<NoWarn>8601</NoWarn>
 		<DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
 	</PropertyGroup>

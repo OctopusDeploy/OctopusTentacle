@@ -5,7 +5,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\</OutputPath>
-    <TargetFrameworks>net452;netstandard2.1;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net48;netstandard2.1;netcoreapp3.1</TargetFrameworks>
     <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
     <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -16,7 +16,7 @@
     <DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
   </PropertyGroup>
   <Choose>
-    <When Condition="'$(TargetFramework)' == 'net452'">
+    <When Condition="'$(TargetFramework)' == 'net48'">
       <PropertyGroup>
         <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
       </PropertyGroup>
