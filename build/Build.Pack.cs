@@ -325,8 +325,8 @@ partial class Build
             {
                 foreach (var runtimeId in RuntimeIds)
                 {
-                    if (runtimeId == "win" && framework != "net452"
-                        || runtimeId != "win" && framework == "net452") continue;
+                    if (runtimeId == "win" && framework != "net48"
+                        || runtimeId != "win" && framework == "net48") continue;
 
                     var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
                     FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{OctoVersionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}",
