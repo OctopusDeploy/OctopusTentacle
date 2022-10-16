@@ -186,7 +186,7 @@ namespace Octopus.Tentacle.Security.Certificates
         {
             try
             {
-                return certificate2.HasPrivateKey && certificate2.PrivateKey != null;
+                return certificate2.GetRSAPrivateKey() != null;
             }
             catch (Exception)
             {
