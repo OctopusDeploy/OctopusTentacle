@@ -102,8 +102,8 @@ namespace Octopus.Tentacle.Security.Certificates
                 store.Close();
             }
         }
-        
-#if NET472_OR_GREATER || NETCOREAPP || NETSTANDARD
+
+#if NETCOREAPP || NETSTANDARD
         // Mac doesn't appear to support EphemeralKeySet 
         // see: https://github.com/dotnet/runtime/blob/a2af6294767b4a3f4c2ce787c5dda2abeeda7a00/src/libraries/System.Security.Cryptography.X509Certificates/src/Internal/Cryptography/Pal.OSX/StorePal.cs#L38
         static X509KeyStorageFlags keySet = PlatformDetection.IsRunningOnMac ? X509KeyStorageFlags.PersistKeySet : X509KeyStorageFlags.EphemeralKeySet;
@@ -124,8 +124,8 @@ namespace Octopus.Tentacle.Security.Certificates
         static X509Certificate2 LoadCertificateWithPrivateKey(byte[] rawData, string? password, bool storeInKeyStore)
         {
             var keySetToUse = storeInKeyStore ? X509KeyStorageFlags.PersistKeySet : keySet;
-            
-            return  TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | keySetToUse, true)
+
+            return TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | keySetToUse, true)
                 ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | keySetToUse, true)
                 ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | keySetToUse, true)
                 ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | keySetToUse, false)
@@ -287,28 +287,28 @@ namespace Octopus.Tentacle.Security.Certificates
                 var num = 0;
                 string text = null;
                 if (CryptAcquireCertificatePrivateKey(cert.Handle,
-                    dwFlags,
-                    IntPtr.Zero,
-                    ref zero,
-                    ref num,
-                    ref flag))
+                        dwFlags,
+                        IntPtr.Zero,
+                        ref zero,
+                        ref num,
+                        ref flag))
                 {
                     var intPtr = IntPtr.Zero;
                     var num2 = 0;
                     try
                     {
                         if (CryptGetProvParam(zero,
-                            CryptGetProvParamType.PP_UNIQUE_CONTAINER,
-                            IntPtr.Zero,
-                            ref num2,
-                            0u))
+                                CryptGetProvParamType.PP_UNIQUE_CONTAINER,
+                                IntPtr.Zero,
+                                ref num2,
+                                0u))
                         {
                             intPtr = Marshal.AllocHGlobal(num2);
                             if (CryptGetProvParam(zero,
-                                CryptGetProvParamType.PP_UNIQUE_CONTAINER,
-                                intPtr,
-                                ref num2,
-                                0u))
+                                    CryptGetProvParamType.PP_UNIQUE_CONTAINER,
+                                    intPtr,
+                                    ref num2,
+                                    0u))
                             {
                                 var array = new byte[num2];
                                 Marshal.Copy(intPtr, array, 0, num2);
