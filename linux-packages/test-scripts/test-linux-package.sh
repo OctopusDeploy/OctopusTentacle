@@ -11,7 +11,6 @@ stat "$PACKAGE_FILENAME"
 
 # Confirm that Tentacle is on the path
 # We don't use `which Tentacle` here as, although Tentacle should have been installed, we can't trust that `which` exists.
-dotnet --version
 Tentacle --version
 echo "Tentacle binary lives in the path."
 echo ""
