@@ -91,8 +91,9 @@ namespace Octopus.Tentacle.Tests.Configuration
             var store = new InMemoryKeyValueStore(mapper);
 
             var settings = store.TryGet<TestConfig[]>("Test");
-            settings.value.Single().SettingA.Should().Be("some value", "strings should get parsed");
-            settings.value.Single().SomethingElse.Should().Be(12, "ints should get parsed");
+            settings.value.Should().NotBeNull();
+            settings.value?.Single().SettingA.Should().Be("some value", "strings should get parsed");
+            settings.value?.Single().SomethingElse.Should().Be(12, "ints should get parsed");
         }
 
         class TestConfig
@@ -105,10 +106,8 @@ namespace Octopus.Tentacle.Tests.Configuration
         static byte[] GenerateValue()
         {
             var key = new byte[16];
-            using (var provider = new RNGCryptoServiceProvider())
-            {
-                provider.GetBytes(key);
-            }
+            using var provider = RandomNumberGenerator.Create();
+            provider.GetBytes(key);
 
             return key;
         }

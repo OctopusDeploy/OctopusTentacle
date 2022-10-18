@@ -271,10 +271,8 @@ namespace Octopus.Tentacle.Tests.Configuration
             static byte[] GenerateValue()
             {
                 var key = new byte[16];
-                using (var provider = new RNGCryptoServiceProvider())
-                {
-                    provider.GetBytes(key);
-                }
+                using var provider = RandomNumberGenerator.Create();
+                provider.GetBytes(key);
 
                 return key;
             }

@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Internals.Options
             var p = Items[index];
             // KeyedCollection.RemoveItem() handles the 0th item
             for (var i = 1; i < p.Names.Length; ++i)
-                Dictionary.Remove(p.Names[i]);
+                Dictionary?.Remove(p.Names[i]);
         }
 
         protected override void SetItem(int index, Option item)
@@ -85,14 +85,14 @@ namespace Octopus.Tentacle.Internals.Options
                 // KeyedCollection.InsertItem/SetItem handle the 0th name.
                 for (var i = 1; i < option.Names.Length; ++i)
                 {
-                    Dictionary.Add(option.Names[i], option);
+                    Dictionary?.Add(option.Names[i], option);
                     added.Add(option.Names[i]);
                 }
             }
             catch (Exception)
             {
                 foreach (var name in added)
-                    Dictionary.Remove(name);
+                    Dictionary?.Remove(name);
                 throw;
             }
         }

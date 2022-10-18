@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Commands
             tentacleConfiguration.Value.ImportCertificate(x509Certificate);
             VoteForRestart();
 
-            if (x509Certificate.PrivateKey.KeySize < CertificateGenerator.RecommendedKeyBitLength)
+            if (x509Certificate.GetRSAPrivateKey()?.KeySize < CertificateGenerator.RecommendedKeyBitLength)
                 log.Warn("The imported certificate's private key is smaller than the currently-recommended bit length; generating a new key for the tentacle is advised.");
 
             log.Info($"Certificate with thumbprint {x509Certificate.Thumbprint} imported successfully.");
@@ -93,22 +93,15 @@ namespace Octopus.Tentacle.Commands
 
         string? GetEncodedCertificate()
         {
-            const RegistryHive Hive = RegistryHive.LocalMachine;
-            const RegistryView View = RegistryView.Registry64;
-            const string KeyName = "Software\\Octopus";
+#pragma warning disable CA1416
+            const RegistryHive hive = RegistryHive.LocalMachine;
+            const RegistryView view = RegistryView.Registry64;
+            const string keyName = "Software\\Octopus";
 
-#pragma warning disable PC001 //API not supported on all platforms, this code should only be run on Windows
-            using (var key = RegistryKey.OpenBaseKey(Hive, View))
-            using (var subkey = key.OpenSubKey(KeyName, false))
-            {
-                if (subkey != null)
-                {
-                    return (string)subkey.GetValue("Cert-cn=Octopus Tentacle", null);
-                }
-
-                return null;
-            }
-#pragma warning restore PC001
+            using var key = RegistryKey.OpenBaseKey(hive, view);
+            using var subkey = key.OpenSubKey(keyName, false);
+            return (string?)subkey?.GetValue("Cert-cn=Octopus Tentacle", null);
+#pragma warning restore CA1416
         }
     }
 }

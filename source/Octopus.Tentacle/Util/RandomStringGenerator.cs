@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Util
 {
     public static class RandomStringGenerator
     {
-        static readonly object GeneratorLock = new object();
+        static readonly object GeneratorLock = new();
 
         public static string Generate(int length)
         {
@@ -14,20 +14,18 @@ namespace Octopus.Tentacle.Util
             lock (GeneratorLock)
             {
                 var password = new StringBuilder(length);
-                using (var random = new RNGCryptoServiceProvider())
-                {
-                    for (var i = 0; i < length; i++)
-                        password.Append(allowedCharacters[Next(random, allowedCharacters.Length - 1)]);
+                using var random = RandomNumberGenerator.Create();
+                for (var i = 0; i < length; i++)
+                    password.Append(allowedCharacters[Next(random, allowedCharacters.Length - 1)]);
 
-                    return password.ToString();
-                }
+                return password.ToString();
             }
         }
 
         static byte Next(RandomNumberGenerator rngCsp, int numberSides)
         {
             if (numberSides <= 0)
-                throw new ArgumentOutOfRangeException("numberSides");
+                throw new ArgumentOutOfRangeException(nameof(numberSides));
 
             var randomNumber = new byte[1];
             do

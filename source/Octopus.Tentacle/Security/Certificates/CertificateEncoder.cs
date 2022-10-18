@@ -251,6 +251,7 @@ namespace Octopus.Tentacle.Security.Certificates
             if (folderPath == null)
                 throw new Exception("There was no directory specified in the private key path.");
 
+#pragma warning disable CA1416
             var current = WindowsIdentity.GetCurrent();
             if (current == null || current.User == null)
                 throw new Exception("There is no current windows identity.");
@@ -263,6 +264,7 @@ namespace Octopus.Tentacle.Security.Certificates
                 PropagationFlags.None,
                 AccessControlType.Allow));
             directory.SetAccessControl(security);
+#pragma warning restore CA1416
         }
 #nullable disable
 

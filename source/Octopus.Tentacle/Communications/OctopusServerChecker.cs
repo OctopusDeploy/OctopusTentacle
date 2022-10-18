@@ -38,34 +38,40 @@ namespace Octopus.Tentacle.Communications
 
             Retry("Checking that server communications are open", () =>
             {
-#pragma warning disable DE0003
+                // TODO see if can deal with SYSLIB0014
+#pragma warning disable DE0003,SYSLIB0014
                 var req = WebRequest.Create(handshake);
                 req.Proxy = proxyOverride;
                 req.Method = "POST";
                 req.ContentLength = 0;
-#pragma warning restore DE0003
+#pragma warning restore DE0003,SYSLIB0014
                 try
                 {
-                    using (var resp = req.GetResponse())
-                    using (var rs = resp.GetResponseStream())
-                    using (var reader = new StreamReader(rs))
-                    {
-                        var wr = (HttpWebResponse)resp;
-                        var content = reader.ReadToEnd();
-                        if (wr.StatusCode != HttpStatusCode.OK)
-                            throw new Exception("The service listening on " + serverAddress + " does not appear to be an Octopus Server. The response code was: " + wr.StatusCode + ". The response was: " + content);
+                    using var resp = req.GetResponse();
+                    using var rs = resp.GetResponseStream();
+                    using var reader = new StreamReader(rs);
+                    var wr = (HttpWebResponse)resp;
+                    var content = reader.ReadToEnd();
+                    if (wr.StatusCode != HttpStatusCode.OK)
+                        throw new Exception("The service listening on " + serverAddress + " does not appear to be an Octopus Server. The response code was: " + wr.StatusCode + ". The response was: " + content);
 
-                        log.Verbose("Connectivity with the server communications port successfully verified.");
-                    }
+                    log.Verbose("Connectivity with the server communications port successfully verified.");
                 }
                 catch (WebException wex)
                 {
+                    if (wex.Response is null)
+                    {
+                        throw;
+                    }
+                    
                     var wr = (HttpWebResponse)wex.Response;
 
                     // "The remote server returned an error: (400) Bad Request."
                     // Server requires we send a cert, which we didn't. Port must be open.
-                    if (wr == null || wr.StatusCode != HttpStatusCode.BadRequest)
+                    if (wr.StatusCode != HttpStatusCode.BadRequest)
+                    {
                         throw;
+                    }
 
                     log.Verbose("Connectivity with the server communications port successfully verified.");
                 }
