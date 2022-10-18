@@ -9,13 +9,13 @@ namespace Octopus.Tentacle.Versioning
         public static string GetFileVersion(this Assembly assembly)
         {
             var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.FullLocalPath());
-            return fileVersionInfo.FileVersion;
+            return fileVersionInfo.FileVersion ?? "";
         }
 
         public static string GetInformationalVersion(this Assembly assembly)
         {
             var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
-            return fileVersionInfo.ProductVersion;
+            return fileVersionInfo.ProductVersion ?? "";
         }
 
         public static SemanticVersionInfo GetSemanticVersionInfo(this Assembly assembly)

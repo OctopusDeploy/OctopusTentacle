@@ -83,7 +83,7 @@ partial class Build : NukeBuild
     readonly AbsolutePath TestDirectory = RootDirectory / "_test";
 
     const string NetFramework = "net48";
-    const string NetCore = "netcoreapp3.1";
+    const string NetCore = "net6";
     readonly string[] RuntimeIds = { "win", "win-x86", "win-x64", "linux-x64", "linux-musl-x64", "linux-arm64", "linux-arm", "osx-x64" };
 
     [PublicAPI]
@@ -109,6 +109,37 @@ partial class Build : NukeBuild
         {
             DotNetRestore(_ => _
                 .SetProjectFile(Solution));
+        });
+    
+    [PublicAPI]
+    Target BuildNetFramework => _ => _
+        .DependsOn(Restore)
+        .Executes(() =>
+        {
+            using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
+            using var productWxsFile = UpdateMsiProductVersion();
+
+            RuntimeIds.Where(x => x.StartsWith("win"))
+                .ForEach(runtimeId => RunBuildFor(runtimeId.Equals("win") ? NetFramework : NetCore, runtimeId));
+            
+            versionInfoFile.Dispose();
+            productWxsFile.Dispose();
+            
+            var winFolder = (BuildDirectory / "Tentacle" / NetFramework / "win");
+            var hardenInstallationDirectoryScript = RootDirectory / "scripts" / "Harden-InstallationDirectory.ps1";
+            CopyFileToDirectory(hardenInstallationDirectoryScript, winFolder, FileExistsPolicy.Overwrite);
+
+            // Sign any unsigned libraries that Octopus Deploy authors so that they play nicely with security scanning tools.
+            // Refer: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1551655877004400
+            // Decision re: no signing everything: https://octopusdeploy.slack.com/archives/C0K9DNQG5/p1557938890227100
+            var windowsOnlyBuiltFileSpec = BuildDirectory.GlobDirectories("**/win*/**");
+
+            var filesToSign = windowsOnlyBuiltFileSpec
+                .SelectMany(x => x.GlobFiles("**/Octo*.exe", "**/Octo*.dll", "**/Tentacle.exe", "**/Tentacle.dll", "**/Halibut.dll", "**/Nuget.*.dll", "**/Nevermore.dll", "**/*.ps1"))
+                .Where(file => !Signing.HasAuthenticodeSignature(file))
+                .ToArray();
+
+            Signing.Sign(filesToSign);
         });
 
     [PublicAPI]
