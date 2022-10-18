@@ -92,7 +92,7 @@
 		<PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0" />
 		<PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.5.0" />
 		<PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
-		<PackageReference Include="NLog" Version="4.7.6" />
+		<PackageReference Include="NLog" Version="5.0.4" />
 		<PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
 		<PackageReference Include="System.Diagnostics.EventLog" Version="4.5.0" />
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
@@ -100,7 +100,7 @@
 		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-		<PackageReference Include="NLog" Version="4.0.1" />
+		<PackageReference Include="NLog" Version="5.0.4" />
 		<PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
 		<PackageReference Include="System.Runtime" Version="4.3.0" />
 		<PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
