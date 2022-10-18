@@ -96,6 +96,7 @@
             "enum": [
               "BuildAll",
               "BuildLinux",
+              "BuildNetFramework",
               "BuildOsx",
               "BuildWindows",
               "CalculateVersion",
@@ -138,6 +139,7 @@
             "enum": [
               "BuildAll",
               "BuildLinux",
+              "BuildNetFramework",
               "BuildOsx",
               "BuildWindows",
               "CalculateVersion",
