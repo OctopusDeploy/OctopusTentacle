@@ -2,6 +2,7 @@ FROM docker.packages.octopushq.com/octopusdeploy/tool-containers/windowsserverco
 
 ARG BUILD_NUMBER
 ARG BUILD_DATE
+ARG INSTALLATION_FOLDER="C:/Program Files/Octopus Deploy/Tentacle/"
 
 ENV TentacleVersion ${BUILD_NUMBER}
 ENV OCTOPUS_RUNNING_IN_CONTAINER Y
@@ -20,9 +21,9 @@ LABEL \
 EXPOSE 10933
 
 # Either from a build artifact dependency or local build output.
-COPY _artifacts/tentacle/ "C:/Program Files/Octopus Deploy/Tentacle/"
+COPY _artifacts/tentacle/ ${INSTALLATION_FOLDER}
 
-RUN setx path "%path%;C:\Program Files\Octopus Deploy\Tentacle"
+RUN setx path "%path%;${INSTALLATION_FOLDER}"
 RUN tentacle create-instance --console --instance Tentacle --config C:\Octopus\Tentacle.config
 
 WORKDIR /Scripts
