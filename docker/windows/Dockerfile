@@ -22,8 +22,6 @@ EXPOSE 10933
 
 # Either from a build artifact dependency or local build output.
 COPY _artifacts/tentacle/ "${INSTALLATION_FOLDER}"
-WORKDIR "${INSTALLATION_FOLDER}"
-RUN dir
 
 RUN setx path "%path%;${INSTALLATION_FOLDER}"
 RUN Tentacle create-instance --console --instance Tentacle --config C:\Octopus\Tentacle.config
