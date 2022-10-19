@@ -222,19 +222,17 @@ namespace Octopus.Tentacle.Security.Certificates
             {
                 return new X509Certificate2(rawData, password, flags);
             }
-            else
+
+            // We have to write it to temp ourselves otherwise the framework will create and never delete the tmp file.
+            var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
+            try
             {
-                // We have to write it to temp ourselves otherwise the framework will create and never delete the tmp file.
-                var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
-                try
-                {
-                    File.WriteAllBytes(file, rawData);
-                    return new X509Certificate2(file, password, flags);
-                }
-                finally
-                {
-                    File.Delete(file);
-                }
+                File.WriteAllBytes(file, rawData);
+                return new X509Certificate2(file, password, flags);
+            }
+            finally
+            {
+                File.Delete(file);
             }
         }
 
