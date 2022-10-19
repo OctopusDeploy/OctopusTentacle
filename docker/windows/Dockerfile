@@ -21,11 +21,11 @@ LABEL \
 EXPOSE 10933
 
 # Either from a build artifact dependency or local build output.
-COPY _artifacts/tentacle/ ${INSTALLATION_FOLDER}
-RUN dir ${INSTALLATION_FOLDER}
+COPY _artifacts/tentacle/ "${INSTALLATION_FOLDER}"
+RUN dir "${INSTALLATION_FOLDER}"
 
 RUN setx path "%path%;${INSTALLATION_FOLDER}"
-RUN tentacle create-instance --console --instance Tentacle --config C:\Octopus\Tentacle.config
+RUN Tentacle create-instance --console --instance Tentacle --config C:\Octopus\Tentacle.config
 
 WORKDIR /Scripts
 COPY docker/windows/Scripts/*.ps1 /Scripts/
