@@ -102,24 +102,17 @@ namespace Octopus.Tentacle.Security.Certificates
                 store.Close();
             }
         }
-
-#if NETCOREAPP || NETSTANDARD
+        
         // Mac doesn't appear to support EphemeralKeySet 
         // see: https://github.com/dotnet/runtime/blob/a2af6294767b4a3f4c2ce787c5dda2abeeda7a00/src/libraries/System.Security.Cryptography.X509Certificates/src/Internal/Cryptography/Pal.OSX/StorePal.cs#L38
-        static X509KeyStorageFlags keySet = PlatformDetection.IsRunningOnMac ? X509KeyStorageFlags.PersistKeySet : X509KeyStorageFlags.EphemeralKeySet;
+        // Window also doesn't appear to support EphemeralKeySet when used with SslStream
+        // see: https://github.com/dotnet/runtime/issues/23749
+        static readonly X509KeyStorageFlags keySet = PlatformDetection.IsRunningOnNix ? X509KeyStorageFlags.EphemeralKeySet : X509KeyStorageFlags.PersistKeySet;
 
         static bool HasFlagEphemeralKeySet(X509KeyStorageFlags flags)
         {
-            return flags.HasFlag(X509KeyStorageFlags.EphemeralKeySet);
+            return !PlatformDetection.IsRunningOnWindows && flags.HasFlag(X509KeyStorageFlags.EphemeralKeySet);
         }
-#else
-        static X509KeyStorageFlags keySet = X509KeyStorageFlags.PersistKeySet;
-
-        static bool HasFlagEphemeralKeySet(X509KeyStorageFlags flags)
-        {
-            return false;
-        }
-#endif
 
         static X509Certificate2 LoadCertificateWithPrivateKey(byte[] rawData, string? password, bool storeInKeyStore)
         {
