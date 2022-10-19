@@ -20,8 +20,10 @@ LABEL \
 EXPOSE 10933
 
 # Either from a build artifact dependency or local build output.
-# COPY _artifacts/msi/Octopus.Tentacle.${BUILD_NUMBER}-x64.msi /tmp/
-COPY _artifacts/zip/tentacle-${BUILD_NUMBER}-net6.0-win-x64/tentacle/ C:/Program Files/Octopus Deploy/
+COPY _artifacts/zip/tentacle-${BUILD_NUMBER}-net6.0-win-x64.zip /tmp/tentacle.zip
+WORKDIR /tmp
+RUN unzip tentacle.zip -d tentacle
+RUN cp tentacle/tentacle C:/Program Files/Octopus Deploy/Tentacle
 
 RUN setx path "%path%;C:\Program Files\Octopus Deploy\Tentacle"
 RUN tentacle create-instance --console --instance Tentacle --config C:\Octopus\Tentacle.config
