@@ -22,12 +22,10 @@ partial class Build
 
     [PublicAPI]
     Target TestLinux => _ => _
-        .DependsOn(BuildLinux)
         .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
     Target TestOsx => _ => _
-        .DependsOn(BuildOsx)
         .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
@@ -55,11 +53,11 @@ partial class Build
                     if (string.IsNullOrEmpty(archSuffix)) throw new NotSupportedException();
 
                     var searchForTestFileDirectory = ArtifactsDirectory / testConfiguration.PackageType;
-                    Log.Information($"Searching for files in {searchForTestFileDirectory}");
+                    Log.Information("Searching for files in {SearchForTestFileDirectory}", searchForTestFileDirectory);
                     var packageTypeFilePath = searchForTestFileDirectory.GlobFiles($"*{archSuffix}.{testConfiguration.PackageType}")
                         .Single();
                     var packageFile = Path.GetFileName(packageTypeFilePath);
-                    Log.Information($"Testing Linux package file {packageFile}");
+                    Log.Information("Testing Linux package file {PackageFile}", packageFile);
 
                     var testScriptsBindMountPoint = RootDirectory / "linux-packages" / "test-scripts";
 
@@ -198,7 +196,7 @@ partial class Build
     
     void RunTests(string testFramework, string testRuntime)
     {
-        Log.Information($"Running test for Framework: {testFramework} and Runtime: {testRuntime}");
+        Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
 
         FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
             
@@ -224,7 +222,7 @@ partial class Build
         }
         catch (Exception e)
         {
-            Log.Warning($"{e.Message}: {e}");
+            Log.Warning("{Message}: {Exception}", e.Message, e.ToString());
         }
     }
 
