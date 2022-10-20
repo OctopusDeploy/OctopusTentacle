@@ -18,7 +18,6 @@ partial class Build
 {
     [PublicAPI]
     Target TestWindows => _ => _
-        .DependsOn(BuildWindows)
         .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
@@ -231,7 +230,7 @@ partial class Build
 
     void RunIntegrationTests(string testFramework, string testRuntime)
     {
-        Log.Information($"Running test for Framework: {testFramework} and Runtime: {testRuntime}");
+        Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
 
         FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
 
@@ -240,13 +239,8 @@ partial class Build
         // have to shunt them all around the place.
         // By doing things this way, we can have a seamless experience between local and remote builds.
         var octopusTentacleTestsDirectory = BuildDirectory / "Octopus.Tentacle.Tests.Integration" / testFramework / testRuntime;
-        Log.Debug("octopusTentacleTestsDirectory: {OctopusTentacleTestsDirectory}", octopusTentacleTestsDirectory);
-        
         var testAssembliesPath = octopusTentacleTestsDirectory.GlobFiles("*.Tests*.dll");
-        Log.Debug("testAssembliesPath: {TestAssembliesPath}", string.Join(',', testAssembliesPath.Select(x => x.ToString())));
-        
         var testResultsPath = ArtifactsDirectory / "teamcity" / $"TestResults-{testFramework}-{testRuntime}.xml";
-        Log.Debug("testResultsPath: {TestResultsPath}", testResultsPath.ToString());
 
         try
         {
@@ -262,7 +256,7 @@ partial class Build
         }
         catch (Exception e)
         {
-            Log.Warning($"{e.Message}: {e}");
+            Log.Warning("{Message}: {Exception}", e.Message, e.ToString());
         }
     }
 }
