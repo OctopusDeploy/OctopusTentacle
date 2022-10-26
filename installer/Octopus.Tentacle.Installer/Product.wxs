@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
   <?if $(var.Platform) = x64 ?>
   <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
@@ -42,12 +42,12 @@
     Ensure that they're not trying to run the 32-bit installer on a 64-bit Operating System.
     -->
     <?if $(var.Platform) = x86 ?>
-    <Condition Message="This installer is only supported on 32-bit operating systems. Please download and run the 64-bit installer."><![CDATA[Not VersionNT64]]></Condition>
+    <Condition Message="This installer is only supported on 64-bit operating systems. Please download and run the 64-bit installer."><![CDATA[Not VersionNT64]]></Condition>
     <?endif ?>
     <!--
     Ensure that the .NET Framework has been installed
     -->
-    <PropertyRef Id="NETFRAMEWORK48" />
+    <PropertyRef Id="NETFRAMEWORK45" />
     <PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR" />
     <Condition Message="This application requires Microsoft .NET Framework 4.8 Runtime in order to run. Please install the .NET Framework and then run this installer again."><![CDATA[Installed OR NETFRAMEWORK45]]></Condition>
     <!--
