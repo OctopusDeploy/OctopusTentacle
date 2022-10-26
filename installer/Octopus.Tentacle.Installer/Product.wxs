@@ -13,7 +13,7 @@
     - Product/Version      : Change this every major build
     - Product/UpgradeCode  : Never change this
   -->
-  <Product Id="*" Name="Octopus Deploy Tentacle" Language="1033" Version="7.0.32" Manufacturer="Octopus Deploy Pty. Ltd." UpgradeCode="1B32E04F-49C2-4907-8879-A556986F7F16">
+  <Product Id="*" Name="Octopus Deploy Tentacle" Language="1033" Version="7.0.33" Manufacturer="Octopus Deploy Pty. Ltd." UpgradeCode="1B32E04F-49C2-4907-8879-A556986F7F16">
     <Package InstallerVersion="200" Compressed="yes" Description="Octopus Deploy Tentacle" Platform="$(var.Platform)" InstallScope="perMachine" />
     <Media Id="1" Cabinet="Files.cab" EmbedCab="yes" />
     <Property Id="MSIFASTINSTALL" Value="3" />
@@ -47,9 +47,9 @@
     <!--
     Ensure that the .NET Framework has been installed
     -->
-    <PropertyRef Id="NETFRAMEWORK45" />
+    <PropertyRef Id="NETFRAMEWORK48" />
     <PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR" />
-    <Condition Message="This application requires Microsoft .NET Framework 4.5 Runtime in order to run. Please install the .NET Framework and then run this installer again."><![CDATA[Installed OR NETFRAMEWORK45]]></Condition>
+    <Condition Message="This application requires Microsoft .NET Framework 4.8 Runtime in order to run. Please install the .NET Framework and then run this installer again."><![CDATA[Installed OR NETFRAMEWORK45]]></Condition>
     <!--
     User Interface
     -->
