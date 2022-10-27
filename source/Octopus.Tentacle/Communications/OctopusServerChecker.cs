@@ -38,7 +38,6 @@ namespace Octopus.Tentacle.Communications
 
             Retry("Checking that server communications are open", () =>
             {
-                // TODO see if can deal with SYSLIB0014
 #pragma warning disable DE0003,SYSLIB0014
                 var req = WebRequest.Create(handshake);
                 req.Proxy = proxyOverride;
