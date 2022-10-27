@@ -47,9 +47,10 @@
     <!--
     Ensure that the .NET Framework has been installed
     -->
-    <PropertyRef Id="NETFRAMEWORK45" />
-    <PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR" />
-    <Condition Message="This application requires Microsoft .NET Framework 4.8 Runtime in order to run. Please install the .NET Framework and then run this installer again."><![CDATA[Installed OR NETFRAMEWORK45]]></Condition>
+    <PropertyRef Id='WIXNETFX4RELEASEINSTALLED'/>
+    <Condition Message="This application requires Microsoft .NET Framework 4.8 Runtime in order to run. Please install the .NET Framework and then run this installer again.">
+      <![CDATA[Installed OR (WIXNETFX4RELEASEINSTALLED >= "#528040")]]>
+    </Condition>
     <!--
     User Interface
     -->
