@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -13,9 +14,10 @@ namespace Octopus.Tentacle.Upgrader
 
         static int Main(string[] args)
         {
-            //we log this as early as possible as a canary to make sure the upgrader launches
-            //if the upgrade log file doesn't exist, we assume that we couldn't launch the upgrader
-            //for some reason (ie, net framework not installed type issue)
+            AppDomain.CurrentDomain.UnhandledException += LogUnhandledException;
+            // we log this as early as possible as a canary to make sure the upgrader launches
+            // if the upgrade log file doesn't exist, we assume that we couldn't launch the upgrader
+            // for some reason (ie, net framework not installed type issue)
             var appName = typeof(Program).Assembly.GetName().Name;
             Log.Upgrade.Info($"{appName} {Version} started...");
 
@@ -104,6 +106,19 @@ namespace Octopus.Tentacle.Upgrader
         static string GetMsiBasedOnArchitecture(IList<string> args)
         {
             return Environment.Is64BitOperatingSystem ? args[2] : args[1];
+        }
+
+        static void LogUnhandledException(object sender, UnhandledExceptionEventArgs args)
+        {
+            if (Debugger.IsAttached) Debugger.Break();
+            if (args.ExceptionObject is Exception exception)
+            {
+                Console.Error.Write("Unhandled AppDomain exception occurred: {0}", exception);
+            }
+            else
+            {
+                Console.Error.Write("Unhandled AppDomain exception occurred: {0}", args.ExceptionObject);
+            }
         }
     }
 }
