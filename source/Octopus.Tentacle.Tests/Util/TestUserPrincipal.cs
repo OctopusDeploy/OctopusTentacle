@@ -51,7 +51,9 @@ namespace Octopus.Tentacle.Tests.Util
         }
 
         public SecurityIdentifier Sid { get; }
+#pragma warning disable CA1416
         public string NTAccountName => Sid.Translate(typeof(NTAccount)).ToString();
+#pragma warning restore CA1416
         public string DomainName => NTAccountName.Split(new[] { '\\' }, 2)[0];
         public string UserName => NTAccountName.Split(new[] { '\\' }, 2)[1];
         public string SamAccountName { get; }
@@ -61,9 +63,13 @@ namespace Octopus.Tentacle.Tests.Util
         {
             Console.WriteLine($"Ensuring the Windows User Account called '{UserName}' is a member of the '{groupName}' group...");
             using (var principalContext = new PrincipalContext(ContextType.Machine))
+#pragma warning disable CA1416
             using (var principal = UserPrincipal.FindByIdentity(principalContext, IdentityType.Sid, Sid.Value))
+#pragma warning restore CA1416
             {
+#pragma warning disable CA1416
                 if (principal == null) throw new Exception($"Couldn't find a user account for {UserName} by the SID {Sid.Value}");
+#pragma warning restore CA1416
                 using (var group = GroupPrincipal.FindByIdentity(principalContext, IdentityType.Name, groupName))
                 {
                     if (group == null) throw new Exception($"Couldn't find a group with the name {groupName}");

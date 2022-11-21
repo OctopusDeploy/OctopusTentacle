@@ -35,8 +35,5 @@ namespace Octopus.Tentacle.Configuration
                 log.Warn(ex, "Unable to configure the proxy server: " + ex.Message);
             }
         }
-
-        public IWebProxy GetProxy()
-            => WebRequest.DefaultWebProxy;
     }
 }

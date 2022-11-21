@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Internals.Options
             try
             {
                 if (value != null)
-                    t = (T)conv.ConvertFromString(value);
+                    t = (T?)conv.ConvertFromString(value);
             }
             catch (Exception e)
             {

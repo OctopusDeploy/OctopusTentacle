@@ -51,7 +51,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         }
 
         public SecurityIdentifier Sid { get; }
+#pragma warning disable CA1416
         public string NTAccountName => Sid.Translate(typeof(NTAccount)).ToString();
+#pragma warning restore CA1416
         public string DomainName => NTAccountName.Split(new[] { '\\' }, 2)[0];
         public string UserName => NTAccountName.Split(new[] { '\\' }, 2)[1];
         public string SamAccountName { get; }
@@ -61,6 +63,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         {
             Console.WriteLine($"Ensuring the Windows User Account called '{UserName}' is a member of the '{groupName}' group...");
             using (var principalContext = new PrincipalContext(ContextType.Machine))
+#pragma warning disable CA1416
             using (var principal = UserPrincipal.FindByIdentity(principalContext, IdentityType.Sid, Sid.Value))
             {
                 if (principal == null) throw new Exception($"Couldn't find a user account for {UserName} by the SID {Sid.Value}");
@@ -74,32 +77,31 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                     }
                 }
             }
+#pragma warning restore CA1416
 
             return this;
         }
 
         public void Delete()
         {
-            using (var principalContext = new PrincipalContext(ContextType.Machine))
+            using var principalContext = new PrincipalContext(ContextType.Machine);
+            UserPrincipal? principal = null;
+
+            try
             {
-                UserPrincipal? principal = null;
-
-                try
+                principal = UserPrincipal.FindByIdentity(principalContext, IdentityType.Name, UserName);
+                if (principal == null)
                 {
-                    principal = UserPrincipal.FindByIdentity(principalContext, IdentityType.Name, UserName);
-                    if (principal == null)
-                    {
-                        Console.WriteLine($"The Windows User Account named {UserName} doesn't exist, nothing to do...");
-                        return;
-                    }
+                    Console.WriteLine($"The Windows User Account named {UserName} doesn't exist, nothing to do...");
+                    return;
+                }
 
-                    Console.WriteLine($"The Windows User Account named {UserName} exists, deleting...");
-                    principal.Delete();
-                }
-                finally
-                {
-                    principal?.Dispose();
-                }
+                Console.WriteLine($"The Windows User Account named {UserName} exists, deleting...");
+                principal.Delete();
+            }
+            finally
+            {
+                principal?.Dispose();
             }
         }
 

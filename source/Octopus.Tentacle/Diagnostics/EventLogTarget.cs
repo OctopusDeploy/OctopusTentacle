@@ -66,20 +66,23 @@ namespace Octopus.Tentacle.Diagnostics
         /// Initializes a new instance of the <see cref="EventLogTarget" /> class.
         /// </summary>
         public EventLogTarget()
+#pragma warning disable CS0618
             : this(LogFactory.CurrentAppDomain)
+#pragma warning restore CS0618
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EventLogTarget" /> class.
         /// </summary>
+#pragma warning disable CS0618
         public EventLogTarget(IAppDomain appDomain)
+#pragma warning restore CS0618
         {
             Source = appDomain.FriendlyName;
             Log = "Application";
             MachineName = ".";
             MaxMessageLength = 16384;
-            OptimizeBufferReuse = GetType() == typeof(EventLogTarget);
         }
 
         /// <summary>
@@ -87,7 +90,9 @@ namespace Octopus.Tentacle.Diagnostics
         /// </summary>
         /// <param name="name">Name of the target.</param>
         public EventLogTarget(string name)
+#pragma warning disable CS0618
             : this(LogFactory.CurrentAppDomain)
+#pragma warning restore CS0618
         {
             Name = name;
         }
