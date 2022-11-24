@@ -102,7 +102,6 @@
 		<PackageReference Include="NLog" Version="5.0.4" />
 		<PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
 		<PackageReference Include="System.Runtime" Version="4.3.0" />
-		<PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
 		<Reference Include="System.Security" />
 		<Reference Include="System.DirectoryServices" />
 		<Reference Include="System.IdentityModel" />
