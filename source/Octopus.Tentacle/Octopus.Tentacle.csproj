@@ -41,7 +41,7 @@
 		<DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Halibut" Version="5.0.147-pull-196" />
+		<PackageReference Include="Halibut" Version="5.0.151-pull-196" />
 		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
 	</ItemGroup>
 	<ItemGroup>

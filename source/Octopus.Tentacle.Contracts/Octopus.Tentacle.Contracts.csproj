@@ -28,7 +28,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="5.0.147-pull-196" />
+    <PackageReference Include="Halibut" Version="5.0.151-pull-196" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
