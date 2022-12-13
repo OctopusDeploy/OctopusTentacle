@@ -35,6 +35,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <Reference Include="System.ServiceProcess" />
 	</ItemGroup>
 
