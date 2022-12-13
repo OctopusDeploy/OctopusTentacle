@@ -116,7 +116,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="FluentValidation" Version="7.2.1" />
-    <PackageReference Include="Halibut" Version="4.5.86" />
+    <PackageReference Include="Halibut" Version="5.0.205" />
     <PackageReference Include="MaterialDesignColors" Version="1.2.0" />
     <PackageReference Include="MaterialDesignThemes" Version="2.5.0.1205" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
