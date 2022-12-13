@@ -19,8 +19,8 @@ namespace Octopus.Tentacle.Tests.Certificates
             var log = new InMemoryLog();
             var cert = generator.GenerateNew("CN=test");
             cert.Export(X509ContentType.Pkcs12);
-            Assert.That(cert.GetRSAPrivateKey()?.KeySize, Is.EqualTo(2048));
-            Assert.That(cert.GetRSAPublicKey()?.KeySize, Is.EqualTo(2048));
+            Assert.That(cert.PrivateKey.KeySize, Is.EqualTo(2048));
+            Assert.That(cert.PublicKey.Key.KeySize, Is.EqualTo(2048));
             if (cert.SignatureAlgorithm.FriendlyName == "sha1RSA")
                 log.GetLog().Should().Contain("WARN: Falling back to SHA1 certificate");
             else

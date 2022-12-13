@@ -257,10 +257,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         
         public static string CurrentUserName => PlatformDetection.IsRunningOnWindows
             ?
-#pragma warning disable CA1416
+#pragma warning disable PC001 // API not supported on all platforms
             WindowsIdentity.GetCurrent().Name
-#pragma warning restore CA1416
             :
+#pragma warning restore PC001 // API not supported on all platforms
             Environment.UserName;
     }
 }

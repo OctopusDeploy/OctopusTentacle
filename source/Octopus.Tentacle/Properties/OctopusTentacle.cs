@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Properties
     public static class OctopusTentacle
     {
         public static readonly Assembly Assembly = typeof (OctopusTentacle).Assembly;
-        public static readonly string InformationalVersion = Assembly.GetInformationalVersion() ?? "0.0.0";
+        public static readonly string InformationalVersion = AssemblyExtensions.GetInformationalVersion(Assembly);
         public static readonly SemanticVersionInfo SemanticVersionInfo = new SemanticVersionInfo(Assembly);
         public static readonly SemanticVersion Version = new SemanticVersion(SemanticVersionInfo.NuGetVersion);
         public static readonly string[] EnvironmentInformation = EnvironmentHelper.SafelyGetEnvironmentInformation();

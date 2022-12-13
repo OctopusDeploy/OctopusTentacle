@@ -23,13 +23,7 @@ namespace Octopus.Tentacle.Configuration
             var serializer = new XmlSerializer(typeof(XmlSettingsRoot));
             using (var xmlReader = new XmlTextReader(new StreamReader(OpenForReading(), Encoding.UTF8)))
             {
-                var obj = serializer.Deserialize(xmlReader);
-                if (obj is null)
-                {
-                    return;
-                }
-                
-                settings = (XmlSettingsRoot) obj;
+                settings = (XmlSettingsRoot)serializer.Deserialize(xmlReader);
             }
 
             foreach (var setting in settings.Settings)

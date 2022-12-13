@@ -22,11 +22,13 @@ namespace Octopus.Tentacle.Configuration.Crypto
             return IterateKeySourcesUntilCryptoSuccess(cipherKeys =>
             {
                 var (key, iv) = cipherKeys;
-                using var aes = Aes.Create();
-                using var enc = aes.CreateEncryptor(key, iv);
-                var inBlock = Encoding.UTF8.GetBytes(raw);
-                var trans = enc.TransformFinalBlock(inBlock, 0, inBlock.Length);
-                return Convert.ToBase64String(trans);
+                using (var rijandel = new RijndaelManaged())
+                using (var enc = rijandel.CreateEncryptor(key, iv))
+                {
+                    var inBlock = Encoding.UTF8.GetBytes(raw);
+                    var trans = enc.TransformFinalBlock(inBlock, 0, inBlock.Length);
+                    return Convert.ToBase64String(trans);
+                }
             });
         }
 
@@ -35,11 +37,13 @@ namespace Octopus.Tentacle.Configuration.Crypto
             return IterateKeySourcesUntilCryptoSuccess(cipherKeys =>
             {
                 var (key, iv) = cipherKeys;
-                using var aes = Aes.Create();
-                using var dec = aes.CreateDecryptor(key, iv);
-                var fromBase = Convert.FromBase64String(encrypted);
-                var asd = dec.TransformFinalBlock(fromBase, 0, fromBase.Length);
-                return Encoding.UTF8.GetString(asd);
+                using (var rijandel = new RijndaelManaged())
+                using (var dec = rijandel.CreateDecryptor(key, iv))
+                {
+                    var fromBase = Convert.FromBase64String(encrypted);
+                    var asd = dec.TransformFinalBlock(fromBase, 0, fromBase.Length);
+                    return Encoding.UTF8.GetString(asd);
+                }
             });
         }
 

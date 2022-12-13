@@ -70,7 +70,7 @@ namespace Octopus.Tentacle.Tests.Configuration.Crypto
             readonly byte[] iv;
             public InMemoryCryptoKeyNixSource()
             {
-                var d = Aes.Create();
+                var d = new RijndaelManaged();
                 d.GenerateIV();
                 d.GenerateKey();
                 key = d.Key;

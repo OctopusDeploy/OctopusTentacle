@@ -103,22 +103,29 @@ namespace Octopus.Tentacle.Security.Certificates
             }
         }
         
+#if NET472_OR_GREATER || NETCOREAPP || NETSTANDARD
         // Mac doesn't appear to support EphemeralKeySet 
         // see: https://github.com/dotnet/runtime/blob/a2af6294767b4a3f4c2ce787c5dda2abeeda7a00/src/libraries/System.Security.Cryptography.X509Certificates/src/Internal/Cryptography/Pal.OSX/StorePal.cs#L38
-        // Window also doesn't appear to support EphemeralKeySet when used with SslStream
-        // see: https://github.com/dotnet/runtime/issues/23749
-        static readonly X509KeyStorageFlags keySet = PlatformDetection.IsRunningOnNix ? X509KeyStorageFlags.EphemeralKeySet : X509KeyStorageFlags.PersistKeySet;
+        static X509KeyStorageFlags keySet = PlatformDetection.IsRunningOnMac ? X509KeyStorageFlags.PersistKeySet : X509KeyStorageFlags.EphemeralKeySet;
 
         static bool HasFlagEphemeralKeySet(X509KeyStorageFlags flags)
         {
-            return !PlatformDetection.IsRunningOnWindows && flags.HasFlag(X509KeyStorageFlags.EphemeralKeySet);
+            return flags.HasFlag(X509KeyStorageFlags.EphemeralKeySet);
         }
+#else
+        static X509KeyStorageFlags keySet = X509KeyStorageFlags.PersistKeySet;
+
+        static bool HasFlagEphemeralKeySet(X509KeyStorageFlags flags)
+        {
+            return false;
+        }
+#endif
 
         static X509Certificate2 LoadCertificateWithPrivateKey(byte[] rawData, string? password, bool storeInKeyStore)
         {
             var keySetToUse = storeInKeyStore ? X509KeyStorageFlags.PersistKeySet : keySet;
-
-            return TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | keySetToUse, true)
+            
+            return  TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | keySetToUse, true)
                 ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet | keySetToUse, true)
                 ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | keySetToUse, true)
                 ?? TryLoadCertificate(rawData, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | keySetToUse, false)
@@ -179,7 +186,7 @@ namespace Octopus.Tentacle.Security.Certificates
         {
             try
             {
-                return certificate2.GetRSAPrivateKey() != null;
+                return certificate2.HasPrivateKey && certificate2.PrivateKey != null;
             }
             catch (Exception)
             {
@@ -222,17 +229,19 @@ namespace Octopus.Tentacle.Security.Certificates
             {
                 return new X509Certificate2(rawData, password, flags);
             }
-
-            // We have to write it to temp ourselves otherwise the framework will create and never delete the tmp file.
-            var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
-            try
+            else
             {
-                File.WriteAllBytes(file, rawData);
-                return new X509Certificate2(file, password, flags);
-            }
-            finally
-            {
-                File.Delete(file);
+                // We have to write it to temp ourselves otherwise the framework will create and never delete the tmp file.
+                var file = Path.Combine(Path.GetTempPath(), "Octo-" + Guid.NewGuid());
+                try
+                {
+                    File.WriteAllBytes(file, rawData);
+                    return new X509Certificate2(file, password, flags);
+                }
+                finally
+                {
+                    File.Delete(file);
+                }
             }
         }
 
@@ -242,7 +251,6 @@ namespace Octopus.Tentacle.Security.Certificates
             if (folderPath == null)
                 throw new Exception("There was no directory specified in the private key path.");
 
-#pragma warning disable CA1416
             var current = WindowsIdentity.GetCurrent();
             if (current == null || current.User == null)
                 throw new Exception("There is no current windows identity.");
@@ -255,7 +263,6 @@ namespace Octopus.Tentacle.Security.Certificates
                 PropagationFlags.None,
                 AccessControlType.Allow));
             directory.SetAccessControl(security);
-#pragma warning restore CA1416
         }
 #nullable disable
 
@@ -280,28 +287,28 @@ namespace Octopus.Tentacle.Security.Certificates
                 var num = 0;
                 string text = null;
                 if (CryptAcquireCertificatePrivateKey(cert.Handle,
-                        dwFlags,
-                        IntPtr.Zero,
-                        ref zero,
-                        ref num,
-                        ref flag))
+                    dwFlags,
+                    IntPtr.Zero,
+                    ref zero,
+                    ref num,
+                    ref flag))
                 {
                     var intPtr = IntPtr.Zero;
                     var num2 = 0;
                     try
                     {
                         if (CryptGetProvParam(zero,
-                                CryptGetProvParamType.PP_UNIQUE_CONTAINER,
-                                IntPtr.Zero,
-                                ref num2,
-                                0u))
+                            CryptGetProvParamType.PP_UNIQUE_CONTAINER,
+                            IntPtr.Zero,
+                            ref num2,
+                            0u))
                         {
                             intPtr = Marshal.AllocHGlobal(num2);
                             if (CryptGetProvParam(zero,
-                                    CryptGetProvParamType.PP_UNIQUE_CONTAINER,
-                                    intPtr,
-                                    ref num2,
-                                    0u))
+                                CryptGetProvParamType.PP_UNIQUE_CONTAINER,
+                                intPtr,
+                                ref num2,
+                                0u))
                             {
                                 var array = new byte[num2];
                                 Marshal.Copy(intPtr, array, 0, num2);

@@ -287,7 +287,7 @@ namespace Octopus.Tentacle.Configuration
 
         public void ImportCertificate(X509Certificate2 certificate)
         {
-            if (certificate == null) throw new ArgumentNullException(nameof(certificate));
+            if (certificate == null) throw new ArgumentNullException("certificate");
             SetTentacleCertificate(certificate);
         }
     }

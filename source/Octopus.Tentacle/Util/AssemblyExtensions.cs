@@ -16,10 +16,10 @@ namespace Octopus.Tentacle.Util
             string processFileName;
             using (var currentProcess = Process.GetCurrentProcess())
             {
-                processFileName = currentProcess.MainModule?.FileName ?? "";
+                processFileName = currentProcess.MainModule.FileName;
             }
 
-            if (string.IsNullOrEmpty(processFileName) || !GetProcessFileName(processFileName).Equals(fileName, StringComparison.OrdinalIgnoreCase))
+            if (processFileName == null || !GetProcessFileName(processFileName).Equals(fileName, StringComparison.OrdinalIgnoreCase))
                 processFileName = Path.Combine(Path.GetDirectoryName(assembly.Location) ?? ".", $"{Path.GetFileNameWithoutExtension(assembly.Location)}{(PlatformDetection.IsRunningOnWindows ? ".exe" : string.Empty)}");
 
             return processFileName;
@@ -27,9 +27,7 @@ namespace Octopus.Tentacle.Util
 
         public static string FullLocalPath(this Assembly assembly)
         {
-#pragma warning disable SYSLIB0012
             var codeBase = assembly.CodeBase ?? throw new Exception($"Could not get code base for {assembly.FullName}");
-#pragma warning restore SYSLIB0012
             var uri = new UriBuilder(codeBase);
             var root = Uri.UnescapeDataString(uri.Path);
             if (PlatformDetection.IsRunningOnWindows)

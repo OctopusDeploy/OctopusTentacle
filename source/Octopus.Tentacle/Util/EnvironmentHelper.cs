@@ -10,9 +10,9 @@ namespace Octopus.Tentacle.Util
 {
     public static class EnvironmentHelper
     {
-#pragma warning disable CA1416
+#pragma warning disable PC001 // API not supported on all platforms
         static string CurrentUserName => PlatformDetection.IsRunningOnWindows ? WindowsIdentity.GetCurrent().Name : Environment.UserName;
-#pragma warning restore CA1416
+#pragma warning restore PC001 // API not supported on all platforms
         public static string[] SafelyGetEnvironmentInformation()
         {
             var envVars = GetEnvironmentVars()

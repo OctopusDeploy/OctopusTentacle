@@ -21,10 +21,10 @@ namespace Octopus.Tentacle.Configuration.Crypto
         void Generate()
         {
             log.Verbose("Machine key file does not yet exist. Generating key file that will be used to encrypt data on this machine");
-            var aes = Aes.Create();
-            aes.GenerateIV();
-            aes.GenerateKey();
-            var raw = Convert.ToBase64String(aes.Key) + "." + Convert.ToBase64String(aes.IV);
+            var d = new RijndaelManaged();
+            d.GenerateIV();
+            d.GenerateKey();
+            var raw = Convert.ToBase64String(d.Key) + "." + Convert.ToBase64String(d.IV);
 
             if (!fileSystem.FileExists(Path.GetDirectoryName(FileName)!))
                 fileSystem.CreateDirectory(Path.GetDirectoryName(FileName)!);

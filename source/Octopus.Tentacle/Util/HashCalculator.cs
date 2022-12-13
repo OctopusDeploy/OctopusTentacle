@@ -8,8 +8,10 @@ namespace Octopus.Tentacle.Util
     {
         public static string Hash(Stream stream)
         {
-            using var hasher = SHA1.Create();
-            return Sanitize(hasher.ComputeHash(stream));
+            using (var hasher = new SHA1CryptoServiceProvider())
+            {
+                return Sanitize(hasher.ComputeHash(stream));
+            }
         }
 
         static string Sanitize(byte[] hash)

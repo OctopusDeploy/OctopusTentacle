@@ -14,10 +14,8 @@ namespace Octopus.Tentacle.Configuration.Instances
     [SuppressMessage("Usage", "PC001:API not supported on all platforms")]
     class WindowsRegistryApplicationInstanceStore : IRegistryApplicationInstanceStore
     {
-#pragma warning disable CA1416
         const RegistryHive Hive = RegistryHive.LocalMachine;
         const RegistryView View = RegistryView.Registry64;
-#pragma warning restore CA1416
         const string KeyName = "Software\\Octopus";
 
         private readonly ApplicationName applicationName;
@@ -42,28 +40,31 @@ namespace Octopus.Tentacle.Configuration.Instances
             if (!PlatformDetection.IsRunningOnWindows)
                 return results;
 
-#pragma warning disable CA1416
-            using var rootKey = RegistryKey.OpenBaseKey(Hive, View);
-            using var subKey = rootKey.OpenSubKey(KeyName, false);
-            if (subKey == null)
-                return results;
-
-            using var applicationNameKey = subKey.OpenSubKey(applicationName.ToString(), false);
-            if (applicationNameKey == null)
-                return results;
-
-            var instanceNames = applicationNameKey.GetSubKeyNames();
-
-            foreach (var instanceName in instanceNames)
+            using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
+            using (var subKey = rootKey.OpenSubKey(KeyName, false))
             {
-                using var instanceKey = applicationNameKey.OpenSubKey(instanceName, false);
-                var path = instanceKey?.GetValue("ConfigurationFilePath");
-#pragma warning restore CA1416
-                if (path is null)
+                if (subKey == null)
+                    return results;
+
+                using (var applicationNameKey = subKey.OpenSubKey(applicationName.ToString(), false))
                 {
-                    continue;
+                    if (applicationNameKey == null)
+                        return results;
+
+                    var instanceNames = applicationNameKey.GetSubKeyNames();
+
+                    foreach (var instanceName in instanceNames)
+                    {
+                        using (var instanceKey = applicationNameKey.OpenSubKey(instanceName, false))
+                        {
+                            if (instanceKey == null)
+                                continue;
+
+                            var path = instanceKey.GetValue("ConfigurationFilePath");
+                            results.Add(new ApplicationInstanceRecord(instanceName, (string)path));
+                        }
+                    }
                 }
-                results.Add(new ApplicationInstanceRecord(instanceName, (string)path));
             }
 
             return results;
@@ -80,17 +81,23 @@ namespace Octopus.Tentacle.Configuration.Instances
 
             try
             {
-#pragma warning disable CA1416
-                using var rootKey = RegistryKey.OpenBaseKey(Hive, View);
-                using var subKey = rootKey.OpenSubKey(KeyName, true);
+                using (var rootKey = RegistryKey.OpenBaseKey(Hive, View))
+                {
+                    using (var subKey = rootKey.OpenSubKey(KeyName, true))
+                    {
+                        if (subKey == null)
+                            return;
 
-                using var applicationNameKey = subKey?.OpenSubKey(applicationName.ToString(), true);
-                if (applicationNameKey == null)
-                    return;
+                        using (var applicationNameKey = subKey.OpenSubKey(applicationName.ToString(), true))
+                        {
+                            if (applicationNameKey == null)
+                                return;
 
-                applicationNameKey.DeleteSubKey(instanceName);
-                applicationNameKey.Flush();
-#pragma warning restore CA1416
+                            applicationNameKey.DeleteSubKey(instanceName);
+                            applicationNameKey.Flush();
+                        }
+                    }
+                }
             }
             catch (UnauthorizedAccessException ex)
             {

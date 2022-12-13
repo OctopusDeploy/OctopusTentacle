@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Communications
         int defaultProxyPort = 1111;
         string defaultProxyUsername = "username";
         string defaultProxyPassword = "password";
-#if NET48
+#if NET452
         [Test]
         public void UseDefaultProxyShouldUseTheDefaultWebProxy()
         {

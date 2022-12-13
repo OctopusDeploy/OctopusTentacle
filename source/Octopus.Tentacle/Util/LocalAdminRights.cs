@@ -25,10 +25,12 @@ namespace Octopus.Tentacle.Util
             if (!PlatformDetection.IsRunningOnWindows)
                 throw new NotSupportedException("This class only checks for admin rights on windows machines");
 
-#pragma warning disable CA1416
-            using var identity = WindowsIdentity.GetCurrent();
-            return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
-#pragma warning restore CA1416
+#pragma warning disable PC001 // API not supported on all platforms
+            using (var identity = WindowsIdentity.GetCurrent())
+            {
+                return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
+            }
+#pragma warning restore PC001 // API not supported on all platforms
         }
     }
 }

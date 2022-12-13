@@ -6,7 +6,7 @@
     <OutputType>WinExe</OutputType>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net452</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -16,7 +16,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net452'">
     <IsPublishable>true</IsPublishable>
   </PropertyGroup>
 
@@ -124,7 +124,7 @@
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
-    <PackageReference Include="NLog" Version="5.0.4" />
+    <PackageReference Include="NLog" Version="4.6.2" />
     <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />

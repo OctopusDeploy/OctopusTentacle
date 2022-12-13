@@ -2,7 +2,6 @@ FROM docker.packages.octopushq.com/octopusdeploy/tool-containers/windowsserverco
 
 ARG BUILD_NUMBER
 ARG BUILD_DATE
-ARG INSTALLATION_FOLDER="C:/Program Files/Octopus Deploy/Tentacle"
 
 ENV TentacleVersion ${BUILD_NUMBER}
 ENV OCTOPUS_RUNNING_IN_CONTAINER Y
@@ -21,10 +20,13 @@ LABEL \
 EXPOSE 10933
 
 # Either from a build artifact dependency or local build output.
-COPY _artifacts/tentacle "${INSTALLATION_FOLDER}"
+COPY _artifacts/msi/Octopus.Tentacle.${BUILD_NUMBER}-x64.msi /tmp/
+
+WORKDIR /tmp
+RUN msiexec /i Octopus.Tentacle.%BUILD_NUMBER%-x64.msi /qn /l*v Tentacle-Installation.log
 
 RUN setx path "%path%;C:\Program Files\Octopus Deploy\Tentacle"
-RUN Tentacle create-instance --console --instance Tentacle --config C:\Octopus\Tentacle.config
+RUN tentacle create-instance --console --instance Tentacle --config C:\Octopus\Tentacle.config
 
 WORKDIR /Scripts
 COPY docker/windows/Scripts/*.ps1 /Scripts/

@@ -18,14 +18,17 @@ partial class Build
 {
     [PublicAPI]
     Target TestWindows => _ => _
+        .DependsOn(BuildWindows)
         .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
     Target TestLinux => _ => _
+        .DependsOn(BuildLinux)
         .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
     Target TestOsx => _ => _
+        .DependsOn(BuildOsx)
         .Executes(() => RunTests(TestFramework, TestRuntime));
 
     [PublicAPI]
@@ -53,11 +56,11 @@ partial class Build
                     if (string.IsNullOrEmpty(archSuffix)) throw new NotSupportedException();
 
                     var searchForTestFileDirectory = ArtifactsDirectory / testConfiguration.PackageType;
-                    Log.Information("Searching for files in {SearchForTestFileDirectory}", searchForTestFileDirectory);
+                    Log.Information($"Searching for files in {searchForTestFileDirectory}");
                     var packageTypeFilePath = searchForTestFileDirectory.GlobFiles($"*{archSuffix}.{testConfiguration.PackageType}")
                         .Single();
                     var packageFile = Path.GetFileName(packageTypeFilePath);
-                    Log.Information("Testing Linux package file {PackageFile}", packageFile);
+                    Log.Information($"Testing Linux package file {packageFile}");
 
                     var testScriptsBindMountPoint = RootDirectory / "linux-packages" / "test-scripts";
 
@@ -85,9 +88,8 @@ partial class Build
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldstable-slim", "deb"),
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:stable-slim", "deb"),
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "linuxmintd/mint19.3-amd64", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:latest", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:rolling", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:jammy", "deb"), // 22.04
+                // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:latest", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
+                // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:rolling", "deb"), // 22.04 doesn't support netcore, https://github.com/dotnet/core/issues/7038
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:focal", "deb"), // 20.04
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:bionic", "deb"), // 18.04
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "ubuntu:xenial", "deb"), // 16.04
@@ -197,7 +199,7 @@ partial class Build
     
     void RunTests(string testFramework, string testRuntime)
     {
-        Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
+        Log.Information($"Running test for Framework: {testFramework} and Runtime: {testRuntime}");
 
         FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
             
@@ -223,13 +225,13 @@ partial class Build
         }
         catch (Exception e)
         {
-            Log.Warning("{Message}: {Exception}", e.Message, e.ToString());
+            Log.Warning($"{e.Message}: {e}");
         }
     }
 
     void RunIntegrationTests(string testFramework, string testRuntime)
     {
-        Log.Information("Running test for Framework: {TestFramework} and Runtime: {TestRuntime}", testFramework, testRuntime);
+        Log.Information($"Running test for Framework: {testFramework} and Runtime: {testRuntime}");
 
         FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "teamcity");
 
@@ -255,7 +257,7 @@ partial class Build
         }
         catch (Exception e)
         {
-            Log.Warning("{Message}: {Exception}", e.Message, e.ToString());
+            Log.Warning($"{e.Message}: {e}");
         }
     }
 }

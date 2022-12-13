@@ -97,7 +97,7 @@ namespace Octopus.Tentacle.Certificates
             using (var ms = new MemoryStream())
             {
                 store.Save(ms, exportpw.ToCharArray(), random);
-                var platformSpecificX509KeyStorageFlags = PlatformDetection.IsRunningOnNix ? X509KeyStorageFlags.EphemeralKeySet : X509KeyStorageFlags.DefaultKeySet;
+                var platformSpecificX509KeyStorageFlags = PlatformDetection.IsRunningOnMac ? X509KeyStorageFlags.DefaultKeySet : X509KeyStorageFlags.EphemeralKeySet;
                 certificate = exportable
 #pragma warning disable PC001 // API not supported on all platforms
                     ? new X509Certificate2(ms.ToArray(), exportpw, X509KeyStorageFlags.Exportable | platformSpecificX509KeyStorageFlags)

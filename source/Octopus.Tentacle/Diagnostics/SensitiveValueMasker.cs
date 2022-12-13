@@ -50,7 +50,8 @@ namespace Octopus.Tentacle.Diagnostics
             if (sensitiveValues == null || sensitiveValues.Length == 0)
                 return this;
 
-            var initialSensitiveValuesCount = SensitiveValues.Length;
+            var initialSensitiveValuesCount = SensitiveValues?.Length ?? 0;
+            // ReSharper disable once RedundantEnumerableCastCall
             var sensitiveValuesUnion = SensitiveValues.Union(sensitiveValues.Where(x => x != null).Cast<string>()).ToArray();
 
             // If no new sensitive-values were added, avoid the cost of rebuilding the trie

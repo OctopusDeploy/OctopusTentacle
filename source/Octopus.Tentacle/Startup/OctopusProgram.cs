@@ -319,13 +319,13 @@ namespace Octopus.Tentacle.Startup
             var stdout = LogManager.Configuration.FindTargetByName(StdOutTargetName) as ColoredConsoleTarget;
             if (stdout == null)
                 throw new Exception($"Invalid logging configuration: missing target '{StdOutTargetName}'");
-            if (stdout.StdErr)
+            if (stdout.ErrorStream)
                 throw new Exception($"Invalid logging configuration: {StdOutTargetName} should not be redirecting to stderr.");
 
             var stderr = LogManager.Configuration.FindTargetByName(StdErrTargetName);
             if (stderr == null)
                 throw new Exception($"Invalid logging configuration: missing target '{StdErrTargetName}'");
-            if (stdout.StdErr)
+            if (stdout.ErrorStream)
                 throw new Exception($"Invalid logging configuration: {StdErrTargetName} should be redirecting to stderr, but isn't.");
 
             LogFileOnlyLogger.AssertConfigurationIsCorrect();
