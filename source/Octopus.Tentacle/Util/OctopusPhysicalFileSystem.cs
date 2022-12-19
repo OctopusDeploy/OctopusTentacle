@@ -257,7 +257,7 @@ namespace Octopus.Tentacle.Util
             if (IsUncPath(directoryPath))
                 return;
 
-            var driveInfo = new DriveInfo(Directory.GetDirectoryRoot(directoryPath));
+            var driveInfo = new DriveInfo(directoryPath);
 
             var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;
             // Make sure there is 10% (and a bit extra) more than we need
