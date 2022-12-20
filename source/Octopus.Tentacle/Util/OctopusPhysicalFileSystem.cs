@@ -261,7 +261,7 @@ namespace Octopus.Tentacle.Util
             if (!Path.IsPathRooted(directoryPath))
                 return;
             
-            var driveInfo = SafelyDriveInfo(directoryPath);
+            var driveInfo = SafelyGetDriveInfo(directoryPath);
 
             var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;
             // Make sure there is 10% (and a bit extra) more than we need
@@ -278,7 +278,7 @@ namespace Octopus.Tentacle.Util
         /// New behaviour is to directly check the free disk space on that directory, but we're feeling a bit
         /// risk averse here (once bitten, twice shy), so we fall back to the old behaviour
         /// </remarks>
-        static DriveInfo SafelyDriveInfo(string directoryPath)
+        static DriveInfo SafelyGetDriveInfo(string directoryPath)
         {
             DriveInfo driveInfo;
             try
