@@ -19,7 +19,9 @@
   <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
     <IsPublishable>true</IsPublishable>
   </PropertyGroup>
-
+  <PropertyGroup>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>

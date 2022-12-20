@@ -28,7 +28,9 @@
 			</PropertyGroup>
 		</Otherwise>
 	</Choose>
-
+	<PropertyGroup>
+		<InvariantGlobalization>false</InvariantGlobalization>
+	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<Optimize>True</Optimize>
 	</PropertyGroup>
