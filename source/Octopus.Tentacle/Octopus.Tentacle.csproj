@@ -78,6 +78,7 @@
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
 		<RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
+		<RuntimeHostConfigurationOption Include="System.Globalization.PredefinedCulturesOnly" Value="false" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
 		<Reference Include="System.IdentityModel" />
