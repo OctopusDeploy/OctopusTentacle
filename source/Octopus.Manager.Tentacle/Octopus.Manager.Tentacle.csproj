@@ -6,7 +6,7 @@
     <OutputType>WinExe</OutputType>
     <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
-    <TargetFramework>net452</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -16,7 +16,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net452'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
     <IsPublishable>true</IsPublishable>
   </PropertyGroup>
 
@@ -116,7 +116,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="FluentValidation" Version="7.2.1" />
-    <PackageReference Include="Halibut" Version="4.5.86" />
+    <PackageReference Include="Halibut" Version="5.0.236" />
     <PackageReference Include="MaterialDesignColors" Version="1.2.0" />
     <PackageReference Include="MaterialDesignThemes" Version="2.5.0.1205" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
@@ -124,7 +124,7 @@
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
-    <PackageReference Include="NLog" Version="4.6.2" />
+    <PackageReference Include="NLog" Version="5.0.4" />
     <PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
     <PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />
@@ -155,8 +155,6 @@
     <PackageReference Include="System.Resources.ResourceManager" Version="4.3.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.Extensions" Version="4.3.1" />
-    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Numerics" Version="4.3.0" />
     <PackageReference Include="System.Text.Encoding" Version="4.3.0" />
     <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />

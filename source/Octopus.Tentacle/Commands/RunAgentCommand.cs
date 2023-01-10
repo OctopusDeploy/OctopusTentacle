@@ -121,17 +121,14 @@ namespace Octopus.Tentacle.Commands
 
         void LogWarningIfNotRunningAsAdministrator()
         {
-            if (PlatformDetection.IsRunningOnWindows)
-            {
-#pragma warning disable PC001 // API not supported on all platforms
-                if (!windowsLocalAdminRightsChecker.IsRunningElevated())
-                {
-                    var groupName = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null).Translate(typeof(NTAccount)).Value;
-
-                    log.Warn($"Tentacle is not running with elevated permissions (user '{WindowsIdentity.GetCurrent().Name}' is not a member of '{groupName}'). Some functionality may be impaired.");
-                }
-#pragma warning restore PC001 // API not supported on all platforms
-            }
+            if (!PlatformDetection.IsRunningOnWindows) return;
+            
+            if (windowsLocalAdminRightsChecker.IsRunningElevated()) return;
+            
+#pragma warning disable CA1416
+            var groupName = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null).Translate(typeof(NTAccount)).Value;
+            log.Warn($"Tentacle is not running with elevated permissions (user '{WindowsIdentity.GetCurrent().Name}' is not a member of '{groupName}'). Some functionality may be impaired.");
+#pragma warning restore CA1416
         }
 
         protected override void Stop()

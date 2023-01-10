@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -257,13 +258,39 @@ namespace Octopus.Tentacle.Util
             if (IsUncPath(directoryPath))
                 return;
 
-            var driveInfo = new DriveInfo(Directory.GetDirectoryRoot(directoryPath));
+            if (!Path.IsPathRooted(directoryPath))
+                return;
+            
+            var driveInfo = SafelyGetDriveInfo(directoryPath);
 
             var required = requiredSpaceInBytes < 0 ? 0 : (ulong)requiredSpaceInBytes;
             // Make sure there is 10% (and a bit extra) more than we need
             required += required / 10 + 1024 * 1024;
             if ((ulong)driveInfo.AvailableFreeSpace < required)
-                throw new IOException($"The drive containing the directory '{directoryPath}' on machine '{Environment.MachineName}' does not have enough free disk space available for this operation to proceed. The disk only has {driveInfo.AvailableFreeSpace.ToFileSizeString()} available; please free up at least {required.ToFileSizeString()}.");
+                throw new IOException($"The drive '{driveInfo.Name}' containing the directory '{directoryPath}' on machine '{Environment.MachineName}' does not have enough free disk space available for this operation to proceed. " +
+                    $"The disk only has {driveInfo.AvailableFreeSpace.ToFileSizeString()} available; please free up at least {required.ToFileSizeString()}.");
+        }
+
+        /// <remarks>
+        /// Previously, we used to get the directory root (ie, `c:\` or `/`) before asking for the drive info
+        /// However, that doesn't work well with mount points, as there might be enough space in that mount point,
+        /// but not enough on the root of the drive.
+        /// New behaviour is to directly check the free disk space on that directory, but we're feeling a bit
+        /// risk averse here (once bitten, twice shy), so we fall back to the old behaviour
+        /// </remarks>
+        static DriveInfo SafelyGetDriveInfo(string directoryPath)
+        {
+            DriveInfo driveInfo;
+            try
+            {
+                driveInfo = new DriveInfo(directoryPath);
+            }
+            catch
+            {
+                driveInfo = new DriveInfo(Directory.GetDirectoryRoot(directoryPath));
+            }
+
+            return driveInfo;
         }
 
         public string GetFullPath(string relativeOrAbsoluteFilePath)

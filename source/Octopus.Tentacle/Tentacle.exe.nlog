@@ -17,7 +17,7 @@
 
   <targets async="false">
     <target xsi:type="ColoredConsole" name="stdout" layout="${messageLayout}" />
-    <target xsi:type="ColoredConsole" name="stderr" errorStream="true" layout="${messageLayout}" />
+    <target xsi:type="ColoredConsole" name="stderr" stdErr="true" layout="${messageLayout}" />
     <target name="octopus-log-file" xsi:type="File"
         layout="${normalLayout}"
         fileName="${octopusLogsDirectory}/OctopusTentacle.txt"

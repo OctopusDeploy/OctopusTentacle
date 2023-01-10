@@ -39,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
-        public void ShouldNotContinueIfMultipleMatchesButAllowMultipleIsNotSupplied()
+        public async Task ShouldNotContinueIfMultipleMatchesButAllowMultipleIsNotSupplied()
         {
             const string expectedThumbPrint1 = "ABCDEFGHIJKLMNOP";
             const string expectedThumbPrint2 = "1234124123412344";
@@ -66,7 +66,7 @@ namespace Octopus.Tentacle.Tests.Commands
                 .ReturnsForAnyArgs(matchingMachines.AsTask());
 
             Func<Task> exec = () => Command.Deregister(asyncRepository);
-            exec.Should().Throw<ControlledFailureException>().WithMessage(DeregisterWorkerCommand.MultipleMatchErrorMsg);
+            await exec.Should().ThrowAsync<ControlledFailureException>().WithMessage(DeregisterWorkerCommand.MultipleMatchErrorMsg);
         }
 
         [Test]

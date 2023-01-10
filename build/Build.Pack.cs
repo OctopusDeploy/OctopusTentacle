@@ -78,7 +78,7 @@ partial class Build
                         "SIGN_PASSPHRASE")
                     .SetVolume(
                         $"{debBuildDir / "scripts"}:/scripts",
-                        $"{BuildDirectory / "zip" / "netcoreapp3.1" / runtimeId / "tentacle"}:/input",
+                        $"{BuildDirectory / "zip" / "net6.0" / runtimeId / "tentacle"}:/input",
                         $"{debBuildDir / "output"}:/output"
                     )
                     .SetImage(dockerToolsContainerImage)
@@ -266,13 +266,15 @@ partial class Build
         .Executes(() =>
         {
             FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "nuget");
+            using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
 
             DotNetPack(p => p
                 .SetProject(RootDirectory / "source" / "Octopus.Tentacle.Contracts" / "Octopus.Tentacle.Contracts.csproj")
                 .SetVersion(OctoVersionInfo.FullSemVer)
                 .SetOutputDirectory(ArtifactsDirectory / "nuget")
                 .DisableIncludeSymbols()
-                .SetVerbosity(DotNetVerbosity.Normal));
+                .SetVerbosity(DotNetVerbosity.Normal)
+                .SetProperty("NuspecProperties", $"Version={OctoVersionInfo.FullSemVer}"));
         });
 
     [PublicAPI]
@@ -323,8 +325,8 @@ partial class Build
             {
                 foreach (var runtimeId in RuntimeIds)
                 {
-                    if (runtimeId == "win" && framework != "net452"
-                        || runtimeId != "win" && framework == "net452") continue;
+                    if (runtimeId == "win" && framework != "net48"
+                        || runtimeId != "win" && framework == "net48") continue;
 
                     var fileExtension = runtimeId.StartsWith("win") ? "zip" : "tar.gz";
                     FileSystemTasks.CopyFile(ArtifactsDirectory / "zip" / $"tentacle-{OctoVersionInfo.FullSemVer}-{framework}-{runtimeId}.{fileExtension}",

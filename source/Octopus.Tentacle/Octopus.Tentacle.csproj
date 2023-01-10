@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<AppConfig Condition="'$(TargetFramework)' == 'netcoreapp3.1'">app.netcore.config</AppConfig>
+		<AppConfig Condition="'$(TargetFramework)' == 'net6.0'">app.netcore.config</AppConfig>
 		<ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
 		<AssemblyName>Tentacle</AssemblyName>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -10,14 +10,14 @@
 		<OutputType>Exe</OutputType>
 		<PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
-		<TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net48;net6.0</TargetFrameworks>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<Choose>
-		<When Condition="'$(TargetFramework)' == 'net452'">
+		<When Condition="'$(TargetFramework)' == 'net48'">
 			<PropertyGroup>
 				<RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
 			</PropertyGroup>
@@ -33,18 +33,15 @@
 		<Optimize>True</Optimize>
 	</PropertyGroup>
 
-	<PropertyGroup>
-		<DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
 		<NoWarn>8601</NoWarn>
 		<DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
 		<DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Halibut" Version="4.5.86" />
+		<PackageReference Include="Halibut" Version="5.0.236" />
 		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
 	</ItemGroup>
 	<ItemGroup>
@@ -81,6 +78,7 @@
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
 		<RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
+		<RuntimeHostConfigurationOption Include="System.Globalization.PredefinedCulturesOnly" Value="false" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
 		<Reference Include="System.IdentityModel" />
@@ -90,23 +88,21 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.0" />
 		<PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
 		<PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0" />
-		<PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.5.0" />
+		<PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
 		<PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
-		<PackageReference Include="NLog" Version="4.7.6" />
+		<PackageReference Include="NLog" Version="5.0.4" />
 		<PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
 		<PackageReference Include="System.Diagnostics.EventLog" Version="4.5.0" />
-		<PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.1" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
 		<PackageReference Include="System.DirectoryServices.AccountManagement" Version="4.5.0" />
 		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
-		<PackageReference Include="NLog" Version="4.0.1" />
+		<PackageReference Include="NLog" Version="5.0.4" />
 		<PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
 		<PackageReference Include="System.Runtime" Version="4.3.0" />
-		<PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
 		<Reference Include="System.Security" />
 		<Reference Include="System.DirectoryServices" />
 		<Reference Include="System.IdentityModel" />
