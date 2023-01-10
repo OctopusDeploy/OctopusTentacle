@@ -95,6 +95,9 @@ namespace Octopus.Tentacle.Commands
             if (communicationStyle == CommunicationStyle.TentacleActive && !string.IsNullOrWhiteSpace(proxy))
                 throw new ControlledFailureException("Option --proxy can only be used with --comms-style=TentaclePassive.  To set a proxy for a polling Tentacle use the polling-proxy command first and then register the Tentacle with register-with.");
 
+            if (!string.IsNullOrEmpty(serverWebSocketAddress) && !string.IsNullOrEmpty(serverCommsAddress))
+                throw new ControlledFailureException("Please specify a --server-web-socket, or a --server-comms-address - not both.");
+
             if (string.IsNullOrEmpty(serverCommsAddress)) serverCommsAddress = api.Server;
             
             Uri? serverAddress = null;
@@ -181,6 +184,7 @@ namespace Octopus.Tentacle.Commands
         }
 
         protected abstract void CheckArgs();
+
         protected abstract void EnhanceOperation(TRegistrationOperationType registerOperation);
 
         async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri? serverAddress, string? sslThumbprint)
