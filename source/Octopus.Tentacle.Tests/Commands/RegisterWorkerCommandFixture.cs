@@ -109,169 +109,65 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingWorker()
         {
-            Start("--workerpool=SomePool",
-                "--server=http://localhost",
-                "--name=MyMachine",
-                "--publicHostName=mymachine.test",
-                "--apiKey=ABC123",
-                "--force",
-                "--comms-style=TentacleActive");
-
-            Assert.That(operation.WorkerPoolNames.Single(), Is.EqualTo("SomePool"));
-            Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
-            Assert.That(operation.TentacleHostname, Is.Empty);
-            Assert.That(operation.TentaclePort, Is.EqualTo(0));
-            Assert.That(operation.TentacleThumbprint, Is.EqualTo(certificate.Thumbprint));
-            Assert.That(operation.AllowOverwrite, Is.True);
-            Assert.That(operation.CommunicationStyle, Is.EqualTo(CommunicationStyle.TentacleActive));
-            Assert.That(operation.MachinePolicy, Is.Null);
-            operation.SubscriptionId.ToString().Should().StartWith("poll://");
-
-            configuration.Received().AddOrUpdateTrustedOctopusServer(
-                Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://localhost:10943/" &&
-                    x.SubscriptionId == operation.SubscriptionId.ToString() &&
-                    x.CommunicationStyle == CommunicationStyle.TentacleActive &&
-                    x.Thumbprint == serverThumbprint));
-
-            operation.Received().ExecuteAsync(repository);
+            AssertPollingWorkerRegistered("https://localhost:10943/", "--server-comms-port=10943");
         }
 
         [Test]
-        public void ShouldRegisterPollingWorkerOverSpecifiedDefaultCommsPort()
+        public void ShouldRegisterPollingWorkerOverDefaultPort()
         {
-            Start("--workerpool=SomePool",
-                "--server=http://localhost",
-                "--name=MyMachine",
-                "--publicHostName=mymachine.test",
-                "--apiKey=ABC123",
-                "--force",
-                "--comms-style=TentacleActive",
-                "--server-comms-port=10943");
-
-            Assert.That(operation.WorkerPoolNames.Single(), Is.EqualTo("SomePool"));
-            Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
-            Assert.That(operation.TentacleHostname, Is.Empty);
-            Assert.That(operation.TentaclePort, Is.EqualTo(0));
-            Assert.That(operation.TentacleThumbprint, Is.EqualTo(certificate.Thumbprint));
-            Assert.That(operation.AllowOverwrite, Is.True);
-            Assert.That(operation.CommunicationStyle, Is.EqualTo(CommunicationStyle.TentacleActive));
-            Assert.That(operation.MachinePolicy, Is.Null);
-            operation.SubscriptionId.ToString().Should().StartWith("poll://");
-
-            configuration.Received().AddOrUpdateTrustedOctopusServer(
-                Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://localhost:10943/" &&
-                    x.SubscriptionId == operation.SubscriptionId.ToString() &&
-                    x.CommunicationStyle == CommunicationStyle.TentacleActive &&
-                    x.Thumbprint == serverThumbprint));
-
-            operation.Received().ExecuteAsync(repository);
+            AssertPollingWorkerRegistered("https://localhost:10943/");
         }
 
         [Test]
         public void ShouldRegisterPollingWorkerOverCustomCommsPort()
         {
-            Start("--workerpool=SomePool",
-                "--server=http://localhost",
-                "--name=MyMachine",
-                "--publicHostName=mymachine.test",
-                "--apiKey=ABC123",
-                "--force",
-                "--comms-style=TentacleActive",
-                "--server-comms-port=123");
-
-            Assert.That(operation.WorkerPoolNames.Single(), Is.EqualTo("SomePool"));
-            Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
-            Assert.That(operation.TentacleHostname, Is.Empty);
-            Assert.That(operation.TentaclePort, Is.EqualTo(0));
-            Assert.That(operation.TentacleThumbprint, Is.EqualTo(certificate.Thumbprint));
-            Assert.That(operation.AllowOverwrite, Is.True);
-            Assert.That(operation.CommunicationStyle, Is.EqualTo(CommunicationStyle.TentacleActive));
-            Assert.That(operation.MachinePolicy, Is.Null);
-            operation.SubscriptionId.ToString().Should().StartWith("poll://");
-
-            configuration.Received().AddOrUpdateTrustedOctopusServer(
-                Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://localhost:123/" &&
-                    x.SubscriptionId == operation.SubscriptionId.ToString() &&
-                    x.CommunicationStyle == CommunicationStyle.TentacleActive &&
-                    x.Thumbprint == serverThumbprint));
-
-            operation.Received().ExecuteAsync(repository);
+            AssertPollingWorkerRegistered("https://localhost:123/", "--server-comms-port=123");
         }
 
         [Test]
         public void ShouldRegisterPollingWorkerOverCustomCommsAddressAndServerCommsPort()
         {
-            Start("--workerpool=SomePool",
-                "--server=http://localhost",
-                "--name=MyMachine",
-                "--publicHostName=mymachine.test",
-                "--apiKey=ABC123",
-                "--force",
-                "--comms-style=TentacleActive",
+            AssertPollingWorkerRegistered(
+                "https://polling.localhost:456/",
                 "--server-comms-address=https://polling.localhost:123/",
                 "--server-comms-port=456");
-
-            Assert.That(operation.WorkerPoolNames.Single(), Is.EqualTo("SomePool"));
-            Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
-            Assert.That(operation.TentacleHostname, Is.Empty);
-            Assert.That(operation.TentaclePort, Is.EqualTo(0));
-            Assert.That(operation.TentacleThumbprint, Is.EqualTo(certificate.Thumbprint));
-            Assert.That(operation.AllowOverwrite, Is.True);
-            Assert.That(operation.CommunicationStyle, Is.EqualTo(CommunicationStyle.TentacleActive));
-            Assert.That(operation.MachinePolicy, Is.Null);
-            operation.SubscriptionId.ToString().Should().StartWith("poll://");
-
-            configuration.Received().AddOrUpdateTrustedOctopusServer(
-                Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://polling.localhost:456/" &&
-                    x.SubscriptionId == operation.SubscriptionId.ToString() &&
-                    x.CommunicationStyle == CommunicationStyle.TentacleActive &&
-                    x.Thumbprint == serverThumbprint));
-
-            operation.Received().ExecuteAsync(repository);
         }
 
         [Test]
         public void ShouldRegisterPollingWorkerOverCustomCommsAddressWithPort()
         {
-            Start("--workerpool=SomePool",
-                "--server=http://localhost",
-                "--name=MyMachine",
-                "--publicHostName=mymachine.test",
-                "--apiKey=ABC123",
-                "--force",
-                "--comms-style=TentacleActive",
+            AssertPollingWorkerRegistered(
+                "https://polling.localhost:123/",
                 "--server-comms-address=https://polling.localhost:123/");
-
-            Assert.That(operation.WorkerPoolNames.Single(), Is.EqualTo("SomePool"));
-            Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
-            Assert.That(operation.TentacleHostname, Is.Empty);
-            Assert.That(operation.TentaclePort, Is.EqualTo(0));
-            Assert.That(operation.TentacleThumbprint, Is.EqualTo(certificate.Thumbprint));
-            Assert.That(operation.AllowOverwrite, Is.True);
-            Assert.That(operation.CommunicationStyle, Is.EqualTo(CommunicationStyle.TentacleActive));
-            Assert.That(operation.MachinePolicy, Is.Null);
-            operation.SubscriptionId.ToString().Should().StartWith("poll://");
-
-            configuration.Received().AddOrUpdateTrustedOctopusServer(
-                Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://polling.localhost:123/" &&
-                    x.SubscriptionId == operation.SubscriptionId.ToString() &&
-                    x.CommunicationStyle == CommunicationStyle.TentacleActive &&
-                    x.Thumbprint == serverThumbprint));
-
-            operation.Received().ExecuteAsync(repository);
         }
 
         [Test]
         public void ShouldRegisterPollingWorkerOverCustomCommsAddressWithDefaultHttpsPort()
         {
-            Start("--workerpool=SomePool",
+            AssertPollingWorkerRegistered(
+                "https://polling.localhost/",
+                "--server-comms-address=https://polling.localhost/");
+        }
+
+        // no need for tests like ShouldReuseSubscriptionIdForPollingTentacleIfReRegistering
+        // because it runs the same code for Workers and Deployment targets
+
+        void AssertPollingWorkerRegistered(string expectedServerAddress, params string[] additionalArgs)
+        {
+            var args = new []
+            {
+                "--workerpool=SomePool",
                 "--server=http://localhost",
                 "--name=MyMachine",
                 "--publicHostName=mymachine.test",
                 "--apiKey=ABC123",
                 "--force",
                 "--comms-style=TentacleActive",
-                "--server-comms-address=https://polling.localhost/");
+            };
+
+            args = args.Concat(additionalArgs).ToArray();
+
+            Start(args);
 
             Assert.That(operation.WorkerPoolNames.Single(), Is.EqualTo("SomePool"));
             Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
@@ -284,7 +180,7 @@ namespace Octopus.Tentacle.Tests.Commands
             operation.SubscriptionId.ToString().Should().StartWith("poll://");
 
             configuration.Received().AddOrUpdateTrustedOctopusServer(
-                Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://polling.localhost/" &&
+                Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == expectedServerAddress &&
                     x.SubscriptionId == operation.SubscriptionId.ToString() &&
                     x.CommunicationStyle == CommunicationStyle.TentacleActive &&
                     x.Thumbprint == serverThumbprint));
@@ -292,7 +188,5 @@ namespace Octopus.Tentacle.Tests.Commands
             operation.Received().ExecuteAsync(repository);
         }
 
-        // no need for tests ike ShouldReuseSubscriptionIdForPollingTentacleIfReRegistering
-        // because it runs the same code for Workers and Deployment targets
     }
 }

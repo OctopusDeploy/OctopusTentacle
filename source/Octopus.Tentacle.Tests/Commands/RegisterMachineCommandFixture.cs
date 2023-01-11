@@ -152,6 +152,45 @@ namespace Octopus.Tentacle.Tests.Commands
         }
 
         [Test]
+        public void ShouldRegisterPollingTentacleOverDefaultPort()
+        {
+            Start("--env=Development",
+                  "--server=http://localhost",
+                  "--name=MyMachine",
+                  "--publicHostName=mymachine.test",
+                  "--apiKey=ABC123",
+                  "--force",
+                  "--role=app-server",
+                  "--role=web-server",
+                  "--tenant=Tenant1",
+                  "--tenantTag=CustomerType/VIP",
+                  "--comms-style=TentacleActive");
+
+            Assert.That(operation.EnvironmentNames.Single(), Is.EqualTo("Development"));
+            Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
+            Assert.That(operation.TentacleHostname, Is.Empty);
+            Assert.That(operation.TentaclePort, Is.EqualTo(0));
+            Assert.That(operation.TentacleThumbprint, Is.EqualTo(certificate.Thumbprint));
+            Assert.That(operation.AllowOverwrite, Is.True);
+            Assert.That(operation.CommunicationStyle, Is.EqualTo(CommunicationStyle.TentacleActive));
+            Assert.That(operation.MachinePolicy, Is.Null);
+            Assert.That(operation.Roles.First(), Is.EqualTo("app-server"));
+            Assert.That(operation.Roles.Last(), Is.EqualTo("web-server"));
+            operation.SubscriptionId.ToString().Should().StartWith("poll://");
+            Assert.That(operation.TenantTags.Single(), Is.EqualTo("CustomerType/VIP"));
+            Assert.That(operation.Tenants.Single(), Is.EqualTo("Tenant1"));
+
+            configuration.Received().AddOrUpdateTrustedOctopusServer(
+                Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://localhost:10943/" &&
+                                                   x.SubscriptionId == operation.SubscriptionId.ToString() &&
+                                                   x.CommunicationStyle == CommunicationStyle.TentacleActive &&
+                                                   x.Thumbprint == serverThumbprint));
+
+            operation.Received().ExecuteAsync(repository);
+        }
+
+
+        [Test]
         public void ShouldReuseSubscriptionIdForPollingTentacleIfReRegistering()
         {
             var subscriptionId = "poll://xz6h25sh28shx52/";
