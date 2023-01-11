@@ -208,7 +208,7 @@ namespace Octopus.Tentacle.Commands
 
                 if (string.IsNullOrEmpty(serverCommsAddress))
                 {
-                    serverCommsAddressUri = new Uri(api.Server);
+                    serverCommsAddressUri = api.ServerUri;
                     serverCommsPort ??= DefaultServerCommsPort;
                 }
                 else
