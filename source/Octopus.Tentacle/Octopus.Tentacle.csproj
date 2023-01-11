@@ -91,7 +91,6 @@
 		<PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
 		<PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0" />
 		<PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
-		<PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
 		<PackageReference Include="NLog" Version="5.0.4" />
 		<PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
 		<PackageReference Include="System.Diagnostics.EventLog" Version="4.5.0" />
