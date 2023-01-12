@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Commands
 {
     public abstract class RegisterMachineCommandBase<TRegistrationOperationType> : AbstractStandardCommand where TRegistrationOperationType : IRegisterMachineOperationBase
     {
-        private const int DefaultServerCommsPort = 10943;
+        const int DefaultServerCommsPort = 10943;
 
         readonly Lazy<TRegistrationOperationType> lazyRegisterMachineOperation;
         readonly Lazy<IWritableTentacleConfiguration> configuration;
