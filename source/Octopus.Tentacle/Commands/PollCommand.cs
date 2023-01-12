@@ -16,8 +16,6 @@ namespace Octopus.Tentacle.Commands
 {
     public class PollCommand : AbstractStandardCommand
     {
-        const int DefaultServerCommsPort = 10943;
-
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly Lazy<IOctopusServerChecker> octopusServerChecker;
         readonly IProxyConfigParser proxyConfig;
@@ -25,9 +23,8 @@ namespace Octopus.Tentacle.Commands
         readonly ISystemLog log;
         readonly IApplicationInstanceSelector selector;
         readonly ApiEndpointOptions api;
-        int? serverCommsPort = null;
+        int commsPort = 10943;
         string serverWebSocketAddress = null!;
-        string serverCommsAddress = null!;
 
         public PollCommand(Lazy<IWritableTentacleConfiguration> configuration,
                            ISystemLog log,
@@ -47,8 +44,7 @@ namespace Octopus.Tentacle.Commands
 
             api = AddOptionSet(new ApiEndpointOptions(Options));
 
-            Options.Add("server-comms-address=", "The comms address on the Octopus Server; the address of the Octopus Server will be used if omitted.", s => serverCommsAddress = s);
-            Options.Add("server-comms-port=", "The comms port on the Octopus Server; the default is " + DefaultServerCommsPort + ". If specified, this will take precedence over any port number in server-comms-address.", s => serverCommsPort = int.Parse(s));
+            Options.Add("server-comms-port=", "The comms port on the Octopus Server; the default is " + commsPort, s => commsPort = int.Parse(s));
             Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus Server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
         }
 
@@ -60,9 +56,6 @@ namespace Octopus.Tentacle.Commands
 
         async Task StartAsync()
         {
-            if (!string.IsNullOrEmpty(serverWebSocketAddress) && !string.IsNullOrEmpty(serverCommsAddress))
-                throw new ControlledFailureException("Please specify a --server-web-socket, or a --server-comms-address - not both.");
-
             var serverAddress = GetAddress();
 
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
@@ -136,22 +129,7 @@ namespace Octopus.Tentacle.Commands
         Uri GetAddress()
         {
             if (string.IsNullOrWhiteSpace(serverWebSocketAddress))
-            {
-                Uri serverCommsAddressUri;
-
-                if (string.IsNullOrEmpty(serverCommsAddress))
-                {
-                    serverCommsAddressUri = api.ServerUri;
-                    serverCommsPort ??= DefaultServerCommsPort;
-                }
-                else
-                {
-                    serverCommsAddressUri = new Uri(serverCommsAddress);
-                    serverCommsPort ??= serverCommsAddressUri.Port;
-                }
-
-                return new Uri($"https://{serverCommsAddressUri.Host}:{serverCommsPort}");
-            }
+                return new Uri("https://" + api.ServerUri.Host + ":" + commsPort);
 
             if (!HalibutRuntime.OSSupportsWebSockets)
                 throw new ControlledFailureException("Websockets is only supported on Windows Server 2012 and later");
