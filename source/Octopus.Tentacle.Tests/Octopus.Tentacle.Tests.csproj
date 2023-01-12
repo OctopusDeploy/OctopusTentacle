@@ -1,0 +1,94 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Octopus.Tentacle.Tests</AssemblyName>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <IsPublishable>true</IsPublishable>
+    <OutputPath>bin</OutputPath>
+    <PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
+    <RootNamespace>Octopus.Tentacle.Tests</RootNamespace>
+    <RuntimeIdentifiers>win;win-x86;win-x64;linux-x64;osx-x64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>8</LangVersion>
+    <Nullable>annotations</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
+    <TargetFrameworks>net48;net6.0</TargetFrameworks>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
+    <DefineConstants>$(DefineConstants);DEFAULT_PROXY_IS_AVAILABLE;HAS_SYSTEM_IDENTITYMODEL_TOKENS;FULL_FRAMEWORK</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+    <DefineConstants>$(DefineConstants);DEFAULT_PROXY_IS_NOT_AVAILABLE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
+    <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" />
+    <PackageReference Include="NSubstitute" Version="4.4.0" />
+    <PackageReference Include="FluentAssertions" Version="6.7.0" />
+    <PackageReference Include="Assent" Version="1.8.2" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.3.0" />
+    <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
+    <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.15" />
+  </ItemGroup>
+  <Target Name="ChangeAliasesOfStrongNameAssemblies" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+    <!--
+      the PackageReference doesnt support aliases, so we need to hook in later
+      in the pipeline to add the alias.
+      In pre 4.5.2 versions of the TaskScheduler package, it has interfaces for
+      IReadOnlyCollection and IReadOnlyList, which were added in 4.5.
+      As we are targeting 4.5.1, we fall back to the 4.0 package, which means
+      we have a clash on those types with this dll and mscorlib
+      see http://taskscheduler.codeplex.com/workitem/12473
+      see https://github.com/NuGet/Home/issues/4989#issuecomment-311042085
+    -->
+    <ItemGroup>
+      <ReferencePath Condition="'%(FileName)' == 'Microsoft.Win32.TaskScheduler'">
+        <Aliases>TaskScheduler</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+  <ItemGroup>
+    <Content Include="Bcl\IO\*.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Startup\Packages\**\*.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.DirectoryServices.AccountManagement" Condition="'$(TargetFramework)' == 'net48'" />
+    <Reference Include="System.IdentityModel" Condition="'$(TargetFramework)' == 'net48'" />
+    <Reference Include="System.ServiceProcess" Condition="'$(TargetFramework)' == 'net48'" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Compile Include="..\Solution Items\SolutionInfo.cs">
+      <Link>Properties\SolutionInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Solution Items\VersionInfo.cs">
+      <Link>Properties\VersionInfo.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <Reference Include="System.IdentityModel" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\TestCertificateNoPassword.pfx" />
+    <EmbeddedResource Include="Resources\TestCertificateNoPrivateKey.pfx" />
+    <EmbeddedResource Include="Resources\TestCertificateWithPassword.pfx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Startup\Packages\Acme.Service\Acme.Service.exe" />
+  </ItemGroup>
+</Project>

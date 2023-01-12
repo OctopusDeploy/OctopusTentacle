@@ -1,0 +1,79 @@
+﻿<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="clr-namespace:Octopus.Manager.Tentacle.Controls"
+    xmlns:shell="clr-namespace:Octopus.Manager.Tentacle.Shell"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    mc:Ignorable="d" 
+    x:Class="Octopus.Manager.Tentacle.Shell.ShellView"
+    Height="750" Width="1000"
+    Title="Octopus Administration Tool" UseLayoutRounding="True"
+    FontSize="10pt"
+    TextOptions.TextFormattingMode="Ideal" 
+    TextOptions.TextRenderingMode="Auto"
+    WindowStartupLocation="CenterScreen"
+    Name="Root"
+    d:DataContext="{d:DesignInstance d:Type={x:Type shell:ShellViewModel}}"
+    Background="#ffffff"
+    >
+    <materialDesign:DialogHost Name="DialogHost" >
+        <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Top header -->
+        <Border>
+            <Border Height="55" Margin="-10, 0, -10, 0" Background="#2f93e0">
+                <Grid Margin="30,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="170" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Logo -->
+                    <controls:RetinaImage BigImage="/Resources/logo-2x.png" SmallImage="/Resources/logo-1x.png" Width="170" Height="30" />
+
+
+                    <TextBlock Grid.Column="2" 
+                               VerticalAlignment="Center" 
+                               HorizontalAlignment="Center" 
+                               Margin="20,0,0,0" 
+                               Padding="0" 
+                               Foreground="White" 
+                               FontWeight="Bold" 
+                               Text="{Binding Path=VersionNumber, StringFormat='EAP Release - {0}'}" Style="{StaticResource TextBlock.Heading}" 
+                               Visibility="{Binding Path=ShowEAPVersion, Converter={StaticResource Converter.BooleanToVisibility}}" />
+                    
+                    <StackPanel Margin="0,0,0,0" Orientation="Horizontal" Grid.Column="3" Visibility="Collapsed" Name="instanceSelectionContainer">
+                        <ComboBox 
+                            Name="instanceCombo" 
+                            ItemsSource="{Binding Path=InstanceSelectionModel.Instances}" DisplayMemberPath="DisplayName" SelectedValuePath="InstanceName" 
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Stretch"
+                            VerticalContentAlignment="Center"
+                            Padding="20,0"
+                            materialDesign:ComboBoxAssist.ClassicMode="True"
+                            SelectedValue="{Binding Path=InstanceSelectionModel.SelectedInstance}"
+                            Style="{StaticResource CustomMaterialDesignComboBox}">
+                            <ComboBox.CommandBindings>
+                                <CommandBinding Command="New" Executed="OnAddNewInstance" />
+                            </ComboBox.CommandBindings>
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Border>
+
+        <ContentControl Name="mainContent" Grid.Row="1" />
+
+    </Grid>
+    </materialDesign:DialogHost>
+</Window>

@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+  <?if $(var.Platform) = x64 ?>
+  <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+  <?define Win64 = "yes" ?>
+  <?else ?>
+  <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+  <?define Win64 = "no" ?>
+  <?endif ?>
+  <!--
+  Notes:
+    - Product/Id           : Change this every build (auto-generated)
+    - Product/Version      : Change this every major build
+    - Product/UpgradeCode  : Never change this
+  -->
+  <Product Id="*" Name="Octopus Deploy Tentacle" Language="1033" Version="7.0.33" Manufacturer="Octopus Deploy Pty. Ltd." UpgradeCode="1B32E04F-49C2-4907-8879-A556986F7F16">
+    <Package InstallerVersion="200" Compressed="yes" Description="Octopus Deploy Tentacle" Platform="$(var.Platform)" InstallScope="perMachine" />
+    <Media Id="1" Cabinet="Files.cab" EmbedCab="yes" />
+    <Property Id="MSIFASTINSTALL" Value="3" />
+    <Property Id="REINSTALLMODE" Value="amus" />
+    <Property Id="POWERSHELLEXE" Secure="yes">
+      <RegistrySearch Id="POWERSHELLEXE" Type="raw" Root="HKLM" Key="SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell" Name="Path" />
+    </Property>
+    <MajorUpgrade AllowDowngrades="yes" Schedule="afterInstallInitialize" />
+    <!--
+    Previous install location
+    -->
+    <Property Id="INSTALLLOCATION">
+      <RegistrySearch Id="RegistrySearch" Type="raw" Root="HKLM" Key="Software\Octopus\Tentacle" Name="InstallLocation" />
+    </Property>
+    <!--
+    Prior to 2.1 our installer was perUser. We changed it to perMachine, but our usual approach of uninstalling the old
+    version when upgrading doesn't work when going from perUser to perMachine. Instead, we'll check whether we have this registry key,
+    and if we do but we think the product isn't installed, then they must have an old version installed.
+    We can't just use the INSTALLLOCATION variable because it gets set once they progress through the wizard.
+    -->
+    <Property Id="CURRENTLYINSTALLED">
+      <RegistrySearch Id="RegistrySearchForCurrentInstallStatus" Type="raw" Root="HKLM" Win64="$(var.Win64)" Key="Software\Octopus\Tentacle" Name="InstallLocation" />
+    </Property>
+    <Condition Message="A previous version of Octopus Deploy Tentacle 2.0 is currently installed. This version cannot be automatically upgraded. You will need to uninstall this version before upgrading. Please view this page for details: http://g.octopushq.com/UninstallFirst">Not CURRENTLYINSTALLED Or WIX_UPGRADE_DETECTED Or Installed</Condition>
+    <!--
+    Ensure that they're not trying to run the 32-bit installer on a 64-bit Operating System.
+    -->
+    <?if $(var.Platform) = x86 ?>
+    <Condition Message="This installer is only supported on 64-bit operating systems. Please download and run the 64-bit installer."><![CDATA[Not VersionNT64]]></Condition>
+    <?endif ?>
+    <!--
+    Ensure that the .NET Framework has been installed
+    -->
+    <PropertyRef Id='WIXNETFX4RELEASEINSTALLED'/>
+    <Condition Message="This application requires Microsoft .NET Framework 4.8 Runtime in order to run. Please install the .NET Framework and then run this installer again.">
+      <![CDATA[Installed OR (WIXNETFX4RELEASEINSTALLED >= "#528040")]]>
+    </Condition>
+  
+    <!--
+    User Interface
+    -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLLOCATION" />
+    <UIRef Id="WixUI_InstallDir" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+    <WixVariable Id="WixUILicenseRtf" Value="..\Resources\License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="..\Resources\Banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="..\Resources\Dialog.bmp" />
+    <WixVariable Id="WixUIExclamationIco" Value="..\Resources\Warning.ico" />
+    <WixVariable Id="WixUIInfoIco" Value="..\Resources\Information.ico" />
+    <UI>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">NOT Installed</Publish>
+    </UI>
+    <!-- Windows service -->
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="RegistryEntries" Guid="47A3978E-6718-44F8-B3BC-249E8253163A">
+        <ServiceControl Id="StopServiceOnUninstall" Name="OctopusDeploy Tentacle" Stop="both" Wait="yes" />
+        <!--
+        Save the install location for next time
+        -->
+        <RegistryValue Id="ApplicationFolder" Root="HKLM" Key="Software\Octopus\Tentacle" Name="InstallLocation" Type="string" Value="[INSTALLLOCATION]" />
+      </Component>
+    </DirectoryRef>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="$(var.PlatformProgramFilesFolder)" Name="PFiles">
+        <Directory Id="OctopusDeployFolder" Name="Octopus Deploy">
+          <Directory Id="INSTALLLOCATION" Name="Tentacle">
+          </Directory>
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Octopus Deploy" />
+      </Directory>
+    </Directory>
+    <!--
+    Start menu shortcuts
+    -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="C54C6569-E8E6-4137-B32C-B3EFCD3D52B4">
+        <Shortcut Id="ToolsStartMenuShortcut" Name="Octopus Tentacle Manager" Description="Configure the Octopus Deploy Tentacle agent" Target="[#Octopus.Manager.Tentacle.exe]" Arguments="tentacle" WorkingDirectory="INSTALLLOCATION" />
+        <RegistryValue Root="HKCU" Key="Software\Octopus\Tentacle" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+      </Component>
+    </DirectoryRef>
+    <!--
+    Harden installation directory
+    -->
+    <CustomAction Id="SetExecProp" Property="WixQuietExecCmdLine" Value="&quot;[POWERSHELLEXE]&quot; -NoProfile -NonInteractive -InputFormat None -ExecutionPolicy Bypass -File &quot;[INSTALLLOCATION]Harden-InstallationDirectory.ps1&quot;">
+    </CustomAction>
+    <CustomAction Id="HardenInstallationDirectory" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="immediate" Return="ignore" />
+    <InstallExecuteSequence>
+      <Custom Action="SetExecProp" After="InstallExecute" />
+      <Custom Action="HardenInstallationDirectory" After="SetExecProp" />
+    </InstallExecuteSequence>
+    <!--
+    Launch tools after installer finishes
+    -->
+    <CustomAction Id="LaunchApplication" FileKey="Octopus.Manager.Tentacle.exe" ExeCommand="tentacle --reconfigure" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
+    <Feature Id="ProductFeature" Title="Octopus Tentacle" Level="1">
+      <ComponentRef Id="RegistryEntries" />
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentGroupRef Id="TentacleComponents" />
+      <ComponentGroupRef Id="Product.Generated" />
+    </Feature>
+    <!--
+    Setup the application icon
+    -->
+    <Icon Id="MainIcon" SourceFile="..\Resources\Icon.ico" />
+    <Property Id="ARPPRODUCTICON">MainIcon</Property>
+  </Product>
+</Wix>

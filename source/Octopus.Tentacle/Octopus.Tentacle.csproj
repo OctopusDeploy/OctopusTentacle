@@ -1,0 +1,119 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AppConfig Condition="'$(TargetFramework)' == 'net6.0'">app.netcore.config</AppConfig>
+		<ApplicationManifest>Tentacle.exe.manifest</ApplicationManifest>
+		<AssemblyName>Tentacle</AssemblyName>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<IsPublishable>true</IsPublishable>
+		<NoWin32Manifest>true</NoWin32Manifest>
+		<OutputPath>bin</OutputPath>
+		<OutputType>Exe</OutputType>
+		<PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
+		<RootNamespace>Octopus.Tentacle</RootNamespace>
+		<TargetFrameworks>net48;net6.0</TargetFrameworks>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<LangVersion>9</LangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<Choose>
+		<When Condition="'$(TargetFramework)' == 'net48'">
+			<PropertyGroup>
+				<RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
+			</PropertyGroup>
+		</When>
+		<Otherwise>
+			<PropertyGroup>
+				<RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
+			</PropertyGroup>
+		</Otherwise>
+	</Choose>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
+		<NoWarn>8601</NoWarn>
+		<DefineConstants>$(DefineConstants);HAS_SYSTEM_IDENTITYMODEL_TOKENS;NLOG_HAS_EVENT_LOG_TARGET;NETFX;FULL_FRAMEWORK</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+		<DefineConstants>$(DefineConstants);REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Halibut" Version="5.0.236" />
+		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Autofac" Version="4.6.2" />
+		<PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
+		<PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
+		<PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />
+		<PackageReference Include="NuGet.Packaging.Core" Version="3.6.0-octopus-58692" />
+		<PackageReference Include="NuGet.Packaging.Core.Types" Version="3.6.0-octopus-58692" />
+		<PackageReference Include="NuGet.Versioning" Version="3.6.0-octopus-58692" />
+		<PackageReference Include="Octopus.Configuration" Version="4.1.0" />
+		<PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
+		<PackageReference Include="Octopus.Time" Version="1.1.339" />
+		<PackageReference Include="Polly" Version="5.3.1" />
+		<PackageReference Include="Portable.BouncyCastle" Version="1.8.4" />
+		<PackageReference Include="System.Management" Version="4.7.0" />
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+		<PackageReference Include="TaskScheduler" Version="2.7.2" />
+		<PackageReference Include="Octopus.CoreUtilities" Version="2.1.143" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Include="..\Solution Items\SolutionInfo.cs">
+			<Link>Properties\SolutionInfo.cs</Link>
+		</Compile>
+		<Compile Include="..\Solution Items\VersionInfo.cs">
+			<Link>Properties\VersionInfo.cs</Link>
+		</Compile>
+		<None Include="Tentacle.exe.nlog">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<Content Include="Tentacle.exe.manifest">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
+		<RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
+		<RuntimeHostConfigurationOption Include="System.Globalization.PredefinedCulturesOnly" Value="false" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+		<Reference Include="System.IdentityModel" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' ">
+		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
+		<PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0" />
+		<PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
+		<PackageReference Include="NLog" Version="5.0.4" />
+		<PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
+		<PackageReference Include="System.Diagnostics.EventLog" Version="4.5.0" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
+		<PackageReference Include="System.DirectoryServices.AccountManagement" Version="4.5.0" />
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+		<PackageReference Include="NLog" Version="5.0.4" />
+		<PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
+		<PackageReference Include="System.Runtime" Version="4.3.0" />
+		<Reference Include="System.Security" />
+		<Reference Include="System.DirectoryServices" />
+		<Reference Include="System.IdentityModel" />
+		<Reference Include="System.ServiceProcess" />
+		<Reference Include="System.Web" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="Internals\Options\_Readme.txt" />
+	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.core.txt" />
+	  <EmbeddedResource Include="Startup\PathsToDeleteOnStartup.netfx.txt" />
+	</ItemGroup>
+</Project>

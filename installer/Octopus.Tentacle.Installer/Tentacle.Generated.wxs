@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="INSTALLLOCATION">
+            <Component Id="AsyncStackTraceEx.dll" Guid="{D0550CCD-4BBD-47CB-B772-55E5AF735083}">
+                <File Id="AsyncStackTraceEx.dll" KeyPath="yes" Source="$(var.TentacleSource)\AsyncStackTraceEx.dll" />
+            </Component>
+            <Component Id="Autofac.dll" Guid="{A6A8930D-6C2E-407B-9771-268991547192}">
+                <File Id="Autofac.dll" KeyPath="yes" Source="$(var.TentacleSource)\Autofac.dll" />
+            </Component>
+            <Component Id="FluentValidation.dll" Guid="{5A938EE7-88C4-4FBB-95A1-06414878E635}">
+                <File Id="FluentValidation.dll" KeyPath="yes" Source="$(var.TentacleSource)\FluentValidation.dll" />
+            </Component>
+            <Component Id="FluentValidation.pdb" Guid="{954E76DA-01A9-4E21-B2A5-D1C19242D4B8}">
+                <File Id="FluentValidation.pdb" KeyPath="yes" Source="$(var.TentacleSource)\FluentValidation.pdb" />
+            </Component>
+            <Component Id="Halibut.dll" Guid="{3F3B4739-93B0-43BC-8C9E-99D1E896ABEA}">
+                <File Id="Halibut.dll" KeyPath="yes" Source="$(var.TentacleSource)\Halibut.dll" />
+            </Component>
+            <Component Id="Microsoft.Win32.TaskScheduler.dll" Guid="{1A3F2AD7-5F62-4938-8658-981CE1FE9D46}">
+                <File Id="Microsoft.Win32.TaskScheduler.dll" KeyPath="yes" Source="$(var.TentacleSource)\Microsoft.Win32.TaskScheduler.dll" />
+            </Component>
+            <Component Id="Nancy.dll" Guid="{55097BE8-3644-4BDC-97C6-950720C9CE95}">
+                <File Id="Nancy.dll" KeyPath="yes" Source="$(var.TentacleSource)\Nancy.dll" />
+            </Component>
+            <Component Id="Nancy.Serialization.JsonNet.dll" Guid="{847215FC-5047-45E9-B228-4DCA43075FCF}">
+                <File Id="Nancy.Serialization.JsonNet.dll" KeyPath="yes" Source="$(var.TentacleSource)\Nancy.Serialization.JsonNet.dll" />
+            </Component>
+            <Component Id="Newtonsoft.Json.dll" Guid="{F8364155-C3D5-4CAA-ACC7-05C41D895FA7}">
+                <File Id="Newtonsoft.Json.dll" KeyPath="yes" Source="$(var.TentacleSource)\Newtonsoft.Json.dll" />
+            </Component>
+            <Component Id="Nito.AsyncEx.dll" Guid="{DC11223E-09E5-4689-82E7-EE3F6D181ED1}">
+                <File Id="Nito.AsyncEx.dll" KeyPath="yes" Source="$(var.TentacleSource)\Nito.AsyncEx.dll" />
+            </Component>
+            <Component Id="Nito.AsyncEx.Enlightenment.dll" Guid="{64468E19-B386-468E-BB82-B6F4F6791BEE}">
+                <File Id="Nito.AsyncEx.Enlightenment.dll" KeyPath="yes" Source="$(var.TentacleSource)\Nito.AsyncEx.Enlightenment.dll" />
+            </Component>
+            <Component Id="NLog.dll" Guid="{178EA1B0-14A6-4CBA-A347-E8670837D934}">
+                <File Id="NLog.dll" KeyPath="yes" Source="$(var.TentacleSource)\NLog.dll" />
+            </Component>
+            <Component Id="NuGet.Common.dll" Guid="{D1377944-E110-4B08-89B7-7BBA650E2960}">
+                <File Id="NuGet.Common.dll" KeyPath="yes" Source="$(var.TentacleSource)\NuGet.Common.dll" />
+            </Component>
+            <Component Id="NuGet.Frameworks.dll" Guid="{2793E7A7-3371-4C77-8E4B-A99852941BF8}">
+                <File Id="NuGet.Frameworks.dll" KeyPath="yes" Source="$(var.TentacleSource)\NuGet.Frameworks.dll" />
+            </Component>
+            <Component Id="NuGet.Packaging.Core.dll" Guid="{FF81C948-BD4B-4AA1-A88E-BF9DBFD1E572}">
+                <File Id="NuGet.Packaging.Core.dll" KeyPath="yes" Source="$(var.TentacleSource)\NuGet.Packaging.Core.dll" />
+            </Component>
+            <Component Id="NuGet.Packaging.Core.Types.dll" Guid="{356BA96B-5F17-4656-A088-BDDCAA6138AF}">
+                <File Id="NuGet.Packaging.Core.Types.dll" KeyPath="yes" Source="$(var.TentacleSource)\NuGet.Packaging.Core.Types.dll" />
+            </Component>
+            <Component Id="NuGet.Packaging.dll" Guid="{38822889-D0A1-4C2C-99BE-25733B08700C}">
+                <File Id="NuGet.Packaging.dll" KeyPath="yes" Source="$(var.TentacleSource)\NuGet.Packaging.dll" />
+            </Component>
+            <Component Id="NuGet.Versioning.dll" Guid="{DC362740-69E2-42FD-972D-023086B5BD2C}">
+                <File Id="NuGet.Versioning.dll" KeyPath="yes" Source="$(var.TentacleSource)\NuGet.Versioning.dll" />
+            </Component>
+            <Component Id="Octopus.Client.dll" Guid="{ABCD13A5-1B07-4B34-8A47-A0419BCE44EE}">
+                <File Id="Octopus.Client.dll" KeyPath="yes" Source="$(var.TentacleSource)\Octopus.Client.dll" />
+            </Component>
+            <Component Id="Octopus.Configuration.dll" Guid="{64121B0A-1278-4EE6-9CAB-B5BA17D4D186}">
+                <File Id="Octopus.Configuration.dll" KeyPath="yes" Source="$(var.TentacleSource)\Octopus.Configuration.dll" />
+            </Component>
+            <Component Id="Octopus.Diagnostics.dll" Guid="{D009FAD4-1B82-4EA1-814F-504DEE52A11A}">
+                <File Id="Octopus.Diagnostics.dll" KeyPath="yes" Source="$(var.TentacleSource)\Octopus.Diagnostics.dll" />
+            </Component>
+            <Component Id="Octopus.Manager.Core.dll" Guid="{3AC18CAB-A621-44B8-A349-D062CA44820F}">
+                <File Id="Octopus.Manager.Core.dll" KeyPath="yes" Source="$(var.TentacleSource)\Octopus.Manager.Core.dll" />
+            </Component>
+            <Component Id="Octopus.Manager.Core.pdb" Guid="{D7E14BF6-7D2E-4F75-AE8C-737B3DFF0010}">
+                <File Id="Octopus.Manager.Core.pdb" KeyPath="yes" Source="$(var.TentacleSource)\Octopus.Manager.Core.pdb" />
+            </Component>
+            <Component Id="Octopus.Manager.Tentacle.exe" Guid="{42ECFDB3-54FF-42ED-B4E9-220318B9586B}">
+                <File Id="Octopus.Manager.Tentacle.exe" KeyPath="yes" Source="$(var.TentacleSource)\Octopus.Manager.Tentacle.exe" />
+            </Component>
+            <Component Id="Octopus.Manager.Tentacle.exe.config" Guid="{08D96845-20D6-4497-B122-08571E24A497}">
+                <File Id="Octopus.Manager.Tentacle.exe.config" KeyPath="yes" Source="$(var.TentacleSource)\Octopus.Manager.Tentacle.exe.config" />
+            </Component>
+            <Component Id="Octopus.Manager.Tentacle.pdb" Guid="{15A38B04-B4B1-40A5-8982-FFEA498C214C}">
+                <File Id="Octopus.Manager.Tentacle.pdb" KeyPath="yes" Source="$(var.TentacleSource)\Octopus.Manager.Tentacle.pdb" />
+            </Component>
+            <Component Id="Octopus.Shared.dll" Guid="{79875895-4C7C-45AD-9674-BF80233E4C20}">
+                <File Id="Octopus.Shared.dll" KeyPath="yes" Source="$(var.TentacleSource)\Octopus.Shared.dll" />
+            </Component>
+            <Component Id="Octopus.Shared.pdb" Guid="{268E89DE-2712-455D-929B-CCB701F0343D}">
+                <File Id="Octopus.Shared.pdb" KeyPath="yes" Source="$(var.TentacleSource)\Octopus.Shared.pdb" />
+            </Component>
+            <Component Id="Octopus.Time.dll" Guid="{AC4C988A-592C-4636-86CA-80300A99F66B}">
+                <File Id="Octopus.Time.dll" KeyPath="yes" Source="$(var.TentacleSource)\Octopus.Time.dll" />
+            </Component>
+            <Component Id="System.Windows.Controls.Input.Toolkit.dll" Guid="{B5E5FDC1-829D-4623-A1B5-57DD2C8E3345}">
+                <File Id="System.Windows.Controls.Input.Toolkit.dll" KeyPath="yes" Source="$(var.TentacleSource)\System.Windows.Controls.Input.Toolkit.dll" />
+            </Component>
+            <Component Id="System.Windows.Controls.Layout.Toolkit.dll" Guid="{123F4AF6-07D5-4348-BC00-42082CDBA338}">
+                <File Id="System.Windows.Controls.Layout.Toolkit.dll" KeyPath="yes" Source="$(var.TentacleSource)\System.Windows.Controls.Layout.Toolkit.dll" />
+            </Component>
+            <Component Id="Tentacle.exe" Guid="{C42C9A6E-67C4-43AA-B2D5-14C862E12FFF}">
+                <File Id="Tentacle.exe" KeyPath="yes" Source="$(var.TentacleSource)\Tentacle.exe" />
+            </Component>
+            <Component Id="Tentacle.exe.config" Guid="{954E72C5-0BB0-4F8B-B06C-C0D172E46AED}">
+                <File Id="Tentacle.exe.config" KeyPath="yes" Source="$(var.TentacleSource)\Tentacle.exe.config" />
+            </Component>
+            <Component Id="Tentacle.exe.manifest" Guid="{DFFE6EB0-4AFE-4F84-AB1A-010444EAE6D1}">
+                <File Id="Tentacle.exe.manifest" KeyPath="yes" Source="$(var.TentacleSource)\Tentacle.exe.manifest" />
+            </Component>
+            <Component Id="tentacle.exe.nlog" Guid="{92BDCD46-AC3A-4A17-A93C-2D63A0C53630}">
+                <File Id="tentacle.exe.nlog" KeyPath="yes" Source="$(var.TentacleSource)\tentacle.exe.nlog" />
+            </Component>
+            <Component Id="Tentacle.pdb" Guid="{7915D028-3BC5-4E42-BE76-C8DE8E50045A}">
+                <File Id="Tentacle.pdb" KeyPath="yes" Source="$(var.TentacleSource)\Tentacle.pdb" />
+            </Component>
+            <Component Id="WPFToolkit.dll" Guid="{4D4CC14B-2781-446C-85D2-B7EC66EDC10D}">
+                <File Id="WPFToolkit.dll" KeyPath="yes" Source="$(var.TentacleSource)\WPFToolkit.dll" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="TentacleComponents">
+            <ComponentRef Id="AsyncStackTraceEx.dll" />
+            <ComponentRef Id="Autofac.dll" />
+            <ComponentRef Id="FluentValidation.dll" />
+            <ComponentRef Id="FluentValidation.pdb" />
+            <ComponentRef Id="Halibut.dll" />
+            <ComponentRef Id="Microsoft.Win32.TaskScheduler.dll" />
+            <ComponentRef Id="Nancy.dll" />
+            <ComponentRef Id="Nancy.Serialization.JsonNet.dll" />
+            <ComponentRef Id="Newtonsoft.Json.dll" />
+            <ComponentRef Id="Nito.AsyncEx.dll" />
+            <ComponentRef Id="Nito.AsyncEx.Enlightenment.dll" />
+            <ComponentRef Id="NLog.dll" />
+            <ComponentRef Id="NuGet.Common.dll" />
+            <ComponentRef Id="NuGet.Frameworks.dll" />
+            <ComponentRef Id="NuGet.Packaging.Core.dll" />
+            <ComponentRef Id="NuGet.Packaging.Core.Types.dll" />
+            <ComponentRef Id="NuGet.Packaging.dll" />
+            <ComponentRef Id="NuGet.Versioning.dll" />
+            <ComponentRef Id="Octopus.Client.dll" />
+            <ComponentRef Id="Octopus.Configuration.dll" />
+            <ComponentRef Id="Octopus.Diagnostics.dll" />
+            <ComponentRef Id="Octopus.Manager.Core.dll" />
+            <ComponentRef Id="Octopus.Manager.Core.pdb" />
+            <ComponentRef Id="Octopus.Manager.Tentacle.exe" />
+            <ComponentRef Id="Octopus.Manager.Tentacle.exe.config" />
+            <ComponentRef Id="Octopus.Manager.Tentacle.pdb" />
+            <ComponentRef Id="Octopus.Shared.dll" />
+            <ComponentRef Id="Octopus.Shared.pdb" />
+            <ComponentRef Id="Octopus.Time.dll" />
+            <ComponentRef Id="System.Windows.Controls.Input.Toolkit.dll" />
+            <ComponentRef Id="System.Windows.Controls.Layout.Toolkit.dll" />
+            <ComponentRef Id="Tentacle.exe" />
+            <ComponentRef Id="Tentacle.exe.config" />
+            <ComponentRef Id="Tentacle.exe.manifest" />
+            <ComponentRef Id="tentacle.exe.nlog" />
+            <ComponentRef Id="Tentacle.pdb" />
+            <ComponentRef Id="WPFToolkit.dll" />
+        </ComponentGroup>
+    </Fragment>
+</Wix>
