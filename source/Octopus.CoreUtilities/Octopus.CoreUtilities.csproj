@@ -3,21 +3,12 @@
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <AssemblyName>Octopus.CoreUtilities</AssemblyName>
     <PackageId>Octopus.CoreUtilities</PackageId>
-    <PackageIcon>icon.png</PackageIcon>
     <Authors>Octopus Deploy</Authors>
     <Title>Octopus Utility Classes</Title>
     <Description>Utility classes shared between the Octopus Deploy server, Calamari and other Octopus libraries</Description>
-    <RepositoryUrl>https://github.com/OctopusDeploy/CoreUtilities</RepositoryUrl>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/OctopusDeploy/CoreUtilities</PackageProjectUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <Copyright>Copyright © Octopus Deploy 2017</Copyright>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>9</LangVersion>
     <nullable>enable</nullable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="icon.png" Pack="true" PackagePath="\" />
-  </ItemGroup>
 </Project>
