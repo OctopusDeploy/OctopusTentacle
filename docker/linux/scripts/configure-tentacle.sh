@@ -75,9 +75,14 @@ function validateVariables() {
 
     echo " - server endpoint '$ServerUrl'"
     echo " - api key '##########'"
-  if [[ ! -z "$ServerPort" ]]; then
+  if [[ ! -z "$ServerCommsAddress" || ! -z "$ServerPort" ]]; then
     echo " - communication mode 'Polling' (Active)"
-    echo " - server port $ServerPort"
+    if [[ ! -z "$ServerCommsAddress" ]]; then
+      echo " - server comms address $ServerCommsAddress"
+    fi
+    if [[ ! -z "$ServerPort" ]]; then
+      echo " - server port $ServerPort"
+    fi
   else
     echo " - communication mode 'Listening' (Passive)"
     echo " - registered port $ListeningPort"
@@ -113,7 +118,7 @@ function configureTentacle() {
 	tentacle configure --instance "$instanceName" --app "$applicationsDirectory"
 
 	echo "Configuring communication type ..."
-	if [[ ! -z "$ServerPort" ]]; then
+	if [[ ! -z "$ServerCommsAddress" || ! -z "$ServerPort" ]]; then
 		tentacle configure --instance "$instanceName" --noListen "True"
 	else
 		tentacle configure --instance "$instanceName" --port $internalListeningPort --noListen "False"
@@ -177,10 +182,16 @@ function registerTentacle() {
 		'--policy' "$MachinePolicy"
 		'--force')
 
-	if [[ ! -z "$ServerPort" ]]; then
-		ARGS+=(
-			'--comms-style' 'TentacleActive'
-			'--server-comms-port' $ServerPort)
+	if [[ ! -z "$ServerCommsAddress" || ! -z "$ServerPort" ]]; then
+		ARGS+=('--comms-style' 'TentacleActive')
+
+		if [[ ! -z "$ServerCommsAddress" ]]; then
+			ARGS+=('--server-comms-address' $ServerCommsAddress)
+		fi
+
+		if [[ ! -z "$ServerPort" ]]; then
+			ARGS+=('--server-comms-port' $ServerPort)
+		fi
 	else
 		ARGS+=(
 			'--comms-style' 'TentaclePassive'

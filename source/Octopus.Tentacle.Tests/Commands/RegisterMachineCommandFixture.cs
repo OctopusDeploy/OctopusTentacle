@@ -115,18 +115,66 @@ namespace Octopus.Tentacle.Tests.Commands
         [Test]
         public void ShouldRegisterPollingTentacle()
         {
-            Start("--env=Development",
-                  "--server=http://localhost",
-                  "--name=MyMachine",
-                  "--publicHostName=mymachine.test",
-                  "--apiKey=ABC123",
-                  "--force",
-                  "--role=app-server",
-                  "--role=web-server",
-                  "--tenant=Tenant1",
-                  "--tenantTag=CustomerType/VIP",
-                  "--comms-style=TentacleActive",
-                  "--server-comms-port=10943");
+            AssertPollingTentacleRegistered("https://localhost:10943/", "--server-comms-port=10943");
+        }
+
+        [Test]
+        public void ShouldRegisterPollingTentacleOverDefaultPort()
+        {
+            AssertPollingTentacleRegistered("https://localhost:10943/");
+        }
+
+        [Test]
+        public void ShouldRegisterPollingTentacleOverCustomCommsPort()
+        {
+            AssertPollingTentacleRegistered("https://localhost:123/", "--server-comms-port=123");
+        }
+
+        [Test]
+        public void ShouldRegisterPollingTentacleOverCustomCommsAddressAndServerCommsPort()
+        {
+            AssertPollingTentacleRegistered(
+                "https://polling.localhost:456/",
+                "--server-comms-address=https://polling.localhost:123/",
+                "--server-comms-port=456");
+        }
+
+        [Test]
+        public void ShouldRegisterPollingTentacleOverCustomCommsAddressWithPort()
+        {
+            AssertPollingTentacleRegistered(
+                "https://polling.localhost:123/",
+                "--server-comms-address=https://polling.localhost:123/");
+        }
+
+        [Test]
+        public void ShouldRegisterPollingTentacleOverCustomCommsAddressWithDefaultHttpsPort()
+        {
+            AssertPollingTentacleRegistered(
+                "https://polling.localhost/",
+                "--server-comms-address=https://polling.localhost/");
+        }
+
+        void AssertPollingTentacleRegistered(string expectedServerAddress, params string[] additionalArgs)
+        {
+            var args = new []
+            {
+                "--env=Development",
+                "--server=http://localhost",
+                "--name=MyMachine",
+                "--publicHostName=mymachine.test",
+                "--apiKey=ABC123",
+                "--force",
+                "--role=app-server",
+                "--role=web-server",
+                "--tenant=Tenant1",
+                "--tenantTag=CustomerType/VIP",
+                "--comms-style=TentacleActive",
+            };
+
+            args = args.Concat(additionalArgs).ToArray();
+
+            Start(args);
 
             Assert.That(operation.EnvironmentNames.Single(), Is.EqualTo("Development"));
             Assert.That(operation.MachineName, Is.EqualTo("MyMachine"));
@@ -143,7 +191,7 @@ namespace Octopus.Tentacle.Tests.Commands
             Assert.That(operation.Tenants.Single(), Is.EqualTo("Tenant1"));
 
             configuration.Received().AddOrUpdateTrustedOctopusServer(
-                Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == "https://localhost:10943/" &&
+                Arg.Is<OctopusServerConfiguration>(x => x.Address.ToString() == expectedServerAddress &&
                                                    x.SubscriptionId == operation.SubscriptionId.ToString() &&
                                                    x.CommunicationStyle == CommunicationStyle.TentacleActive &&
                                                    x.Thumbprint == serverThumbprint));

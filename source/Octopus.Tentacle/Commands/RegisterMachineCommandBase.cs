@@ -20,6 +20,8 @@ namespace Octopus.Tentacle.Commands
 {
     public abstract class RegisterMachineCommandBase<TRegistrationOperationType> : AbstractStandardCommand where TRegistrationOperationType : IRegisterMachineOperationBase
     {
+        const int DefaultServerCommsPort = 10943;
+
         readonly Lazy<TRegistrationOperationType> lazyRegisterMachineOperation;
         readonly Lazy<IWritableTentacleConfiguration> configuration;
         readonly Lazy<IOctopusServerChecker> octopusServerChecker;
@@ -34,7 +36,8 @@ namespace Octopus.Tentacle.Commands
         string publicName = null!;
         bool allowOverwrite;
         string comms = "TentaclePassive";
-        int serverCommsPort = 10943;
+        int? serverCommsPort = null;
+        string serverCommsAddress = null!;
         string proxy = null!;
         string spaceName = null!;
         string serverWebSocketAddress = null!;
@@ -68,7 +71,8 @@ namespace Octopus.Tentacle.Commands
             Options.Add("comms-style=", "The communication style to use - either TentacleActive or TentaclePassive; the default is " + comms, s => comms = s);
             Options.Add("proxy=", "When using passive communication, the name of a proxy that Octopus should connect to the Tentacle through - e.g., 'Proxy ABC' where the proxy name is already configured in Octopus; the default is to connect to the machine directly", s => proxy = s);
             Options.Add("space=", "The name of the space within which this command will be executed. E.g. 'Finance Department' where Finance Department is the name of an existing space. The default space will be used if omitted.", s => spaceName = s);
-            Options.Add("server-comms-port=", "When using active communication, the comms port on the Octopus Server; the default is " + serverCommsPort, s => serverCommsPort = int.Parse(s));
+            Options.Add("server-comms-port=", "When using active communication, the comms port on the Octopus Server; the default is " + DefaultServerCommsPort + ". If specified, this will take precedence over any port number in server-comms-address.", s => serverCommsPort = int.Parse(s));
+            Options.Add("server-comms-address=", "When using active communication, the comms address on the Octopus Server; the address of the Octopus Server will be used if omitted.", s => serverCommsAddress = s);
             Options.Add("server-web-socket=", "When using active communication over websockets, the address of the Octopus Server, eg 'wss://example.com/OctopusComms'. Refer to http://g.octopushq.com/WebSocketComms", s => serverWebSocketAddress = s);
             Options.Add("tentacle-comms-port=", "When using passive communication, the comms port that the Octopus Server is instructed to call back on to reach this machine; defaults to the configured listening port", s => tentacleCommsPort = int.Parse(s));
         }
@@ -92,6 +96,9 @@ namespace Octopus.Tentacle.Commands
 
             if (communicationStyle == CommunicationStyle.TentacleActive && !string.IsNullOrWhiteSpace(proxy))
                 throw new ControlledFailureException("Option --proxy can only be used with --comms-style=TentaclePassive.  To set a proxy for a polling Tentacle use the polling-proxy command first and then register the Tentacle with register-with.");
+
+            if (!string.IsNullOrEmpty(serverWebSocketAddress) && !string.IsNullOrEmpty(serverCommsAddress))
+                throw new ControlledFailureException("Please specify a --server-web-socket, or a --server-comms-address - not both.");
 
             Uri? serverAddress = null;
 
@@ -177,6 +184,7 @@ namespace Octopus.Tentacle.Commands
         }
 
         protected abstract void CheckArgs();
+
         protected abstract void EnhanceOperation(TRegistrationOperationType registerOperation);
 
         async Task<string> GetServerThumbprint(IOctopusSystemAsyncRepository repository, Uri? serverAddress, string? sslThumbprint)
@@ -195,7 +203,22 @@ namespace Octopus.Tentacle.Commands
         Uri GetActiveTentacleAddress()
         {
             if (string.IsNullOrWhiteSpace(serverWebSocketAddress))
-                return new Uri($"https://{api.ServerUri.Host}:{serverCommsPort}");
+            {
+                Uri serverCommsAddressUri;
+
+                if (string.IsNullOrEmpty(serverCommsAddress))
+                {
+                    serverCommsAddressUri = api.ServerUri;
+                    serverCommsPort ??= DefaultServerCommsPort;
+                }
+                else
+                {
+                    serverCommsAddressUri = new Uri(serverCommsAddress);
+                    serverCommsPort ??= serverCommsAddressUri.Port;
+                }
+
+                return new Uri($"https://{serverCommsAddressUri.Host}:{serverCommsPort}");
+            }
 
             if (!HalibutRuntime.OSSupportsWebSockets)
                 throw new ControlledFailureException("Websockets is only supported on Windows Server 2012 and later");

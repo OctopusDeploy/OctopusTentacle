@@ -19,6 +19,7 @@ $ListeningPort=$env:ListeningPort;
 $PublicHostNameConfiguration=$env:PublicHostNameConfiguration;
 $CustomPublicHostName=$env:CustomPublicHostName;
 $InternalListeningPort=10933;
+$ServerCommsAddress=$env:ServerCommsAddress;
 $ServerPort=$env:ServerPort;
 $Space=$env:Space;
 $MachinePolicy=$env:MachinePolicy;
@@ -109,9 +110,15 @@ function Validate-Variables() {
 
   Write-Log " - server endpoint '$ServerUrl'"
   Write-Log " - api key '##########'"
-  if ($null -ne $ServerPort) {
+  if (($null -ne $ServerCommsAddress) -or ($null -ne $ServerPort)) {
     Write-Log " - communication mode 'Polling' (Active)"
-    Write-Log " - server port $ServerPort"
+
+    if ($null -ne $ServerCommsAddress) {
+      Write-Log " - server comms address $ServerCommsAddress"
+    }
+    if ($null -ne $ServerPort) {
+      Write-Log " - server port $ServerPort"
+    }
   } else {
     Write-Log " - communication mode 'Listening' (Passive)"
     Write-Log " - registered port $ListeningPort"
@@ -157,7 +164,7 @@ function Configure-Tentacle
     '--app', 'C:\Applications')
 
   Write-Log "Configuring communication type ..."
-  if ($ServerPort -ne $null) {
+  if (($null -ne $ServerCommsAddress) -or ($null -ne $ServerPort)) {
     Execute-Command $TentacleExe @(
       'configure',
       '--console',
@@ -208,11 +215,19 @@ function Register-Tentacle(){
     '--force')
   }
 
-  if ($null -ne $ServerPort) {
+  if (($null -ne $ServerCommsAddress) -or ($null -ne $ServerPort)) {
     $arg += "--comms-style"
     $arg += "TentacleActive"
-    $arg += "--server-comms-port"
-    $arg += $ServerPort
+
+    if ($null -ne $ServerCommsAddress) {
+      $arg += "--server-comms-address"
+      $arg += $ServerCommsAddress
+    }
+
+    if ($null -ne $ServerPort) {
+      $arg += "--server-comms-port"
+      $arg += $ServerPort
+    }
   } else {
     $arg += "--comms-style"
     $arg += "TentaclePassive"
