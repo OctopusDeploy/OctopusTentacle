@@ -59,6 +59,14 @@
                                         <Hyperlink NavigateUri="http://g.octopushq.com/ApiKey" RequestNavigate="Navigate">Learn about creating an API key here.</Hyperlink>
                             </TextBlock>
                         </StackPanel>
+
+                        <StackPanel Width="400">
+                            <TextBox Text="{Binding Path=ServerCommsAddress, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}" Name="ServerCommsAddressTextBox" Style="{DynamicResource MaterialDesignFloatingHintTextBox}" materialDesign:ValidationAssist.Background="Transparent" materialDesign:HintAssist.Hint="Server Communication Address (optional)"/>
+                            <TextBlock Style="{StaticResource TextBlock.Small}" Foreground="Gray" Margin="0,20,0,0">
+                                <Run>???.</Run>
+                                <Hyperlink NavigateUri="http://g.octopushq.com/TODO" RequestNavigate="Navigate">Learn about customising the server communications address here.</Hyperlink>
+                            </TextBlock>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Grid>

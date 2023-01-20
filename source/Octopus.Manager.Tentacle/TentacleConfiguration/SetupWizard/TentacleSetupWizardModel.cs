@@ -64,6 +64,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
         OctopusServerConfiguration handshake;
         string listenPort;
         string octopusThumbprint;
+        string serverCommsAddress;
         string serverCommsPort;
         string serverWebSocket;
         bool skipServerRegistration;
@@ -413,6 +414,17 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
             {
                 if (value == listenPort) return;
                 listenPort = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ServerCommsAddress
+        {
+            get => serverCommsAddress;
+            set
+            {
+                if (value == serverCommsAddress) return;
+                serverCommsAddress = value;
                 OnPropertyChanged();
             }
         }
