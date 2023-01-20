@@ -830,6 +830,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                     .Must(s => s.StartsWith("API-")).WithMessage("The API key you provided doesn't start with \"API-\" as expected. It's possible you've copied the wrong thing from the Octopus Portal.").When(t => t.AuthMode == AuthMode.APIKey);
                 validator.RuleFor(m => m.Username).NotEmpty().WithMessage("Please enter your username").When(t => t.AuthMode == AuthMode.UsernamePassword);
                 validator.RuleFor(m => m.Password).NotEmpty().WithMessage("Please enter your password").When(t => t.AuthMode == AuthMode.UsernamePassword);
+                validator.RuleFor(m => m.ServerCommsAddress).Must(BeAValidUrl).Unless(m => string.IsNullOrWhiteSpace(m.ServerCommsAddress)).WithMessage("Please enter a valid Server Communications Address");
             });
             validator.RuleSet("TentaclePassive", delegate
             {
@@ -895,7 +896,14 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
 
                 if (CommunicationStyle == CommunicationStyle.TentacleActive)
                 {
-                    register = register.Argument("server-comms-port", serverCommsPort);
+                    if (string.IsNullOrWhiteSpace(serverCommsAddress))
+                    {
+                        register = register.Argument("server-comms-port", serverCommsPort);
+                    }
+                    else
+                    {
+                        register = register.Argument("server-comms-address", serverCommsAddress);
+                    }
                 }
 
                 if (!string.IsNullOrWhiteSpace(serverWebSocket))
