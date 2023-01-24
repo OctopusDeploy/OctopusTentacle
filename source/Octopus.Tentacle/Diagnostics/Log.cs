@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Octopus.CoreUtilities.Extensions;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Diagnostics.Formatters;
 using Octopus.Tentacle.Util;

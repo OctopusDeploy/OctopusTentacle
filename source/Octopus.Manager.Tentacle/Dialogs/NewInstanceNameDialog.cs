@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using Octopus.CoreUtilities.Extensions;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Manager.Tentacle.Dialogs
 {

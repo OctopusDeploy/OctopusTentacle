@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace Octopus.CoreUtilities.Extensions
+namespace Octopus.Tentacle.Util
 {
     public static class ListExtensions
     {
@@ -34,21 +33,6 @@ namespace Octopus.CoreUtilities.Extensions
 
             foreach (var item in itemsToAdd)
                 source.Add(item);
-        }
-
-        public static void AddRangeUnique<TElement>(this ICollection<TElement>? source, IEnumerable<TElement>? itemsToAdd)
-        {
-            if (itemsToAdd == null || source == null)
-                return;
-
-            foreach (var item in itemsToAdd.Where(item => !source.Contains(item)))
-                source.Add(item);
-        }
-
-        public static void ReplaceAll<TElement>(this ICollection<TElement> source, IEnumerable<TElement> itemsToAdd)
-        {
-            source.Clear();
-            source.AddRange(itemsToAdd);
         }
     }
 }

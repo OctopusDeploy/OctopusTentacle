@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Octopus.CoreUtilities.Extensions;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Diagnostics.KnowledgeBase
 {

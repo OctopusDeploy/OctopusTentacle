@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Octopus.CoreUtilities.Extensions;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
 

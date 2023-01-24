@@ -109,7 +109,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
-		<ProjectReference Include="..\Octopus.CoreUtilities\Octopus.CoreUtilities.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <EmbeddedResource Include="Internals\Options\_Readme.txt" />

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using Halibut.ServiceModel;
-using Octopus.CoreUtilities.Extensions;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Communications
