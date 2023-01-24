@@ -5,7 +5,6 @@ using System.Management;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using Octopus.CoreUtilities.Extensions;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Util;
 using Polly;

@@ -60,7 +60,6 @@
 		<PackageReference Include="System.Management" Version="4.7.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 		<PackageReference Include="TaskScheduler" Version="2.7.2" />
-		<PackageReference Include="Octopus.CoreUtilities" Version="2.1.143" />
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Include="..\Solution Items\SolutionInfo.cs">
@@ -109,7 +108,7 @@
 		<Reference Include="System.Web" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
+		<ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <EmbeddedResource Include="Internals\Options\_Readme.txt" />
