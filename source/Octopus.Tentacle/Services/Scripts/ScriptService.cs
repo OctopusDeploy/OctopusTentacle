@@ -34,11 +34,23 @@ namespace Octopus.Tentacle.Services.Scripts
         public ScriptTicket StartScript(StartScriptCommand command)
         {
             var ticket = ScriptTicket.Create(command.TaskId);
-            var workspace = PrepareWorkspace(command, ticket);
             var cancel = new CancellationTokenSource();
-            var process = LaunchShell(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
-            running.TryAdd(ticket.TaskId, process);
-            cancellationTokens.TryAdd(ticket.TaskId, cancel);
+            if (cancellationTokens.TryAdd(ticket.TaskId, cancel))
+            {
+                var workspace = PrepareWorkspace(command, ticket);
+                var process = LaunchShell(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
+                running.TryAdd(ticket.TaskId, process);
+            }
+            else
+            {
+                int count = 0;
+                while (!running.ContainsKey(ticket.TaskId) && count < 5)
+                {
+                    Thread.Sleep(1000);
+                    count++;
+                }
+                
+            }
             return ticket;
         }
 

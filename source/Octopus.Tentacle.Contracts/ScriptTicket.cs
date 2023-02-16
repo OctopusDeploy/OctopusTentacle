@@ -48,6 +48,10 @@ namespace Octopus.Tentacle.Contracts
 
         public static ScriptTicket Create(string? serverTaskId)
         {
+            if (serverTaskId != null && serverTaskId.StartsWith("v2-"))
+            {
+                return new ScriptTicket(serverTaskId);
+            }
             serverTaskId = serverTaskId?.Replace("ServerTasks-", string.Empty);
             return new ScriptTicket($"{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{serverTaskId}-{Interlocked.Increment(ref nextTaskId)}");
         }
