@@ -3,7 +3,7 @@ if (-not (Test-Path c:\octopus-run.initstate)) {
     exit 1
 }
 
-$config = [xml](get-content 'C:\TentacleHome\tentacle.config')
+$config = [xml](get-content 'C:\Octopus\tentacle.config')
 $servers = (($config.'octopus-settings'.set | where-object { $_.key -eq 'Tentacle.Communication.TrustedOctopusServers' }).'#text' | ConvertFrom-Json)
 
 if ($servers[0].CommunicationStyle -eq 1) {
