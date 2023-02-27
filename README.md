@@ -43,10 +43,27 @@ To include a new version into the next Octopus Server release, update the [refer
 
 ## Debugging
 
-In most scenarios, Tentacle is simple to debug:
+Generally the simplest way to debug the Tentacle codebase is to install a Tentacle like a customer would (a Tentacle "instance"), connect it to Octopus Server and then use this instance when debugging in your IDE.
 
-1. Just like a customer, set up an instance of Tentacle and connect it to an Octopus Server
-2. Start Tentacle using the debugger in your development environment of choice, using the `Tentacle.exe run --instance=YOUR_INSTANCE_NAME` command
+### 1. Set up a Tentacle and connect it to Octopus Server
+
+There are multiple ways to install and connect a Tentacle to Octopus Server, the best place to get started with this is the [Octopus Tentacle documentation](https://octopus.com/docs/infrastructure/deployment-targets/tentacle).
+
+Once the Tentacle is installed and connected to Octopus Server, take note of the name you gave the Tentacle during installation, this will be the "instance name" which will be used to debug the Tentacle codebase.
+
+### 2. Stop the existing Tentacle service
+
+Depending on how you installed Tentacle above, you may have a service installed (this could be a Windows service or systemd). You'll need to stop this so that it doesn't clash with any debugging you want to do.
+
+### 3. Debug Tentacle in your IDE
+
+When Tentacle runs it can read configuration from an installed instance in order to connect to Octopus Server, in this case this configuration is what we set up above for the installed Tentacle. 
+
+To debug open up the Tentacle codebase in your IDE of choice and run the debugger with the following arguments:
+
+`run --instance=INSTANCE_NAME` where `INSTANCE_NAME` is the name of the Tentacle from point 1.
+
+When the debugger starts it will now be acting as your installed Tentacle and you can debug as required.
 
 ## Debugging in WSL (Windows Subsystem for Linux )
 Currently we can only debug netcore apps running in WSL from VSCode, Visual Studio and Rider dont seem to have good working solutions
