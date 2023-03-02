@@ -10,9 +10,12 @@ namespace Octopus.Tentacle.Contracts
         public ScriptTicket(string taskId)
         {
             TaskId = taskId ?? throw new ArgumentNullException("taskId");
+            //TaskIdTwo = TaskId;
         }
 
         public string TaskId { get; }
+
+        //public string TaskIdTwo { get; }
 
         public bool Equals(ScriptTicket? other)
         {

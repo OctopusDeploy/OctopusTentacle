@@ -93,6 +93,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 scriptIsolationMutexName,
                 arguments.ToArray(),
                 taskId,
+                taskId,
                 additionalScripts,
                 files.ToArray());
     }

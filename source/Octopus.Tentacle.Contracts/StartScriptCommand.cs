@@ -13,10 +13,12 @@ namespace Octopus.Tentacle.Contracts
             TimeSpan scriptIsolationMutexTimeout,
             string? isolationMutexName,
             string[] arguments,
-            string? taskId)
+            string? taskId,
+            string? scriptTicketId)
         {
             Arguments = arguments;
             TaskId = taskId;
+            ScriptTicketId = scriptTicketId;
             ScriptBody = scriptBody;
             Isolation = isolation;
             ScriptIsolationMutexTimeout = scriptIsolationMutexTimeout;
@@ -29,13 +31,15 @@ namespace Octopus.Tentacle.Contracts
             string isolationMutexName,
             string[] arguments,
             string? taskId,
+            string? scriptTicketId,
             params ScriptFile[] additionalFiles)
             : this(scriptBody,
                 isolation,
                 scriptIsolationMutexTimeout,
                 isolationMutexName,
                 arguments,
-                taskId)
+                taskId,
+                scriptTicketId)
         {
             if (additionalFiles != null)
                 Files.AddRange(additionalFiles);
@@ -47,6 +51,7 @@ namespace Octopus.Tentacle.Contracts
             string isolationMutexName,
             string[] arguments,
             string? taskId,
+            string? scriptTicketId,
             Dictionary<ScriptType, string> additionalScripts,
             params ScriptFile[] additionalFiles)
             : this(scriptBody,
@@ -55,6 +60,7 @@ namespace Octopus.Tentacle.Contracts
                 isolationMutexName,
                 arguments,
                 taskId,
+                scriptTicketId,
                 additionalFiles)
         {
             if (additionalScripts == null || !additionalScripts.Any())
@@ -77,6 +83,7 @@ namespace Octopus.Tentacle.Contracts
         public string[] Arguments { get; }
 
         public string? TaskId { get; }
+        public string? ScriptTicketId { get; }
 
         public TimeSpan ScriptIsolationMutexTimeout { get; }
         public string? IsolationMutexName { get; }
