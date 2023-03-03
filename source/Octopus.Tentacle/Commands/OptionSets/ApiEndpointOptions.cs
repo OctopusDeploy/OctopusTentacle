@@ -11,6 +11,8 @@ namespace Octopus.Tentacle.Commands.OptionSets
         public string Username { get; private set; } = null!;
         public string Password { get; private set; } = null!;
 
+        public bool IgnoreSslErrors { get; private set; } = false;
+
         public bool Optional { private get; set; }
 
         public ApiEndpointOptions(OptionSet options)
@@ -19,6 +21,9 @@ namespace Octopus.Tentacle.Commands.OptionSets
             options.Add("apiKey=", "Your API key; you can get this from the Octopus web portal", s => ApiKey = s, sensitive: true);
             options.Add("u|username=|user=", "If not using API keys, your username", s => Username = s);
             options.Add("p|password=", "If not using API keys, your password", s => Password = s, sensitive: true);
+#if HTTP_CLIENT_SUPPORTS_SSL_OPTIONS
+            options.Add("ignoreSslErrors", "Set this flag if your Octopus Server uses HTTPS but the certificate is not trusted on this machine. Any certificate errors will be ignored. WARNING: this option may create a security vulnerability.", v => IgnoreSslErrors = true);
+#endif
         }
 
         public Uri ServerUri => new Uri(Server);

@@ -20,7 +20,12 @@ namespace Octopus.Tentacle.Commands.OptionSets
             try
             {
                 var endpoint = GetEndpoint(apiEndpointOptions, overrideProxy);
-                var clientOptions = new OctopusClientOptions() { AllowDefaultProxy = useDefaultProxy };
+#if HTTP_CLIENT_SUPPORTS_SSL_OPTIONS
+                 var clientOptions = new OctopusClientOptions { AllowDefaultProxy = useDefaultProxy, IgnoreSslErrors = apiEndpointOptions.IgnoreSslErrors };
+#else
+                var clientOptions = new OctopusClientOptions { AllowDefaultProxy = useDefaultProxy};
+#endif
+
                 client = await OctopusAsyncClient.Create(endpoint, clientOptions).ConfigureAwait(false);
 
                 if (string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey))
