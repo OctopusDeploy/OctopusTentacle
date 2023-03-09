@@ -5,6 +5,7 @@ using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Properties;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Util;
@@ -33,7 +34,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         public ScriptTicket StartScript(StartScriptCommand command)
         {
-            var ticket = ScriptTicket.Create(command.TaskId);
+            var ticket = ScriptTicket.Create(command.TaskId, new SupportedFeaturesService().SupportedFeatures().Features);
             var workspace = PrepareWorkspace(command, ticket);
             var cancel = new CancellationTokenSource();
             var process = LaunchShell(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);

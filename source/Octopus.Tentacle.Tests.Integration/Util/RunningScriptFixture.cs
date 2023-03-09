@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Services;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Util;
@@ -52,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             var log = new InMemoryLog();
             var workspaceFactory = new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(log), homeConfiguration);
             taskId = Guid.NewGuid().ToString();
-            workspace = workspaceFactory.GetWorkspace(new ScriptTicket(taskId));
+            workspace = workspaceFactory.GetWorkspace(new ScriptTicket(taskId, new SupportedFeaturesService().SupportedFeatures().Features));
             Console.WriteLine($"Working directory: {workspace.WorkingDirectory}");
             scriptLog = new TestScriptLog();
             cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));

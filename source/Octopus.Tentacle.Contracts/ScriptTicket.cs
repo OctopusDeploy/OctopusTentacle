@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Octopus.Tentacle.Contracts
@@ -7,15 +8,15 @@ namespace Octopus.Tentacle.Contracts
     {
         static long nextTaskId;
 
-        public ScriptTicket(string taskId)
+        public ScriptTicket(string taskId, IReadOnlyList<string> supportedFeatures)
         {
             TaskId = taskId ?? throw new ArgumentNullException("taskId");
-            //TaskIdTwo = TaskId;
+            SupportedFeatures = supportedFeatures;
         }
 
         public string TaskId { get; }
 
-        //public string TaskIdTwo { get; }
+        public IReadOnlyList<string> SupportedFeatures { get; }
 
         public bool Equals(ScriptTicket? other)
         {
@@ -49,10 +50,10 @@ namespace Octopus.Tentacle.Contracts
         public override string ToString()
             => TaskId;
 
-        public static ScriptTicket Create(string? serverTaskId)
+        public static ScriptTicket Create(string? serverTaskId, IReadOnlyList<string> supportedFeatures)
         {
             serverTaskId = serverTaskId?.Replace("ServerTasks-", string.Empty);
-            return new ScriptTicket($"{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{serverTaskId}-{Interlocked.Increment(ref nextTaskId)}");
+            return new ScriptTicket($"{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{serverTaskId}-{Interlocked.Increment(ref nextTaskId)}", supportedFeatures);
         }
     }
 }
