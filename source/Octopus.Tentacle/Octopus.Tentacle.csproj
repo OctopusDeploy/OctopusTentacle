@@ -10,7 +10,7 @@
 		<OutputType>Exe</OutputType>
 		<PublishDir>../../_build/$(AssemblyName)/$(TargetFramework)/$(RuntimeIdentifier)</PublishDir>
 		<RootNamespace>Octopus.Tentacle</RootNamespace>
-		<TargetFrameworks>net48;net6.0</TargetFrameworks>
+		<TargetFramework>net6.0</TargetFramework>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
@@ -42,7 +42,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Halibut" Version="5.0.236" />
-		<PackageReference Include="Octopus.Server.Client" Version="13.2.185" />
+		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="4.6.2" />
