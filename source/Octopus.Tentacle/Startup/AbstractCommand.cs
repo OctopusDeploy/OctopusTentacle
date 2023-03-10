@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Octopus.Tentacle.Internals.Options;
 
 namespace Octopus.Tentacle.Startup
@@ -11,6 +12,8 @@ namespace Octopus.Tentacle.Startup
         protected AbstractCommand(ILogFileOnlyLogger logFileOnlyLogger)
         {
             this.LogFileOnlyLogger = logFileOnlyLogger;
+            CancellationToken = new CancellationToken();
+
         }
         protected ILogFileOnlyLogger LogFileOnlyLogger { get; }
 
@@ -21,6 +24,7 @@ namespace Octopus.Tentacle.Startup
         public virtual bool CanRunAsService => false;
 
         public OptionSet Options { get; } = new OptionSet();
+        public CancellationToken CancellationToken { get; }
 
         protected ICommandRuntime Runtime
         {

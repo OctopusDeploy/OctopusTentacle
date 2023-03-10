@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using Octopus.Tentacle.Internals.Options;
 
 namespace Octopus.Tentacle.Startup
@@ -21,6 +22,8 @@ namespace Octopus.Tentacle.Startup
         bool CanRunAsService { get; }
 
         OptionSet Options { get; }
+        
+        CancellationToken CancellationToken { get; }
 
         void WriteHelp(TextWriter writer);
 

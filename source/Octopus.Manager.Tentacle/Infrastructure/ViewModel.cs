@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using FluentValidation;
 using FluentValidation.Internal;
 using Octopus.Manager.Tentacle.Properties;
@@ -17,10 +18,14 @@ namespace Octopus.Manager.Tentacle.Infrastructure
 
         public ViewModel()
         {
+            var cancellationTokenSource = new CancellationTokenSource();
+            CancellationToken = cancellationTokenSource.Token;
             isValid = true;
         }
 
         public IValidator Validator { get; protected set; }
+        
+        public CancellationToken CancellationToken { get; }
 
         public string this[string columnName] => errors.ContainsKey(columnName) ? errors[columnName] : null;
 

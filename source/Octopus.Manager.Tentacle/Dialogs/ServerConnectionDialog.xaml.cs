@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -12,34 +12,31 @@ namespace Octopus.Manager.Tentacle.Dialogs
     /// </summary>
     public partial class ServerConnectionDialog : UserControl
     {
-        readonly TentacleSetupWizardModel model;
-        readonly TextBoxLogger logger;
-
         public ServerConnectionDialog(TentacleSetupWizardModel model)
         {
             InitializeComponent();
 
-            DataContext = this.model = model;
-            logger = new TextBoxLogger(outputLog);
+            DataContext = model;
+            var logger = new TextBoxLogger(outputLog);
             Loaded += async (a, e) =>
             {
                 model.ContributeSensitiveValues(logger);
-                await model.VerifyCredentials(logger);
+                await model.VerifyCredentials(logger, model.CancellationToken);
                 if (model.HaveCredentialsBeenVerified)
                 {
-                    setProgressBarToStatus(false, true);
+                    SetProgressBarToStatus(false, true);
                     CloseButton.Visibility = Visibility.Collapsed;
                     NextButton.Visibility = Visibility.Visible;
                     //DialogHost.CloseDialogCommand.Execute(null, null);
                 }
                 else
                 {
-                    setProgressBarToStatus(true, true);
+                    SetProgressBarToStatus(true, true);
                 }
             };
         }
 
-        void setProgressBarToStatus(bool error, bool isComplete)
+        void SetProgressBarToStatus(bool error, bool isComplete)
         {
             progressBar.Value = (error || isComplete) ? 100 : 0;
             progressBar.IsIndeterminate = (!error && !isComplete);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Diagnostics;
 using Octopus.Client;
@@ -49,21 +50,21 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             base.Start();
-            StartAsync().GetAwaiter().GetResult();
+            StartAsync(CancellationToken).GetAwaiter().GetResult();
         }
 
-        async Task StartAsync()
+        async Task StartAsync(CancellationToken cancellationToken)
         {
             //if we are on a polling tentacle with a polling proxy set up, use the api through that proxy
             var proxyOverride = proxyConfig.ParseToWebProxy(configuration.Value.PollingProxyConfiguration);
             using (var client = await octopusClientInitializer.CreateClient(api, proxyOverride))
             {
                 var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
-                await Deregister(spaceRepository);
+                await Deregister(spaceRepository, cancellationToken);
             }
         }
 
-        public async Task Deregister(IOctopusSpaceAsyncRepository repository)
+        public async Task Deregister(IOctopusSpaceAsyncRepository repository, CancellationToken cancellationToken)
         {
             if (configuration.Value.TentacleCertificate?.Thumbprint == null)
             {
@@ -82,7 +83,7 @@ namespace Octopus.Tentacle.Commands
             foreach (var machineResource in matchingMachines)
             {
                 log.Info($"Deleting machine '{machineResource.Name}' from the Octopus Server...");
-                await repository.Machines.Delete(machineResource);
+                await repository.Machines.Delete(machineResource, cancellationToken);
             }
 
             var certificate = await repository.Certificates.GetOctopusCertificate();

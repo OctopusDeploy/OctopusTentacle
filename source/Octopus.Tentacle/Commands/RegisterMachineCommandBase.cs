@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Client;
@@ -80,10 +81,10 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             base.Start();
-            StartAsync().GetAwaiter().GetResult();
+            StartAsync(System.Threading.CancellationToken).GetAwaiter().GetResult();
         }
 
-        async Task StartAsync()
+        async Task StartAsync(CancellationToken cancellationToken)
         {
             CheckArgs();
 
@@ -126,9 +127,9 @@ namespace Octopus.Tentacle.Commands
             await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle);
         }
 
-        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri? serverAddress, string? sslThumbprint, CommunicationStyle communicationStyle)
+        async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri? serverAddress, string? sslThumbprint, CommunicationStyle communicationStyle, CancellationToken cancellationToken)
         {
-            await ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(systemRepository);
+            await ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(systemRepository, cancellationToken);
 
             var server = new OctopusServerConfiguration(await GetServerThumbprint(systemRepository, serverAddress, sslThumbprint))
             {
@@ -241,9 +242,9 @@ namespace Octopus.Tentacle.Commands
 
         #region Helpers
 
-        async Task ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusSystemAsyncRepository repository)
+        async Task ConfirmTentacleCanRegisterWithServerBasedOnItsVersion(IOctopusSystemAsyncRepository repository, CancellationToken cancellationToken)
         {
-            var rootDocument = await repository.LoadRootDocument();
+            var rootDocument = await repository.LoadRootDocument(cancellationToken);
             // Eg. Check they're not trying to register a 3.* Tentacle with a 2.* API Server.
             if (string.IsNullOrEmpty(rootDocument.Version))
                 throw new ControlledFailureException("Unable to determine the Octopus Server version.");
