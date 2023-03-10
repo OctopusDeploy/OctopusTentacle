@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Commands
         protected override void Start()
         {
             base.Start();
-            StartAsync(System.Threading.CancellationToken).GetAwaiter().GetResult();
+            StartAsync(CancellationToken).GetAwaiter().GetResult();
         }
 
         async Task StartAsync(CancellationToken cancellationToken)
@@ -124,7 +124,7 @@ namespace Octopus.Tentacle.Commands
                 : await octopusClientInitializer.CreateClient(api, proxyOverride);
 
             var spaceRepository = await spaceRepositoryFactory.CreateSpaceRepository(client, spaceName);
-            await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle);
+            await RegisterMachine(client.ForSystem(), spaceRepository, serverAddress, sslThumbprint, communicationStyle, cancellationToken);
         }
 
         async Task RegisterMachine(IOctopusSystemAsyncRepository systemRepository, IOctopusSpaceAsyncRepository repository, Uri? serverAddress, string? sslThumbprint, CommunicationStyle communicationStyle, CancellationToken cancellationToken)
