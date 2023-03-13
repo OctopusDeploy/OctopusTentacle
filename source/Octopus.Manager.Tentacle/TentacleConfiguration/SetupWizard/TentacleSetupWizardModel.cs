@@ -673,7 +673,7 @@ namespace Octopus.Manager.Tentacle.TentacleConfiguration.SetupWizard
                 endpoint.Proxy = proxy;
             }
 
-            return OctopusAsyncClient.Create(endpoint);
+            return OctopusAsyncClient.Create(endpoint, new OctopusClientOptions());
         }
 
         async Task LoadSpaceSpecificData(IOctopusAsyncClient client)
