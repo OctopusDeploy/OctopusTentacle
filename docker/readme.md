@@ -55,6 +55,7 @@ docker run --publish 10931:10933 --tty --interactive --env "ListeningPort=10931"
 - **TargetTenantTag**: Comma delimited list of tenant tags to add to this target.
 - **TargetTenantedDeploymentParticipation**: The tenanted deployment mode of the target. Allowed values are Untenanted, TenantedOrUntenanted and Tenanted. Defaults to Untenanted.
 - **MachinePolicy**: The name of the machine policy that will apply to this Tentacle. Defaults to the default machine policy.
+- **ServerCommsAddress**: The URL of the Octopus Server that the Tentacle will poll for work. Defaults to `ServerUrl`. Implies a polling Tentacle.
 - **ServerPort**: The port on the Octopus Server that the Tentacle will poll for work. Defaults to 10943. Implies a polling Tentacle.
 - **ListeningPort**: The port that the Octopus Server will connect back to the Tentacle with. Defaults to 10933. Implies a listening Tentacle.
 - **PublicHostNameConfiguration**: How the url that the Octopus server will use to communicate with the Tentacle is determined. Can be `PublicIp`, `FQDN`, `ComputerName` or `Custom`. Defaults to `PublicIp`.
