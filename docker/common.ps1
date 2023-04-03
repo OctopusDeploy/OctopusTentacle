@@ -1,6 +1,9 @@
 function Get-IPAddress() {
     param ([ValidateNotNullOrEmpty()][string]$network, [ValidateNotNullOrEmpty()][string]$container)
-
+	
+	#debug
+	docker inspect $container
+	
     $docker = (docker inspect $container | convertfrom-json)[0]
     return $docker.NetworkSettings.Networks.$network.IpAddress
 }
