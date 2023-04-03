@@ -19,7 +19,7 @@ Add-Type -Path (Join-Path (Get-Item ((Get-Package Octopus.Client).source)).Direc
 
 . .\common.ps1
 
-$networkName = "${ProjectName}-default"
+$networkName = "${ProjectName}_default"
 $octopusServerContainerName = "${ProjectName}-octopus-server-1"
 Write-Host "Octopus Server container is $octopusServerContainerName"
 $octopusServerIpAddress = Get-IPAddress $networkName $octopusServerContainerName
