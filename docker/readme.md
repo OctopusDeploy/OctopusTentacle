@@ -1,55 +1,58 @@
-# tentacle
+This image can be used to bring up an [Octopus Tentacle in a container](https://octopus.com/docs/installation/octopus-tentacle-container).
 
-Due to required build context, all scripts should be executed from the root directory.
+# Pre-Requisites
 
-## Building the container
+Docker containers are supported on Windows Server 2016 and Windows 10. 
 
-```plaintext
-docker build --tag octopusdeploy/tentacle-prerelease:3.15.8 --build-arg OctopusVersion=latest --file Tentacle\Dockerfile .
+Make sure you've enabled the containers feature:
+
+```
+Enable-WindowsOptionalFeature -Online -FeatureName containers –All
 ```
 
-## Running a Tentacle: Docker compose
+If you want to run with [Hyper-V isolation](https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/hyperv-container), enable Hyper-V as well:
 
-This will run a SQL Express container, an Octopus Server container and a Tentacle container:
-
-```plaintext
-& docker-compose --project-name octopusdocker --file Tentacle\docker-compose.yml up --force-recreate -d
+```
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V –All
 ```
 
-Usage of this `docker-compose.yml` file implies acceptance of the Microsoft EULA as per https://hub.docker.com/r/microsoft/mssql-server-windows-express/.
+You will also need [Docker for Windows](https://www.docker.com/community-edition#/windows) installed.
+
+# Notes #
+On Linux containers, prior to version `6.1.1271` the internal listening port was set by the `ListeningPort` environment variable. Any containers which previously exposed Tentacle on a port other than `10933` will need to have their port configuration updated if updating to a version `>=6.1.1271`. For example if the container was run with `-p 10934:10934` this should be updated to `-p 10934:10933`.
+
+# Usage #
+
+On a Windows Server 2016 server, or on Windows 10, run:
+
+```
+docker run --publish 10931:10933 `
+           --tty --interactive `
+           --env ListeningPort="10931" `
+           --env ServerApiKey="API-WZ27UDXXAPCKUPZSH1WTG8YC80G" `
+           --env TargetEnvironment="Test" `
+           --env TargetRole="app-server" `
+           --env ServerUrl="https://octopus.example.com" `
+           --env PublicHostNameConfiguration="ComputerName" `
+           --env ACCEPT_EULA="Y" `
+           octopusdeploy/tentacle
+```
+
+
+It is recommended that you run this using something like docker compose, so that it sets up and handles networking for you. Please see the [`docker-compose.yml` file in the Octopus Tentacle](https://github.com/OctopusDeploy/OctopusTentacle/blob/main/docker-compose.yml) repo for an example. Otherwise, use `docker network` so that the containers can talk to each other.
 
 ### Environment variables
 
-Default values are set in the `.env` file.
-
-- **SA_PASSWORD**: SA password to use the sql express database
-- **OctopusAdminUsername**: The admin user to create for the Octopus Server
-- **OctopusAdminPassword**: The password for the admin user for the Octopus Server
-
-#### Ports
-
-- **81**: Port for API and HTTP portal
-
-### Volume
-
-- **C:\Applications**: Default directory to deploy applications to.
-
-## Running a Tentacle - Plain ol' Docker
-
-```plaintext
-docker run --publish 10931:10933 --tty --interactive --env "ListeningPort=10931" --env "ServerApiKey=API-L9WIFOCOWABUNGAQO6JMZIGWV6HI" --env "TargetEnvironment=Test" --env "TargetRole=app-server" --env "ServerUrl=https://octopus.example.com"  --env "PublicHostNameConfiguration=PublicIp" octopusdeploy/tentacle:3.15.8
-```
-
-### Environment variables
-
+- **ACCEPT_EULA**: Set to Y to indicate that you accept the EULA.
+- **DISABLE_DIND**: Set to Y to disable Docker-in-Docker (used to run container images).
 - **ServerApiKey**: The API Key of the Octopus Server the Tentacle should register with.
 - **ServerUsername**: If not using an API key, the user to use when registering the Tentacle with the Octopus Server.
-- **ServerPassword**: If not using an API key, the password to use when registering the Tentacle
+- **ServerPassword**: If not using an API key, the password to use when registering the Tentacle.
 - **ServerUrl**: The Url of the Octopus Server the Tentacle should register with.
 - **Space**: The name of the space which the Tentacle will be added to. Defaults to the default space.
 - **TargetEnvironment**: Comma delimited list of environments to add this target to.
 - **TargetRole**: Comma delimited list of roles to add to this target.
-- **TargetWorkerPool**: Comma delimited list of worker pools to add this target to (not to be used with environment, tenant, tenant tag or role variable).
+- **TargetWorkerPool**: Comma delimited list of worker pools to add to this target to (not to be used with environments or role variable).
 - **TargetName**: Optional Target name, defaults to host.
 - **TargetTenant**: Comma delimited list of tenants to add to this target.
 - **TargetTenantTag**: Comma delimited list of tenant tags to add to this target.
@@ -61,20 +64,15 @@ docker run --publish 10931:10933 --tty --interactive --env "ListeningPort=10931"
 - **PublicHostNameConfiguration**: How the url that the Octopus server will use to communicate with the Tentacle is determined. Can be `PublicIp`, `FQDN`, `ComputerName` or `Custom`. Defaults to `PublicIp`.
 - **CustomPublicHostName**: If `PublicHostNameConfiguration` is set to `Custom`, the host name that the Octopus Server should use to communicate with the Tentacle.
 
+
 ### Ports
 
-- **10933**: Port tentacle will be listening on (if in listening mode).
+- **10933**: Port Tentacle will be listening on.
 
-## Build and deployment process
+## Support ##
 
-The internal Octopus build and deployment process is split into two phases.
+Please contact [Octopus Support](https://octopus.com/support) for support.
 
-First stage builds a docker container, and publishes it to `octopusdeploy/tentacle-prerelease`. These images are only intended for internal testing. This is primarily based around pre-release (CI) packages.
+## Additional Information ##
 
-```plaintext
-.\Tentacle\01-build.ps1 -TentacleVersion 3.15.8
-.\Tentacle\02-start.ps1 -OctopusVersion latest -TentacleVersion 3.15.8 -username -username <user> -password <password>
-.\Tentacle\03-run.ps1
-.\Tentacle\04-stop.ps1 -OctopusVersion latest -TentacleVersion 3.15.8
-.\Tentacle\05-publish-privately.ps1 -OctopusVersion latest -TentacleVersion 3.15.8 -username <user> -password <password>
-```
+* These images are based off the [OctopusTentacle](https://github.com/OctopusDeploy/OctopusTentacle) repo on GitHub.

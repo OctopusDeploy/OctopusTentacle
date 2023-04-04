@@ -20,12 +20,12 @@ Add-Type -Path (Join-Path (Get-Item ((Get-Package Octopus.Client).source)).Direc
 . .\common.ps1
 
 $networkName = "${ProjectName}_default"
-$octopusServerContainerName = "${ProjectName}_octopus-server_1"
+$octopusServerContainerName = "${ProjectName}-octopus-server-1"
 Write-Host "Octopus Server container is $octopusServerContainerName"
 $octopusServerIpAddress = Get-IPAddress $networkName $octopusServerContainerName
 Write-Host "Octopus Server hosted at $octopusServerIpAddress"
-$listeningTentacleContainerName = "${ProjectName}_listening-tentacle_1"
-$pollingTentacleContainerName = "${ProjectName}_polling-tentacle_1"
+$listeningTentacleContainerName = "${ProjectName}-listening-tentacle-1"
+$pollingTentacleContainerName = "${ProjectName}-polling-tentacle-1"
 
 Wait-ForServiceToPassHealthCheck $octopusServerContainerName
 Wait-ForServiceToPassHealthCheck $listeningTentacleContainerName

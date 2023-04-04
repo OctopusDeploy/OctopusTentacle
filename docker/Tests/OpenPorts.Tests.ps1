@@ -11,10 +11,10 @@ Describe 'Port 10933' {
 
 	BeforeAll {
 		$networkName = $script:ProjectName + "_default";
-		$octopusServerContainer = $script:ProjectName + "_octopus-server_1";
-		$octopusListeningTentacleContainer = $script:ProjectName + "_listening-tentacle_1";
-		$octopusPollingTentacleContainer = $script:ProjectName + "_polling-tentacle_1";
-		$octopusDBContainer = $script:ProjectName + "_db_1";
+		$octopusServerContainer = $script:ProjectName + "-octopus-server-1";
+		$octopusListeningTentacleContainer = $script:ProjectName + "-listening-tentacle-1";
+		$octopusPollingTentacleContainer = $script:ProjectName + "-polling-tentacle-1";
+		$octopusDBContainer = $script:ProjectName + "-db-1";
 	}
 
 	Context 'Listening Tentacle' {
