@@ -90,6 +90,9 @@ function validateVariables() {
             echo " - communication mode 'Listening' (Passive)"
         fi
         echo " - registered port $ListeningPort"
+    if [[ ! -z "$ProxyName" ]]; then
+      echo " - proxy '$ProxyName'"
+    fi
     fi
     if [[ ! -z "$TargetWorkerPool" ]]; then
         echo " - worker pool '$TargetWorkerPool'"
@@ -211,6 +214,9 @@ function registerTentacle() {
         if [[ ! -z "$ListeningPort" && "$ListeningPort" != "$internalListeningPort" ]]; then
             ARGS+=('--tentacle-comms-port' $ListeningPort)
         fi
+		if [[ ! -z "$ProxyName" ]]; then
+		  ARGS+=('--proxy' $ProxyName)
+		fi
     fi
 
     if [[ ! -z "$ServerApiKey" ]]; then
