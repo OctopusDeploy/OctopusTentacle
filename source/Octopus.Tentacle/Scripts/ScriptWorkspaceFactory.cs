@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts
@@ -27,6 +28,48 @@ namespace Octopus.Tentacle.Scripts
 
             return new ScriptWorkspace(FindWorkingDirectory(ticket), fileSystem);
         }
+
+        public IScriptWorkspace PrepareWorkspace(StartScriptCommand command, ScriptTicket ticket)
+        {
+            var workspace = GetWorkspace(ticket);
+            workspace.IsolationLevel = command.Isolation;
+            workspace.ScriptMutexAcquireTimeout = command.ScriptIsolationMutexTimeout;
+            workspace.ScriptArguments = command.Arguments;
+            workspace.ScriptMutexName = command.IsolationMutexName;
+
+            if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
+            {
+                //TODO: This could be better
+                workspace.BootstrapScript(command.Scripts.ContainsKey(ScriptType.Bash)
+                    ? command.Scripts[ScriptType.Bash]
+                    : command.ScriptBody);
+            }
+            else
+            {
+                workspace.BootstrapScript(command.ScriptBody);
+            }
+
+            command.Files.ForEach(file => SaveFileToDisk(workspace, file));
+
+            return workspace;
+        }
+
+        void SaveFileToDisk(IScriptWorkspace workspace, ScriptFile scriptFile)
+        {
+            if (scriptFile.EncryptionPassword == null)
+            {
+                scriptFile.Contents.Receiver().SaveTo(workspace.ResolvePath(scriptFile.Name));
+            }
+            else
+            {
+                scriptFile.Contents.Receiver().Read(stream =>
+                {
+                    using var reader = new StreamReader(stream);
+                    fileSystem.WriteAllBytes(workspace.ResolvePath(scriptFile.Name), new AesEncryption(scriptFile.EncryptionPassword).Encrypt(reader.ReadToEnd()));
+                });
+            }
+        }
+
 
         string FindWorkingDirectory(ScriptTicket ticket)
         {

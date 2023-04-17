@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.Scripts
@@ -19,10 +17,15 @@ namespace Octopus.Tentacle.Services.Scripts
         readonly IOctopusFileSystem fileSystem;
         readonly SensitiveValueMasker sensitiveValueMasker;
         readonly ISystemLog log;
-        readonly ConcurrentDictionary<string, RunningScript> running = new ConcurrentDictionary<string, RunningScript>(StringComparer.OrdinalIgnoreCase);
-        readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
+        readonly ConcurrentDictionary<string, RunningScript> running = new(StringComparer.OrdinalIgnoreCase);
+        readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new(StringComparer.OrdinalIgnoreCase);
 
-        public ScriptService(IShell shell, IScriptWorkspaceFactory workspaceFactory, IOctopusFileSystem fileSystem, SensitiveValueMasker sensitiveValueMasker, ISystemLog log)
+        public ScriptService(
+            IShell shell,
+            IScriptWorkspaceFactory workspaceFactory,
+            IOctopusFileSystem fileSystem,
+            SensitiveValueMasker sensitiveValueMasker,
+            ISystemLog log)
         {
             this.shell = shell;
             this.workspaceFactory = workspaceFactory;
@@ -34,68 +37,12 @@ namespace Octopus.Tentacle.Services.Scripts
         public ScriptTicket StartScript(StartScriptCommand command)
         {
             var ticket = ScriptTicket.Create(command.TaskId);
-            var workspace = PrepareWorkspace(command, ticket);
+            var workspace = workspaceFactory.PrepareWorkspace(command, ticket);
             var cancel = new CancellationTokenSource();
             var process = LaunchShell(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
             running.TryAdd(ticket.TaskId, process);
             cancellationTokens.TryAdd(ticket.TaskId, cancel);
             return ticket;
-        }
-
-        IScriptWorkspace PrepareWorkspace(StartScriptCommand command, ScriptTicket ticket)
-        {
-            var workspace = workspaceFactory.GetWorkspace(ticket);
-            workspace.IsolationLevel = command.Isolation;
-            workspace.ScriptMutexAcquireTimeout = command.ScriptIsolationMutexTimeout;
-            workspace.ScriptArguments = command.Arguments;
-            workspace.ScriptMutexName = command.IsolationMutexName;
-
-            if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
-            {
-                //TODO: This could be better
-                workspace.BootstrapScript(command.Scripts.ContainsKey(ScriptType.Bash)
-                    ? command.Scripts[ScriptType.Bash]
-                    : command.ScriptBody);
-            }
-            else
-            {
-                workspace.BootstrapScript(command.ScriptBody);
-            }
-
-            command.Files.ForEach(file => SaveFileToDisk(workspace, file));
-
-            return workspace;
-        }
-
-        void SaveFileToDisk(IScriptWorkspace workspace, ScriptFile scriptFile)
-        {
-            if (scriptFile.EncryptionPassword == null)
-            {
-                scriptFile.Contents.Receiver().SaveTo(workspace.ResolvePath(scriptFile.Name));
-            }
-            else
-            {
-                scriptFile.Contents.Receiver().Read(stream =>
-                {
-                    using (var reader = new StreamReader(stream))
-                    {
-                        fileSystem.WriteAllBytes(workspace.ResolvePath(scriptFile.Name), new AesEncryption(scriptFile.EncryptionPassword).Encrypt(reader.ReadToEnd()));
-                    }
-                });
-            }
-        }
-
-        IScriptLog CreateLog(IScriptWorkspace workspace)
-        {
-            return new ScriptLog(workspace.ResolvePath("Output.log"), fileSystem, sensitiveValueMasker);
-        }
-
-        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
-        {
-            var runningScript = new RunningScript(shell, workspace, CreateLog(workspace), serverTaskId, cancel.Token, log);
-            var thread = new Thread(runningScript.Execute) {Name = "Executing PowerShell script for " + ticket.TaskId};
-            thread.Start();
-            return runningScript;
         }
 
         public ScriptStatusResponse GetStatus(ScriptStatusRequest request)
@@ -123,6 +70,19 @@ namespace Octopus.Tentacle.Services.Scripts
             var workspace = workspaceFactory.GetWorkspace(command.Ticket);
             workspace.Delete();
             return response;
+        }
+
+        RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
+        {
+            var runningScript = new RunningScript(shell, workspace, CreateLog(workspace), serverTaskId, cancel.Token, log);
+            var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell script for " + ticket.TaskId };
+            thread.Start();
+            return runningScript;
+        }
+
+        IScriptLog CreateLog(IScriptWorkspace workspace)
+        {
+            return new ScriptLog(workspace.ResolvePath("Output.log"), fileSystem, sensitiveValueMasker);
         }
 
         ScriptStatusResponse GetResponse(ScriptTicket ticket, RunningScript? script, long lastLogSequence)

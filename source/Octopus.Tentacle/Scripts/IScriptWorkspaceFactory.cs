@@ -6,5 +6,6 @@ namespace Octopus.Tentacle.Scripts
     public interface IScriptWorkspaceFactory
     {
         IScriptWorkspace GetWorkspace(ScriptTicket ticket);
+        IScriptWorkspace PrepareWorkspace(StartScriptCommand command, ScriptTicket ticket);
     }
 }
