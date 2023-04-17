@@ -5,11 +5,9 @@ namespace Octopus.Tentacle.Contracts
 {
     public class ScriptTicket : IEquatable<ScriptTicket>
     {
-        static long nextTaskId;
-
         public ScriptTicket(string taskId)
         {
-            TaskId = taskId ?? throw new ArgumentNullException("taskId");
+            TaskId = taskId ?? throw new ArgumentNullException(nameof(taskId));
         }
 
         public string TaskId { get; }
@@ -45,11 +43,5 @@ namespace Octopus.Tentacle.Contracts
 
         public override string ToString()
             => TaskId;
-
-        public static ScriptTicket Create(string? serverTaskId)
-        {
-            serverTaskId = serverTaskId?.Replace("ServerTasks-", string.Empty);
-            return new ScriptTicket($"{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{serverTaskId}-{Interlocked.Increment(ref nextTaskId)}");
-        }
     }
 }

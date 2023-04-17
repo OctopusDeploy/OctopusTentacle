@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
         public ScriptTicket StartScript(StartScriptCommand command)
         {
-            var ticket = ScriptTicket.Create(command.TaskId);
+            var ticket = ScriptTicketFactory.Create(command.TaskId);
             var workspace = workspaceFactory.PrepareWorkspace(command, ticket);
             var cancel = new CancellationTokenSource();
             var process = LaunchShell(ticket, command.TaskId ?? ticket.TaskId, workspace, cancel);
