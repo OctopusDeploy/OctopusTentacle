@@ -3,9 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Scripts;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
@@ -14,8 +12,6 @@ namespace Octopus.Tentacle.Services.Scripts
     {
         readonly IShell shell;
         readonly IScriptWorkspaceFactory workspaceFactory;
-        readonly IOctopusFileSystem fileSystem;
-        readonly SensitiveValueMasker sensitiveValueMasker;
         readonly ISystemLog log;
         readonly ConcurrentDictionary<string, RunningScript> running = new(StringComparer.OrdinalIgnoreCase);
         readonly ConcurrentDictionary<string, CancellationTokenSource> cancellationTokens = new(StringComparer.OrdinalIgnoreCase);
@@ -23,14 +19,10 @@ namespace Octopus.Tentacle.Services.Scripts
         public ScriptService(
             IShell shell,
             IScriptWorkspaceFactory workspaceFactory,
-            IOctopusFileSystem fileSystem,
-            SensitiveValueMasker sensitiveValueMasker,
             ISystemLog log)
         {
             this.shell = shell;
             this.workspaceFactory = workspaceFactory;
-            this.fileSystem = fileSystem;
-            this.sensitiveValueMasker = sensitiveValueMasker;
             this.log = log;
         }
 
@@ -74,22 +66,17 @@ namespace Octopus.Tentacle.Services.Scripts
 
         RunningScript LaunchShell(ScriptTicket ticket, string serverTaskId, IScriptWorkspace workspace, CancellationTokenSource cancel)
         {
-            var runningScript = new RunningScript(shell, workspace, CreateLog(workspace), serverTaskId, cancel.Token, log);
+            var runningScript = new RunningScript(shell, workspace, workspace.CreateLog(), serverTaskId, cancel.Token, log);
             var thread = new Thread(runningScript.Execute) { Name = "Executing PowerShell script for " + ticket.TaskId };
             thread.Start();
             return runningScript;
-        }
-
-        IScriptLog CreateLog(IScriptWorkspace workspace)
-        {
-            return new ScriptLog(workspace.ResolvePath("Output.log"), fileSystem, sensitiveValueMasker);
         }
 
         ScriptStatusResponse GetResponse(ScriptTicket ticket, RunningScript? script, long lastLogSequence)
         {
             var exitCode = script != null ? script.ExitCode : 0;
             var state = script != null ? script.State : ProcessState.Complete;
-            var scriptLog = script != null ? script.ScriptLog : CreateLog(workspaceFactory.GetWorkspace(ticket));
+            var scriptLog = script != null ? script.ScriptLog : workspaceFactory.GetWorkspace(ticket).CreateLog();
 
             var logs = scriptLog.GetOutput(lastLogSequence, out var next);
             return new ScriptStatusResponse(ticket, state, exitCode, logs, next);

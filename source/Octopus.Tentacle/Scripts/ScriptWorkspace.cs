@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Text;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Diagnostics;
+using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Scripts
@@ -9,15 +11,19 @@ namespace Octopus.Tentacle.Scripts
     public class ScriptWorkspace : IScriptWorkspace
     {
         protected readonly IOctopusFileSystem FileSystem;
+        protected readonly SensitiveValueMasker SensitiveValueMasker;
 
         TimeSpan scriptMutexAcquireTimeout = ScriptIsolationMutex.NoTimeout;
 
-        public ScriptWorkspace(string workingDirectory, IOctopusFileSystem fileSystem)
+        public ScriptWorkspace(
+            string workingDirectory,
+            IOctopusFileSystem fileSystem,
+            SensitiveValueMasker sensitiveValueMasker)
         {
             WorkingDirectory = workingDirectory;
             FileSystem = fileSystem;
+            SensitiveValueMasker = sensitiveValueMasker;
             fileSystem.EnsureDiskHasEnoughFreeSpace(workingDirectory);
-            BootstrapScriptFilePath = Path.Combine(workingDirectory, BootstrapScriptName);
         }
 
         protected virtual string BootstrapScriptName => "Bootstrap.ps1";
@@ -45,7 +51,7 @@ namespace Octopus.Tentacle.Scripts
 
         public string WorkingDirectory { get; }
 
-        public string BootstrapScriptFilePath { get; }
+        public string BootstrapScriptFilePath => Path.Combine(WorkingDirectory, BootstrapScriptName);
 
         public virtual void BootstrapScript(string scriptBody)
         {
@@ -65,6 +71,11 @@ namespace Octopus.Tentacle.Scripts
         public void Delete()
         {
             FileSystem.DeleteDirectory(WorkingDirectory, DeletionOptions.TryThreeTimesIgnoreFailure);
+        }
+
+        public IScriptLog CreateLog()
+        {
+            return new ScriptLog(ResolvePath("Output.log"), FileSystem, SensitiveValueMasker);
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Security;
 using Octopus.Tentacle.Util;
 
@@ -11,22 +12,27 @@ namespace Octopus.Tentacle.Scripts
     {
         readonly IOctopusFileSystem fileSystem;
         readonly IHomeConfiguration home;
+        readonly SensitiveValueMasker sensitiveValueMasker;
 
-        public ScriptWorkspaceFactory(IOctopusFileSystem fileSystem, IHomeConfiguration home)
+        public ScriptWorkspaceFactory(
+            IOctopusFileSystem fileSystem,
+            IHomeConfiguration home,
+            SensitiveValueMasker sensitiveValueMasker)
         {
             if (home.ApplicationSpecificHomeDirectory == null)
                 throw new ArgumentException($"{GetType().Name} cannot function without the HomeDirectory configured.", nameof(home));
 
             this.fileSystem = fileSystem;
             this.home = home;
+            this.sensitiveValueMasker = sensitiveValueMasker;
         }
 
         public IScriptWorkspace GetWorkspace(ScriptTicket ticket)
         {
             if (!PlatformDetection.IsRunningOnWindows)
-                return new BashScriptWorkspace(FindWorkingDirectory(ticket), fileSystem);
+                return new BashScriptWorkspace(FindWorkingDirectory(ticket), fileSystem, sensitiveValueMasker);
 
-            return new ScriptWorkspace(FindWorkingDirectory(ticket), fileSystem);
+            return new ScriptWorkspace(FindWorkingDirectory(ticket), fileSystem, sensitiveValueMasker);
         }
 
         public IScriptWorkspace PrepareWorkspace(StartScriptCommand command, ScriptTicket ticket)
