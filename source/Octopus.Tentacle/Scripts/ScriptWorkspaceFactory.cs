@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
@@ -35,27 +36,36 @@ namespace Octopus.Tentacle.Scripts
             return new ScriptWorkspace(FindWorkingDirectory(ticket), fileSystem, sensitiveValueMasker);
         }
 
-        public IScriptWorkspace PrepareWorkspace(StartScriptCommand command, ScriptTicket ticket)
+        public IScriptWorkspace PrepareWorkspace(
+            ScriptTicket ticket,
+            string scriptBody,
+            Dictionary<ScriptType, string> scripts,
+            ScriptIsolationLevel isolationLevel,
+            TimeSpan scriptMutexAcquireTimeout,
+            string? scriptMutexName,
+            string[]? scriptArguments,
+            List<ScriptFile> files)
         {
             var workspace = GetWorkspace(ticket);
-            workspace.IsolationLevel = command.Isolation;
-            workspace.ScriptMutexAcquireTimeout = command.ScriptIsolationMutexTimeout;
-            workspace.ScriptArguments = command.Arguments;
-            workspace.ScriptMutexName = command.IsolationMutexName;
+            workspace.IsolationLevel = isolationLevel;
+            workspace.ScriptMutexAcquireTimeout = scriptMutexAcquireTimeout;
+            workspace.ScriptArguments = scriptArguments;
+            workspace.ScriptMutexName = scriptMutexName;
 
             if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
             {
                 //TODO: This could be better
-                workspace.BootstrapScript(command.Scripts.ContainsKey(ScriptType.Bash)
-                    ? command.Scripts[ScriptType.Bash]
-                    : command.ScriptBody);
+                workspace.BootstrapScript(scripts.ContainsKey(ScriptType.Bash)
+                    ? scripts[ScriptType.Bash]
+                    : scriptBody);
             }
             else
             {
-                workspace.BootstrapScript(command.ScriptBody);
+                workspace.BootstrapScript(scriptBody);
             }
 
-            command.Files.ForEach(file => SaveFileToDisk(workspace, file));
+
+            files.ForEach(file => SaveFileToDisk(workspace, file));
 
             return workspace;
         }
