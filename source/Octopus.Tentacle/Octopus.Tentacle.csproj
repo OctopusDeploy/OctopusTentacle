@@ -41,11 +41,8 @@
 		<DefineConstants>$(DefineConstants);HTTP_CLIENT_SUPPORTS_SSL_OPTIONS;REQUIRES_EXPLICIT_LOG_CONFIG;REQUIRES_CODE_PAGE_PROVIDER;USER_INTERACTIVE_DOES_NOT_WORK;DEFAULT_PROXY_IS_NOT_AVAILABLE;HAS_NULLABLE_REF_TYPES</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Halibut" Version="5.0.236" />
 		<PackageReference Include="Octopus.Client" Version="11.3.3453" />
-	</ItemGroup>
-	<ItemGroup>
-		<PackageReference Include="Autofac" Version="4.6.2" />
+    <PackageReference Include="Autofac" Version="4.6.2" />
 		<PackageReference Include="NuGet.Common" Version="3.6.0-octopus-58692" />
 		<PackageReference Include="NuGet.Frameworks" Version="3.6.0-octopus-58692" />
 		<PackageReference Include="NuGet.Packaging" Version="3.6.0-octopus-58692" />
