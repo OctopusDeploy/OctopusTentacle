@@ -1,4 +1,5 @@
 ﻿using Halibut.Transport.Protocol;
+using Newtonsoft.Json;
 
 namespace Octopus.Tentacle.Contracts.Legacy
 {
@@ -10,10 +11,15 @@ namespace Octopus.Tentacle.Contracts.Legacy
         {
             return builder.WithSerializerSettings(settings =>
             {
-                var namespaceMappingBinder = new NamespaceMappingSerializationBinderDecorator(settings.SerializationBinder, LegacyNamespace, TentacleContracts.Namespace);
-                var assemblyMappingBinder = new AssemblyMappingSerializationBinderDecorator(namespaceMappingBinder, LegacyAssembly, TentacleContracts.AssemblyName);
-                settings.SerializationBinder = assemblyMappingBinder;
+                AddLegacyContractSupportToJsonSerializer(settings);
             });
+        }
+
+        public static void AddLegacyContractSupportToJsonSerializer(JsonSerializerSettings settings)
+        {
+            var namespaceMappingBinder = new NamespaceMappingSerializationBinderDecorator(settings.SerializationBinder, LegacyNamespace, TentacleContracts.Namespace);
+            var assemblyMappingBinder = new AssemblyMappingSerializationBinderDecorator(namespaceMappingBinder, LegacyAssembly, TentacleContracts.AssemblyName, LegacyNamespace, TentacleContracts.Namespace);
+            settings.SerializationBinder = assemblyMappingBinder;
         }
     }
 }
