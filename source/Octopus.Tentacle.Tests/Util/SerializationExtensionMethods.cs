@@ -36,13 +36,5 @@ namespace Octopus.Tentacle.Tests.Util
             var output = jsonSerializer.Deserialize(reader, objectType);
             return output;
         }
-
-        public static void Configure(this JsonSerializer jsonSerializer, JsonSerializerSettings settings)
-        {
-            // private static void ApplySerializerSettings(JsonSerializer serializer, JsonSerializerSettings settings)
-            var applySerializerSettingsMethod = typeof(JsonSerializer).GetMethod("ApplySerializerSettings", BindingFlags.NonPublic | BindingFlags.Static)!;
-            var args = new object[] { jsonSerializer, settings };
-            applySerializerSettingsMethod.Invoke(null, args);
-        }
     }
 }

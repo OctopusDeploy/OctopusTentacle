@@ -7,7 +7,7 @@ namespace Octopus.Tentacle.Contracts.Legacy
 {
     public class ReMappedLegacyTypes
     {
-        private static IReadOnlyCollection<Type> Types = new HashSet<Type>(new[] { typeof(CancelScriptCommand),
+        private static IReadOnlyCollection<Type> LegacyContractTypes = new HashSet<Type>(new[] { typeof(CancelScriptCommand),
             typeof(CompleteScriptCommand),
             typeof(IFileTransferService),
             typeof(IScriptService),
@@ -23,13 +23,13 @@ namespace Octopus.Tentacle.Contracts.Legacy
 
         IReadOnlyCollection<string> FullNameOfTypesToRemap;
 
-        public ReMappedLegacyTypes(params string[] nameSpaces)
+        internal ReMappedLegacyTypes(params string[] nameSpaces)
         {
             var set = new HashSet<string>();
 
             foreach (var nameSpace in nameSpaces)
             {
-                foreach (var oldTypeName in Types.Select(t => nameSpace + "." + t.Name).ToHashSet())
+                foreach (var oldTypeName in LegacyContractTypes.Select(t => nameSpace + "." + t.Name).ToHashSet())
                 {
                     set.Add(oldTypeName);
                 }
@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Contracts.Legacy
             FullNameOfTypesToRemap = set;
         }
 
-        public bool ShouldRemap(string? fullTypeName)
+        internal bool ShouldRemap(string? fullTypeName)
         {
             if (fullTypeName == null) return false;
 
