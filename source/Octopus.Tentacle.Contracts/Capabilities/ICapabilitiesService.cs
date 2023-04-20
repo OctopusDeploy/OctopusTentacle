@@ -4,6 +4,6 @@ namespace Octopus.Tentacle.Contracts.Capabilities
 {
     public interface ICapabilitiesService
     {
-        public CapabilitiesResponse GetCapabilities();
+        public CapabilitiesResponse SupportedCapabilities();
     }
 }
