@@ -4,11 +4,11 @@ namespace Octopus.Tentacle.Contracts
 {
     public class CapabilitiesResponse
     {
-        public IReadOnlyList<string> capabilities { get; }
+        public IReadOnlyList<string> SupportedCapabilities { get; }
 
-        public CapabilitiesResponse(IReadOnlyList<string> capabilities)
+        public CapabilitiesResponse(IReadOnlyList<string> supportedCapabilities)
         {
-            this.capabilities = capabilities;
+            this.SupportedCapabilities = supportedCapabilities;
         }
     }
 }

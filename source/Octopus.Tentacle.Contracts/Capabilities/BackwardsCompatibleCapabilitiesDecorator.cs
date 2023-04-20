@@ -12,11 +12,11 @@ namespace Octopus.Tentacle.Contracts.Capabilities
             this.inner = inner;
         }
 
-        public CapabilitiesResponse SupportedCapabilities()
+        public CapabilitiesResponse GetCapabilities()
         {
             try
             {
-                return inner.SupportedCapabilities();
+                return inner.GetCapabilities();
             }
             catch (NoMatchingServiceOrMethodHalibutClientException)
             {

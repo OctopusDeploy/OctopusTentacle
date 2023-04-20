@@ -7,7 +7,7 @@ namespace Octopus.Tentacle.Services.Capabilities
     [Service]
     public class CapabilitiesService : ICapabilitiesService
     {
-        public CapabilitiesResponse SupportedCapabilities()
+        public CapabilitiesResponse GetCapabilities()
         {
             return new CapabilitiesResponse(new List<string>());
         }
