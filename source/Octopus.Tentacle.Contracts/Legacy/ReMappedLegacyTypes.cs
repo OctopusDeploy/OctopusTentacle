@@ -18,7 +18,6 @@ namespace Octopus.Tentacle.Contracts.Legacy
             typeof(ScriptTicket),
             typeof(ScriptType),
             typeof(StartScriptCommand),
-            typeof(TentacleContracts),
             typeof(UploadResult)});
 
         IReadOnlyCollection<string> FullNameOfTypesToRemap;
