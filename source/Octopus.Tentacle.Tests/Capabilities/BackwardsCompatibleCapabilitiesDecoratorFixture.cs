@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Tests.Capabilities
         public void ShouldWrapServiceNotFoundExceptionToNoCapabilities()
         {
             var backwardsCompatibleCapabilitiesService = new ThrowsServiceNotFoundCapabilitiesService().WithBackwardsCompatability();
-            backwardsCompatibleCapabilitiesService.SupportedCapabilities().capabilities.Count.Should().Be(0);
+            backwardsCompatibleCapabilitiesService.GetCapabilities().SupportedCapabilities.Count.Should().Be(0);
         }
 
         public class ThrowsServiceNotFoundCapabilitiesService : ICapabilitiesService
