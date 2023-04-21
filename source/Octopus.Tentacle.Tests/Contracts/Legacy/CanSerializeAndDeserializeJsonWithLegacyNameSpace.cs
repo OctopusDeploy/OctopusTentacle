@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Contracts.Legacy
             var serializer = CreateJsonSerializer();
 
             var memoryStream = new MemoryStream();
-            var laJson = serializer.ToJson(new HasAThing(new ScriptTicket("foo")));
+            var laJson = serializer.ToJson(new HasAThing(new ScriptTicket("fo   o")));
             laJson.Should().Contain(
                 "Octopus.Shared.Contracts.ScriptTicket, Octopus.Shared",
                 because: "It should make reference to the old namespace and assembly for backwards compatability with old tentacle or clients of tentacle.");
@@ -47,6 +47,10 @@ namespace Octopus.Tentacle.Tests.Contracts.Legacy
             var cancelScriptCommand = hasAThing.TheThing as CancelScriptCommand;
             cancelScriptCommand.Ticket.TaskId.Should().Be("F12");
             cancelScriptCommand.LastLogSequence.Should().Be(12L);
+            
+            serializer.ToJson(hasAThing)
+                .Should().Contain("Octopus.Shared.Contracts")
+                .And.NotContain("Octopus.Tentacle.Contracts");
         }
 
         [Test]
@@ -62,6 +66,10 @@ namespace Octopus.Tentacle.Tests.Contracts.Legacy
             var completeScriptCommand = hasAThing.TheThing as CompleteScriptCommand;
             completeScriptCommand.Ticket.TaskId.Should().Be("F12");
             completeScriptCommand.LastLogSequence.Should().Be(12L);
+            
+            serializer.ToJson(hasAThing)
+                .Should().Contain("Octopus.Shared.Contracts")
+                .And.NotContain("Octopus.Tentacle.Contracts");
         }
 
         [Test]
@@ -77,6 +85,10 @@ namespace Octopus.Tentacle.Tests.Contracts.Legacy
             var scriptFile = hasAThing.TheThing as ScriptFile;
             scriptFile.Name.Should().Be("Alice");
             // No need to check the DataStream, that is handled in a special way in halibut.
+            
+            serializer.ToJson(hasAThing)
+                .Should().Contain("Octopus.Shared.Contracts")
+                .And.NotContain("Octopus.Tentacle.Contracts");
         }
 
         [Test]
@@ -92,6 +104,10 @@ namespace Octopus.Tentacle.Tests.Contracts.Legacy
             var scriptStatusRequest = hasAThing.TheThing as ScriptStatusRequest;
             scriptStatusRequest.Ticket.TaskId.Should().Be("ticket");
             scriptStatusRequest.LastLogSequence.Should().Be(1337L);
+            
+            serializer.ToJson(hasAThing)
+                .Should().Contain("Octopus.Shared.Contracts")
+                .And.NotContain("Octopus.Tentacle.Contracts");
         }
 
         [Test]
@@ -109,6 +125,10 @@ namespace Octopus.Tentacle.Tests.Contracts.Legacy
             scriptStatusResponse.State.Should().Be(ProcessState.Pending);
             scriptStatusResponse.Logs.Count.Should().Be(1);
             scriptStatusResponse.Logs[0].Text.Should().Be("something");
+            
+            serializer.ToJson(hasAThing)
+                .Should().Contain("Octopus.Shared.Contracts")
+                .And.NotContain("Octopus.Tentacle.Contracts");
         }
 
         [Test]
@@ -121,12 +141,16 @@ namespace Octopus.Tentacle.Tests.Contracts.Legacy
             var hasAThing = serializer.FromJson<HasAThing>(json);
             hasAThing.TheThing.GetType().Should().Be(typeof(StartScriptCommand));
 
-            var scriptStatusResponse = hasAThing.TheThing as StartScriptCommand;
-            scriptStatusResponse.ScriptBody.Should().Be("echo hello");
-            scriptStatusResponse.Isolation.Should().Be(ScriptIsolationLevel.FullIsolation);
-            scriptStatusResponse.Scripts.Count.Should().Be(1);
-            scriptStatusResponse.Scripts[ScriptType.Bash].Should().Be("bob");
-            scriptStatusResponse.IsolationMutexName.Should().Be("mutex");
+            var startScriptCommand = hasAThing.TheThing as StartScriptCommand;
+            startScriptCommand.ScriptBody.Should().Be("echo hello");
+            startScriptCommand.Isolation.Should().Be(ScriptIsolationLevel.FullIsolation);
+            startScriptCommand.Scripts.Count.Should().Be(1);
+            startScriptCommand.Scripts[ScriptType.Bash].Should().Be("bob");
+            startScriptCommand.IsolationMutexName.Should().Be("mutex");
+            
+            serializer.ToJson(hasAThing)
+                .Should().Contain("Octopus.Shared.Contracts")
+                .And.NotContain("Octopus.Tentacle.Contracts");
         }
 
         [Test]
@@ -139,8 +163,12 @@ namespace Octopus.Tentacle.Tests.Contracts.Legacy
             var hasAThing = serializer.FromJson<HasAThing>(json);
             hasAThing.TheThing.GetType().Should().Be(typeof(UploadResult));
 
-            var scriptStatusResponse = hasAThing.TheThing as UploadResult;
-            scriptStatusResponse.FullPath.Should().Be("/the/path");
+            var uploadResult = hasAThing.TheThing as UploadResult;
+            uploadResult.FullPath.Should().Be("/the/path");
+
+            serializer.ToJson(hasAThing)
+                .Should().Contain("Octopus.Shared.Contracts")
+                .And.NotContain("Octopus.Tentacle.Contracts");
         }
 
         private static JsonSerializer CreateJsonSerializer()
