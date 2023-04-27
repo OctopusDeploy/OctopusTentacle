@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>Octopus.Tentacle.Contracts</RootNamespace>
     <AssemblyName>Octopus.Tentacle.Contracts</AssemblyName>
@@ -28,7 +28,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <PackageReference Include="Halibut" Version="5.0.464" />
+    <PackageReference Include="Halibut" Version="4.4.7" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Solution Items\SolutionInfo.cs">
