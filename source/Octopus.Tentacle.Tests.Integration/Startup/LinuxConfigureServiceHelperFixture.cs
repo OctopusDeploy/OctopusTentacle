@@ -151,7 +151,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             Console.WriteLine($"Status of service {serviceName}");
             foreach (var info in result.Infos)
                 Console.WriteLine(info);
-            var infoSplits = result.Infos.Select(x => x.Split(new[] { '=' }, 2, StringSplitOptions.RemoveEmptyEntries)).ToList();
+            var infoSplits = result.Infos.Select(x => x.Split(new[] { '=' }, 2, StringSplitOptions.None)).ToList();
             foreach (var infoSplit in infoSplits)
             {
                 if (infoSplit.Length == 0)
