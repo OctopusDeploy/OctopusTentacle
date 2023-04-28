@@ -81,7 +81,11 @@ partial class Build
             List<TestConfigurationOnLinuxDistribution> testOnLinuxDistributions = new()
             {
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:buster", "deb"),
-                new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldoldstable-slim", "deb"),
+
+                // Debian dist oldoldstable appears to have been removed on 23/4/2023, maybe temporarily whilst a new stable release is created. 
+                // TODO: Revisit this when/if the dist becomes available again and reinstate if possible.
+                // new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldoldstable-slim", "deb"),
+
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:oldstable-slim", "deb"),
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "debian:stable-slim", "deb"),
                 new TestConfigurationOnLinuxDistribution(NetCore, "linux-x64", "linuxmintd/mint19.3-amd64", "deb"),
