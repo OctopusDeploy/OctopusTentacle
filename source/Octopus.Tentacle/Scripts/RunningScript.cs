@@ -8,11 +8,6 @@ namespace Octopus.Tentacle.Scripts
 {
     public class RunningScript
     {
-        public const int FatalExitCode = -41;
-        public const int PowershellInvocationErrorExitCode = -42;
-        public const int CanceledExitCode = -43;
-        public const int TimeoutExitCode = -44;
-
         readonly IScriptWorkspace workspace;
         readonly IShell shell;
         readonly string taskId;
@@ -64,13 +59,13 @@ namespace Octopus.Tentacle.Scripts
                     catch (OperationCanceledException)
                     {
                         writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
-                        ExitCode = CanceledExitCode;
+                        ExitCode = ScriptExitCodes.CanceledExitCode;
                         State = ProcessState.Complete;
                     }
                     catch (TimeoutException)
                     {
                         writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution timed out.");
-                        ExitCode = TimeoutExitCode;
+                        ExitCode = ScriptExitCodes.TimeoutExitCode;
                         State = ProcessState.Complete;
                     }
                 }
@@ -78,7 +73,7 @@ namespace Octopus.Tentacle.Scripts
             catch (Exception)
             {
                 // Something went really really wrong, probably creating or writing to the log file (Disk space)
-                ExitCode = FatalExitCode;
+                ExitCode = ScriptExitCodes.FatalExitCode;
                 State = ProcessState.Complete;
             }
         }
@@ -105,7 +100,7 @@ namespace Octopus.Tentacle.Scripts
             {
                 writer.WriteOutput(ProcessOutputSource.StdErr, "An exception was thrown when invoking " + shellPath + ": " + ex.Message);
                 writer.WriteOutput(ProcessOutputSource.StdErr, ex.ToString());
-                ExitCode = PowershellInvocationErrorExitCode;
+                ExitCode = ScriptExitCodes.PowershellInvocationErrorExitCode;
                 State = ProcessState.Complete;
             }
         }

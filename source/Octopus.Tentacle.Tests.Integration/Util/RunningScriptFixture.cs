@@ -6,6 +6,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
@@ -50,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             homeConfiguration.HomeDirectory.Returns(temporaryDirectory.DirectoryPath);
             homeConfiguration.ApplicationSpecificHomeDirectory.Returns(temporaryDirectory.DirectoryPath);
             var log = new InMemoryLog();
-            var workspaceFactory = new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(log), homeConfiguration);
+            var workspaceFactory = new ScriptWorkspaceFactory(new OctopusPhysicalFileSystem(log), homeConfiguration, new SensitiveValueMasker());
             taskId = Guid.NewGuid().ToString();
             workspace = workspaceFactory.GetWorkspace(new ScriptTicket(taskId));
             Console.WriteLine($"Working directory: {workspace.WorkingDirectory}");
