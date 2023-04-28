@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Services.Capabilities
     {
         public CapabilitiesResponse GetCapabilities()
         {
-            return new CapabilitiesResponse(new List<string>());
+            return new CapabilitiesResponse(new List<string>{ nameof(IScriptServiceV2)+"Alpha" });
         }
     }
 }

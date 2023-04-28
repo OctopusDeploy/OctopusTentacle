@@ -12,8 +12,7 @@ namespace Octopus.Tentacle.Tests.Capabilities
             new CapabilitiesService()
                 .GetCapabilities()
                 .SupportedCapabilities
-                .Count
-                .Should().Be(0);
+                .Should().BeEquivalentTo(new[]{ "IScriptServiceV2Alpha" });
         }
     }
 }
