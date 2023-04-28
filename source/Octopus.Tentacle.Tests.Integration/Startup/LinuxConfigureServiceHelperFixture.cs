@@ -151,19 +151,9 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             Console.WriteLine($"Status of service {serviceName}");
             foreach (var info in result.Infos)
                 Console.WriteLine(info);
-            var infoSplits = result.Infos.Select(x => x.Split(new[] { '=' }, 2, StringSplitOptions.None)).ToList();
-            foreach (var infoSplit in infoSplits)
-            {
-                if (infoSplit.Length == 0)
-                {
-                    Console.Write("Split returned an empty array when it shouldn't have!!");
-                }
-                else
-                {
-                    Console.WriteLine(string.Join(" --> ", infoSplit));
-                }
-            }
-            return infoSplits.ToDictionary(x => x[0], x => x[1]);
+            return result.Infos
+                .Select(x => x.Split(new[] { '=' }, 2, StringSplitOptions.None))
+                .ToDictionary(x => x[0], x => x[1]);
         }
 
         bool IsServiceRunning(string serviceName)
