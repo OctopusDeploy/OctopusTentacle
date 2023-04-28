@@ -154,7 +154,14 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             var infoSplits = result.Infos.Select(x => x.Split(new[] { '=' }, 2, StringSplitOptions.RemoveEmptyEntries)).ToList();
             foreach (var infoSplit in infoSplits)
             {
-                Console.WriteLine(string.Join(" --> ", infoSplit));
+                if (infoSplit.Length == 0)
+                {
+                    Console.Write("Split returned an empty array when it shouldn't have!!");
+                }
+                else
+                {
+                    Console.WriteLine(string.Join(" --> ", infoSplit));
+                }
             }
             return infoSplits.ToDictionary(x => x[0], x => x[1]);
         }
