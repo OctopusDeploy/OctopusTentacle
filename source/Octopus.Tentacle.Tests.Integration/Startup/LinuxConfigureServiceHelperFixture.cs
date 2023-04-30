@@ -152,7 +152,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
             foreach (var info in result.Infos)
                 Console.WriteLine(info);
             return result.Infos
-                .Select(x => x.Split(new [] {'='}, 2, StringSplitOptions.RemoveEmptyEntries))
+                .Select(x => x.Split(new[] { '=' }, 2, StringSplitOptions.None))
                 .ToDictionary(x => x[0], x => x[1]);
         }
 
