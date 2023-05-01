@@ -13,8 +13,8 @@ namespace Octopus.Tentacle.Versioning
         {
             SemanticVersion = SemanticVersion.Parse(assembly.GetInformationalVersion() ?? "0.0.0");
             MajorMinorPatch = SemanticVersion.ToString("V", new VersionFormatter());
-            BranchName = assembly.GetCustomAttribute<AssemblyGitBranchAttribute>()!.BranchName;
-            NuGetVersion = assembly.GetCustomAttribute<AssemblyNuGetVersionAttribute>()!.NuGetVersion;
+            BranchName = assembly.GetCustomAttribute<AssemblyGitBranchAttribute>()?.BranchName??"UNKNOWNBRANCH";
+            NuGetVersion = assembly.GetCustomAttribute<AssemblyNuGetVersionAttribute>()?.NuGetVersion??"0.0.0-local";
         }
 
         /// <summary>

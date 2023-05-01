@@ -11,12 +11,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public static X509Certificate2 Server;
         public static string ServerPublicThumbprint;
 
+        public static string TentaclePfxPath;
+
         static Certificates()
         {
             //jump through hoops to find certs because the nunit test runner is messing with directories
             var directory = Path.Combine(Path.GetDirectoryName(new Uri(typeof(Certificates).Assembly.Location).LocalPath), "Certificates");
 
-            Tentacle = new X509Certificate2(Path.Combine(directory, "Tentacle.pfx"));
+            TentaclePfxPath = Path.Combine(directory, "Tentacle.pfx");
+            Tentacle = new X509Certificate2(TentaclePfxPath);
             TentaclePublicThumbprint = Tentacle.Thumbprint;
 
             Server = new X509Certificate2(Path.Combine(directory, "Server.pfx"));

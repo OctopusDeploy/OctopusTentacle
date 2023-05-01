@@ -15,6 +15,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             DirectoryPath = directoryPath ?? CreateTemporaryDirectory();
         }
 
+        public TemporaryDirectory() : this(new OctopusPhysicalFileSystem(new InMemoryLog()))
+        {
+        }
+
         public string DirectoryPath { get; }
 
         string GetTempBasePath()
