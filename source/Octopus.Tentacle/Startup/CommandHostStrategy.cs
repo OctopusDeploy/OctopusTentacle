@@ -6,9 +6,19 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Startup
 {
-    public class CommandHostStrategy
+    public interface ICommandHostStrategy
     {
-        internal static ICommandHost SelectMostAppropriateHost(ICommand command,
+        public ICommandHost SelectMostAppropriateHost(ICommand command,
+            string displayName,
+            ISystemLog log,
+            bool forceConsoleHost,
+            bool forceNoninteractiveHost,
+            string? monitorMutexHost);
+    }
+    
+    public class CommandHostStrategy : ICommandHostStrategy
+    {
+        public ICommandHost SelectMostAppropriateHost(ICommand command,
             string displayName,
             ISystemLog log,
             bool forceConsoleHost,

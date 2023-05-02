@@ -108,6 +108,7 @@ namespace Octopus.Tentacle.Startup
                         DisableConsoleLogging,
                         WriteDiagnosticsInfoToLogFile,
                         (shutdown) => new ControlHandler(shutdown, log),
+                        new CommandHostStrategy(),
                         displayName,
                         log
                         );

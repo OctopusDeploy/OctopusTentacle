@@ -25,6 +25,7 @@ namespace Octopus.Tentacle.Startup
             Action disableConsoleLogging,
             Action<StartUpInstanceRequest> logDiagnosticsInfo,
             Func<Action, IDisposable> controlCHandlerFactory,
+            ICommandHostStrategy commandHostStrategy,
             string displayName,
             ISystemLog log)
         {
@@ -73,7 +74,7 @@ namespace Octopus.Tentacle.Startup
                 out var forceNoninteractiveHost,
                 out var monitorMutexHost);
 
-            var host = CommandHostStrategy.SelectMostAppropriateHost(responsibleCommand,
+            var host = commandHostStrategy.SelectMostAppropriateHost(responsibleCommand,
                 displayName,
                 log,
                 forceConsoleHost,
