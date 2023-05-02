@@ -12,37 +12,31 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public (IDisposable, Task) DoStuff(int octopusHalibutPort, string octopusThumbprint, string tentaclePollSubscriptionId, CancellationToken cancellationToken)
         {
-            var tmp = new TemporaryDirectory();
+            var tempDirectory = new TemporaryDirectory();
+            var instanceName = Guid.NewGuid().ToString("N");
+            var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
 
-            var instanceName = Guid.NewGuid().ToString().Replace("-", "");
-
-            var configFilePath = Path.Combine(tmp.DirectoryPath, instanceName + ".cfg");
-            
-            createInstance(configFilePath, instanceName, cancellationToken);
-
+            CreateInstance(configFilePath, instanceName, cancellationToken);
             AddCertificateToTentacle(configFilePath, instanceName, Certificates.TentaclePfxPath, cancellationToken);
-
             PollOctopusServer(configFilePath, octopusHalibutPort, octopusThumbprint, tentaclePollSubscriptionId);
 
-            return (tmp, RunningTentacle(configFilePath, instanceName, cancellationToken));
-
+            return (tempDirectory, RunningTentacle(configFilePath, instanceName, cancellationToken));
         }
 
-        private Task RunningTentacle(string configFilePath, string instanceName, CancellationToken token)
+        private Task RunningTentacle(string configFilePath, string instanceName, CancellationToken cancellationToken)
         {
-            var runningTentacle = Task.Run(() =>
+            return Task.Run(() =>
             {
                 try
                 {
-                    RunTentacleCommandInProcess(token, "agent", "--config", configFilePath, $"--instance={instanceName}");
+                    RunTentacleCommandInProcess(new [] {"agent", "--config", configFilePath, $"--instance={instanceName}"}, cancellationToken);
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
                     throw;
                 }
-            });
-            return runningTentacle;
+            }, cancellationToken);
         }
 
         private void PollOctopusServer(string configFilePath, int octopusHalibutPort, string octopusThumbprint, string tentaclePollSubscriptionId)
@@ -64,37 +58,34 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void AddCertificateToTentacle(string configFilePath, string instanceName, string tentaclePfxPath, CancellationToken token)
         {
-            RunTentacleCommandInProcess(token, "import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, $"--instance={instanceName}");
+            RunTentacleCommandInProcess(new [] {"import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, $"--instance={instanceName}"}, token);
         }
 
-        private void createInstance(string configFilePath, string instanceName, CancellationToken token)
+        private void CreateInstance(string configFilePath, string instanceName, CancellationToken token)
         {
-            
             //$tentacle_bin  create-instance --config "$configFilePath" --instance=$name
-            RunTentacleCommandInProcess(token, new string[] {"create-instance", "--config", configFilePath, $"--instance={instanceName}"});
+            RunTentacleCommandInProcess(new [] {"create-instance", "--config", configFilePath, $"--instance={instanceName}"}, token);
         }
 
-        private void RunTentacleCommandInProcess(CancellationToken cancellationToken, params string[] args)
+        private void RunTentacleCommandInProcess(string[] args, CancellationToken cancellationToken)
         {
             var res = new Octopus.Tentacle.Startup.Tentacle()
-                .RunTentacle(args, 
+                .RunTentacle(args,
                     () => { },
                     (start) => { },
                     (shutdown) => new DoNothingDisposable(),
                     new TestCommandHostStrategy(cancellationToken),
-                    "",
+                    String.Empty,
                     new InMemoryLog());
 
             if (res == null) throw new Exception("Unknown command");
         }
-        
-        
-        
-    }
-    
-    internal class DoNothingDisposable : IDisposable {
-        public void Dispose()
+
+        private class DoNothingDisposable : IDisposable
         {
+            public void Dispose()
+            {
+            }
         }
     }
 }
