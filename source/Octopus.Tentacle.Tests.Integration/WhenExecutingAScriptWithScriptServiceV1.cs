@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .WithRemoteThumbprint(Support.Certificates.TentaclePublicThumbprint)
                     .Build(cancellationToken);
                 
-                new PollingTentacleBuilder().DoStuff();
+                //new PollingTentacleBuilder().DoStuff();
 
                 var startScriptCommand = new StartScriptCommandBuilder()
                     .WithScriptBody("echo \"WellKnownLogMessage\"")

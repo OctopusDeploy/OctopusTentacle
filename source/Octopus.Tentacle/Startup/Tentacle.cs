@@ -228,7 +228,7 @@ namespace Octopus.Tentacle.Startup
             return commonOptions;
         }
 
-        protected IContainer BuildContainer(StartUpInstanceRequest startUpInstanceRequest)
+        public IContainer BuildContainer(StartUpInstanceRequest startUpInstanceRequest)
         {
             var builder = new ContainerBuilder();
 

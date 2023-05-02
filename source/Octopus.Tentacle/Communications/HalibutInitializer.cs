@@ -94,7 +94,9 @@ namespace Octopus.Tentacle.Communications
 
                 log.Info($"Agent will poll Octopus Server at {pollingEndPoint.Address} for subscription {pollingEndPoint.SubscriptionId} expecting thumbprint {pollingEndPoint.Thumbprint}");
                 var halibutProxy = proxyConfigParser.ParseToHalibutProxy(configuration.PollingProxyConfiguration, pollingEndPoint.Address, log);
-                halibut.Poll(new Uri(pollingEndPoint.SubscriptionId), new ServiceEndPoint(pollingEndPoint.Address, pollingEndPoint.Thumbprint, halibutProxy));
+                var uri = new Uri(pollingEndPoint.SubscriptionId);
+                var serviceEndPoint = new ServiceEndPoint(pollingEndPoint.Address, pollingEndPoint.Thumbprint, halibutProxy);
+                halibut.Poll(uri, serviceEndPoint);
             }
         }
 
