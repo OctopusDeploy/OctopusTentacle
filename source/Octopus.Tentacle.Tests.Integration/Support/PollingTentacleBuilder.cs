@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -101,6 +103,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private string FindTentacleExe()
         {
             var assemblyDirectory = Path.GetDirectoryName(GetType().Assembly.Location);
+            
+            // Hopefully, some really obvious sanity checking logs
+            TestContext.WriteLine($"Find Tentacle exe: assembly directory={assemblyDirectory}");
+            IEnumerable<string> tentacleFiles = Directory.EnumerateFiles(assemblyDirectory).Where(x => x.Contains("Tentacle"));
+            TestContext.WriteLine($"Tentacle files found: {String.Join(", ", tentacleFiles)}");
             
             // Are we on teamcity?
             if (TestExecutionContext.IsRunningInTeamCity)
