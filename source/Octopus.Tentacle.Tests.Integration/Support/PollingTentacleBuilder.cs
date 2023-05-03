@@ -78,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             var assemblyLocation = GetType().Assembly.Location;
             var tentacleExe = Path.Combine(Path.GetDirectoryName(assemblyLocation), "Tentacle");
-            if (OperatingSystem.IsWindows()) tentacleExe += ".exe";
+            if (PlatformDetection.IsRunningOnWindows) tentacleExe += ".exe";
 
             var arguments = String.Join(" ", args);
 
