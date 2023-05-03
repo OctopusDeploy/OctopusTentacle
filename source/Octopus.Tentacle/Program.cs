@@ -37,7 +37,7 @@ namespace Octopus.Tentacle
             return new Program(args).Run();
         }
 
-        protected override IContainer BuildContainer(StartUpInstanceRequest startUpInstanceRequest)
+        public override IContainer BuildContainer(StartUpInstanceRequest startUpInstanceRequest)
         {
             var builder = new ContainerBuilder();
 
