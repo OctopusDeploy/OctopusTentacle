@@ -71,13 +71,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void AddCertificateToTentacle(string configFilePath, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken token)
         {
-            RunTentacleCommand(new[] {"import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, $"--instance={instanceName}"}, tmp, token);
+            RunTentacleCommand(new[] {"import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, 
+                //$"--instance={instanceName}"
+                
+            }, tmp, token);
         }
 
         private void CreateInstance(string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken token)
         {
             //$tentacle_bin  create-instance --config "$configFilePath" --instance=$name
-            RunTentacleCommand(new[] {"create-instance", "--config", configFilePath, $"--instance={instanceName}"}, tmp, token);
+            RunTentacleCommand(new[] {"create-instance", "--config", configFilePath, 
+                //$"--instance={instanceName}"
+                
+            }, tmp, token);
         }
 
         private void RunTentacleCommand(string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
