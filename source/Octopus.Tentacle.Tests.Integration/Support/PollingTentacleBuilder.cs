@@ -131,7 +131,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     foreach (var s in teamcityenvvars)
                     {
                         var environmentVariableValue = Environment.GetEnvironmentVariable(s);
-                        if (string.IsNullOrEmpty(environmentVariableValue)) return true;
+                        if (!string.IsNullOrEmpty(environmentVariableValue)) return true;
                     }
 
                     return false;
