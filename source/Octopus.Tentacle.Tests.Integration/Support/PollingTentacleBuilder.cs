@@ -110,13 +110,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 // Desired path to tentacle.
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
 
+                // TODO add exe
                 return Path.Combine(Directory.GetParent(assemblyDirectory).Parent.Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
                 
 
             }
             // TODO this wont work locally with nuke.
             var tentacleExe = Path.Combine(assemblyDirectory, "Tentacle");
-            if (OperatingSystem.IsWindows()) tentacleExe += ".exe";
+            if (PlatformDetection.IsRunningOnWindows) tentacleExe += ".exe";
             return tentacleExe;
         }
         
