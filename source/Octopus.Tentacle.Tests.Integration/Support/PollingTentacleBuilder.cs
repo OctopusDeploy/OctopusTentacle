@@ -111,7 +111,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
 
                 // TODO add exe
-                return Path.Combine(Directory.GetParent(assemblyDirectory).Parent.Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
+                return Path.Combine(Directory.GetParent(assemblyDirectory).Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
                 
 
             }
