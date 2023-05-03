@@ -105,11 +105,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var assemblyDirectory = Path.GetDirectoryName(GetType().Assembly.Location);
             
             // Hopefully, some really obvious sanity checking logs
-            TestContext.WriteLine($"Find Tentacle exe: assembly directory={assemblyDirectory}");
-            IEnumerable<string> tentacleFiles = Directory.EnumerateFiles(assemblyDirectory).Where(x => x.Contains("Tentacle"));
-            TestContext.WriteLine($"Tentacle files found: {String.Join(", ", tentacleFiles)}");
-            
-            
+            WriteOutLogInfo(assemblyDirectory);
+
+            WriteOutLogInfo(Directory.GetParent(assemblyDirectory).Parent.FullName);
             // Are we on teamcity?
             if (TestExecutionContext.IsRunningInTeamCity || assemblyDirectory.Contains("Team"))
             {
@@ -128,7 +126,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             if (PlatformDetection.IsRunningOnWindows) tentacleExe += ".exe";
             return tentacleExe;
         }
-        
+
+        private static void WriteOutLogInfo(string? assemblyDirectory)
+        {
+            TestContext.WriteLine($"Find Tentacle exe: assembly directory={assemblyDirectory}");
+            IEnumerable<string> tentacleFiles = Directory.EnumerateFiles(assemblyDirectory).Where(x => x.Contains("Tentacle"));
+            TestContext.WriteLine($"Tentacle files found: {String.Join(", ", tentacleFiles)}\r\nEND#####");
+            
+        }
+
         public static class TestExecutionContext
         {
             public static bool IsRunningInTeamCity
