@@ -133,6 +133,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                         var environmentVariableValue = Environment.GetEnvironmentVariable(s);
                         return !string.IsNullOrEmpty(environmentVariableValue);
                     }
+
+                    return false;
                 }
             }
         }
