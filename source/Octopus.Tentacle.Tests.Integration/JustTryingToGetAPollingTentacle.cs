@@ -1,12 +1,15 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -25,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var cts = new CancellationTokenSource();
 
             string tentacleId = "poll://eze";
-            var (disposable, runningTentacle) = new PollingTentacleBuilder().DoStuff(port, Support.Certificates.ServerPublicThumbprint, tentacleId, cts.Token);
+            var (disposable, runningTentacle) = new PollingTentacleBuilder().Build(port, Support.Certificates.ServerPublicThumbprint, tentacleId, cts.Token);
             using (disposable)
             {
                 var testTask = Task.Run(() =>
@@ -36,6 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         .Build(CancellationToken.None);
 
                     var res = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(new ScriptTicket("1212"), 111));
+                    res.ExitCode.Should().Be(0);
                 }, cts.Token);
                 
                 await Task.WhenAny(runningTentacle, testTask);

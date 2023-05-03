@@ -1,35 +1,38 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
+using NUnit.Framework;
 using Octopus.Client.Model;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class PollingTentacleBuilder
     {
-        public (IDisposable, Task) DoStuff(int octopusHalibutPort, string octopusThumbprint, string tentaclePollSubscriptionId, CancellationToken cancellationToken)
+        public (IDisposable, Task) Build(int octopusHalibutPort, string octopusThumbprint, string tentaclePollSubscriptionId, CancellationToken cancellationToken)
         {
             var tempDirectory = new TemporaryDirectory();
             var instanceName = Guid.NewGuid().ToString("N");
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
 
-            CreateInstance(configFilePath, instanceName, cancellationToken);
-            AddCertificateToTentacle(configFilePath, instanceName, Certificates.TentaclePfxPath, cancellationToken);
+            CreateInstance(configFilePath, instanceName, tempDirectory, cancellationToken);
+            AddCertificateToTentacle(configFilePath, instanceName, Certificates.TentaclePfxPath, tempDirectory, cancellationToken);
             PollOctopusServer(configFilePath, octopusHalibutPort, octopusThumbprint, tentaclePollSubscriptionId);
 
-            return (tempDirectory, RunningTentacle(configFilePath, instanceName, cancellationToken));
+            return (tempDirectory, RunningTentacle(configFilePath, instanceName, tempDirectory, cancellationToken));
         }
 
-        private Task RunningTentacle(string configFilePath, string instanceName, CancellationToken cancellationToken)
+        private Task RunningTentacle(string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {
                 try
                 {
-                    RunTentacleCommandInProcess(new [] {"agent", "--config", configFilePath, $"--instance={instanceName}"}, cancellationToken);
+                    RunTentacleCommand(new [] {"agent", "--config", configFilePath, $"--instance={instanceName}"}, tmp, cancellationToken);
                 }
                 catch (Exception e)
                 {
@@ -56,15 +59,43 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             });
         }
 
-        private void AddCertificateToTentacle(string configFilePath, string instanceName, string tentaclePfxPath, CancellationToken token)
+        private void AddCertificateToTentacle(string configFilePath, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken token)
         {
-            RunTentacleCommandInProcess(new [] {"import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, $"--instance={instanceName}"}, token);
+            RunTentacleCommand(new [] {"import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, $"--instance={instanceName}"}, tmp, token);
         }
 
-        private void CreateInstance(string configFilePath, string instanceName, CancellationToken token)
+        private void CreateInstance(string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken token)
         {
             //$tentacle_bin  create-instance --config "$configFilePath" --instance=$name
-            RunTentacleCommandInProcess(new [] {"create-instance", "--config", configFilePath, $"--instance={instanceName}"}, token);
+            RunTentacleCommand(new [] {"create-instance", "--config", configFilePath, $"--instance={instanceName}"}, tmp, token);
+        }
+
+        private void RunTentacleCommand(string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        {
+            RunTentacleCommandOutOfProcess(args, tmp, cancellationToken);
+        }
+        
+        private void RunTentacleCommandOutOfProcess(string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        {
+            var assemblyLocation = this.GetType().Assembly.Location;
+            var tentacleExe = Path.Combine(Path.GetDirectoryName(assemblyLocation), "Tentacle");
+            if (OperatingSystem.IsWindows()) tentacleExe += ".exe";
+
+            var arguments = args.Aggregate((current, next) => current + " " + next);
+            var exitCode = SilentProcessRunner.ExecuteCommand(
+                tentacleExe,
+                arguments,
+                tmp.DirectoryPath,
+                output => TestContext.WriteLine(output),
+                output => TestContext.WriteLine(output),
+                output => TestContext.WriteLine(output),
+                cancellationToken);
+            
+            if(cancellationToken.IsCancellationRequested) return;
+            if (exitCode != 0)
+            {
+                throw new Exception("Error running tentacle");
+            }
         }
 
         private void RunTentacleCommandInProcess(string[] args, CancellationToken cancellationToken)
