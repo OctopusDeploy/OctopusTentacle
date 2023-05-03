@@ -25,6 +25,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             AddCertificateToTentacle(configFilePath, instanceName, Certificates.TentaclePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(configFilePath, octopusHalibutPort, octopusThumbprint, tentaclePollSubscriptionId);
 
+            TestContext.WriteLine("The config is: " + File.ReadAllText(configFilePath));
+
             return (tempDirectory, RunningTentacle(configFilePath, instanceName, tempDirectory, cancellationToken));
         }
 
@@ -34,7 +36,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 try
                 {
-                    RunTentacleCommand(new[] {"agent", "--config", configFilePath, $"--instance={instanceName}"}, tmp, cancellationToken);
+                    RunTentacleCommand(new[] {"agent", "--config", configFilePath,
+                        // Maybe it is looking in the wrong spot?
+                        //$"--instance={instanceName}"
+                        
+                    }, tmp, cancellationToken);
                 }
                 catch (Exception e)
                 {
