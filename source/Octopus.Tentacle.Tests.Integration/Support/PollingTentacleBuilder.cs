@@ -108,6 +108,22 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             WriteOutLogInfo(assemblyDirectory);
 
             WriteOutLogInfo(Directory.GetParent(assemblyDirectory).Parent.FullName);
+
+            try
+            {
+                var exitCode = SilentProcessRunner.ExecuteCommand(
+                    "/usr/bin/ls",
+                    ("-R " + (Directory.GetParent(assemblyDirectory).Parent.FullName)).ToString(),
+                    "/tmp/",
+                    output => TestContext.WriteLine(output),
+                    output => TestContext.WriteLine(output),
+                    output => TestContext.WriteLine(output),
+                    CancellationToken.None);
+            }
+            catch
+            {
+                
+            }
             // Are we on teamcity?
             if (TestExecutionContext.IsRunningInTeamCity || assemblyDirectory.Contains("Team"))
             {
@@ -117,7 +133,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
 
                 // TODO add exe
-                return Path.Combine(Directory.GetParent(assemblyDirectory).Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
+                return Path.Combine(Directory.GetParent(assemblyDirectory).Parent.Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
                 
 
             }
