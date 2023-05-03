@@ -140,7 +140,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
             
             if (PlatformDetection.IsRunningOnWindows) tentacleExe += ".exe";
-            if ("luke".Length > 0) return "/home/auser/Documents/octopus/OctopusTentacle2/_build/Tentacle/net6.0/linux-x64/Tentacle";
             return tentacleExe;
         }
 
