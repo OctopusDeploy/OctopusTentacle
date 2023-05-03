@@ -109,8 +109,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             IEnumerable<string> tentacleFiles = Directory.EnumerateFiles(assemblyDirectory).Where(x => x.Contains("Tentacle"));
             TestContext.WriteLine($"Tentacle files found: {String.Join(", ", tentacleFiles)}");
             
+            
             // Are we on teamcity?
-            if (TestExecutionContext.IsRunningInTeamCity)
+            if (TestExecutionContext.IsRunningInTeamCity || assemblyDirectory.Contains("Team"))
             {
                 // Example current directory of assumbly.
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net6.0/linux-x64
