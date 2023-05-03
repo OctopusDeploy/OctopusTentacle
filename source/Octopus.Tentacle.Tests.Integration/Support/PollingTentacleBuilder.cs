@@ -16,6 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public (IDisposable, Task) Build(int octopusHalibutPort, string octopusThumbprint, string tentaclePollSubscriptionId, CancellationToken cancellationToken)
         {
+            WhoAmI();
             var tempDirectory = new TemporaryDirectory();
             var instanceName = Guid.NewGuid().ToString("N");
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
@@ -100,45 +101,44 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
         }
 
+        public void WhoAmI()
+        {
+            
+            var exitCode = SilentProcessRunner.ExecuteCommand(
+                "whoami",
+                "",
+                new TemporaryDirectory().DirectoryPath,
+                output => TestContext.WriteLine("Whoami: " + output),
+                output => TestContext.WriteLine("Whoami: " + output),
+                output => TestContext.WriteLine("Whoami: " + output),
+                CancellationToken.None);
+        }
+
         private string FindTentacleExe()
         {
             var assemblyDirectory = Path.GetDirectoryName(GetType().Assembly.Location);
             
             // Hopefully, some really obvious sanity checking logs
             WriteOutLogInfo(assemblyDirectory);
-
-            WriteOutLogInfo(Directory.GetParent(assemblyDirectory).Parent.FullName);
-
-            try
-            {
-                var exitCode = SilentProcessRunner.ExecuteCommand(
-                    "/usr/bin/ls",
-                    ("-R " + (Directory.GetParent(assemblyDirectory).Parent.FullName)).ToString(),
-                    "/tmp/",
-                    output => TestContext.WriteLine(output),
-                    output => TestContext.WriteLine(output),
-                    output => TestContext.WriteLine(output),
-                    CancellationToken.None);
-            }
-            catch
-            {
-                
-            }
+            
+            // TODO this wont work locally with nuke.
+            var tentacleExe = Path.Combine(assemblyDirectory, "Tentacle");
+            
             // Are we on teamcity?
+            // It seems no environment variables are passed to us.
             if (TestExecutionContext.IsRunningInTeamCity || assemblyDirectory.Contains("Team"))
             {
-                // Example current directory of assumbly.
+                // Example current directory of assembly.
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net6.0/linux-x64
                 // Desired path to tentacle.
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
 
                 // TODO add exe
-                return Path.Combine(Directory.GetParent(assemblyDirectory).Parent.Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
+                tentacleExe = Path.Combine(Directory.GetParent(assemblyDirectory).Parent.Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
                 
 
             }
-            // TODO this wont work locally with nuke.
-            var tentacleExe = Path.Combine(assemblyDirectory, "Tentacle");
+            
             if (PlatformDetection.IsRunningOnWindows) tentacleExe += ".exe";
             return tentacleExe;
         }
