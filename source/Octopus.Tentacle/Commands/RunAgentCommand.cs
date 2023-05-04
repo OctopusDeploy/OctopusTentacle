@@ -88,6 +88,7 @@ namespace Octopus.Tentacle.Commands
             catch (CryptographicException cx)
             {
                 log.Error($"The owner of the x509stores is not the current user, please change ownership of the x509stores directory or run with sudo. Details: {cx.Message}");
+                log.Error($"Full stack: {cx}");
                 return;
             }
 

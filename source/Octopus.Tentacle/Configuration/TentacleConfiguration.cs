@@ -107,12 +107,14 @@ namespace Octopus.Tentacle.Configuration
                     return CachedCertificate;
 
                 var thumbprint = settings.Get<string?>(CertificateThumbprintSettingName);
+                Console.WriteLine($"I got certs: {thumbprint}");
                 if (string.IsNullOrWhiteSpace(thumbprint))
                 {
                     return null;
                 }
 
                 var encoded = settings.Get<string>(CertificateSettingName, protectionLevel: ProtectionLevel.MachineKey);
+                Console.WriteLine($"I gotz encodez: {encoded}");
                 return encoded is null || string.IsNullOrWhiteSpace(encoded) ? null : CertificateEncoder.FromBase64String(thumbprint!, encoded, log);
             }
         }
