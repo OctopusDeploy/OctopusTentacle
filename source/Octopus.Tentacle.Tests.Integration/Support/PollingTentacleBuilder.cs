@@ -166,9 +166,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private static void WriteOutLogInfo(string? assemblyDirectory)
         {
             TestContext.WriteLine($"Find Tentacle exe: assembly directory={assemblyDirectory}");
-            IEnumerable<string> tentacleFiles = Directory.EnumerateFiles(assemblyDirectory).Where(x => x.Contains("Tentacle"));
-            TestContext.WriteLine($"Tentacle files found: {String.Join(", ", tentacleFiles)}\r\nEND#####");
-            
+            // IEnumerable<string> tentacleFiles = Directory.EnumerateFiles(assemblyDirectory).Where(x => x.Contains("Tentacle"));
+            // TestContext.WriteLine($"Tentacle files found: {String.Join(", ", tentacleFiles)}\r\nEND#####");
         }
 
         public static class TestExecutionContext
