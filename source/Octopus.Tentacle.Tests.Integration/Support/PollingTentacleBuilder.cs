@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -16,7 +14,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public (IDisposable, Task) Build(int octopusHalibutPort, string octopusThumbprint, string tentaclePollSubscriptionId, CancellationToken cancellationToken)
         {
-            WhoAmI();
             var tempDirectory = new TemporaryDirectory();
             var instanceName = Guid.NewGuid().ToString("N");
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
@@ -24,9 +21,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             CreateInstance(configFilePath, instanceName, tempDirectory, cancellationToken);
             AddCertificateToTentacle(configFilePath, instanceName, Certificates.TentaclePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(configFilePath, octopusHalibutPort, octopusThumbprint, tentaclePollSubscriptionId);
-
-            TestContext.WriteLine($"Config file path: {configFilePath}");
-            TestContext.WriteLine("The config is: " + File.ReadAllText(configFilePath));
 
             return (tempDirectory, RunningTentacle(configFilePath, instanceName, tempDirectory, cancellationToken));
         }
@@ -37,11 +31,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 try
                 {
-                    RunTentacleCommand(new[] {"agent", "--config", configFilePath,
+                    RunTentacleCommand(new[]
+                    {
+                        "agent", "--config", configFilePath,
                         // Maybe it is looking in the wrong spot?
                         $"--instance={instanceName}",
                         "--noninteractive"
-                        
                     }, tmp, cancellationToken);
                 }
                 catch (Exception e)
@@ -73,25 +68,25 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void AddCertificateToTentacle(string configFilePath, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken token)
         {
-            RunTentacleCommand(new[] {"import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, 
+            RunTentacleCommand(new[]
+            {
+                "import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath,
                 $"--instance={instanceName}"
-                
             }, tmp, token);
         }
 
         private void CreateInstance(string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken token)
         {
-            //$tentacle_bin  create-instance --config "$configFilePath" --instance=$name
-            RunTentacleCommand(new[] {"create-instance", "--config", configFilePath, 
-               $"--instance={instanceName}"
-                
+            RunTentacleCommand(new[]
+            {
+                "create-instance", "--config", configFilePath,
+                $"--instance={instanceName}"
             }, tmp, token);
         }
 
         private void RunTentacleCommand(string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommandOutOfProcess(args, tmp, cancellationToken);
-            //new Program(args).Run();
         }
 
         private void RunTentacleCommandOutOfProcess(string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
@@ -116,29 +111,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
         }
 
-        public void WhoAmI()
-        {
-            
-            var exitCode = SilentProcessRunner.ExecuteCommand(
-                "whoami",
-                "",
-                new TemporaryDirectory().DirectoryPath,
-                output => TestContext.WriteLine("Whoami: " + output),
-                output => TestContext.WriteLine("Whoami: " + output),
-                output => TestContext.WriteLine("Whoami: " + output),
-                CancellationToken.None);
-        }
-
         private string FindTentacleExe()
         {
             var assemblyDirectory = Path.GetDirectoryName(GetType().Assembly.Location);
-            
-            // Hopefully, some really obvious sanity checking logs
-            WriteOutLogInfo(assemblyDirectory);
-            
+
             // TODO this wont work locally with nuke.
             var tentacleExe = Path.Combine(assemblyDirectory, "Tentacle");
-            
+
             // Are we on teamcity?
             // It seems no environment variables are passed to us.
             if (TestExecutionContext.IsRunningInTeamCity || assemblyDirectory.Contains("Team"))
@@ -150,25 +129,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 // TODO add exe
                 tentacleExe = Path.Combine(Directory.GetParent(assemblyDirectory).Parent.Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
-                
-
             }
 
-            if (assemblyDirectory.Contains("dev"))
-            {
-                tentacleExe = @"C:\dev\OctopusTentacle\source\Octopus.Tentacle\bin\net6.0\Tentacle";
-                //tentacleExe = Path.Combine(Directory.GetParent(assemblyDirectory).Parent.Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
-            }
-            
             if (PlatformDetection.IsRunningOnWindows) tentacleExe += ".exe";
             return tentacleExe;
-        }
-
-        private static void WriteOutLogInfo(string? assemblyDirectory)
-        {
-            TestContext.WriteLine($"Find Tentacle exe: assembly directory={assemblyDirectory}");
-            // IEnumerable<string> tentacleFiles = Directory.EnumerateFiles(assemblyDirectory).Where(x => x.Contains("Tentacle"));
-            // TestContext.WriteLine($"Tentacle files found: {String.Join(", ", tentacleFiles)}\r\nEND#####");
         }
 
         public static class TestExecutionContext

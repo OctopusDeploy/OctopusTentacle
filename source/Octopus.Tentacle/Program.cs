@@ -1,6 +1,5 @@
 using System;
 using System.Net;
-using System.Threading;
 using Autofac;
 using Octopus.Tentacle.Certificates;
 using Octopus.Tentacle.Commands;
@@ -35,21 +34,6 @@ namespace Octopus.Tentacle
 
         static int Main(string[] args)
         {
-            try
-            {
-                var exitCode = SilentProcessRunner.ExecuteCommand(
-                    "whoami",
-                    "",
-                    "/tmp/",
-                    output => Console.WriteLine("Whoami: start" + output),
-                    output => Console.WriteLine("Whoami: start" + output),
-                    output => Console.WriteLine("Whoami: start" + output),
-                    CancellationToken.None);
-            }
-            catch
-            {
-                
-            }
             return new Program(args).Run();
         }
 

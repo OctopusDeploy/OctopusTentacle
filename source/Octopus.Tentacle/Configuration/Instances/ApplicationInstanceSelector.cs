@@ -109,12 +109,10 @@ namespace Octopus.Tentacle.Configuration.Instances
                 case StartUpRegistryInstanceRequest registryInstanceRequest:
                 {   //  `--instance` parameter provided. Use That
                     var indexInstance = applicationInstanceStore.LoadInstanceDetails(registryInstanceRequest.InstanceName);
-                    Console.Error.WriteLine("Using instance: " + indexInstance + " With config file at: " + indexInstance.ConfigurationFilePath);
                     return (indexInstance.InstanceName, indexInstance.ConfigurationFilePath);
                 }
                 case StartUpConfigFileInstanceRequest configFileInstanceRequest: 
                 {   // `--config` parameter provided. Use that 
-                    Console.Error.WriteLine("Using config: " + configFileInstanceRequest.ConfigFile);
                     return (null, configFileInstanceRequest.ConfigFile);
                 }
                 default:

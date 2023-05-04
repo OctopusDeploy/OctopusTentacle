@@ -9,24 +9,11 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.TentacleClient;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
     public class PollingTentacleTest
     {
-        [Test]
-        public async Task PrintEnvs()
-        {
-            SilentProcessRunner.ExecuteCommand("printenv", "", "/tmp",
-                output => TestContext.WriteLine("Whoami: " + output),
-                output => TestContext.WriteLine("Whoami: " + output),
-                output => TestContext.WriteLine("Whoami: " + output),
-                CancellationToken.None);
-            1.Should().Be(2);
-            await Task.CompletedTask;
-        }
-        
         [Test]
         public async Task BasicCommunicationsWithWithAPollingTentacle()
         {
