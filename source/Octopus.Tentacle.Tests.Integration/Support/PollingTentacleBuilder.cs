@@ -25,6 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             AddCertificateToTentacle(configFilePath, instanceName, Certificates.TentaclePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(configFilePath, octopusHalibutPort, octopusThumbprint, tentaclePollSubscriptionId);
 
+            TestContext.WriteLine($"Config file path: {configFilePath}");
             TestContext.WriteLine("The config is: " + File.ReadAllText(configFilePath));
 
             return (tempDirectory, RunningTentacle(configFilePath, instanceName, tempDirectory, cancellationToken));
@@ -38,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 {
                     RunTentacleCommand(new[] {"agent", "--config", configFilePath,
                         // Maybe it is looking in the wrong spot?
-                        //$"--instance={instanceName}"
+                        $"--instance={instanceName}"
                         
                     }, tmp, cancellationToken);
                 }
@@ -72,7 +73,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private void AddCertificateToTentacle(string configFilePath, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken token)
         {
             RunTentacleCommand(new[] {"import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, 
-                //$"--instance={instanceName}"
+                $"--instance={instanceName}"
                 
             }, tmp, token);
         }
@@ -81,7 +82,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             //$tentacle_bin  create-instance --config "$configFilePath" --instance=$name
             RunTentacleCommand(new[] {"create-instance", "--config", configFilePath, 
-                //$"--instance={instanceName}"
+               $"--instance={instanceName}"
                 
             }, tmp, token);
         }
@@ -89,6 +90,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private void RunTentacleCommand(string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommandOutOfProcess(args, tmp, cancellationToken);
+            //new Program(args).Run();
         }
 
         private void RunTentacleCommandOutOfProcess(string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
@@ -149,6 +151,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tentacleExe = Path.Combine(Directory.GetParent(assemblyDirectory).Parent.Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
                 
 
+            }
+
+            if (assemblyDirectory.Contains("dev"))
+            {
+                tentacleExe = @"C:\dev\OctopusTentacle\source\Octopus.Tentacle\bin\net6.0\Tentacle";
+                //tentacleExe = Path.Combine(Directory.GetParent(assemblyDirectory).Parent.Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
             }
             
             if (PlatformDetection.IsRunningOnWindows) tentacleExe += ".exe";
