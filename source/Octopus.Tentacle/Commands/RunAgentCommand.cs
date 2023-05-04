@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Communications;
 using Octopus.Tentacle.Configuration;
@@ -73,6 +75,7 @@ namespace Octopus.Tentacle.Commands
                 sleep.For(wait);
             }
 
+            log.Error("Number of configured octopus server: " + configuration.Value.TrustedOctopusServers.ToArray().Length);
             try
             {
                 if (configuration.Value.TentacleCertificate == null)
@@ -87,6 +90,8 @@ namespace Octopus.Tentacle.Commands
                 log.Error($"The owner of the x509stores is not the current user, please change ownership of the x509stores directory or run with sudo. Details: {cx.Message}");
                 return;
             }
+
+            log.Error("All good going to start");
 
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleHome, home.Value.HomeDirectory);
             Environment.SetEnvironmentVariable(EnvironmentVariables.TentacleApplications, configuration.Value.ApplicationDirectory);
