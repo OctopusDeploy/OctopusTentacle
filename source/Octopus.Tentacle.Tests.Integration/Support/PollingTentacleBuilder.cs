@@ -12,19 +12,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class PollingTentacleBuilder
     {
-        int octopusHalibutPort;
+        readonly int octopusHalibutPort;
         string? octopusThumbprint;
         string? tentaclePollSubscriptionId;
 
         public PollingTentacleBuilder(int octopusHalibutPort)
         {
             this.octopusHalibutPort = octopusHalibutPort;
-        }
-
-        public PollingTentacleBuilder WithOctopusHalibutPort(int octopusHalibutPort)
-        {
-            this.octopusHalibutPort = octopusHalibutPort;
-            return this;
         }
 
         public PollingTentacleBuilder WithOctopusThumbprint(string octopusThumbprint)
