@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Scripts
 
         public void Execute()
         {
-            int exitCode;
+            var exitCode = -1;
 
             try
             {
@@ -60,21 +60,16 @@ namespace Octopus.Tentacle.Scripts
                     try
                     {
                         using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
-                            workspace.ScriptMutexAcquireTimeout,
-                            workspace.ScriptMutexName ?? nameof(RunningScript),
-                            message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
-                            taskId,
-                            token,
-                            log))
+                                   workspace.ScriptMutexAcquireTimeout,
+                                   workspace.ScriptMutexName ?? nameof(RunningScript),
+                                   message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
+                                   taskId,
+                                   token,
+                                   log))
                         {
                             State = ProcessState.Running;
 
-                            if (stateRepository != null)
-                            {
-                                var scriptState = stateRepository.Load();
-                                scriptState.Start();
-                                stateRepository.Save(scriptState);
-                            }
+                            RecordScriptHasStarted();
 
                             exitCode = RunScript(shellPath, writer);
                         }
@@ -96,16 +91,38 @@ namespace Octopus.Tentacle.Scripts
                 // Something went really really wrong, probably creating or writing to the log file (Disk space)
                 exitCode = ScriptExitCodes.FatalExitCode;
             }
+            finally
+            {
+                try
+                {
+                    RecordScriptHasCompleted(exitCode);
+                }
+                finally
+                {
+                    ExitCode = exitCode;
+                    State = ProcessState.Complete;
+                }
+            }
+        }
 
+        void RecordScriptHasStarted()
+        {
+            if (stateRepository != null)
+            {
+                var scriptState = stateRepository.Load();
+                scriptState.Start();
+                stateRepository.Save(scriptState);
+            }
+        }
+
+        void RecordScriptHasCompleted(int exitCode)
+        {
             if (stateRepository != null)
             {
                 var scriptState = stateRepository.Load();
                 scriptState.Complete(exitCode);
                 stateRepository.Save(scriptState);
             }
-
-            ExitCode = exitCode;
-            State = ProcessState.Complete;
         }
 
         int RunScript(string shellPath, IScriptLogWriter writer)

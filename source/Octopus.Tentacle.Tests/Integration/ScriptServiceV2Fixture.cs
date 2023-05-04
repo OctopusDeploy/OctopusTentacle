@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
@@ -15,7 +16,6 @@ using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Services.Scripts;
 using Octopus.Tentacle.Util;
-using Org.BouncyCastle.Crypto.Generators;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var bashScript = "ping localhost -c 1";
 
             var startScriptCommand = new StartScriptCommandV2Builder()
-                .WithScriptBody(windowsScript, bashScript)
+                .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .Build();
 
             var startScriptResponse = service.StartScript(startScriptCommand);
@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var bashScript = "ping nope -c 1";
 
             var startScriptCommand = new StartScriptCommandV2Builder()
-                .WithScriptBody(windowsScript, bashScript)
+                .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .Build();
 
             var startScriptResponse = service.StartScript(startScriptCommand);
@@ -84,9 +84,9 @@ namespace Octopus.Tentacle.Tests.Integration
             var bashScript = "sleep 10";
             var windowsScript = "Start-Sleep -Seconds 10";
 
-            var scripts = Enumerable.Range(0, 2).Select(x =>
+            var scripts = Enumerable.Range(0, 5).Select(x =>
                 new StartScriptCommandAndResponse(command: new StartScriptCommandV2Builder()
-                    .WithScriptBody(windowsScript, bashScript)
+                    .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                     .Build())).ToList();
 
             var started = Stopwatch.StartNew();
@@ -95,6 +95,11 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 script.Response = service.StartScript(script.Command);
             });
+
+            var startDuration = started.Elapsed;
+            startDuration.Should().BeLessThan(TimeSpan.FromSeconds(5));
+
+            await Task.Delay(TimeSpan.FromSeconds(10), CancellationToken.None);
 
             foreach (var script in scripts)
             {
@@ -106,7 +111,7 @@ namespace Octopus.Tentacle.Tests.Integration
             }
 
             started.Stop();
-            started.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(30));
+            started.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(15));
         }
 
         [Test]
@@ -148,7 +153,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var windowsScript = "Start-Sleep -Seconds 10";
 
             var startScriptCommand = new StartScriptCommandV2Builder()
-                .WithScriptBody(windowsScript, bashScript)
+                .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .Build();
 
             var startScriptResponse = service.StartScript(startScriptCommand);
@@ -182,7 +187,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var windowsScript = "Start-Sleep -Seconds 10";
 
             var startScriptCommand = new StartScriptCommandV2Builder()
-                .WithScriptBody(windowsScript, bashScript)
+                .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromSeconds(5))
                 .Build();
 
@@ -266,7 +271,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var windowsScript = "Start-Sleep -Seconds 60";
 
             var startScriptCommand = new StartScriptCommandV2Builder()
-                .WithScriptBody(windowsScript, bashScript)
+                .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .Build();
 
             var cancellationTimer = new Stopwatch();
@@ -408,7 +413,7 @@ namespace Octopus.Tentacle.Tests.Integration
             }
 
             var startScriptCommand = new StartScriptCommandV2Builder()
-                .WithScriptBody(windowsScript, bashScript)
+                .WithScriptBodyForCurrentOs(windowsScript, bashScript)
                 .WithScriptTicket(scriptTicket)
                 .Build();
 
@@ -442,7 +447,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             foreach (var log in logs)
             {
-                Console.WriteLine(log.Text);
+                TestContext.Out.WriteLine(log.Text);
             }
         }
 

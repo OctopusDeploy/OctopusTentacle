@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Tests.Integration
         readonly List<string> arguments = new List<string>();
         readonly Dictionary<ScriptType, string> additionalScripts = new Dictionary<ScriptType, string>();
         StringBuilder scriptBody = new StringBuilder(string.Empty);
-        ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
+        ScriptIsolationLevel isolation = ScriptIsolationLevel.NoIsolation;
         TimeSpan scriptIsolationMutexTimeout = ScriptIsolationMutex.NoTimeout;
         string scriptIsolationMutexName = nameof(RunningScript);
         string taskId = Guid.NewGuid().ToString();
@@ -26,22 +26,9 @@ namespace Octopus.Tentacle.Tests.Integration
             return this;
         }
 
-        public StartScriptCommandV2Builder WithScriptBody(string windowsScript, string bashScript)
+        public StartScriptCommandV2Builder WithScriptBodyForCurrentOs(string windowsScript, string bashScript)
         {
             this.scriptBody = new StringBuilder(PlatformDetection.IsRunningOnWindows ? windowsScript : bashScript);
-            return this;
-        }
-
-        public StartScriptCommandV2Builder WithReplacementInScriptBody(string oldValue, string newValue)
-        {
-            scriptBody.Replace(oldValue, newValue);
-            return this;
-        }
-
-        public StartScriptCommandV2Builder WithReplacementInAdditionalScriptBody(ScriptType scriptType, string oldValue, string newValue)
-        {
-            if (additionalScripts.ContainsKey(scriptType))
-                additionalScripts[scriptType] = additionalScripts[scriptType].Replace(oldValue, newValue);
             return this;
         }
 
