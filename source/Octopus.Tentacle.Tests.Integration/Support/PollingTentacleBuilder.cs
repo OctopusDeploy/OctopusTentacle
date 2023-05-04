@@ -12,7 +12,34 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class PollingTentacleBuilder
     {
-        public (IDisposable, Task) Build(int octopusHalibutPort, string octopusThumbprint, string tentaclePollSubscriptionId, CancellationToken cancellationToken)
+        int octopusHalibutPort;
+        string? octopusThumbprint;
+        string? tentaclePollSubscriptionId;
+
+        public PollingTentacleBuilder(int octopusHalibutPort)
+        {
+            this.octopusHalibutPort = octopusHalibutPort;
+        }
+
+        public PollingTentacleBuilder WithOctopusHalibutPort(int octopusHalibutPort)
+        {
+            this.octopusHalibutPort = octopusHalibutPort;
+            return this;
+        }
+
+        public PollingTentacleBuilder WithOctopusThumbprint(string octopusThumbprint)
+        {
+            this.octopusThumbprint = octopusThumbprint;
+            return this;
+        }
+
+        public PollingTentacleBuilder WithTentaclePollSubscription(string tentaclePollSubscriptionId)
+        {
+            this.tentaclePollSubscriptionId = tentaclePollSubscriptionId;
+            return this;
+        }
+        
+        public (IDisposable, Task) Build(CancellationToken cancellationToken)
         {
             var tempDirectory = new TemporaryDirectory();
             var instanceName = Guid.NewGuid().ToString("N");
@@ -20,7 +47,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             CreateInstance(configFilePath, instanceName, tempDirectory, cancellationToken);
             AddCertificateToTentacle(configFilePath, instanceName, Certificates.TentaclePfxPath, tempDirectory, cancellationToken);
-            ConfigureTentacleToPollOctopusServer(configFilePath, octopusHalibutPort, octopusThumbprint, tentaclePollSubscriptionId);
+            ConfigureTentacleToPollOctopusServer(
+                configFilePath,
+                octopusHalibutPort,
+                octopusThumbprint ?? Certificates.ServerPublicThumbprint,
+                tentaclePollSubscriptionId ?? "poll://randomTentaclePollSubscriptionId");
 
             return (tempDirectory, RunningTentacle(configFilePath, instanceName, tempDirectory, cancellationToken));
         }
@@ -66,22 +97,22 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             writableTentacleConfiguration.SetNoListen(true);
         }
 
-        private void AddCertificateToTentacle(string configFilePath, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken token)
+        private void AddCertificateToTentacle(string configFilePath, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommand(new[]
             {
                 "import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath,
                 $"--instance={instanceName}"
-            }, tmp, token);
+            }, tmp, cancellationToken);
         }
 
-        private void CreateInstance(string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken token)
+        private void CreateInstance(string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommand(new[]
             {
                 "create-instance", "--config", configFilePath,
                 $"--instance={instanceName}"
-            }, tmp, token);
+            }, tmp, cancellationToken);
         }
 
         private void RunTentacleCommand(string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
@@ -99,12 +130,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tentacleExe,
                 arguments,
                 tmp.DirectoryPath,
-                output => TestContext.WriteLine(output),
-                output => TestContext.WriteLine(output),
-                output => TestContext.WriteLine(output),
+                TestContext.WriteLine,
+                TestContext.WriteLine,
+                TestContext.WriteLine,
                 cancellationToken);
 
             if (cancellationToken.IsCancellationRequested) return;
+            
             if (exitCode != 0)
             {
                 throw new Exception("Error running tentacle");

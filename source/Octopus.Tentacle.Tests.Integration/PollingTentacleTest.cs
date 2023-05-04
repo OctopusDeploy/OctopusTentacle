@@ -24,10 +24,14 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var port = octopus.Listen();
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
+            
             var cts = new CancellationTokenSource();
-
-            string tentacleId = "poll://ggez";
-            var (disposable, runningTentacle) = new PollingTentacleBuilder().Build(port, Support.Certificates.ServerPublicThumbprint, tentacleId, cts.Token);
+            string tentacleId = "poll://random-tentacle-id";
+            
+            var (disposable, runningTentacle) = new PollingTentacleBuilder(port)
+                .WithTentaclePollSubscription(tentacleId)
+                .Build(cts.Token);
+            
             using (disposable)
             {
                 var testTask = Task.Run(() =>
