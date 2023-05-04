@@ -39,7 +39,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 {
                     RunTentacleCommand(new[] {"agent", "--config", configFilePath,
                         // Maybe it is looking in the wrong spot?
-                        $"--instance={instanceName}"
+                        $"--instance={instanceName}",
+                        "--noninteractive"
                         
                     }, tmp, cancellationToken);
                 }
