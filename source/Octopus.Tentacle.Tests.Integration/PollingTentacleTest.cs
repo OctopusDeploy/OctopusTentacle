@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
+using Halibut.ServiceModel;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Legacy;
@@ -43,6 +44,38 @@ namespace Octopus.Tentacle.Tests.Integration
                 await Task.WhenAny(runningTentacle, testTask);
                 cts.Cancel();
                 await Task.WhenAll(runningTentacle, testTask);
+            }
+        }
+
+        [Test]
+        [Obsolete("Obsolete")]
+        public void Halibut()
+        {
+            var services = new DelegateServiceFactory();
+            services.Register<IFoo>(() => new Foo());
+            using (var octopus = new HalibutRuntime(Support.Certificates.Server))
+            using (var tentaclePolling = new HalibutRuntime(services, Support.Certificates.Tentacle))
+            {
+                var octopusPort = octopus.Listen();
+                octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
+
+                tentaclePolling.Poll(new Uri("poll://SQ-TENTAPOLL"), new ServiceEndPoint(new Uri("https://localhost:" + octopusPort), Support.Certificates.ServerPublicThumbprint));
+
+                var svc = octopus.CreateClient<IFoo>("poll://SQ-TENTAPOLL", Support.Certificates.TentaclePublicThumbprint);
+                svc.FooBar();
+            }
+        }
+        
+        public interface IFoo
+        {
+            public void FooBar();
+        }
+
+        public class Foo : IFoo
+        {
+            public void FooBar()
+            {
+                
             }
         }
     }
