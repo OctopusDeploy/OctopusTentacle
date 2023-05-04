@@ -5,6 +5,7 @@ using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Services.Scripts
 {
@@ -40,7 +41,7 @@ namespace Octopus.Tentacle.Services.Scripts
                     return new RunningScriptWrapper(scriptState);
                 });
 
-            using (runningScript.ScriptStateStore.GetExclusiveLock())
+            using (runningScript.StartScriptMutex.Lock())
             {
                 IScriptWorkspace workspace;
 
@@ -81,7 +82,7 @@ namespace Octopus.Tentacle.Services.Scripts
                     var waited = Stopwatch.StartNew();
                     while (process.State != ProcessState.Complete && waited.Elapsed < command.DurationToWaitForScriptToFinish)
                     {
-                        Thread.Sleep(TimeSpan.FromMilliseconds(100));
+                        Thread.Sleep(TimeSpan.FromMilliseconds(10));
                     }
                 }
 
@@ -157,6 +158,7 @@ namespace Octopus.Tentacle.Services.Scripts
 
             public RunningScript? Process { get; set; }
             public ScriptStateStore ScriptStateStore { get; }
+            public SemaphoreSlim StartScriptMutex { get; } = new(1, 1);
             public CancellationTokenSource? CancellationTokenSource { get; set; }
         }
     }

@@ -9,7 +9,6 @@ namespace Octopus.Tentacle.Scripts
 {
     public class ScriptStateStore : IScriptStateStore
     {
-        readonly SemaphoreSlim storeLock = new(1, 1);
         readonly SemaphoreSlim scriptStateLock = new(1, 1);
         readonly IScriptWorkspace workspace;
         readonly ScriptTicket scriptTicket;
@@ -26,95 +25,67 @@ namespace Octopus.Tentacle.Scripts
 
         public ScriptState Create()
         {
-            scriptStateLock.Wait();
+            using var _ = scriptStateLock.Lock();
 
-            try
+            if (ExistsNoLock())
             {
-                if (ExistsNoLock())
-                {
-                    throw new InvalidOperationException($"ScriptState already exists at {StateFilePath}");
-                }
-
-                var state = new ScriptState(scriptTicket);
-                var serialized = SerializeState(state);
-                using var writer = GetStreamWriter(FileMode.CreateNew);
-                writer.Write(serialized);
-
-                return state;
+                throw new InvalidOperationException($"ScriptState already exists at {StateFilePath}");
             }
-            finally
-            {
-                scriptStateLock.Release();
-            }
+
+            var state = new ScriptState(scriptTicket);
+            var serialized = SerializeState(state);
+            using var writer = GetStreamWriter(StateFilePath, FileMode.CreateNew);
+            writer.Write(serialized);
+
+            return state;
         }
 
         public ScriptState Load()
         {
-            scriptStateLock.Wait();
+            using var _ = scriptStateLock.Lock();
 
-            try
+            if (!ExistsNoLock())
             {
-                if (!ExistsNoLock())
-                {
-                    throw new InvalidOperationException($"ScriptState does not exists at {StateFilePath}");
-                }
-
-                using var reader = new StreamReader(fileSystem.OpenFile(StateFilePath, FileMode.Open, FileAccess.Read, FileShare.Delete | FileShare.ReadWrite));
-                var serialized = reader.ReadToEnd();
-                var state = DeserializeState(serialized);
-
-                if (state == null)
-                {
-                    throw new Exception($"ScriptState could not be loaded from {StateFilePath}");
-                }
-
-                return state;
+                throw new InvalidOperationException($"ScriptState does not exists at {StateFilePath}");
             }
-            finally
+
+            using var reader = new StreamReader(fileSystem.OpenFile(StateFilePath, FileMode.Open, FileAccess.Read, FileShare.Delete | FileShare.ReadWrite));
+            var serialized = reader.ReadToEnd();
+            var state = DeserializeState(serialized);
+
+            if (state == null)
             {
-                scriptStateLock.Release();
+                throw new Exception($"ScriptState could not be loaded from {StateFilePath}");
             }
+
+            return state;
         }
 
         public void Save(ScriptState state)
         {
-            scriptStateLock.Wait();
+            using var _ = scriptStateLock.Lock();
 
-            try
+            if (!ExistsNoLock())
             {
-                if (!ExistsNoLock())
-                {
-                    throw new InvalidOperationException($"ScriptState does not exists at {StateFilePath}");
-                }
+                throw new InvalidOperationException($"ScriptState does not exists at {StateFilePath}");
+            }
 
-                var serialized = SerializeState(state);
-                using var writer = GetStreamWriter(FileMode.Create);
+            var serialized = SerializeState(state);
+            var tempFilePath = workspace.ResolvePath(Guid.NewGuid().ToString());
+            var backupPath = workspace.ResolvePath(Guid.NewGuid().ToString());
+            using (var writer = GetStreamWriter(tempFilePath, FileMode.Create))
+            {
                 writer.Write(serialized);
             }
-            finally
-            {
-                scriptStateLock.Release();
-            }
+
+            File.Replace(tempFilePath, StateFilePath, backupPath, true);
         }
 
         public bool Exists()
         {
-            scriptStateLock.Wait();
-            try
-            {
-                return ExistsNoLock();
+            using var _ = scriptStateLock.Lock();
 
-            }
-            finally
-            {
-                scriptStateLock.Release();
-            }
-        }
-
-        public IDisposable GetExclusiveLock()
-        {
-            storeLock.Wait();
-            return new SemaphoreSlimReleaser(storeLock);
+            return ExistsNoLock();
         }
 
         bool ExistsNoLock()
@@ -132,9 +103,9 @@ namespace Octopus.Tentacle.Scripts
             return JsonConvert.SerializeObject(state);
         }
 
-        private StreamWriter GetStreamWriter(FileMode fileMode)
+        private StreamWriter GetStreamWriter(string path, FileMode fileMode)
         {
-            return new StreamWriter(fileSystem.OpenFile(StateFilePath, fileMode, FileAccess.Write, FileShare.Delete | FileShare.ReadWrite));
+            return new StreamWriter(fileSystem.OpenFile(path, fileMode, FileAccess.Write, FileShare.Delete | FileShare.ReadWrite));
         }
     }
 }
