@@ -95,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private void RunTentacleCommandOutOfProcess(string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             var exitCode = SilentProcessRunner.ExecuteCommand(
-                FindTentacleExe(),
+                TentacleExeFinder.FindTentacleExe(),
                 String.Join(" ", args),
                 tmp.DirectoryPath,
                 TestContext.WriteLine,
@@ -109,28 +109,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 throw new Exception("Tentacle returns non zero exit code: " + exitCode);
             }
-        }
-
-        private string FindTentacleExe()
-        {
-            var assemblyDirectory = Path.GetDirectoryName(GetType().Assembly.Location)!;
-
-            // TODO this wont work locally with nuke.
-            var tentacleExe = Path.Combine(assemblyDirectory, "Tentacle");
-
-            // We don't have access to any teamcity environment variables so instead rely on the path. 
-            if (assemblyDirectory.Contains("TeamCity"))
-            {
-                // Example current directory of assembly.
-                // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net6.0/linux-x64
-                // Desired path to tentacle.
-                // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
-
-                tentacleExe = Path.Combine(Directory.GetParent(assemblyDirectory).Parent.Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
-            }
-
-            if (PlatformDetection.IsRunningOnWindows) tentacleExe += ".exe";
-            return tentacleExe;
         }
     }
 }
