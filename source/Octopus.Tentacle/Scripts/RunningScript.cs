@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Scripts
     public class RunningScript
     {
         readonly IScriptWorkspace workspace;
-        readonly IScriptStateStore? stateRepository;
+        readonly IScriptStateStore? stateStore;
         readonly IShell shell;
         readonly string taskId;
         readonly CancellationToken token;
@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Scripts
 
         public RunningScript(IShell shell,
             IScriptWorkspace workspace,
-            IScriptStateStore? stateRepository,
+            IScriptStateStore? stateStore,
             IScriptLog scriptLog,
             string taskId,
             CancellationToken token,
@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Scripts
         {
             this.shell = shell;
             this.workspace = workspace;
-            this.stateRepository = stateRepository;
+            this.stateStore = stateStore;
             this.taskId = taskId;
             this.token = token;
             this.log = log;
@@ -107,21 +107,21 @@ namespace Octopus.Tentacle.Scripts
 
         void RecordScriptHasStarted()
         {
-            if (stateRepository != null)
+            if (stateStore != null)
             {
-                var scriptState = stateRepository.Load();
+                var scriptState = stateStore.Load();
                 scriptState.Start();
-                stateRepository.Save(scriptState);
+                stateStore.Save(scriptState);
             }
         }
 
         void RecordScriptHasCompleted(int exitCode)
         {
-            if (stateRepository != null)
+            if (stateStore != null)
             {
-                var scriptState = stateRepository.Load();
+                var scriptState = stateStore.Load();
                 scriptState.Complete(exitCode);
-                stateRepository.Save(scriptState);
+                stateStore.Save(scriptState);
             }
         }
 
