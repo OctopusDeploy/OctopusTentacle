@@ -386,6 +386,8 @@ namespace Octopus.Tentacle.Tests.Integration
             service.CompleteScript(request);
         }
 
+        // TODO - Test the stateStore is updated.
+
         private void SetupScriptState(ScriptTicket ticket)
         {
             var workspace = workspaceFactory.GetWorkspace(ticket);
