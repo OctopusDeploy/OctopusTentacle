@@ -31,7 +31,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             await OctopusPackageDownloader.DownloadPackage(url, downloadFilePath);
 
             var extractionDirectory = new DirectoryInfo(Path.Combine(directoryPath, "extracted"));
-            ZipFile.ExtractToDirectory(downloadFilePath, extractionDirectory.FullName);
 
             ExtractTarGzip(downloadFilePath, extractionDirectory.FullName);
             return Path.Combine(extractionDirectory.FullName, "tentacle", "Tentacle");
