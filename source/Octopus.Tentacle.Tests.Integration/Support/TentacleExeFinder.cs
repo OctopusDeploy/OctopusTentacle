@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             
 
             // We don't have access to any teamcity environment variables so instead rely on the path. 
-            if (assemblyDir.FullName.Contains("TeamCity"))
+            if (IsRunningInTeamCity())
             {
                 // Example current directory of assembly.
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net6.0/linux-x64
@@ -43,10 +43,31 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             throw new Exception("Could not determine where to look for Tentacle Exe started searching from: " + assemblyDir.FullName);
         }
 
-        public static string AddExeExtension(string path)
+        private static string AddExeExtension(string path)
         {
             if (PlatformDetection.IsRunningOnWindows) path += ".exe";
             return path;
+        }
+        
+        public static bool IsRunningInTeamCity()
+        {
+            // Under linux we don't have the team city environment variables
+            if (typeof(TentacleExeFinder).Assembly.Location.Contains("TeamCity"))
+            {
+                return true;
+            }
+            
+            // Under windows we do.
+            var teamcityenvvars = new String[] {"TEAMCITY_VERSION", "TEAMCITY_BUILD_ID"};
+            foreach (var s in teamcityenvvars)
+            {
+                var environmentVariableValue = Environment.GetEnvironmentVariable(s);
+                TestContext.WriteLine($"Env value: {s} is '{environmentVariableValue}'");
+                if (!string.IsNullOrEmpty(environmentVariableValue)) return true;
+            }
+
+            return false;
+            
         }
     }
 }
