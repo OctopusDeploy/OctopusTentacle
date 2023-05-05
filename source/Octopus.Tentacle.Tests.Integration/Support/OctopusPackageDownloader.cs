@@ -24,7 +24,6 @@ namespace Octopus.Tentacle.Tests.Integration
                 {
                     response.EnsureSuccessStatusCode();
                     var totalLength = response.Content.Headers.ContentLength;
-
                     if (response.Headers.TryGetValues("x-amz-meta-sha256", out var expectedHashs))
                     {
                         expectedHash = expectedHashs.FirstOrDefault();
