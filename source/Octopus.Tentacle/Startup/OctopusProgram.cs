@@ -582,7 +582,7 @@ namespace Octopus.Tentacle.Startup
             return commandLineArguments.Skip(1).ToArray();
         }
 
-        protected abstract IContainer BuildContainer(StartUpInstanceRequest startUpInstanceRequest);
+        public abstract IContainer BuildContainer(StartUpInstanceRequest startUpInstanceRequest);
 
         protected virtual void RegisterAdditionalModules(IContainer builtContainer)
         {

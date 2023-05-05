@@ -152,7 +152,7 @@ namespace Octopus.Tentacle.Commands
                 if (existingServer?.SubscriptionId != null)
                     subscriptionId = new Uri(existingServer.SubscriptionId);
                 else
-                    subscriptionId = new Uri("poll://" + RandomStringGenerator.Generate(20).ToLowerInvariant() + "/");
+                    subscriptionId = PollingSubscriptionId.Generate();
                 registerMachineOperation.SubscriptionId = subscriptionId;
                 server.SubscriptionId = subscriptionId.ToString();
             }
