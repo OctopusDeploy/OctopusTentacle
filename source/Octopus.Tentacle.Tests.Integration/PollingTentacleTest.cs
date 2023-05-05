@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var cts = new CancellationTokenSource();
             var tentacleId = PollingSubscriptionId.Generate();
             
-            var (disposable, runningTentacle) = new PollingTentacleBuilder(port)
+            var (disposable, runningTentacle) = new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
                 .WithTentaclePollSubscription(tentacleId)
                 .Build(cts.Token);
             

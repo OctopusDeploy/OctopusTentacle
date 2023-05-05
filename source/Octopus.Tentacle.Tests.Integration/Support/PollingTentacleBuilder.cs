@@ -13,18 +13,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public class PollingTentacleBuilder
     {
         readonly int octopusHalibutPort;
-        string? octopusThumbprint;
+        string octopusThumbprint;
         Uri? tentaclePollSubscriptionId;
 
-        public PollingTentacleBuilder(int octopusHalibutPort)
+        public PollingTentacleBuilder(int octopusHalibutPort, string octopusThumbprint)
         {
             this.octopusHalibutPort = octopusHalibutPort;
-        }
-
-        public PollingTentacleBuilder WithOctopusThumbprint(string octopusThumbprint)
-        {
             this.octopusThumbprint = octopusThumbprint;
-            return this;
         }
 
         public PollingTentacleBuilder WithTentaclePollSubscription(Uri tentaclePollSubscriptionId)
@@ -32,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.tentaclePollSubscriptionId = tentaclePollSubscriptionId;
             return this;
         }
-        
+
         public (IDisposable, Task) Build(CancellationToken cancellationToken)
         {
             var tempDirectory = new TemporaryDirectory();
@@ -56,17 +51,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 try
                 {
-                    RunTentacleCommand(new[]
-                    {
-                        "agent", "--config", configFilePath,
-                        // Maybe it is looking in the wrong spot?
-                        $"--instance={instanceName}",
-                        "--noninteractive"
-                    }, tmp, cancellationToken);
+                    RunTentacleCommand(new[] {"agent", "--config", configFilePath, $"--instance={instanceName}", "--noninteractive"}, tmp, cancellationToken);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    TestContext.WriteLine(e);
                     throw;
                 }
             }, cancellationToken);
@@ -74,9 +63,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void ConfigureTentacleToPollOctopusServer(string configFilePath, int octopusHalibutPort, string octopusThumbprint, Uri tentaclePollSubscriptionId)
         {
-            // TODO: No, listen: NoListen
-            //RunTentacleCommandInProcess("poll-server", $"--from-file={tentaclePfxPath}", "--config", configFilePath, $"--instance={instanceName}");
-
             var startUpConfigFileInstanceRequest = new StartUpConfigFileInstanceRequest(configFilePath);
             using var container = new Program(new string[] { }).BuildContainer(startUpConfigFileInstanceRequest);
 
@@ -93,11 +79,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void AddCertificateToTentacle(string configFilePath, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommand(new[]
-            {
-                "import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath,
-                $"--instance={instanceName}"
-            }, tmp, cancellationToken);
+            RunTentacleCommand(new[] {"import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, $"--instance={instanceName}"}, tmp, cancellationToken);
         }
 
         private void CreateInstance(string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
@@ -112,13 +94,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void RunTentacleCommandOutOfProcess(string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            var tentacleExe = FindTentacleExe();
-
-            var arguments = String.Join(" ", args);
-
             var exitCode = SilentProcessRunner.ExecuteCommand(
-                tentacleExe,
-                arguments,
+                FindTentacleExe(),
+                String.Join(" ", args),
                 tmp.DirectoryPath,
                 TestContext.WriteLine,
                 TestContext.WriteLine,
@@ -126,54 +104,33 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 cancellationToken);
 
             if (cancellationToken.IsCancellationRequested) return;
-            
+
             if (exitCode != 0)
             {
-                throw new Exception("Error running tentacle");
+                throw new Exception("Tentacle returns non zero exit code: " + exitCode);
             }
         }
 
         private string FindTentacleExe()
         {
-            var assemblyDirectory = Path.GetDirectoryName(GetType().Assembly.Location);
+            var assemblyDirectory = Path.GetDirectoryName(GetType().Assembly.Location)!;
 
             // TODO this wont work locally with nuke.
             var tentacleExe = Path.Combine(assemblyDirectory, "Tentacle");
 
-            // Are we on teamcity?
-            // It seems no environment variables are passed to us.
-            if (TestExecutionContext.IsRunningInTeamCity || assemblyDirectory.Contains("Team"))
+            // We don't have access to any teamcity environment variables so instead rely on the path. 
+            if (assemblyDirectory.Contains("TeamCity"))
             {
                 // Example current directory of assembly.
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/integrationtests/net6.0/linux-x64
                 // Desired path to tentacle.
                 // /opt/TeamCity/BuildAgent/work/639265b01610d682/build/outputs/tentaclereal/tentacle/Tentacle
 
-                // TODO add exe
                 tentacleExe = Path.Combine(Directory.GetParent(assemblyDirectory).Parent.Parent.FullName, "tentaclereal", "tentacle", "Tentacle");
             }
 
             if (PlatformDetection.IsRunningOnWindows) tentacleExe += ".exe";
             return tentacleExe;
-        }
-
-        public static class TestExecutionContext
-        {
-            public static bool IsRunningInTeamCity
-            {
-                get
-                {
-                    var teamcityenvvars = new String[] {"TEAMCITY_VERSION", "TEAMCITY_BUILD_ID"};
-                    foreach (var s in teamcityenvvars)
-                    {
-                        var environmentVariableValue = Environment.GetEnvironmentVariable(s);
-                        TestContext.WriteLine($"Env value: {s} is '{environmentVariableValue}'");
-                        if (!string.IsNullOrEmpty(environmentVariableValue)) return true;
-                    }
-
-                    return false;
-                }
-            }
         }
     }
 }
