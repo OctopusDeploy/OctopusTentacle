@@ -63,7 +63,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             using (var sha256 = SHA256.Create())
             {
-                var fileBytes = await File.ReadAllBytesAsync(filePath);
+                var fileBytes = File.ReadAllBytes(filePath);
                 var hash = sha256.ComputeHash(fileBytes);
                 var computedHash = BitConverter.ToString(hash).Replace("-", "");
                 if (!computedHash.Equals(expectedHash, StringComparison.OrdinalIgnoreCase))
