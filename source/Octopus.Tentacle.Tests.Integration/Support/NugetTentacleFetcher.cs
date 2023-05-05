@@ -27,9 +27,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             TestContext.WriteLine($"Downloading {url} to {downloadFilePath}");
             await OctopusPackageDownloader.DownloadPackage(url, downloadFilePath);
 
-            // For local TODO delte this.
-            //File.Copy("/tmp/tentaclenuget/Octopus.Tentacle.CrossPlatformBundle.6.3.451.nupkg", downloadFilePath);
-
             var extractionDirectory = Path.Combine(directoryPath, "extracted");
 
             ZipFile.ExtractToDirectory(downloadFilePath, extractionDirectory);
