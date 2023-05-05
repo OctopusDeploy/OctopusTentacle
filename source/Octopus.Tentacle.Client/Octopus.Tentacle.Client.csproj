@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Octopus.Tentacle.Client</RootNamespace>
+        <AssemblyName>Octopus.Tentacle.Client</AssemblyName>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <OutputPath>bin\</OutputPath>
+        <TargetFrameworks>net48;netstandard2.1;net6.0</TargetFrameworks>
+        <DisableImplicitPackageTargetFallback>true</DisableImplicitPackageTargetFallback>
+        <Optimize Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">True</Optimize>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>9</LangVersion>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <PropertyGroup>
+        <DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
+    </PropertyGroup>
+    <Choose>
+        <When Condition="'$(TargetFramework)' == 'net48'">
+            <PropertyGroup>
+                <RuntimeIdentifiers>win</RuntimeIdentifiers><!-- This is AnyCPU -->
+            </PropertyGroup>
+        </When>
+        <Otherwise>
+            <PropertyGroup>
+                <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;linux-arm64;linux-arm;linux-musl-x64</RuntimeIdentifiers>
+            </PropertyGroup>
+        </Otherwise>
+    </Choose>
+    <ItemGroup>
+        <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
+    </ItemGroup>
+</Project>
