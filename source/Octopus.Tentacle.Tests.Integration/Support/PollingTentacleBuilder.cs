@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         readonly int octopusHalibutPort;
         string? octopusThumbprint;
-        string? tentaclePollSubscriptionId;
+        Uri? tentaclePollSubscriptionId;
 
         public PollingTentacleBuilder(int octopusHalibutPort)
         {
@@ -27,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        public PollingTentacleBuilder WithTentaclePollSubscription(string tentaclePollSubscriptionId)
+        public PollingTentacleBuilder WithTentaclePollSubscription(Uri tentaclePollSubscriptionId)
         {
             this.tentaclePollSubscriptionId = tentaclePollSubscriptionId;
             return this;
@@ -45,7 +45,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 configFilePath,
                 octopusHalibutPort,
                 octopusThumbprint ?? Certificates.ServerPublicThumbprint,
-                tentaclePollSubscriptionId ?? "poll://randomTentaclePollSubscriptionId");
+                tentaclePollSubscriptionId ?? PollingSubscriptionId.Generate());
 
             return (tempDirectory, RunningTentacle(configFilePath, instanceName, tempDirectory, cancellationToken));
         }
@@ -72,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }, cancellationToken);
         }
 
-        private void ConfigureTentacleToPollOctopusServer(string configFilePath, int octopusHalibutPort, string octopusThumbprint, string tentaclePollSubscriptionId)
+        private void ConfigureTentacleToPollOctopusServer(string configFilePath, int octopusHalibutPort, string octopusThumbprint, Uri tentaclePollSubscriptionId)
         {
             // TODO: No, listen: NoListen
             //RunTentacleCommandInProcess("poll-server", $"--from-file={tentaclePfxPath}", "--config", configFilePath, $"--instance={instanceName}");
@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 Address = new Uri("https://localhost:" + octopusHalibutPort),
                 CommunicationStyle = CommunicationStyle.TentacleActive,
-                SubscriptionId = tentaclePollSubscriptionId
+                SubscriptionId = tentaclePollSubscriptionId.ToString()
             });
 
             writableTentacleConfiguration.SetNoListen(true);
@@ -102,11 +102,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void CreateInstance(string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommand(new[]
-            {
-                "create-instance", "--config", configFilePath,
-                $"--instance={instanceName}"
-            }, tmp, cancellationToken);
+            RunTentacleCommand(new[] {"create-instance", "--config", configFilePath, $"--instance={instanceName}"}, tmp, cancellationToken);
         }
 
         private void RunTentacleCommand(string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)

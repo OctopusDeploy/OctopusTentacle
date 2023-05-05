@@ -9,6 +9,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.TentacleClient;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -26,7 +27,7 @@ namespace Octopus.Tentacle.Tests.Integration
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
             
             var cts = new CancellationTokenSource();
-            string tentacleId = "poll://random-tentacle-id";
+            var tentacleId = PollingSubscriptionId.Generate();
             
             var (disposable, runningTentacle) = new PollingTentacleBuilder(port)
                 .WithTentaclePollSubscription(tentacleId)
@@ -38,7 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 {
                     var tentacleClient = new TentacleClientBuilder(octopus)
                         .WithRemoteThumbprint(Support.Certificates.TentaclePublicThumbprint)
-                        .WithServiceUri(new Uri(tentacleId))
+                        .WithServiceUri(tentacleId)
                         .Build(CancellationToken.None);
 
                     var res = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(new ScriptTicket("1212"), 111));
@@ -48,38 +49,6 @@ namespace Octopus.Tentacle.Tests.Integration
                 await Task.WhenAny(runningTentacle, testTask);
                 cts.Cancel();
                 await Task.WhenAll(runningTentacle, testTask);
-            }
-        }
-
-        [Test]
-        [Obsolete("Obsolete")]
-        public void Halibut()
-        {
-            var services = new DelegateServiceFactory();
-            services.Register<IFoo>(() => new Foo());
-            using (var octopus = new HalibutRuntime(Support.Certificates.Server))
-            using (var tentaclePolling = new HalibutRuntime(services, Support.Certificates.Tentacle))
-            {
-                var octopusPort = octopus.Listen();
-                octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
-
-                tentaclePolling.Poll(new Uri("poll://SQ-TENTAPOLL"), new ServiceEndPoint(new Uri("https://localhost:" + octopusPort), Support.Certificates.ServerPublicThumbprint));
-
-                var svc = octopus.CreateClient<IFoo>("poll://SQ-TENTAPOLL", Support.Certificates.TentaclePublicThumbprint);
-                svc.FooBar();
-            }
-        }
-        
-        public interface IFoo
-        {
-            public void FooBar();
-        }
-
-        public class Foo : IFoo
-        {
-            public void FooBar()
-            {
-                
             }
         }
     }
