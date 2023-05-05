@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using NuGet.Frameworks;
 using NUnit.Framework;
 using Octopus.Tentacle.Util;
 
@@ -52,30 +53,36 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             if (PlatformDetection.IsRunningOnWindows)
             {
-                return $"tentacle-{GetFramework()}-win-{Architecture()}.zip";
+                if (TentacleBinaryFrameworkForCurrentOs() == "net48")
+                {
+                    return "tentacle-net48-win.zip";
+                }
+                return $"tentacle-{TentacleBinaryFrameworkForCurrentOs()}-win-{Architecture()}.zip";
             }
 
             if (PlatformDetection.IsRunningOnMac)
             {
-                return $"tentacle-{GetFramework()}-osx-{Architecture()}.tar.gz";
+                return $"tentacle-{TentacleBinaryFrameworkForCurrentOs()}-osx-{Architecture()}.tar.gz";
             }
 
             if (PlatformDetection.IsRunningOnNix)
             {
-                return $"tentacle-{GetFramework()}-linux-{Architecture()}.tar.gz";
+                return $"tentacle-{TentacleBinaryFrameworkForCurrentOs()}-linux-{Architecture()}.tar.gz";
             }
 
             throw new Exception("Wow this is one fancy OS that tentacle probably can't run on");
         }
 
-        string GetFramework()
+        public static string TentacleBinaryFrameworkForCurrentOs()
         {
+            // This wont work for future versions of dotnet
             if (RuntimeInformation.FrameworkDescription.StartsWith(".NET 6.0"))
             {
                 return "net6.0";
             }
 
-            return string.Concat(RuntimeInformation.FrameworkDescription.Split(' ').Take(2));
+            // This is the last net framework
+            return "net48";
         }
 
         string Architecture()

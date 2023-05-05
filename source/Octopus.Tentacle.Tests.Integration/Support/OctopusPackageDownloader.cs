@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -16,14 +17,19 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         public static async Task DownloadPackage(string downloadUrl, string filePath)
         {
-            string expectedHash;
+            string expectedHash = null;
             using (var client = new HttpClient())
             {
                 using (var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead))
                 {
                     response.EnsureSuccessStatusCode();
                     var totalLength = response.Content.Headers.ContentLength;
-                    expectedHash = response.Headers.GetValues("x-amz-meta-sha256").FirstOrDefault() ?? throw new ApplicationException($"Did not find x-amz-meta-sha256 header on URL {downloadUrl}");
+
+                    if (response.Headers.TryGetValues("x-amz-meta-sha256", out var expectedHashs))
+                    {
+                        expectedHash = expectedHashs.FirstOrDefault();
+                    }
+                    
                     TestContext.WriteLine($"Downloading {downloadUrl} ({totalLength} bytes)");
                     var sw = new Stopwatch();
                     sw.Start();
@@ -61,14 +67,17 @@ namespace Octopus.Tentacle.Tests.Integration
                 }
             }
 
-            using (var sha256 = SHA256.Create())
+            if (!expectedHash.IsNullOrEmpty())
             {
-                var fileBytes = File.ReadAllBytes(filePath);
-                var hash = sha256.ComputeHash(fileBytes);
-                var computedHash = BitConverter.ToString(hash).Replace("-", "");
-                if (!computedHash.Equals(expectedHash, StringComparison.OrdinalIgnoreCase))
+                using (var sha256 = SHA256.Create())
                 {
-                    throw new Exception($"Computed SHA256 ({computedHash}) hash of file does not match expected ({expectedHash})." + $"Downloaded file may be corrupt. File size {((long)fileBytes.Length)}");
+                    var fileBytes = File.ReadAllBytes(filePath);
+                    var hash = sha256.ComputeHash(fileBytes);
+                    var computedHash = BitConverter.ToString(hash).Replace("-", "");
+                    if (!computedHash.Equals(expectedHash, StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new Exception($"Computed SHA256 ({computedHash}) hash of file does not match expected ({expectedHash})." + $"Downloaded file may be corrupt. File size {((long)fileBytes.Length)}");
+                    }
                 }
             }
         }

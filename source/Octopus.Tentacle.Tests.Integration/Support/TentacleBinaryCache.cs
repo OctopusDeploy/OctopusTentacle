@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public async Task<string> GetTentacleVersion(string tmp, string version)
         {
-            var cacheDir = Path.Combine(Path.GetTempPath(), "TentacleBinaryCache");
+            var cacheDir = Path.Combine(Path.GetTempPath(), "TentacleBinaryCache", NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs());
             Directory.CreateDirectory(cacheDir);
 
             var tentacleVersionCacheDir = Path.Combine(cacheDir, version);
