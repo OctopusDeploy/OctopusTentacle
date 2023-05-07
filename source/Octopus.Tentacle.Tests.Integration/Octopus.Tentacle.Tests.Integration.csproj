@@ -47,7 +47,4 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="TentacleClient" />
-    </ItemGroup>
 </Project>

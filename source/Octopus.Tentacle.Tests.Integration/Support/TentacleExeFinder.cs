@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             throw new Exception("Could not determine where to look for Tentacle Exe started searching from: " + assemblyDir.FullName);
         }
 
-        private static string AddExeExtension(string path)
+        public static string AddExeExtension(string path)
         {
             if (PlatformDetection.IsRunningOnWindows) path += ".exe";
             return path;
