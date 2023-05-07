@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 try
                 {
-                    RunTentacleCommandOutOfProcess(tentacleExe, new[] {"agent", "--config", configFilePath, $"--instance={instanceName}", "--noninteractive"}, tmp,
+                    RunTentacleCommandOutOfProcess(tentacleExe, new[] {"agent", $"--instance={instanceName}", "--noninteractive"}, tmp,
                         s =>
                         {
                             if (s.Contains("Agent will not listen") || s.Contains("Agent listening on"))
@@ -143,7 +143,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void AddCertificateToTentacle(string tentacleExe, string configFilePath, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommand(tentacleExe, new[] {"import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, $"--instance={instanceName}"}, tmp, cancellationToken);
+            RunTentacleCommand(tentacleExe, new[] {"import-certificate", $"--from-file={tentaclePfxPath}", $"--instance={instanceName}"}, tmp, cancellationToken);
         }
 
         private void CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
