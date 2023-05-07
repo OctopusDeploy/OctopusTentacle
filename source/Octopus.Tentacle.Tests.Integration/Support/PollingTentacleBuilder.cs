@@ -35,22 +35,24 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        public (IDisposable, Task) Build(CancellationToken cancellationToken)
+        internal RunningTestTentacle Build(CancellationToken cancellationToken)
         {
             var tempDirectory = new TemporaryDirectory();
             var instanceName = Guid.NewGuid().ToString("N");
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
             var tentacleExe = this.tentacleExePath ?? TentacleExeFinder.FindTentacleExe();
-
+            var subscriptionId = tentaclePollSubscriptionId ?? PollingSubscriptionId.Generate();
             CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
             AddCertificateToTentacle(tentacleExe, configFilePath, instanceName, Certificates.TentaclePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(
                 configFilePath,
                 octopusHalibutPort,
                 octopusThumbprint ?? Certificates.ServerPublicThumbprint,
-                tentaclePollSubscriptionId ?? PollingSubscriptionId.Generate());
+                subscriptionId);
 
-            return (tempDirectory, RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken));
+            CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            return new RunningTestTentacle(subscriptionId, tempDirectory, cts, RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cts.Token));
         }
 
         private Task RunningTentacle(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
@@ -117,6 +119,29 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 throw new Exception("Tentacle returns non zero exit code: " + exitCode);
             }
+        }
+    }
+
+    class RunningTestTentacle : IDisposable
+    {
+        public Uri ServiceUri { get; }
+        private TemporaryDirectory TemporaryDirectory;
+        private CancellationTokenSource cts;
+        public Task Task { get; }
+
+        public RunningTestTentacle(Uri serviceUri, TemporaryDirectory temporaryDirectory, CancellationTokenSource cts, Task task)
+        {
+            TemporaryDirectory = temporaryDirectory;
+            this.cts = cts;
+            Task = task;
+            ServiceUri = serviceUri;
+        }
+
+        public void Dispose()
+        {
+            cts.Cancel();
+            cts.Dispose();
+            TemporaryDirectory.Dispose();
         }
     }
 }
