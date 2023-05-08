@@ -59,6 +59,7 @@
 		<PackageReference Include="System.Management" Version="4.7.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 		<PackageReference Include="TaskScheduler" Version="2.7.2" />
+		<PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Include="..\Solution Items\SolutionInfo.cs">
@@ -90,7 +91,6 @@
 		<PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0" />
 		<PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
 		<PackageReference Include="NLog" Version="5.0.4" />
-		<PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
 		<PackageReference Include="System.Diagnostics.EventLog" Version="4.5.0" />
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
 		<PackageReference Include="System.DirectoryServices.AccountManagement" Version="4.5.0" />
@@ -98,7 +98,6 @@
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
 		<PackageReference Include="NLog" Version="5.0.4" />
-		<PackageReference Include="Nito.AsyncEx" Version="3.0.1" />
 		<PackageReference Include="System.Runtime" Version="4.3.0" />
 		<Reference Include="System.Security" />
 		<Reference Include="System.DirectoryServices" />
