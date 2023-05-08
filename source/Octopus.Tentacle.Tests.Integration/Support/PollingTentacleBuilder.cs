@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using Nito.AsyncEx;
 using Nito.AsyncEx.Interop;
 using NUnit.Framework;
 using Octopus.Client.Model;
@@ -15,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public class PollingTentacleBuilder
     {
         readonly int octopusHalibutPort;
-        string octopusThumbprint;
+        readonly string octopusThumbprint;
         Uri? tentaclePollSubscriptionId;
         private string? tentacleExePath;
 
@@ -52,10 +51,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var tempDirectory = new TemporaryDirectory();
             var instanceName = Guid.NewGuid().ToString("N");
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
-            var tentacleExe = this.tentacleExePath ?? TentacleExeFinder.FindTentacleExe();
+            var tentacleExe = tentacleExePath ?? TentacleExeFinder.FindTentacleExe();
             var subscriptionId = tentaclePollSubscriptionId ?? PollingSubscriptionId.Generate();
             var CertificatePfxPath = this.CertificatePfxPath ?? Certificates.TentaclePfxPath;
-            var tentacleThumbprint = this.TentacleThumbprint ?? Certificates.TentaclePublicThumbprint;
+            var tentacleThumbprint = TentacleThumbprint ?? Certificates.TentaclePublicThumbprint;
             CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
             AddCertificateToTentacle(tentacleExe, configFilePath, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(
@@ -90,16 +89,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private async Task<Task> RunningTentacle(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-
             var hasTentacleStarted = new ManualResetEventSlim();
             hasTentacleStarted.Reset();
-            
-            
-            var runningTentacle =  Task.Run(() =>
+
+            var runningTentacle = Task.Run(() =>
             {
                 try
                 {
-                    RunTentacleCommandOutOfProcess(tentacleExe, new[] {"agent", "--config", configFilePath, $"--instance={instanceName}", "--noninteractive"}, tmp, 
+                    RunTentacleCommandOutOfProcess(tentacleExe, new[] {"agent", "--config", configFilePath, $"--instance={instanceName}", "--noninteractive"}, tmp,
                         s =>
                         {
                             if (s.Contains("Agent will not listen") || s.Contains("Agent listening on"))
@@ -115,7 +112,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 }
             }, cancellationToken);
 
-            
             await Task.WhenAny(runningTentacle, WaitHandleAsyncFactory.FromWaitHandle(hasTentacleStarted.WaitHandle, TimeSpan.FromMinutes(1)));
 
             // Will throw.
@@ -157,16 +153,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommandOutOfProcess(tentacleExe, args, tmp, s => {}, cancellationToken);
+            RunTentacleCommandOutOfProcess(tentacleExe, args, tmp, s =>
+            {
+            }, cancellationToken);
         }
 
-        private void RunTentacleCommandOutOfProcess(string tentacleExe, 
-                                string[] args,
-                                TemporaryDirectory tmp,
-                                Action<string> CommandOutput,
-                                CancellationToken cancellationToken)
+        private void RunTentacleCommandOutOfProcess(string tentacleExe,
+            string[] args,
+            TemporaryDirectory tmp,
+            Action<string> CommandOutput,
+            CancellationToken cancellationToken)
         {
-            Action<string> allOutput = (s) =>
+            Action<string> allOutput = s =>
             {
                 TestContext.WriteLine(s);
                 CommandOutput(s);
@@ -192,8 +190,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public class RunningTestTentacle : IDisposable
     {
         public Uri ServiceUri { get; }
-        private IDisposable TemporaryDirectory;
-        private CancellationTokenSource cts;
+        private readonly IDisposable TemporaryDirectory;
+        private readonly CancellationTokenSource cts;
         private Task RunningTentacleTask { get; }
         public string Thumbprint { get; }
 
