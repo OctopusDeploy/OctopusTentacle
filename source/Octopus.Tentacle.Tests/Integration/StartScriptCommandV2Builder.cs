@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 
@@ -18,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration
         string scriptIsolationMutexName = nameof(RunningScript);
         string taskId = Guid.NewGuid().ToString();
         ScriptTicket scriptTicket = new ScriptTicket(Guid.NewGuid().ToString());
-        TimeSpan durationStartScriptCanWaitForScriptToFinish = TimeSpan.Zero;
+        TimeSpan? durationStartScriptCanWaitForScriptToFinish;
 
         public StartScriptCommandV2Builder WithScriptBody(string scriptBody)
         {

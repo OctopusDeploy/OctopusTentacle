@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
-namespace Octopus.Tentacle.Contracts
+namespace Octopus.Tentacle.Contracts.ScriptServiceV2
 {
     public class ScriptStatusResponseV2
     {

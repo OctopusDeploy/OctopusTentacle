@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace Octopus.Tentacle.Contracts
+namespace Octopus.Tentacle.Contracts.ScriptServiceV2
 {
     public class StartScriptCommandV2
     {
@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Contracts
             string[] arguments,
             string taskId,
             ScriptTicket scriptTicket,
-            TimeSpan durationToWaitForScriptToFinish)
+            TimeSpan? durationToWaitForScriptToFinish)
         {
             Arguments = arguments;
             TaskId = taskId;
@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Contracts
             string[] arguments,
             string taskId,
             ScriptTicket scriptTicket,
-            TimeSpan durationToWaitForScriptToFinish,
+            TimeSpan? durationToWaitForScriptToFinish,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
                 isolation,
@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Contracts
             string[] arguments,
             string taskId,
             ScriptTicket scriptTicket,
-            TimeSpan durationToWaitForScriptToFinish,
+            TimeSpan? durationToWaitForScriptToFinish,
             Dictionary<ScriptType, string>? additionalScripts,
             params ScriptFile[]? additionalFiles)
             : this(scriptBody,
@@ -81,7 +81,7 @@ namespace Octopus.Tentacle.Contracts
         public ScriptTicket ScriptTicket { get; set; }
         public string ScriptBody { get; }
         public string TaskId { get; }
-        public TimeSpan DurationToWaitForScriptToFinish { get; }
+        public TimeSpan? DurationToWaitForScriptToFinish { get; }
 
         public ScriptIsolationLevel Isolation { get; }
         public TimeSpan ScriptIsolationMutexTimeout { get; }

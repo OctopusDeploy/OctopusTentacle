@@ -4,6 +4,16 @@ using System.Diagnostics;
 using System.Threading;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Contracts;
+
+/* Unmerged change from project 'Octopus.Tentacle (net6.0)'
+Before:
+using Octopus.Tentacle.Scripts;
+After:
+using Octopus.Tentacle.Contracts.IScriptServiceV2;
+using Octopus.Tentacle.Contracts.IScriptServiceV2.IScriptServiceV2;
+using Octopus.Tentacle.Scripts;
+*/
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Util;
 
@@ -37,7 +47,7 @@ namespace Octopus.Tentacle.Services.Scripts
                 s =>
                 {
                     var workspace = workspaceFactory.GetWorkspace(command.ScriptTicket);
-                    var scriptState = scriptStateStoreFactory.Get(s, workspace);
+                    var scriptState = scriptStateStoreFactory.Create(s, workspace);
                     return new RunningScriptWrapper(scriptState);
                 });
 
@@ -77,10 +87,10 @@ namespace Octopus.Tentacle.Services.Scripts
                 runningScript.Process = process;
                 runningScript.CancellationTokenSource = cancellationTokenSource;
 
-                if (command.DurationToWaitForScriptToFinish > TimeSpan.Zero)
+                if (command.DurationToWaitForScriptToFinish != null)
                 {
                     var waited = Stopwatch.StartNew();
-                    while (process.State != ProcessState.Complete && waited.Elapsed < command.DurationToWaitForScriptToFinish)
+                    while (process.State != ProcessState.Complete && waited.Elapsed < command.DurationToWaitForScriptToFinish.Value)
                     {
                         Thread.Sleep(TimeSpan.FromMilliseconds(10));
                     }
@@ -132,8 +142,8 @@ namespace Octopus.Tentacle.Services.Scripts
             }
 
             // If we don't have a RunningProcess we check the ScriptStateStore to see if we have persisted a script result
-            var scriptStateStore = scriptStateStoreFactory.Get(ticket, workspace);
-            if (scriptStateStore?.Exists() == true)
+            var scriptStateStore = scriptStateStoreFactory.Create(ticket, workspace);
+            if (scriptStateStore.Exists())
             {
                 var scriptState = scriptStateStore.Load();
 
