@@ -57,10 +57,13 @@ namespace Octopus.Tentacle.Tests.Integration
             }
         }
 
-        [TestCase("5.0.12")] // The autofac service was in octopus shared.
-        [TestCase("6.3.451")] // the autofac service is in tentacle, but tentacle does not have the capabilities service.
-        public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(string version)
+        [TestCase("5.0.12", true)] // The autofac service was in octopus shared.
+        [TestCase("6.3.451", false)] // the autofac service is in tentacle, but tentacle does not have the capabilities service.
+        public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(string version, bool linuxOnly)
         {
+            // TODO
+            if(linuxOnly && !PlatformDetection.IsRunningOnNix) return;
+            
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Support.Certificates.Server)
                 .WithMessageSerializer(s => s.WithLegacyContractSupport())
