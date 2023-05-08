@@ -1,6 +1,6 @@
 using System;
 
-namespace Octopus.Tentacle.Contracts
+namespace Octopus.Tentacle.Contracts.ScriptServiceV2
 {
     public class CompleteScriptCommandV2
     {

@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Scripts
             this.fileSystem = fileSystem;
         }
 
-        public ScriptStateStore Get(ScriptTicket ticket, IScriptWorkspace workspace)
+        public ScriptStateStore Create(ScriptTicket ticket, IScriptWorkspace workspace)
         {
             return new ScriptStateStore(ticket, workspace, fileSystem);
         }

@@ -316,7 +316,7 @@ namespace Octopus.Tentacle.Diagnostics
         }
 
         /// <summary>
-        /// Get the entry type for logging the message.
+        /// Create the entry type for logging the message.
         /// </summary>
         /// <param name="logEvent">The logging event - for rendering the <see cref="EntryType" /></param>
         /// <returns></returns>
@@ -343,7 +343,7 @@ namespace Octopus.Tentacle.Diagnostics
         }
 
         /// <summary>
-        /// Get the source, if and only if the source is fixed.
+        /// Create the source, if and only if the source is fixed.
         /// </summary>
         /// <returns><c>null</c> when not <see cref="SimpleLayout.IsFixedText" /></returns>
         /// <remarks>Internal for unit tests</remarks>
@@ -360,7 +360,7 @@ namespace Octopus.Tentacle.Diagnostics
         }
 
         /// <summary>
-        /// Get the eventlog to write to.
+        /// Create the eventlog to write to.
         /// </summary>
         /// <param name="logEvent">Event if the source needs to be rendered.</param>
         /// <returns></returns>

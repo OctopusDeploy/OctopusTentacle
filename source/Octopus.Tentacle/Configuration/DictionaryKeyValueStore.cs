@@ -31,7 +31,7 @@ namespace Octopus.Tentacle.Configuration
             SaveSettings(settings.Value);
 
             // we're reloading on save because at this point the dictionary may contain non-string values (i.e. int/bool/etc)
-            // after reload the dictionary will contain the formatted strings that are converted during the Get<T> call
+            // after reload the dictionary will contain the formatted strings that are converted during the Create<T> call
             // Reads vastly outnumber writes so performance is not really a concern here.
             // Also, future plan is to move as much configuration to the database as possible.
             settings = new Lazy<IDictionary<string, object?>>(Load);

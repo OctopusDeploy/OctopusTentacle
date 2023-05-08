@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Scripts
                 throw new InvalidOperationException($"ScriptState already exists at {StateFilePath}");
             }
 
-            var state = new ScriptState(scriptTicket);
+            var state = new ScriptState(scriptTicket, DateTimeOffset.UtcNow);
             var serialized = SerializeState(state);
             using var writer = GetStreamWriter(StateFilePath, FileMode.CreateNew);
             writer.Write(serialized);

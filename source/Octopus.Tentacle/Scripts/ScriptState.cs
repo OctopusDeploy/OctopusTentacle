@@ -1,21 +1,42 @@
 ﻿using System;
+using Newtonsoft.Json;
 using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Scripts
 {
     public class ScriptState
     {
-        public ScriptState(ScriptTicket scriptTicket)
+        [JsonConstructor]
+        public ScriptState(ScriptTicket scriptTicket,
+            DateTimeOffset created,
+            DateTimeOffset? started,
+            DateTimeOffset? completed,
+            ProcessState state,
+            int? exitCode,
+            bool? ranToCompletion)
         {
+            Created = created;
             ScriptTicket = scriptTicket;
+            Started = started;
+            Completed = completed;
+            State = state;
+            ExitCode = exitCode;
+            RanToCompletion = ranToCompletion;
         }
 
-        public ScriptTicket ScriptTicket { get; set; }
-        public DateTimeOffset? Started { get; set; }
-        public DateTimeOffset? Completed { get; set; }
-        public ProcessState State { get; set; } = ProcessState.Pending;
-        public int? ExitCode { get; set; }
-        public bool? RanToCompletion { get; set; }
+        public ScriptState(ScriptTicket scriptTicket, DateTimeOffset created)
+        {
+            ScriptTicket = scriptTicket;
+            Created = created;
+        }
+
+        public ScriptTicket ScriptTicket { get; }
+        public DateTimeOffset Created { get; }
+        public DateTimeOffset? Started { get; private set; }
+        public DateTimeOffset? Completed { get; private set; }
+        public ProcessState State { get; private set; } = ProcessState.Pending;
+        public int? ExitCode { get; private set; }
+        public bool? RanToCompletion { get; private set; }
 
         public bool HasStarted()
         {

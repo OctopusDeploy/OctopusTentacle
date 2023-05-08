@@ -5,6 +5,6 @@ namespace Octopus.Tentacle.Scripts
 {
     public interface IScriptStateStoreFactory
     {
-        ScriptStateStore Get(ScriptTicket ticket, IScriptWorkspace workspace);
+        ScriptStateStore Create(ScriptTicket ticket, IScriptWorkspace workspace);
     }
 }

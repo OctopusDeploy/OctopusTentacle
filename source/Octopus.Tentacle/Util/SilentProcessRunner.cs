@@ -316,7 +316,7 @@ namespace Octopus.Tentacle.Util
                 if (PlatformDetection.IsRunningOnWindows)
                     try
                     {
-                        // Get the OEM CodePage for the installation, otherwise fall back to code page 850 (DOS Western Europe)
+                        // Create the OEM CodePage for the installation, otherwise fall back to code page 850 (DOS Western Europe)
                         // https://en.wikipedia.org/wiki/Code_page_850
                         const int CP_OEMCP = 1;
                         const int dwFlags = 0;

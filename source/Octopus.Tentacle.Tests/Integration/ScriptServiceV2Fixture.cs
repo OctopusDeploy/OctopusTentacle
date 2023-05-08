@@ -12,6 +12,16 @@ using NUnit.Framework;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
+
+/* Unmerged change from project 'Octopus.Tentacle.Tests (net6.0)'
+Before:
+using Octopus.Tentacle.Diagnostics;
+After:
+using Octopus.Tentacle.Contracts.IScriptServiceV2;
+using Octopus.Tentacle.Contracts.IScriptServiceV2.IScriptServiceV2;
+using Octopus.Tentacle.Diagnostics;
+*/
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Diagnostics;
 using Octopus.Tentacle.Scripts;
 using Octopus.Tentacle.Services.Scripts;
@@ -386,13 +396,62 @@ namespace Octopus.Tentacle.Tests.Integration
             service.CompleteScript(request);
         }
 
+        [Test]
+        public async Task ShouldStoreTheStateOfTheScriptInTheScriptStateStore()
+        {
+            var testStarted = DateTimeOffset.UtcNow;
+
+            var bashScript = "sleep 10";
+            var windowsScript = "Start-Sleep -Seconds 10";
+
+            var startScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBodyForCurrentOs(windowsScript, bashScript)
+                .Build();
+
+            var scriptStateStore = SetupScriptStateStore(startScriptCommand.ScriptTicket);
+
+            var startScriptResponse = service.StartScript(startScriptCommand);
+
+            var runningScriptState = scriptStateStore.Load();
+
+            var (logs, finalResponse) = await RunUntilScriptFinishes(startScriptCommand, startScriptResponse);
+
+            var testFinished = DateTimeOffset.UtcNow;
+            var finishedScriptState = scriptStateStore.Load();
+
+            service.CompleteScript(new CompleteScriptCommandV2(startScriptCommand.ScriptTicket));
+            WriteLogsToConsole(logs);
+
+            finalResponse.State.Should().Be(ProcessState.Complete);
+            finalResponse.ExitCode.Should().Be(0);
+
+            runningScriptState.Completed.Should().BeNull();
+            runningScriptState.ExitCode.Should().BeNull();
+            runningScriptState.RanToCompletion.Should().BeNull();
+            runningScriptState.ScriptTicket.Should().BeEquivalentTo(startScriptCommand.ScriptTicket);
+            runningScriptState.Created.Should().BeOnOrAfter(testStarted).And.BeOnOrBefore(testFinished);
+
+            finishedScriptState.Completed.Should().BeOnOrAfter(testStarted.AddSeconds(5)).And.BeOnOrBefore(testFinished);
+            finishedScriptState.ExitCode.Should().Be(0);
+            finishedScriptState.RanToCompletion.Should().BeTrue();
+            finishedScriptState.ScriptTicket.Should().BeEquivalentTo(startScriptCommand.ScriptTicket);
+            finishedScriptState.Created.Should().Be(runningScriptState.Created);
+            finishedScriptState.Started.Should().BeOnOrAfter(testStarted).And.BeOnOrBefore(testFinished);
+        }
+
         // TODO - Test the stateStore is updated.
 
         private void SetupScriptState(ScriptTicket ticket)
         {
-            var workspace = workspaceFactory.GetWorkspace(ticket);
-            var stateWorkspace = stateStoreFactory.Get(ticket, workspace);
+            var stateWorkspace = SetupScriptStateStore(ticket);
             stateWorkspace.Create();
+        }
+
+        private ScriptStateStore SetupScriptStateStore(ScriptTicket ticket)
+        {
+            var workspace = workspaceFactory.GetWorkspace(ticket);
+            var stateWorkspace = stateStoreFactory.Create(ticket, workspace);
+            return stateWorkspace;
         }
 
         private void CleanupWorkspace(ScriptTicket ticket)
@@ -424,6 +483,17 @@ namespace Octopus.Tentacle.Tests.Integration
 
         async Task<(List<ProcessOutput>, ScriptStatusResponseV2)> RunUntilScriptCompletes(StartScriptCommandV2 startScriptCommand, ScriptStatusResponseV2 response)
         {
+            var (logs, lastResponse) = await RunUntilScriptFinishes(startScriptCommand, response);
+
+            service.CompleteScript(new CompleteScriptCommandV2(startScriptCommand.ScriptTicket));
+
+            WriteLogsToConsole(logs);
+
+            return (logs, lastResponse);
+        }
+
+        async Task<(List<ProcessOutput> logs, ScriptStatusResponseV2 response)> RunUntilScriptFinishes(StartScriptCommandV2 startScriptCommand, ScriptStatusResponseV2 response)
+        {
             var logs = new List<ProcessOutput>(response.Logs);
 
             while (response.State != ProcessState.Complete)
@@ -437,10 +507,6 @@ namespace Octopus.Tentacle.Tests.Integration
                     await Task.Delay(TimeSpan.FromMilliseconds(100));
                 }
             }
-
-            service.CompleteScript(new CompleteScriptCommandV2(startScriptCommand.ScriptTicket));
-
-            WriteLogsToConsole(logs);
 
             return (logs, response);
         }
