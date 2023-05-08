@@ -59,7 +59,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 try
                 {
-                    RunTentacleCommand(tentacleExe, new[] {"agent", "--config", configFilePath, $"--instance={instanceName}", "--noninteractive"}, tmp, cancellationToken);
+                    RunTentacleCommand(tentacleExe, new[] {"agent", $"--instance={instanceName}", "--noninteractive"}, tmp, cancellationToken);
                 }
                 catch (Exception e)
                 {
@@ -87,7 +87,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void AddCertificateToTentacle(string tentacleExe, string configFilePath, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommand(tentacleExe, new[] {"import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, $"--instance={instanceName}"}, tmp, cancellationToken);
+            RunTentacleCommand(tentacleExe, new[] {"import-certificate", $"--from-file={tentaclePfxPath}", $"--instance={instanceName}"}, tmp, cancellationToken);
         }
 
         private void CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
@@ -115,7 +115,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             if (exitCode != 0)
             {
-                throw new Exception("Tentacle returns non zero exit code: " + exitCode);
+                throw new Exception($"Tentacle returns non zero exit code: {exitCode} \r\nRunning: {tentacleExe} {String.Join(" ", args)}");
             }
         }
     }
