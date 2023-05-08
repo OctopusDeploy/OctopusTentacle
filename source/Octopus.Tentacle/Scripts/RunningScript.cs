@@ -69,7 +69,7 @@ namespace Octopus.Tentacle.Scripts
                         {
                             State = ProcessState.Running;
 
-                            RecordScriptHasStarted();
+                            RecordScriptHasStarted(writer);
 
                             exitCode = RunScript(shellPath, writer);
                         }
@@ -105,23 +105,52 @@ namespace Octopus.Tentacle.Scripts
             }
         }
 
-        void RecordScriptHasStarted()
+        void RecordScriptHasStarted(IScriptLogWriter writer)
         {
-            if (stateStore != null)
+            try
             {
-                var scriptState = stateStore.Load();
-                scriptState.Start();
-                stateStore.Save(scriptState);
+                if (stateStore != null)
+                {
+                    var scriptState = stateStore.Load();
+                    scriptState.Start();
+                    stateStore.Save(scriptState);
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdOut, $"Warning: An exception occurred saving the ScriptState: {ex.Message}");
+                    writer.WriteOutput(ProcessOutputSource.StdOut, ex.ToString());
+                }
+                catch
+                {
+                }
             }
         }
 
         void RecordScriptHasCompleted(int exitCode)
         {
-            if (stateStore != null)
+            try
             {
-                var scriptState = stateStore.Load();
-                scriptState.Complete(exitCode);
-                stateStore.Save(scriptState);
+                if (stateStore != null)
+                {
+                    var scriptState = stateStore.Load();
+                    scriptState.Complete(exitCode);
+                    stateStore.Save(scriptState);
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    using var writer = ScriptLog.CreateWriter();
+                    writer.WriteOutput(ProcessOutputSource.StdOut, $"Warning: An exception occurred saving the ScriptState: {ex.Message}");
+                    writer.WriteOutput(ProcessOutputSource.StdOut, ex.ToString());
+                }
+                catch
+                {
+                }
             }
         }
 
