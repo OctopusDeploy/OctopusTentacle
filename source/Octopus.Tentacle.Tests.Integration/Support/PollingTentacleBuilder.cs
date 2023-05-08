@@ -3,6 +3,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
+using Nito.AsyncEx;
+using Nito.AsyncEx.Interop;
 using NUnit.Framework;
 using Octopus.Client.Model;
 using Octopus.Tentacle.Configuration;
@@ -52,16 +54,46 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            return new RunningTestTentacle(subscriptionId, tempDirectory, cts, RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cts.Token));
-        }
-
-        private Task RunningTentacle(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
-        {
-            return Task.Run(() =>
+            try
+            {
+                return new RunningTestTentacle(subscriptionId, tempDirectory, cts, RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cts.Token));
+            }
+            catch (Exception)
             {
                 try
                 {
-                    RunTentacleCommand(tentacleExe, new[] {"agent", "--config", configFilePath, $"--instance={instanceName}", "--noninteractive"}, tmp, cancellationToken);
+                    cts.Cancel();
+                    tempDirectory.Dispose();
+                }
+                catch (Exception e)
+                {
+                    TestContext.WriteLine(e);
+                }
+
+                // Throw the interesting exception
+                throw;
+            }
+        }
+
+        private async Task<Task> RunningTentacle(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        {
+
+            var hasTentacleStarted = new ManualResetEventSlim();
+            hasTentacleStarted.Reset();
+            
+            
+            var runningTentacle =  Task.Run(() =>
+            {
+                try
+                {
+                    RunTentacleCommandOutOfProcess(tentacleExe, new[] {"agent", "--config", configFilePath, $"--instance={instanceName}", "--noninteractive"}, tmp, 
+                        s =>
+                        {
+                            if (s.Contains("Agent will not listen") || s.Contains("Agent listening on"))
+                            {
+                                hasTentacleStarted.Set();
+                            }
+                        }, cancellationToken);
                 }
                 catch (Exception e)
                 {
@@ -69,6 +101,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     throw;
                 }
             }, cancellationToken);
+
+            
+            await Task.WhenAny(runningTentacle, WaitHandleAsyncFactory.FromWaitHandle(hasTentacleStarted.WaitHandle, TimeSpan.FromMinutes(1)));
+
+            // Will throw.
+            if (runningTentacle.IsCompleted) await runningTentacle;
+
+            if (!hasTentacleStarted.IsSet)
+            {
+                throw new Exception("Tentacle did not appear to start correctly");
+            }
+
+            return runningTentacle;
         }
 
         private void ConfigureTentacleToPollOctopusServer(string configFilePath, int octopusHalibutPort, string octopusThumbprint, Uri tentaclePollSubscriptionId)
@@ -99,18 +144,27 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommandOutOfProcess(tentacleExe, args, tmp, cancellationToken);
+            RunTentacleCommandOutOfProcess(tentacleExe, args, tmp, s => {}, cancellationToken);
         }
 
-        private void RunTentacleCommandOutOfProcess(string tentacleExe, string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        private void RunTentacleCommandOutOfProcess(string tentacleExe, 
+                                string[] args,
+                                TemporaryDirectory tmp,
+                                Action<string> CommandOutput,
+                                CancellationToken cancellationToken)
         {
+            Action<string> allOutput = (s) =>
+            {
+                TestContext.WriteLine(s);
+                CommandOutput(s);
+            };
             var exitCode = SilentProcessRunner.ExecuteCommand(
                 tentacleExe,
                 String.Join(" ", args),
                 tmp.DirectoryPath,
-                TestContext.WriteLine,
-                TestContext.WriteLine,
-                TestContext.WriteLine,
+                allOutput,
+                allOutput,
+                allOutput,
                 cancellationToken);
 
             if (cancellationToken.IsCancellationRequested) return;
