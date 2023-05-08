@@ -50,14 +50,12 @@ namespace Octopus.Tentacle.Tests.Integration
             var port = octopus.Listen();
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
 
-            var cts = new CancellationTokenSource();
-
             using var tmp = new TemporaryDirectory();
             var oldTentacleExe = await TentacleFetcher.GetTentacleVersion(tmp.DirectoryPath, "6.3.451");
 
             using (var runningTentacle = new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
                        .WithTentacleExe(oldTentacleExe)
-                       .Build(cts.Token))
+                       .Build(CancellationToken.None))
             {
                 var tentacleClient = new TentacleClientBuilder(octopus)
                     .WithRemoteThumbprint(Support.Certificates.TentaclePublicThumbprint)

@@ -181,7 +181,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public Uri ServiceUri { get; }
         private TemporaryDirectory TemporaryDirectory;
         private CancellationTokenSource cts;
-        public Task Task { get; }
+        private Task Task { get; }
 
         public RunningTestTentacle(Uri serviceUri, TemporaryDirectory temporaryDirectory, CancellationTokenSource cts, Task task)
         {
@@ -196,6 +196,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             cts.Cancel();
             cts.Dispose();
             TemporaryDirectory.Dispose();
+            Task.GetAwaiter().GetResult();
         }
     }
 }
