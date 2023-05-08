@@ -19,6 +19,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         Uri? tentaclePollSubscriptionId;
         private string? tentacleExePath;
 
+        private string? CertificatePfxPath;
+        private string? TentacleThumbprint;
+
         public PollingTentacleBuilder(int octopusHalibutPort, string octopusThumbprint)
         {
             this.octopusHalibutPort = octopusHalibutPort;
@@ -28,6 +31,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public PollingTentacleBuilder WithTentaclePollSubscription(Uri tentaclePollSubscriptionId)
         {
             this.tentaclePollSubscriptionId = tentaclePollSubscriptionId;
+            return this;
+        }
+
+        public PollingTentacleBuilder WithCertificate(string CertificatePfxPath, string TentacleThumbprint)
+        {
+            this.CertificatePfxPath = CertificatePfxPath;
+            this.TentacleThumbprint = TentacleThumbprint;
             return this;
         }
 
@@ -44,8 +54,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
             var tentacleExe = this.tentacleExePath ?? TentacleExeFinder.FindTentacleExe();
             var subscriptionId = tentaclePollSubscriptionId ?? PollingSubscriptionId.Generate();
+            var CertificatePfxPath = this.CertificatePfxPath ?? Certificates.TentaclePfxPath;
+            var tentacleThumbprint = this.TentacleThumbprint ?? Certificates.TentaclePublicThumbprint;
             CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
-            AddCertificateToTentacle(tentacleExe, configFilePath, instanceName, Certificates.TentaclePfxPath, tempDirectory, cancellationToken);
+            AddCertificateToTentacle(tentacleExe, configFilePath, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(
                 configFilePath,
                 octopusHalibutPort,
@@ -56,7 +68,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             try
             {
-                return new RunningTestTentacle(subscriptionId, tempDirectory, cts, RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cts.Token));
+                var runningTentacle = RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cts.Token);
+                return new RunningTestTentacle(subscriptionId, tempDirectory, cts, runningTentacle, tentacleThumbprint);
             }
             catch (Exception)
             {
@@ -176,18 +189,20 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
     }
 
-    class RunningTestTentacle : IDisposable
+    public class RunningTestTentacle : IDisposable
     {
         public Uri ServiceUri { get; }
-        private TemporaryDirectory TemporaryDirectory;
+        private IDisposable TemporaryDirectory;
         private CancellationTokenSource cts;
-        private Task Task { get; }
+        private Task RunningTentacleTask { get; }
+        public string Thumbprint { get; }
 
-        public RunningTestTentacle(Uri serviceUri, TemporaryDirectory temporaryDirectory, CancellationTokenSource cts, Task task)
+        public RunningTestTentacle(Uri serviceUri, IDisposable temporaryDirectory, CancellationTokenSource cts, Task RunningTentacleTask, string thumbprint)
         {
             TemporaryDirectory = temporaryDirectory;
             this.cts = cts;
-            Task = task;
+            this.RunningTentacleTask = RunningTentacleTask;
+            Thumbprint = thumbprint;
             ServiceUri = serviceUri;
         }
 
@@ -196,7 +211,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             cts.Cancel();
             cts.Dispose();
             TemporaryDirectory.Dispose();
-            Task.GetAwaiter().GetResult();
+            RunningTentacleTask.GetAwaiter().GetResult();
         }
     }
 }
