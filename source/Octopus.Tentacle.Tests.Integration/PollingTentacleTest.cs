@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class PollingTentacleTest
     {
         [Test]
-        public async Task BasicCommunicationsWithWithAPollingTentacle()
+        public void BasicCommunicationsWithWithAPollingTentacle()
         {
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Support.Certificates.Server)
@@ -25,30 +25,16 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var port = octopus.Listen();
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
-            
-            var cts = new CancellationTokenSource();
-            var tentacleId = PollingSubscriptionId.Generate();
-            
-            var (disposable, runningTentacle) = new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
-                .WithTentaclePollSubscription(tentacleId)
-                .Build(cts.Token);
-            
-            using (disposable)
-            {
-                var testTask = Task.Run(() =>
-                {
-                    var tentacleClient = new TentacleClientBuilder(octopus)
-                        .WithRemoteThumbprint(Support.Certificates.TentaclePublicThumbprint)
-                        .WithServiceUri(tentacleId)
-                        .Build(CancellationToken.None);
 
-                    var res = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(new ScriptTicket("1212"), 111));
-                    res.ExitCode.Should().Be(0);
-                }, cts.Token);
-                
-                await Task.WhenAny(runningTentacle, testTask);
-                cts.Cancel();
-                await Task.WhenAll(runningTentacle, testTask);
+            using (var runningTentacle = new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
+                       .Build(CancellationToken.None))
+            {
+                var tentacleClient = new TentacleClientBuilder(octopus)
+                    .ForRunningTentacle(runningTentacle)
+                    .Build(CancellationToken.None);
+
+                var res = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(new ScriptTicket("1212"), 111));
+                res.ExitCode.Should().Be(0);
             }
         }
 
@@ -63,33 +49,19 @@ namespace Octopus.Tentacle.Tests.Integration
             var port = octopus.Listen();
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
 
-            var cts = new CancellationTokenSource();
-            var tentacleId = PollingSubscriptionId.Generate();
-
             using var tmp = new TemporaryDirectory();
             var oldTentacleExe = await TentacleFetcher.GetTentacleVersion(tmp.DirectoryPath, "6.3.451");
 
-            var (disposable, runningTentacle) = new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
-                .WithTentaclePollSubscription(tentacleId)
-                .WithTentacleExe(oldTentacleExe)
-                .Build(cts.Token);
-
-            using (disposable)
+            using (var runningTentacle = new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
+                       .WithTentacleExe(oldTentacleExe)
+                       .Build(CancellationToken.None))
             {
-                var testTask = Task.Run(() =>
-                {
-                    var tentacleClient = new TentacleClientBuilder(octopus)
-                        .WithRemoteThumbprint(Support.Certificates.TentaclePublicThumbprint)
-                        .WithServiceUri(tentacleId)
-                        .Build(CancellationToken.None);
+                var tentacleClient = new TentacleClientBuilder(octopus)
+                    .ForRunningTentacle(runningTentacle)
+                    .Build(CancellationToken.None);
 
-                    var res = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(new ScriptTicket("1212"), 111));
-                    res.ExitCode.Should().Be(0);
-                }, cts.Token);
-
-                await Task.WhenAny(runningTentacle, testTask);
-                cts.Cancel();
-                await Task.WhenAll(runningTentacle, testTask);
+                var res = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(new ScriptTicket("1212"), 111));
+                res.ExitCode.Should().Be(0);
             }
         }
     }

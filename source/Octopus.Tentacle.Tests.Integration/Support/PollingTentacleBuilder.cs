@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
+using Nito.AsyncEx.Interop;
 using NUnit.Framework;
 using Octopus.Client.Model;
 using Octopus.Tentacle.Configuration;
@@ -13,9 +14,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public class PollingTentacleBuilder
     {
         readonly int octopusHalibutPort;
-        string octopusThumbprint;
+        readonly string octopusThumbprint;
         Uri? tentaclePollSubscriptionId;
         private string? tentacleExePath;
+
+        private string? CertificatePfxPath;
+        private string? TentacleThumbprint;
 
         public PollingTentacleBuilder(int octopusHalibutPort, string octopusThumbprint)
         {
@@ -29,37 +33,77 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
+        public PollingTentacleBuilder WithCertificate(string CertificatePfxPath, string TentacleThumbprint)
+        {
+            this.CertificatePfxPath = CertificatePfxPath;
+            this.TentacleThumbprint = TentacleThumbprint;
+            return this;
+        }
+
         public PollingTentacleBuilder WithTentacleExe(string tentacleExe)
         {
             tentacleExePath = tentacleExe;
             return this;
         }
 
-        public (IDisposable, Task) Build(CancellationToken cancellationToken)
+        internal RunningTestTentacle Build(CancellationToken cancellationToken)
         {
             var tempDirectory = new TemporaryDirectory();
             var instanceName = Guid.NewGuid().ToString("N");
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
-            var tentacleExe = this.tentacleExePath ?? TentacleExeFinder.FindTentacleExe();
-
+            var tentacleExe = tentacleExePath ?? TentacleExeFinder.FindTentacleExe();
+            var subscriptionId = tentaclePollSubscriptionId ?? PollingSubscriptionId.Generate();
+            var CertificatePfxPath = this.CertificatePfxPath ?? Certificates.TentaclePfxPath;
+            var tentacleThumbprint = TentacleThumbprint ?? Certificates.TentaclePublicThumbprint;
             CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
-            AddCertificateToTentacle(tentacleExe, configFilePath, instanceName, Certificates.TentaclePfxPath, tempDirectory, cancellationToken);
+            AddCertificateToTentacle(tentacleExe, configFilePath, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(
                 configFilePath,
                 octopusHalibutPort,
                 octopusThumbprint ?? Certificates.ServerPublicThumbprint,
-                tentaclePollSubscriptionId ?? PollingSubscriptionId.Generate());
+                subscriptionId);
 
-            return (tempDirectory, RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken));
-        }
+            CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        private Task RunningTentacle(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
-        {
-            return Task.Run(() =>
+            try
+            {
+                var runningTentacle = RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cts.Token);
+                return new RunningTestTentacle(subscriptionId, tempDirectory, cts, runningTentacle, tentacleThumbprint);
+            }
+            catch (Exception)
             {
                 try
                 {
-                    RunTentacleCommand(tentacleExe, new[] {"agent", "--config", configFilePath, $"--instance={instanceName}", "--noninteractive"}, tmp, cancellationToken);
+                    cts.Cancel();
+                    tempDirectory.Dispose();
+                }
+                catch (Exception e)
+                {
+                    TestContext.WriteLine(e);
+                }
+
+                // Throw the interesting exception
+                throw;
+            }
+        }
+
+        private async Task<Task> RunningTentacle(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        {
+            var hasTentacleStarted = new ManualResetEventSlim();
+            hasTentacleStarted.Reset();
+
+            var runningTentacle = Task.Run(() =>
+            {
+                try
+                {
+                    RunTentacleCommandOutOfProcess(tentacleExe, new[] {"agent", "--config", configFilePath, $"--instance={instanceName}", "--noninteractive"}, tmp,
+                        s =>
+                        {
+                            if (s.Contains("Agent will not listen") || s.Contains("Agent listening on"))
+                            {
+                                hasTentacleStarted.Set();
+                            }
+                        }, cancellationToken);
                 }
                 catch (Exception e)
                 {
@@ -67,6 +111,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     throw;
                 }
             }, cancellationToken);
+
+            await Task.WhenAny(runningTentacle, WaitHandleAsyncFactory.FromWaitHandle(hasTentacleStarted.WaitHandle, TimeSpan.FromMinutes(1)));
+
+            // Will throw.
+            if (runningTentacle.IsCompleted) await runningTentacle;
+
+            if (!hasTentacleStarted.IsSet)
+            {
+                throw new Exception("Tentacle did not appear to start correctly");
+            }
+
+            return runningTentacle;
         }
 
         private void ConfigureTentacleToPollOctopusServer(string configFilePath, int octopusHalibutPort, string octopusThumbprint, Uri tentaclePollSubscriptionId)
@@ -97,18 +153,29 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommandOutOfProcess(tentacleExe, args, tmp, cancellationToken);
+            RunTentacleCommandOutOfProcess(tentacleExe, args, tmp, s =>
+            {
+            }, cancellationToken);
         }
 
-        private void RunTentacleCommandOutOfProcess(string tentacleExe, string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        private void RunTentacleCommandOutOfProcess(string tentacleExe,
+            string[] args,
+            TemporaryDirectory tmp,
+            Action<string> CommandOutput,
+            CancellationToken cancellationToken)
         {
+            Action<string> allOutput = s =>
+            {
+                TestContext.WriteLine(s);
+                CommandOutput(s);
+            };
             var exitCode = SilentProcessRunner.ExecuteCommand(
                 tentacleExe,
                 String.Join(" ", args),
                 tmp.DirectoryPath,
-                TestContext.WriteLine,
-                TestContext.WriteLine,
-                TestContext.WriteLine,
+                allOutput,
+                allOutput,
+                allOutput,
                 cancellationToken);
 
             if (cancellationToken.IsCancellationRequested) return;
@@ -117,6 +184,32 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 throw new Exception("Tentacle returns non zero exit code: " + exitCode);
             }
+        }
+    }
+
+    public class RunningTestTentacle : IDisposable
+    {
+        public Uri ServiceUri { get; }
+        private readonly IDisposable TemporaryDirectory;
+        private readonly CancellationTokenSource cts;
+        private Task RunningTentacleTask { get; }
+        public string Thumbprint { get; }
+
+        public RunningTestTentacle(Uri serviceUri, IDisposable temporaryDirectory, CancellationTokenSource cts, Task RunningTentacleTask, string thumbprint)
+        {
+            TemporaryDirectory = temporaryDirectory;
+            this.cts = cts;
+            this.RunningTentacleTask = RunningTentacleTask;
+            Thumbprint = thumbprint;
+            ServiceUri = serviceUri;
+        }
+
+        public void Dispose()
+        {
+            cts.Cancel();
+            cts.Dispose();
+            TemporaryDirectory.Dispose();
+            RunningTentacleTask.GetAwaiter().GetResult();
         }
     }
 }
