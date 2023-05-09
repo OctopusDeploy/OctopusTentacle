@@ -62,6 +62,10 @@ namespace Octopus.Tentacle.Contracts.Capabilities
                 return true;
             }
 
+            if (e.Message.Contains("NotRegistered")) return true;
+
+            if (e.Message.Contains(nameof(ICapabilitiesServiceV2))) return true;
+
             return false;
         }
     }

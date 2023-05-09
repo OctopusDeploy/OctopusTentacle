@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        internal RunningTestTentacle Build(CancellationToken cancellationToken)
+        internal async Task<RunningTestTentacle> Build(CancellationToken cancellationToken)
         {
             var tempDirectory = new TemporaryDirectory();
             var instanceName = Guid.NewGuid().ToString("N");
@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             try
             {
-                var runningTentacle = RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cts.Token);
+                var runningTentacle = await RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cts.Token);
                 return new RunningTestTentacle(subscriptionId, tempDirectory, cts, runningTentacle, tentacleThumbprint);
             }
             catch (Exception)
@@ -137,6 +137,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 CommunicationStyle = CommunicationStyle.TentacleActive,
                 SubscriptionId = tentaclePollSubscriptionId.ToString()
             });
+            writableTentacleConfiguration.SetApplicationDirectory(Path.Combine(new DirectoryInfo(configFilePath).Parent.FullName, "appdir"));
 
             writableTentacleConfiguration.SetNoListen(true);
         }
