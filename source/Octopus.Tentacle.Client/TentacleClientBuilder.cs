@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Halibut;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Tests.Integration.TentacleClient
 {
@@ -46,8 +47,9 @@ namespace Octopus.Tentacle.Tests.Integration.TentacleClient
 
             var scriptService = halibutRuntime.CreateClient<IScriptService>(serviceEndPoint, cancellationToken);
             var fileTransferService = halibutRuntime.CreateClient<IFileTransferService>(serviceEndPoint, cancellationToken);
+            var scriptServiceV2 = halibutRuntime.CreateClient<IScriptServiceV2>(serviceEndPoint, cancellationToken);
 
-            return new TentacleClient(scriptService, fileTransferService);
+            return new TentacleClient(scriptService, fileTransferService, scriptServiceV2);
         }
     }
 }
