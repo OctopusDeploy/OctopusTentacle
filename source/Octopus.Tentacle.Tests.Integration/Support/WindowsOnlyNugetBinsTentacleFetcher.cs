@@ -29,10 +29,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var tentacelFolder = Directory.EnumerateDirectories(dotnetversionpath).FirstOrDefault();
 
             return TentacleExeFinder.AddExeExtension(Path.Combine(tentacelFolder, "Tentacle"));
-
-
-            // netcoreapp2.2
-
         }
     }
 }
