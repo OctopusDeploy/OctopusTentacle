@@ -35,28 +35,31 @@ namespace Octopus.Tentacle.Contracts.Capabilities
         private static bool ExceptionLooksLikeTheServiceWasNotFound(HalibutClientException e)
         {
 
+            // More recent versions of tentacle threw this exception.
             if (e.Message.Contains("Octopus.Tentacle.Communications.UnknownServiceNameException")) return true;
-            
-            // Does it look like an exception from creating the service?
+
+            // All services in Halibut are constructed via an implementation of the IServiceFactory
+            // Halibut calls the CreateService() method on that interface. History[1] of that
+            // interface shows its type and package have been
+            // - Halibut.ServiceModel.CreateService(string serviceName)
+            // - Halibut.Server.ServiceModel.CreateService(string serviceName)
+            // - Halibut.Server.ServiceModel.CreateService(Type serviceType)
+            // 
+            // The CreateService method has existed since Jan 10 2013
             //
-            // When Halibut processes a request it will call `ServiceInvoker.Invoke` which finds the service and executes the request.
-            // This here detects if the exception happened within that Invoke method, if it did and the stack trace is within the CreateService method
-            // Then either:
-            //    - The service could not be found.
-            //    - The service could not be created
-            if(e.Message.Contains("Halibut.ServiceModel.ServiceInvoker.Invoke(RequestMessage requestMessage)") 
-               && e.Message.Contains("CreateService(String serviceName)"))
+            // 1. https://github.com/OctopusDeploy/Halibut/commits/main/source/Halibut/ServiceModel/IServiceFactory.cs
+            //
+            // This here assumes that in tentacle any failure in CreateService means that the service could not be found. 
+            if(e.Message.Contains("CreateService("))
             {
+                // Return 
                 if (e.Message.Contains("The Tentacle service is shutting down and cannot process this request.")
                     || e.Message.Contains("ObjectDisposedException"))
                 {
                     return false;
                 }
-                // Assume any inability to create or find the service with autofac means it does not exist.
-                if (e.Message.ToLower().Contains("autofac"))
-                {
-                    return true;
-                }
+
+                return true;
             }
 
             return false;
