@@ -28,7 +28,10 @@ namespace Octopus.Tentacle.Tests.Integration
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
 
             using var tmp = new TemporaryDirectory();
+
             var oldTentacleExe = version == null ? TentacleExeFinder.FindTentacleExe() : await TentacleFetcher.GetTentacleVersion(tmp.DirectoryPath, version);
+
+            //var oldTentacleExe = @"C:\tmp\WasUp\Tentacle.Binaries.win-x64.5.0.0\build\netcoreapp2.2\Tentacle\Tentacle.exe";
 
             using (var runningTentacle = await new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
                        .WithTentacleExe(oldTentacleExe)

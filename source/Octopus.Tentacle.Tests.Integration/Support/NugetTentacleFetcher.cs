@@ -10,6 +10,10 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
+    /// <summary>
+    /// Downloads tentacle from the cross platform nuget package
+    /// Earliest version supported: 6.0.174
+    /// </summary>
     public class NugetTentacleFetcher : ITentacleFetcher
     {
         static string DownloadUrlForVersion(string versionString) => $"https://f.feedz.io/octopus-deploy/dependencies/packages/Octopus.Tentacle.CrossPlatformBundle/{versionString}/download";

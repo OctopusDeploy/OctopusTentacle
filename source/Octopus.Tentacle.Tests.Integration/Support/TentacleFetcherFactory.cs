@@ -7,8 +7,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         private ITentacleFetcher GetBase()
         {
-            if (PlatformDetection.IsRunningOnNix) return new LinuxTentacleFetcher();
-            return new NugetTentacleFetcher();
+            return new VersionDependentTentacleFetcher();
         }
 
         public ITentacleFetcher Create()
