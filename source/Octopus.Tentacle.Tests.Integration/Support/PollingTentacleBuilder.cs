@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        internal RunningTestTentacle Build(CancellationToken cancellationToken)
+        internal async Task<RunningTestTentacle> Build(CancellationToken cancellationToken)
         {
             var tempDirectory = new TemporaryDirectory();
             var instanceName = Guid.NewGuid().ToString("N");
@@ -63,19 +63,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 octopusThumbprint ?? Certificates.ServerPublicThumbprint,
                 subscriptionId);
 
-            CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
+            Func<CancellationToken, Task<Task>> startTentacle = token => RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, token);  
+            var runningTentacle =  new RunningTestTentacle(subscriptionId, tempDirectory, startTentacle, tentacleThumbprint);
             try
             {
-                var runningTentacle = RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cts.Token);
-                return new RunningTestTentacle(subscriptionId, tempDirectory, cts, runningTentacle, tentacleThumbprint);
+                await runningTentacle.Start(cancellationToken);
+                return runningTentacle;
             }
             catch (Exception)
             {
                 try
                 {
-                    cts.Cancel();
-                    tempDirectory.Dispose();
+                    runningTentacle.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -191,25 +190,50 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public Uri ServiceUri { get; }
         private readonly IDisposable TemporaryDirectory;
-        private readonly CancellationTokenSource cts;
-        private Task RunningTentacleTask { get; }
+        private CancellationTokenSource? cts;
+        private Task? RunningTentacleTask { get; set; }
+        private Func<CancellationToken, Task<Task>> startTentacle;
         public string Thumbprint { get; }
 
-        public RunningTestTentacle(Uri serviceUri, IDisposable temporaryDirectory, CancellationTokenSource cts, Task RunningTentacleTask, string thumbprint)
+        public RunningTestTentacle(Uri serviceUri, 
+            IDisposable temporaryDirectory,
+            Func<CancellationToken, Task<Task>> startTentacle
+            , string thumbprint)
         {
             TemporaryDirectory = temporaryDirectory;
-            this.cts = cts;
-            this.RunningTentacleTask = RunningTentacleTask;
+            this.startTentacle = startTentacle;
             Thumbprint = thumbprint;
             ServiceUri = serviceUri;
         }
 
+        public async Task Start(CancellationToken cancellationToken)
+        {
+            await Task.CompletedTask;
+            if (RunningTentacleTask != null) throw new Exception("Tentacle is already running, call stop() first");
+
+            cts = new CancellationTokenSource();
+
+            RunningTentacleTask = await startTentacle(cts.Token);
+        }
+
+        public async Task Stop(CancellationToken cancellationToken)
+        {
+            if (cts != null)
+            {
+                cts.Cancel();
+                cts.Dispose();
+                cts = null;
+            }
+
+            var t = RunningTentacleTask;
+            RunningTentacleTask = null;
+            await t;
+        }
+
         public void Dispose()
         {
-            cts.Cancel();
-            cts.Dispose();
+            if (RunningTentacleTask != null) Stop(CancellationToken.None).GetAwaiter().GetResult();
             TemporaryDirectory.Dispose();
-            RunningTentacleTask.GetAwaiter().GetResult();
         }
     }
 }
