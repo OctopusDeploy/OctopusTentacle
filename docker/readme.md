@@ -2,7 +2,7 @@ This image can be used to bring up an [Octopus Tentacle in a container](https://
 
 # Pre-Requisites
 
-Docker containers are supported on Windows Server 2016 and Windows 10. 
+Docker containers are supported on Windows Server 2016 or later and Windows 10 or later. 
 
 Make sure you've enabled the containers feature:
 
