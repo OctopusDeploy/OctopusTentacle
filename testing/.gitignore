@@ -1,0 +1,6 @@
+﻿.vs
+.vagrant
+.env
+compatability/docker/config.generated.json
+compatability/docker/docker-compose.yml
+compatability/docker/config.json

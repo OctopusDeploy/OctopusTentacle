@@ -1,0 +1,66 @@
+version: '3.8'
+services:    
+{{#versions}}
+{{#pollingDeploymentTargets}}
+    pollingDeploymentTarget{{version}}:
+        image: "octopusdeploy/tentacle:{{version}}"       
+        privileged: true 
+        environment:
+            TargetName: "DockerPollingDeploymentTarget.{{version}}"
+            Space: ${space}
+            TargetEnvironment: "${environment}"
+            TargetRole: "${pollingRole}"
+            ACCEPT_EULA: "Y"
+            ServerPort: "${serverPollingPort}"
+            ServerApiKey: ${serverApiKey}
+            ServerUrl: "${serverUrl}"
+{{/pollingDeploymentTargets}}
+{{#listeningDeploymentTargets}}
+    listeningDeploymentTarget{{version}}:
+        image: "octopusdeploy/tentacle:{{version}}"
+        privileged: true
+        environment:
+            TargetName: "DockerListeningDeploymentTarget.{{version}}"
+            Space: ${space}
+            TargetEnvironment: "${environment}"
+            TargetRole: "${listeningRole}"
+            ACCEPT_EULA: "Y"
+            ListeningPort: "{{deploymentTargetListeningPort}}"
+            ServerApiKey: ${serverApiKey}
+            ServerUrl: "${serverUrl}"
+            PublicHostNameConfiguration: "Custom"
+            CustomPublicHostName: "${CustomPublicHostName}"
+        ports: 
+            - "{{deploymentTargetListeningPort}}:10933"
+{{/listeningDeploymentTargets}}
+{{#pollingWorkers}}
+    pollingWorker{{version}}:
+        image: "octopusdeploy/tentacle:{{version}}"       
+        privileged: true 
+        environment:
+            TargetName: "DockerPollingWorker.{{version}}"
+            TargetWorkerPool: "${workerPool}"
+            Space: ${space}
+            ACCEPT_EULA: "Y"
+            ServerPort: "${serverPollingPort}"
+            ServerApiKey: ${serverApiKey}
+            ServerUrl: "${serverUrl}"
+{{/pollingWorkers}}
+{{#listeningWorkers}}
+    listeningWorker{{version}}:
+        image: "octopusdeploy/tentacle:{{version}}"
+        privileged: true
+        environment:
+            TargetName: "DockerListeningWorker.{{version}}"
+            TargetWorkerPool: "${workerPool}"
+            Space: ${space}            
+            ACCEPT_EULA: "Y"
+            ListeningPort: "{{workerListeningPort}}"
+            ServerApiKey: ${serverApiKey}
+            ServerUrl: "${serverUrl}"
+            PublicHostNameConfiguration: "Custom"
+            CustomPublicHostName: "${CustomPublicHostName}"
+        ports: 
+            - "{{workerListeningPort}}:10933"
+{{/listeningWorkers}}
+{{/versions}}
