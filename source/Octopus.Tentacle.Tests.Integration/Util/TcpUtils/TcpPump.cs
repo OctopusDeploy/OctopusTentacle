@@ -19,15 +19,17 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
         bool isDisposing;
         bool isDisposed;
         public bool IsPaused { get; set; }
-        
+        private Func<BiDirectionalDataTransferObserver> factory;
 
-        public TcpPump(Socket clientSocket, Socket originSocket, EndPoint originEndPoint, TimeSpan sendDelay, ILogger logger)
+
+        public TcpPump(Socket clientSocket, Socket originSocket, EndPoint originEndPoint, TimeSpan sendDelay, Func<BiDirectionalDataTransferObserver> factory, ILogger logger)
         {
             this.logger = logger.ForContext<TcpPump>(); 
             this.clientSocket = clientSocket ?? throw new ArgumentNullException(nameof(clientSocket));
             this.originSocket = originSocket ?? throw new ArgumentNullException(nameof(originSocket));
             this.originEndPoint = originEndPoint ?? throw new ArgumentNullException(nameof(originEndPoint));
             this.sendDelay = sendDelay;
+            this.factory = factory;
             clientEndPoint = clientSocket.RemoteEndPoint ?? throw new ArgumentException("Remote endpoint is null", nameof(clientSocket));
         }
 
@@ -46,9 +48,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                     {
                         await originSocket.ConnectAsync(originEndPoint).ConfigureAwait(false);
 
+                        var biDirectionalCallBack = factory();
                         // If the connection was ok, then set-up a pump both ways
-                        var pump1 = Task.Run(async () => await PumpBytes(clientSocket, originSocket, new SocketPump(() => this.IsPaused, sendDelay), cancellationToken).ConfigureAwait(false), cancellationToken);
-                        var pump2 = Task.Run(async () => await PumpBytes(originSocket, clientSocket, new SocketPump(() => this.IsPaused, sendDelay), cancellationToken).ConfigureAwait(false), cancellationToken);
+                        var pump1 = Task.Run(async () => await PumpBytes(clientSocket, originSocket, new SocketPump(this, () => this.IsPaused, sendDelay, biDirectionalCallBack.DataTransferObserverClientToOrigin), cancellationToken).ConfigureAwait(false), cancellationToken);
+                        var pump2 = Task.Run(async () => await PumpBytes(originSocket, clientSocket, new SocketPump(this, () => this.IsPaused, sendDelay, biDirectionalCallBack.DataTransferObserverOriginToClient), cancellationToken).ConfigureAwait(false), cancellationToken);
 
                         // When one is finished, they are both "done" so stop them
                         await Task.WhenAny(pump1, pump2).ConfigureAwait(false);
@@ -118,9 +121,18 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             cancellationTokenSource.Cancel();
             cancellationTokenSource.Dispose();
             isDisposed = true;
+
+            try
+            {
+                clientSocket.Shutdown(SocketShutdown.Both);
+                clientSocket.Close();
+            }
+            finally
+            {
+                originSocket.Shutdown(SocketShutdown.Both);
+                originSocket.Close();
+            }
             
-            clientSocket.Close();
-            originSocket.Close();
         }
 
         public void Pause()

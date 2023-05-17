@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 throw new Exception("Tentacle is already running, call stop() first");
             }
 
-            cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
             var (rtt, serviceUri) = await startTentacleFunction(cancellationTokenSource.Token);
 
@@ -52,6 +52,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var t = runningTentacleTask;
             runningTentacleTask = null;
             await t;
+        }
+
+        public async Task Restart(CancellationToken cancellationToken)
+        {
+            await Stop(cancellationToken);
+            await Start(cancellationToken);
         }
 
         public void Dispose()

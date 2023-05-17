@@ -1,12 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Scripts;
+using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Util;
 
-namespace Octopus.Tentacle.Tests.Integration
+namespace Octopus.Tentacle.CommonTestUtils.Builders
 {
     public class StartScriptCommandV2Builder
     {
@@ -30,6 +31,12 @@ namespace Octopus.Tentacle.Tests.Integration
         public StartScriptCommandV2Builder WithScriptBodyForCurrentOs(string windowsScript, string bashScript)
         {
             this.scriptBody = new StringBuilder(PlatformDetection.IsRunningOnWindows ? windowsScript : bashScript);
+            return this;
+        }
+
+        public StartScriptCommandV2Builder WithScriptBody(ScriptBuilder scriptBuilder)
+        {
+            scriptBody = new StringBuilder(scriptBuilder.BuildForCurrentOs());
             return this;
         }
 

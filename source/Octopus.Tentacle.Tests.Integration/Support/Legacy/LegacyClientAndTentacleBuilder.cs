@@ -1,9 +1,8 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Tentacle.Contracts.Legacy;
-using Octopus.Tentacle.Tests.Integration.Util;
+using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 {
