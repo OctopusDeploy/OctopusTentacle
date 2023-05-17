@@ -9,6 +9,7 @@ namespace Octopus.Tentacle.Scripts
     public class RunningScript
     {
         readonly IScriptWorkspace workspace;
+        readonly IScriptStateStore? stateStore;
         readonly IShell shell;
         readonly string taskId;
         readonly CancellationToken token;
@@ -16,6 +17,7 @@ namespace Octopus.Tentacle.Scripts
 
         public RunningScript(IShell shell,
             IScriptWorkspace workspace,
+            IScriptStateStore? stateStore,
             IScriptLog scriptLog,
             string taskId,
             CancellationToken token,
@@ -23,11 +25,21 @@ namespace Octopus.Tentacle.Scripts
         {
             this.shell = shell;
             this.workspace = workspace;
+            this.stateStore = stateStore;
             this.taskId = taskId;
             this.token = token;
             this.log = log;
-            ScriptLog = scriptLog;
-            State = ProcessState.Pending;
+            this.ScriptLog = scriptLog;
+            this.State = ProcessState.Pending;
+        }
+
+        public RunningScript(IShell shell,
+            IScriptWorkspace workspace,
+            IScriptLog scriptLog,
+            string taskId,
+            CancellationToken token,
+            ILog log) : this(shell, workspace, null, scriptLog, taskId, token, log)
+        {
         }
 
         public ProcessState State { get; private set; }
@@ -37,6 +49,8 @@ namespace Octopus.Tentacle.Scripts
 
         public void Execute()
         {
+            var exitCode = -1;
+
             try
             {
                 var shellPath = shell.GetFullPath();
@@ -46,44 +60,104 @@ namespace Octopus.Tentacle.Scripts
                     try
                     {
                         using (ScriptIsolationMutex.Acquire(workspace.IsolationLevel,
-                            workspace.ScriptMutexAcquireTimeout,
-                            workspace.ScriptMutexName ?? nameof(RunningScript),
-                            message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
-                            taskId,
-                            token,
-                            log))
+                                   workspace.ScriptMutexAcquireTimeout,
+                                   workspace.ScriptMutexName ?? nameof(RunningScript),
+                                   message => writer.WriteOutput(ProcessOutputSource.StdOut, message),
+                                   taskId,
+                                   token,
+                                   log))
                         {
-                            RunScript(shellPath, writer);
+                            State = ProcessState.Running;
+
+                            RecordScriptHasStarted(writer);
+
+                            exitCode = RunScript(shellPath, writer);
                         }
                     }
                     catch (OperationCanceledException)
                     {
                         writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution canceled.");
-                        ExitCode = ScriptExitCodes.CanceledExitCode;
-                        State = ProcessState.Complete;
+                        exitCode = ScriptExitCodes.CanceledExitCode;
                     }
                     catch (TimeoutException)
                     {
                         writer.WriteOutput(ProcessOutputSource.StdOut, "Script execution timed out.");
-                        ExitCode = ScriptExitCodes.TimeoutExitCode;
-                        State = ProcessState.Complete;
+                        exitCode = ScriptExitCodes.TimeoutExitCode;
                     }
                 }
             }
             catch (Exception)
             {
                 // Something went really really wrong, probably creating or writing to the log file (Disk space)
-                ExitCode = ScriptExitCodes.FatalExitCode;
-                State = ProcessState.Complete;
+                exitCode = ScriptExitCodes.FatalExitCode;
+            }
+            finally
+            {
+                try
+                {
+                    RecordScriptHasCompleted(exitCode);
+                }
+                finally
+                {
+                    ExitCode = exitCode;
+                    State = ProcessState.Complete;
+                }
             }
         }
 
-        void RunScript(string shellPath, IScriptLogWriter writer)
+        void RecordScriptHasStarted(IScriptLogWriter writer)
         {
             try
             {
-                State = ProcessState.Running;
+                if (stateStore != null)
+                {
+                    var scriptState = stateStore.Load();
+                    scriptState.Start();
+                    stateStore.Save(scriptState);
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    writer.WriteOutput(ProcessOutputSource.StdOut, $"Warning: An exception occurred saving the ScriptState: {ex.Message}");
+                    writer.WriteOutput(ProcessOutputSource.StdOut, ex.ToString());
+                }
+                catch
+                {
+                }
+            }
+        }
 
+        void RecordScriptHasCompleted(int exitCode)
+        {
+            try
+            {
+                if (stateStore != null)
+                {
+                    var scriptState = stateStore.Load();
+                    scriptState.Complete(exitCode);
+                    stateStore.Save(scriptState);
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    using var writer = ScriptLog.CreateWriter();
+                    writer.WriteOutput(ProcessOutputSource.StdOut, $"Warning: An exception occurred saving the ScriptState: {ex.Message}");
+                    writer.WriteOutput(ProcessOutputSource.StdOut, ex.ToString());
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        int RunScript(string shellPath, IScriptLogWriter writer)
+        {
+            try
+            {
                 var exitCode = SilentProcessRunner.ExecuteCommand(
                     shellPath,
                     shell.FormatCommandArguments(workspace.BootstrapScriptFilePath, workspace.ScriptArguments, false),
@@ -93,15 +167,14 @@ namespace Octopus.Tentacle.Scripts
                     output => writer.WriteOutput(ProcessOutputSource.StdErr, output),
                     token);
 
-                ExitCode = exitCode;
-                State = ProcessState.Complete;
+                return exitCode;
             }
             catch (Exception ex)
             {
                 writer.WriteOutput(ProcessOutputSource.StdErr, "An exception was thrown when invoking " + shellPath + ": " + ex.Message);
                 writer.WriteOutput(ProcessOutputSource.StdErr, ex.ToString());
-                ExitCode = ScriptExitCodes.PowershellInvocationErrorExitCode;
-                State = ProcessState.Complete;
+
+                return ScriptExitCodes.PowershellInvocationErrorExitCode;
             }
         }
     }
