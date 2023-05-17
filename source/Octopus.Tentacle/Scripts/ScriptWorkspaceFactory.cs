@@ -86,12 +86,16 @@ namespace Octopus.Tentacle.Scripts
             }
         }
 
-
         string FindWorkingDirectory(ScriptTicket ticket)
         {
-            var work = fileSystem.GetFullPath(Path.Combine(home.HomeDirectory ?? "", "Work", ticket.TaskId));
+            var work = GetWorkingDirectoryPath(ticket);
             fileSystem.EnsureDirectoryExists(work);
             return work;
+        }
+
+        public string GetWorkingDirectoryPath(ScriptTicket ticket)
+        {
+            return fileSystem.GetFullPath(Path.Combine(home.HomeDirectory ?? "", "Work", ticket.TaskId));
         }
     }
 }

@@ -9,14 +9,10 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
     public class StartScriptCommandBuilder
     {
         readonly List<ScriptFile> files = new List<ScriptFile>();
-
         readonly List<string> arguments = new List<string>();
-
         readonly Dictionary<ScriptType, string> additionalScripts = new Dictionary<ScriptType, string>();
         StringBuilder scriptBody = new StringBuilder(string.Empty);
-
         ScriptIsolationLevel isolation = ScriptIsolationLevel.FullIsolation;
-
         TimeSpan scriptIsolationMutexTimeout = ScriptIsolationMutex.NoTimeout;
         string scriptIsolationMutexName = nameof(RunningScript);
         string? taskId;
@@ -24,19 +20,6 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
         public StartScriptCommandBuilder WithScriptBody(string scriptBody)
         {
             this.scriptBody = new StringBuilder(scriptBody);
-            return this;
-        }
-
-        public StartScriptCommandBuilder WithReplacementInScriptBody(string oldValue, string newValue)
-        {
-            scriptBody.Replace(oldValue, newValue);
-            return this;
-        }
-
-        public StartScriptCommandBuilder WithReplacementInAdditionalScriptBody(ScriptType scriptType, string oldValue, string newValue)
-        {
-            if (additionalScripts.ContainsKey(scriptType))
-                additionalScripts[scriptType] = additionalScripts[scriptType].Replace(oldValue, newValue);
             return this;
         }
 
