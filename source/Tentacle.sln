@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Tests.Inte
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Client", "Octopus.Tentacle.Client\Octopus.Tentacle.Client.csproj", "{506D425E-10F0-49A1-826C-8B704B7140B2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Tests.Common", "Octopus.Tentacle.Tests.Common\Octopus.Tentacle.Tests.Common.csproj", "{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -175,6 +177,26 @@ Global
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release-net6.0-linux-arm|Any CPU.Build.0 = Debug|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release-net6.0-osx-x64|Any CPU.ActiveCfg = Debug|Any CPU
 		{506D425E-10F0-49A1-826C-8B704B7140B2}.Release-net6.0-osx-x64|Any CPU.Build.0 = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net48-win|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net48-win|Any CPU.Build.0 = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-win-x86|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-win-x86|Any CPU.Build.0 = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-win-x64|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-win-x64|Any CPU.Build.0 = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-linux-arm64|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-linux-arm64|Any CPU.Build.0 = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-linux-musl-x64|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-linux-musl-x64|Any CPU.Build.0 = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-linux-x64|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-linux-x64|Any CPU.Build.0 = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-linux-arm|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-linux-arm|Any CPU.Build.0 = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-osx-x64|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}.Release-net6.0-osx-x64|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

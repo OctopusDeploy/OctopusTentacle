@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <PropertyGroup Condition="!$([MSBuild]::IsOSUnixLike())">
+        <TargetFrameworks>net48;net6.0</TargetFrameworks>
+    </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSUnixLike())">
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
+      <ProjectReference Include="..\Octopus.Tentacle\Octopus.Tentacle.csproj" />
+    </ItemGroup>
+
+</Project>
