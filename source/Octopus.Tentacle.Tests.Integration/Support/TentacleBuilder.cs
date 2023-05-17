@@ -6,6 +6,7 @@ using Autofac;
 using Nito.AsyncEx.Interop;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -168,9 +169,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             Action<string> commandOutput,
             CancellationToken cancellationToken)
         {
+            var log = new SerilogLoggerBuilder().Build().ForContext<RunningTentacle>();
             void AllOutput(string s)
             {
-                TestContext.WriteLine(s);
+                log.Information("[Tentacle] " + s);
                 commandOutput(s);
             }
 

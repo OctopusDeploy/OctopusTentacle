@@ -16,14 +16,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
         readonly List<TcpPump> pumps = new List<TcpPump>();
         readonly ILogger logger;
         readonly TimeSpan sendDelay;
+        private Func<BiDirectionalDataTransferObserver> factory;
         
         public int ListeningPort { get; }
 
-        public PortForwarder(Uri originServer, TimeSpan sendDelay)
+        public PortForwarder(Uri originServer, TimeSpan sendDelay, Func<BiDirectionalDataTransferObserver> factory)
         {
             logger = new SerilogLoggerBuilder().Build().ForContext<PortForwarder>();
             this.originServer = originServer;
             this.sendDelay = sendDelay;
+            this.factory = factory;
             var scheme = originServer.Scheme;
 
             listeningSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -52,7 +54,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                     var originEndPoint = new DnsEndPoint(originServer.Host, originServer.Port);
                     var originSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
-                    var pump = new TcpPump(clientSocket, originSocket, originEndPoint, sendDelay, logger);
+                    var pump = new TcpPump(clientSocket, originSocket, originEndPoint, sendDelay, factory, logger);
                     pump.Stopped += OnPortForwarderStopped;
                     lock (pumps)
                     {
