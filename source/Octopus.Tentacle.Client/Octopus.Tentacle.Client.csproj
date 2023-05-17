@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <RootNamespace>Octopus.Tentacle.Client</RootNamespace>
         <AssemblyName>Octopus.Tentacle.Client</AssemblyName>
@@ -11,9 +11,6 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>9</LangVersion>
         <Nullable>enable</Nullable>
-    </PropertyGroup>
-    <PropertyGroup>
-        <DefineConstants>DEFINE_VERSION_ATTRIBUTES</DefineConstants>
     </PropertyGroup>
     <Choose>
         <When Condition="'$(TargetFramework)' == 'net48'">
@@ -28,6 +25,14 @@
         </Otherwise>
     </Choose>
     <ItemGroup>
-        <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
+      <Compile Include="..\Solution Items\SolutionInfo.cs" Link="SolutionInfo.cs" />
+      <Compile Include="..\Solution Items\VersionInfo.cs" Link="VersionInfo.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Polly" Version="7.2.2" />
+        <PackageReference Include="Octopus.Diagnostics" Version="2.1.0" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
     </ItemGroup>
 </Project>

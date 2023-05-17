@@ -1,10 +1,10 @@
-using Octopus.Tentacle.Tests.Integration.TentacleClient;
+using Octopus.Tentacle.Client;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public static class TentacleClientBuilderExtensionMethods
     {
-        public static TentacleClientBuilder ForRunningTentacle(this TentacleClientBuilder tentacleClientBuilder, RunningTentacle runningTentacle)
+        internal static LegacyTentacleClientBuilder ForRunningTentacle(this LegacyTentacleClientBuilder tentacleClientBuilder, RunningTentacle runningTentacle)
         {
             return tentacleClientBuilder
                 .WithServiceUri(runningTentacle.ServiceUri)

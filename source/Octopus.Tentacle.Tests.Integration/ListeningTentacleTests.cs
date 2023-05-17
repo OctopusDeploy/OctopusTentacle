@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
@@ -7,7 +6,6 @@ using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support;
-using Octopus.Tentacle.Tests.Integration.TentacleClient;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -26,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Integration
             using var runningTentacle = await new ListeningTentacleBuilder(Support.Certificates.ServerPublicThumbprint)
                 .Build(CancellationToken.None);
 
-            var tentacleClient = new TentacleClientBuilder(octopus)
+            var tentacleClient = new LegacyTentacleClientBuilder(octopus)
                 .WithServiceUri(runningTentacle.ServiceUri)
                 .WithRemoteThumbprint(runningTentacle.Thumbprint)
                 .Build(CancellationToken.None);
@@ -52,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleExe(oldTentacleExe)
                 .Build(CancellationToken.None);
 
-            var tentacleClient = new TentacleClientBuilder(octopus)
+            var tentacleClient = new LegacyTentacleClientBuilder(octopus)
                 .WithServiceUri(runningTentacle.ServiceUri)
                 .WithRemoteThumbprint(runningTentacle.Thumbprint)
                 .Build(CancellationToken.None);

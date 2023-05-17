@@ -4,38 +4,38 @@ using Halibut;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 
-namespace Octopus.Tentacle.Tests.Integration.TentacleClient
+namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public class TentacleClientBuilder
+    internal class LegacyTentacleClientBuilder
     {
         IHalibutRuntime? halibutRuntime;
         Uri? serviceUri;
         string? remoteThumbprint;
 
-        public TentacleClientBuilder()
+        public LegacyTentacleClientBuilder()
         {
         }
 
-        public TentacleClientBuilder(IHalibutRuntime halibutRuntime)
+        public LegacyTentacleClientBuilder(IHalibutRuntime halibutRuntime)
         {
             this.halibutRuntime = halibutRuntime;
         }
 
-        public TentacleClientBuilder WithServiceUri(Uri serviceUri)
+        public LegacyTentacleClientBuilder WithServiceUri(Uri serviceUri)
         {
             this.serviceUri = serviceUri;
 
             return this;
         }
 
-        public TentacleClientBuilder WithRemoteThumbprint(string remoteThumbprint)
+        public LegacyTentacleClientBuilder WithRemoteThumbprint(string remoteThumbprint)
         {
             this.remoteThumbprint = remoteThumbprint;
 
             return this;
         }
 
-        public TentacleClient Build(CancellationToken cancellationToken)
+        public LegacyTentacleClient Build(CancellationToken cancellationToken)
         {
             var serviceEndPoint = new ServiceEndPoint(this.serviceUri, this.remoteThumbprint);
 
@@ -49,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Integration.TentacleClient
             var fileTransferService = halibutRuntime.CreateClient<IFileTransferService>(serviceEndPoint, cancellationToken);
             var capabilitiesServiceV2 = halibutRuntime.CreateClient<ICapabilitiesServiceV2>(serviceEndPoint, cancellationToken).WithBackwardsCompatability();
 
-            return new TentacleClient(scriptService, fileTransferService, capabilitiesServiceV2);
+            return new LegacyTentacleClient(scriptService, fileTransferService, capabilitiesServiceV2);
         }
     }
 }

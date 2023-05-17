@@ -6,7 +6,6 @@ using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support;
-using Octopus.Tentacle.Tests.Integration.TentacleClient;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -26,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration
             using var runningTentacle = await new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
                 .Build(CancellationToken.None);
 
-            var tentacleClient = new TentacleClientBuilder(octopus)
+            var tentacleClient = new LegacyTentacleClientBuilder(octopus)
                 .ForRunningTentacle(runningTentacle)
                 .Build(CancellationToken.None);
 
@@ -52,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleExe(oldTentacleExe)
                 .Build(CancellationToken.None);
 
-            var tentacleClient = new TentacleClientBuilder(octopus)
+            var tentacleClient = new LegacyTentacleClientBuilder(octopus)
                 .ForRunningTentacle(runningTentacle)
                 .Build(CancellationToken.None);
 

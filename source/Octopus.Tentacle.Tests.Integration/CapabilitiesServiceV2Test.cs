@@ -6,7 +6,6 @@ using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support;
-using Octopus.Tentacle.Tests.Integration.TentacleClient;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -34,7 +33,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleExe(oldTentacleExe)
                 .Build(cts);
 
-            var tentacleClient = new TentacleClientBuilder(octopus)
+            var tentacleClient = new LegacyTentacleClientBuilder(octopus)
                 .ForRunningTentacle(runningTentacle)
                 .Build(cts);
 
