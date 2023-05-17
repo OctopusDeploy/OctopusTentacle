@@ -46,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        internal RunningTestTentacle Build(CancellationToken cancellationToken)
+        internal async Task<RunningTestTentacle> Build(CancellationToken cancellationToken)
         {
             var tempDirectory = new TemporaryDirectory();
             var instanceName = Guid.NewGuid().ToString("N");
@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             try
             {
-                var runningTentacle = RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cts.Token);
+                var runningTentacle = await RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, cts.Token);
                 return new RunningTestTentacle(subscriptionId, tempDirectory, cts, runningTentacle, tentacleThumbprint);
             }
             catch (Exception)
@@ -96,7 +96,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 try
                 {
-                    RunTentacleCommandOutOfProcess(tentacleExe, new[] {"agent", "--config", configFilePath, $"--instance={instanceName}", "--noninteractive"}, tmp,
+                    RunTentacleCommandOutOfProcess(tentacleExe, new[] {"agent", $"--instance={instanceName}", "--noninteractive"}, tmp,
                         s =>
                         {
                             if (s.Contains("Agent will not listen") || s.Contains("Agent listening on"))
@@ -137,13 +137,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 CommunicationStyle = CommunicationStyle.TentacleActive,
                 SubscriptionId = tentaclePollSubscriptionId.ToString()
             });
+            writableTentacleConfiguration.SetApplicationDirectory(Path.Combine(new DirectoryInfo(configFilePath).Parent.FullName, "appdir"));
 
             writableTentacleConfiguration.SetNoListen(true);
         }
 
         private void AddCertificateToTentacle(string tentacleExe, string configFilePath, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommand(tentacleExe, new[] {"import-certificate", $"--from-file={tentaclePfxPath}", "--config", configFilePath, $"--instance={instanceName}"}, tmp, cancellationToken);
+            RunTentacleCommand(tentacleExe, new[] {"import-certificate", $"--from-file={tentaclePfxPath}", $"--instance={instanceName}"}, tmp, cancellationToken);
         }
 
         private void CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)

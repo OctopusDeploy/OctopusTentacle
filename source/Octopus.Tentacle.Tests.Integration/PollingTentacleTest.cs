@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class PollingTentacleTest
     {
         [Test]
-        public void BasicCommunicationsWithWithAPollingTentacle()
+        public async Task BasicCommunicationsWithWithAPollingTentacle()
         {
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Support.Certificates.Server)
@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var port = octopus.Listen();
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
 
-            using (var runningTentacle = new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
+            using (var runningTentacle = await new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
                        .Build(CancellationToken.None))
             {
                 var tentacleClient = new TentacleClientBuilder(octopus)
@@ -52,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Integration
             using var tmp = new TemporaryDirectory();
             var oldTentacleExe = await TentacleFetcher.GetTentacleVersion(tmp.DirectoryPath, "6.3.451");
 
-            using (var runningTentacle = new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
+            using (var runningTentacle = await new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
                        .WithTentacleExe(oldTentacleExe)
                        .Build(CancellationToken.None))
             {

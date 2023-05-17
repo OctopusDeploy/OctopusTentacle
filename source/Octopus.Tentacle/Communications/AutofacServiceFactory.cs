@@ -14,6 +14,8 @@ namespace Octopus.Tentacle.Communications
     /// </summary>
     public class AutofacServiceFactory : IServiceFactory, IDisposable
     {
+        // Must never be modified as it is required for backwards compatability in BackwardsCompatibleCapabilitiesV2Decorator
+        const string TentacleServiceShuttingDownMessage = "The Tentacle service is shutting down and cannot process this request.";
         readonly ILifetimeScope scope;
         readonly Dictionary<string, Type> serviceTypes = new Dictionary<string, Type>();
 
@@ -57,7 +59,7 @@ namespace Octopus.Tentacle.Communications
             }
             catch (ObjectDisposedException)
             {
-                throw new Exception("The Tentacle service is shutting down and cannot process this request.");
+                throw new Exception(TentacleServiceShuttingDownMessage);
             }
         }
 
