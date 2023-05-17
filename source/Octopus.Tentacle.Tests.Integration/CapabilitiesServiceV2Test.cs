@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCase("6.3.451")] // the autofac service is in tentacle, but tentacle does not have the capabilities service.
         public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(string version)
         {
-            using var clientAndTentacle = await new ClientAndTentacleBuilder(TentacleType.Polling)
+            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(TentacleType.Polling)
                 .WithTentacleVersion(version)
                 .Build(CancellationToken);
 
