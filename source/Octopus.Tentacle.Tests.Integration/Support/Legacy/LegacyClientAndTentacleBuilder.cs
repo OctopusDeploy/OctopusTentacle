@@ -7,23 +7,23 @@ using Octopus.Tentacle.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 {
-    internal class ClientAndTentacleBuilder
+    internal class LegacyClientAndTentacleBuilder
     {
         private readonly TentacleType tentacleType;
         private string? tentacleVersion;
 
-        public ClientAndTentacleBuilder(TentacleType tentacleType)
+        public LegacyClientAndTentacleBuilder(TentacleType tentacleType)
         {
             this.tentacleType = tentacleType;
         }
 
-        public ClientAndTentacleBuilder WithTentacleVersion(string tentacleVersion)
+        public LegacyClientAndTentacleBuilder WithTentacleVersion(string tentacleVersion)
         {
             this.tentacleVersion = tentacleVersion;
             return this;
         }
 
-        public async Task<ClientAndTentacle> Build(CancellationToken cancellationToken)
+        public async Task<LegacyClientAndTentacle> Build(CancellationToken cancellationToken)
         {
             // Server
             var serverHalibutRuntime = new HalibutRuntimeBuilder()
@@ -61,10 +61,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
             var tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
 
-            var tentacleClient = new TentacleClientBuilder(server.ServerHalibutRuntime, tentacleEndPoint)
+            var tentacleClient = new LegacyTentacleClientBuilder(server.ServerHalibutRuntime, tentacleEndPoint)
                 .Build(cancellationToken);
 
-            return new ClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
+            return new LegacyClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
         }
     }
 }

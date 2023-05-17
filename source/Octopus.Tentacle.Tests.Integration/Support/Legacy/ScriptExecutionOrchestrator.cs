@@ -9,11 +9,11 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 {
-    public class ScriptExecutionOrchestrator
+    internal class ScriptExecutionOrchestrator
     {
-        private readonly TentacleClient tentacleClient;
+        private readonly LegacyTentacleClient tentacleClient;
 
-        public ScriptExecutionOrchestrator(TentacleClient tentacleClient)
+        public ScriptExecutionOrchestrator(LegacyTentacleClient tentacleClient)
         {
             this.tentacleClient = tentacleClient;
         }
