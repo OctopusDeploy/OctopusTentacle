@@ -17,10 +17,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
         IsPumpPaused isPumpPaused;
         readonly TimeSpan sendDelay;
 
-        public SocketPump(IsPumpPaused isPumpPaused, TimeSpan sendDelay)
+        IDataTransferObserver dataTransferObserver;
+
+        public SocketPump(IsPumpPaused isPumpPaused, TimeSpan sendDelay, IDataTransferObserver dataTransferObserver)
         {
             this.isPumpPaused = isPumpPaused;
             this.sendDelay = sendDelay;
+            this.dataTransferObserver = dataTransferObserver;
         }
 
         public async Task<SocketStatus> PumpBytes(Socket readFrom, Socket writeTo, CancellationToken cancellationToken)
@@ -41,6 +44,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             if ((readFrom.Available == 0 && stopwatch.Elapsed >= sendDelay) || buffer.Length > 100 * 1024 * 1024)
             {
                 // Send the data
+                dataTransferObserver.WritingData(buffer);
                 await WriteToSocket(writeTo, buffer.GetBuffer(), (int)buffer.Length, cancellationToken);
                 buffer.SetLength(0);
             }

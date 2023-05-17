@@ -6,6 +6,7 @@ using Autofac;
 using Nito.AsyncEx.Interop;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -157,9 +158,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             Action<string> commandOutput,
             CancellationToken cancellationToken)
         {
+            var log = new SerilogLoggerBuilder().Build().ForContext<RunningTentacle>();
             void AllOutput(string s)
             {
-                TestContext.WriteLine(s);
+                log.Information("[Tentacle] " + s);
                 commandOutput(s);
             }
 
@@ -209,7 +211,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 throw new Exception("Tentacle is already running, call stop() first");
             }
 
-            cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
             var (rtt, serviceUri) = await startTentacleFunction(cancellationTokenSource.Token);
 
@@ -229,6 +231,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var t = runningTentacleTask;
             runningTentacleTask = null;
             await t;
+        }
+
+        public async Task Restart(CancellationToken cancellationToken)
+        {
+            await Stop(cancellationToken);
+            await Start(cancellationToken);
         }
 
         public void Dispose()

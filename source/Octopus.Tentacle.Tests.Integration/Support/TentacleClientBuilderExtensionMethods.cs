@@ -2,7 +2,7 @@ using Octopus.Tentacle.Client;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public static class TentacleClientBuilderExtensionMethods
+    internal static class TentacleClientBuilderExtensionMethods
     {
         internal static LegacyTentacleClientBuilder ForRunningTentacle(this LegacyTentacleClientBuilder tentacleClientBuilder, RunningTentacle runningTentacle)
         {
