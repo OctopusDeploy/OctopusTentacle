@@ -12,11 +12,11 @@ namespace Octopus.Tentacle.Tests.Integration
 {
     public class CapabilitiesServiceV2Test
     {
-        [TestCase(null)] // Current version
-        [TestCase("5.0.4")] // First linux Release 9/9/2019
-        [TestCase("5.0.12")] // The autofac service was in octopus shared.
-        [TestCase("6.3.451")] // the autofac service is in tentacle, but tentacle does not have the capabilities service.
-        public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(string version)
+        [TestCase(true, null)] // The version of tentacle compiled from the current code.
+        [TestCase(false, "5.0.4")] // First linux Release 9/9/2019
+        [TestCase(false, "5.0.12")] // The autofac service was in octopus shared.
+        [TestCase(false, "6.3.451")] // the autofac service is in tentacle, but tentacle does not have the capabilities service.
+        public async Task CapabilitiesFromAnOlderTentacleWhichHasNoCapabilitiesService_WorksWithTheBackwardsCompatabilityDecorator(bool useTentacleBuiltFromCurrentCode, string version)
         {
             var cts = new CancellationTokenSource((int)TimeSpan.FromSeconds(120).TotalMilliseconds).Token;
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
 
             using var tmp = new TemporaryDirectory();
-            var oldTentacleExe = version == null ? TentacleExeFinder.FindTentacleExe() : await TentacleFetcher.GetTentacleVersion(tmp.DirectoryPath, version);
+            var oldTentacleExe = useTentacleBuiltFromCurrentCode ? TentacleExeFinder.FindTentacleExe() : await TentacleFetcher.GetTentacleVersion(tmp.DirectoryPath, version);
 
             using (var runningTentacle = await new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
                        .WithTentacleExe(oldTentacleExe)
