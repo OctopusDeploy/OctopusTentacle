@@ -278,6 +278,23 @@ partial class Build
         });
 
     [PublicAPI]
+    Target PackClient => _ => _
+        .Description("Packs the NuGet package for Tentacle Client.")
+        .Executes(() =>
+        {
+            FileSystemTasks.EnsureExistingDirectory(ArtifactsDirectory / "nuget");
+            using var versionInfoFile = ModifyTemplatedVersionAndProductFilesWithValues();
+
+            DotNetPack(p => p
+                .SetProject(RootDirectory / "source" / "Octopus.Tentacle.Client" / "Octopus.Tentacle.Client.csproj")
+                .SetVersion(OctoVersionInfo.FullSemVer)
+                .SetOutputDirectory(ArtifactsDirectory / "nuget")
+                .DisableIncludeSymbols()
+                .SetVerbosity(DotNetVerbosity.Normal)
+                .SetProperty("NuspecProperties", $"Version={OctoVersionInfo.FullSemVer}"));
+        });
+
+    [PublicAPI]
     Target PackWindows => _ => _
         .Description("Packs all the Windows targets.")
         .DependsOn(PackWindowsZips)
@@ -354,7 +371,8 @@ partial class Build
     Target Pack => _ => _
         .Description("Pack all the artifacts. Notional task - running this on a single host is possible but cumbersome.")
         .DependsOn(PackCrossPlatformBundle)
-        .DependsOn(PackContracts);
+        .DependsOn(PackContracts)
+        .DependsOn(PackClient);
 
     void PackTarballs(string runtimeId)
     {
