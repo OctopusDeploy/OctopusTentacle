@@ -4,7 +4,7 @@ using System.Text;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Scripts;
 
-namespace Octopus.Tentacle.Tests.Integration
+namespace Octopus.Tentacle.CommonTestUtils.Builders
 {
     public class StartScriptCommandBuilder
     {

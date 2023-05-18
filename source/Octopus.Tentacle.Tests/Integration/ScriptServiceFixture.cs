@@ -5,6 +5,7 @@ using System.Threading;
 using NSubstitute;
 using NUnit.Framework;
 using Octopus.Diagnostics;
+using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Configuration;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Diagnostics;
