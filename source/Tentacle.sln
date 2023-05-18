@@ -33,7 +33,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Tests.Inte
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Client", "Octopus.Tentacle.Client\Octopus.Tentacle.Client.csproj", "{506D425E-10F0-49A1-826C-8B704B7140B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.Tests.Common", "Octopus.Tentacle.Tests.Common\Octopus.Tentacle.Tests.Common.csproj", "{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Octopus.Tentacle.CommonTestUtils", "Octopus.Tentacle.CommonTestUtils\Octopus.Tentacle.CommonTestUtils.csproj", "{D0F2DBE7-017B-4AF1-9CA7-8C746220C6F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
