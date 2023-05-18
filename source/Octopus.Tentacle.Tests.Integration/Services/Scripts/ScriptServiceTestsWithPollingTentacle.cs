@@ -10,6 +10,7 @@ using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.TentacleClient;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Services.Scripts
 {
@@ -25,6 +26,21 @@ namespace Octopus.Tentacle.Tests.Integration.Services.Scripts
                                 Start-Sleep -Seconds 3
                                 Write-Host ""Waking up, current time is"" (Get-Date -DisplayHint Time)
                                 Write-Host ""This is the end of the script""";
+
+            var cmdScript = @"
+                                echo This is the start of the script
+                                set /A theAnswer = 6 * 7
+                                echo The answer is %theAnswer%
+                                ping localhost -n 4 > nul
+                                echo This is the end of the script";
+
+            var bashScript = @"
+                                echo This is the start of the script
+                                val=6
+                                ((theAnswer=$val*7))
+                                echo The answer is $theAnswer
+                                sleep 3
+                                echo This is the end of the script";
             
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Support.Certificates.Server)
@@ -41,7 +57,10 @@ namespace Octopus.Tentacle.Tests.Integration.Services.Scripts
                     .ForRunningTentacle(runningTentacle)
                     .Build(CancellationToken.None);
 
-                var startScriptCommand = new StartScriptCommandBuilder().WithScriptBody(psScript).Build();
+                var startScriptCommand = new StartScriptCommandBuilder()
+                    .WithScriptBody(PlatformDetection.IsRunningOnWindows ? psScript : bashScript)
+                    .Build();
+                    
                 var scriptTicket = tentacleClient.ScriptService.StartScript(startScriptCommand);
                 while (tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(scriptTicket, 0)).State != ProcessState.Complete)
                 {
