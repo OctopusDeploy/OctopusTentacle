@@ -2,13 +2,13 @@ using System.IO;
 using System.Text;
 using Halibut;
 
-namespace Octopus.Tentacle.Tests.Util
+namespace Octopus.Tentacle.CommonTestUtils
 {
     public static class DataStreamExtensionMethods
     {
         public static byte[] ToBytes(this DataStream dataStream)
         {
-            byte[] bytes = null;
+            byte[]? bytes = null;
             dataStream.Receiver()
                 .Read(
                     stream =>
@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Util
                         }
                     });
 
-            return bytes;
+            return bytes!;
         }
 
         public static string GetString(this DataStream dataStream, Encoding encoding) => encoding.GetString(dataStream.ToBytes());
