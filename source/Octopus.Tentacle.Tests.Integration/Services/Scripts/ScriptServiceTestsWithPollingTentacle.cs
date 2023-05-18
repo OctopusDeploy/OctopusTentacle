@@ -27,12 +27,12 @@ namespace Octopus.Tentacle.Tests.Integration.Services.Scripts
                                 Write-Host ""Waking up, current time is"" (Get-Date -DisplayHint Time)
                                 Write-Host ""This is the end of the script""";
 
-            var cmdScript = @"
-                                echo This is the start of the script
-                                set /A theAnswer = 6 * 7
-                                echo The answer is %theAnswer%
-                                ping localhost -n 4 > nul
-                                echo This is the end of the script";
+            // var cmdScript = @"
+            //                     echo This is the start of the script
+            //                     set /A theAnswer = 6 * 7
+            //                     echo The answer is %theAnswer%
+            //                     ping localhost -n 4 > nul
+            //                     echo This is the end of the script";
 
             var bashScript = @"
                                 echo This is the start of the script
