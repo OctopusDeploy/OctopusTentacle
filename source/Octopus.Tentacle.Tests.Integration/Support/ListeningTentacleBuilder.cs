@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             AddCertificateToTentacle(tentacleExe, configFilePath, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToListen(configFilePath, octopusThumbprint ?? Certificates.ServerPublicThumbprint);
 
-            Func<CancellationToken, Task<(int, Task)>> startTentacle = token => RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, token);
+            Func<CancellationToken, Task<(string, Task)>> startTentacle = token => RunningTentacle(tentacleExe, configFilePath, instanceName, tempDirectory, token);
             var runningTentacle =  new RunningTestListeningTentacle(tempDirectory, startTentacle, tentacleThumbprint);
             
             try
@@ -78,12 +76,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private static Regex listeningPortRegex = new Regex(@"^listen:\/\/.+:(\d+)\/");
 
-        private async Task<(int, Task)> RunningTentacle(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        private async Task<(string, Task)> RunningTentacle(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             var hasTentacleStarted = new ManualResetEventSlim();
             hasTentacleStarted.Reset();
 
-            int listeningPort = -1;
+            string listeningPort = null;
 
             var runningTentacle = Task.Run(() =>
             {
@@ -98,8 +96,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                             }
                             else if (s.Contains("Listener started"))
                             {
-                                string port = listeningPortRegex.Match(s).Groups[1].Value;
-                                listeningPort = Int32.Parse(port);
+                                listeningPort = listeningPortRegex.Match(s).Groups[1].Value;
                             }
                         }, cancellationToken);
                 }
@@ -184,18 +181,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
     }
 
-    public class RunningTestListeningTentacle : IDisposable
+    class RunningTestListeningTentacle : IDisposable
     {
         private readonly IDisposable TemporaryDirectory;
         private CancellationTokenSource cts;
         private Task? RunningTentacleTask { get; set; }
-        private Func<CancellationToken, Task<(int, Task)>> startTentacle;
+        private Func<CancellationToken, Task<(string, Task)>> startTentacle;
         public string Thumbprint { get; }
-        public int Port { get; private set; }
+        public Uri ServiceUri { get; private set; }
 
         public RunningTestListeningTentacle( 
             IDisposable temporaryDirectory,
-            Func<CancellationToken, Task<(int, Task)>> startTentacle,
+            Func<CancellationToken, Task<(string, Task)>> startTentacle,
             string thumbprint)
         {
             TemporaryDirectory = temporaryDirectory;
@@ -212,7 +209,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             var (port, stopTask) = await startTentacle(cts.Token);
             RunningTentacleTask = stopTask;
-            Port = port;
+            ServiceUri = new Uri($"https://localhost:{port}");
         }
 
         public async Task Stop(CancellationToken cancellationToken)
