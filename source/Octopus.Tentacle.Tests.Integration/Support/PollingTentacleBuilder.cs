@@ -50,7 +50,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 CommunicationStyle = CommunicationStyle.TentacleActive,
                 SubscriptionId = subscriptionId.ToString()
             });
-
+            
+            writableTentacleConfiguration.SetApplicationDirectory(Path.Combine(new DirectoryInfo(configFilePath).Parent.FullName, "appdir"));
             writableTentacleConfiguration.SetNoListen(true);
         }
     }
