@@ -1,21 +1,16 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Octopus.Client.Model;
 using Octopus.Tentacle.Configuration;
-using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public class PollingTentacleBuilder : TentacleBuilder<PollingTentacleBuilder>
+    public class ListeningTentacleBuilder : TentacleBuilder<ListeningTentacleBuilder>
     {
-        readonly int pollingPort;
-
-        public PollingTentacleBuilder(int pollingPort, string serverThumbprint)
+        public ListeningTentacleBuilder(string serverThumbprint)
         {
-            this.pollingPort = pollingPort;
-
             ServerThumbprint = serverThumbprint;
         }
 
@@ -25,14 +20,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var instanceName = Guid.NewGuid().ToString("N");
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
-            var subscriptionId = PollingSubscriptionId.Generate();
 
             CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
             AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
-            ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId);
+            ConfigureTentacleToListen(configFilePath);
 
             return await StartTentacle(
-                subscriptionId,
+                null,
                 tentacleExe,
                 instanceName,
                 tempDirectory,
@@ -40,19 +34,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 cancellationToken);
         }
 
-        private void ConfigureTentacleToPollOctopusServer(string configFilePath, Uri subscriptionId)
+        private void ConfigureTentacleToListen(string configFilePath)
         {
             var writableTentacleConfiguration = GetWritableTentacleConfiguration(configFilePath);
 
             writableTentacleConfiguration.AddOrUpdateTrustedOctopusServer(new OctopusServerConfiguration(ServerThumbprint)
             {
-                Address = new Uri("https://localhost:" + pollingPort),
-                CommunicationStyle = CommunicationStyle.TentacleActive,
-                SubscriptionId = subscriptionId.ToString()
+                CommunicationStyle = CommunicationStyle.TentaclePassive,
             });
-            
-            writableTentacleConfiguration.SetApplicationDirectory(Path.Combine(new DirectoryInfo(configFilePath).Parent.FullName, "appdir"));
-            writableTentacleConfiguration.SetNoListen(true);
+
+            writableTentacleConfiguration.SetServicesPortNumber(0); // Find a random available port
+            writableTentacleConfiguration.SetNoListen(false);
         }
     }
 }

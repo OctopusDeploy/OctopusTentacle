@@ -1,3 +1,4 @@
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -10,24 +11,24 @@ using Octopus.Tentacle.Tests.Integration.TentacleClient;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
-    public class PollingTentacleTest
+    public class ListeningTentacleTests
     {
         [Test]
-        public async Task BasicCommunicationsWithWithAPollingTentacle()
+        public async Task BasicCommunicationsWithAListeningTentacle()
         {
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Support.Certificates.Server)
                 .WithLegacyContractSupport()
                 .Build();
 
-            var port = octopus.Listen();
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
 
-            using var runningTentacle = await new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
+            using var runningTentacle = await new ListeningTentacleBuilder(Support.Certificates.ServerPublicThumbprint)
                 .Build(CancellationToken.None);
 
             var tentacleClient = new TentacleClientBuilder(octopus)
-                .ForRunningTentacle(runningTentacle)
+                .WithServiceUri(runningTentacle.ServiceUri)
+                .WithRemoteThumbprint(runningTentacle.Thumbprint)
                 .Build(CancellationToken.None);
 
             var res = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(new ScriptTicket("1212"), 111));
@@ -35,25 +36,25 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public async Task BasicCommunicationsWithWithAnOldPollingTentacle()
+        public async Task BasicCommunicationsWithAnOldListeningTentacle()
         {
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Support.Certificates.Server)
                 .WithLegacyContractSupport()
                 .Build();
 
-            var port = octopus.Listen();
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
 
             using var tmp = new TemporaryDirectory();
             var oldTentacleExe = await TentacleFetcher.GetTentacleVersion(tmp.DirectoryPath, "6.3.451");
 
-            using var runningTentacle = await new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
+            using var runningTentacle = await new ListeningTentacleBuilder(Support.Certificates.ServerPublicThumbprint)
                 .WithTentacleExe(oldTentacleExe)
                 .Build(CancellationToken.None);
 
             var tentacleClient = new TentacleClientBuilder(octopus)
-                .ForRunningTentacle(runningTentacle)
+                .WithServiceUri(runningTentacle.ServiceUri)
+                .WithRemoteThumbprint(runningTentacle.Thumbprint)
                 .Build(CancellationToken.None);
 
             var res = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(new ScriptTicket("1212"), 111));
