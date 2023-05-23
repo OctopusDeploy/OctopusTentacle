@@ -21,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var cts = new CancellationTokenSource((int)TimeSpan.FromSeconds(120).TotalMilliseconds).Token;
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
                 .WithServerCertificate(Support.Certificates.Server)
-                .WithMessageSerializer(s => s.WithLegacyContractSupport())
+                .WithLegacyContractSupport()
                 .Build();
 
             var port = octopus.Listen();
@@ -30,20 +30,19 @@ namespace Octopus.Tentacle.Tests.Integration
             using var tmp = new TemporaryDirectory();
             var oldTentacleExe = useTentacleBuiltFromCurrentCode ? TentacleExeFinder.FindTentacleExe() : await TentacleFetcher.GetTentacleVersion(tmp.DirectoryPath, version);
 
-            using (var runningTentacle = await new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
-                       .WithTentacleExe(oldTentacleExe)
-                       .Build(cts))
-            {
-                var tentacleClient = new TentacleClientBuilder(octopus)
-                    .ForRunningTentacle(runningTentacle)
-                    .Build(cts);
+            using var runningTentacle = await new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
+                .WithTentacleExe(oldTentacleExe)
+                .Build(cts);
 
-                var capabilities = tentacleClient.CapabilitiesServiceV2.GetCapabilities().SupportedCapabilities;
+            var tentacleClient = new TentacleClientBuilder(octopus)
+                .ForRunningTentacle(runningTentacle)
+                .Build(cts);
 
-                capabilities.Should().Contain("IScriptService");
-                capabilities.Should().Contain("IFileTransferService");
-                capabilities.Count.Should().Be(2);
-            }
+            var capabilities = tentacleClient.CapabilitiesServiceV2.GetCapabilities().SupportedCapabilities;
+
+            capabilities.Should().Contain("IScriptService");
+            capabilities.Should().Contain("IFileTransferService");
+            capabilities.Count.Should().Be(2);
         }
     }
 }
