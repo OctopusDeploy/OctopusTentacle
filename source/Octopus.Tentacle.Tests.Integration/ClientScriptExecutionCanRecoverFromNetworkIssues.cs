@@ -112,7 +112,6 @@ namespace Octopus.Tentacle.Tests.Integration
                        .Build())
             using (var runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Support.Certificates.ServerPublicThumbprint).Build(token))
             {
-                // portForwarderRef.value = portForwarder;
                 var serviceEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
 
                 var waitForFile = Path.Combine(tmp.DirectoryPath, "waitforme");
