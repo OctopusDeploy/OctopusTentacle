@@ -97,9 +97,11 @@ namespace Octopus.Tentacle.Upgrader
             var arguments = string.Join(" ", "config", $"\"{service.ServiceName}\"", "binpath=", $"\"\\\"{tentacleExePath}\\\" run --instance=\\\"{GetInstanceName(service)}\\\"\"");
 
             Log.Upgrade.Info("Running SC.exe " + arguments);
+            
+            var serviceControlPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
             using (var process = new Process())
             {
-                process.StartInfo.FileName = "sc.exe";
+                process.StartInfo.FileName = serviceControlPath;
                 process.StartInfo.Arguments = arguments;
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
