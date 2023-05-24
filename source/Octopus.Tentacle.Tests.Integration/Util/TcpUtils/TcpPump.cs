@@ -121,9 +121,18 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             cancellationTokenSource.Cancel();
             cancellationTokenSource.Dispose();
             isDisposed = true;
+
+            try
+            {
+                clientSocket.Shutdown(SocketShutdown.Both);
+                clientSocket.Close();
+            }
+            finally
+            {
+                originSocket.Shutdown(SocketShutdown.Both);
+                originSocket.Close();
+            }
             
-            clientSocket.Close();
-            originSocket.Close();
         }
 
         public void Pause()
