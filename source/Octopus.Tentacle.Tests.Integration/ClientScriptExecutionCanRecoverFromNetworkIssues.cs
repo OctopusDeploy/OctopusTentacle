@@ -110,7 +110,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             using (var tmp = new TemporaryDirectory())
             using (var portForwarder = PortForwarderBuilder.ForwardingToLocalPort(port)
-                       .WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder().ObserveDataFromRemote(dataTransferredFromTentacle).Build())
+                       .WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder().ObserveDataClientToOrigin(dataTransferredFromTentacle).Build())
                        .Build())
             using (var runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Support.Certificates.ServerPublicThumbprint).Build(token))
             {
@@ -248,7 +248,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var dataTransferredFromTentacle = ConnectionKillerWhenReceivingDataFromTentacle(logger, killConnectionWhenReceivingResponse, portForwarderRef);
             
             using (var portForwarder = PortForwarderBuilder.ForwardingToLocalPort(port)
-                       .WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder().ObserveDataFromRemote(dataTransferredFromTentacle).Build())
+                       .WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder().ObserveDataClientToOrigin(dataTransferredFromTentacle).Build())
                        .Build())
             using (var runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Support.Certificates.ServerPublicThumbprint).Build(token))
             {
@@ -335,7 +335,7 @@ namespace Octopus.Tentacle.Tests.Integration
             Exception exceptionInCallToGetCapabilities = null; 
             
             using (var portForwarder = PortForwarderBuilder.ForwardingToLocalPort(port)
-                       .WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder().ObserveDataFromRemote(dataTransferredFromTentacle).Build())
+                       .WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder().ObserveDataClientToOrigin(dataTransferredFromTentacle).Build())
                        .Build())
             using (var runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Support.Certificates.ServerPublicThumbprint).Build(token))
             {

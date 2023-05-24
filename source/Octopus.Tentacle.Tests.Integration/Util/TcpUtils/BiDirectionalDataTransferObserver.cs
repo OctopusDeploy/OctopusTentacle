@@ -2,13 +2,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 {
     public class BiDirectionalDataTransferObserver
     {
-        public BiDirectionalDataTransferObserver(IDataTransferObserver dataTransferObserverToRemote, IDataTransferObserver dataTransferObserverFromRemote)
+        public BiDirectionalDataTransferObserver(IDataTransferObserver dataTransferObserverClientToOrigin, IDataTransferObserver dataTransferObserverOriginToClient)
         {
-            DataTransferObserverToRemote = dataTransferObserverToRemote;
-            DataTransferObserverFromRemote = dataTransferObserverFromRemote;
+            DataTransferObserverClientToOrigin = dataTransferObserverClientToOrigin;
+            DataTransferObserverOriginToClient = dataTransferObserverOriginToClient;
         }
 
-        public IDataTransferObserver DataTransferObserverToRemote { get; }
-        public IDataTransferObserver DataTransferObserverFromRemote { get; }
+        public IDataTransferObserver DataTransferObserverClientToOrigin { get; }
+        public IDataTransferObserver DataTransferObserverOriginToClient { get; }
     }
 }

@@ -2,24 +2,24 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 {
     public class BiDirectionalDataTransferObserverBuilder
     {
-        IDataTransferObserver DataTransferObserverToRemote = new DataTransferObserverBuilder().Build();
-        IDataTransferObserver DataTransferObserverFromRemote = new DataTransferObserverBuilder().Build();
+        IDataTransferObserver DataTransferObserverClientToOrigin = new DataTransferObserverBuilder().Build();
+        IDataTransferObserver DataTransferObserverOriginToClient = new DataTransferObserverBuilder().Build();
 
-        public BiDirectionalDataTransferObserverBuilder ObserveDataToRemote(IDataTransferObserver DataTransferObserverToRemote)
+        public BiDirectionalDataTransferObserverBuilder ObserveDataClientToOrigin(IDataTransferObserver DataTransferObserverClientToOrigin)
         {
-            this.DataTransferObserverToRemote = DataTransferObserverToRemote;
+            this.DataTransferObserverClientToOrigin = DataTransferObserverClientToOrigin;
             return this;
         }
         
-        public BiDirectionalDataTransferObserverBuilder ObserveDataFromRemote(IDataTransferObserver DataTransferObserverFromRemote)
+        public BiDirectionalDataTransferObserverBuilder ObserveDataOriginToClient(IDataTransferObserver DataTransferObserverOriginToClient)
         {
-            this.DataTransferObserverFromRemote = DataTransferObserverFromRemote;
+            this.DataTransferObserverOriginToClient = DataTransferObserverOriginToClient;
             return this;
         }
 
         public BiDirectionalDataTransferObserver Build()
         {
-            return new BiDirectionalDataTransferObserver(DataTransferObserverToRemote, DataTransferObserverFromRemote);
+            return new BiDirectionalDataTransferObserver(DataTransferObserverClientToOrigin, DataTransferObserverOriginToClient);
         }
         
     }
