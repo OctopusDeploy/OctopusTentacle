@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         internal async Task<RunningTentacle> Build(CancellationToken cancellationToken)
         {
             var tempDirectory = new TemporaryDirectory();
-            var instanceName = Guid.NewGuid().ToString("N");
+            var instanceName = InstanceNameGenerator();
             var configFilePath = Path.Combine(tempDirectory.DirectoryPath, instanceName + ".cfg");
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
             var subscriptionId = PollingSubscriptionId.Generate();
