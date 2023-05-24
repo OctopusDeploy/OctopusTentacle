@@ -1,7 +1,8 @@
+using System;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 
-namespace Octopus.Tentacle.Tests.Integration.TentacleClient
+namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 {
     public class TentacleClient
     {
