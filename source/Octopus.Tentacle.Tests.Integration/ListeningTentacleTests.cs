@@ -25,8 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build(CancellationToken.None);
 
             var tentacleClient = new LegacyTentacleClientBuilder(octopus)
-                .WithServiceUri(runningTentacle.ServiceUri)
-                .WithRemoteThumbprint(runningTentacle.Thumbprint)
+                .ForRunningTentacle(runningTentacle)
                 .Build(CancellationToken.None);
 
             var res = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(new ScriptTicket("1212"), 111));
@@ -51,8 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build(CancellationToken.None);
 
             var tentacleClient = new LegacyTentacleClientBuilder(octopus)
-                .WithServiceUri(runningTentacle.ServiceUri)
-                .WithRemoteThumbprint(runningTentacle.Thumbprint)
+                .ForRunningTentacle(runningTentacle)
                 .Build(CancellationToken.None);
 
             var res = tentacleClient.ScriptService.GetStatus(new ScriptStatusRequest(new ScriptTicket("1212"), 111));

@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return (T)this;
         }
 
-        internal IWritableTentacleConfiguration GetWritableTentacleConfiguration(string configFilePath)
+        protected IWritableTentacleConfiguration GetWritableTentacleConfiguration(string configFilePath)
         {
             var startUpConfigFileInstanceRequest = new StartUpConfigFileInstanceRequest(configFilePath);
             using var container = new Program(Array.Empty<string>()).BuildContainer(startUpConfigFileInstanceRequest);
@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return writableTentacleConfiguration;
         }
 
-        internal async Task<RunningTentacle> StartTentacle(
+        protected async Task<RunningTentacle> StartTentacle(
             Uri? serviceUri,
             string tentacleExe,
             string instanceName,
@@ -78,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
         }
 
-        internal async Task<(Task task, Uri serviceUri)> RunTentacle(
+        protected async Task<(Task task, Uri serviceUri)> RunTentacle(
             Uri? serviceUri,
             string tentacleExe,
             string instanceName,
@@ -135,12 +135,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
 
 
-        internal void AddCertificateToTentacle(string tentacleExe, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        protected void AddCertificateToTentacle(string tentacleExe, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommand(tentacleExe, new[] { "import-certificate", $"--from-file={tentaclePfxPath}", $"--instance={instanceName}" }, tmp, cancellationToken);
         }
 
-        internal void CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        protected void CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommand(tentacleExe, new[] { "create-instance", "--config", configFilePath, $"--instance={instanceName}" }, tmp, cancellationToken);
         }
