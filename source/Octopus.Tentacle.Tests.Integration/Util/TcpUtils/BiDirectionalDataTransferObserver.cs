@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 {
     public class BiDirectionalDataTransferObserver
@@ -10,5 +12,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
         public IDataTransferObserver DataTransferObserverClientToOrigin { get; }
         public IDataTransferObserver DataTransferObserverOriginToClient { get; }
+        
+        public static BiDirectionalDataTransferObserver Combiner(params BiDirectionalDataTransferObserver[] biDirectionalDataTransferObservers)
+        {
+
+            var dataTransferObserverClientToOrigin = IDataTransferObserver.Combine(biDirectionalDataTransferObservers.Select(o => o.DataTransferObserverClientToOrigin).ToArray());
+            var dataTransferObserverOriginToClient = IDataTransferObserver.Combine(biDirectionalDataTransferObservers.Select(o => o.DataTransferObserverOriginToClient).ToArray());
+            return new BiDirectionalDataTransferObserver(dataTransferObserverClientToOrigin, dataTransferObserverOriginToClient);
+        }
     }
+    
+    
 }

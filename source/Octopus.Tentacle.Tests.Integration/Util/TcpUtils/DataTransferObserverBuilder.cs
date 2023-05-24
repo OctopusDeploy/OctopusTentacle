@@ -1,15 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 {
     public class DataTransferObserverBuilder
     {
-        private Action<MemoryStream> WritingDataObserver = stream => { };
+        private List<Action<TcpPump, MemoryStream>> WritingDataObserver = new ();
         
-        public DataTransferObserverBuilder WithWritingDataObserver(Action<MemoryStream> WritingDataObserver)
+        public DataTransferObserverBuilder WithWritingDataObserver(Action<TcpPump, MemoryStream> WritingDataObserver)
         {
-            this.WritingDataObserver = WritingDataObserver;
+            this.WritingDataObserver.Add(WritingDataObserver);
             return this;
         }
         
@@ -20,16 +21,19 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
         private class ActionDataTransferObserver : IDataTransferObserver
         {
-            private Action<MemoryStream> WritingDataObserver;
+            private List<Action<TcpPump, MemoryStream>> WritingDataObserver;
 
-            public ActionDataTransferObserver(Action<MemoryStream> writingDataObserver)
+            public ActionDataTransferObserver(List<Action<TcpPump, MemoryStream>> writingDataObserver)
             {
                 WritingDataObserver = writingDataObserver;
             }
 
-            public void WritingData(MemoryStream buffer)
+            public void WritingData(TcpPump tcpPump, MemoryStream buffer)
             {
-                WritingDataObserver(buffer);
+                foreach (var action in WritingDataObserver)
+                {
+                    action(tcpPump, buffer);
+                }
             }
         }
     }

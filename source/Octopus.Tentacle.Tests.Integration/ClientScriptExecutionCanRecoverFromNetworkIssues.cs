@@ -16,6 +16,7 @@ using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
+using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 using Serilog;
 
@@ -102,19 +103,16 @@ namespace Octopus.Tentacle.Tests.Integration
             var port = octopus.Listen();
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
 
-            Reference<PortForwarder> portForwarderRef= new Reference<PortForwarder>();
-            Reference<Boolean> killConnectionWhenReceivingResponse = new Reference<Boolean>();
-            var dataTransferredFromTentacle = ConnectionKillerWhenReceivingDataFromTentacle(logger, killConnectionWhenReceivingResponse, portForwarderRef);
-            
             Exception exceptionInCallToGetStatus = null;
 
             using (var tmp = new TemporaryDirectory())
             using (var portForwarder = PortForwarderBuilder.ForwardingToLocalPort(port)
-                       .WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder().ObserveDataClientToOrigin(dataTransferredFromTentacle).Build())
+                       .WithDataLoggingForPolling()
+                       .WithPollingResponseMessageTcpKiller(out var pollingResponseMessageTcpKiller)
                        .Build())
             using (var runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Support.Certificates.ServerPublicThumbprint).Build(token))
             {
-                portForwarderRef.value = portForwarder;
+                // portForwarderRef.value = portForwarder;
                 var serviceEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
 
                 var waitForFile = Path.Combine(tmp.DirectoryPath, "waitforme");
@@ -126,9 +124,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             logger.Information("Calling get status");
                             if (exceptionInCallToGetStatus == null)
                             {
-                                // Ensure plenty of time for control messages to be sent.
-                                Thread.Sleep(1000);
-                                killConnectionWhenReceivingResponse.value = true;
+                                pollingResponseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
 
                             try
@@ -243,16 +239,11 @@ namespace Octopus.Tentacle.Tests.Integration
             
             Exception exceptionInCallToCancelScript = null;
 
-            Reference<PortForwarder> portForwarderRef= new Reference<PortForwarder>();
-            Reference<Boolean> killConnectionWhenReceivingResponse = new Reference<Boolean>();
-            var dataTransferredFromTentacle = ConnectionKillerWhenReceivingDataFromTentacle(logger, killConnectionWhenReceivingResponse, portForwarderRef);
-            
             using (var portForwarder = PortForwarderBuilder.ForwardingToLocalPort(port)
-                       .WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder().ObserveDataClientToOrigin(dataTransferredFromTentacle).Build())
+                       .WithPollingResponseMessageTcpKiller(out var pollingResponseMessageTcpKiller)
                        .Build())
             using (var runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Support.Certificates.ServerPublicThumbprint).Build(token))
             {
-                portForwarderRef.value = portForwarder;
                 var serviceEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
 
                 CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -269,9 +260,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             logger.Information("Calling CancelScript");
                             if (exceptionInCallToCancelScript == null)
                             {
-                                // Ensure plenty of time for control messages to be sent.
-                                Thread.Sleep(1000);
-                                killConnectionWhenReceivingResponse.value = true;
+                                pollingResponseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
 
                             try
@@ -328,18 +317,13 @@ namespace Octopus.Tentacle.Tests.Integration
             var port = octopus.Listen();
             octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
 
-            Reference<PortForwarder> portForwarderRef= new Reference<PortForwarder>();
-            Reference<Boolean> killConnectionWhenReceivingResponse = new Reference<Boolean>();
-            var dataTransferredFromTentacle = ConnectionKillerWhenReceivingDataFromTentacle(logger, killConnectionWhenReceivingResponse, portForwarderRef);
-            
             Exception exceptionInCallToGetCapabilities = null; 
             
             using (var portForwarder = PortForwarderBuilder.ForwardingToLocalPort(port)
-                       .WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder().ObserveDataClientToOrigin(dataTransferredFromTentacle).Build())
+                       .WithPollingResponseMessageTcpKiller(out var pollingResponseMessageTcpKiller)
                        .Build())
             using (var runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Support.Certificates.ServerPublicThumbprint).Build(token))
             {
-                portForwarderRef.value = portForwarder;
                 var serviceEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
 
                 await queue.WaitUntilATentacleIsWaitingToDequeueAMessage(token);
@@ -351,9 +335,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             logger.Information("Calling GetCapabilities");
                             if (exceptionInCallToGetCapabilities == null)
                             {
-                                // Ensure plenty of time for control messages to be sent.
-                                Thread.Sleep(1000);
-                                killConnectionWhenReceivingResponse.value = true;
+                                pollingResponseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
 
                             try
@@ -391,33 +373,10 @@ namespace Octopus.Tentacle.Tests.Integration
             }
         }
 
-        /// <summary>
-        /// Will only kill the connection when data is being received from the Tentacle but before being sent to the client.
-        ///
-        /// Useful for when the aim is to kill a in-flight request. 
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="killConnection"></param>
-        /// <param name="portForwarderRef"></param>
-        /// <returns></returns>
-        private static IDataTransferObserver ConnectionKillerWhenReceivingDataFromTentacle(ILogger logger, Reference<bool> killConnection, Reference<PortForwarder> portForwarderRef)
-        {
-            return new DataTransferObserverBuilder().WithWritingDataObserver(dataFromTentacle =>
-            {
-                var size = dataFromTentacle.Length;
-                logger.Information($"Received: {size} from tentacle");
-                if (killConnection.value)
-                {
-                    killConnection.value = false;
-                    logger.Information("Killing connection");
-                    portForwarderRef.value.CloseExistingConnections();
-                }
-            }).Build();
-        }
-
         private static string JoinLogs(List<ProcessOutput> logs)
         {
             return String.Join(" ", logs.Select(l => l.Text).ToArray());
         }
     }
+   
 }

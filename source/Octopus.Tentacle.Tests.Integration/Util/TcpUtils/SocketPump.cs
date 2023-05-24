@@ -14,13 +14,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
         Stopwatch stopwatch = Stopwatch.StartNew();
         MemoryStream buffer = new MemoryStream();
+        private readonly TcpPump tcpPump;
         IsPumpPaused isPumpPaused;
         readonly TimeSpan sendDelay;
 
         IDataTransferObserver dataTransferObserver;
 
-        public SocketPump(IsPumpPaused isPumpPaused, TimeSpan sendDelay, IDataTransferObserver dataTransferObserver)
+        public SocketPump(TcpPump tcpPump, IsPumpPaused isPumpPaused, TimeSpan sendDelay, IDataTransferObserver dataTransferObserver)
         {
+            this.tcpPump = tcpPump;
             this.isPumpPaused = isPumpPaused;
             this.sendDelay = sendDelay;
             this.dataTransferObserver = dataTransferObserver;
@@ -44,7 +46,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             if ((readFrom.Available == 0 && stopwatch.Elapsed >= sendDelay) || buffer.Length > 100 * 1024 * 1024)
             {
                 // Send the data
-                dataTransferObserver.WritingData(buffer);
+                dataTransferObserver.WritingData(tcpPump, buffer);
                 await WriteToSocket(writeTo, buffer.GetBuffer(), (int)buffer.Length, cancellationToken);
                 buffer.SetLength(0);
             }

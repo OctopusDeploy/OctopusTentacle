@@ -50,8 +50,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
                         var biDirectionalCallBack = factory();
                         // If the connection was ok, then set-up a pump both ways
-                        var pump1 = Task.Run(async () => await PumpBytes(clientSocket, originSocket, new SocketPump(() => this.IsPaused, sendDelay, biDirectionalCallBack.DataTransferObserverClientToOrigin), cancellationToken).ConfigureAwait(false), cancellationToken);
-                        var pump2 = Task.Run(async () => await PumpBytes(originSocket, clientSocket, new SocketPump(() => this.IsPaused, sendDelay, biDirectionalCallBack.DataTransferObserverOriginToClient), cancellationToken).ConfigureAwait(false), cancellationToken);
+                        var pump1 = Task.Run(async () => await PumpBytes(clientSocket, originSocket, new SocketPump(this, () => this.IsPaused, sendDelay, biDirectionalCallBack.DataTransferObserverClientToOrigin), cancellationToken).ConfigureAwait(false), cancellationToken);
+                        var pump2 = Task.Run(async () => await PumpBytes(originSocket, clientSocket, new SocketPump(this, () => this.IsPaused, sendDelay, biDirectionalCallBack.DataTransferObserverOriginToClient), cancellationToken).ConfigureAwait(false), cancellationToken);
 
                         // When one is finished, they are both "done" so stop them
                         await Task.WhenAny(pump1, pump2).ConfigureAwait(false);
