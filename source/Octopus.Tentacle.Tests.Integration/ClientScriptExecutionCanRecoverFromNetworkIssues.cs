@@ -26,8 +26,6 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task WhenANetworkFailureOccurs_DuringStartScript_TheClientIsAbleToSuccessfullyCompleteTheScript()
         {
-            if(NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs() == "net48") return;
-            
             var token = TestCancellationToken.Token();
             var logger = new SerilogLoggerBuilder().Build();
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
@@ -94,7 +92,6 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task WhenANetworkFailureOccurs_DuringGetStatus_TheClientIsAbleToSuccessfullyCompleteTheScript()
         {
-            if (NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs() == "net48") return;
             var token = TestCancellationToken.Token();
             var logger = new SerilogLoggerBuilder().Build();
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
@@ -182,7 +179,6 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task WhenANetworkFailureOccurs_DuringCompleteScript_TheClientIsAbleToSuccessfullyCompleteTheScript()
         {
-            if (NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs() == "net48") return;
             var token = TestCancellationToken.Token();
             var logger = new SerilogLoggerBuilder().Build();
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
@@ -235,7 +231,6 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task WhenANetworkFailureOccurs_DuringCancelScript_TheClientIsAbleToSuccessfullyCancelTheScript()
         {
-            if (NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs() == "net48") return;
             var token = TestCancellationToken.Token();
             var logger = new SerilogLoggerBuilder().Build();
             using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
@@ -321,7 +316,6 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task WhenANetworkFailureOccurs_DuringGetCapabilities_TheClientIsAbleToSuccessfullyCompleteTheScript()
         {
-            if (NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs() == "net48") return;
             var token = TestCancellationToken.Token();
             var logger = new SerilogLoggerBuilder().Build();
             var queue = new IsTentacleWaitingPendingRequestQueueDecoratorFactory();
