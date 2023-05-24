@@ -14,12 +14,13 @@ namespace Octopus.Tentacle.Tests.Integration
     public class FileTransferServiceTests : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task UploadFileSuccessfully(TentacleType tentacleType)
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
+        public async Task UploadFileSuccessfully(TentacleType tentacleType, string tentacleVersion)
         {
             using var fileToUpload = new RandomTemporaryFileBuilder().Build();
 
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithTentacleVersion(tentacleVersion)
                 .Build(CancellationToken);
 
             var uploadResult = clientAndTentacle.TentacleClient.FileTransferService.UploadFile(
@@ -42,12 +43,13 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task DownloadFileSuccessfully(TentacleType tentacleType)
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
+        public async Task DownloadFileSuccessfully(TentacleType tentacleType, string tentacleVersion)
         {
             using var fileToDownload = new RandomTemporaryFileBuilder().Build();
 
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithTentacleVersion(tentacleVersion)
                 .Build(CancellationToken);
 
             var downloadedData = clientAndTentacle.TentacleClient.FileTransferService.DownloadFile(fileToDownload.File.FullName);

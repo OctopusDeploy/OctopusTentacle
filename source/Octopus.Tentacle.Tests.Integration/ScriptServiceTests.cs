@@ -13,8 +13,8 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ScriptServiceTests : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task RunScriptWithSuccess(TentacleType tentacleType)
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
+        public async Task RunScriptWithSuccess(TentacleType tentacleType, string tentacleVersion)
         {
             var windowsScript = @"
                 Write-Host ""This is the start of the script""
@@ -31,10 +31,12 @@ namespace Octopus.Tentacle.Tests.Integration
                 echo This is the end of the script";
 
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithTentacleVersion(tentacleVersion)
                 .Build(CancellationToken);
 
             var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
+
             DumpLog(scriptStatusResponse);
 
             scriptStatusResponse.State.Should().Be(ProcessState.Complete);
@@ -43,8 +45,8 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task RunScriptWithErrors(TentacleType tentacleType)
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
+        public async Task RunScriptWithErrors(TentacleType tentacleType, string tentacleVersion)
         {
             var windowsScript = @"
                 Write-Host ""This is the start of the script""
@@ -60,10 +62,12 @@ namespace Octopus.Tentacle.Tests.Integration
                 echo This is the end of the script";
 
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithTentacleVersion(tentacleVersion)
                 .Build(CancellationToken);
 
             var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient)
                 .ExecuteScript(windowsScript, nixScript, CancellationToken);
+
             DumpLog(scriptStatusResponse);
 
             scriptStatusResponse.State.Should().Be(ProcessState.Complete);
@@ -73,8 +77,8 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCaseSource(typeof(TentacleTypesToTest))]
-        public async Task CancelScript(TentacleType tentacleType)
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
+        public async Task CancelScript(TentacleType tentacleType, string tentacleVersion)
         {
             var windowsScript = @"Write-Host ""This is the start of the script""
                                 & ping.exe 127.0.0.1 -n 100
@@ -85,6 +89,7 @@ namespace Octopus.Tentacle.Tests.Integration
                               echo This is the end of the script";
 
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithTentacleVersion(tentacleVersion)
                 .Build(CancellationToken);
 
             var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient);
