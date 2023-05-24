@@ -1,28 +1,56 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
+using Octopus.Tentacle.Client;
+using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 
-namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
+namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    internal class LegacyClientAndTentacleBuilder
+    internal class ClientAndTentacleBuilder
     {
-        private readonly TentacleType tentacleType;
-        private string? tentacleVersion;
+        ITentacleServiceDecorator? tentacleServiceDecorator;
+        TimeSpan retryDuration = TimeSpan.FromMinutes(2);
+        IScriptObserverBackoffStrategy scriptObserverBackoffStrategy = new DefaultScriptObserverBackoffStrategy();
+        readonly TentacleType tentacleType;
+        string? tentacleVersion;
 
-        public LegacyClientAndTentacleBuilder(TentacleType tentacleType)
+        public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
             this.tentacleType = tentacleType;
         }
 
-        public LegacyClientAndTentacleBuilder WithTentacleVersion(string tentacleVersion)
+        public ClientAndTentacleBuilder WithTentacleServiceDecorator(ITentacleServiceDecorator tentacleServiceDecorator)
         {
-            this.tentacleVersion = tentacleVersion;
+            this.tentacleServiceDecorator = tentacleServiceDecorator;
+
             return this;
         }
 
-        public async Task<LegacyClientAndTentacle> Build(CancellationToken cancellationToken)
+        public ClientAndTentacleBuilder WithRetryDuration(TimeSpan retryDuration)
+        {
+            this.retryDuration = retryDuration;
+
+            return this;
+        }
+
+        public ClientAndTentacleBuilder WithScriptObserverBackoffStrategy(IScriptObserverBackoffStrategy scriptObserverBackoffStrategy)
+        {
+            this.scriptObserverBackoffStrategy = scriptObserverBackoffStrategy;
+
+            return this;
+        }
+
+        public ClientAndTentacleBuilder WithTentacleVersion(string tentacleVersion)
+        {
+            this.tentacleVersion = tentacleVersion;
+
+            return this;
+        }
+
+        public async Task<ClientAndTentacle> Build(CancellationToken cancellationToken)
         {
             // Server
             var serverHalibutRuntime = new HalibutRuntimeBuilder()
@@ -40,7 +68,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             RunningTentacle runningTentacle;
             ServiceEndPoint tentacleEndPoint;
 
-            // Tentacle
             var temporaryDirectory = new TemporaryDirectory();
             var tentacleExe = string.IsNullOrWhiteSpace(tentacleVersion) ?
                 TentacleExeFinder.FindTentacleExe() :
@@ -67,10 +94,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                 tentacleEndPoint = new ServiceEndPoint(portForwarder.PublicEndpoint, runningTentacle.Thumbprint);
             }
 
-            var tentacleClient = new LegacyTentacleClientBuilder(server.ServerHalibutRuntime, tentacleEndPoint)
-                .Build(cancellationToken);
+            var tentacleClient = new TentacleClient(
+                tentacleEndPoint,
+                server.ServerHalibutRuntime,
+                scriptObserverBackoffStrategy,
+                tentacleServiceDecorator,
+                retryDuration);
 
-            return new LegacyClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
+            return new ClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
         }
     }
 }

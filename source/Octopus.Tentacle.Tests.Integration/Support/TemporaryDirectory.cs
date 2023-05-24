@@ -5,7 +5,7 @@ using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    class TemporaryDirectory : IDisposable
+    public class TemporaryDirectory : IDisposable
     {
         readonly IOctopusFileSystem fileSystem;
 
@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.fileSystem = fileSystem;
             DirectoryPath = directoryPath ?? CreateTemporaryDirectory();
         }
-        
+
         public TemporaryDirectory() : this(new OctopusPhysicalFileSystem(new InMemoryLog()))
         {
         }

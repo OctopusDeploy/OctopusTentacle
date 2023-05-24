@@ -1,22 +1,33 @@
 ﻿using System;
 using System.Threading;
+using NUnit.Framework;
+using Octopus.Tentacle.Tests.Integration.Util;
+using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public abstract class IntegrationTest : IDisposable
+    public abstract class IntegrationTest
     {
-        readonly CancellationTokenSource cancellationTokenSource;
-        public CancellationToken CancellationToken { get; }
+        CancellationTokenSource? cancellationTokenSource;
+        public CancellationToken CancellationToken { get; private set; }
+        public ILogger Logger { get; private set; } = null!;
 
-        protected IntegrationTest()
+        [SetUp]
+        public void SetUp()
         {
-            cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(4));
+            cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             CancellationToken = cancellationTokenSource.Token;
+            Logger = new SerilogLoggerBuilder().Build();
         }
 
-        public void Dispose()
+        [TearDown]
+        public void TearDown()
         {
-            cancellationTokenSource.Dispose();
+            if (cancellationTokenSource != null)
+            {
+                cancellationTokenSource.Dispose();
+                cancellationTokenSource = null;
+            }
         }
     }
 }

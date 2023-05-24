@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
         readonly Uri originServer;
         TimeSpan sendDelay = TimeSpan.Zero;
 
-        private List<Func<BiDirectionalDataTransferObserver>> observerFactory = new(); 
+        private List<Func<BiDirectionalDataTransferObserver>> observerFactory = new();
             //() => new BiDirectionalDataTransferObserver(new DataTransferObserverBuilder().Build(), new DataTransferObserverBuilder().Build());
 
         public PortForwarderBuilder(Uri originServer)
@@ -42,8 +42,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                 var results = observerFactory.Select(factory => factory()).ToArray();
                 return BiDirectionalDataTransferObserver.Combiner(results);
             });
-        } 
-        
-        
+        }
+
+
     }
 }

@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
             windowsScript.AppendLine($"echo \"{stringToPrint}\"");
             return this;
         }
-        
+
         public ScriptBuilder Sleep(TimeSpan timeSpan)
         {
             bashScript.AppendLine($"sleep \"{timeSpan.TotalSeconds}\"");
@@ -59,13 +59,13 @@ done
 while (!(Test-Path {fileToWaitFor}))" + @"
 {
     echo waiting
-    Start-Sleep 1 
+    Start-Sleep 1
 }
 ");
             return this;
         }
-        
-        
+
+
         public ScriptBuilder PrintArguments()
         {
             bashScript.AppendLine(@"
@@ -78,7 +78,7 @@ ForEach ($arg in $args){
 ");
             return this;
         }
-        
+
         public ScriptBuilder PrintFileContents(string file)
         {
             bashScript.AppendLine($@"
