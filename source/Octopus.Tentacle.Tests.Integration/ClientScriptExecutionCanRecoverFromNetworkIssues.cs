@@ -216,7 +216,6 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
-                //.WithPendingRequestQueueFactory(queue)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .DecorateCapabilitiesServiceV2With(new CapabilitiesServiceV2DecoratorBuilder()
                         .DecorateGetCapabilitiesWith(inner =>

@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
         }
         
 
-        public static PortForwarderBuilder WithDataLoggingForPolling(this PortForwarderBuilder portForwarderBuilder)
+        private static PortForwarderBuilder WithDataLoggingForPolling(this PortForwarderBuilder portForwarderBuilder)
         {
             var logger = new SerilogLoggerBuilder().Build().ForContext<PortForwarder>();
             return portForwarderBuilder.WithDataObserver(new BiDirectionalDataTransferObserverBuilder()
@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
                 .Build);
         }
         
-        public static PortForwarderBuilder WithDataLoggingForListening(this PortForwarderBuilder portForwarderBuilder)
+        private static PortForwarderBuilder WithDataLoggingForListening(this PortForwarderBuilder portForwarderBuilder)
         {
             var logger = new SerilogLoggerBuilder().Build().ForContext<PortForwarder>();
             return portForwarderBuilder.WithDataObserver(new BiDirectionalDataTransferObserverBuilder()
