@@ -5,7 +5,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
     public class CapabilitiesServiceV2DecoratorBuilder
     {
-        private Func<ICapabilitiesServiceV2, CapabilitiesResponseV2> getCapabilitiesFunc = v2 => v2.GetCapabilities();
+        private Func<ICapabilitiesServiceV2, CapabilitiesResponseV2> getCapabilitiesFunc = inner => inner.GetCapabilities();
+
+        public CapabilitiesServiceV2DecoratorBuilder BeforeGetCapabilities(Action beforeGetCapabilities)
+        {
+            return DecorateGetCapabilitiesWith((inner) =>
+            {
+                beforeGetCapabilities();
+                return inner.GetCapabilities();
+            });
+        }
 
         public CapabilitiesServiceV2DecoratorBuilder DecorateGetCapabilitiesWith(Func<ICapabilitiesServiceV2, CapabilitiesResponseV2> getCapabilitiesFunc)
         {

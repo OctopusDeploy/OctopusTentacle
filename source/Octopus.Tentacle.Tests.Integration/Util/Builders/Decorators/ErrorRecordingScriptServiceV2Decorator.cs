@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
     public class ScriptServiceV2Exceptions
     {
-        public Exception? StartScriptLatestException;
+        public Exception? StartScriptLatestException { get; set; }
         public Exception? GetStatusLatestException { get; set; }
         public Exception? CancelScriptLatestException { get; set; }
     }

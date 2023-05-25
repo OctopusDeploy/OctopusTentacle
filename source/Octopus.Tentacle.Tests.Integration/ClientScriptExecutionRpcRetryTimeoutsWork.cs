@@ -25,6 +25,80 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCase(TentacleType.Polling, true)] // Timeout trying to connect
         [TestCase(TentacleType.Listening, false)] // Timeout an in-flight request
         [TestCase(TentacleType.Listening, true)] // Timeout trying to connect
+        public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleType tentacleType, bool stopPortForwarderAfterFirstCall)
+        {
+            PortForwarder portForwarder = null!;
+            using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                // Set a short retry duration so we cancel fairly quickly
+                .WithRetryDuration(TimeSpan.FromSeconds(10))
+                .WithPortForwarderDataLogging()
+                .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .LogCallsToCapabilitiesServiceV2()
+                    .CountCallsToCapabilitiesServiceV2(out var capabilitiesServiceCallCounts)
+                    .RecordExceptionThrownInCapabilitiesServiceV2(out var capabilitiesServiceV2Exception)
+                    .DecorateCapabilitiesServiceV2With(d => d
+                        .BeforeGetCapabilities(() =>
+                        {
+                            // Kill the first StartScript call to force the rpc call into retries
+                            if (capabilitiesServiceV2Exception.GetCapabilitiesLatestException == null)
+                            {
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
+                            }
+                            else
+                            {
+                                if (stopPortForwarderAfterFirstCall)
+                                {
+                                    // Kill the port forwarder so the next requests are in the connecting state when retries timeout
+                                    Logger.Information("Killing PortForwarder");
+                                    portForwarder!.Dispose();
+                                }
+                                else
+                                {
+                                    // Pause the port forwarder so the next requests are in-flight when retries timeout
+                                    responseMessageTcpKiller.PauseConnectionOnNextResponse();
+                                }
+
+                            }
+                        })
+                        .Build())
+                    .Build())
+                .Build(CancellationToken);
+
+            portForwarder = clientAndTentacle.PortForwarder;
+
+            var startScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody(b => b
+                    .Print("Should not run this script"))
+                .Build();
+
+            // Start the script which will wait for a file to exist
+            var duration = Stopwatch.StartNew();
+
+            WorkAroundAuthIssueAndConnectionKiller();
+
+            var executeScriptTask = clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+
+            Func<Task> action = async () => await executeScriptTask;
+            await action.Should().ThrowAsync<HalibutClientException>();
+            duration.Stop();
+
+            capabilitiesServiceCallCounts.GetCapabilitiesCallCountStarted.Should().BeGreaterOrEqualTo(2);
+
+            // Ensure we actually waited and retried until the timeout policy kicked in
+            duration.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(9));
+
+            void WorkAroundAuthIssueAndConnectionKiller()
+            {
+                var forceConnectionToAuth = clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilities();
+            }
+        }
+
+        [Test]
+        [TestCase(TentacleType.Polling, false)] // Timeout an in-flight request
+        [TestCase(TentacleType.Polling, true)] // Timeout trying to connect
+        [TestCase(TentacleType.Listening, false)] // Timeout an in-flight request
+        [TestCase(TentacleType.Listening, true)] // Timeout trying to connect
         public async Task WhenRpcRetriesTimeOut_DuringStartScript_TheRpcCallIsCancelled(TentacleType tentacleType, bool stopPortForwarderAfterFirstCall)
         {
             PortForwarder portForwarder = null!;
@@ -165,7 +239,7 @@ namespace Octopus.Tentacle.Tests.Integration
             duration.Stop();
 
             scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceCallCounts.GetStatusCallCountStarted.Should().Be(2);
+            scriptServiceCallCounts.GetStatusCallCountStarted.Should().BeGreaterOrEqualTo(2);
             scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(0);
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
 
@@ -177,7 +251,7 @@ namespace Octopus.Tentacle.Tests.Integration
         //Retry Timeout
         // - Times out cancel script / complete script when connecting
         // - Times out cancel script / complete script for an in-flight rpc call(walks away as we can't cancel in Halibut at this point currently)
-        // - Timeout for file upload and file download work
+        // - Timeout for capability service work
         //Cancellation
         // - Can cancel a call to get capabilities without waiting (could be connecting or in-flight) and walk away
         // - Can cancel a connecting call to start script

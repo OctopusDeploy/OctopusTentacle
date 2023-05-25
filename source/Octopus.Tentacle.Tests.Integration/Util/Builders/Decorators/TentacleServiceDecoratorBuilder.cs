@@ -35,9 +35,31 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return this;
         }
 
+        public TentacleServiceDecoratorBuilder DecorateFileTransferServiceWith(Func<IFileTransferService, IFileTransferService> fileTransferServiceDecorator)
+        {
+            this.fileTransferServiceDecorator.Add(fileTransferServiceDecorator);
+            return this;
+        }
+
+        public TentacleServiceDecoratorBuilder DecorateFileTransferServiceWith(Action<FileTransferServiceDecoratorBuilder> fileTransferServiceDecorator)
+        {
+            var b = new FileTransferServiceDecoratorBuilder();
+            fileTransferServiceDecorator(b);
+            this.DecorateFileTransferServiceWith(b.Build());
+            return this;
+        }
+
         public TentacleServiceDecoratorBuilder DecorateCapabilitiesServiceV2With(Func<ICapabilitiesServiceV2, ICapabilitiesServiceV2> capabilitiesServiceV2Decorator)
         {
             this.capabilitiesServiceV2Decorator.Add(capabilitiesServiceV2Decorator);
+            return this;
+        }
+
+        public TentacleServiceDecoratorBuilder DecorateCapabilitiesServiceV2With(Action<CapabilitiesServiceV2DecoratorBuilder> capabilitiesServiceDecorator)
+        {
+            var b = new CapabilitiesServiceV2DecoratorBuilder();
+            capabilitiesServiceDecorator(b);
+            this.DecorateCapabilitiesServiceV2With(b.Build());
             return this;
         }
 
