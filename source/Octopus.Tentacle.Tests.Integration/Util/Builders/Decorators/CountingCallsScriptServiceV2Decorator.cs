@@ -9,14 +9,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public long GetStatusCallCountStarted;
         public long CancelScriptCallCountStarted;
         public long CompleteScriptCallCountStarted;
-        
+
         public long StartScriptCallCountComplete;
     }
-    
+
     public class CountingCallsScriptServiceV2Decorator : IScriptServiceV2
     {
         private ScriptServiceV2CallCounts counts;
-        
+
 
         private IScriptServiceV2 inner;
 

@@ -1,5 +1,3 @@
-using System;
-using System.Threading;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 using Serilog;
@@ -14,6 +12,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
     public class ListeningResponseMessageTcpKiller : IResponseMessageTcpKiller
     {
         private volatile bool killConnection = false;
+        private volatile bool pauseConnection = false;
         private ILogger logger;
 
         public ListeningResponseMessageTcpKiller()
@@ -27,6 +26,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
             killConnection = true;
         }
 
+        public void PauseConnectionOnNextResponse()
+        {
+            logger.Information("Will pause connection next time tentacle sends more than 45 bytes (ie something that looks bigger than a control message)");
+            pauseConnection = true;
+        }
+
         public IDataTransferObserver DataTransferObserver()
         {
             return new DataTransferObserverBuilder().WithWritingDataObserver((tcpPump, dataFromTentacle) =>
@@ -34,6 +39,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
                 var size = dataFromTentacle.Length;
                 // It seems messages around 45 and below are control messages
                 // So anything bigger must be the interesting one.
+                if (pauseConnection && size > 45)
+                {
+                    pauseConnection = false;
+                    logger.Information("Pause connection");
+                    tcpPump.Pause();
+                }
+
                 if (killConnection && size > 45)
                 {
                     killConnection = false;
@@ -44,7 +56,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
         }
     }
 
-    
+
     public static class ClientAndTentacleBuilderListeningResponseMessageTcpKillerExtensionMethods {
         public static ClientAndTentacleBuilder WithListeningResponseMessageTcpKiller(this ClientAndTentacleBuilder clientAndTentacleBuilder, out IResponseMessageTcpKiller pollingResponseMessageTcpKiller)
         {

@@ -1,5 +1,3 @@
-using System;
-using System.Threading;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Serilog;
 
@@ -13,7 +11,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public LogCallsToScriptServiceV2Decorator(IScriptServiceV2 inner)
         {
             this.inner = inner;
-            logger = new SerilogLoggerBuilder().Build().ForContext<ErrorRecordingScriptServiceV2Decorator>();
+            logger = new SerilogLoggerBuilder().Build().ForContext<LogCallsToScriptServiceV2Decorator>();
         }
 
         public ScriptStatusResponseV2 StartScript(StartScriptCommandV2 command)
@@ -66,7 +64,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             {
                 logger.Information("CompleteScript call complete");
             }
-            
+
         }
     }
 
