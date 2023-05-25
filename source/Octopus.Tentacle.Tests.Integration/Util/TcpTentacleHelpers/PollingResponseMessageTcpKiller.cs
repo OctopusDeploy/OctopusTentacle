@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 using Serilog;
 
@@ -10,7 +11,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
     ///
     /// Useful for when the aim is to kill a in-flight request. 
     /// </summary>
-    public class PollingResponseMessageTcpKiller
+    public class PollingResponseMessageTcpKiller : IResponseMessageTcpKiller
     {
         private volatile bool killConnection = false;
         private ILogger logger;
@@ -46,14 +47,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
             }).Build();
         }
     }
-    
-    public static class PortForwarderBuilderPollingResponseMessageTcpKillerExtensionMethods {
-        public static PortForwarderBuilder WithPollingResponseMessageTcpKiller(this PortForwarderBuilder portForwarderBuilder, out PollingResponseMessageTcpKiller pollingResponseMessageTcpKiller)
+
+    public static class ClientAndTentacleBuilderPollingResponseMessageTcpKillerExtensionMethods {
+        public static ClientAndTentacleBuilder WithPollingResponseMessageTcpKiller(this ClientAndTentacleBuilder clientAndTentacleBuilder, out IResponseMessageTcpKiller pollingResponseMessageTcpKiller)
         {
             var myPollingResponseMessageTcpKiller = new PollingResponseMessageTcpKiller();
             pollingResponseMessageTcpKiller = myPollingResponseMessageTcpKiller;
-            return portForwarderBuilder
-                .WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder().ObserveDataClientToOrigin(myPollingResponseMessageTcpKiller.DataTransferObserver()).Build());
+            return clientAndTentacleBuilder.WithPortForwarder(
+                    builder => builder.WithDataObserver(() => new BiDirectionalDataTransferObserverBuilder().ObserveDataClientToOrigin(myPollingResponseMessageTcpKiller.DataTransferObserver()).Build()));
         }
     }
 }

@@ -37,10 +37,9 @@ namespace Octopus.Tentacle.Tests.Integration
                 var startScriptCommand = new StartScriptCommandV2Builder()
                     .WithScriptBody(new ScriptBuilder().PrintNTimesWithDelay("another one", 10, TimeSpan.FromSeconds(1)))
                     .Build();
-
-                CountingCallsScriptServiceV2Decorator? callCounts = null;
+                
                 var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder()
-                    .DecorateScriptServiceV2With(inner => callCounts = new CountingCallsScriptServiceV2Decorator(inner))
+                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
                     .Build();
 
                 var tentacleClient = new TentacleClient(serviceEndPoint, 
@@ -51,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 var (_, logs) = await tentacleClient.ExecuteScript(startScriptCommand, token);
                 
                 
-                callCounts.GetStatusCallCountStarted.Should().BeLessThan(3);
+                scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeLessThan(3);
             }
         }
     }

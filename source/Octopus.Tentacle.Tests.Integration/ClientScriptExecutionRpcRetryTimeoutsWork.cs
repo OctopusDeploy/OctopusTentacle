@@ -23,14 +23,10 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCase(TentacleType.Listening, true)] // Timeout trying to connect
         public async Task WhenRpcRetriesTimeOut_DuringStartScript_TheRpcCallIsCancelled(TentacleType tentacleType, bool stopPortForwarderAfterFirstCall)
         {
-            CountingCallsScriptServiceV2Decorator scriptServiceCallCounts = null!;
-
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(45))
-                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .DecorateScriptServiceV2With(inner => scriptServiceCallCounts = new(inner))
-                    .Build())
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceCallCounts).Build())
                 .Build(CancellationToken);
 
             var startScriptHasStartedFile = Path.Combine(clientAndTentacle.TemporaryDirectory.DirectoryPath, "startscript.started");
