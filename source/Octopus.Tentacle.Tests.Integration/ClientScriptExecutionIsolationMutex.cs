@@ -62,12 +62,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .WithIsolation(levelOfSecondScript)
                     .WithMutexName("mymutex")
                     .Build();
-
-                CountingCallsScriptServiceV2Decorator? callCounts = null;
-                CountingCallsScriptServiceDecorator? callCountsV1 = null;
+                
                 var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder()
-                    .DecorateScriptServiceV2With(inner => callCounts = new CountingCallsScriptServiceV2Decorator(inner))
-                    .DecorateScriptServiceWith(inner => callCountsV1 = new CountingCallsScriptServiceDecorator(inner))
+                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
+                    .CountCallsToScriptService(out var scriptServiceCallCounts)
                     .Build();
 
                 var tentacleClient = new TentacleClient(serviceEndPoint, octopus, new DefaultScriptObserverBackoffStrategy(), tentacleServicesDecorator, TimeSpan.FromMinutes(4));
@@ -79,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, token));
 
                 // Wait for the second script start script RPC call to return. 
-                await Wait.For(() => (callCounts.StartScriptCallCountComplete + callCountsV1.StartScriptCallCountComplete) == 2, token);
+                await Wait.For(() => (scriptServiceV2CallCounts.StartScriptCallCountComplete + scriptServiceCallCounts.StartScriptCallCountComplete) == 2, token);
 
                 // Give Tentacle some more time to run the script (although it should not).
                 await Task.Delay(TimeSpan.FromSeconds(2));

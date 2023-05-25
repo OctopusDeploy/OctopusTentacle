@@ -4,7 +4,7 @@ using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    internal class ClientAndTentacle: IDisposable
+    public class ClientAndTentacle: IDisposable
     {
         public Server Server { get; }
         public PortForwarder PortForwarder { get; }
