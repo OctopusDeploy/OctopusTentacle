@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Serilog;
 
@@ -11,7 +10,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public Exception? GetStatusLatestException { get; set; }
         public Exception? CancelScriptLatestException { get; set; }
     }
-    
+
     public class ErrorRecordingScriptServiceV2Decorator : IScriptServiceV2
     {
         private ScriptServiceV2Exceptions errors;

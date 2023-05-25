@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
         readonly ILogger logger;
         readonly TimeSpan sendDelay;
         private Func<BiDirectionalDataTransferObserver> factory;
-        
+
         public int ListeningPort { get; }
 
         public PortForwarder(Uri originServer, TimeSpan sendDelay, Func<BiDirectionalDataTransferObserver> factory)
@@ -140,7 +140,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             {
                 listeningSocket.Dispose();
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not ObjectDisposedException)
             {
                 exceptions.Add(e);
             }
@@ -149,14 +149,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             {
                 cancellationTokenSource.Dispose();
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not ObjectDisposedException)
             {
                 exceptions.Add(e);
             }
 
             if (exceptions.Count > 0)
             {
-                throw new AggregateException(exceptions);
+                logger.Warning(new AggregateException(exceptions), "Exceptions where thrown when Disposing of the PortForwarder");
             }
         }
     }

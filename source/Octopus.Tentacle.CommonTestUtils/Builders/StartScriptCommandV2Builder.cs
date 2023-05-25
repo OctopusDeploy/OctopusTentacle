@@ -40,6 +40,13 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
             return this;
         }
 
+        public StartScriptCommandV2Builder WithScriptBody(Action<ScriptBuilder> builderFunc)
+        {
+            var scriptBuilder = new ScriptBuilder();
+            builderFunc(scriptBuilder);
+            return WithScriptBody(scriptBuilder);
+        }
+
         public StartScriptCommandV2Builder WithAdditionalScriptTypes(ScriptType scriptType, string scriptBody)
         {
             additionalScripts.Add(scriptType, scriptBody);
@@ -92,7 +99,7 @@ namespace Octopus.Tentacle.CommonTestUtils.Builders
             return this;
         }
 
-        public StartScriptCommandV2Builder WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan duration)
+        public StartScriptCommandV2Builder WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan? duration)
         {
             this.durationStartScriptCanWaitForScriptToFinish = duration;
             return this;

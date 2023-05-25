@@ -20,7 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             this.scriptServiceDecorator.Add(scriptServiceDecorator);
             return this;
         }
-        
+
         public TentacleServiceDecoratorBuilder DecorateScriptServiceV2With(Func<IScriptServiceV2, IScriptServiceV2> scriptServiceV2Decorator)
         {
             this.scriptServiceV2Decorator.Add(scriptServiceV2Decorator);
@@ -34,7 +34,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             this.DecorateScriptServiceV2With(b.Build());
             return this;
         }
-        
+
         public TentacleServiceDecoratorBuilder DecorateCapabilitiesServiceV2With(Func<ICapabilitiesServiceV2, ICapabilitiesServiceV2> capabilitiesServiceV2Decorator)
         {
             this.capabilitiesServiceV2Decorator.Add(capabilitiesServiceV2Decorator);
@@ -53,7 +53,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             {
                 var reverseChain = new List<Func<T, T>>(chain);
                 reverseChain.Reverse();
-                
+
                 foreach (var func in reverseChain)
                 {
                     t = func(t);

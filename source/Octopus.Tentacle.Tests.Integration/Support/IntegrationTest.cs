@@ -15,9 +15,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         [SetUp]
         public void SetUp()
         {
-            cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(1));
             CancellationToken = cancellationTokenSource.Token;
-            Logger = new SerilogLoggerBuilder().Build();
+            Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
         }
 
         [TearDown]

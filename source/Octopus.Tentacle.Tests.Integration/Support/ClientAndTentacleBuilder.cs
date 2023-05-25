@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Halibut.ServiceModel;
-using NUnit.Framework;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts.Legacy;
@@ -79,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             return portForwarderBuilderFunc.Aggregate(PortForwarderBuilder.ForwardingToLocalPort(port), (current, port) => port(current)).Build();
         }
-        
+
         public async Task<ClientAndTentacle> Build(CancellationToken cancellationToken)
         {
             // Server
@@ -124,8 +123,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 tentacleEndPoint = new ServiceEndPoint(portForwarder.PublicEndpoint, runningTentacle.Thumbprint);
             }
-            
-            
+
+
             foreach (var serviceEndpointModifier in serviceEndpointModifiers)
             {
                 serviceEndpointModifier(tentacleEndPoint);

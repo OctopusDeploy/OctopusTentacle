@@ -1,14 +1,14 @@
 using System;
 using Octopus.Tentacle.Tests.Integration.Support;
-using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
 {
     public interface IResponseMessageTcpKiller
     {
-        public void KillConnectionOnNextResponse();
+        void KillConnectionOnNextResponse();
+        void PauseConnectionOnNextResponse();
     }
-    
+
     public static class ClientAndTentacleBuilderResponseMessageTcpKillerExtensionMethods {
         public static ClientAndTentacleBuilder WithResponseMessageTcpKiller(this ClientAndTentacleBuilder clientAndTentacleBuilder, out IResponseMessageTcpKiller pollingResponseMessageTcpKiller)
         {
