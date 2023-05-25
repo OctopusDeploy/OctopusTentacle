@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Threading;
+using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
+    [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
     public abstract class IntegrationTest
     {
         CancellationTokenSource? cancellationTokenSource;
@@ -23,10 +25,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         [TearDown]
         public void TearDown()
         {
-            if (cancellationTokenSource != null)
+            try
             {
-                cancellationTokenSource.Dispose();
-                cancellationTokenSource = null;
+                cancellationTokenSource?.Token.IsCancellationRequested.Should().BeFalse("The test timed out.");
+            }
+            finally
+            {
+                if (cancellationTokenSource != null)
+                {
+                    cancellationTokenSource.Dispose();
+                    cancellationTokenSource = null;
+                }
             }
         }
     }

@@ -7,14 +7,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public class ClientAndTentacle: IDisposable
     {
         public Server Server { get; }
-        public PortForwarder PortForwarder { get; }
+        public PortForwarder? PortForwarder { get; }
         public RunningTentacle RunningTentacle { get; }
         public TentacleClient TentacleClient { get; }
         public TemporaryDirectory TemporaryDirectory { get; }
 
         public ClientAndTentacle(
             Server server,
-            PortForwarder portForwarder,
+            PortForwarder? portForwarder,
             RunningTentacle runningTentacle,
             TentacleClient tentacleClient,
             TemporaryDirectory temporaryDirectory)
@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public void Dispose()
         {
             Server.Dispose();
-            PortForwarder.Dispose();
+            PortForwarder?.Dispose();
             RunningTentacle.Dispose();
             TentacleClient.Dispose();
             TemporaryDirectory.Dispose();
