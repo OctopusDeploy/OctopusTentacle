@@ -124,6 +124,61 @@ namespace Octopus.Tentacle.Tests.Integration
         
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
+        public async Task WhenANetworkFailureOccurs_DuringCancelScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
+        {
+            CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithTentacleVersion("6.3.451") // No capabilities service
+                .WithPortForwarderDataLogging()
+                .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
+                .WithRetryDuration(TimeSpan.FromMinutes(4))
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .LogCallsToScriptService()
+                    .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
+                    .CountCallsToScriptService(out var scriptServiceCallCounts)
+                    .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
+                        .BeforeGetStatus(() => cts.Cancel())
+                        .BeforeCancelScript(() =>
+                        {
+                            if (scriptServiceExceptions.CancelScriptLatestException == null)
+                            {
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
+                            }
+                        })
+                        .Build())
+                    .Build())
+                .Build(CancellationToken);
+
+            using var tmp = new TemporaryDirectory();
+            var waitForFile = Path.Combine(tmp.DirectoryPath, "waitforme");
+
+            var startScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody(new ScriptBuilder()
+                    .Print("hello")
+                    .WaitForFileToExist(waitForFile)
+                    .Print("AllDone"))
+                .Build();
+
+
+            List<ProcessOutput> logs = new List<ProcessOutput>();
+            Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScriptAssumingException(startScriptCommand, logs, cts.Token));
+
+            // Let the script finish.
+            File.WriteAllText(waitForFile, "");
+
+            var allLogs = logs.JoinLogs();
+
+            allLogs.Should().NotContain("AllDone");
+            scriptServiceExceptions.CancelScriptLatestException.Should().NotBeNull();
+            scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
+            scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(1);
+            scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+            // Ensure that we didn't just timeout.
+            CancellationToken.ThrowIfCancellationRequested();
+        }
+        
+        [Test]
+        [TestCaseSource(typeof(TentacleTypesToTest))]
         public async Task WhenANetworkFailureOccurs_DuringCompleteScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
