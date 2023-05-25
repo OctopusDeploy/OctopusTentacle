@@ -14,8 +14,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
     }
     public class CountingCallsScriptServiceDecorator : IScriptService
     {
-        private ScriptServiceCallCounts scriptServiceCallCounts;
-        private IScriptService inner;
+        private readonly ScriptServiceCallCounts scriptServiceCallCounts;
+        private readonly IScriptService inner;
 
         public CountingCallsScriptServiceDecorator(IScriptService inner, ScriptServiceCallCounts scriptServiceCallCounts)
         {
