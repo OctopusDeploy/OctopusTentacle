@@ -3,7 +3,7 @@ using Halibut;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    internal class Server : IDisposable
+    public class Server : IDisposable
     {
         public IHalibutRuntime ServerHalibutRuntime { get; }
         public int ServerListeningPort { get; }

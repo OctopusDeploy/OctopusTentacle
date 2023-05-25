@@ -45,11 +45,8 @@ namespace Octopus.Tentacle.Tests.Integration
                         .PrintNTimesWithDelay("another one", 10, TimeSpan.FromSeconds(1))
                         .Print("All done"))
                     .Build();
-
-                CountingCallsScriptServiceV2Decorator? callCounts = null;
-                var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder()
-                    .DecorateScriptServiceV2With(inner => callCounts = new CountingCallsScriptServiceV2Decorator(inner))
-                    .Build();
+                
+                var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build();
 
                 var tentacleClient = new TentacleClient(serviceEndPoint, octopus, new DefaultScriptObserverBackoffStrategy(), tentacleServicesDecorator, TimeSpan.FromMinutes(4));
                 var (finalResponse, logs) = await tentacleClient.ExecuteScript(startScriptCommand, token);
@@ -62,12 +59,12 @@ namespace Octopus.Tentacle.Tests.Integration
                 allLogs.Should().Contain("All done");
                 allLogs.Should().MatchRegex(".*Lets do it.*another one.*All done.*");
 
-                callCounts.StartScriptCallCountStarted.Should().Be(1);
-                callCounts.GetStatusCallCountStarted.Should().BeGreaterThan(10);
-                callCounts.GetStatusCallCountStarted.Should().BeLessThan(30);
-                logger.Debug("{S}", callCounts.GetStatusCallCountStarted);
-                callCounts.CompleteScriptCallCountStarted.Should().Be(1);
-                callCounts.CancelScriptCallCountStarted.Should().Be(0);
+                scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
+                scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeGreaterThan(10);
+                scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeLessThan(30);
+                logger.Debug("{S}", scriptServiceV2CallCounts.GetStatusCallCountStarted);
+                scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
+                scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().Be(0);
             }
         }
 
@@ -96,11 +93,8 @@ namespace Octopus.Tentacle.Tests.Integration
                         .Print("All done"))
                     .WithDurationStartScriptCanWaitForScriptToFinish(TimeSpan.FromMinutes(1))
                     .Build();
-
-                CountingCallsScriptServiceV2Decorator? callCounts = null;
-                var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder()
-                    .DecorateScriptServiceV2With(inner => callCounts = new CountingCallsScriptServiceV2Decorator(inner))
-                    .Build();
+                
+                var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build();
 
                 var tentacleClient = new TentacleClient(serviceEndPoint, octopus, new DefaultScriptObserverBackoffStrategy(), tentacleServicesDecorator, TimeSpan.FromMinutes(4));
                 var (finalResponse, logs) = await tentacleClient.ExecuteScript(startScriptCommand, token);
@@ -113,10 +107,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 allLogs.Should().Contain("All done");
                 allLogs.Should().MatchRegex(".*Lets do it.*another one.*All done.*");
 
-                callCounts.StartScriptCallCountStarted.Should().Be(1);
-                callCounts.GetStatusCallCountStarted.Should().Be(0, "Since start script should wait for the script to finish so we don't need to call get status");
-                callCounts.CompleteScriptCallCountStarted.Should().Be(1);
-                callCounts.CancelScriptCallCountStarted.Should().Be(0);
+                scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
+                scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().Be(0, "Since start script should wait for the script to finish so we don't need to call get status");
+                scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
+                scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().Be(0);
             }
         }
 
@@ -145,11 +139,8 @@ namespace Octopus.Tentacle.Tests.Integration
                         .Print("waitingtobestopped")
                         .Sleep(TimeSpan.FromSeconds(100)))
                     .Build();
-
-                CountingCallsScriptServiceV2Decorator? callCounts = null;
-                var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder()
-                    .DecorateScriptServiceV2With(inner => callCounts = new CountingCallsScriptServiceV2Decorator(inner))
-                    .Build();
+                
+                var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build();
 
                 var tentacleClient = new TentacleClient(serviceEndPoint, octopus, new DefaultScriptObserverBackoffStrategy(), tentacleServicesDecorator, TimeSpan.FromMinutes(4));
 
@@ -176,10 +167,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 finalResponse.State.Should().Be(ProcessState.Complete); // This is technically a lie, the process is still running on linux
                 finalResponse.ExitCode.Should().Be(ScriptExitCodes.UnknownResultExitCode);
 
-                callCounts.StartScriptCallCountStarted.Should().Be(1);
-                callCounts.GetStatusCallCountStarted.Should().BeGreaterThan(1);
-                callCounts.CompleteScriptCallCountStarted.Should().Be(1);
-                callCounts.CancelScriptCallCountStarted.Should().Be(0);
+                scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
+                scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeGreaterThan(1);
+                scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
+                scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().Be(0);
             }
         }
 
@@ -208,11 +199,8 @@ namespace Octopus.Tentacle.Tests.Integration
                         .Print("waitingtobestopped")
                         .Sleep(TimeSpan.FromSeconds(100)))
                     .Build();
-
-                CountingCallsScriptServiceV2Decorator? callCounts = null;
-                var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder()
-                    .DecorateScriptServiceV2With(inner => callCounts = new CountingCallsScriptServiceV2Decorator(inner))
-                    .Build();
+                
+                var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build();
 
                 var tentacleClient = new TentacleClient(serviceEndPoint, octopus, new DefaultScriptObserverBackoffStrategy(), tentacleServicesDecorator, TimeSpan.FromMinutes(4));
 
@@ -231,10 +219,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 finalResponse.ExitCode.Should().NotBe(0);
                 stopWatch.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(10));
 
-                callCounts.StartScriptCallCountStarted.Should().Be(1);
-                callCounts.GetStatusCallCountStarted.Should().BeGreaterThan(1);
-                callCounts.CancelScriptCallCountStarted.Should().BeGreaterThan(0);
-                callCounts.CompleteScriptCallCountStarted.Should().Be(1);
+                scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
+                scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeGreaterThan(1);
+                scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().BeGreaterThan(0);
+                scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
             }
         }
 

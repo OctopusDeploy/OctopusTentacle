@@ -22,6 +22,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             this.getStatusFunc = getStatusFunc;
             return this;
         }
+        
+        public ScriptServiceV2DecoratorBuilder BeforeGetStatus(Action beforeGetStatus)
+        {
+
+            return DecorateGetStatusWith((inner, scriptStatusRequestV2) =>
+            {
+                beforeGetStatus();
+                return inner.GetStatus(scriptStatusRequestV2);
+            });
+        }
 
         public ScriptServiceV2DecoratorBuilder DecorateCancelScriptWith(Func<IScriptServiceV2, CancelScriptCommandV2, ScriptStatusResponseV2> cancelScriptFunc)
         {
@@ -29,10 +39,28 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return this;
         }
         
+        public ScriptServiceV2DecoratorBuilder BeforeCancelScript(Action beforeCancelScript)
+        {
+            return DecorateCancelScriptWith((inner, command) =>
+            {
+                beforeCancelScript();
+                return inner.CancelScript(command);
+            });
+        }
+        
         public ScriptServiceV2DecoratorBuilder DecorateCompleteScriptWith(Action<IScriptServiceV2, CompleteScriptCommandV2> completeScriptAction)
         {
             this.completeScriptAction = completeScriptAction;
             return this;
+        }
+        
+        public ScriptServiceV2DecoratorBuilder BeforeCompleteScript(Action beforeCompleteScript)
+        {
+            return DecorateCompleteScriptWith((inner, command) =>
+            {
+                beforeCompleteScript();
+                inner.CompleteScript(command);
+            });
         }
 
         public Func<IScriptServiceV2, IScriptServiceV2> Build()

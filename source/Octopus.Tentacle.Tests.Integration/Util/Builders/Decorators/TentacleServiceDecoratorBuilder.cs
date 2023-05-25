@@ -51,7 +51,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
             return t =>
             {
-                foreach (var func in chain)
+                var reverseChain = new List<Func<T, T>>(chain);
+                reverseChain.Reverse();
+                
+                foreach (var func in reverseChain)
                 {
                     t = func(t);
                 }
