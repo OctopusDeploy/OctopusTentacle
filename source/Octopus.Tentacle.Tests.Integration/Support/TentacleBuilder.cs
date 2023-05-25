@@ -55,7 +55,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var runningTentacle = new RunningTentacle(
                 tempDirectory,
                 StartTentacleFunction,
-                tentacleThumbprint);
+                tentacleThumbprint,
+                ct => DeleteInstance(tentacleExe, instanceName, tempDirectory, ct));
 
             try
             {
@@ -142,6 +143,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         internal void CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommand(tentacleExe, new[] { "create-instance", "--config", configFilePath, $"--instance={instanceName}" }, tmp, cancellationToken);
+        }
+        
+        internal void DeleteInstance(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        {
+            RunTentacleCommand(tentacleExe, new[] {"delete-instance", $"--instance={instanceName}"}, tmp, cancellationToken);
+        }
+
+        internal string InstanceNameGenerator()
+        {
+            return $"TentacleIT-{Guid.NewGuid().ToString("N")}";
         }
 
         private void RunTentacleCommand(string tentacleExe, string[] args, TemporaryDirectory tmp, CancellationToken cancellationToken)

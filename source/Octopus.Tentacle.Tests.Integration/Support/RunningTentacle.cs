@@ -10,16 +10,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private CancellationTokenSource? cancellationTokenSource;
         private Task? runningTentacleTask;
         private readonly Func<CancellationToken, Task<(Task runningTentacleTask, Uri serviceUri)>> startTentacleFunction;
+        private readonly Action<CancellationToken> deleteInstanceFunction;
 
         public RunningTentacle(
             IDisposable temporaryDirectory,
             Func<CancellationToken, Task<(Task, Uri)>> startTentacleFunction,
-            string thumbprint)
+            string thumbprint, Action<CancellationToken> deleteInstanceFunction)
         {
             this.startTentacleFunction = startTentacleFunction;
             this.temporaryDirectory = temporaryDirectory;
 
             Thumbprint = thumbprint;
+            this.deleteInstanceFunction = deleteInstanceFunction;
         }
 
         public Uri ServiceUri { get; private set; }
@@ -60,6 +62,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 Stop(CancellationToken.None).GetAwaiter().GetResult();
             }
+
+            deleteInstanceFunction(CancellationToken.None);
 
             temporaryDirectory.Dispose();
         }
