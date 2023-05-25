@@ -18,9 +18,10 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionCanRecoverFromNetworkIssues : IntegrationTest
     {
         [Test]
-        public async Task WhenANetworkFailureOccurs_DuringStartScript_TheClientIsAbleToSuccessfullyCompleteTheScript()
+        [TestCaseSource(typeof(TentacleTypesToTest))]
+        public async Task WhenANetworkFailureOccurs_DuringStartScript_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleType tentacleType)
         {
-            using var clientTentacle = await new ClientAndTentacleBuilder(TentacleType.Polling)
+            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
                 .Build(CancellationToken);
@@ -61,11 +62,12 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public async Task WhenANetworkFailureOccurs_DuringGetStatus_TheClientIsAbleToSuccessfullyCompleteTheScript()
+        [TestCaseSource(typeof(TentacleTypesToTest))]
+        public async Task WhenANetworkFailureOccurs_DuringGetStatus_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleType tentacleType)
         {
-            using var clientTentacle = await new ClientAndTentacleBuilder(TentacleType.Polling)
-                .WithPollingResponseMessageTcpKiller(out var pollingResponseMessageTcpKiller)
-                .WithPortForwarder(builder => builder.WithDataLoggingForPolling())
+            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithPortForwarderDataLogging()
+                .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .RecordExceptionThrownInScriptServiceV2(out var scriptServiceV2Exceptions)
@@ -75,7 +77,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         {
                             if (scriptServiceV2Exceptions.GetStatusLatestException == null)
                             {
-                                pollingResponseMessageTcpKiller.KillConnectionOnNextResponse();
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
                         .Build())
@@ -110,19 +112,22 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public async Task WhenANetworkFailureOccurs_DuringCompleteScript_TheClientIsAbleToSuccessfullyCompleteTheScript()
+        [TestCaseSource(typeof(TentacleTypesToTest))]
+        public async Task WhenANetworkFailureOccurs_DuringCompleteScript_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleType tentacleType)
         {
             bool completeScriptWasCalled = false;
             var portForwarderRef = new Reference<PortForwarder>();
-            using var clientTentacle = await new ClientAndTentacleBuilder(TentacleType.Polling)
-                .WithPortForwarder(builder => builder.WithDataLoggingForPolling())
+            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithPortForwarderDataLogging()
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithServiceEndpointModifier(serviceEndpoint =>
                 {
                     serviceEndpoint.PollingRequestQueueTimeout = TimeSpan.FromSeconds(10);
                     serviceEndpoint.PollingRequestMaximumMessageProcessingTimeout = TimeSpan.FromSeconds(10);
+                    serviceEndpoint.RetryCountLimit = 1;
                 })
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .LogCallsToScriptServiceV2()
                     .DecorateScriptServiceV2With(new ScriptServiceV2DecoratorBuilder()
                         .BeforeCompleteScript(() =>
                         {
@@ -152,24 +157,31 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public async Task WhenANetworkFailureOccurs_DuringCancelScript_TheClientIsAbleToSuccessfullyCancelTheScript()
+        [TestCaseSource(typeof(TentacleTypesToTest))]
+        public async Task WhenANetworkFailureOccurs_DuringCancelScript_TheClientIsAbleToSuccessfullyCancelTheScript(TentacleType tentacleType)
         {
             var cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+            using var tmp = new TemporaryDirectory();
+            var scriptRunningFlag = Path.Combine(tmp.DirectoryPath, "scriptisrunning");
 
-            using var clientTentacle = await new ClientAndTentacleBuilder(TentacleType.Polling)
-                .WithPollingResponseMessageTcpKiller(out var pollingResponseMessageTcpKiller)
-                .WithPortForwarder(builder => builder.WithDataLoggingForPolling())
+            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithPortForwarderDataLogging()
+                .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .LogCallsToScriptServiceV2()
                     .RecordExceptionThrownInScriptServiceV2(out var scriptServiceV2Exceptions)
                     .DecorateScriptServiceV2With(new ScriptServiceV2DecoratorBuilder()
-                        .BeforeGetStatus(() => cts.Cancel())
+                        .BeforeGetStatus(() =>
+                        {
+                            Wait.For(() => File.Exists(scriptRunningFlag), CancellationToken).GetAwaiter().GetResult();
+                            cts.Cancel();
+                        })
                         .BeforeCancelScript(() =>
                         {
                             if (scriptServiceV2Exceptions.CancelScriptLatestException == null)
                             {
-                                pollingResponseMessageTcpKiller.KillConnectionOnNextResponse();
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
                         .Build())
@@ -179,6 +191,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
+                    .CreateFile(scriptRunningFlag)
                     .Sleep(TimeSpan.FromMinutes(2))
                     .Print("AllDone"))
                 .Build();
@@ -195,26 +208,27 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        public async Task WhenANetworkFailureOccurs_DuringGetCapabilities_TheClientIsAbleToSuccessfullyCompleteTheScript()
+        [TestCaseSource(typeof(TentacleTypesToTest))]
+        public async Task WhenANetworkFailureOccurs_DuringGetCapabilities_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleType tentacleType)
         {
-            var token = TestCancellationToken.Token();
-            var logger = new SerilogLoggerBuilder().Build();
-            var queue = new IsTentacleWaitingPendingRequestQueueDecoratorFactory();
-
             Exception exceptionInCallToGetCapabilities = null;
-            using var clientTentacle = await new ClientAndTentacleBuilder(TentacleType.Polling)
-                .WithPollingResponseMessageTcpKiller(out var pollingResponseMessageTcpKiller)
-                .WithPortForwarder(builder => builder.WithDataLoggingForPolling())
+            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithPortForwarderDataLogging()
+                .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
-                .WithPendingRequestQueueFactory(queue)
+                //.WithPendingRequestQueueFactory(queue)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .DecorateCapabilitiesServiceV2With(new CapabilitiesServiceV2DecoratorBuilder()
                         .DecorateGetCapabilitiesWith(inner =>
                         {
-                            logger.Information("Calling GetCapabilities");
+                            Logger.Information("Calling GetCapabilities");
                             if (exceptionInCallToGetCapabilities == null)
+                                
                             {
-                                pollingResponseMessageTcpKiller.KillConnectionOnNextResponse();
+                                // Make a call to capabilities to ensure the TCP connections are all setup.
+                                // Otherwise the TcpKiller is going to struggle to know when to kill
+                                inner.GetCapabilities();
+                                responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
 
                             try
@@ -224,25 +238,23 @@ namespace Octopus.Tentacle.Tests.Integration
                             catch (Exception e)
                             {
                                 exceptionInCallToGetCapabilities = e;
-                                logger.Information("Error in GetCapabilities" + e);
+                                Logger.Information("Error in GetCapabilities" + e);
                                 throw;
                             }
                             finally
                             {
-                                logger.Information("GetCapabilities call complete");
+                                Logger.Information("GetCapabilities call complete");
                             }
                         })
                         .Build())
                     .Build())
                 .Build(CancellationToken);
 
-            await queue.WaitUntilATentacleIsWaitingToDequeueAMessage(token);
-
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().Print("hello"))
                 .Build();
 
-            var (finalResponse, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, token);
+            var (finalResponse, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
 
             finalResponse.State.Should().Be(ProcessState.Complete);
             finalResponse.ExitCode.Should().Be(0);

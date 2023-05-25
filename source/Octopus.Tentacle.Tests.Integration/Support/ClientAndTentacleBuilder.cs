@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         ITentacleServiceDecorator? tentacleServiceDecorator;
         TimeSpan retryDuration = TimeSpan.FromMinutes(2);
         IScriptObserverBackoffStrategy scriptObserverBackoffStrategy = new DefaultScriptObserverBackoffStrategy();
-        readonly TentacleType tentacleType;
+        public readonly TentacleType TentacleType;
         string? tentacleVersion;
         readonly List<Func<PortForwarderBuilder, PortForwarderBuilder>> portForwarderBuilderFunc = new ();
         readonly List<Action<ServiceEndPoint>> serviceEndpointModifiers = new();
@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
-            this.tentacleType = tentacleType;
+            this.TentacleType = tentacleType;
         }
 
         public ClientAndTentacleBuilder WithServiceEndpointModifier(Action<ServiceEndPoint> serviceEndpointModifier)
@@ -104,7 +104,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 TentacleExeFinder.FindTentacleExe() :
                 await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion);
 
-            if (tentacleType == TentacleType.Polling)
+            if (TentacleType == TentacleType.Polling)
             {
                 portForwarder = BuildPortForwarder(serverListeningPort);
 
