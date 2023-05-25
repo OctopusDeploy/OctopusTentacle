@@ -64,8 +64,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var server = new Server(serverHalibutRuntime, serverListeningPort);
 
             // Port Forwarder
-            var portForwarder = PortForwarderBuilder.ForwardingToLocalPort(serverListeningPort).Build();
+            PortForwarder portForwarder;
             RunningTentacle runningTentacle;
+            ServiceEndPoint tentacleEndPoint;
 
             var temporaryDirectory = new TemporaryDirectory();
             var tentacleExe = string.IsNullOrWhiteSpace(tentacleVersion) ?
@@ -74,18 +75,24 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             if (tentacleType == TentacleType.Polling)
             {
+                portForwarder = PortForwarderBuilder.ForwardingToLocalPort(serverListeningPort).Build();
+
                 runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe)
                     .Build(cancellationToken);
+
+                tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
             }
             else
             {
                 runningTentacle = await new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe)
                     .Build(cancellationToken);
-            }
 
-            var tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
+                portForwarder = new PortForwarderBuilder(runningTentacle.ServiceUri).Build();
+
+                tentacleEndPoint = new ServiceEndPoint(portForwarder.PublicEndpoint, runningTentacle.Thumbprint);
+            }
 
             var tentacleClient = new TentacleClient(
                 tentacleEndPoint,
