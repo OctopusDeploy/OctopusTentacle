@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
@@ -15,19 +14,11 @@ namespace Octopus.Tentacle.Tests.Integration
     [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
     public class ClientScriptExecutionScriptArgumentsWork : IntegrationTest
     {
-        class AllTentacleTypesWithV1V2ScriptServices : IEnumerable
-        {
-            public IEnumerator GetEnumerator()
-            {
-                return CartesianProduct.Of(new TentacleTypesToTest(), new V1OnlyAndV2ScriptServiceTentacleVersions()).GetEnumerator();
-            }
-        }
-
         [Test]
         [TestCaseSource(typeof(AllTentacleTypesWithV1V2ScriptServices))]
         public async Task ArgumentsArePassedToTheScript(TentacleType tentacleType, string tentacleVersion)
         {
-            var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithTentacleVersion(tentacleVersion)
                 .Build(CancellationToken);
 
