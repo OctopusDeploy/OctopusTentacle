@@ -1,5 +1,4 @@
 using System;
-using System.Buffers.Text;
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -22,7 +21,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var cachDirName = "TentacleBinaryCache";
             if (TentacleExeFinder.IsRunningInTeamCity())
             {
-                cachDirName += cachDirName + Guid.NewGuid();
+                cachDirName += cachDirName + Guid.NewGuid().ToString("N");
             }
             var cacheDir = Path.Combine(Path.GetTempPath(), cachDirName, NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs());
             Directory.CreateDirectory(cacheDir);
