@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
         {
             await PausePump(cancellationToken);
 
-            // Only read if we have nothing to send or if data exists 
+            // Only read if we have nothing to send or if data exists
             if (readFrom.Available > 0 || buffer.Length == 0)
             {
                 var receivedByteCount = await ReadFromSocket(readFrom, buffer, cancellationToken);
@@ -40,13 +40,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                 stopwatch = Stopwatch.StartNew();
             }
 
-
             await PausePump(cancellationToken);
 
             if ((readFrom.Available == 0 && stopwatch.Elapsed >= sendDelay) || buffer.Length > 100 * 1024 * 1024)
             {
                 // Send the data
                 dataTransferObserver.WritingData(tcpPump, buffer);
+
+                await PausePump(cancellationToken);
+
                 await WriteToSocket(writeTo, buffer.GetBuffer(), (int)buffer.Length, cancellationToken);
                 buffer.SetLength(0);
             }
