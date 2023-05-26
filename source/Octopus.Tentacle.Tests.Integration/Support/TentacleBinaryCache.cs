@@ -16,9 +16,16 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.tentacleFetcher = tentacleFetcher;
         }
 
+        private static string cacheDirRunExtension = Guid.NewGuid().ToString("N");
+
         public async Task<string> GetTentacleVersion(string tmp, string version)
         {
-            var cacheDir = Path.Combine(Path.GetTempPath(), "TentacleBinaryCache", NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs());
+            var cachDirName = "TentacleBinaryCache";
+            if (TentacleExeFinder.IsRunningInTeamCity())
+            {
+                cachDirName += cachDirName + cacheDirRunExtension;
+            }
+            var cacheDir = Path.Combine(Path.GetTempPath(), cachDirName, NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs());
             Directory.CreateDirectory(cacheDir);
 
             var tentacleVersionCacheDir = Path.Combine(cacheDir, version);
