@@ -34,29 +34,32 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 cancellationToken);
 
             SetThePort(configFilePath, runningTentacle.ServiceUri.Port);
-            
+
             return runningTentacle;
         }
 
         private void ConfigureTentacleToListen(string configFilePath)
         {
-            var writableTentacleConfiguration = GetWritableTentacleConfiguration(configFilePath);
-
-            writableTentacleConfiguration.AddOrUpdateTrustedOctopusServer(new OctopusServerConfiguration(ServerThumbprint)
+            WithWritableTentacleConfiguration(configFilePath, writableTentacleConfiguration =>
             {
-                CommunicationStyle = CommunicationStyle.TentaclePassive,
-            });
-            
-            writableTentacleConfiguration.SetApplicationDirectory(Path.Combine(new DirectoryInfo(configFilePath).Parent.FullName, "appdir"));
+                writableTentacleConfiguration.AddOrUpdateTrustedOctopusServer(new OctopusServerConfiguration(ServerThumbprint)
+                {
+                    CommunicationStyle = CommunicationStyle.TentaclePassive,
+                });
 
-            writableTentacleConfiguration.SetServicesPortNumber(0); // Find a random available port
-            writableTentacleConfiguration.SetNoListen(false);
+                writableTentacleConfiguration.SetApplicationDirectory(Path.Combine(new DirectoryInfo(configFilePath).Parent.FullName, "appdir"));
+
+                writableTentacleConfiguration.SetServicesPortNumber(0); // Find a random available port
+                writableTentacleConfiguration.SetNoListen(false);
+            });
         }
-        
+
         private void SetThePort(string configFilePath, int port)
         {
-            var writableTentacleConfiguration = GetWritableTentacleConfiguration(configFilePath);
-            writableTentacleConfiguration.SetServicesPortNumber(port);
+            WithWritableTentacleConfiguration(configFilePath, writableTentacleConfiguration =>
+            {
+                writableTentacleConfiguration.SetServicesPortNumber(port);
+            });
         }
     }
 }

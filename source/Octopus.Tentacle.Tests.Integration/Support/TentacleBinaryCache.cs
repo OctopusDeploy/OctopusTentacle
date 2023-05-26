@@ -39,7 +39,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 lock (CacheMutex)
                 {
-                    parentDir.MoveTo(tentacleVersionCacheDir);
+                    parentDir.CopyTo(tentacleVersionCacheDir);
+                    Directory.Delete(parentDir.FullName, true);
                 }
             }
             catch (Exception e)
