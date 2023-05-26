@@ -15,6 +15,7 @@ using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
+    [Parallelizable(scope: ParallelScope.All)]
     public class ClientScriptExecutionCanRecoverFromNetworkIssues : IntegrationTest
     {
         [Test]
@@ -222,7 +223,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         {
                             Logger.Information("Calling GetCapabilities");
                             if (exceptionInCallToGetCapabilities == null)
-                                
+
                             {
                                 // Make a call to capabilities to ensure the TCP connections are all setup.
                                 // Otherwise the TcpKiller is going to struggle to know when to kill

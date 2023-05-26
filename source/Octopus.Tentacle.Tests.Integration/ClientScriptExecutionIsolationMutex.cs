@@ -1,14 +1,12 @@
 using System;
+using System.Collections;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Halibut;
 using NUnit.Framework;
-using Octopus.Tentacle.Client;
-using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -16,161 +14,155 @@ using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
-    public class ClientScriptExecutionIsolationMutex
+    [Parallelizable(scope: ParallelScope.All)]
+    public class ClientScriptExecutionIsolationMutex : IntegrationTest
     {
-        
-        [TestCase(true, null, ScriptIsolationLevel.FullIsolation)] // Has Script service v2
-        [TestCase(false, "6.3.451", ScriptIsolationLevel.FullIsolation)] // Script Service v1
-        [TestCase(true, null, ScriptIsolationLevel.NoIsolation)] // Has Script service v2
-        [TestCase(false, "6.3.451", ScriptIsolationLevel.NoIsolation)] // Script Service v1
-        public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(bool useTentacleBuiltFromCurrentCode, string version, ScriptIsolationLevel levelOfSecondScript)
+        class AllTentacleTypesWithV1V2AndAllIsolationTypes : IEnumerable
         {
-            //TODO
-            var token = TestCancellationToken.Token();
-            using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
-                .WithServerCertificate(Support.Certificates.Server)
-                .WithMessageSerializer(s => s.WithLegacyContractSupport())
-                .Build();
-
-            var port = octopus.Listen();
-            octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
-
-            using var tmp = new TemporaryDirectory();
-            var oldTentacleExe = useTentacleBuiltFromCurrentCode ? TentacleExeFinder.FindTentacleExe() : await TentacleFetcher.GetTentacleVersion(tmp.DirectoryPath, version);
-            using (var runningTentacle = await new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
-                       .WithTentacleExe(oldTentacleExe)
-                       .Build(token))
+            public IEnumerator GetEnumerator()
             {
-                var serviceEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
-                var firstScriptStartFile = Path.Combine(tmp.DirectoryPath, "firstScriptStartFile");
-                var firstScriptWaitFile = Path.Combine(tmp.DirectoryPath, "firstScriptWaitFile");
-                
-                var secondScriptStart = Path.Combine(tmp.DirectoryPath, "secondScriptStartFile");
-
-
-                var firstStartScriptCommand = new StartScriptCommandV2Builder()
-                    .WithScriptBody(new ScriptBuilder()
-                        .CreateFile(firstScriptStartFile)
-                        .WaitForFileToExist(firstScriptWaitFile))
-                    .WithIsolation(ScriptIsolationLevel.FullIsolation)
-                    .WithMutexName("mymutex")
-                    .Build();
-                
-                
-                var secondStartScriptCommand = new StartScriptCommandV2Builder()
-                    .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
-                    .WithIsolation(levelOfSecondScript)
-                    .WithMutexName("mymutex")
-                    .Build();
-                
-                var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder()
-                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
-                    .CountCallsToScriptService(out var scriptServiceCallCounts)
-                    .Build();
-
-                var tentacleClient = new TentacleClient(serviceEndPoint, octopus, new DefaultScriptObserverBackoffStrategy(), tentacleServicesDecorator, TimeSpan.FromMinutes(4));
-                var firstScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstStartScriptCommand, token));
-
-                // Wait for the first script to start running
-                await Wait.For(() => File.Exists(firstScriptStartFile), token);
-                
-                var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, token));
-
-                // Wait for the second script start script RPC call to return. 
-                await Wait.For(() => (scriptServiceV2CallCounts.StartScriptCallCountComplete + scriptServiceCallCounts.StartScriptCallCountComplete) == 2, token);
-
-                // Give Tentacle some more time to run the script (although it should not).
-                await Task.Delay(TimeSpan.FromSeconds(2));
-
-                File.Exists(secondScriptStart).Should().BeFalse("The second script must not be started while the first is running with a FullIsolationMutex");
-                
-                // Let the first script finish.
-                File.WriteAllText(firstScriptWaitFile, "");
-
-                var(finalResponseFirstScript, _) = await firstScriptExecution;
-                var(finalResponseSecondScript, _) = await secondScriptExecution;
-                
-                File.Exists(secondScriptStart).Should().BeTrue("The second should now have run.");
-
-                finalResponseFirstScript.ExitCode.Should().Be(0);
-                finalResponseSecondScript.ExitCode.Should().Be(0);
+                var scriptIsolationLevels = new[] {ScriptIsolationLevel.FullIsolation, ScriptIsolationLevel.NoIsolation};
+                return CartesianProduct.Of(new TentacleTypesToTest(), new V1OnlyAndV2ScriptServiceTentacleVersions(), scriptIsolationLevels).GetEnumerator();
             }
         }
-        
-        [TestCase(true, null,ScriptIsolationLevel.FullIsolation, "mutex", ScriptIsolationLevel.FullIsolation, "differentMutex")]
-        [TestCase(true, null,ScriptIsolationLevel.NoIsolation, "sameMutex", ScriptIsolationLevel.NoIsolation, "sameMutex")]
-        [TestCase(false, "6.3.451", ScriptIsolationLevel.FullIsolation, "mutex", ScriptIsolationLevel.FullIsolation, "differentMutex")]
-        [TestCase(false, "6.3.451", ScriptIsolationLevel.NoIsolation, "sameMutex", ScriptIsolationLevel.NoIsolation, "sameMutex")]
+
+        [Test]
+        [TestCaseSource(typeof(AllTentacleTypesWithV1V2AndAllIsolationTypes))]
+        public async Task ScriptIsolationMutexFull_EnsuresTwoDifferentScriptsDontRunAtTheSameTime(TentacleType tentacleType, string tentacleVersion, ScriptIsolationLevel levelOfSecondScript)
+        {
+            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithTentacleVersion(tentacleVersion)
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
+                    .CountCallsToScriptService(out var scriptServiceCallCounts)
+                    .Build())
+                .Build(CancellationToken);
+
+            using var tmp = new TemporaryDirectory();
+
+            var firstScriptStartFile = Path.Combine(tmp.DirectoryPath, "firstScriptStartFile");
+            var firstScriptWaitFile = Path.Combine(tmp.DirectoryPath, "firstScriptWaitFile");
+
+            var secondScriptStart = Path.Combine(tmp.DirectoryPath, "secondScriptStartFile");
+
+            var firstStartScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody(new ScriptBuilder()
+                    .CreateFile(firstScriptStartFile)
+                    .WaitForFileToExist(firstScriptWaitFile))
+                .WithIsolation(ScriptIsolationLevel.FullIsolation)
+                .WithMutexName("mymutex")
+                .Build();
+
+            var secondStartScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
+                .WithIsolation(levelOfSecondScript)
+                .WithMutexName("mymutex")
+                .Build();
+
+            var tentacleClient = clientTentacle.TentacleClient;
+            var firstScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstStartScriptCommand, CancellationToken));
+
+            // Wait for the first script to start running
+            await Wait.For(() => File.Exists(firstScriptStartFile), CancellationToken);
+            Logger.Information("First script is now running");
+
+            var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, CancellationToken));
+
+            // Wait for the second script start script RPC call to return. 
+            await Wait.For(() => (scriptServiceV2CallCounts.StartScriptCallCountComplete + scriptServiceCallCounts.StartScriptCallCountComplete) == 2, CancellationToken);
+
+            // Give Tentacle some more time to run the script (although it should not).
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            File.Exists(secondScriptStart).Should().BeFalse("The second script must not be started while the first is running with a FullIsolationMutex");
+
+            // Let the first script finish.
+            File.WriteAllText(firstScriptWaitFile, "");
+
+            var (finalResponseFirstScript, _) = await firstScriptExecution;
+            var (finalResponseSecondScript, _) = await secondScriptExecution;
+
+            File.Exists(secondScriptStart).Should().BeTrue("The second should now have run.");
+
+            finalResponseFirstScript.ExitCode.Should().Be(0);
+            finalResponseSecondScript.ExitCode.Should().Be(0);
+        }
+
+        class ScriptsCanRunInParallelCases : IEnumerable
+        {
+            public IEnumerator GetEnumerator()
+            {
+                var allTheTentacles = CartesianProduct.Of(new TentacleTypesToTest(), new V1OnlyAndV2ScriptServiceTentacleVersions());
+
+                var allTheCases = new object[]
+                {
+                    new object[] {ScriptIsolationLevel.FullIsolation, "mutex", ScriptIsolationLevel.FullIsolation, "differentMutex"},
+                    new object[] {ScriptIsolationLevel.NoIsolation, "sameMutex", ScriptIsolationLevel.NoIsolation, "sameMutex"}
+                };
+
+                return CartesianProduct.Of(allTheTentacles, allTheCases)
+                    .Select(tentacleAndCase => tentacleAndCase.SelectMany(n => (object[])n).ToArray())
+                    .GetEnumerator();
+            }
+        }
+
+        [Test]
+        [TestCaseSource(typeof(ScriptsCanRunInParallelCases))]
         public async Task ScriptIsolationMutexFull_IsOnlyExclusiveWhenFullAndWhenTheMutexNameIsTheSame(
-            bool useTentacleBuiltFromCurrentCode,
-            string version,
-            ScriptIsolationLevel levelOfFirstScript, 
+            TentacleType tentacleType,
+            string tentacleVersion,
+            ScriptIsolationLevel levelOfFirstScript,
             string mutexForFirstScript,
             ScriptIsolationLevel levelOfSecondScript,
             string mutexForSecondScript)
         {
-            var token = TestCancellationToken.Token();
-            using IHalibutRuntime octopus = new HalibutRuntimeBuilder()
-                .WithServerCertificate(Support.Certificates.Server)
-                .WithMessageSerializer(s => s.WithLegacyContractSupport())
-                .Build();
-
-            var port = octopus.Listen();
-            octopus.Trust(Support.Certificates.TentaclePublicThumbprint);
+            using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithTentacleVersion(tentacleVersion)
+                .Build(CancellationToken);
 
             using var tmp = new TemporaryDirectory();
-            var oldTentacleExe = useTentacleBuiltFromCurrentCode ? TentacleExeFinder.FindTentacleExe() : await TentacleFetcher.GetTentacleVersion(tmp.DirectoryPath, version);
-            using (var runningTentacle = await new PollingTentacleBuilder(port, Support.Certificates.ServerPublicThumbprint)
-                       .WithTentacleExe(oldTentacleExe)
-                       .Build(token))
-            {
-                var serviceEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
-                var firstScriptStartFile = Path.Combine(tmp.DirectoryPath, "firstScriptStartFile");
-                var firstScriptWaitFile = Path.Combine(tmp.DirectoryPath, "firstScriptWaitFile");
-                
-                var secondScriptStart = Path.Combine(tmp.DirectoryPath, "secondScriptStartFile");
 
+            var firstScriptStartFile = Path.Combine(tmp.DirectoryPath, "firstScriptStartFile");
+            var firstScriptWaitFile = Path.Combine(tmp.DirectoryPath, "firstScriptWaitFile");
 
-                var firstStartScriptCommand = new StartScriptCommandV2Builder()
-                    .WithScriptBody(new ScriptBuilder()
-                        .CreateFile(firstScriptStartFile)
-                        .WaitForFileToExist(firstScriptWaitFile))
-                    .WithIsolation(levelOfFirstScript)
-                    .WithMutexName(mutexForFirstScript)
-                    .Build();
-                
-                
-                var secondStartScriptCommand = new StartScriptCommandV2Builder()
-                    .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
-                    .WithIsolation(levelOfSecondScript)
-                    .WithMutexName(mutexForSecondScript)
-                    .Build();
-                
-                var tentacleServicesDecorator = new TentacleServiceDecoratorBuilder().Build();
+            var secondScriptStart = Path.Combine(tmp.DirectoryPath, "secondScriptStartFile");
 
-                var tentacleClient = new TentacleClient(serviceEndPoint, octopus, new DefaultScriptObserverBackoffStrategy(), tentacleServicesDecorator, TimeSpan.FromMinutes(4));
-                var firstScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstStartScriptCommand, token));
+            var firstStartScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody(new ScriptBuilder()
+                    .CreateFile(firstScriptStartFile)
+                    .WaitForFileToExist(firstScriptWaitFile))
+                .WithIsolation(levelOfFirstScript)
+                .WithMutexName(mutexForFirstScript)
+                .Build();
 
-                // Wait for the first script to start running
-                await Wait.For(() => File.Exists(firstScriptStartFile), token);
-                
-                var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, token));
-                
-                // Wait for the second script to start
-                await Wait.For(() => File.Exists(secondScriptStart), token);
-                // Both scripts are now running in parallel
+            var secondStartScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody(new ScriptBuilder().CreateFile(secondScriptStart))
+                .WithIsolation(levelOfSecondScript)
+                .WithMutexName(mutexForSecondScript)
+                .Build();
 
-                // Let the first script finish.
-                File.WriteAllText(firstScriptWaitFile, "");
+            var tentacleClient = clientTentacle.TentacleClient;
+            var firstScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(firstStartScriptCommand, CancellationToken));
 
-                var(finalResponseFirstScript, _) = await firstScriptExecution;
-                var(finalResponseSecondScript, _) = await secondScriptExecution;
-                
-                File.Exists(secondScriptStart).Should().BeTrue("The second script must not be started while the first is running with a FullIsolationMutex");
+            // Wait for the first script to start running
+            await Wait.For(() => File.Exists(firstScriptStartFile), CancellationToken);
 
-                finalResponseFirstScript.ExitCode.Should().Be(0);
-                finalResponseSecondScript.ExitCode.Should().Be(0);
-            }
+            var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, CancellationToken));
+
+            // Wait for the second script to start
+            await Wait.For(() => File.Exists(secondScriptStart), CancellationToken);
+            // Both scripts are now running in parallel
+
+            // Let the first script finish.
+            File.WriteAllText(firstScriptWaitFile, "");
+
+            var (finalResponseFirstScript, _) = await firstScriptExecution;
+            var (finalResponseSecondScript, _) = await secondScriptExecution;
+
+            File.Exists(secondScriptStart).Should().BeTrue("The second script must not be started while the first is running with a FullIsolationMutex");
+
+            finalResponseFirstScript.ExitCode.Should().Be(0);
+            finalResponseSecondScript.ExitCode.Should().Be(0);
         }
     }
 }

@@ -1,13 +1,19 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public class TentacleTypesToTest : IEnumerable
+    public class TentacleTypesToTest : IEnumerable<TentacleType>
     {
-        public IEnumerator GetEnumerator()
+        public IEnumerator<TentacleType> GetEnumerator()
         {
-            yield return new object[] { TentacleType.Polling };
-            yield return new object[] { TentacleType.Listening };
+            yield return  TentacleType.Polling;
+            yield return TentacleType.Listening;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

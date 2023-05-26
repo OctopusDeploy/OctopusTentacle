@@ -18,7 +18,7 @@ using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
-    [Ignore("")]
+    [Parallelizable(scope: ParallelScope.All)]
     public class ClientScriptExecutionScriptServiceV1IsNotRetried : IntegrationTest
     {
         [Test]
