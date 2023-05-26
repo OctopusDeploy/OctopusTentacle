@@ -13,15 +13,17 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
         public static ParallelScope ScopeFromEnv()
         {
-            if (TentacleExeFinder.IsRunningInTeamCity()) return ParallelScope.Default;
-            var var  =Environment.GetEnvironmentVariable("RunTestsInParallel") ?? "false";
-            if (var.Equals("true"))
-            {
-                ThreadPool.SetMaxThreads(2000, 2000);
-                ThreadPool.SetMinThreads(2000, 2000);
-                return ParallelScope.All;
-            }
-            return ParallelScope.Default;
+            // TODO don't actually bring this in.
+            return ParallelScope.All;
+            // if (TentacleExeFinder.IsRunningInTeamCity()) return ParallelScope.Default;
+            // var var  =Environment.GetEnvironmentVariable("RunTestsInParallel") ?? "false";
+            // if (var.Equals("true"))
+            // {
+            //     ThreadPool.SetMaxThreads(2000, 2000);
+            //     ThreadPool.SetMinThreads(2000, 2000);
+            //     return ParallelScope.All;
+            // }
+            // return ParallelScope.Default;
         }
     }
 }
