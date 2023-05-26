@@ -18,7 +18,6 @@ using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
-    [Ignore("")]
     [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
     [IntegrationTestTimeout]
     public class ClientScriptExecutionScriptServiceV1IsNotRetried : IntegrationTest
@@ -111,7 +110,9 @@ namespace Octopus.Tentacle.Tests.Integration
 
 
             List<ProcessOutput> logs = new List<ProcessOutput>();
+            Logger.Information("Starting and waiting for script exec");
             Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScriptAssumingException(startScriptCommand, logs, CancellationToken));
+            Logger.Information("Exception thrown.");
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
@@ -123,6 +124,8 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
             scriptServiceCallCounts.GetStatusCallCountStarted.Should().Be(1);
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
+            
+            Logger.Information("All done");
         }
 
         [Test]
