@@ -68,14 +68,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
+        public ClientAndTentacleBuilder WithPortForwarder()
+        {
+            return this.WithPortForwarder(p => p);
+        }
         public ClientAndTentacleBuilder WithPortForwarder(Func<PortForwarderBuilder, PortForwarderBuilder> portForwarderBuilder)
         {
             this.portForwarderBuilderFunc.Add(portForwarderBuilder);
             return this;
         }
 
-        private PortForwarder BuildPortForwarder(int port)
+        private PortForwarder? BuildPortForwarder(int port)
         {
+            if (portForwarderBuilderFunc.Count == 0) return null;
             return portForwarderBuilderFunc.Aggregate(PortForwarderBuilder.ForwardingToLocalPort(port), (current, port) => port(current)).Build();
         }
 
@@ -94,7 +99,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var server = new Server(serverHalibutRuntime, serverListeningPort);
 
             // Port Forwarder
-            PortForwarder portForwarder;
+            PortForwarder? portForwarder;
             RunningTentacle runningTentacle;
             ServiceEndPoint tentacleEndPoint;
 
@@ -107,7 +112,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 portForwarder = BuildPortForwarder(serverListeningPort);
 
-                runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Certificates.ServerPublicThumbprint)
+                runningTentacle = await new PollingTentacleBuilder(portForwarder?.ListeningPort??serverListeningPort, Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe)
                     .Build(cancellationToken);
 
@@ -121,7 +126,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 portForwarder = BuildPortForwarder(runningTentacle.ServiceUri.Port);
 
-                tentacleEndPoint = new ServiceEndPoint(portForwarder.PublicEndpoint, runningTentacle.Thumbprint);
+                tentacleEndPoint = new ServiceEndPoint(portForwarder?.PublicEndpoint??runningTentacle.ServiceUri, runningTentacle.Thumbprint);
             }
 
 

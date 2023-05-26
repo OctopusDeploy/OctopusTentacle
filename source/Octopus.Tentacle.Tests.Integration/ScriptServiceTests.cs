@@ -7,9 +7,11 @@ using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
+using Octopus.Tentacle.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
+    [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
     public class ScriptServiceTests : IntegrationTest
     {
         [Test]

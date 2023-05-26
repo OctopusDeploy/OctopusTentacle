@@ -15,6 +15,7 @@ using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
+    [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
     public class ClientScriptExecutionCanRecoverFromNetworkIssues : IntegrationTest
     {
         [Test]
@@ -22,6 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenANetworkFailureOccurs_DuringStartScript_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleType tentacleType)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithPortForwarder()
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
                 .Build(CancellationToken);
@@ -222,7 +224,7 @@ namespace Octopus.Tentacle.Tests.Integration
                         {
                             Logger.Information("Calling GetCapabilities");
                             if (exceptionInCallToGetCapabilities == null)
-                                
+
                             {
                                 // Make a call to capabilities to ensure the TCP connections are all setup.
                                 // Otherwise the TcpKiller is going to struggle to know when to kill

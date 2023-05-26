@@ -7,6 +7,7 @@ using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
+    [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
     public abstract class IntegrationTest
     {
         CancellationTokenSource? cancellationTokenSource;
