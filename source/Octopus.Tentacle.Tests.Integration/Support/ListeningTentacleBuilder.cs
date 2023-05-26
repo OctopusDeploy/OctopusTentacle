@@ -48,7 +48,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 });
 
                 writableTentacleConfiguration.SetApplicationDirectory(Path.Combine(new DirectoryInfo(configFilePath).Parent.FullName, "appdir"));
-
+                
                 writableTentacleConfiguration.SetServicesPortNumber(0); // Find a random available port
                 writableTentacleConfiguration.SetNoListen(false);
             });
