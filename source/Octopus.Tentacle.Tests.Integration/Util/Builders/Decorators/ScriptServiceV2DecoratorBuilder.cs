@@ -20,6 +20,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             });
         }
 
+        public ScriptServiceV2DecoratorBuilder BeforeStartScript(Action<IScriptServiceV2, StartScriptCommandV2> beforeStartScript)
+        {
+            return DecorateStartScriptWith((inner, scriptStatusRequestV2) =>
+            {
+                beforeStartScript(inner, scriptStatusRequestV2);
+                return inner.StartScript(scriptStatusRequestV2);
+            });
+        }
+
         public ScriptServiceV2DecoratorBuilder DecorateStartScriptWith(Func<IScriptServiceV2, StartScriptCommandV2, ScriptStatusResponseV2> startScriptFunc)
         {
             this.startScriptFunc = startScriptFunc;

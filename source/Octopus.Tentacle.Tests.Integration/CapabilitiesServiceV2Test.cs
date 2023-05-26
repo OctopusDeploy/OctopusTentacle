@@ -26,6 +26,7 @@ namespace Octopus.Tentacle.Tests.Integration
     }
 
     [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
+    [IntegrationTestTimeout]
     public class CapabilitiesServiceV2Test : IntegrationTest
     {
         [Test]

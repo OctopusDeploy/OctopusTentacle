@@ -18,6 +18,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             });
         }
 
+        public FileTransferServiceDecoratorBuilder BeforeUploadFile(Action<IFileTransferService, string, DataStream> beforeUploadFile)
+        {
+            return DecorateUploadFileWith((inner, remotePath, upload) =>
+            {
+                beforeUploadFile(inner, remotePath, upload);
+                return inner.UploadFile(remotePath, upload);
+            });
+        }
+
         public FileTransferServiceDecoratorBuilder DecorateUploadFileWith(Func<IFileTransferService, string, DataStream, UploadResult> uploadFileFunc)
         {
             this.uploadFileFunc = uploadFileFunc;
@@ -29,6 +38,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return DecorateDownloadFileWith((inner, remotePath) =>
             {
                 beforeDownloadFile();
+                return inner.DownloadFile(remotePath);
+            });
+        }
+
+        public FileTransferServiceDecoratorBuilder BeforeDownloadFile(Action<IFileTransferService, string> beforeDownloadFile)
+        {
+            return DecorateDownloadFileWith((inner, remotePath) =>
+            {
+                beforeDownloadFile(inner, remotePath);
                 return inner.DownloadFile(remotePath);
             });
         }
