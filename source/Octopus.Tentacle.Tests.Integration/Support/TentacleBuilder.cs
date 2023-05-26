@@ -34,13 +34,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return (T)this;
         }
 
-        protected IWritableTentacleConfiguration GetWritableTentacleConfiguration(string configFilePath)
+        protected void WithWritableTentacleConfiguration(string configFilePath, Action<IWritableTentacleConfiguration> action)
         {
             var startUpConfigFileInstanceRequest = new StartUpConfigFileInstanceRequest(configFilePath);
             using var container = new Program(Array.Empty<string>()).BuildContainer(startUpConfigFileInstanceRequest);
 
             var writableTentacleConfiguration = container.Resolve<IWritableTentacleConfiguration>();
-            return writableTentacleConfiguration;
+
+            action(writableTentacleConfiguration);
         }
 
         protected async Task<RunningTentacle> StartTentacle(

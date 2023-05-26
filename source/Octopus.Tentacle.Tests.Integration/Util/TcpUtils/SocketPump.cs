@@ -77,21 +77,37 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 ArraySegment<byte> outputBuffer = new ArraySegment<byte>(inputBuffer, offset, totalBytesToSend - offset);
+
 #if DOES_NOT_SUPPORT_CANCELLATION_ON_SOCKETS
-                offset += await writeTo.SendAsync(outputBuffer, SocketFlags.None).ConfigureAwait(false);
+                var sendAsyncCancellationTokenSource = new CancellationTokenSource();
+                using (cancellationToken.Register(() => sendAsyncCancellationTokenSource.Cancel()))
+                {
+                    var cancelTask = sendAsyncCancellationTokenSource.Token.AsTask<int>();
+                    var actionTask = writeTo.SendAsync(outputBuffer, SocketFlags.None);
+
+                    offset += await (await Task.WhenAny(actionTask, cancelTask).ConfigureAwait(false)).ConfigureAwait(false);
+                }
 #else
                 offset += await writeTo.SendAsync(outputBuffer, SocketFlags.None, cancellationToken).ConfigureAwait(false);
 #endif
             }
-
         }
 
         static async Task<int> ReadFromSocket(Socket readFrom, MemoryStream memoryStream, CancellationToken cancellationToken)
         {
             var inputBuffer = new byte[readFrom.ReceiveBufferSize];
             ArraySegment<byte> inputBufferArraySegment = new ArraySegment<byte>(inputBuffer);
+
 #if DOES_NOT_SUPPORT_CANCELLATION_ON_SOCKETS
-            var receivedByteCount = await readFrom.ReceiveAsync(inputBufferArraySegment, SocketFlags.None).ConfigureAwait(false);
+            int receivedByteCount;
+            var receiveAsyncCancellationTokenSource = new CancellationTokenSource();
+            using (cancellationToken.Register(() => receiveAsyncCancellationTokenSource.Cancel()))
+            {
+                var cancelTask = receiveAsyncCancellationTokenSource.Token.AsTask<int>();
+                var actionTask = readFrom.ReceiveAsync(inputBufferArraySegment, SocketFlags.None);
+
+                receivedByteCount = await (await Task.WhenAny(actionTask, cancelTask).ConfigureAwait(false)).ConfigureAwait(false);
+            }
 #else
             var receivedByteCount = await readFrom.ReceiveAsync(inputBufferArraySegment, SocketFlags.None, cancellationToken).ConfigureAwait(false);
 #endif

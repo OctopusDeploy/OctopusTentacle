@@ -132,15 +132,32 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
         public void Dispose()
         {
             if(!cancellationTokenSource.IsCancellationRequested) cancellationTokenSource.Cancel();
-            listeningSocket.Close();
 
             var exceptions = DisposePumps();
 
             try
             {
+                listeningSocket.Shutdown(SocketShutdown.Both);
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(e);
+            }
+
+            try
+            {
+                listeningSocket.Close(0);
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(e);
+            }
+
+            try
+            {
                 listeningSocket.Dispose();
             }
-            catch (Exception e) when (e is not ObjectDisposedException)
+            catch (Exception e)
             {
                 exceptions.Add(e);
             }
@@ -149,7 +166,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             {
                 cancellationTokenSource.Dispose();
             }
-            catch (Exception e) when (e is not ObjectDisposedException)
+            catch (Exception e)
             {
                 exceptions.Add(e);
             }
