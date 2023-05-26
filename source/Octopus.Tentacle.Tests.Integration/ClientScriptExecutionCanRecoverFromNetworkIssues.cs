@@ -23,6 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenANetworkFailureOccurs_DuringStartScript_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleType tentacleType)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithPortForwarder()
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
                 .Build(CancellationToken);
