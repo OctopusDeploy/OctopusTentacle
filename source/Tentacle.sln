@@ -22,6 +22,11 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Manager.Tentacle", "Octopus.Manager.Tentacle\Octopus.Manager.Tentacle.csproj", "{A9E01394-4A21-418F-9ACC-D5A164E8491B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Tests", "Octopus.Tentacle.Tests\Octopus.Tentacle.Tests.csproj", "{8A33CADF-9D7F-4835-842C-B71700DB6A3B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4} = {0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}
+		{407551C4-B4DF-4665-96B1-BFF6A6A74D36} = {407551C4-B4DF-4665-96B1-BFF6A6A74D36}
+		{506D425E-10F0-49A1-826C-8B704B7140B2} = {506D425E-10F0-49A1-826C-8B704B7140B2}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Upgrader", "Octopus.Tentacle.Upgrader\Octopus.Tentacle.Upgrader.csproj", "{8F604C33-4137-4C00-A9B3-847FD403811D}"
 EndProject
@@ -30,6 +35,11 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Contracts", "Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj", "{407551C4-B4DF-4665-96B1-BFF6A6A74D36}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Tests.Integration", "Octopus.Tentacle.Tests.Integration\Octopus.Tentacle.Tests.Integration.csproj", "{86C4288E-9982-4DC6-994F-461C95640C7D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4} = {0FCA52BD-3D2C-4F05-9F87-42920C1FA4F4}
+		{407551C4-B4DF-4665-96B1-BFF6A6A74D36} = {407551C4-B4DF-4665-96B1-BFF6A6A74D36}
+		{506D425E-10F0-49A1-826C-8B704B7140B2} = {506D425E-10F0-49A1-826C-8B704B7140B2}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Octopus.Tentacle.Client", "Octopus.Tentacle.Client\Octopus.Tentacle.Client.csproj", "{506D425E-10F0-49A1-826C-8B704B7140B2}"
 EndProject

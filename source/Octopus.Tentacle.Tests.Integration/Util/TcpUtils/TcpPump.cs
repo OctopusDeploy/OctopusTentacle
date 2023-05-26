@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.Tests.Integration.Support;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
@@ -13,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
         readonly EndPoint clientEndPoint;
         readonly Socket originSocket;
         readonly EndPoint originEndPoint;
-        readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+        readonly CancellationTokenSource cancellationTokenSource = new();
         readonly ILogger logger;
         readonly TimeSpan sendDelay;
         bool isDisposing;
@@ -21,10 +24,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
         public bool IsPaused { get; set; }
         private Func<BiDirectionalDataTransferObserver> factory;
 
-
         public TcpPump(Socket clientSocket, Socket originSocket, EndPoint originEndPoint, TimeSpan sendDelay, Func<BiDirectionalDataTransferObserver> factory, ILogger logger)
         {
-            this.logger = logger.ForContext<TcpPump>(); 
+            this.logger = logger.ForContext<TcpPump>();
             this.clientSocket = clientSocket ?? throw new ArgumentNullException(nameof(clientSocket));
             this.originSocket = originSocket ?? throw new ArgumentNullException(nameof(originSocket));
             this.originEndPoint = originEndPoint ?? throw new ArgumentNullException(nameof(originEndPoint));
@@ -46,7 +48,18 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
                     try
                     {
-                        await originSocket.ConnectAsync(originEndPoint).ConfigureAwait(false);
+#if DOES_NOT_SUPPORT_CANCELLATION_ON_SOCKETS
+                        var connectAsyncCancellationTokenSource = new CancellationTokenSource();
+                        using (cancellationToken.Register(() => connectAsyncCancellationTokenSource.Cancel()))
+                        {
+                            var cancelTask = connectAsyncCancellationTokenSource.Token.AsTask();
+                            var actionTask = originSocket.ConnectAsync(originEndPoint);
+
+                            await (await Task.WhenAny(actionTask, cancelTask).ConfigureAwait(false)).ConfigureAwait(false);
+                        }
+#else
+                        await originSocket.ConnectAsync(originEndPoint, cancellationToken).ConfigureAwait(false);
+#endif
 
                         var biDirectionalCallBack = factory();
                         // If the connection was ok, then set-up a pump both ways
@@ -71,8 +84,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
                     // We are done. Close everything.
                     logger.Verbose("Stopped connection forwarding from {ClientEndPoint} to {OriginEndPoint}.", clientEndPoint.ToString(), originEndPoint.ToString());
-                    clientSocket.Close();
-                    originSocket.Close();
+                    clientSocket.Close(0);
+                    originSocket.Close(0);
 
                     // Let the users know we are done
                     Stopped?.Invoke(this, EventArgs.Empty);
@@ -122,17 +135,66 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             cancellationTokenSource.Dispose();
             isDisposed = true;
 
+            var exceptions = new List<Exception>();
+
             try
             {
                 clientSocket.Shutdown(SocketShutdown.Both);
-                clientSocket.Close();
             }
-            finally
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+
+            try
+            {
+                clientSocket.Close(0);
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+
+            try
+            {
+                clientSocket.Dispose();
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+
+            try
             {
                 originSocket.Shutdown(SocketShutdown.Both);
-                originSocket.Close();
             }
-            
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+
+            try
+            {
+                originSocket.Close(0);
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+
+            try
+            {
+                originSocket.Dispose();
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+
+            if (exceptions.Any())
+            {
+                logger.Warning(new AggregateException(exceptions), "Errors occurred Disposing of hte TcpPump");
+            }
         }
 
         public void Pause()

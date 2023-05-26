@@ -20,6 +20,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             });
         }
 
+        public ScriptServiceV2DecoratorBuilder BeforeStartScript(Action<IScriptServiceV2, StartScriptCommandV2> beforeStartScript)
+        {
+            return DecorateStartScriptWith((inner, scriptStatusRequestV2) =>
+            {
+                beforeStartScript(inner, scriptStatusRequestV2);
+                return inner.StartScript(scriptStatusRequestV2);
+            });
+        }
+
         public ScriptServiceV2DecoratorBuilder DecorateStartScriptWith(Func<IScriptServiceV2, StartScriptCommandV2, ScriptStatusResponseV2> startScriptFunc)
         {
             this.startScriptFunc = startScriptFunc;
@@ -42,6 +51,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             });
         }
 
+        public ScriptServiceV2DecoratorBuilder BeforeGetStatus(Action<IScriptServiceV2, ScriptStatusRequestV2> beforeGetStatus)
+        {
+            return DecorateGetStatusWith((inner, scriptStatusRequestV2) =>
+            {
+                beforeGetStatus(inner, scriptStatusRequestV2);
+                return inner.GetStatus(scriptStatusRequestV2);
+            });
+        }
+
         public ScriptServiceV2DecoratorBuilder DecorateCancelScriptWith(Func<IScriptServiceV2, CancelScriptCommandV2, ScriptStatusResponseV2> cancelScriptFunc)
         {
             this.cancelScriptFunc = cancelScriptFunc;
@@ -53,6 +71,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return DecorateCancelScriptWith((inner, command) =>
             {
                 beforeCancelScript();
+                return inner.CancelScript(command);
+            });
+        }
+
+        public ScriptServiceV2DecoratorBuilder BeforeCancelScript(Action<IScriptServiceV2, CancelScriptCommandV2> beforeCancelScript)
+        {
+            return DecorateCancelScriptWith((inner, command) =>
+            {
+                beforeCancelScript(inner, command);
                 return inner.CancelScript(command);
             });
         }

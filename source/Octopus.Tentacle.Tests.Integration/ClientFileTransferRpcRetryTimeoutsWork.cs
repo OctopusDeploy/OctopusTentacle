@@ -18,7 +18,8 @@ namespace Octopus.Tentacle.Tests.Integration
     /// These tests make sure that we can cancel or walk away (if code does not cooperate with cancellation tokens)
     /// from RPC calls when they are being retried and the rpc timeout period elapses.
     /// </summary>
-    public class FileTransferRpcRetryTimeoutsWork : IntegrationTest
+    [IntegrationTestTimeout]
+    public class ClientFileTransferRpcRetryTimeoutsWork : IntegrationTest
     {
         [Test]
         [TestCase(TentacleType.Polling, false)] // Timeout an in-flight request
@@ -30,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration
             PortForwarder portForwarder = null!;
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 // Set a short retry duration so we cancel fairly quickly
-                .WithRetryDuration(TimeSpan.FromSeconds(10))
+                .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -38,8 +39,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .CountCallsToFileTransferService(out var fileTransferServiceCallCounts)
                     .RecordExceptionThrownInFileTransferService(out var fileTransferServiceException)
                     .DecorateFileTransferServiceWith(d => d
-                        .BeforeUploadFile(() =>
+                        .BeforeUploadFile((service, _, _) =>
                         {
+                            service.EnsureTentacleIsConnectedToServer(Logger);
+
                             // Kill the first UploadFile call to force the rpc call into retries
                             if (fileTransferServiceException.UploadLatestException == null)
                             {
@@ -67,8 +70,6 @@ namespace Octopus.Tentacle.Tests.Integration
 
             portForwarder = clientAndTentacle.PortForwarder;
 
-            WorkAroundAuthIssueAndConnectionKiller(clientAndTentacle);
-
             var remotePath = Path.Combine(clientAndTentacle.TemporaryDirectory.DirectoryPath, "UploadFile.txt");
             var dataStream = DataStream.FromString("The Stream");
 
@@ -84,7 +85,7 @@ namespace Octopus.Tentacle.Tests.Integration
             fileTransferServiceCallCounts.DownloadFileCallCountStarted.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
-            duration.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(9));
+            duration.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(14));
         }
 
         [Test]
@@ -97,7 +98,7 @@ namespace Octopus.Tentacle.Tests.Integration
             PortForwarder portForwarder = null!;
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 // Set a short retry duration so we cancel fairly quickly
-                .WithRetryDuration(TimeSpan.FromSeconds(30))
+                .WithRetryDuration(TimeSpan.FromSeconds(15))
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -105,8 +106,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .CountCallsToFileTransferService(out var fileTransferServiceCallCounts)
                     .RecordExceptionThrownInFileTransferService(out var fileTransferServiceException)
                     .DecorateFileTransferServiceWith(d => d
-                        .BeforeDownloadFile(() =>
+                        .BeforeDownloadFile((service, _) =>
                         {
+                            service.EnsureTentacleIsConnectedToServer(Logger);
+
                             // Kill the first DownloadFile call to force the rpc call into retries
                             if (fileTransferServiceException.DownloadFileLatestException == null)
                             {
@@ -134,8 +137,6 @@ namespace Octopus.Tentacle.Tests.Integration
 
             portForwarder = clientAndTentacle.PortForwarder;
 
-            WorkAroundAuthIssueAndConnectionKiller(clientAndTentacle);
-
             using var tempFile = new RandomTemporaryFileBuilder().Build();
 
             // Start the script which will wait for a file to exist
@@ -150,12 +151,7 @@ namespace Octopus.Tentacle.Tests.Integration
             fileTransferServiceCallCounts.UploadFileCallCountStarted.Should().Be(0);
 
             // Ensure we actually waited and retried until the timeout policy kicked in
-            duration.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(9));
-        }
-
-        private static void WorkAroundAuthIssueAndConnectionKiller(ClientAndTentacle clientAndTentacle)
-        {
-            var forceConnectionToAuth = clientAndTentacle.TentacleClient.CapabilitiesServiceV2.GetCapabilities();
+            duration.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(14));
         }
     }
 }

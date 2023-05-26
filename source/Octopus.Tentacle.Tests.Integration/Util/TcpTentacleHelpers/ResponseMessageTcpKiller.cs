@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
     public interface IResponseMessageTcpKiller
     {
         void KillConnectionOnNextResponse();
-        void PauseConnectionOnNextResponse();
+        void PauseConnectionOnNextResponse(Action? callBack = null);
     }
 
     public static class ClientAndTentacleBuilderResponseMessageTcpKillerExtensionMethods {

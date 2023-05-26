@@ -11,6 +11,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public long CompleteScriptCallCountStarted;
 
         public long StartScriptCallCountComplete;
+        public long GetStatusCallCountCompleted;
+        public long CancelScriptCallCountCompleted;
+        public long CompleteScriptCallCountCompleted;
     }
 
     public class CountingCallsScriptServiceV2Decorator : IScriptServiceV2
@@ -42,19 +45,40 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public ScriptStatusResponseV2 GetStatus(ScriptStatusRequestV2 request)
         {
             Interlocked.Increment(ref counts.GetStatusCallCountStarted);
-            return inner.GetStatus(request);
+            try
+            {
+                return inner.GetStatus(request);
+            }
+            finally
+            {
+                Interlocked.Increment(ref counts.GetStatusCallCountCompleted);
+            }
         }
 
         public ScriptStatusResponseV2 CancelScript(CancelScriptCommandV2 command)
         {
             Interlocked.Increment(ref counts.CancelScriptCallCountStarted);
-            return inner.CancelScript(command);
+            try
+            {
+                return inner.CancelScript(command);
+            }
+            finally
+            {
+                Interlocked.Increment(ref counts.CancelScriptCallCountCompleted);
+            }
         }
 
         public void CompleteScript(CompleteScriptCommandV2 command)
         {
             Interlocked.Increment(ref counts.CompleteScriptCallCountStarted);
-            inner.CompleteScript(command);
+            try
+            {
+                inner.CompleteScript(command);
+            }
+            finally
+            {
+                Interlocked.Increment(ref counts.CompleteScriptCallCountCompleted);
+            }
         }
     }
 

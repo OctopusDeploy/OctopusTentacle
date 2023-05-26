@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.Tests.Integration.Util;
+using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -11,6 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         private Task? runningTentacleTask;
         private readonly Func<CancellationToken, Task<(Task runningTentacleTask, Uri serviceUri)>> startTentacleFunction;
         private readonly Action<CancellationToken> deleteInstanceFunction;
+        private ILogger logger;
 
         public RunningTentacle(
             IDisposable temporaryDirectory,
@@ -19,6 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             this.startTentacleFunction = startTentacleFunction;
             this.temporaryDirectory = temporaryDirectory;
+            this.logger = new SerilogLoggerBuilder().Build().ForContext<RunningTentacle>();
 
             Thumbprint = thumbprint;
             this.deleteInstanceFunction = deleteInstanceFunction;
@@ -56,6 +61,30 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             await t;
         }
 
+        private void StopOnDispose(CancellationToken cancellationToken)
+        {
+            if (cancellationTokenSource != null)
+            {
+                cancellationTokenSource.Cancel();
+                cancellationTokenSource.Dispose();
+                cancellationTokenSource = null;
+            }
+
+            var t = runningTentacleTask;
+            runningTentacleTask = null;
+
+            var stopDuration = Stopwatch.StartNew();
+            while (t?.IsCompleted == false && stopDuration.Elapsed < TimeSpan.FromSeconds(10))
+            {
+                Thread.Sleep(10);
+            }
+
+            if (t?.IsCompleted == false)
+            {
+                logger.Warning("Failed to stop Running Tentacle");
+            }
+        }
+
         public async Task Restart(CancellationToken cancellationToken)
         {
             await Stop(cancellationToken);
@@ -66,7 +95,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             if (runningTentacleTask != null)
             {
-                Stop(CancellationToken.None).GetAwaiter().GetResult();
+                StopOnDispose(CancellationToken.None);
             }
 
             deleteInstanceFunction(CancellationToken.None);

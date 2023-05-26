@@ -20,9 +20,9 @@ namespace Octopus.Tentacle.Tests.Integration
 {
     [Ignore("")]
     [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
+    [IntegrationTestTimeout]
     public class ClientScriptExecutionScriptServiceV1IsNotRetried : IntegrationTest
     {
-        
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
         public async Task WhenANetworkFailureOccurs_DuringStartScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
@@ -48,8 +48,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            using var tmp = new TemporaryDirectory();
-            var waitForFile = Path.Combine(tmp.DirectoryPath, "waitforme");
+            var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()
@@ -73,7 +72,7 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceCallCounts.GetStatusCallCountStarted.Should().Be(0);
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
         }
-        
+
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
         public async Task WhenANetworkFailureOccurs_DuringGetStatus_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
@@ -99,8 +98,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            using var tmp = new TemporaryDirectory();
-            var waitForFile = Path.Combine(tmp.DirectoryPath, "waitforme");
+            var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()
@@ -124,7 +122,7 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceCallCounts.GetStatusCallCountStarted.Should().Be(1);
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
         }
-        
+
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
         public async Task WhenANetworkFailureOccurs_DuringCancelScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
@@ -152,8 +150,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            using var tmp = new TemporaryDirectory();
-            var waitForFile = Path.Combine(tmp.DirectoryPath, "waitforme");
+            var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()
@@ -179,7 +176,7 @@ namespace Octopus.Tentacle.Tests.Integration
             // Ensure that we didn't just timeout.
             CancellationToken.ThrowIfCancellationRequested();
         }
-        
+
         [Test]
         [TestCaseSource(typeof(TentacleTypesToTest))]
         public async Task WhenANetworkFailureOccurs_DuringCompleteScript_WithATentacleThatOnlySupportsV1ScriptService_TheCallIsNotRetried(TentacleType tentacleType)
@@ -213,18 +210,18 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // We Can not verify what will be in the logs because of race conditions in tentacle.
             // The last complete script which we fail might come back with the logs.
-            
+
             scriptServiceExceptions.CompleteScriptLatestException.Should().NotBeNull();
             scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(1);
         }
     }
-    
-    
+
+
     static class TentacleClientExtensionMethods
     {
         public static async Task<ScriptStatusResponseV2> ExecuteScriptAssumingException(
-            this TentacleClient tentacleClient, 
+            this TentacleClient tentacleClient,
             StartScriptCommandV2 startScriptCommand,
             List<ProcessOutput> logs,
             CancellationToken token)

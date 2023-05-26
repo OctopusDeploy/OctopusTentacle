@@ -15,6 +15,7 @@ using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 namespace Octopus.Tentacle.Tests.Integration
 {
     [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
+    [IntegrationTestTimeout]
     public class ClientScriptExecutionIsolationMutex : IntegrationTest
     {
         class AllTentacleTypesWithV1V2AndAllIsolationTypes : IEnumerable
@@ -38,12 +39,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            using var tmp = new TemporaryDirectory();
+            var firstScriptStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptStartFile");
+            var firstScriptWaitFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptWaitFile");
 
-            var firstScriptStartFile = Path.Combine(tmp.DirectoryPath, "firstScriptStartFile");
-            var firstScriptWaitFile = Path.Combine(tmp.DirectoryPath, "firstScriptWaitFile");
-
-            var secondScriptStart = Path.Combine(tmp.DirectoryPath, "secondScriptStartFile");
+            var secondScriptStart = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "secondScriptStartFile");
 
             var firstStartScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()
@@ -68,7 +67,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, CancellationToken));
 
-            // Wait for the second script start script RPC call to return. 
+            // Wait for the second script start script RPC call to return.
             await Wait.For(() => (scriptServiceV2CallCounts.StartScriptCallCountComplete + scriptServiceCallCounts.StartScriptCallCountComplete) == 2, CancellationToken);
 
             // Give Tentacle some more time to run the script (although it should not).
@@ -120,12 +119,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleVersion(tentacleVersion)
                 .Build(CancellationToken);
 
-            using var tmp = new TemporaryDirectory();
+            var firstScriptStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptStartFile");
+            var firstScriptWaitFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptWaitFile");
 
-            var firstScriptStartFile = Path.Combine(tmp.DirectoryPath, "firstScriptStartFile");
-            var firstScriptWaitFile = Path.Combine(tmp.DirectoryPath, "firstScriptWaitFile");
-
-            var secondScriptStart = Path.Combine(tmp.DirectoryPath, "secondScriptStartFile");
+            var secondScriptStart = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "secondScriptStartFile");
 
             var firstStartScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()
