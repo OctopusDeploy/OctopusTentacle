@@ -25,13 +25,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToListen(configFilePath);
 
-            return await StartTentacle(
+            var runningTentacle = await StartTentacle(
                 null,
                 tentacleExe,
                 instanceName,
                 tempDirectory,
                 TentacleThumbprint,
                 cancellationToken);
+
+            SetThePort(configFilePath, runningTentacle.ServiceUri.Port);
+            
+            return runningTentacle;
         }
 
         private void ConfigureTentacleToListen(string configFilePath)
@@ -47,6 +51,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             writableTentacleConfiguration.SetServicesPortNumber(0); // Find a random available port
             writableTentacleConfiguration.SetNoListen(false);
+        }
+        
+        private void SetThePort(string configFilePath, int port)
+        {
+            var writableTentacleConfiguration = GetWritableTentacleConfiguration(configFilePath);
+            writableTentacleConfiguration.SetServicesPortNumber(port);
         }
     }
 }
