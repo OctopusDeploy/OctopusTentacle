@@ -14,7 +14,7 @@ using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
-    [Parallelizable(scope: ParallelScope.All)]
+    [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
     public class ClientScriptExecutionIsolationMutex : IntegrationTest
     {
         class AllTentacleTypesWithV1V2AndAllIsolationTypes : IEnumerable

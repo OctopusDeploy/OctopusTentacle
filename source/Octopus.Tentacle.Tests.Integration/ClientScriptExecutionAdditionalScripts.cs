@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
@@ -15,10 +16,20 @@ using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
+    [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
     public class ClientScriptExecutionAdditionalScripts
     {
-        [TestCase(true, null)] // Has Script service v2
-        [TestCase(false, "6.3.451")] // Script Service v1
+        
+        public class AllTentacleTypesWithV1AndV2ScriptServiceTentacles : IEnumerable
+        {
+            public IEnumerator GetEnumerator()
+            {
+                return CartesianProduct.Of(new TentacleTypesToTest(), new V1OnlyAndV2ScriptServiceTentacleVersions()).GetEnumerator();
+            }
+        }
+        
+        [Test]
+        [TestCaseSource(typeof(AllTentacleTypesWithV1AndV2ScriptServiceTentacles))]
         public async Task AdditionalScriptsWork(bool useTentacleBuiltFromCurrentCode, string version)
         {
             var token = TestCancellationToken.Token();

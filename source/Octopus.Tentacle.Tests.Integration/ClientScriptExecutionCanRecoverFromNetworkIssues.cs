@@ -15,7 +15,7 @@ using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
-    [Parallelizable(scope: ParallelScope.All)]
+    [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
     public class ClientScriptExecutionCanRecoverFromNetworkIssues : IntegrationTest
     {
         [Test]

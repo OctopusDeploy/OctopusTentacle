@@ -5,6 +5,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
+using Octopus.Tentacle.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -24,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
     }
 
-    [Parallelizable(scope: ParallelScope.All)]
+    [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
     public class CapabilitiesServiceV2Test : IntegrationTest
     {
         [Test]
