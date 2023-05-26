@@ -10,6 +10,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
     public abstract class IntegrationTest
     {
+        public static int TimeoutInMiliseconds = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
+
         CancellationTokenSource? cancellationTokenSource;
         public CancellationToken CancellationToken { get; private set; }
         public ILogger Logger { get; private set; } = null!;
@@ -17,8 +19,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         [SetUp]
         public void SetUp()
         {
-            cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(1));
+            cancellationTokenSource = new CancellationTokenSource(TimeoutInMiliseconds);
             CancellationToken = cancellationTokenSource.Token;
+            CancellationToken.Register(() =>
+            {
+                Assert.Fail("The test timed out.");
+            });
             Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
         }
 
@@ -37,6 +43,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     cancellationTokenSource = null;
                 }
             }
+        }
+    }
+
+    public class IntegrationTestTimeout : TimeoutAttribute
+    {
+        public IntegrationTestTimeout() : base(IntegrationTest.TimeoutInMiliseconds)
+        {
         }
     }
 }

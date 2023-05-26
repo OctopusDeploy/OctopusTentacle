@@ -15,6 +15,7 @@ using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 namespace Octopus.Tentacle.Tests.Integration
 {
     [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
+    [IntegrationTestTimeout]
     public class ClientScriptExecutionIsolationMutex : IntegrationTest
     {
         class AllTentacleTypesWithV1V2AndAllIsolationTypes : IEnumerable
@@ -68,7 +69,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var secondScriptExecution = Task.Run(async () => await tentacleClient.ExecuteScript(secondStartScriptCommand, CancellationToken));
 
-            // Wait for the second script start script RPC call to return. 
+            // Wait for the second script start script RPC call to return.
             await Wait.For(() => (scriptServiceV2CallCounts.StartScriptCallCountComplete + scriptServiceCallCounts.StartScriptCallCountComplete) == 2, CancellationToken);
 
             // Give Tentacle some more time to run the script (although it should not).
