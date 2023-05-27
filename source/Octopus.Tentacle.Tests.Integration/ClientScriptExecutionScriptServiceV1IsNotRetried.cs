@@ -65,6 +65,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
                 // Let the script finish.
                 File.WriteAllText(waitForFile, "");
+                Thread.Sleep(2000); 
 
                 var allLogs = logs.JoinLogs();
 
@@ -125,6 +126,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
                 // Let the script finish.
                 File.WriteAllText(waitForFile, "");
+                Thread.Sleep(2000); // Give the script time to finish
 
                 var allLogs = logs.JoinLogs();
 
@@ -186,7 +188,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             // Let the script finish.
             File.WriteAllText(waitForFile, "");
-
+            Thread.Sleep(2000); // Give the script time to finish
+            
             var allLogs = logs.JoinLogs();
 
             allLogs.Should().NotContain("AllDone");
