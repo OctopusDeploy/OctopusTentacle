@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using NSubstitute;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 using Serilog;
@@ -14,8 +15,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
     public class PollingResponseMessageTcpKiller : IResponseMessageTcpKiller
     {
         private volatile bool killConnection = false;
-        private ILogger logger;
         private volatile bool pauseConnection = false;
+        private ILogger logger;
+        private Action? pauseConnectionCallBack;
 
         public PollingResponseMessageTcpKiller()
         {
@@ -33,7 +35,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
             killConnection = true;
         }
 
-        public void PauseConnectionOnNextResponse()
+        public void PauseConnectionOnNextResponse(Action? callBack = null)
         {
             // Allow some time for control messages to be sent
             // We can't actually tell the difference between control messages being sent and a response message
@@ -42,6 +44,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
             Thread.Sleep(TimeSpan.FromSeconds(1));
             logger.Information("Will pause connection next time tentacle sends data.");
             pauseConnection = true;
+            pauseConnectionCallBack = callBack;
         }
 
         public IDataTransferObserver DataTransferObserver()
@@ -55,6 +58,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
                     pauseConnection = false;
                     logger.Information("Pause connection");
                     tcpPump.Pause();
+                    pauseConnectionCallBack?.Invoke();
                 }
 
                 if (killConnection)

@@ -121,4 +121,74 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
     }
+
+    public static class TentacleServiceDecoratorBuilderExtensionMethods
+    {
+        public static TentacleServiceDecoratorBuilder LogAllCalls(this TentacleServiceDecoratorBuilder builder)
+        {
+            return builder.LogCallsToCapabilitiesServiceV2()
+                .LogCallsToScriptService()
+                .LogCallsToScriptServiceV2()
+                .LogCallsToFileTransferService();
+        }
+
+        public static TentacleServiceDecoratorBuilder CountAllCalls(this TentacleServiceDecoratorBuilder builder,
+            out CapabilitiesServiceV2CallCounts capabilitiesServiceV2CallCounts,
+            out ScriptServiceCallCounts scriptServiceCallCounts,
+            out ScriptServiceV2CallCounts scriptServiceV2CallCounts,
+            out FileTransferServiceCallCounts fileTransferServiceServiceCallCounts)
+        {
+            builder.CountCallsToCapabilitiesServiceV2(out var capabilitiesServiceCallCountsOut)
+                .CountCallsToScriptService(out var scriptServiceCallCountsOut)
+                .CountCallsToScriptServiceV2(out var scriptServiceV2CallCountsOut)
+                .CountCallsToFileTransferService(out var fileTransferServiceCallCountsOut);
+
+            capabilitiesServiceV2CallCounts = capabilitiesServiceCallCountsOut;
+            scriptServiceCallCounts = scriptServiceCallCountsOut;
+            scriptServiceV2CallCounts = scriptServiceV2CallCountsOut;
+            fileTransferServiceServiceCallCounts = fileTransferServiceCallCountsOut;
+
+            return builder;
+        }
+
+        public static TentacleServiceDecoratorBuilder LogAndCountAllCalls(this TentacleServiceDecoratorBuilder builder,
+            out CapabilitiesServiceV2CallCounts capabilitiesServiceV2CallCounts,
+            out ScriptServiceCallCounts scriptServiceCallCounts,
+            out ScriptServiceV2CallCounts scriptServiceV2CallCounts,
+            out FileTransferServiceCallCounts fileTransferServiceServiceCallCounts)
+        {
+            builder.LogAllCalls()
+                .CountAllCalls(out var capabilitiesServiceCallCountsOut,
+                    out var scriptServiceCallCountsOut,
+                    out var scriptServiceV2CallCountsOut,
+                    out var fileTransferServiceCallCountsOut);
+
+            capabilitiesServiceV2CallCounts = capabilitiesServiceCallCountsOut;
+            scriptServiceCallCounts = scriptServiceCallCountsOut;
+            scriptServiceV2CallCounts = scriptServiceV2CallCountsOut;
+            fileTransferServiceServiceCallCounts = fileTransferServiceCallCountsOut;
+
+            return builder;
+        }
+
+        public static TentacleServiceDecoratorBuilder RecordAllExceptions(this TentacleServiceDecoratorBuilder builder,
+            out CapabilitiesServiceV2Exceptions capabilitiesServiceV2Exceptions,
+            out ScriptServiceExceptions scriptServiceExceptions,
+            out ScriptServiceV2Exceptions scriptServiceV2Exceptions,
+            out FileTransferServiceExceptions fileTransferServiceServiceExceptions)
+        {
+            builder.RecordExceptionThrownInCapabilitiesServiceV2(out var capabilitiesServiceV2ExceptionOut)
+                .RecordExceptionThrownInScriptService(out var scriptServiceExceptionsOut)
+                .RecordExceptionThrownInScriptServiceV2(out var scriptServiceV2ExceptionsOut)
+                .RecordExceptionThrownInFileTransferService(out var fileTransferServiceExceptionsOut);
+
+            capabilitiesServiceV2Exceptions = capabilitiesServiceV2ExceptionOut;
+            scriptServiceExceptions = scriptServiceExceptionsOut;
+            scriptServiceV2Exceptions = scriptServiceV2ExceptionsOut;
+            fileTransferServiceServiceExceptions = fileTransferServiceExceptionsOut;
+
+            return builder;
+            //
+        }
+    }
 }

@@ -39,12 +39,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            using var tmp = new TemporaryDirectory();
+            var firstScriptStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptStartFile");
+            var firstScriptWaitFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptWaitFile");
 
-            var firstScriptStartFile = Path.Combine(tmp.DirectoryPath, "firstScriptStartFile");
-            var firstScriptWaitFile = Path.Combine(tmp.DirectoryPath, "firstScriptWaitFile");
-
-            var secondScriptStart = Path.Combine(tmp.DirectoryPath, "secondScriptStartFile");
+            var secondScriptStart = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "secondScriptStartFile");
 
             var firstStartScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()
@@ -121,12 +119,10 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithTentacleVersion(tentacleVersion)
                 .Build(CancellationToken);
 
-            using var tmp = new TemporaryDirectory();
+            var firstScriptStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptStartFile");
+            var firstScriptWaitFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "firstScriptWaitFile");
 
-            var firstScriptStartFile = Path.Combine(tmp.DirectoryPath, "firstScriptStartFile");
-            var firstScriptWaitFile = Path.Combine(tmp.DirectoryPath, "firstScriptWaitFile");
-
-            var secondScriptStart = Path.Combine(tmp.DirectoryPath, "secondScriptStartFile");
+            var secondScriptStart = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "secondScriptStartFile");
 
             var firstStartScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()

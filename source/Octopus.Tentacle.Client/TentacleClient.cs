@@ -23,8 +23,6 @@ namespace Octopus.Tentacle.Client
         readonly IFileTransferService fileTransferServiceV1;
         readonly ICapabilitiesServiceV2 capabilitiesServiceV2;
 
-        internal ICapabilitiesServiceV2 CapabilitiesServiceV2 => capabilitiesServiceV2;
-
         public TentacleClient(ServiceEndPoint serviceEndPoint,
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
@@ -61,7 +59,7 @@ namespace Octopus.Tentacle.Client
             return await rpcCallRetryHandler.ExecuteWithRetries(
                 ct =>
                 {
-                    using (ct.Register(connectCancellationTokenSource.Cancel))
+                    using (ct.Register(connectCancellationTokenSource.TryCancel))
                     {
                         logger.Info($"Beginning upload of {fileName} to Tentacle");
                         var result = fileTransferServiceV1.UploadFile(path, package);
@@ -70,7 +68,8 @@ namespace Octopus.Tentacle.Client
                     }
                 },
                 logger,
-                cancellationToken);
+                cancellationToken,
+                abandonActionOnCancellation: false);
         }
 
         public async Task<DataStream?> DownloadFile(string remotePath, ILog logger, CancellationToken cancellationToken)
@@ -78,7 +77,7 @@ namespace Octopus.Tentacle.Client
             var dataStream = await rpcCallRetryHandler.ExecuteWithRetries(
                 ct =>
                 {
-                    using (ct.Register(connectCancellationTokenSource.Cancel))
+                    using (ct.Register(connectCancellationTokenSource.TryCancel))
                     {
                         logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
                         var result = fileTransferServiceV1.DownloadFile(remotePath);
@@ -87,7 +86,8 @@ namespace Octopus.Tentacle.Client
                     }
                 },
                 logger,
-                cancellationToken);
+                cancellationToken,
+                abandonActionOnCancellation: false);
 
             return (DataStream?)dataStream;
         }

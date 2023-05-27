@@ -7,14 +7,30 @@ namespace Octopus.Tentacle.Client.Retries
 {
     internal static class RpcCallRetryHandlerExtensionMethods
     {
-        public static async Task<T> ExecuteWithRetries<T>(this RpcCallRetryHandler rpcCallRetryHandler, Func<CancellationToken, T> action, ILog logger, CancellationToken cancellationToken)
+        public static async Task<T> ExecuteWithRetries<T>(this RpcCallRetryHandler rpcCallRetryHandler, Func<CancellationToken, T> action, ILog logger, CancellationToken cancellationToken, bool abandonActionOnCancellation)
         {
             return await rpcCallRetryHandler.ExecuteWithRetries(
                 async ct =>
                 {
-                    var task = Task.Run(() => action(ct), ct);
+                    var actionTask = Task.Run(() => action(ct), ct);
 
-                    return await task;
+                    if (!abandonActionOnCancellation)
+                    {
+                        return await actionTask;
+                    }
+
+                    using (var abandonCancellationTokenSource = new CancellationTokenSource())
+                    using (cancellationToken.Register(() => abandonCancellationTokenSource
+                               // Give the actionTask some time to cancel on it's own.
+                               // If it doesn't assume it does not co-operate with cancellationTokens and walk away.
+                               .TryCancelAfter(TimeSpan.FromSeconds(5))))
+                    {
+                        var abandonTask = abandonCancellationTokenSource.Token.AsTask<T>();
+
+                        var compositeTask = (await Task.WhenAny(actionTask, abandonTask));
+
+                        return await compositeTask;
+                    }
                 },
                 onRetryAction: async (lastException, sleepDuration, retryCount, totalRetryDuration, ct) =>
                 {
