@@ -28,8 +28,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             //var path = Path.GetTempPath();
 
-            path = Path.Combine(path, Assembly.GetEntryAssembly() != null ? Assembly.GetEntryAssembly()!.GetName().Name! : "Octopus");
-            //path = Path.Combine(path, "TentacleIT");
+            //path = Path.Combine(path, Assembly.GetEntryAssembly() != null ? Assembly.GetEntryAssembly()!.GetName().Name! : "Octopus");
+            path = Path.Combine(path, "TentacleIT");
             return Path.Combine(path, "Temp");
         }
 
