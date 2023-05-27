@@ -31,7 +31,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 cachDirName += cachDirName + cacheDirRunExtension;
             }
-            var cacheDir = Path.Combine(Path.GetTempPath(), cachDirName, NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs());
+
+            var pathBase = //Path.GetTempPath();
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
+            var cacheDir = Path.Combine(pathBase, cachDirName, NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs());
             Directory.CreateDirectory(cacheDir);
 
             var tentacleVersionCacheDir = Path.Combine(cacheDir, version);
@@ -45,13 +48,21 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 lock (CacheMutex)
                 {
-                    parentDir.CopyTo(tentacleVersionCacheDir);
-                    Directory.Delete(parentDir.FullName, true);
+                    try
+                    {
+                        parentDir.MoveTo(tentacleVersionCacheDir);
+                    }
+                    catch (Exception e)
+                    {
+                        TestContext.Error.WriteLine($"Could not move {parentDir.FullName} to {tentacleVersionCacheDir} attempting to copy files instead. {e}");
+                        parentDir.CopyTo(tentacleVersionCacheDir);
+                        Directory.Delete(parentDir.FullName, true);
+                    }
                 }
             }
             catch (Exception e)
             {
-                TestContext.Error.WriteLine($"Could not move {parentDir.FullName} to {tentacleVersionCacheDir} tentacle may not be cached locally. {e}");
+                TestContext.Error.WriteLine($"Could not copy {parentDir.FullName} to {tentacleVersionCacheDir} tentacle will not be cached. {e}");
             }
 
             if (Directory.Exists(tentacleVersionCacheDir)) return Path.Combine(tentacleVersionCacheDir, TentacleExeFinder.AddExeExtension("Tentacle"));
