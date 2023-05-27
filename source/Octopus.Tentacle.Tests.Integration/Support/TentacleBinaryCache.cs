@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -18,8 +21,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private static string cacheDirRunExtension = Guid.NewGuid().ToString("N");
 
+        private static ConcurrentDictionary<string, SemaphoreSlim> versionLock = new();
+
         public async Task<string> GetTentacleVersion(string tmp, string version)
         {
+            using var _ = versionLock.GetOrAdd(version, s => new SemaphoreSlim(1, 1)).Lock();
             var cachDirName = "TentacleBinaryCache";
             if (TentacleExeFinder.IsRunningInTeamCity())
             {
