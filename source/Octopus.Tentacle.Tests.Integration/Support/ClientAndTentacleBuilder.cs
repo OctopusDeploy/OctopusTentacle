@@ -142,7 +142,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tentacleServiceDecorator,
                 retryDuration);
 
-            return new ClientAndTentacle(server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
+            return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
         }
     }
 }
