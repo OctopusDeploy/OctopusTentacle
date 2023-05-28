@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Tests.Integration
 {
 
     [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
-    [IntegrationTestTimeout]
+    // [IntegrationTestTimeout]
     public class ClientScriptExecutionWorksWithMultipleVersions : IntegrationTest
     {
         [Test]

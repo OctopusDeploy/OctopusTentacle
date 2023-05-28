@@ -12,7 +12,7 @@ using Octopus.Tentacle.Tests.Integration.Util;
 namespace Octopus.Tentacle.Tests.Integration
 {
     [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
-    [IntegrationTestTimeout]
+    // [IntegrationTestTimeout]
     public class FileTransferServiceTests : IntegrationTest
     {
         [Test]

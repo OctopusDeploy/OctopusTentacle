@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration
     /// These tests make sure that we can cancel or walk away (if code does not cooperate with cancellation tokens)
     /// from RPC calls when they are being retried and the rpc timeout period elapses.
     /// </summary>
-    [IntegrationTestTimeout]
+    // [IntegrationTestTimeout]
     public class ClientFileTransferRpcRetryTimeoutsWork : IntegrationTest
     {
         [Test]

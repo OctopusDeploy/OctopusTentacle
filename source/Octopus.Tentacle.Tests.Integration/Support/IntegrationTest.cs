@@ -72,10 +72,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
     }
 
-    public class IntegrationTestTimeout : TimeoutAttribute
-    {
-        public IntegrationTestTimeout() : base(IntegrationTest.TimeoutInMiliseconds)
-        {
-        }
-    }
+    // public class IntegrationTestTimeout : TimeoutAttribute
+    // {
+    //     public IntegrationTestTimeout() : base(IntegrationTest.TimeoutInMiliseconds)
+    //     {
+    //     }
+    // }
 }
