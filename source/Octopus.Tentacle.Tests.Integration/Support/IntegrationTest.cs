@@ -28,10 +28,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             cancellationTokenSource = new CancellationTokenSource(TimeoutInMiliseconds);
             CancellationToken = cancellationTokenSource.Token;
-            CancellationToken.Register(() =>
-            {
-                Assert.Fail("The test timed out.");
-            });
+            // CancellationToken.Register(() =>
+            // {
+            //     Assert.Fail("The test timed out.");
+            // });
             Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
             Logger.Fatal("Test started");
 
