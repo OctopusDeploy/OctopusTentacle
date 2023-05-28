@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -13,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
         readonly Uri originServer;
         readonly Socket listeningSocket;
         readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        readonly List<TcpPump> pumps = new List<TcpPump>();
+        readonly List<TcpPump> pumps = new();
         readonly ILogger logger;
         readonly TimeSpan sendDelay;
         private Func<BiDirectionalDataTransferObserver> factory;
@@ -171,7 +172,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                 exceptions.Add(e);
             }
 
-            if (exceptions.Count > 0)
+            if (exceptions.Count(x => x is not ObjectDisposedException &&
+                    !(x is SocketException && x.Message.Contains("A request to send or receive data was disallowed because the socket is not connected"))) > 0)
             {
                 logger.Warning(new AggregateException(exceptions), "Exceptions where thrown when Disposing of the PortForwarder");
             }

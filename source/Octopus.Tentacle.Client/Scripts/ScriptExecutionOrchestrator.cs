@@ -55,7 +55,7 @@ namespace Octopus.Tentacle.Client.Scripts
             ScriptServiceVersion scriptServiceVersionToUse;
 
             // Only use this cancellation token for connection. Once connected, we use the cancellation token within taskContext
-            using (cancellationToken.Register(connectCancellationTokenSource.Cancel))
+            using (cancellationToken.Register(connectCancellationTokenSource.TryCancel))
             {
                 scriptServiceVersionToUse = await DetermineScriptServiceVersionToUse(logger, cancellationToken);
 
@@ -64,13 +64,14 @@ namespace Octopus.Tentacle.Client.Scripts
                     scriptStatusResponse = await rpcCallRetryHandler.ExecuteWithRetries(
                         ct =>
                         {
-                            using (ct.Register(connectCancellationTokenSource.Cancel))
+                            using (ct.Register(connectCancellationTokenSource.TryCancel))
                             {
                                 return scriptServiceV2.StartScript(startScriptCommand);
                             }
                         },
                         logger,
-                        cancellationToken);
+                        cancellationToken,
+                        abandonActionOnCancellation: false); // TODO - Should be true
                 }
                 else
                 {
@@ -96,13 +97,14 @@ namespace Octopus.Tentacle.Client.Scripts
             var tentacleCapabilities = await rpcCallRetryHandler.ExecuteWithRetries(
                 ct =>
                 {
-                    using (ct.Register(connectCancellationTokenSource.Cancel))
+                    using (ct.Register(connectCancellationTokenSource.TryCancel))
                     {
                         return capabilitiesServiceV2.GetCapabilities();
                     }
                 },
                 logger,
-                cancellationToken);
+                cancellationToken,
+                abandonActionOnCancellation: true);
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
 
@@ -130,7 +132,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
             await onScriptCompleted(cancellationToken);
 
-            lastScriptStatus = Finish(scriptServiceVersionToUse, lastScriptStatus, cancellationToken);
+            lastScriptStatus = await Finish(scriptServiceVersionToUse, lastScriptStatus, cancellationToken);
 
             return lastScriptStatus;
         }
@@ -189,7 +191,8 @@ namespace Octopus.Tentacle.Client.Scripts
                 return await rpcCallRetryHandler.ExecuteWithRetries(
                     ct => scriptServiceV2.GetStatus(new ScriptStatusRequestV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence)),
                     logger,
-                    cancellationToken);
+                    cancellationToken,
+                    abandonActionOnCancellation: false); // TODO - Should be true
             }
 
             var scriptStatusResponseV1 = scriptServiceV1.GetStatus(new ScriptStatusRequest(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence));
@@ -207,17 +210,18 @@ namespace Octopus.Tentacle.Client.Scripts
                     ct => scriptServiceV2.CancelScript(new CancelScriptCommandV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence)),
                     logger,
                     // We don't want to cancel this operation as it is responsible for stopping the script executing on the Tentacle
-                    CancellationToken.None);
+                    CancellationToken.None,
+                    abandonActionOnCancellation: false);
             }
 
             var scriptStatusResponseV1 = scriptServiceV1.CancelScript(new CancelScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence));
             return Map(scriptStatusResponseV1);
         }
 
-        ScriptStatusResponseV2 Finish(
+        async Task<ScriptStatusResponseV2> Finish(
             ScriptServiceVersion scriptServiceVersionToUse,
             ScriptStatusResponseV2 lastStatusResponse,
-            CancellationToken _)
+            CancellationToken cancellationToken)
         {
             ScriptStatusResponseV2 completeStatus;
 
@@ -226,9 +230,25 @@ namespace Octopus.Tentacle.Client.Scripts
                 // Best effort cleanup of Tentacle
                 try
                 {
-                    scriptServiceV2.CompleteScript(new CompleteScriptCommandV2(lastStatusResponse.Ticket));
+                    var actionTask = Task.Run(() => scriptServiceV2.CompleteScript(new CompleteScriptCommandV2(lastStatusResponse.Ticket)), CancellationToken.None);
+
+                    var abandonCancellationTokenSource = new CancellationTokenSource();
+                    using (cancellationToken.Register(() => abandonCancellationTokenSource.TryCancelAfter(TimeSpan.FromMinutes(1))))
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            // Allow a short duration to try and Complete the script
+                            abandonCancellationTokenSource.TryCancelAfter(TimeSpan.FromMinutes(1));
+                        }
+
+                        var abandonTask = abandonCancellationTokenSource.Token.AsTask<ScriptStatusResponseV2>();
+
+                        var compositeTask = (await Task.WhenAny(actionTask, abandonTask));
+
+                        await compositeTask;
+                    }
                 }
-                catch (HalibutClientException ex)
+                catch (Exception ex) when (ex is HalibutClientException or OperationCanceledException)
                 {
                     logger.Warn("Failed to cleanup the working directory on Tentacle");
                     logger.Verbose(ex);
