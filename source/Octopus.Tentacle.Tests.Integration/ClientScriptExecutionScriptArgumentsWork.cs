@@ -11,12 +11,11 @@ using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
-    [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
     [IntegrationTestTimeout]
     public class ClientScriptExecutionScriptArgumentsWork : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(AllTentacleTypesWithV1V2ScriptServices))]
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
         public async Task ArgumentsArePassedToTheScript(TentacleType tentacleType, string tentacleVersion)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)

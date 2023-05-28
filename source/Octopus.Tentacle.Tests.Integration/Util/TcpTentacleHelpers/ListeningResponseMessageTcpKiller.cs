@@ -9,6 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
     /// Will only kill the connection when data is being received from the Tentacle and only when it looks big enough to not be a control message.
     ///
     /// Very dodgy, caller should ensure that an exception is actually thrown from the RPC call.
+    /// See ResponseMessageTcpKillerWorkarounds for ensuring the TCP connection is in a state this can kill
     /// </summary>
     public class ListeningResponseMessageTcpKiller : IResponseMessageTcpKiller
     {

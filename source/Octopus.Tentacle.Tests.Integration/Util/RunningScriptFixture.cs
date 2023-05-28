@@ -18,7 +18,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util
     // Sometimes powershell just returns -1 when running these scripts.
     // That's why every test has a retry attribute.
     [TestFixture]
-    public class RunningScriptFixture
+    [NonParallelizable]
+    public class RunningScriptFixture : IntegrationTest
     {
         TemporaryDirectory temporaryDirectory;
         CancellationTokenSource cancellationTokenSource;
@@ -29,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         TestUserPrincipal user;
 
         [SetUp]
-        public void SetUp()
+        public void SetUpLocal()
         {
             string testRootPath;
             IShell shell;
@@ -66,7 +67,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         }
 
         [TearDown]
-        public void TearDown()
+        public void TearDownLocal()
         {
             cancellationTokenSource.Dispose();
             temporaryDirectory.Dispose();

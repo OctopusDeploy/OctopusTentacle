@@ -5,7 +5,6 @@ using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
-using Octopus.Tentacle.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -13,19 +12,18 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         public IEnumerator GetEnumerator()
         {
-            var versions = new[]
-            {
-                null, // The version of tentacle compiled from the current code.
-                "5.0.4", // First linux Release 9/9/2019
-                "5.0.12", // The autofac service was in octopus shared.
-                "6.3.451" // the autofac service is in tentacle, but tentacle does not have the capabilities service.
-            };
-
-            return CartesianProduct.Of(new TentacleTypesToTest(), versions).GetEnumerator();
+            return AllCombinations
+                .Of(new TentacleTypesToTest())
+                .And(
+                    TentacleVersions.Current,
+                    TentacleVersions.v5_0_4_FirstLinuxRelease,
+                    TentacleVersions.v5_0_12_AutofacServiceFactoryIsInShared,
+                    TentacleVersions.v6_3_417_LastWithScriptServiceV1Only // the autofac service is in tentacle, but tentacle does not have the capabilities service.
+                )
+                .Build();
         }
     }
-
-    [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
+    
     [IntegrationTestTimeout]
     public class CapabilitiesServiceV2Test : IntegrationTest
     {

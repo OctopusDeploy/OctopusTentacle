@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -10,6 +13,13 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
     public abstract class IntegrationTest
     {
+        static IntegrationTest()
+        {
+            // Required otherwise the test can struggle to run in parallel
+            ThreadPool.SetMaxThreads(2000, 2000);
+            ThreadPool.SetMinThreads(2000, 2000);
+        }
+        
         public static int TimeoutInMilliseconds = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
         CancellationTokenSource? cancellationTokenSource;
@@ -19,29 +29,24 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         [SetUp]
         public void SetUp()
         {
+            Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
+            Logger.Information("Test started");
             cancellationTokenSource = new CancellationTokenSource(TimeoutInMilliseconds);
             CancellationToken = cancellationTokenSource.Token;
             CancellationToken.Register(() =>
             {
                 Assert.Fail("The test timed out.");
             });
-            Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
         }
 
         [TearDown]
         public void TearDown()
         {
-            try
+            Logger.Information("Tearing down");
+            if (cancellationTokenSource != null)
             {
-                cancellationTokenSource?.Token.IsCancellationRequested.Should().BeFalse("The test timed out.");
-            }
-            finally
-            {
-                if (cancellationTokenSource != null)
-                {
-                    cancellationTokenSource.Dispose();
-                    cancellationTokenSource = null;
-                }
+                cancellationTokenSource.Dispose();
+                cancellationTokenSource = null;
             }
         }
     }
