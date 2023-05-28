@@ -19,55 +19,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public CancellationToken CancellationToken { get; private set; }
         public ILogger Logger { get; private set; } = null!;
 
-        public CancellationTokenSource WatchDogCancellation;
-
-        private static ConcurrentDictionary<string, string> runningTests = new ();
-
         [SetUp]
         public void SetUp()
         {
-            cancellationTokenSource = new CancellationTokenSource(TimeoutInMiliseconds);
+            Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
+            cancellationTokenSource = new CancellationTokenSource(10);
             CancellationToken = cancellationTokenSource.Token;
             CancellationToken.Register(() =>
             {
                 Assert.Fail("The test timed out.");
             });
-            Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
-            Logger.Fatal("Test started");
-
-            WatchDogCancellation = new CancellationTokenSource();
-
-            Task.Run(async () =>
-            {
-                await Task.Delay(TimeSpan.FromMinutes(1) + TimeSpan.FromSeconds(10), WatchDogCancellation.Token);
-                
-                while (!WatchDogCancellation.IsCancellationRequested)
-                {
-                    Logger.Fatal("This test has been running for too long!");
-                    Logger.Fatal("Currently running tests: " + string.Join(" ", runningTests.Keys));
-                    await Task.Delay(TimeSpan.FromSeconds(30));
-                }
-            });
-            runningTests[TestContext.CurrentContext.Test.Name + "-" + TestContext.CurrentContext.Test.FullName] = "";
         }
 
         [TearDown]
         public void TearDown()
         {
-            Logger.Fatal("Test Finished");
-            runningTests.TryRemove(TestContext.CurrentContext.Test.Name + "-" + TestContext.CurrentContext.Test.FullName, out _);
-            WatchDogCancellation.Cancel();
-            try
+            Logger.Information("Tearing down");
+            if (cancellationTokenSource != null)
             {
-                cancellationTokenSource?.Token.IsCancellationRequested.Should().BeFalse("The test timed out.");
-            }
-            finally
-            {
-                if (cancellationTokenSource != null)
-                {
-                    cancellationTokenSource.Dispose();
-                    cancellationTokenSource = null;
-                }
+                cancellationTokenSource.Dispose();
+                cancellationTokenSource = null;
             }
         }
     }

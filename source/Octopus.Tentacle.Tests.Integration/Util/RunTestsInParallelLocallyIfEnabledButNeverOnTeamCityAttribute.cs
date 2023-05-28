@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using NUnit.Framework;
-using Octopus.Tentacle.Tests.Integration.Support;
 
 namespace Octopus.Tentacle.Tests.Integration.Util
 {
