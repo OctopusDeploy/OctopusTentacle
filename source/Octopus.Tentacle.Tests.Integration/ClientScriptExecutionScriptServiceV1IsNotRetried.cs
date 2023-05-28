@@ -47,8 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            using var tmp = new TemporaryDirectory();
-            var waitForFile = Path.Combine(tmp.DirectoryPath, "waitforme");
+            var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithIsolation(ScriptIsolationLevel.FullIsolation)
@@ -107,8 +106,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            using var tmp = new TemporaryDirectory();
-            var waitForFile = Path.Combine(tmp.DirectoryPath, "waitforme");
+            var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()
@@ -169,8 +167,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            using var tmp = new TemporaryDirectory();
-            var waitForFile = Path.Combine(tmp.DirectoryPath, "waitforme");
+            var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()

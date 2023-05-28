@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Octopus.Tentacle.Tests.Integration.Support;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils

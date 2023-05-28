@@ -1,3 +1,4 @@
+using System;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 using Serilog;
@@ -14,6 +15,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
         private volatile bool killConnection = false;
         private volatile bool pauseConnection = false;
         private ILogger logger;
+        private Action? pauseConnectionCallBack;
 
         public ListeningResponseMessageTcpKiller()
         {
@@ -26,10 +28,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
             killConnection = true;
         }
 
-        public void PauseConnectionOnNextResponse()
+        public void PauseConnectionOnNextResponse(Action? callBack = null)
         {
             logger.Information("Will pause connection next time tentacle sends more than 45 bytes (ie something that looks bigger than a control message)");
             pauseConnection = true;
+            pauseConnectionCallBack = callBack;
         }
 
         public IDataTransferObserver DataTransferObserver()
@@ -44,6 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
                     pauseConnection = false;
                     logger.Information("Pause connection");
                     tcpPump.Pause();
+                    pauseConnectionCallBack?.Invoke();
                 }
 
                 if (killConnection && size > 45)

@@ -28,10 +28,9 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder().CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts).Build())
                 .Build(CancellationToken);
-            using var tmp = new TemporaryDirectory();
 
-            var scriptHasStartFile = Path.Combine(tmp.DirectoryPath, "scripthasstarted");
-            var waitForFile = Path.Combine(tmp.DirectoryPath, "waitforme");
+            var scriptHasStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "scripthasstarted");
+            var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()
@@ -87,8 +86,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            using var tmp = new TemporaryDirectory();
-            var waitForFile = Path.Combine(tmp.DirectoryPath, "waitforme");
+            var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder()
