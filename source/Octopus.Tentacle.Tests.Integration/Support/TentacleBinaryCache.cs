@@ -39,8 +39,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     cachDirName += cachDirName + cacheDirRunExtension;
                 }
 
-                var pathBase = //Path.GetTempPath();
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
+                var pathBase = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
                 var cacheDir = Path.Combine(pathBase, cachDirName, NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs());
                 Directory.CreateDirectory(cacheDir);
 
