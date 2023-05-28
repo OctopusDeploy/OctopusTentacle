@@ -5,6 +5,7 @@ using Octopus.Tentacle.Tests.Integration.Support;
 
 namespace Octopus.Tentacle.Tests.Integration.Util
 {
+    // TODO rename this (when it will not cause a painful merge conflict)
     public class RunTestsInParallelLocallyIfEnabledButNeverOnTeamCityAttribute : ParallelizableAttribute
     {
         public RunTestsInParallelLocallyIfEnabledButNeverOnTeamCityAttribute() : base(ScopeFromEnv())
@@ -13,17 +14,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
         public static ParallelScope ScopeFromEnv()
         {
-            // TODO don't actually bring this in.
+            ThreadPool.SetMaxThreads(2000, 2000);
+            ThreadPool.SetMinThreads(2000, 2000);
             return ParallelScope.All;
-            // if (TentacleExeFinder.IsRunningInTeamCity()) return ParallelScope.Default;
-            // var var  =Environment.GetEnvironmentVariable("RunTestsInParallel") ?? "false";
-            // if (var.Equals("true"))
-            // {
-            //     ThreadPool.SetMaxThreads(2000, 2000);
-            //     ThreadPool.SetMinThreads(2000, 2000);
-            //     return ParallelScope.All;
-            // }
-            // return ParallelScope.Default;
         }
     }
 }
