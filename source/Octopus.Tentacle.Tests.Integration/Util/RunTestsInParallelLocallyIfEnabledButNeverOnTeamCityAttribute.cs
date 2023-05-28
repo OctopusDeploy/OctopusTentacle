@@ -13,6 +13,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 
         public static ParallelScope ScopeFromEnv()
         {
+            ThreadPool.SetMaxThreads(2000, 2000);
+            ThreadPool.SetMinThreads(2000, 2000);
             // TODO don't actually bring this in.
             return ParallelScope.All;
             // if (TentacleExeFinder.IsRunningInTeamCity()) return ParallelScope.Default;
