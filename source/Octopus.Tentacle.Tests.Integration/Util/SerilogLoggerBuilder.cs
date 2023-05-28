@@ -70,7 +70,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 this._formatter.Format(logEvent, (TextWriter) output);
                 // This is the change, call this instead of: TestContext.Progress
                 TestContext.Write(output.ToString());
-                File.AppendAllText("/tmp/nunitlog", output.ToString());
             }
         }
     }
