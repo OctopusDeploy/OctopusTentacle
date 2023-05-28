@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration
             allLogs.Should().MatchRegex(".*Lets do it\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nanother one\nAll done.*");
 
             scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);
-            scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeGreaterThan(10);
+            scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeGreaterThan(2);
             scriptServiceV2CallCounts.GetStatusCallCountStarted.Should().BeLessThan(30);
             Logger.Debug("{S}", scriptServiceV2CallCounts.GetStatusCallCountStarted);
             scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);

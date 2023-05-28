@@ -4,7 +4,7 @@ using Octopus.Tentacle.Contracts.Capabilities;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 {
-    internal class LegacyTentacleClient
+    public class LegacyTentacleClient
     {
         public LegacyTentacleClient(IScriptService scriptService, IFileTransferService fileTransferService, ICapabilitiesServiceV2 capabilitiesServiceV2)
         {

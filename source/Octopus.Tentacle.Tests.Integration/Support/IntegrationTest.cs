@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Util;
@@ -19,29 +22,23 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         [SetUp]
         public void SetUp()
         {
+            Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
             cancellationTokenSource = new CancellationTokenSource(TimeoutInMilliseconds);
             CancellationToken = cancellationTokenSource.Token;
             CancellationToken.Register(() =>
             {
                 Assert.Fail("The test timed out.");
             });
-            Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
         }
 
         [TearDown]
         public void TearDown()
         {
-            try
+            Logger.Information("Tearing down");
+            if (cancellationTokenSource != null)
             {
-                cancellationTokenSource?.Token.IsCancellationRequested.Should().BeFalse("The test timed out.");
-            }
-            finally
-            {
-                if (cancellationTokenSource != null)
-                {
-                    cancellationTokenSource.Dispose();
-                    cancellationTokenSource = null;
-                }
+                cancellationTokenSource.Dispose();
+                cancellationTokenSource = null;
             }
         }
     }

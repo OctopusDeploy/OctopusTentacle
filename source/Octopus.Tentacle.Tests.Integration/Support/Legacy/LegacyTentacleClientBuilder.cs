@@ -5,7 +5,7 @@ using Octopus.Tentacle.Contracts.Capabilities;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 {
-    internal class LegacyTentacleClientBuilder
+    public class LegacyTentacleClientBuilder
     {
         readonly IHalibutRuntime halibutRuntime;
         readonly ServiceEndPoint serviceEndPoint;

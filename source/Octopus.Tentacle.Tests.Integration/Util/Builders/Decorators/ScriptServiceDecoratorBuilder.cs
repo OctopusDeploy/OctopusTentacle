@@ -21,13 +21,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         
         public ScriptServiceDecoratorBuilder DecorateStartScriptWith(Func<IScriptService, StartScriptCommand, ScriptTicket> startScriptFunc)
         {
-            this.startScriptFunc = startScriptFunc;
+            this.startScriptFunc += startScriptFunc;
             return this;
         }
 
         public ScriptServiceDecoratorBuilder DecorateGetStatusWith(Func<IScriptService, ScriptStatusRequest, ScriptStatusResponse> getStatusFunc)
         {
-            this.getStatusFunc = getStatusFunc;
+            this.getStatusFunc += getStatusFunc;
             return this;
         }
 
@@ -42,7 +42,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         public ScriptServiceDecoratorBuilder DecorateCancelScriptWith(Func<IScriptService, CancelScriptCommand, ScriptStatusResponse> cancelScriptFunc)
         {
-            this.cancelScriptFunc = cancelScriptFunc;
+            this.cancelScriptFunc += cancelScriptFunc;
             return this;
         }
 
@@ -57,7 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         public ScriptServiceDecoratorBuilder DecorateCompleteScriptWith(Func<IScriptService, CompleteScriptCommand, ScriptStatusResponse> completeScriptAction)
         {
-            this.completeScriptAction = completeScriptAction;
+            this.completeScriptAction += completeScriptAction;
             return this;
         }
 
