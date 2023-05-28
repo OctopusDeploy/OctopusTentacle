@@ -93,7 +93,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             if (runningTentacleTask != null)
             {
-                StopOnDispose(CancellationToken.None);
+                //StopOnDispose(CancellationToken.None);
+                Stop(CancellationToken.None).GetAwaiter().GetResult();
             }
 
             temporaryDirectory.Dispose();
