@@ -146,7 +146,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
             try
             {
-                listeningSocket.Close(0);
+                listeningSocket.Close();
             }
             catch (Exception e)
             {

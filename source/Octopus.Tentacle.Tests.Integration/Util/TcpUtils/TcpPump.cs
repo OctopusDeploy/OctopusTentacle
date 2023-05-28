@@ -83,8 +83,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
                     // We are done. Close everything.
                     logger.Verbose("Stopped connection forwarding from {ClientEndPoint} to {OriginEndPoint}.", clientEndPoint.ToString(), originEndPoint.ToString());
-                    clientSocket.Close(0);
-                    originSocket.Close(0);
+                    clientSocket.Close();
+                    originSocket.Close();
 
                     // Let the users know we are done
                     Stopped?.Invoke(this, EventArgs.Empty);
@@ -147,7 +147,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
             try
             {
-                clientSocket.Close(0);
+                clientSocket.Close();
             }
             catch (Exception ex)
             {
@@ -174,7 +174,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
             try
             {
-                originSocket.Close(0);
+                originSocket.Close();
             }
             catch (Exception ex)
             {
