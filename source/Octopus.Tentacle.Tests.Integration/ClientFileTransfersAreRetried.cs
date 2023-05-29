@@ -17,7 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         [TestCase(TentacleType.Polling)]
         [TestCase(TentacleType.Listening)]
-        public async Task FailedUploadsAreRetried(TentacleType tentacleType)
+        public async Task FailedUploadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithPortForwarderDataLogging()
@@ -54,7 +54,7 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         [TestCase(TentacleType.Polling)]
         [TestCase(TentacleType.Listening)]
-        public async Task FailedDownloadsAreRetried(TentacleType tentacleType)
+        public async Task FailedDownloadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithPortForwarderDataLogging()
