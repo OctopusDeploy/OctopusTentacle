@@ -4,13 +4,14 @@ using System.Text;
 using System.Threading;
 using FluentAssertions;
 using NUnit.Framework;
+using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.TestAttributes;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Util
 {
     [TestFixture]
-    public class SilentProcessRunnerFixture
+    public class SilentProcessRunnerFixture : IntegrationTest
     {
         const int SIG_TERM = 143;
         const int SIG_KILL = 137;
@@ -19,7 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
         string commandParam;
 
         [SetUp]
-        public void SetUp()
+        public void SetUpLocal()
         {
             if (PlatformDetection.IsRunningOnWindows)
             {

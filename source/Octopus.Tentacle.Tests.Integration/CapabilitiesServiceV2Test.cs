@@ -24,8 +24,7 @@ namespace Octopus.Tentacle.Tests.Integration
             return CartesianProduct.Of(new TentacleTypesToTest(), versions).GetEnumerator();
         }
     }
-
-    [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
+    
     [IntegrationTestTimeout]
     public class CapabilitiesServiceV2Test : IntegrationTest
     {

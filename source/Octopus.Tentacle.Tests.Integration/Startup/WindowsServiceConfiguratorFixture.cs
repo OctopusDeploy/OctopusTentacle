@@ -17,6 +17,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
 {
     [TestFixture]
     [WindowsTest]
+    [NonParallelizable]
     public class WindowsServiceConfiguratorFixture
     {
         [Test]

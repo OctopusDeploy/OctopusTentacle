@@ -19,7 +19,6 @@ namespace Octopus.Tentacle.Tests.Integration
     /// from RPC calls when they are being retried and the rpc timeout period elapses.
     /// </summary>
     [IntegrationTestTimeout]
-    [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
     public class ClientFileTransferRpcRetryTimeoutsWork : IntegrationTest
     {
         [Test]

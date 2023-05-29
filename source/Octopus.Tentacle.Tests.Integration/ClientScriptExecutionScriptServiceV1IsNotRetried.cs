@@ -18,7 +18,6 @@ using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
-    [RunTestsInParallelLocallyIfEnabledButNeverOnTeamCity]
     [IntegrationTestTimeout]
     public class ClientScriptExecutionScriptServiceV1IsNotRetried : IntegrationTest
     {
