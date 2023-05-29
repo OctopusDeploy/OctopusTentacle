@@ -39,6 +39,12 @@ namespace Octopus.Manager.Tentacle
                 Environment.Exit(0);
             }
 
+            ServicePointManager.SecurityProtocol =
+                SecurityProtocolType.Ssl3
+                | SecurityProtocolType.Tls
+                | SecurityProtocolType.Tls11
+                | SecurityProtocolType.Tls12;
+
             commonOptions.Add("reconfigure", "Reconfigure the targeted services", v => reconfigure = true);
 
             base.OnStartup(e);
