@@ -92,7 +92,7 @@ namespace Octopus.Tentacle.Client
             return (DataStream?)dataStream;
         }
 
-        public async Task<ScriptStatusResponseV2> ExecuteScript(
+        public async Task<ScriptExecutionResult> ExecuteScript(
             StartScriptCommandV2 startScriptCommand,
             Action<ScriptStatusResponseV2> onScriptStatusResponseReceived,
             Func<CancellationToken, Task> onScriptCompleted,
@@ -111,7 +111,8 @@ namespace Octopus.Tentacle.Client
                 onScriptCompleted,
                 logger);
 
-            return await orchestrator.ExecuteScript(cancellationToken);
+            var result = await orchestrator.ExecuteScript(cancellationToken);
+            return new ScriptExecutionResult(result.Ticket, result.State, result.ExitCode);
         }
     }
 }
