@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutorObservesScriptObserverBackoffStrategy : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(AllTentacleTypesWithV1V2ScriptServices))]
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
         public async Task TheScriptObserverBackoffShouldBeRespected(TentacleType tentacleType, string tentacleVersion)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)

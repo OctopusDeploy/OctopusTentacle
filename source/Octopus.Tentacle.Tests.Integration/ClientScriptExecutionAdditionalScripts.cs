@@ -15,16 +15,8 @@ namespace Octopus.Tentacle.Tests.Integration
     [IntegrationTestTimeout]
     public class ClientScriptExecutionAdditionalScripts : IntegrationTest
     {
-        public class AllTentacleTypesWithV1AndV2ScriptServiceTentacles : IEnumerable
-        {
-            public IEnumerator GetEnumerator()
-            {
-                return CartesianProduct.Of(new TentacleTypesToTest(), new V1OnlyAndV2ScriptServiceTentacleVersions()).GetEnumerator();
-            }
-        }
-
         [Test]
-        [TestCaseSource(typeof(AllTentacleTypesWithV1AndV2ScriptServiceTentacles))]
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
         public async Task AdditionalScriptsWork(TentacleType tentacleType, string tentacleVersion)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
