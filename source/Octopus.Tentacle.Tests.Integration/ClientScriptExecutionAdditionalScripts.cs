@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
@@ -19,15 +20,19 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
         public async Task AdditionalScriptsWork(TentacleType tentacleType, string tentacleVersion)
         {
+            using var tmp = new TemporaryDirectory();
+            var path = Path.Combine(tmp.DirectoryPath, "file");
+            
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithTentacleVersion(tentacleVersion)
-                .WithScriptObserverBackoffStrategy(new FuncScriptObserverBackoffStrategy(iters => TimeSpan.FromSeconds(20)))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
                     .CountCallsToScriptServiceV2(out var scriptServiceV2CallCounts)
                     .Build())
                 .Build(CancellationToken);
 
-            var scriptBuilder = new ScriptBuilder().Print("Hello");
+            var scriptBuilder = new ScriptBuilder()
+                .CreateFile(path) // How files are made are different in bash and powershell, doing this ensures the client and tentacle really are using the correct script.
+                .Print("Hello");
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithAdditionalScriptTypes(ScriptType.Bash, scriptBuilder.BuildBashScript())
                 // Additional Scripts don't actually work on tentacle for anything other than bash.

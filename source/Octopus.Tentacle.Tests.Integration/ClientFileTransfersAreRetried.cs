@@ -15,11 +15,11 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientFileTransfersAreRetried : IntegrationTest
     {
         [Test]
-        [TestCase(TentacleType.Polling)]
-        [TestCase(TentacleType.Listening)]
-        public async Task FailedUploadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType)
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
+        public async Task FailedUploadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType, string version)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithTentacleVersion(version)
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -52,11 +52,11 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [TestCase(TentacleType.Polling)]
-        [TestCase(TentacleType.Listening)]
-        public async Task FailedDownloadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType)
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
+        public async Task FailedDownloadsAreRetriedAndIsEventuallySuccessful(TentacleType tentacleType, string version)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithTentacleVersion(version)
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()

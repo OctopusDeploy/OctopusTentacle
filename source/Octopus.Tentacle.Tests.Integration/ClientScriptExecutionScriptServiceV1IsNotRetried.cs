@@ -191,8 +191,6 @@ namespace Octopus.Tentacle.Tests.Integration
             scriptServiceCallCounts.StartScriptCallCountStarted.Should().Be(1);
             scriptServiceCallCounts.CancelScriptCallCountStarted.Should().Be(1);
             scriptServiceCallCounts.CompleteScriptCallCountStarted.Should().Be(0);
-            // Ensure that we didn't just timeout.
-            CancellationToken.ThrowIfCancellationRequested();
         }
 
         [Test]

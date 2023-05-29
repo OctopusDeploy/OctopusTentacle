@@ -14,12 +14,11 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionWorksWithMultipleVersions : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(CapabilitiesServiceInterestingTentacles))]
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
         public async Task CanRunScript(TentacleType tentacleType, string tentacleVersion)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithTentacleVersion(tentacleVersion)
-                .WithRetryDuration(TimeSpan.FromMinutes(4))
                 .Build(CancellationToken);
 
             var startScriptCommand = new StartScriptCommandV2Builder()
