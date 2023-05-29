@@ -112,7 +112,7 @@ namespace Octopus.Tentacle.Client
                 logger);
 
             var result = await orchestrator.ExecuteScript(cancellationToken);
-            return new ScriptExecutionResult(result.Ticket, result.State, result.ExitCode);
+            return new ScriptExecutionResult(result.State, result.ExitCode);
         }
     }
 }
