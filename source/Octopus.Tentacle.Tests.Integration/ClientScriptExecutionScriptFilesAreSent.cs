@@ -15,7 +15,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionScriptFilesAreSent : IntegrationTest
     {
         [Test]
-        [TestCaseSource(typeof(AllTentacleTypesWithV1V2ScriptServices))]
+        [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
         public async Task ArgumentsArePassedToTheScript(TentacleType tentacleType, string tentacleVersion)
         {
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
