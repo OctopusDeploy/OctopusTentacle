@@ -13,6 +13,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
     public abstract class IntegrationTest
     {
+        static IntegrationTest()
+        {
+            ThreadPool.SetMaxThreads(2000, 2000);
+            ThreadPool.SetMinThreads(2000, 2000);
+        }
+        
         public static int TimeoutInMilliseconds = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
         CancellationTokenSource? cancellationTokenSource;
@@ -23,6 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public void SetUp()
         {
             Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
+            Logger.Information("Test started");
             cancellationTokenSource = new CancellationTokenSource(TimeoutInMilliseconds);
             CancellationToken = cancellationTokenSource.Token;
             CancellationToken.Register(() =>
