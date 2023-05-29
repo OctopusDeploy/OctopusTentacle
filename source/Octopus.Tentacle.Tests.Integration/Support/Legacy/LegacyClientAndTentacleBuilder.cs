@@ -44,7 +44,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             var temporaryDirectory = new TemporaryDirectory();
             var tentacleExe = string.IsNullOrWhiteSpace(tentacleVersion) ?
                 TentacleExeFinder.FindTentacleExe() :
-                await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion);
+                await TentacleFetcher.GetTentacleVersion(temporaryDirectory.DirectoryPath, tentacleVersion, cancellationToken);
 
             if (tentacleType == TentacleType.Polling)
             {

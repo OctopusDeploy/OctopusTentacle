@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -11,8 +12,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class TentacleBinaryCache : ITentacleFetcher
     {
-        public static object CacheMutex = new object();
-
         private readonly ITentacleFetcher tentacleFetcher;
 
         public TentacleBinaryCache(ITentacleFetcher tentacleFetcher)
@@ -24,53 +23,26 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private static readonly ConcurrentDictionary<string, SemaphoreSlim> versionLock = new();
 
-        public async Task<string> GetTentacleVersion(string tmp, string version)
+        public async Task<string> GetTentacleVersion(string tmp, string version, CancellationToken cancellationToken)
         {
-            var sw = Stopwatch.StartNew();
             var logger = new SerilogLoggerBuilder().Build().ForContext<TentacleBinaryCache>();
-            logger.Information("Will download tentacle: {Version}", version);
             var semaphore = versionLock.GetOrAdd(version, s => new SemaphoreSlim(1, 1));
-            await semaphore.WaitAsync(CancellationToken.None);
+            await semaphore.WaitAsync(cancellationToken);
             try
             {
-                var cachDirName = "TentacleBinaryCache";
-                if (TentacleExeFinder.IsRunningInTeamCity())
-                {
-                    cachDirName += cachDirName + cacheDirRunExtension;
-                }
-
-                var pathBase = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
-                var cacheDir = Path.Combine(pathBase, cachDirName, NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs());
-                Directory.CreateDirectory(cacheDir);
-
-                var tentacleVersionCacheDir = Path.Combine(cacheDir, version);
+                var tentacleVersionCacheDir = TentacleVersionCacheDir(version);
+                
                 if (Directory.Exists(tentacleVersionCacheDir)) return Path.Combine(tentacleVersionCacheDir, TentacleExeFinder.AddExeExtension("Tentacle"));
 
-                var tentacleExe = await tentacleFetcher.GetTentacleVersion(tmp, version);
+                var sw = Stopwatch.StartNew();
+                
+                logger.Information("Will download tentacle: {Version}", version);
+                var tentacleExe = await tentacleFetcher.GetTentacleVersion(tmp, version, cancellationToken);
                 var parentDir = new DirectoryInfo(tentacleExe).Parent;
+                
+                AddTentacleIntoCache(parentDir, tentacleVersionCacheDir);
 
-                try
-                {
-                    lock (CacheMutex)
-                    {
-                        try
-                        {
-                            parentDir.MoveTo(tentacleVersionCacheDir);
-                        }
-                        catch (Exception e)
-                        {
-                            TestContext.Error.WriteLine($"Could not move {parentDir.FullName} to {tentacleVersionCacheDir} attempting to copy files instead. {e}");
-                            parentDir.CopyTo(tentacleVersionCacheDir);
-                            Directory.Delete(parentDir.FullName, true);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    TestContext.Error.WriteLine($"Could not copy {parentDir.FullName} to {tentacleVersionCacheDir} tentacle will not be cached. {e}");
-                }
-
-                logger.Information("Download tentacle: {Version}", version);
+                logger.Information("Downloaded tentacle: {Version} in {Time}", version, sw.Elapsed);
 
                 if (Directory.Exists(tentacleVersionCacheDir)) return Path.Combine(tentacleVersionCacheDir, TentacleExeFinder.AddExeExtension("Tentacle"));
 
@@ -78,8 +50,44 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
             finally
             {
-                logger.Information("Took {Time} to find tentacle bin: ", sw.Elapsed);
                 semaphore.Release(1);
+            }
+        }
+
+        private static string TentacleVersionCacheDir(string version)
+        {
+            var cachDirName = "TentacleBinaryCache";
+            if (TentacleExeFinder.IsRunningInTeamCity())
+            {
+                cachDirName += cachDirName + cacheDirRunExtension;
+            }
+
+            var pathBase = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
+            var cacheDir = Path.Combine(pathBase, cachDirName, NugetTentacleFetcher.TentacleBinaryFrameworkForCurrentOs());
+            Directory.CreateDirectory(cacheDir);
+
+            var tentacleVersionCacheDir = Path.Combine(cacheDir, version);
+            return tentacleVersionCacheDir;
+        }
+
+        private static void AddTentacleIntoCache(DirectoryInfo? parentDir, string tentacleVersionCacheDir)
+        {
+            try
+            {
+                try
+                {
+                    parentDir.MoveTo(tentacleVersionCacheDir);
+                }
+                catch (Exception e)
+                {
+                    TestContext.Error.WriteLine($"Could not move {parentDir.FullName} to {tentacleVersionCacheDir} attempting to copy files instead. {e}");
+                    parentDir.CopyTo(tentacleVersionCacheDir);
+                    Directory.Delete(parentDir.FullName, true);
+                }
+            }
+            catch (Exception e)
+            {
+                TestContext.Error.WriteLine($"Could not copy {parentDir.FullName} to {tentacleVersionCacheDir} tentacle will not be cached. {e}");
             }
         }
     }

@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         static string LinuxDownloadUrlForVersion(string versionString) => $"https://download.octopusdeploy.com/linux-tentacle/tentacle-{versionString}-linux_x64.tar.gz";
 
-        public async Task<string> GetTentacleVersion(string downloadPath, string version)
+        public async Task<string> GetTentacleVersion(string downloadPath, string version, CancellationToken cancellationToken)
         {
             var directoryPath = Path.Combine(downloadPath, version);
             if (!Directory.Exists(directoryPath))
