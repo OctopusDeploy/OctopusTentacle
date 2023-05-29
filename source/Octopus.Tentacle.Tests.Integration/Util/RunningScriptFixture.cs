@@ -18,6 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
     // Sometimes powershell just returns -1 when running these scripts.
     // That's why every test has a retry attribute.
     [TestFixture]
+    [NonParallelizable]
     public class RunningScriptFixture : IntegrationTest
     {
         TemporaryDirectory temporaryDirectory;
