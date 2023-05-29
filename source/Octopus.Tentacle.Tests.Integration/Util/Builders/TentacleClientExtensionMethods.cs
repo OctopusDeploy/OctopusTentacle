@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Tentacle.Client;
+using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -13,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
 {
     public static class TentacleClientExtensionMethods
     {
-        public static async Task<(ScriptStatusResponseV2, List<ProcessOutput>)> ExecuteScript(
+        public static async Task<(ScriptExecutionResult, List<ProcessOutput>)> ExecuteScript(
             this TentacleClient tentacleClient,
             StartScriptCommandV2 startScriptCommand,
             CancellationToken token,
