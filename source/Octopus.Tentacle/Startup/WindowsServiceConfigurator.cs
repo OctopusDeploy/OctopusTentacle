@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Management;
 using System.ServiceProcess;
@@ -335,8 +336,11 @@ namespace Octopus.Tentacle.Startup
             var outputBuilder = new StringBuilder();
             var argumentsToLog = string.Join(" ", arguments);
 
+            var system32 = Environment.GetFolderPath(Environment.SpecialFolder.System);
+            var sc = Path.Combine(system32, "sc.exe");
+
             logFileOnlyLogger.Info($"Executing sc.exe {argumentsToLog}");
-            var exitCode = SilentProcessRunner.ExecuteCommand("sc.exe",
+            var exitCode = SilentProcessRunner.ExecuteCommand(sc,
                 arguments,
                 Environment.CurrentDirectory,
                 output => outputBuilder.AppendLine(output),
