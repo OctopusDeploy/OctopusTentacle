@@ -7,7 +7,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class AllCombinations
     {
-        private List<IEnumerable> sequences = new ();
+        private readonly List<IEnumerable> sequences = new ();
         
         public static AllCombinations Of(IEnumerable sequence)
         {
