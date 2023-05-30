@@ -99,6 +99,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             });
         }
 
+        public ScriptServiceV2DecoratorBuilder BeforeCompleteScript(Action<IScriptServiceV2, CompleteScriptCommandV2> beforeCompleteScript)
+        {
+            return DecorateCompleteScriptWith((inner, command) =>
+            {
+                beforeCompleteScript(inner, command);
+                inner.CompleteScript(command);
+            });
+        }
+
         public Func<IScriptServiceV2, IScriptServiceV2> Build()
         {
             return inner =>

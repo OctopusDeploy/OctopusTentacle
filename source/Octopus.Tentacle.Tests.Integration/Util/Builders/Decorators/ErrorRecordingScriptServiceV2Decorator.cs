@@ -9,6 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public Exception? StartScriptLatestException { get; set; }
         public Exception? GetStatusLatestException { get; set; }
         public Exception? CancelScriptLatestException { get; set; }
+        public Exception? CompleteScriptLatestException { get; set; }
     }
 
     public class ErrorRecordingScriptServiceV2Decorator : IScriptServiceV2
@@ -68,7 +69,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         public void CompleteScript(CompleteScriptCommandV2 command)
         {
-            inner.CompleteScript(command);
+            try
+            {
+                inner.CompleteScript(command);
+            }
+            catch (Exception e)
+            {
+                errors.CompleteScriptLatestException = e;
+                logger.Information(e, "Recorded error from CompleteScript");
+                throw;
+            }
         }
     }
 

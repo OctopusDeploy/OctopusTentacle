@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -142,17 +143,26 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var scriptCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
             var stopWatch = Stopwatch.StartNew();
-            var (finalResponse, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, scriptCancellationTokenSource.Token, onScriptStatusResponseReceived =>
+            Exception? actualException = null;
+
+            try
             {
-                if (onScriptStatusResponseReceived.Logs.JoinLogs().Contains("waitingtobestopped"))
+                await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, scriptCancellationTokenSource.Token, onScriptStatusResponseReceived =>
                 {
-                    scriptCancellationTokenSource.Cancel();
-                }
-            });
+                    if (onScriptStatusResponseReceived.Logs.JoinLogs().Contains("waitingtobestopped"))
+                    {
+                        scriptCancellationTokenSource.Cancel();
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                actualException = ex;
+            }
+
             stopWatch.Stop();
 
-            finalResponse.State.Should().Be(ProcessState.Complete); // This is technically a lie, the process is still running.
-            finalResponse.ExitCode.Should().NotBe(0);
+            actualException.Should().NotBeNull().And.BeOfType<OperationCanceledException>().And.Match<Exception>(x => x.Message == "Script execution was cancelled");
             stopWatch.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(10));
 
             scriptServiceV2CallCounts.StartScriptCallCountStarted.Should().Be(1);

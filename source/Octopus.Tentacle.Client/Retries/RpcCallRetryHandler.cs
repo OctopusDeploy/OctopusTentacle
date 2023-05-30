@@ -29,22 +29,19 @@ namespace Octopus.Tentacle.Client.Retries
 
             async Task OnRetryAction(Exception exception, TimeSpan sleepDuration, int retryCount, Context context)
             {
-                await Task.CompletedTask;
                 lastException = exception;
 
                 if (onRetryAction != null)
                 {
-                    await onRetryAction.Invoke(exception, sleepDuration, retryCount, RetryTimeout, cancellationToken);
+                    await onRetryAction.Invoke(exception, sleepDuration, retryCount, RetryTimeout, cancellationToken).ConfigureAwait(false);
                 }
             }
 
             async Task OnTimeoutAction(Context? context, TimeSpan timeout, Task? task, Exception? exception)
             {
-                await Task.CompletedTask;
-
                 if (onTimeoutAction != null)
                 {
-                    await onTimeoutAction.Invoke(RetryTimeout, cancellationToken);
+                    await onTimeoutAction.Invoke(RetryTimeout, cancellationToken).ConfigureAwait(false);
                 }
             }
 
@@ -63,7 +60,7 @@ namespace Octopus.Tentacle.Client.Retries
                 if (isInitialAction)
                 {
                     isInitialAction = false;
-                    return await action(ct);
+                    return await action(ct).ConfigureAwait(false);
                 }
 
                 var remainingRetryDuration = RetryTimeout - started.Elapsed;
@@ -71,7 +68,7 @@ namespace Octopus.Tentacle.Client.Retries
                 if (remainingRetryDuration < TimeSpan.FromSeconds(1))
                 {
                     // We are short circuiting as the retry duration has elapsed
-                    await OnTimeoutAction(null, RetryTimeout, null, null);
+                    await OnTimeoutAction(null, RetryTimeout, null, null).ConfigureAwait(false);
                     throw new TimeoutRejectedException("The delegate executed asynchronously through TimeoutPolicy did not complete within the timeout.");
                 }
 
@@ -80,13 +77,13 @@ namespace Octopus.Tentacle.Client.Retries
                     .WithRetryTimeout(remainingRetryDuration, timeoutStrategy)
                     .BuildTimeoutPolicy();
 
-                return await timeoutPolicy.ExecuteAsync(action, ct);
+                return await timeoutPolicy.ExecuteAsync(action, ct).ConfigureAwait(false);
             }
 
             try
             {
                 started.Start();
-                return await retryPolicy.ExecuteAsync(ExecuteAction, cancellationToken);
+                return await retryPolicy.ExecuteAsync(ExecuteAction, cancellationToken).ConfigureAwait(false);
             }
             catch (TimeoutRejectedException)
             {

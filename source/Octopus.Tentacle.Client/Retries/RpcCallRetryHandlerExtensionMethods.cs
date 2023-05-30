@@ -7,7 +7,12 @@ namespace Octopus.Tentacle.Client.Retries
 {
     internal static class RpcCallRetryHandlerExtensionMethods
     {
-        public static async Task<T> ExecuteWithRetries<T>(this RpcCallRetryHandler rpcCallRetryHandler, Func<CancellationToken, T> action, ILog logger, CancellationToken cancellationToken, bool abandonActionOnCancellation)
+        public static async Task<T> ExecuteWithRetries<T>(
+            this RpcCallRetryHandler rpcCallRetryHandler,
+            Func<CancellationToken, T> action,
+            ILog logger,
+            CancellationToken cancellationToken,
+            bool abandonActionOnCancellation)
         {
             return await rpcCallRetryHandler.ExecuteWithRetries(
                 async ct =>
@@ -16,20 +21,34 @@ namespace Octopus.Tentacle.Client.Retries
 
                     if (!abandonActionOnCancellation)
                     {
-                        return await actionTask;
+                        return await actionTask.ConfigureAwait(false);
                     }
 
-                    using (var abandonCancellationTokenSource = new CancellationTokenSource())
-                    using (cancellationToken.Register(() => abandonCancellationTokenSource
-                               // Give the actionTask some time to cancel on it's own.
-                               // If it doesn't assume it does not co-operate with cancellationTokens and walk away.
-                               .TryCancelAfter(TimeSpan.FromSeconds(5))))
+                    var abandonAfter = TimeSpan.FromSeconds(5);
+
+                    using var abandonCancellationTokenSource = new CancellationTokenSource();
+                    using (ct.Register(() =>
+                    {
+                        // Give the actionTask some time to cancel on it's own.
+                        // If it doesn't assume it does not co-operate with cancellationTokens and walk away.
+                        abandonCancellationTokenSource.TryCancelAfter(abandonAfter);
+                    }))
                     {
                         var abandonTask = abandonCancellationTokenSource.Token.AsTask<T>();
 
-                        var compositeTask = (await Task.WhenAny(actionTask, abandonTask));
+                        try
+                        {
+                            return await (await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false)).ConfigureAwait(false);
+                        }
+                        catch (Exception e) when (e is OperationCanceledException)
+                        {
+                            if (abandonCancellationTokenSource.IsCancellationRequested)
+                            {
+                                throw new OperationAbandonedException(e, abandonAfter);
+                            }
 
-                        return await compositeTask;
+                            throw;
+                        }
                     }
                 },
                 onRetryAction: async (lastException, sleepDuration, retryCount, totalRetryDuration, ct) =>

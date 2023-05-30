@@ -9,4 +9,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         // The RPC Request has been sent by Server for Listening / the pending request has been dequeued for polling by no response has been received
         InFlight
     }
+
+    public enum RpcCall
+    {
+        FirstCall,
+        RetryingCall
+    }
 }
