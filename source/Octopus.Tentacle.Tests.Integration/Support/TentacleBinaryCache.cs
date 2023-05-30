@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Concurrent;
-using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Util;
+using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -26,32 +26,25 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         public async Task<string> GetTentacleVersion(string tmp, string version, CancellationToken cancellationToken)
         {
             var logger = new SerilogLoggerBuilder().Build().ForContext<TentacleBinaryCache>();
-            var semaphore = versionLock.GetOrAdd(version, s => new SemaphoreSlim(1, 1));
-            await semaphore.WaitAsync(cancellationToken);
-            try
-            {
-                var tentacleVersionCacheDir = TentacleVersionCacheDir(version);
-                
-                if (Directory.Exists(tentacleVersionCacheDir)) return Path.Combine(tentacleVersionCacheDir, TentacleExeFinder.AddExeExtension("Tentacle"));
+            using var _ = await versionLock.GetOrAdd(version, s => new SemaphoreSlim(1, 1)).LockAsync();
 
-                var sw = Stopwatch.StartNew();
-                
-                logger.Information("Will download tentacle: {Version}", version);
-                var tentacleExe = await tentacleFetcher.GetTentacleVersion(tmp, version, cancellationToken);
-                var parentDir = new DirectoryInfo(tentacleExe).Parent;
-                
-                AddTentacleIntoCache(parentDir, tentacleVersionCacheDir);
+            var tentacleVersionCacheDir = TentacleVersionCacheDir(version);
 
-                logger.Information("Downloaded tentacle: {Version} in {Time}", version, sw.Elapsed);
+            if (Directory.Exists(tentacleVersionCacheDir)) return Path.Combine(tentacleVersionCacheDir, TentacleExeFinder.AddExeExtension("Tentacle"));
 
-                if (Directory.Exists(tentacleVersionCacheDir)) return Path.Combine(tentacleVersionCacheDir, TentacleExeFinder.AddExeExtension("Tentacle"));
+            var sw = Stopwatch.StartNew();
 
-                return tentacleExe;
-            }
-            finally
-            {
-                semaphore.Release(1);
-            }
+            logger.Information("Will download tentacle: {Version}", version);
+            var tentacleExe = await tentacleFetcher.GetTentacleVersion(tmp, version, cancellationToken);
+            var parentDir = new DirectoryInfo(tentacleExe).Parent;
+
+            AddTentacleIntoCache(parentDir, tentacleVersionCacheDir);
+
+            logger.Information("Downloaded tentacle: {Version} in {Time}", version, sw.Elapsed);
+
+            if (Directory.Exists(tentacleVersionCacheDir)) return Path.Combine(tentacleVersionCacheDir, TentacleExeFinder.AddExeExtension("Tentacle"));
+
+            return tentacleExe;
         }
 
         private static string TentacleVersionCacheDir(string version)
