@@ -11,6 +11,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
     /// Will only kill the connection when data is being received from the Tentacle but before being sent to the client.
     ///
     /// Useful for when the aim is to kill a in-flight request.
+    ///
+    /// See ResponseMessageTcpKillerWorkarounds for ensuring the TCP connection is in a state this can kill
     /// </summary>
     public class PollingResponseMessageTcpKiller : IResponseMessageTcpKiller
     {

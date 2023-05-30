@@ -117,7 +117,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task WhenANetworkFailureOccurs_DuringCompleteScript_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleType tentacleType)
         {
             bool completeScriptWasCalled = false;
-            var portForwarderRef = new Reference<PortForwarder>();
+            PortForwarder? portForwarder = null;
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithPortForwarderDataLogging()
                 .WithServiceEndpointModifier(serviceEndpoint =>
@@ -135,12 +135,12 @@ namespace Octopus.Tentacle.Tests.Integration
                             // A successfully CompleteScript call is not required for the script to be completed.
                             // So it should be the case that the tentacle can be no longer contactable at this point,
                             // yet the script execution is marked as successful.
-                            portForwarderRef.value.Dispose();
+                            portForwarder.Dispose();
                         })
                         .Build())
                     .Build())
                 .Build(CancellationToken);
-            portForwarderRef.value = clientTentacle.PortForwarder;
+            portForwarder = clientTentacle.PortForwarder;
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().Print("hello").Sleep(TimeSpan.FromSeconds(1)))
