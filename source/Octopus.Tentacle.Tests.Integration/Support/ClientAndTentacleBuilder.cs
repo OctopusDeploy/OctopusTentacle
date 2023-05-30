@@ -19,7 +19,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         IScriptObserverBackoffStrategy scriptObserverBackoffStrategy = new DefaultScriptObserverBackoffStrategy();
         public readonly TentacleType TentacleType;
         string? tentacleVersion;
-        readonly List<Func<PortForwarderBuilder, PortForwarderBuilder>> portForwarderBuilderFunc = new ();
+        readonly List<Func<PortForwarderBuilder, PortForwarderBuilder>> portForwarderModifiers = new ();
         readonly List<Action<ServiceEndPoint>> serviceEndpointModifiers = new();
         private IPendingRequestQueueFactory? queueFactory = null;
 
@@ -74,14 +74,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
         public ClientAndTentacleBuilder WithPortForwarder(Func<PortForwarderBuilder, PortForwarderBuilder> portForwarderBuilder)
         {
-            this.portForwarderBuilderFunc.Add(portForwarderBuilder);
+            this.portForwarderModifiers.Add(portForwarderBuilder);
             return this;
         }
 
         private PortForwarder? BuildPortForwarder(int port)
         {
-            if (portForwarderBuilderFunc.Count == 0) return null;
-            return portForwarderBuilderFunc.Aggregate(PortForwarderBuilder.ForwardingToLocalPort(port), (current, port) => port(current)).Build();
+            if (portForwarderModifiers.Count == 0) return null;
+            return portForwarderModifiers.Aggregate(PortForwarderBuilder.ForwardingToLocalPort(port), (current, portForwarderModifier) => portForwarderModifier(current)).Build();
         }
 
         public async Task<ClientAndTentacle> Build(CancellationToken cancellationToken)
