@@ -11,6 +11,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         static IntegrationTest()
         {
+            // Required otherwise the test can struggle to run in parallel
             ThreadPool.SetMaxThreads(2000, 2000);
             ThreadPool.SetMinThreads(2000, 2000);
         }

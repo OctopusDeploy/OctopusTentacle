@@ -152,10 +152,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
                         .DecorateGetStatusWith((inner, request) =>
                         {
+                            cts.Cancel();
                             scriptStatusRequest = request;
                             return inner.GetStatus(request);
                         })
-                        .BeforeGetStatus(() => cts.Cancel())
                         .BeforeCancelScript(() =>
                         {
                             if (scriptServiceExceptions.CancelScriptLatestException == null)
