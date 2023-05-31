@@ -57,7 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tempDirectory,
                 StartTentacleFunction,
                 tentacleThumbprint,
-                ct => DeleteInstance(tentacleExe, instanceName, tempDirectory, ct));
+                ct => DeleteInstanceIgnoringFailure(tentacleExe, instanceName, tempDirectory, ct));
 
             try
             {
@@ -145,7 +145,19 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             RunTentacleCommand(tentacleExe, new[] { "create-instance", "--config", configFilePath, $"--instance={instanceName}" }, tmp, cancellationToken);
         }
-        
+
+        internal void DeleteInstanceIgnoringFailure(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        {
+            try
+            {
+                DeleteInstance(tentacleExe, instanceName, tmp, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                new SerilogLoggerBuilder().Build().Warning(e, "Could not delete instance: {InstanceName}", instanceName);
+                throw;
+            }
+        }
         internal void DeleteInstance(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommand(tentacleExe, new[] {"delete-instance", $"--instance={instanceName}"}, tmp, cancellationToken);

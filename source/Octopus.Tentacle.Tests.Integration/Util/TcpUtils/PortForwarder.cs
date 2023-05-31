@@ -83,6 +83,19 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
         public Uri PublicEndpoint { get; set; }
 
+        public bool InKillAllMode { get; set; }
+
+        public void EnterKillAllMode()
+        {
+            InKillAllMode = true;
+            this.CloseExistingConnections();
+        }
+        
+        public void ReturnToNormalMode()
+        {
+            InKillAllMode = false;
+        }
+
         async Task WorkerTask(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
@@ -94,16 +107,27 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                     {
                         var clientSocket = await listeningSocket?.AcceptAsync();
 
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        if (!active)
+                        if (!active || InKillAllMode)
                         {
+
+                            try
+                            {
+                                clientSocket.Shutdown(SocketShutdown.Both);
+                            }
+                            catch (Exception)
+                            {
+                            }
+
                             clientSocket.Close(0);
                             clientSocket.Dispose();
                             clientSocket = null;
 
-                            throw new OperationCanceledException("Port forwarder is not active");
+                            if(!active) throw new OperationCanceledException("Port forwarder is not active");
+                            continue;
                         }
+
+                        cancellationToken.ThrowIfCancellationRequested();
+                        
 
                         var originEndPoint = new DnsEndPoint(originServer.Host, originServer.Port);
                         var originSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);

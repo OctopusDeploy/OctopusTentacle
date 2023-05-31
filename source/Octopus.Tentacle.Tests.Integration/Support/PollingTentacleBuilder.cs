@@ -28,8 +28,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var subscriptionId = PollingSubscriptionId.Generate();
 
             CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
-            AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId);
+            AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
+            
 
             return await StartTentacle(
                 subscriptionId,

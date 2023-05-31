@@ -415,7 +415,8 @@ namespace Octopus.Tentacle.Tests.Integration
             if (rpcCallStage == RpcCallStage.Connecting)
             {
                 Logger.Information("Killing the port forwarder so the next RPCs are in the connecting state when being cancelled");
-                portForwarder.Stop();
+                //portForwarder.Stop();
+                portForwarder.EnterKillAllMode();
                 rpcCallHasStarted.Value = true;
             }
             else
@@ -430,7 +431,8 @@ namespace Octopus.Tentacle.Tests.Integration
             if (rpcCallStage == RpcCallStage.Connecting)
             {
                 Logger.Information("Starting the PortForwarder as we stopped it to get the StartScript RPC call in the Connecting state");
-                portForwarder.Value.Start();
+                //portForwarder.Value.Start();
+                portForwarder.Value.ReturnToNormalMode();
             }
             else if (tentacleType == TentacleType.Polling)
             {
