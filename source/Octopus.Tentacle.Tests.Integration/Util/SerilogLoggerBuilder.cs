@@ -57,7 +57,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 _formatter.Format(logEvent, output);
                 // This is the change, call this instead of: TestContext.Progress
                 TestContext.Write(output.ToString());
-                WriteNunitLogsToFile.write(output.ToString());
             }
         }
     }
