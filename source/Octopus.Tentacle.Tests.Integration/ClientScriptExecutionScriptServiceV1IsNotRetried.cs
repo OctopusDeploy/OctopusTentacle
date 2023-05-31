@@ -7,6 +7,7 @@ using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
 using Octopus.Tentacle.Client;
+using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
@@ -233,7 +234,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
     static class TentacleClientExtensionMethods
     {
-        public static async Task<ScriptStatusResponseV2> ExecuteScriptAssumingException(
+        public static async Task<ScriptExecutionResult> ExecuteScriptAssumingException(
             this TentacleClient tentacleClient,
             StartScriptCommandV2 startScriptCommand,
             List<ProcessOutput> logs,

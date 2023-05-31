@@ -5,6 +5,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Halibut.Logging;
+using NUnit.Framework.Constraints;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
@@ -12,16 +14,17 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
     public class PortForwarder : IDisposable
     {
         readonly Uri originServer;
-        readonly Socket listeningSocket;
+        Socket? listeningSocket;
         readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         readonly List<TcpPump> pumps = new();
         readonly ILogger logger;
         readonly TimeSpan sendDelay;
-        private Func<BiDirectionalDataTransferObserver> factory;
+        Func<BiDirectionalDataTransferObserver> factory;
+        bool active = false;
 
         public int ListeningPort { get; }
 
-        public PortForwarder(Uri originServer, TimeSpan sendDelay, Func<BiDirectionalDataTransferObserver> factory)
+        public PortForwarder(Uri originServer, TimeSpan sendDelay, Func<BiDirectionalDataTransferObserver> factory, int? listeningPort = null)
         {
             logger = new SerilogLoggerBuilder().Build().ForContext<PortForwarder>();
             this.originServer = originServer;
@@ -29,10 +32,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             this.factory = factory;
             var scheme = originServer.Scheme;
 
-            listeningSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            listeningSocket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-            listeningSocket.Listen(0);
-            logger.Information("Listening on {LoadBalancerEndpoint}", listeningSocket.LocalEndPoint?.ToString());
+            Start();
 
             ListeningPort = ((IPEndPoint)listeningSocket.LocalEndPoint).Port;
             PublicEndpoint = new UriBuilder(scheme, "localhost", ListeningPort).Uri;
@@ -40,38 +40,97 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             Task.Factory.StartNew(() => WorkerTask(cancellationTokenSource.Token).ConfigureAwait(false), TaskCreationOptions.LongRunning);
         }
 
-        public Uri PublicEndpoint { get; }
+        public void Start()
+        {
+            if (active)
+            {
+                throw new InvalidOperationException("PortForwarder is already started");
+            }
+
+            CreateNewSocketIfNeeded();
+
+            listeningSocket!.Bind(new IPEndPoint(IPAddress.Loopback, ListeningPort));
+
+            try
+            {
+                listeningSocket.Listen(int.MaxValue);
+            }
+            catch (SocketException)
+            {
+                Stop();
+                throw;
+            }
+            logger.Information("Listening on {LoadBalancerEndpoint}", listeningSocket.LocalEndPoint?.ToString());
+            active = true;
+        }
+
+        public void Stop()
+        {
+            active = false;
+            listeningSocket?.Dispose();
+            listeningSocket = null;
+            logger.Information("Stopped listening");
+            CloseExistingConnections();
+        }
+
+        private void CreateNewSocketIfNeeded()
+        {
+            if (listeningSocket == null)
+            {
+                listeningSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            }
+        }
+
+        public Uri PublicEndpoint { get; set; }
 
         async Task WorkerTask(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Yield();
-
-                try
+                if (active)
                 {
-                    var clientSocket = await listeningSocket.AcceptAsync();
-
-                    var originEndPoint = new DnsEndPoint(originServer.Host, originServer.Port);
-                    var originSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-
-                    var pump = new TcpPump(clientSocket, originSocket, originEndPoint, sendDelay, factory, logger);
-                    pump.Stopped += OnPortForwarderStopped;
-                    lock (pumps)
+                    try
                     {
-                        pumps.Add(pump);
-                    }
+                        var clientSocket = await listeningSocket?.AcceptAsync();
 
-                    pump.Start();
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (!active)
+                        {
+                            clientSocket.Close(0);
+                            clientSocket.Dispose();
+                            clientSocket = null;
+
+                            throw new OperationCanceledException("Port forwarder is not active");
+                        }
+
+                        var originEndPoint = new DnsEndPoint(originServer.Host, originServer.Port);
+                        var originSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+
+                        var pump = new TcpPump(clientSocket, originSocket, originEndPoint, sendDelay, factory, logger);
+                        pump.Stopped += OnPortForwarderStopped;
+                        lock (pumps)
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+                            pumps.Add(pump);
+                        }
+
+                        pump.Start();
+                    }
+                    catch (SocketException ex)
+                    {
+                        // This will occur normally on teardown.
+                        logger.Verbose(ex, "Socket Error accepting new connection {Message}", ex.Message);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error(ex, "Error accepting new connection {Message}", ex.Message);
+                    }
                 }
-                catch (SocketException ex)
+                else
                 {
-                    // This will occur normally on teardown.
-                    logger.Verbose(ex, "Socket Error accepting new connection {Message}", ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    logger.Error(ex, "Error accepting new connection {Message}", ex.Message);
+                    await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
                 }
             }
         }
@@ -90,6 +149,17 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             }
         }
 
+        public void UnPauseExistingConnections()
+        {
+            lock (pumps)
+            {
+                foreach (var pump in pumps)
+                {
+                    pump.UnPause();
+                }
+            }
+        }
+
         public void PauseExistingConnections()
         {
             lock (pumps)
@@ -103,11 +173,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
         public void CloseExistingConnections()
         {
+            logger.Information("Closing existing connections");
             DisposePumps();
         }
 
         List<Exception> DisposePumps()
         {
+            logger.Information("Start Dispose Pumps");
             var exceptions = new List<Exception>();
 
             lock (pumps)
@@ -127,6 +199,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                 }
             }
 
+            logger.Information("Fisinshed Dispose Pumps");
+
             return exceptions;
         }
 
@@ -138,7 +212,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
             try
             {
-                listeningSocket.Shutdown(SocketShutdown.Both);
+                listeningSocket?.Shutdown(SocketShutdown.Both);
             }
             catch (Exception e)
             {
@@ -147,7 +221,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
             try
             {
-                listeningSocket.Close(0);
+                listeningSocket?.Close(0);
             }
             catch (Exception e)
             {
@@ -156,7 +230,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
             try
             {
-                listeningSocket.Dispose();
+                listeningSocket?.Dispose();
             }
             catch (Exception e)
             {

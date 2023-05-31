@@ -8,6 +8,7 @@ using Halibut.ServiceModel;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts.Legacy;
+using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -22,6 +23,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         readonly List<Func<PortForwarderBuilder, PortForwarderBuilder>> portForwarderModifiers = new ();
         readonly List<Action<ServiceEndPoint>> serviceEndpointModifiers = new();
         private IPendingRequestQueueFactory? queueFactory = null;
+        private Reference<PortForwarder>? portForwarderReference;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -72,19 +74,31 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             return this.WithPortForwarder(p => p);
         }
+
         public ClientAndTentacleBuilder WithPortForwarder(Func<PortForwarderBuilder, PortForwarderBuilder> portForwarderBuilder)
         {
             this.portForwarderModifiers.Add(portForwarderBuilder);
             return this;
         }
 
-        private PortForwarder? BuildPortForwarder(int localPort)
+        public ClientAndTentacleBuilder WithPortForwarder(out Reference<PortForwarder> portForwarder)
+        {
+            this.WithPortForwarder();
+
+            this.portForwarderReference = new Reference<PortForwarder>();
+            portForwarder = this.portForwarderReference;
+
+            return this;
+        }
+
+        private PortForwarder? BuildPortForwarder(int localPort, int? listeningPort)
         {
             if (portForwarderModifiers.Count == 0) return null;
 
             return portForwarderModifiers.Aggregate(
                     PortForwarderBuilder
-                        .ForwardingToLocalPort(localPort),
+                        .ForwardingToLocalPort(localPort)
+                        .ListenOnPort(listeningPort),
                     (current, portForwarderModifier) => portForwarderModifier(current))
                 .Build();
         }
@@ -115,9 +129,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             if (TentacleType == TentacleType.Polling)
             {
-                portForwarder = BuildPortForwarder(serverListeningPort);
+                portForwarder = BuildPortForwarder(serverListeningPort, null);
 
-                runningTentacle = await new PollingTentacleBuilder(portForwarder?.ListeningPort??serverListeningPort, Certificates.ServerPublicThumbprint)
+                runningTentacle = await new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe)
                     .Build(cancellationToken);
 
@@ -129,11 +143,15 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                     .WithTentacleExe(tentacleExe)
                     .Build(cancellationToken);
 
-                portForwarder = BuildPortForwarder(runningTentacle.ServiceUri.Port);
+                portForwarder = BuildPortForwarder(runningTentacle.ServiceUri.Port, null);
 
-                tentacleEndPoint = new ServiceEndPoint(portForwarder?.PublicEndpoint??runningTentacle.ServiceUri, runningTentacle.Thumbprint);
+                tentacleEndPoint = new ServiceEndPoint(portForwarder?.PublicEndpoint ?? runningTentacle.ServiceUri, runningTentacle.Thumbprint);
             }
 
+            if (portForwarderReference != null && portForwarder != null)
+            {
+                portForwarderReference.Value = portForwarder;
+            }
 
             foreach (var serviceEndpointModifier in serviceEndpointModifiers)
             {

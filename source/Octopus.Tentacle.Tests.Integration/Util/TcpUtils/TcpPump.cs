@@ -61,6 +61,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                         await originSocket.ConnectAsync(originEndPoint, cancellationToken).ConfigureAwait(false);
 #endif
 
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         var biDirectionalCallBack = factory();
                         // If the connection was ok, then set-up a pump both ways
                         var pump1 = Task.Run(async () => await PumpBytes(clientSocket, originSocket, new SocketPump(this, () => this.IsPaused, sendDelay, biDirectionalCallBack.DataTransferObserverClientToOrigin), cancellationToken).ConfigureAwait(false), cancellationToken);
@@ -69,6 +71,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                         // When one is finished, they are both "done" so stop them
                         await Task.WhenAny(pump1, pump2).ConfigureAwait(false);
                         logger.Verbose("Stopping connection forwarding from {ClientEndPoint} to {OriginEndPoint}.", clientEndPoint.ToString(), originEndPoint.ToString());
+
                         if (!cancellationTokenSource.IsCancellationRequested)
                         {
                             cancellationTokenSource.Cancel();
@@ -106,7 +109,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                 try
                 {
 
-                    var socketStatus = await socketPump.PumpBytes(readFrom, writeTo, cancellationToken);
+                    var socketStatus = await socketPump.PumpBytes(readFrom, writeTo, cancellationToken).ConfigureAwait(false);
                     if(socketStatus == SocketPump.SocketStatus.SOCKET_CLOSED) break;
                 }
                 catch (SocketException socketException)
@@ -124,6 +127,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             }
         }
 
+        public void Pause()
+        {
+            IsPaused = true;
+        }
+
+        public void UnPause()
+        {
+            IsPaused = false;
+        }
 
         public void Dispose()
         {
@@ -148,25 +160,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
             try
             {
-                clientSocket.Close(0);
-            }
-            catch (Exception ex)
-            {
-                exceptions.Add(ex);
-            }
-
-            try
-            {
-                clientSocket.Dispose();
-            }
-            catch (Exception ex)
-            {
-                exceptions.Add(ex);
-            }
-
-            try
-            {
                 originSocket.Shutdown(SocketShutdown.Both);
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+
+            try
+            {
+                clientSocket.Close(0);
             }
             catch (Exception ex)
             {
@@ -184,6 +187,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 
             try
             {
+                clientSocket.Dispose();
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+
+            try
+            {
                 originSocket.Dispose();
             }
             catch (Exception ex)
@@ -191,15 +203,10 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                 exceptions.Add(ex);
             }
 
-            if (exceptions.Any())
+            if (exceptions.Count(x => x is not ObjectDisposedException) > 0)
             {
-                logger.Warning(new AggregateException(exceptions), "Errors occurred Disposing of hte TcpPump");
+                logger.Warning(new AggregateException(exceptions), "Errors occurred Disposing of the TcpPump");
             }
-        }
-
-        public void Pause()
-        {
-            IsPaused = true;
         }
     }
 }

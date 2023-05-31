@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Serilog;
@@ -19,7 +15,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ThreadPool.SetMaxThreads(2000, 2000);
             ThreadPool.SetMinThreads(2000, 2000);
         }
-        
+
         public static int TimeoutInMilliseconds = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
         CancellationTokenSource? cancellationTokenSource;

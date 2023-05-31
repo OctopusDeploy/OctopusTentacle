@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Tentacle.Client;
+using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -13,22 +14,26 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
 {
     public static class TentacleClientExtensionMethods
     {
-        public static async Task<(ScriptStatusResponseV2, List<ProcessOutput>)> ExecuteScript(
+        public static async Task<(ScriptExecutionResult, List<ProcessOutput>)> ExecuteScript(
             this TentacleClient tentacleClient,
             StartScriptCommandV2 startScriptCommand,
             CancellationToken token,
-            Action<ScriptStatusResponseV2> onScriptStatusResponseReceivedAction = null)
+            Action<ScriptStatusResponseV2>? onScriptStatusResponseReceivedAction = null)
         {
             var logs = new List<ProcessOutput>();
             var finalResponse = await tentacleClient.ExecuteScript(startScriptCommand,
                 onScriptStatusResponseReceived =>
                 {
-                    if(onScriptStatusResponseReceivedAction != null) onScriptStatusResponseReceivedAction(onScriptStatusResponseReceived);
+                    if (onScriptStatusResponseReceivedAction != null)
+                    {
+                        onScriptStatusResponseReceivedAction(onScriptStatusResponseReceived);
+                    }
+
                     logs.AddRange(onScriptStatusResponseReceived.Logs);
                 },
                 cts => Task.CompletedTask,
                 new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog(),
-                token);
+                token).ConfigureAwait(false);
             return (finalResponse, logs);
         }
 
@@ -42,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
                 remotePath,
                 upload,
                 new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog(),
-                token);
+                token).ConfigureAwait(false);
 
             return result;
         }
@@ -54,7 +59,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
         {
             var result = await tentacleClient.DownloadFile(remotePath,
                 new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog(),
-                token);
+                token).ConfigureAwait(false);
 
             return result;
         }

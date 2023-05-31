@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Collections;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using Octopus.Tentacle.Client;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
@@ -196,10 +196,26 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Print("AllDone"))
                 .Build();
 
-            var (finalResponse, logs) = await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, cts.Token);
+            Exception? actualException = null;
+            var logs = new List<ProcessOutput>();
 
-            finalResponse.State.Should().Be(ProcessState.Complete);
-            finalResponse.ExitCode.Should().NotBe(0);
+            try
+            {
+                await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand,
+                    onScriptStatusResponseReceived =>
+                    {
+                        logs.AddRange(onScriptStatusResponseReceived.Logs);
+                    },
+                    _ => Task.CompletedTask,
+                    new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog(),
+                    cts.Token);
+            }
+            catch (Exception ex)
+            {
+                actualException = ex;
+            }
+
+            actualException.Should().NotBeNull().And.BeOfType<OperationCanceledException>().And.Match<Exception>(x => x.Message == "Script execution was cancelled");
 
             var allLogs = logs.JoinLogs();
             allLogs.Should().Contain("hello");

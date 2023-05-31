@@ -77,6 +77,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             while (totalBytesToSend - offset > 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
                 ArraySegment<byte> outputBuffer = new ArraySegment<byte>(inputBuffer, offset, totalBytesToSend - offset);
 
 #if DOES_NOT_SUPPORT_CANCELLATION_ON_SOCKETS
@@ -91,11 +92,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 #else
                 offset += await writeTo.SendAsync(outputBuffer, SocketFlags.None, cancellationToken).ConfigureAwait(false);
 #endif
+
+                cancellationToken.ThrowIfCancellationRequested();
             }
         }
 
         static async Task<int> ReadFromSocket(Socket readFrom, MemoryStream memoryStream, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var inputBuffer = new byte[readFrom.ReceiveBufferSize];
             ArraySegment<byte> inputBufferArraySegment = new ArraySegment<byte>(inputBuffer);
 
@@ -112,6 +117,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
 #else
             var receivedByteCount = await readFrom.ReceiveAsync(inputBufferArraySegment, SocketFlags.None, cancellationToken).ConfigureAwait(false);
 #endif
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             memoryStream.Write(inputBuffer, 0, receivedByteCount);
             return receivedByteCount;

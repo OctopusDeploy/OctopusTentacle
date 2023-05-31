@@ -2,6 +2,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 {
     public class Reference<T>
     {
-        public T value { get; set; }
+        public Reference()
+        {
+        }
+
+        public Reference(T value)
+        {
+            Value = value;
+        }
+
+        public T Value { get; set; }
     }
 }
