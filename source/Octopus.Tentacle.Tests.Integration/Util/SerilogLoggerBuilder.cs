@@ -8,6 +8,7 @@ using Octopus.Tentacle.Tests.Integration.Support;
 using Serilog;
 using Serilog.Core;
 using Serilog.Formatting.Display;
+using Serilog.Templates;
 
 namespace Octopus.Tentacle.Tests.Integration.Util
 {
@@ -24,15 +25,18 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 testName = "[{TestName}] ";
             }
 
-            TestTimers.GetOrAdd(TestContext.CurrentContext.Test.Name, k => Stopwatch.StartNew());
+            TestTimers.GetOrAdd(TestContext.CurrentContext.Test.ID, k => Stopwatch.StartNew());
 
-            var outputTemplate = "[{SourceContext}] "
-                + testName
+            var outputTemplate = 
+                testName
                 + "{Message}{NewLine}{Exception}";
-            
+
+            new ExpressionTemplate(outputTemplate);
             return new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.Sink(new NonProgressNUnitSink(new MessageTemplateTextFormatter(outputTemplate)))
+                .WriteTo.Sink(new NonProgressNUnitSink(
+                    new MessageTemplateTextFormatter(outputTemplate)
+                    ))
                 .Enrich.WithProperty("TestName", TestContext.CurrentContext.Test.Name)
                 .CreateLogger();
         }
@@ -60,9 +64,13 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 if (TestContext.Out == null)
                     return;
                 StringWriter output = new StringWriter();
+                if (logEvent.Properties.TryGetValue("SourceContext", out var sourceContext))
+                {
+                    output.Write("[" + sourceContext.ToString().Substring(sourceContext.ToString().LastIndexOf('.') + 1).Replace("\"", "") + "] ");
+                }
                 _formatter.Format(logEvent, output);
                 // This is the change, call this instead of: TestContext.Progress
-                var elapsed = SerilogLoggerBuilder.TestTimers[TestContext.CurrentContext.Test.Name].Elapsed.ToString();
+                var elapsed = SerilogLoggerBuilder.TestTimers[TestContext.CurrentContext.Test.ID].Elapsed.ToString();
                 var s = elapsed + " " + output.ToString();
                 TestContext.Write(s);
             }
