@@ -35,4 +35,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Octopus.Tentacle.Contracts\Octopus.Tentacle.Contracts.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="ClientServices" />
+    </ItemGroup>
 </Project>

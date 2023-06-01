@@ -3,6 +3,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Decorators;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
@@ -14,16 +16,14 @@ using ILog = Octopus.Diagnostics.ILog;
 
 namespace Octopus.Tentacle.Client
 {
-    public class TentacleClient : ITentacleClient, IDisposable
+    public class TentacleClient : ITentacleClient
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
-        readonly CancellationTokenSource connectCancellationTokenSource;
         readonly RpcCallRetryHandler rpcCallRetryHandler;
-        readonly IScriptService scriptServiceV1;
-        readonly IScriptServiceV2 scriptServiceV2;
-        readonly IScriptServiceV2 scriptServiceV2WithoutConnectCancellation;
-        readonly IFileTransferService fileTransferServiceV1;
-        readonly ICapabilitiesServiceV2 capabilitiesServiceV2;
+        readonly IClientScriptService scriptServiceV1;
+        readonly IClientScriptServiceV2 scriptServiceV2;
+        readonly IClientFileTransferService fileTransferServiceV1;
+        readonly IClientCapabilitiesServiceV2 capabilitiesServiceV2;
 
         public TentacleClient(ServiceEndPoint serviceEndPoint,
             IHalibutRuntime halibutRuntime,
@@ -33,24 +33,19 @@ namespace Octopus.Tentacle.Client
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
 
-            connectCancellationTokenSource = new CancellationTokenSource();
-
-            scriptServiceV1 = halibutRuntime.CreateClient<IScriptService>(serviceEndPoint, connectCancellationTokenSource.Token);
-            scriptServiceV2 = halibutRuntime.CreateClient<IScriptServiceV2>(serviceEndPoint, connectCancellationTokenSource.Token);
-            scriptServiceV2WithoutConnectCancellation = halibutRuntime.CreateClient<IScriptServiceV2>(serviceEndPoint, CancellationToken.None);
-            fileTransferServiceV1 = halibutRuntime.CreateClient<IFileTransferService>(serviceEndPoint, connectCancellationTokenSource.Token);
-            capabilitiesServiceV2 = halibutRuntime.CreateClient<ICapabilitiesServiceV2>(serviceEndPoint, connectCancellationTokenSource.Token).WithBackwardsCompatability();
+            scriptServiceV1 = halibutRuntime.CreateClient<IScriptService, IClientScriptService>(serviceEndPoint);
+            scriptServiceV2 = halibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(serviceEndPoint);
+            fileTransferServiceV1 = halibutRuntime.CreateClient<IFileTransferService, IClientFileTransferService>(serviceEndPoint);
+            capabilitiesServiceV2 = halibutRuntime.CreateClient<ICapabilitiesServiceV2, IClientCapabilitiesServiceV2>(serviceEndPoint).WithBackwardsCompatability();
 
             var exceptionDecorator = new HalibutExceptionTentacleServiceDecorator();
             scriptServiceV2 = exceptionDecorator.Decorate(scriptServiceV2);
-            scriptServiceV2WithoutConnectCancellation = exceptionDecorator.Decorate(scriptServiceV2WithoutConnectCancellation);
             capabilitiesServiceV2 = exceptionDecorator.Decorate(capabilitiesServiceV2);
 
             if (tentacleServicesDecorator != null)
             {
                 scriptServiceV1 = tentacleServicesDecorator.Decorate(scriptServiceV1);
                 scriptServiceV2 = tentacleServicesDecorator.Decorate(scriptServiceV2);
-                scriptServiceV2WithoutConnectCancellation = tentacleServicesDecorator.Decorate(scriptServiceV2WithoutConnectCancellation);
                 fileTransferServiceV1 = tentacleServicesDecorator.Decorate(fileTransferServiceV1);
                 capabilitiesServiceV2 = tentacleServicesDecorator.Decorate(capabilitiesServiceV2);
             }
@@ -60,23 +55,15 @@ namespace Octopus.Tentacle.Client
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
 
-        public void Dispose()
-        {
-            connectCancellationTokenSource?.Dispose();
-        }
-
         public async Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ILog logger, CancellationToken cancellationToken)
         {
             return await rpcCallRetryHandler.ExecuteWithRetries(
                 ct =>
                 {
-                    using (ct.Register(connectCancellationTokenSource.TryCancel))
-                    {
-                        logger.Info($"Beginning upload of {fileName} to Tentacle");
-                        var result = fileTransferServiceV1.UploadFile(path, package);
-                        logger.Info("Upload complete");
-                        return result;
-                    }
+                    logger.Info($"Beginning upload of {fileName} to Tentacle");
+                    var result = fileTransferServiceV1.UploadFile(path, package, new HalibutProxyRequestOptions(ct));
+                    logger.Info("Upload complete");
+                    return result;
                 },
                 logger,
                 cancellationToken,
@@ -88,13 +75,10 @@ namespace Octopus.Tentacle.Client
             var dataStream = await rpcCallRetryHandler.ExecuteWithRetries(
                 ct =>
                 {
-                    using (ct.Register(connectCancellationTokenSource.TryCancel))
-                    {
-                        logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
-                        var result = fileTransferServiceV1.DownloadFile(remotePath);
-                        logger.Info("Download complete");
-                        return result;
-                    }
+                    logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
+                    var result = fileTransferServiceV1.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct));
+                    logger.Info("Download complete");
+                    return result;
                 },
                 logger,
                 cancellationToken,
@@ -113,9 +97,7 @@ namespace Octopus.Tentacle.Client
             using var orchestrator = new ScriptExecutionOrchestrator(
                 scriptServiceV1,
                 scriptServiceV2,
-                scriptServiceV2WithoutConnectCancellation,
                 capabilitiesServiceV2,
-                connectCancellationTokenSource,
                 scriptObserverBackOffStrategy,
                 rpcCallRetryHandler,
                 startScriptCommand,
@@ -126,6 +108,10 @@ namespace Octopus.Tentacle.Client
 
             var result = await orchestrator.ExecuteScript(cancellationToken).ConfigureAwait(false);
             return new ScriptExecutionResult(result.State, result.ExitCode);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

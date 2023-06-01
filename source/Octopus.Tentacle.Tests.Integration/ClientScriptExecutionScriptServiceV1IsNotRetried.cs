@@ -92,15 +92,13 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
                     .CountCallsToScriptService(out var scriptServiceCallCounts)
                     .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
-                        .DecorateGetStatusWith((inner, request) =>
+                        .BeforeGetStatus((inner, request) =>
                         {
                             scriptStatusRequest = request;
                             if (scriptServiceExceptions.GetStatusLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
-
-                            return inner.GetStatus(request);
                         })
                         .Build())
                     .Build())
@@ -150,11 +148,10 @@ namespace Octopus.Tentacle.Tests.Integration
                     .RecordExceptionThrownInScriptService(out var scriptServiceExceptions)
                     .CountCallsToScriptService(out var scriptServiceCallCounts)
                     .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder()
-                        .DecorateGetStatusWith((inner, request) =>
+                        .BeforeGetStatus((inner, request) =>
                         {
                             cts.Cancel();
                             scriptStatusRequest = request;
-                            return inner.GetStatus(request);
                         })
                         .BeforeCancelScript(() =>
                         {
@@ -177,6 +174,8 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
 
             List<ProcessOutput> logs = new List<ProcessOutput>();
+
+            //Assert.CatchAsync(async () => await clientTentacle.TentacleClient.ExecuteScriptAssumingException(startScriptCommand, logs, cts.Token));
             Assert.ThrowsAsync<HalibutClientException>(async () => await clientTentacle.TentacleClient.ExecuteScriptAssumingException(startScriptCommand, logs, cts.Token));
 
             // Let the script finish.

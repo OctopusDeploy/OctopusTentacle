@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Halibut;
 using Halibut.Exceptions;
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 
 namespace Octopus.Tentacle.Contracts.Capabilities
 {
@@ -16,21 +18,27 @@ namespace Octopus.Tentacle.Contracts.Capabilities
 
         public CapabilitiesResponseV2 GetCapabilities()
         {
+            return WithBackwardsCompatability(inner.GetCapabilities);
+        }
+
+        internal static CapabilitiesResponseV2 WithBackwardsCompatability(Func<CapabilitiesResponseV2> inner)
+        {
             try
             {
-                return inner.GetCapabilities();
+                return inner();
             }
             catch (NoMatchingServiceOrMethodHalibutClientException)
             {
                 return new CapabilitiesResponseV2(new List<string>() {nameof(IScriptService), nameof(IFileTransferService)});
             }
             catch (HalibutClientException e) when 
-                (
-                    ExceptionLooksLikeTheServiceWasNotFound(e))
+            (
+                ExceptionLooksLikeTheServiceWasNotFound(e))
             {
                 return new CapabilitiesResponseV2(new List<string>() {nameof(IScriptService), nameof(IFileTransferService)});
             }
         }
+        
 
         private static bool ExceptionLooksLikeTheServiceWasNotFound(HalibutClientException e)
         {

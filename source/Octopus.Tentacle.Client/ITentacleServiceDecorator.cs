@@ -1,3 +1,4 @@
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
@@ -6,12 +7,12 @@ namespace Octopus.Tentacle.Client
 {
     public interface ITentacleServiceDecorator
     {
-        public IScriptService Decorate(IScriptService scriptService);
+        public IClientScriptService Decorate(IClientScriptService scriptService);
 
-        public IScriptServiceV2 Decorate(IScriptServiceV2 scriptService);
+        public IClientScriptServiceV2 Decorate(IClientScriptServiceV2 scriptService);
 
-        public IFileTransferService Decorate(IFileTransferService service);
+        public IClientFileTransferService Decorate(IClientFileTransferService service);
 
-        public ICapabilitiesServiceV2 Decorate(ICapabilitiesServiceV2 service);
+        public IClientCapabilitiesServiceV2 Decorate(IClientCapabilitiesServiceV2 service);
     }
 }

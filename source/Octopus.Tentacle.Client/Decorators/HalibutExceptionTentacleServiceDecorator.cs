@@ -1,6 +1,7 @@
 using System;
 using Halibut;
-using Octopus.Tentacle.Contracts;
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
@@ -11,22 +12,22 @@ namespace Octopus.Tentacle.Client.Decorators
     /// </summary>
     internal class HalibutExceptionTentacleServiceDecorator : ITentacleServiceDecorator
     {
-        public IScriptService Decorate(IScriptService service)
+        public IClientScriptService Decorate(IClientScriptService service)
         {
             return service;
         }
 
-        public IScriptServiceV2 Decorate(IScriptServiceV2 service)
+        public IClientScriptServiceV2 Decorate(IClientScriptServiceV2 service)
         {
             return new HalibutExceptionScriptServiceV2Decorator(service);
         }
 
-        public IFileTransferService Decorate(IFileTransferService service)
+        public IClientFileTransferService Decorate(IClientFileTransferService service)
         {
             return service;
         }
 
-        public ICapabilitiesServiceV2 Decorate(ICapabilitiesServiceV2 service)
+        public IClientCapabilitiesServiceV2 Decorate(IClientCapabilitiesServiceV2 service)
         {
             return new HalibutExceptionCapabilitiesServiceV2Decorator(service);
         }
@@ -37,20 +38,20 @@ namespace Octopus.Tentacle.Client.Decorators
         }
     }
 
-    class HalibutExceptionScriptServiceV2Decorator : IScriptServiceV2
+    class HalibutExceptionScriptServiceV2Decorator : IClientScriptServiceV2
     {
-        private readonly IScriptServiceV2 inner;
+        private readonly IClientScriptServiceV2 inner;
 
-        public HalibutExceptionScriptServiceV2Decorator(IScriptServiceV2 inner)
+        public HalibutExceptionScriptServiceV2Decorator(IClientScriptServiceV2 inner)
         {
             this.inner = inner;
         }
 
-        public ScriptStatusResponseV2 StartScript(StartScriptCommandV2 command)
+        public ScriptStatusResponseV2 StartScript(StartScriptCommandV2 command, HalibutProxyRequestOptions halibutProxyRequestOptions)
         {
             try
             {
-                return inner.StartScript(command);
+                return inner.StartScript(command, halibutProxyRequestOptions);
             }
             catch (Exception e) when (HalibutExceptionTentacleServiceDecorator.IsHalibutOperationCancellationException(e))
             {
@@ -58,11 +59,11 @@ namespace Octopus.Tentacle.Client.Decorators
             }
         }
 
-        public ScriptStatusResponseV2 GetStatus(ScriptStatusRequestV2 request)
+        public ScriptStatusResponseV2 GetStatus(ScriptStatusRequestV2 request, HalibutProxyRequestOptions halibutProxyRequestOptions)
         {
             try
             {
-                return inner.GetStatus(request);
+                return inner.GetStatus(request, halibutProxyRequestOptions);
             }
             catch (Exception e) when (HalibutExceptionTentacleServiceDecorator.IsHalibutOperationCancellationException(e))
             {
@@ -70,11 +71,11 @@ namespace Octopus.Tentacle.Client.Decorators
             }
         }
 
-        public ScriptStatusResponseV2 CancelScript(CancelScriptCommandV2 command)
+        public ScriptStatusResponseV2 CancelScript(CancelScriptCommandV2 command, HalibutProxyRequestOptions halibutProxyRequestOptions)
         {
             try
             {
-                return inner.CancelScript(command);
+                return inner.CancelScript(command, halibutProxyRequestOptions);
             }
             catch (Exception e) when (HalibutExceptionTentacleServiceDecorator.IsHalibutOperationCancellationException(e))
             {
@@ -82,11 +83,11 @@ namespace Octopus.Tentacle.Client.Decorators
             }
         }
 
-        public void CompleteScript(CompleteScriptCommandV2 command)
+        public void CompleteScript(CompleteScriptCommandV2 command, HalibutProxyRequestOptions halibutProxyRequestOptions)
         {
             try
             {
-                inner.CompleteScript(command);
+                inner.CompleteScript(command, halibutProxyRequestOptions);
             }
             catch (Exception e) when (HalibutExceptionTentacleServiceDecorator.IsHalibutOperationCancellationException(e))
             {
@@ -95,20 +96,20 @@ namespace Octopus.Tentacle.Client.Decorators
         }
     }
 
-    class HalibutExceptionCapabilitiesServiceV2Decorator : ICapabilitiesServiceV2
+    class HalibutExceptionCapabilitiesServiceV2Decorator : IClientCapabilitiesServiceV2
     {
-        private readonly ICapabilitiesServiceV2 inner;
+        private readonly IClientCapabilitiesServiceV2 inner;
 
-        public HalibutExceptionCapabilitiesServiceV2Decorator(ICapabilitiesServiceV2 inner)
+        public HalibutExceptionCapabilitiesServiceV2Decorator(IClientCapabilitiesServiceV2 inner)
         {
             this.inner = inner;
         }
 
-        public CapabilitiesResponseV2 GetCapabilities()
+        public CapabilitiesResponseV2 GetCapabilities(HalibutProxyRequestOptions halibutProxyRequestOptions)
         {
             try
             {
-                return inner.GetCapabilities();
+                return inner.GetCapabilities(halibutProxyRequestOptions);
             }
             catch (Exception e) when (HalibutExceptionTentacleServiceDecorator.IsHalibutOperationCancellationException(e))
             {

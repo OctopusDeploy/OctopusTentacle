@@ -1,26 +1,28 @@
 using Halibut;
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
-    public class LogCallsToFileTransferServiceDecorator : IFileTransferService
+    public class LogCallsToFileTransferServiceDecorator : IClientFileTransferService
     {
-        private IFileTransferService inner;
+        private IClientFileTransferService inner;
         private ILogger logger;
 
-        public LogCallsToFileTransferServiceDecorator(IFileTransferService inner)
+        public LogCallsToFileTransferServiceDecorator(IClientFileTransferService inner)
         {
             this.inner = inner;
             logger = new SerilogLoggerBuilder().Build().ForContext<LogCallsToFileTransferServiceDecorator>();
         }
 
-        public UploadResult UploadFile(string remotePath, DataStream upload)
+        public UploadResult UploadFile(string remotePath, DataStream upload, HalibutProxyRequestOptions options)
         {
             logger.Information("UploadFile call started");
             try
             {
-                return inner.UploadFile(remotePath, upload);
+                return inner.UploadFile(remotePath, upload, options);
             }
             finally
             {
@@ -28,12 +30,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public DataStream DownloadFile(string remotePath)
+        public DataStream DownloadFile(string remotePath, HalibutProxyRequestOptions options)
         {
             logger.Information("DownloadFile call started");
             try
             {
-                return inner.DownloadFile(remotePath);
+                return inner.DownloadFile(remotePath, options);
             }
             finally
             {

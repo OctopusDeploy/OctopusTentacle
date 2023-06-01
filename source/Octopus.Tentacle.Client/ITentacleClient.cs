@@ -9,7 +9,7 @@ using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Client
 {
-    public interface ITentacleClient
+    public interface ITentacleClient : IDisposable
     {
         Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ILog logger, CancellationToken cancellationToken);
         Task<DataStream?> DownloadFile(string remotePath, ILog logger, CancellationToken cancellationToken);
