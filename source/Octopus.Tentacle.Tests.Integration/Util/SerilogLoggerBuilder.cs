@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using Halibut.Diagnostics;
 using NUnit.Framework;
@@ -11,6 +13,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 {
     public class SerilogLoggerBuilder
     {
+        public static readonly ConcurrentDictionary<string, Stopwatch> TestTimers = new ConcurrentDictionary<string, Stopwatch>();
+        
         public ILogger Build()
         {
             // In teamcity we need to know what test the log is for, since we can find hung builds and only have a single file containing all log messages.
@@ -20,10 +24,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 testName = "[{TestName}] ";
             }
 
-            var outputTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] [{SourceContext}] "
+            TestTimers.GetOrAdd(TestContext.CurrentContext.Test.Name, k => Stopwatch.StartNew());
+
+            var outputTemplate = "[{SourceContext}] "
                 + testName
                 + "{Message}{NewLine}{Exception}";
-
+            
             return new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Sink(new NonProgressNUnitSink(new MessageTemplateTextFormatter(outputTemplate)))
@@ -56,7 +62,9 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 StringWriter output = new StringWriter();
                 _formatter.Format(logEvent, output);
                 // This is the change, call this instead of: TestContext.Progress
-                TestContext.Write(output.ToString());
+                var elapsed = SerilogLoggerBuilder.TestTimers[TestContext.CurrentContext.Test.Name].Elapsed.ToString();
+                var s = elapsed + " " + output.ToString();
+                TestContext.Write(s);
             }
         }
     }

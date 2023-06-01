@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -19,10 +20,21 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return new AllCombinations().And(sequence);
         }
 
+        public static AllCombinations AllValuesOf(Type enumType)
+        {
+            return new AllCombinations().AndAllValuesOf(enumType);
+        }
+
         public AllCombinations And(IEnumerable sequence)
         {
             sequences.Add(sequence);
             return this;
+        }
+        
+        public AllCombinations AndAllValuesOf(Type enumType)
+        {
+
+            return And(Enum.GetValues(enumType));
         }
 
         public AllCombinations And(params string[] sequence)
