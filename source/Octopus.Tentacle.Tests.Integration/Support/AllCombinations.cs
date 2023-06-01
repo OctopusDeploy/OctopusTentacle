@@ -8,6 +8,11 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public class AllCombinations
     {
         private readonly List<IEnumerable> sequences = new ();
+
+        public static AllCombinations Of(params object[] sequence)
+        {
+            return new AllCombinations().And(sequence);
+        }
         
         public static AllCombinations Of(IEnumerable sequence)
         {
