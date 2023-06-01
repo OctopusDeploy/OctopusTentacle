@@ -8,7 +8,6 @@ using Octopus.Tentacle.Tests.Integration.Support;
 using Serilog;
 using Serilog.Core;
 using Serilog.Formatting.Display;
-using Serilog.Templates;
 
 namespace Octopus.Tentacle.Tests.Integration.Util
 {
@@ -30,8 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util
             var outputTemplate = 
                 testName
                 + "{Message}{NewLine}{Exception}";
-
-            new ExpressionTemplate(outputTemplate);
+            
             return new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Sink(new NonProgressNUnitSink(
