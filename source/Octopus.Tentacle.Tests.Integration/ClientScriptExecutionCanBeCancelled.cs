@@ -147,7 +147,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .LogAndCountAllCalls(out _, out _, out var scriptServiceV2CallCounts, out _)
                     .RecordAllExceptions(out _, out _, out var scriptServiceV2Exceptions, out _)
                     .DecorateScriptServiceV2With(d => d
-                        .DecorateStartScriptWith((service, command) =>
+                        .DecorateStartScriptWith((service, command, options) =>
                         {
                             service.EnsureTentacleIsConnectedToServer(Logger);
 
@@ -164,7 +164,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             var timer = Stopwatch.StartNew();
                             try
                             {
-                                return service.StartScript(command);
+                                return service.StartScript(command, options);
                             }
                             finally
                             {
@@ -270,7 +270,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .LogAndCountAllCalls(out _, out _, out var scriptServiceV2CallCounts, out _)
                     .RecordAllExceptions(out _, out _, out var scriptServiceV2Exceptions, out _)
                     .DecorateScriptServiceV2With(d => d
-                        .DecorateGetStatusWith((service, request) =>
+                        .DecorateGetStatusWith((service, request, options) =>
                         {
                             service.EnsureTentacleIsConnectedToServer(Logger);
 
@@ -287,7 +287,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             var timer = Stopwatch.StartNew();
                             try
                             {
-                                return service.GetStatus(request);
+                                return service.GetStatus(request, options);
                             }
                             finally
                             {

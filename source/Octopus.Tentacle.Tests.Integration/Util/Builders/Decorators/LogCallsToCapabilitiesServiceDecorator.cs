@@ -1,25 +1,27 @@
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
-    public class LogCallsToCapabilitiesServiceDecorator : ICapabilitiesServiceV2
+    public class LogCallsToCapabilitiesServiceDecorator : IClientCapabilitiesServiceV2
     {
-        private ICapabilitiesServiceV2 inner;
+        private IClientCapabilitiesServiceV2 inner;
         private ILogger logger;
 
-        public LogCallsToCapabilitiesServiceDecorator(ICapabilitiesServiceV2 inner)
+        public LogCallsToCapabilitiesServiceDecorator(IClientCapabilitiesServiceV2 inner)
         {
             this.inner = inner;
             logger = new SerilogLoggerBuilder().Build().ForContext<LogCallsToCapabilitiesServiceDecorator>();
         }
 
-        public CapabilitiesResponseV2 GetCapabilities()
+        public CapabilitiesResponseV2 GetCapabilities(HalibutProxyRequestOptions options)
         {
             logger.Information("GetCapabilities call started");
             try
             {
-                return inner.GetCapabilities();
+                return inner.GetCapabilities(options);
             }
             finally
             {

@@ -1,5 +1,8 @@
+using System;
 using System.Threading;
 using Halibut;
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
@@ -13,24 +16,24 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public long DownloadFileCallCountComplete;
     }
 
-    public class CountingCallsFileTransferServiceDecorator : IFileTransferService
+    public class CountingCallsFileTransferServiceDecorator : IClientFileTransferService
     {
-        private FileTransferServiceCallCounts counts;
+        private readonly FileTransferServiceCallCounts counts;
 
-        private IFileTransferService inner;
+        private readonly IClientFileTransferService inner;
 
-        public CountingCallsFileTransferServiceDecorator(IFileTransferService inner, FileTransferServiceCallCounts counts)
+        public CountingCallsFileTransferServiceDecorator(IClientFileTransferService inner, FileTransferServiceCallCounts counts)
         {
             this.inner = inner;
             this.counts = counts;
         }
 
-        public UploadResult UploadFile(string remotePath, DataStream upload)
+        public UploadResult UploadFile(string remotePath, DataStream upload, HalibutProxyRequestOptions options)
         {
             Interlocked.Increment(ref counts.UploadFileCallCountStarted);
             try
             {
-                return inner.UploadFile(remotePath, upload);
+                return inner.UploadFile(remotePath, upload, options);
             }
             finally
             {
@@ -38,12 +41,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public DataStream DownloadFile(string remotePath)
+        public DataStream DownloadFile(string remotePath, HalibutProxyRequestOptions options)
         {
             Interlocked.Increment(ref counts.DownloadFileCallCountStarted);
             try
             {
-                return inner.DownloadFile(remotePath);
+                return inner.DownloadFile(remotePath, options);
             }
             finally
             {

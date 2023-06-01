@@ -1,5 +1,7 @@
 using System;
 using Halibut;
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
 using Serilog;
 
@@ -11,24 +13,24 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public Exception? DownloadFileLatestException { get; set; }
     }
 
-    public class ErrorRecordingFileTransferServiceDecorator : IFileTransferService
+    public class ErrorRecordingFileTransferServiceDecorator : IClientFileTransferService
     {
         private FileTransferServiceExceptions errors;
-        private IFileTransferService inner;
+        private IClientFileTransferService inner;
         private ILogger logger;
 
-        public ErrorRecordingFileTransferServiceDecorator(IFileTransferService inner, FileTransferServiceExceptions errors)
+        public ErrorRecordingFileTransferServiceDecorator(IClientFileTransferService inner, FileTransferServiceExceptions errors)
         {
             this.inner = inner;
             this.errors = errors;
             logger = new SerilogLoggerBuilder().Build().ForContext<ErrorRecordingFileTransferServiceDecorator>();
         }
 
-        public UploadResult UploadFile(string remotePath, DataStream upload)
+        public UploadResult UploadFile(string remotePath, DataStream upload, HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.UploadFile(remotePath, upload);
+                return inner.UploadFile(remotePath, upload, options);
             }
             catch (Exception e)
             {
@@ -38,11 +40,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public DataStream DownloadFile(string remotePath)
+        public DataStream DownloadFile(string remotePath, HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.DownloadFile(remotePath);
+                return inner.DownloadFile(remotePath, options);
             }
             catch (Exception e)
             {

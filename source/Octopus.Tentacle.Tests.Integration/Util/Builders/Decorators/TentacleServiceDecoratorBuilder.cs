@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Octopus.Tentacle.Client;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
@@ -10,18 +11,18 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
     public class TentacleServiceDecoratorBuilder
     {
 
-        private List<Func<IScriptService, IScriptService>> scriptServiceDecorator = new ();
-        private List<Func<IScriptServiceV2, IScriptServiceV2>> scriptServiceV2Decorator = new ();
-        private List<Func<IFileTransferService, IFileTransferService>> fileTransferServiceDecorator = new ();
-        private List<Func<ICapabilitiesServiceV2, ICapabilitiesServiceV2>> capabilitiesServiceV2Decorator = new ();
+        private List<Func<IClientScriptService, IClientScriptService>> scriptServiceDecorator = new ();
+        private List<Func<IClientScriptServiceV2, IClientScriptServiceV2>> scriptServiceV2Decorator = new ();
+        private List<Func<IClientFileTransferService, IClientFileTransferService>> fileTransferServiceDecorator = new ();
+        private List<Func<IClientCapabilitiesServiceV2, IClientCapabilitiesServiceV2>> capabilitiesServiceV2Decorator = new ();
 
-        public TentacleServiceDecoratorBuilder DecorateScriptServiceWith(Func<IScriptService, IScriptService> scriptServiceDecorator)
+        public TentacleServiceDecoratorBuilder DecorateScriptServiceWith(Func<IClientScriptService, IClientScriptService> scriptServiceDecorator)
         {
             this.scriptServiceDecorator.Add(scriptServiceDecorator);
             return this;
         }
 
-        public TentacleServiceDecoratorBuilder DecorateScriptServiceV2With(Func<IScriptServiceV2, IScriptServiceV2> scriptServiceV2Decorator)
+        public TentacleServiceDecoratorBuilder DecorateScriptServiceV2With(Func<IClientScriptServiceV2, IClientScriptServiceV2> scriptServiceV2Decorator)
         {
             this.scriptServiceV2Decorator.Add(scriptServiceV2Decorator);
             return this;
@@ -35,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return this;
         }
 
-        public TentacleServiceDecoratorBuilder DecorateFileTransferServiceWith(Func<IFileTransferService, IFileTransferService> fileTransferServiceDecorator)
+        public TentacleServiceDecoratorBuilder DecorateFileTransferServiceWith(Func<IClientFileTransferService, IClientFileTransferService> fileTransferServiceDecorator)
         {
             this.fileTransferServiceDecorator.Add(fileTransferServiceDecorator);
             return this;
@@ -49,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return this;
         }
 
-        public TentacleServiceDecoratorBuilder DecorateCapabilitiesServiceV2With(Func<ICapabilitiesServiceV2, ICapabilitiesServiceV2> capabilitiesServiceV2Decorator)
+        public TentacleServiceDecoratorBuilder DecorateCapabilitiesServiceV2With(Func<IClientCapabilitiesServiceV2, IClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator)
         {
             this.capabilitiesServiceV2Decorator.Add(capabilitiesServiceV2Decorator);
             return this;
@@ -87,12 +88,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 
         private class FooTentacleServiceDecorator : ITentacleServiceDecorator
         {
-            private Func<IScriptService, IScriptService> scriptServiceDecorator;
-            private Func<IScriptServiceV2, IScriptServiceV2> scriptServiceV2Decorator;
-            private Func<IFileTransferService, IFileTransferService> fileTransferServiceDecorator;
-            private Func<ICapabilitiesServiceV2, ICapabilitiesServiceV2> capabilitiesServiceV2Decorator;
+            private Func<IClientScriptService, IClientScriptService> scriptServiceDecorator;
+            private Func<IClientScriptServiceV2, IClientScriptServiceV2> scriptServiceV2Decorator;
+            private Func<IClientFileTransferService, IClientFileTransferService> fileTransferServiceDecorator;
+            private Func<IClientCapabilitiesServiceV2, IClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator;
 
-            public FooTentacleServiceDecorator(Func<IScriptService, IScriptService> scriptServiceDecorator, Func<IScriptServiceV2, IScriptServiceV2> scriptServiceV2Decorator, Func<IFileTransferService, IFileTransferService> fileTransferServiceDecorator, Func<ICapabilitiesServiceV2, ICapabilitiesServiceV2> capabilitiesServiceV2Decorator)
+            public FooTentacleServiceDecorator(Func<IClientScriptService, IClientScriptService> scriptServiceDecorator, 
+                Func<IClientScriptServiceV2, IClientScriptServiceV2> scriptServiceV2Decorator,
+                Func<IClientFileTransferService, IClientFileTransferService> fileTransferServiceDecorator,
+                Func<IClientCapabilitiesServiceV2, IClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator)
             {
                 this.scriptServiceDecorator = scriptServiceDecorator;
                 this.scriptServiceV2Decorator = scriptServiceV2Decorator;
@@ -100,22 +104,22 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
                 this.capabilitiesServiceV2Decorator = capabilitiesServiceV2Decorator;
             }
 
-            public IScriptService Decorate(IScriptService scriptService)
+            public IClientScriptService Decorate(IClientScriptService scriptService)
             {
                 return scriptServiceDecorator(scriptService);
             }
 
-            public IScriptServiceV2 Decorate(IScriptServiceV2 scriptService)
+            public IClientScriptServiceV2 Decorate(IClientScriptServiceV2 scriptService)
             {
                 return scriptServiceV2Decorator(scriptService);
             }
 
-            public IFileTransferService Decorate(IFileTransferService service)
+            public IClientFileTransferService Decorate(IClientFileTransferService service)
             {
                 return fileTransferServiceDecorator(service);
             }
 
-            public ICapabilitiesServiceV2 Decorate(ICapabilitiesServiceV2 service)
+            public IClientCapabilitiesServiceV2 Decorate(IClientCapabilitiesServiceV2 service)
             {
                 return capabilitiesServiceV2Decorator(service);
             }

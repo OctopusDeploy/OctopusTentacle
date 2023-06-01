@@ -1,4 +1,6 @@
 using System.Threading;
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
@@ -16,25 +18,25 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public long CompleteScriptCallCountCompleted;
     }
 
-    public class CountingCallsScriptServiceV2Decorator : IScriptServiceV2
+    public class CountingCallsScriptServiceV2Decorator : IClientScriptServiceV2
     {
         private ScriptServiceV2CallCounts counts;
 
 
-        private IScriptServiceV2 inner;
+        private IClientScriptServiceV2 inner;
 
-        public CountingCallsScriptServiceV2Decorator(IScriptServiceV2 inner, ScriptServiceV2CallCounts counts)
+        public CountingCallsScriptServiceV2Decorator(IClientScriptServiceV2 inner, ScriptServiceV2CallCounts counts)
         {
             this.inner = inner;
             this.counts = counts;
         }
 
-        public ScriptStatusResponseV2 StartScript(StartScriptCommandV2 command)
+        public ScriptStatusResponseV2 StartScript(StartScriptCommandV2 command, HalibutProxyRequestOptions options)
         {
             Interlocked.Increment(ref counts.StartScriptCallCountStarted);
             try
             {
-                return inner.StartScript(command);
+                return inner.StartScript(command, options);
             }
             finally
             {
@@ -42,12 +44,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public ScriptStatusResponseV2 GetStatus(ScriptStatusRequestV2 request)
+        public ScriptStatusResponseV2 GetStatus(ScriptStatusRequestV2 request, HalibutProxyRequestOptions options)
         {
             Interlocked.Increment(ref counts.GetStatusCallCountStarted);
             try
             {
-                return inner.GetStatus(request);
+                return inner.GetStatus(request, options);
             }
             finally
             {
@@ -55,12 +57,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public ScriptStatusResponseV2 CancelScript(CancelScriptCommandV2 command)
+        public ScriptStatusResponseV2 CancelScript(CancelScriptCommandV2 command, HalibutProxyRequestOptions options)
         {
             Interlocked.Increment(ref counts.CancelScriptCallCountStarted);
             try
             {
-                return inner.CancelScript(command);
+                return inner.CancelScript(command, options);
             }
             finally
             {
@@ -68,12 +70,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public void CompleteScript(CompleteScriptCommandV2 command)
+        public void CompleteScript(CompleteScriptCommandV2 command, HalibutProxyRequestOptions options)
         {
             Interlocked.Increment(ref counts.CompleteScriptCallCountStarted);
             try
             {
-                inner.CompleteScript(command);
+                inner.CompleteScript(command, options);
             }
             finally
             {

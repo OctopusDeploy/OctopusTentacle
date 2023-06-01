@@ -1,26 +1,28 @@
 using System;
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
-    public class LogCallsToScriptServiceDecorator : IScriptService
+    public class LogCallsToScriptServiceDecorator : IClientScriptService
     {
-        private readonly IScriptService inner;
+        private readonly IClientScriptService inner;
         private readonly ILogger logger;
 
-        public LogCallsToScriptServiceDecorator(IScriptService inner)
+        public LogCallsToScriptServiceDecorator(IClientScriptService inner)
         {
             this.inner = inner;
             logger = new SerilogLoggerBuilder().Build().ForContext<ErrorRecordingScriptServiceDecorator>();
         }
 
-        public ScriptTicket StartScript(StartScriptCommand command)
+        public ScriptTicket StartScript(StartScriptCommand command, HalibutProxyRequestOptions options)
         {
             logger.Information("StartScript call started");
             try
             {
-                return inner.StartScript(command);
+                return inner.StartScript(command, options);
             }
             finally
             {
@@ -28,12 +30,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public ScriptStatusResponse GetStatus(ScriptStatusRequest request)
+        public ScriptStatusResponse GetStatus(ScriptStatusRequest request, HalibutProxyRequestOptions options)
         {
             logger.Information("GetStatus call started");
             try
             {
-                return inner.GetStatus(request);
+                return inner.GetStatus(request, options);
             }
             finally
             {
@@ -41,12 +43,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public ScriptStatusResponse CancelScript(CancelScriptCommand command)
+        public ScriptStatusResponse CancelScript(CancelScriptCommand command, HalibutProxyRequestOptions options)
         {
             logger.Information("CancelScript call started");
             try
             {
-                return inner.CancelScript(command);
+                return inner.CancelScript(command, options);
             }
             finally
             {
@@ -54,12 +56,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public ScriptStatusResponse CompleteScript(CompleteScriptCommand command)
+        public ScriptStatusResponse CompleteScript(CompleteScriptCommand command, HalibutProxyRequestOptions options)
         {
             logger.Information("CompleteScript call started");
             try
             {
-                return inner.CompleteScript(command);
+                return inner.CompleteScript(command, options);
             }
             finally
             {

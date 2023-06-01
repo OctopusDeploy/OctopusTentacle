@@ -1,55 +1,55 @@
 using System;
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.Capabilities;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
 {
     public class CapabilitiesServiceV2DecoratorBuilder
     {
-        private Func<ICapabilitiesServiceV2, CapabilitiesResponseV2> getCapabilitiesFunc = inner => inner.GetCapabilities();
+        public delegate CapabilitiesResponseV2 GetCapabilitiesClientDecorator(IClientCapabilitiesServiceV2 inner, HalibutProxyRequestOptions halibutProxyRequestOptions);
+
+        private GetCapabilitiesClientDecorator getCapabilitiesFunc = (inner, options) => inner.GetCapabilities(options);
 
         public CapabilitiesServiceV2DecoratorBuilder BeforeGetCapabilities(Action beforeGetCapabilities)
         {
-            return DecorateGetCapabilitiesWith((inner) =>
-            {
-                beforeGetCapabilities();
-                return inner.GetCapabilities();
-            });
+            return BeforeGetCapabilities(inner => beforeGetCapabilities());
         }
 
-        public CapabilitiesServiceV2DecoratorBuilder BeforeGetCapabilities(Action<ICapabilitiesServiceV2> beforeGetCapabilities)
+        public CapabilitiesServiceV2DecoratorBuilder BeforeGetCapabilities(Action<IClientCapabilitiesServiceV2> beforeGetCapabilities)
         {
-            return DecorateGetCapabilitiesWith((inner) =>
+            return DecorateGetCapabilitiesWith((inner, options) =>
             {
                 beforeGetCapabilities(inner);
-                return inner.GetCapabilities();
+                return inner.GetCapabilities(options);
             });
         }
 
-        public CapabilitiesServiceV2DecoratorBuilder DecorateGetCapabilitiesWith(Func<ICapabilitiesServiceV2, CapabilitiesResponseV2> getCapabilitiesFunc)
+        public CapabilitiesServiceV2DecoratorBuilder DecorateGetCapabilitiesWith(GetCapabilitiesClientDecorator getCapabilitiesFunc)
         {
             this.getCapabilitiesFunc = getCapabilitiesFunc;
             return this;
         }
 
-        public Func<ICapabilitiesServiceV2, ICapabilitiesServiceV2> Build()
+        public Func<IClientCapabilitiesServiceV2, IClientCapabilitiesServiceV2> Build()
         {
             return inner => new FuncCapabilitiesServiceV2Decorator(inner, getCapabilitiesFunc);
         }
 
-        private class FuncCapabilitiesServiceV2Decorator : ICapabilitiesServiceV2
+        private class FuncCapabilitiesServiceV2Decorator : IClientCapabilitiesServiceV2
         {
-            private readonly ICapabilitiesServiceV2 inner;
-            private readonly Func<ICapabilitiesServiceV2, CapabilitiesResponseV2> getCapabilitiesFunc;
+            private readonly IClientCapabilitiesServiceV2 inner;
+            private readonly GetCapabilitiesClientDecorator getCapabilitiesFunc;
 
-            public FuncCapabilitiesServiceV2Decorator(ICapabilitiesServiceV2 inner, Func<ICapabilitiesServiceV2, CapabilitiesResponseV2> getCapabilitiesFunc)
+            public FuncCapabilitiesServiceV2Decorator(IClientCapabilitiesServiceV2 inner, GetCapabilitiesClientDecorator getCapabilitiesFunc)
             {
                 this.inner = inner;
                 this.getCapabilitiesFunc = getCapabilitiesFunc;
             }
 
-            public CapabilitiesResponseV2 GetCapabilities()
+            public CapabilitiesResponseV2 GetCapabilities(HalibutProxyRequestOptions options)
             {
-                return getCapabilitiesFunc(inner);
+                return getCapabilitiesFunc(inner, options);
             }
         }
     }

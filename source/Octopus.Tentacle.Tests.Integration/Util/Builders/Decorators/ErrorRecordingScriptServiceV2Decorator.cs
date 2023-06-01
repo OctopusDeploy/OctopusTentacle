@@ -1,4 +1,6 @@
 using System;
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Serilog;
 
@@ -12,24 +14,24 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public Exception? CompleteScriptLatestException { get; set; }
     }
 
-    public class ErrorRecordingScriptServiceV2Decorator : IScriptServiceV2
+    public class ErrorRecordingScriptServiceV2Decorator : IClientScriptServiceV2
     {
         private ScriptServiceV2Exceptions errors;
-        private IScriptServiceV2 inner;
+        private IClientScriptServiceV2 inner;
         private ILogger logger;
 
-        public ErrorRecordingScriptServiceV2Decorator(IScriptServiceV2 inner, ScriptServiceV2Exceptions errors)
+        public ErrorRecordingScriptServiceV2Decorator(IClientScriptServiceV2 inner, ScriptServiceV2Exceptions errors)
         {
             this.inner = inner;
             this.errors = errors;
             logger = new SerilogLoggerBuilder().Build().ForContext<ErrorRecordingScriptServiceV2Decorator>();
         }
 
-        public ScriptStatusResponseV2 StartScript(StartScriptCommandV2 command)
+        public ScriptStatusResponseV2 StartScript(StartScriptCommandV2 command, HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.StartScript(command);
+                return inner.StartScript(command, options);
             }
             catch (Exception e)
             {
@@ -39,11 +41,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public ScriptStatusResponseV2 GetStatus(ScriptStatusRequestV2 request)
+        public ScriptStatusResponseV2 GetStatus(ScriptStatusRequestV2 request, HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.GetStatus(request);
+                return inner.GetStatus(request, options);
             }
             catch (Exception e)
             {
@@ -53,11 +55,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public ScriptStatusResponseV2 CancelScript(CancelScriptCommandV2 command)
+        public ScriptStatusResponseV2 CancelScript(CancelScriptCommandV2 command, HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.CancelScript(command);
+                return inner.CancelScript(command, options);
             }
             catch (Exception e)
             {
@@ -67,11 +69,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             }
         }
 
-        public void CompleteScript(CompleteScriptCommandV2 command)
+        public void CompleteScript(CompleteScriptCommandV2 command, HalibutProxyRequestOptions options)
         {
             try
             {
-                inner.CompleteScript(command);
+                inner.CompleteScript(command, options);
             }
             catch (Exception e)
             {

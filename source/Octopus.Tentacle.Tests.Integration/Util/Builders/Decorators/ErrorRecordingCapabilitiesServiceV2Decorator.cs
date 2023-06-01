@@ -1,4 +1,6 @@
 using System;
+using Halibut.ServiceModel;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Serilog;
 
@@ -9,24 +11,24 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public Exception? GetCapabilitiesLatestException { get; set; }
     }
 
-    public class ErrorRecordingCapabilitiesServiceV2Decorator : ICapabilitiesServiceV2
+    public class ErrorRecordingCapabilitiesServiceV2Decorator : IClientCapabilitiesServiceV2
     {
         private CapabilitiesServiceV2Exceptions errors;
-        private ICapabilitiesServiceV2 inner;
+        private IClientCapabilitiesServiceV2 inner;
         private ILogger logger;
 
-        public ErrorRecordingCapabilitiesServiceV2Decorator(ICapabilitiesServiceV2 inner, CapabilitiesServiceV2Exceptions errors)
+        public ErrorRecordingCapabilitiesServiceV2Decorator(IClientCapabilitiesServiceV2 inner, CapabilitiesServiceV2Exceptions errors)
         {
             this.inner = inner;
             this.errors = errors;
             logger = new SerilogLoggerBuilder().Build().ForContext<ErrorRecordingCapabilitiesServiceV2Decorator>();
         }
 
-        public CapabilitiesResponseV2 GetCapabilities()
+        public CapabilitiesResponseV2 GetCapabilities(HalibutProxyRequestOptions options)
         {
             try
             {
-                return inner.GetCapabilities();
+                return inner.GetCapabilities(options);
             }
             catch (Exception e)
             {
