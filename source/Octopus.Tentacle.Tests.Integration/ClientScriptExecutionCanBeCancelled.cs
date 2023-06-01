@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,17 +29,29 @@ namespace Octopus.Tentacle.Tests.Integration
     [IntegrationTestTimeout]
     public class ClientScriptExecutionCanBeCancelled : IntegrationTest
     {
+        class GetCaps : IEnumerable
+        {
+            public IEnumerator GetEnumerator()
+            {
+                return AllCombinations.Of(TentacleType.Listening, TentacleType.Polling)
+                    .And(RpcCallStage.InFlight, RpcCallStage.Connecting)
+                    .And(RpcCall.RetryingCall, RpcCall.FirstCall)
+                    .And(Enumerable.Range(0, 100))
+                    .Build();
+            }
+        }
         [Test]
         // [RetryInconclusive(5)]
-        [TestCase(TentacleType.Polling, RpcCallStage.InFlight, RpcCall.FirstCall)]
-        [TestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.FirstCall)]
-        [TestCase(TentacleType.Listening, RpcCallStage.InFlight, RpcCall.FirstCall)]
-        [TestCase(TentacleType.Listening, RpcCallStage.Connecting, RpcCall.FirstCall)]
-        [TestCase(TentacleType.Polling, RpcCallStage.InFlight, RpcCall.RetryingCall)]
-        [TestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.RetryingCall)]
-        [TestCase(TentacleType.Listening, RpcCallStage.InFlight, RpcCall.RetryingCall)]
-        [TestCase(TentacleType.Listening, RpcCallStage.Connecting, RpcCall.RetryingCall)]
-        public async Task DuringGetCapabilities_ScriptExecutionCanBeCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage, RpcCall rpcCall)
+        // [TestCase(TentacleType.Polling, RpcCallStage.InFlight, RpcCall.FirstCall)]
+        // [TestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.FirstCall)]
+        // [TestCase(TentacleType.Listening, RpcCallStage.InFlight, RpcCall.FirstCall)]
+        // [TestCase(TentacleType.Listening, RpcCallStage.Connecting, RpcCall.FirstCall)]
+        // [TestCase(TentacleType.Polling, RpcCallStage.InFlight, RpcCall.RetryingCall)]
+        // [TestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.RetryingCall)]
+        // [TestCase(TentacleType.Listening, RpcCallStage.InFlight, RpcCall.RetryingCall)]
+        // [TestCase(TentacleType.Listening, RpcCallStage.Connecting, RpcCall.RetryingCall)]
+        [TestCaseSource(typeof(GetCaps))]
+        public async Task DuringGetCapabilities_ScriptExecutionCanBeCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage, RpcCall rpcCall, int i)
         {
             // ARRANGE
             var rpcCallHasStarted = new Reference<bool>(false);
@@ -479,25 +493,25 @@ namespace Octopus.Tentacle.Tests.Integration
 
         private static bool AssertInconclusiveIfHalibutDequeueToClosedConnection(TentacleType tentacleType, RpcCallStage rpcCallStage, RpcCall rpcCall, Func<long> actualCallCounts)
         {
-            if (tentacleType == TentacleType.Polling &&
-                rpcCallStage == RpcCallStage.Connecting &&
-                actualCallCounts() > (rpcCall == RpcCall.FirstCall ? 1 : 2))
-            {
-                // Known bug
-                Assert.Inconclusive("The request was queued for the Polling endpoint and immediately returned an error due to a previously connected tentacle that was polling for a request disconnected before a request or null was returned");
-                return true;
-            }
+            // if (tentacleType == TentacleType.Polling &&
+            //     rpcCallStage == RpcCallStage.Connecting &&
+            //     actualCallCounts() > (rpcCall == RpcCall.FirstCall ? 1 : 2))
+            // {
+            //     // Known bug
+            //     Assert.Inconclusive("The request was queued for the Polling endpoint and immediately returned an error due to a previously connected tentacle that was polling for a request disconnected before a request or null was returned");
+            //     return true;
+            // }
 
             return false;
         }
 
         private static bool AssertInconclusiveIfPortforwarderCannotBeRestarted(Exception? actualException)
         {
-            if (actualException is SocketException s && s.Message.Contains("Only one usage of each socket address (protocol/network address/port) is normally permitted"))
-            {
-                Assert.Inconclusive("Could not restart the port forwarder. Something is hanging onto the port");
-                return true;
-            }
+            // if (actualException is SocketException s && s.Message.Contains("Only one usage of each socket address (protocol/network address/port) is normally permitted"))
+            // {
+            //     Assert.Inconclusive("Could not restart the port forwarder. Something is hanging onto the port");
+            //     return true;
+            // }
 
             return false;
         }
