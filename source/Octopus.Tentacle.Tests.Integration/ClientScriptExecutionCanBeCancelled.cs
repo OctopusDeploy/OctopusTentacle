@@ -28,7 +28,7 @@ namespace Octopus.Tentacle.Tests.Integration
     public class ClientScriptExecutionCanBeCancelled : IntegrationTest
     {
         [Test]
-        [RetryInconclusive(5)]
+        // [RetryInconclusive(5)]
         [TestCase(TentacleType.Polling, RpcCallStage.InFlight, RpcCall.FirstCall)]
         [TestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.FirstCall)]
         [TestCase(TentacleType.Listening, RpcCallStage.InFlight, RpcCall.FirstCall)]
@@ -122,7 +122,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [RetryInconclusive(5)]
+        // [RetryInconclusive(5)]
         [TestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.FirstCall, ExpectedFlow.CancelRpcAndExitImmediately)]
         [TestCase(TentacleType.Listening, RpcCallStage.Connecting, RpcCall.FirstCall, ExpectedFlow.CancelRpcAndExitImmediately)]
         [TestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.RetryingCall, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
@@ -245,7 +245,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [RetryInconclusive(5)]
+        // [RetryInconclusive(5)]
         [TestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.FirstCall, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
         [TestCase(TentacleType.Listening, RpcCallStage.Connecting, RpcCall.FirstCall, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
         [TestCase(TentacleType.Polling, RpcCallStage.Connecting, RpcCall.RetryingCall, ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)]
@@ -354,7 +354,7 @@ namespace Octopus.Tentacle.Tests.Integration
         }
 
         [Test]
-        [RetryInconclusive(5)]
+        // [RetryInconclusive(5)]
         [TestCase(TentacleType.Polling, RpcCallStage.Connecting)]
         [TestCase(TentacleType.Listening, RpcCallStage.Connecting)]
         [TestCase(TentacleType.Polling, RpcCallStage.InFlight)]
@@ -416,7 +416,7 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 Logger.Information("Killing the port forwarder so the next RPCs are in the connecting state when being cancelled");
                 //portForwarder.Stop();
-                portForwarder.EnterKillAllMode();
+                portForwarder.EnterKillNewAndExistingConnectionsMode();
                 rpcCallHasStarted.Value = true;
             }
             else
