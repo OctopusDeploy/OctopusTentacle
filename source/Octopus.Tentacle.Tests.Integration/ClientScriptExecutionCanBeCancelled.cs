@@ -381,7 +381,7 @@ namespace Octopus.Tentacle.Tests.Integration
             if (expectedFlow == ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)
             {
                 // This last call includes the time it takes to cancel and hence is why I kept pushing it up
-                lastCallDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds((rpcCall == RpcCall.RetryingCall ? 6 : 12) + 2)); // + 2 TODO 
+                lastCallDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds((rpcCall == RpcCall.RetryingCall ? 6 : 12) + 2)); // + 2 seconds for some error of margin 
             }
 
             // Or if the rpc call could not be cancelled it cancelled fairly quickly e.g. we are not waiting for an rpc call to timeout
