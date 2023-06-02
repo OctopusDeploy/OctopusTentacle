@@ -143,7 +143,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         protected void CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommand(tentacleExe, new[] { "create-instance", "--config", configFilePath, $"--instance={instanceName}" }, tmp, cancellationToken);
+            RunTentacleCommand(tentacleExe, new[] { "create-instance", "--config", $"\"{configFilePath}\"", $"--instance={instanceName}" }, tmp, cancellationToken);
         }
 
         internal void DeleteInstanceIgnoringFailure(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
