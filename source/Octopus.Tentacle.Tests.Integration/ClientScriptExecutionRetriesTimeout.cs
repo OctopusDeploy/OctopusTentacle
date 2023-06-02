@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 {
                                     // Kill the port forwarder so the next requests are in the connecting state when retries timeout
                                     Logger.Information("Killing PortForwarder");
-                                    portForwarder.Value.Stop();
+                                    portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
                                 }
                                 else
                                 {
@@ -122,7 +122,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 {
                                     // Kill the port forwarder so the next requests are in the connecting state when retries timeout
                                     Logger.Information("Killing PortForwarder");
-                                    portForwarder.Value.Stop();
+                                    portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
                                 }
                                 else
                                 {
@@ -191,7 +191,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 {
                                     // Kill the port forwarder so the next requests are in the connecting state when retries timeout
                                     Logger.Information("Killing PortForwarder");
-                                    portForwarder.Value.Stop();
+                                    portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
                                 }
                                 else
                                 {
@@ -262,7 +262,7 @@ namespace Octopus.Tentacle.Tests.Integration
                                 {
                                     // Kill the port forwarder so the next requests are in the connecting state when retries timeout
                                     Logger.Information("Killing PortForwarder");
-                                    portForwarder.Value.Stop();
+                                    portForwarder.Value.EnterKillNewAndExistingConnectionsMode();
                                 }
                                 else
                                 {

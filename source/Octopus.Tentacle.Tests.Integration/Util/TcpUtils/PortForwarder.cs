@@ -40,14 +40,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             Task.Factory.StartNew(() => WorkerTask(cancellationTokenSource.Token).ConfigureAwait(false), TaskCreationOptions.LongRunning);
         }
 
-        public void Start()
+        private void Start()
         {
             if (active)
             {
                 throw new InvalidOperationException("PortForwarder is already started");
             }
 
-            CreateNewSocketIfNeeded();
+            listeningSocket ??= new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             listeningSocket!.Bind(new IPEndPoint(IPAddress.Loopback, ListeningPort));
 
@@ -64,7 +64,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             active = true;
         }
 
-        public void Stop()
+        private void Stop()
         {
             active = false;
             listeningSocket?.Dispose();
@@ -73,15 +73,20 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
             CloseExistingConnections();
         }
 
-        private void CreateNewSocketIfNeeded()
-        {
-            if (listeningSocket == null)
-            {
-                listeningSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            }
-        }
-
         public Uri PublicEndpoint { get; set; }
+
+        public bool KillNewConnectionsImmediatlyMode { get; set; }
+
+        public void EnterKillNewAndExistingConnectionsMode()
+        {
+            KillNewConnectionsImmediatlyMode = true;
+            this.CloseExistingConnections();
+        }
+        
+        public void ReturnToNormalMode()
+        {
+            KillNewConnectionsImmediatlyMode = false;
+        }
 
         async Task WorkerTask(CancellationToken cancellationToken)
         {
@@ -94,29 +99,20 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                     {
                         var clientSocket = await listeningSocket?.AcceptAsync();
 
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        if (!active)
+                        if (!active || KillNewConnectionsImmediatlyMode || cancellationToken.IsCancellationRequested)
                         {
-                            clientSocket.Close(0);
-                            clientSocket.Dispose();
-                            clientSocket = null;
 
-                            throw new OperationCanceledException("Port forwarder is not active");
+                            CloseSocketIgnoringErrors(clientSocket);
+
+                            if(!active) throw new OperationCanceledException("Port forwarder is not active");
+                            continue;
                         }
 
                         var originEndPoint = new DnsEndPoint(originServer.Host, originServer.Port);
                         var originSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
                         var pump = new TcpPump(clientSocket, originSocket, originEndPoint, sendDelay, factory, logger);
-                        pump.Stopped += OnPortForwarderStopped;
-                        lock (pumps)
-                        {
-                            cancellationToken.ThrowIfCancellationRequested();
-                            pumps.Add(pump);
-                        }
-
-                        pump.Start();
+                        AddNewPump(pump, cancellationToken);
                     }
                     catch (SocketException ex)
                     {
@@ -133,6 +129,39 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                     await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
                 }
             }
+        }
+
+        private static void CloseSocketIgnoringErrors(Socket clientSocket)
+        {
+            DoIgnoringException(() => clientSocket.Shutdown(SocketShutdown.Both));
+            DoIgnoringException(() => clientSocket.Close(0));
+            DoIgnoringException(() => clientSocket.Dispose());
+        }
+
+        private void AddNewPump(TcpPump pump, CancellationToken cancellationToken)
+        {
+            
+            lock (pumps)
+            {
+                if (cancellationToken.IsCancellationRequested || !active || KillNewConnectionsImmediatlyMode)
+                {
+                    try
+                    {
+                        pump.Dispose();
+                    }
+                    catch (Exception)
+                    {
+                        
+                    }
+                }
+                else
+                {
+                    pump.Stopped += OnPortForwarderStopped;
+                    pumps.Add(pump);
+                }
+            }
+
+            pump.Start();
         }
 
         void OnPortForwarderStopped(object sender, EventArgs e)
@@ -250,6 +279,17 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpUtils
                     !(x is SocketException && x.Message.Contains("A request to send or receive data was disallowed because the socket is not connected"))) > 0)
             {
                 logger.Warning(new AggregateException(exceptions), "Exceptions where thrown when Disposing of the PortForwarder");
+            }
+        }
+
+        private static void DoIgnoringException(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception)
+            {
             }
         }
     }

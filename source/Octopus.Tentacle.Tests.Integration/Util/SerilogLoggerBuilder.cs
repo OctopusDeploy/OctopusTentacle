@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using Halibut.Diagnostics;
 using NUnit.Framework;
@@ -11,6 +13,8 @@ namespace Octopus.Tentacle.Tests.Integration.Util
 {
     public class SerilogLoggerBuilder
     {
+        public static readonly ConcurrentDictionary<string, Stopwatch> TestTimers = new ConcurrentDictionary<string, Stopwatch>();
+        
         public ILogger Build()
         {
             // In teamcity we need to know what test the log is for, since we can find hung builds and only have a single file containing all log messages.
@@ -20,13 +24,17 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 testName = "[{TestName}] ";
             }
 
-            var outputTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] [{SourceContext}] "
-                + testName
-                + "{Message}{NewLine}{Exception}";
+            TestTimers.GetOrAdd(TestContext.CurrentContext.Test.ID, k => Stopwatch.StartNew());
 
+            var outputTemplate = 
+                testName
+                + "{Message}{NewLine}{Exception}";
+            
             return new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.Sink(new NonProgressNUnitSink(new MessageTemplateTextFormatter(outputTemplate)))
+                .WriteTo.Sink(new NonProgressNUnitSink(
+                    new MessageTemplateTextFormatter(outputTemplate)
+                    ))
                 .Enrich.WithProperty("TestName", TestContext.CurrentContext.Test.Name)
                 .CreateLogger();
         }
@@ -54,9 +62,15 @@ namespace Octopus.Tentacle.Tests.Integration.Util
                 if (TestContext.Out == null)
                     return;
                 StringWriter output = new StringWriter();
+                if (logEvent.Properties.TryGetValue("SourceContext", out var sourceContext))
+                {
+                    output.Write("[" + sourceContext.ToString().Substring(sourceContext.ToString().LastIndexOf('.') + 1).Replace("\"", "") + "] ");
+                }
                 _formatter.Format(logEvent, output);
                 // This is the change, call this instead of: TestContext.Progress
-                TestContext.Write(output.ToString());
+                var elapsed = SerilogLoggerBuilder.TestTimers[TestContext.CurrentContext.Test.ID].Elapsed.ToString();
+                var s = elapsed + " " + output.ToString();
+                TestContext.Write(s);
             }
         }
     }
