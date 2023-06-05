@@ -17,39 +17,10 @@ namespace Octopus.Tentacle.Client.Retries
             return await rpcCallRetryHandler.ExecuteWithRetries(
                 async ct =>
                 {
+                    // Wrap the action in a task so it doesn't block on sync Halibut calls
                     var actionTask = Task.Run(() => action(ct), ct);
 
-                    if (!abandonActionOnCancellation)
-                    {
-                        return await actionTask.ConfigureAwait(false);
-                    }
-
-                    var abandonAfter = TimeSpan.FromSeconds(5);
-
-                    using var abandonCancellationTokenSource = new CancellationTokenSource();
-                    using (ct.Register(() =>
-                    {
-                        // Give the actionTask some time to cancel on it's own.
-                        // If it doesn't assume it does not co-operate with cancellationTokens and walk away.
-                        abandonCancellationTokenSource.TryCancelAfter(abandonAfter);
-                    }))
-                    {
-                        var abandonTask = abandonCancellationTokenSource.Token.AsTask<T>();
-
-                        try
-                        {
-                            return await (await Task.WhenAny(actionTask, abandonTask).ConfigureAwait(false)).ConfigureAwait(false);
-                        }
-                        catch (Exception e) when (e is OperationCanceledException)
-                        {
-                            if (abandonCancellationTokenSource.IsCancellationRequested)
-                            {
-                                throw new OperationAbandonedException(e, abandonAfter);
-                            }
-
-                            throw;
-                        }
-                    }
+                    return await actionTask.ConfigureAwait(false);
                 },
                 onRetryAction: async (lastException, sleepDuration, retryCount, totalRetryDuration, ct) =>
                 {
@@ -62,6 +33,8 @@ namespace Octopus.Tentacle.Client.Retries
                     await Task.CompletedTask;
                     logger.Info($"Could not communicating with Tentacle after retrying for {timeoutDuration.TotalSeconds} seconds. No more retries will be attempted.");
                 },
+                abandonActionOnCancellation,
+                abandonAfter: TimeSpan.FromSeconds(5),
                 cancellationToken);
         }
     }
