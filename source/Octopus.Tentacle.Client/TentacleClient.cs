@@ -60,9 +60,9 @@ namespace Octopus.Tentacle.Client
             return await rpcCallRetryHandler.ExecuteWithRetries(
                 ct =>
                 {
-                    logger.Info($"Beginning upload of {fileName} to Tentacle");
+                    logger.Info($"Beginning streaming transfer of {fileName}");
                     var result = fileTransferServiceV1.UploadFile(path, package, new HalibutProxyRequestOptions(ct));
-                    logger.Info("Upload complete");
+                    logger.Info("Stream transfer complete");
                     return result;
                 },
                 logger,
@@ -75,9 +75,9 @@ namespace Octopus.Tentacle.Client
             var dataStream = await rpcCallRetryHandler.ExecuteWithRetries(
                 ct =>
                 {
-                    logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
+                    logger.Verbose($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
                     var result = fileTransferServiceV1.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct));
-                    logger.Info("Download complete");
+                    logger.Verbose("Download complete");
                     return result;
                 },
                 logger,
