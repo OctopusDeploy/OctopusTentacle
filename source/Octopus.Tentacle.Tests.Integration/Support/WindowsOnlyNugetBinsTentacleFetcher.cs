@@ -2,6 +2,7 @@
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -11,7 +12,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         static string DownloadUrlForVersion(string versionString) => $"https://f.feedz.io/octopus-deploy/dependencies/packages/Tentacle.Binaries.win-x64/{versionString}/download";
         
-        public async Task<string> GetTentacleVersion(string downloadPath, string version)
+        public async Task<string> GetTentacleVersion(string downloadPath, string version, CancellationToken cancellationToken)
         {
             var downloadFilePath = Path.Combine(downloadPath, Guid.NewGuid().ToString("N"));
 

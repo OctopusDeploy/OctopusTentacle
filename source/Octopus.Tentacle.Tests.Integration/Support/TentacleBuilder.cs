@@ -6,6 +6,7 @@ using Autofac;
 using Nito.AsyncEx.Interop;
 using NUnit.Framework;
 using Octopus.Tentacle.Configuration;
+using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
@@ -32,17 +33,17 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             return (T)this;
         }
-
-        internal IWritableTentacleConfiguration GetWritableTentacleConfiguration(string configFilePath)
+        
+        protected void WithWritableTentacleConfiguration(string configFilePath, Action<IWritableTentacleConfiguration> action)
         {
             var startUpConfigFileInstanceRequest = new StartUpConfigFileInstanceRequest(configFilePath);
             using var container = new Program(Array.Empty<string>()).BuildContainer(startUpConfigFileInstanceRequest);
 
             var writableTentacleConfiguration = container.Resolve<IWritableTentacleConfiguration>();
-            return writableTentacleConfiguration;
+            action(writableTentacleConfiguration);
         }
 
-        internal async Task<RunningTentacle> StartTentacle(
+        protected async Task<RunningTentacle> StartTentacle(
             Uri? serviceUri,
             string tentacleExe,
             string instanceName,
@@ -56,7 +57,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tempDirectory,
                 StartTentacleFunction,
                 tentacleThumbprint,
-                ct => DeleteInstance(tentacleExe, instanceName, tempDirectory, ct));
+                ct => DeleteInstanceIgnoringFailure(tentacleExe, instanceName, tempDirectory, ct));
 
             try
             {
@@ -78,7 +79,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
         }
 
-        internal async Task<(Task task, Uri serviceUri)> RunTentacle(
+        protected async Task<(Task task, Uri serviceUri)> RunTentacle(
             Uri? serviceUri,
             string tentacleExe,
             string instanceName,
@@ -135,16 +136,28 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         }
 
 
-        internal void AddCertificateToTentacle(string tentacleExe, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        protected void AddCertificateToTentacle(string tentacleExe, string instanceName, string tentaclePfxPath, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommand(tentacleExe, new[] { "import-certificate", $"--from-file={tentaclePfxPath}", $"--instance={instanceName}" }, tmp, cancellationToken);
         }
 
-        internal void CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        protected void CreateInstance(string tentacleExe, string configFilePath, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
-            RunTentacleCommand(tentacleExe, new[] { "create-instance", "--config", configFilePath, $"--instance={instanceName}" }, tmp, cancellationToken);
+            RunTentacleCommand(tentacleExe, new[] { "create-instance", "--config", $"\"{configFilePath}\"", $"--instance={instanceName}" }, tmp, cancellationToken);
         }
-        
+
+        internal void DeleteInstanceIgnoringFailure(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
+        {
+            try
+            {
+                DeleteInstance(tentacleExe, instanceName, tmp, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                new SerilogLoggerBuilder().Build().Warning(e, "Could not delete instance: {InstanceName}", instanceName);
+                throw;
+            }
+        }
         internal void DeleteInstance(string tentacleExe, string instanceName, TemporaryDirectory tmp, CancellationToken cancellationToken)
         {
             RunTentacleCommand(tentacleExe, new[] {"delete-instance", $"--instance={instanceName}"}, tmp, cancellationToken);
@@ -168,9 +181,10 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             Action<string> commandOutput,
             CancellationToken cancellationToken)
         {
+            var log = new SerilogLoggerBuilder().Build().ForContext<RunningTentacle>();
             void AllOutput(string s)
             {
-                TestContext.WriteLine(s);
+                log.Information("[Tentacle] " + s);
                 commandOutput(s);
             }
 

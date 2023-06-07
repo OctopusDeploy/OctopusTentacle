@@ -12,11 +12,6 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public ITentacleFetcher Create()
         {
-            if (TentacleExeFinder.IsRunningInTeamCity())
-            {
-                return GetBase();
-            }
-
             return new TentacleBinaryCache(GetBase());
         }
     }

@@ -7,9 +7,11 @@ using NUnit.Framework;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
+using Octopus.Tentacle.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
+    [IntegrationTestTimeout]
     public class ScriptServiceTests : IntegrationTest
     {
         [Test]
@@ -30,7 +32,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 sleep 3
                 echo This is the end of the script";
 
-            using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .Build(CancellationToken);
 
             var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient)
@@ -59,7 +61,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 exit 1
                 echo This is the end of the script";
 
-            using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .Build(CancellationToken);
 
             var scriptStatusResponse = await new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient)
@@ -84,7 +86,7 @@ namespace Octopus.Tentacle.Tests.Integration
                               ping 127.0.0.1 -c 100
                               echo This is the end of the script";
 
-            using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .Build(CancellationToken);
 
             var scriptExecutor = new ScriptExecutionOrchestrator(clientAndTentacle.TentacleClient);

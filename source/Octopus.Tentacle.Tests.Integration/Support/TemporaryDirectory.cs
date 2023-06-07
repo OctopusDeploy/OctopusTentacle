@@ -1,20 +1,22 @@
 ﻿using System;
+using System.Data;
 using System.IO;
 using System.Reflection;
 using Octopus.Tentacle.Util;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    class TemporaryDirectory : IDisposable
+    public class TemporaryDirectory : IDisposable
     {
         readonly IOctopusFileSystem fileSystem;
+        private bool deleted;
 
         public TemporaryDirectory(IOctopusFileSystem fileSystem, string? directoryPath = null)
         {
             this.fileSystem = fileSystem;
             DirectoryPath = directoryPath ?? CreateTemporaryDirectory();
         }
-        
+
         public TemporaryDirectory() : this(new OctopusPhysicalFileSystem(new InMemoryLog()))
         {
         }
@@ -36,9 +38,32 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             Directory.CreateDirectory(path);
             return path;
         }
+
+        public (bool deleted, Exception? deleteException) TryDelete()
+        {
+            if (!deleted)
+            {
+                if (Directory.Exists(DirectoryPath))
+                {
+                    try
+                    {
+                        Directory.Delete(DirectoryPath, true);
+                    }
+                    catch (Exception e)
+                    {
+                        return (false, e);
+                    }
+                }
+
+                deleted = true;
+            }
+
+            return (true, null);
+        }
+
         public void Dispose()
         {
-            fileSystem.DeleteDirectory(DirectoryPath, DeletionOptions.TryThreeTimesIgnoreFailure);
+            TryDelete();
         }
     }
 }

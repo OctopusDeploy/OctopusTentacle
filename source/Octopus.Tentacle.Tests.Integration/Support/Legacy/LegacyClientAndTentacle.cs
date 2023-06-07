@@ -3,19 +3,19 @@ using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 {
-    internal class ClientAndTentacle : IDisposable
+    internal class LegacyClientAndTentacle : IDisposable
     {
         private readonly TemporaryDirectory temporaryDirectory;
         public Server Server { get; }
         public PortForwarder PortForwarder { get; }
         public RunningTentacle RunningTentacle { get; }
-        public TentacleClient TentacleClient { get; }
+        public LegacyTentacleClient TentacleClient { get; }
 
-        public ClientAndTentacle(
+        public LegacyClientAndTentacle(
             Server server,
             PortForwarder portForwarder,
             RunningTentacle runningTentacle,
-            TentacleClient tentacleClient,
+            LegacyTentacleClient tentacleClient,
             TemporaryDirectory temporaryDirectory)
         {
             this.temporaryDirectory = temporaryDirectory;

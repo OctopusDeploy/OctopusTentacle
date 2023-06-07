@@ -28,8 +28,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var subscriptionId = PollingSubscriptionId.Generate();
 
             CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
-            AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId);
+            AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
+            
 
             return await StartTentacle(
                 subscriptionId,
@@ -42,17 +43,18 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         private void ConfigureTentacleToPollOctopusServer(string configFilePath, Uri subscriptionId)
         {
-            var writableTentacleConfiguration = GetWritableTentacleConfiguration(configFilePath);
-
-            writableTentacleConfiguration.AddOrUpdateTrustedOctopusServer(new OctopusServerConfiguration(ServerThumbprint)
+            WithWritableTentacleConfiguration(configFilePath, writableTentacleConfiguration =>
             {
-                Address = new Uri("https://localhost:" + pollingPort),
-                CommunicationStyle = CommunicationStyle.TentacleActive,
-                SubscriptionId = subscriptionId.ToString()
+                writableTentacleConfiguration.AddOrUpdateTrustedOctopusServer(new OctopusServerConfiguration(ServerThumbprint)
+                {
+                    Address = new Uri("https://localhost:" + pollingPort),
+                    CommunicationStyle = CommunicationStyle.TentacleActive,
+                    SubscriptionId = subscriptionId.ToString()
+                });
+
+                writableTentacleConfiguration.SetApplicationDirectory(Path.Combine(new DirectoryInfo(configFilePath).Parent.FullName, "appdir"));
+                writableTentacleConfiguration.SetNoListen(true);
             });
-            
-            writableTentacleConfiguration.SetApplicationDirectory(Path.Combine(new DirectoryInfo(configFilePath).Parent.FullName, "appdir"));
-            writableTentacleConfiguration.SetNoListen(true);
         }
     }
 }

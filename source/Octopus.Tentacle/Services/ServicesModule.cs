@@ -14,6 +14,7 @@ namespace Octopus.Tentacle.Services
             base.Load(builder);
 
             builder.RegisterType<ScriptWorkspaceFactory>().As<IScriptWorkspaceFactory>();
+            builder.RegisterType<ScriptStateStoreFactory>().As<IScriptStateStoreFactory>();
 
             builder.RegisterType<NuGetPackageInstaller>().As<IPackageInstaller>();
 

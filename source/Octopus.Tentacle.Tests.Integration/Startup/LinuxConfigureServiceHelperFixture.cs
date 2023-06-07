@@ -16,6 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration.Startup
 {
     [TestFixture]
     [LinuxTest]
+    [NonParallelizable]
     public class LinuxConfigureServiceHelperFixture
     {
         [Test]

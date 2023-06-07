@@ -11,6 +11,7 @@ using Octopus.Tentacle.Tests.Integration.Util;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
+    [IntegrationTestTimeout]
     public class FileTransferServiceTests : IntegrationTest
     {
         [Test]
@@ -19,7 +20,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             using var fileToUpload = new RandomTemporaryFileBuilder().Build();
 
-            using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .Build(CancellationToken);
 
             var uploadResult = clientAndTentacle.TentacleClient.FileTransferService.UploadFile(
@@ -47,7 +48,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             using var fileToDownload = new RandomTemporaryFileBuilder().Build();
 
-            using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+            using var clientAndTentacle = await new LegacyClientAndTentacleBuilder(tentacleType)
                 .Build(CancellationToken);
 
             var downloadedData = clientAndTentacle.TentacleClient.FileTransferService.DownloadFile(fileToDownload.File.FullName);

@@ -30,5 +30,7 @@ namespace Octopus.Tentacle.CommonTestUtils
         }
 
         public static string GetString(this DataStream dataStream, Encoding encoding) => encoding.GetString(dataStream.ToBytes());
+        
+        public static string GetUtf8String(this DataStream dataStream) => dataStream.GetString(Encoding.UTF8);
     }
 }

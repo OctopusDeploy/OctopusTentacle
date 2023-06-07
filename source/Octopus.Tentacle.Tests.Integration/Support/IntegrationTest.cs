@@ -1,22 +1,56 @@
 ﻿using System;
 using System.Threading;
+using NUnit.Framework;
+using Octopus.Tentacle.Tests.Integration.Util;
+using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
-    public abstract class IntegrationTest : IDisposable
+    [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+    public abstract class IntegrationTest
     {
-        readonly CancellationTokenSource cancellationTokenSource;
-        public CancellationToken CancellationToken { get; }
-
-        protected IntegrationTest()
+        static IntegrationTest()
         {
-            cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(4));
-            CancellationToken = cancellationTokenSource.Token;
+            // Required otherwise the test can struggle to run in parallel
+            ThreadPool.SetMaxThreads(2000, 2000);
+            ThreadPool.SetMinThreads(2000, 2000);
         }
 
-        public void Dispose()
+        public static int TimeoutInMilliseconds = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
+
+        CancellationTokenSource? cancellationTokenSource;
+        public CancellationToken CancellationToken { get; private set; }
+        public ILogger Logger { get; private set; } = null!;
+
+        [SetUp]
+        public void SetUp()
         {
-            cancellationTokenSource.Dispose();
+            Logger = new SerilogLoggerBuilder().Build().ForContext(GetType());
+            Logger.Information("Test started");
+            cancellationTokenSource = new CancellationTokenSource(TimeoutInMilliseconds);
+            CancellationToken = cancellationTokenSource.Token;
+            CancellationToken.Register(() =>
+            {
+                Assert.Fail("The test timed out.");
+            });
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Logger.Information("Tearing down");
+            if (cancellationTokenSource != null)
+            {
+                cancellationTokenSource.Dispose();
+                cancellationTokenSource = null;
+            }
+        }
+    }
+
+    public class IntegrationTestTimeout : TimeoutAttribute
+    {
+        public IntegrationTestTimeout() : base(IntegrationTest.TimeoutInMilliseconds)
+        {
         }
     }
 }
