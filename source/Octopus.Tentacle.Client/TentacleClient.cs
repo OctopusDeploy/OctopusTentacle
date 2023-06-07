@@ -92,7 +92,7 @@ namespace Octopus.Tentacle.Client
             Action<ScriptStatusResponseV2> onScriptStatusResponseReceived,
             Func<CancellationToken, Task> onScriptCompleted,
             ILog logger,
-            CancellationToken cancellationToken)
+            CancellationToken scriptExecutionCancellationToken)
         {
             using var orchestrator = new ScriptExecutionOrchestrator(
                 scriptServiceV1,
@@ -106,7 +106,7 @@ namespace Octopus.Tentacle.Client
                 OnCancellationAbandonCompleteScriptAfter,
                 logger);
 
-            var result = await orchestrator.ExecuteScript(cancellationToken).ConfigureAwait(false);
+            var result = await orchestrator.ExecuteScript(scriptExecutionCancellationToken).ConfigureAwait(false);
             return new ScriptExecutionResult(result.State, result.ExitCode);
         }
 

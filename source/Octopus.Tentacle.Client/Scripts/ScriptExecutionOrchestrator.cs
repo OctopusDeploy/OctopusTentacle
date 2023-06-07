@@ -8,7 +8,6 @@ using Octopus.Tentacle.Client.Capabilities;
 using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Contracts;
-using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using ILog = Octopus.Diagnostics.ILog;
 
@@ -50,7 +49,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.logger = logger;
         }
 
-        public async Task<ScriptStatusResponseV2> ExecuteScript(CancellationToken cancellationToken)
+        public async Task<ScriptStatusResponseV2> ExecuteScript(CancellationToken scriptExecutionCancellationToken)
         {
             ScriptStatusResponseV2 scriptStatusResponse;
             ScriptServiceVersion scriptServiceVersionToUse;
@@ -58,9 +57,9 @@ namespace Octopus.Tentacle.Client.Scripts
 
             try
             {
-                scriptServiceVersionToUse = await DetermineScriptServiceVersionToUse(logger, cancellationToken).ConfigureAwait(false);
+                scriptServiceVersionToUse = await DetermineScriptServiceVersionToUse(logger, scriptExecutionCancellationToken).ConfigureAwait(false);
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (scriptExecutionCancellationToken.IsCancellationRequested)
             {
                 throw new OperationCanceledException("Script execution was cancelled");
             }
@@ -76,14 +75,14 @@ namespace Octopus.Tentacle.Client.Scripts
                             return scriptServiceV2.StartScript(startScriptCommand, new HalibutProxyRequestOptions(ct));
                         },
                         logger,
-                        cancellationToken,
+                        scriptExecutionCancellationToken,
                         // If we are cancelling script execution we can abandon a call to start script
                         // If we manage to cancel the start script call we can walk away
                         // If we do abandon the start script call we have to assume the script is running so need
                         // to call CancelScript and CompleteScript
                         abandonActionOnCancellation: true).ConfigureAwait(false);
                 }
-                catch (Exception e) when (e is OperationCanceledException && cancellationToken.IsCancellationRequested)
+                catch (Exception e) when (e is OperationCanceledException && scriptExecutionCancellationToken.IsCancellationRequested)
                 {
                     // If we are not retrying and we managed to cancel execution it means the request was never sent so we can safely walk away from it.
                     if (e is not OperationAbandonedException && startScriptCallCount <= 1)
@@ -100,7 +99,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         new List<ProcessOutput>(),
                         0);
 
-                    await ObserveUntilCompleteThenFinish(scriptServiceVersionToUse, scriptStatusResponse, cancellationToken).ConfigureAwait(false);
+                    await ObserveUntilCompleteThenFinish(scriptServiceVersionToUse, scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
 
                     // Throw an error so the caller knows that execution of the script was cancelled
                     throw new OperationCanceledException("Script execution was cancelled");
@@ -109,14 +108,14 @@ namespace Octopus.Tentacle.Client.Scripts
             else
             {
                 var startScriptCommandV1 = Map(startScriptCommand);
-                var scriptTicket = scriptServiceV1.StartScript(startScriptCommandV1, new HalibutProxyRequestOptions(cancellationToken));
+                var scriptTicket = scriptServiceV1.StartScript(startScriptCommandV1, new HalibutProxyRequestOptions(scriptExecutionCancellationToken));
 
                 scriptStatusResponse = Map(scriptTicket);
             }
 
-            var response = await ObserveUntilCompleteThenFinish(scriptServiceVersionToUse, scriptStatusResponse, cancellationToken).ConfigureAwait(false);
+            var response = await ObserveUntilCompleteThenFinish(scriptServiceVersionToUse, scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            if (cancellationToken.IsCancellationRequested)
+            if (scriptExecutionCancellationToken.IsCancellationRequested)
             {
                 // Throw an error so the caller knows that execution of the script was cancelled
                 throw new OperationCanceledException("Script execution was cancelled");
@@ -156,15 +155,15 @@ namespace Octopus.Tentacle.Client.Scripts
         async Task<ScriptStatusResponseV2> ObserveUntilCompleteThenFinish(
             ScriptServiceVersion scriptServiceVersionToUse,
             ScriptStatusResponseV2 scriptStatusResponse,
-            CancellationToken cancellationToken)
+            CancellationToken scriptExecutionCancellationToken)
         {
             onScriptStatusResponseReceived(scriptStatusResponse);
 
-            var lastScriptStatus = await ObserveUntilComplete(scriptServiceVersionToUse, scriptStatusResponse, cancellationToken).ConfigureAwait(false);
+            var lastScriptStatus = await ObserveUntilComplete(scriptServiceVersionToUse, scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
 
-            await onScriptCompleted(cancellationToken);
+            await onScriptCompleted(scriptExecutionCancellationToken);
 
-            lastScriptStatus = await Finish(scriptServiceVersionToUse, lastScriptStatus, cancellationToken).ConfigureAwait(false);
+            lastScriptStatus = await Finish(scriptServiceVersionToUse, lastScriptStatus, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             return lastScriptStatus;
         }
@@ -172,7 +171,7 @@ namespace Octopus.Tentacle.Client.Scripts
         async Task<ScriptStatusResponseV2> ObserveUntilComplete(
             ScriptServiceVersion scriptServiceVersionToUse,
             ScriptStatusResponseV2 scriptStatusResponse,
-            CancellationToken cancellationToken)
+            CancellationToken scriptExecutionCancellationToken)
         {
             var lastStatusResponse = scriptStatusResponse;
             var iteration = 0;
@@ -180,7 +179,7 @@ namespace Octopus.Tentacle.Client.Scripts
 
             while (lastStatusResponse.State != ProcessState.Complete)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
                     lastStatusResponse = await Cancel(scriptServiceVersionToUse, lastStatusResponse).ConfigureAwait(false);
                 }
@@ -188,11 +187,11 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     try
                     {
-                        lastStatusResponse = await GetStatus(scriptServiceVersionToUse, lastStatusResponse, cancellationToken).ConfigureAwait(false);
+                        lastStatusResponse = await GetStatus(scriptServiceVersionToUse, lastStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {
-                        if(cancellationToken.IsCancellationRequested) continue; // Enter cancellation mode.
+                        if(scriptExecutionCancellationToken.IsCancellationRequested) continue; // Enter cancellation mode.
                         throw;
                     }
                 }
@@ -204,7 +203,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     continue;
                 }
 
-                if (cancellationToken.IsCancellationRequested)
+                if (scriptExecutionCancellationToken.IsCancellationRequested)
                 {
                     // When cancelling we want to back-off between checks to see if the script has cancelled but restart from iteration 0
                     await Task.Delay(scriptObserverBackOffStrategy.GetBackoff(++cancellationIteration), CancellationToken.None)
@@ -212,7 +211,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 }
                 else
                 {
-                    await Task.Delay(scriptObserverBackOffStrategy.GetBackoff(++iteration), cancellationToken)
+                    await Task.Delay(scriptObserverBackOffStrategy.GetBackoff(++iteration), scriptExecutionCancellationToken)
                         .SuppressOperationCanceledException()
                         .ConfigureAwait(false);
                 }
@@ -281,7 +280,7 @@ namespace Octopus.Tentacle.Client.Scripts
         async Task<ScriptStatusResponseV2> Finish(
             ScriptServiceVersion scriptServiceVersionToUse,
             ScriptStatusResponseV2 lastStatusResponse,
-            CancellationToken cancellationToken)
+            CancellationToken scriptExecutionCancellationToken)
         {
             ScriptStatusResponseV2 completeStatus;
 
@@ -290,7 +289,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 // Best effort cleanup of Tentacle
                 try
                 {
-                    var actionTask = Task.Run(() => scriptServiceV2.CompleteScript(new CompleteScriptCommandV2(lastStatusResponse.Ticket), new HalibutProxyRequestOptions(cancellationToken)), CancellationToken.None);
+                    var actionTask = Task.Run(() => scriptServiceV2.CompleteScript(new CompleteScriptCommandV2(lastStatusResponse.Ticket), new HalibutProxyRequestOptions(scriptExecutionCancellationToken)), CancellationToken.None);
 
                     var abandonCancellationTokenSource = new CancellationTokenSource();
 
@@ -300,9 +299,9 @@ namespace Octopus.Tentacle.Client.Scripts
                         abandonCancellationTokenSource.TryCancelAfter(onCancellationAbandonCompleteScriptAfter);
                     }
 
-                    using (cancellationToken.Register(CancelAfter))
+                    using (scriptExecutionCancellationToken.Register(CancelAfter))
                     {
-                        if (cancellationToken.IsCancellationRequested)
+                        if (scriptExecutionCancellationToken.IsCancellationRequested)
                         {
                             CancelAfter();
                         }
