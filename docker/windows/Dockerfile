@@ -28,6 +28,9 @@ RUN Tentacle create-instance --console --instance Tentacle --config C:\Octopus\T
 
 WORKDIR /Scripts
 COPY docker/windows/Scripts/*.ps1 /Scripts/
+
+RUN powershell -File ./configure-tentacle.ps1 -Verbose
+
 HEALTHCHECK --interval=20s --timeout=20s --retries=6 CMD powershell -file ./healthcheck-tentacle.ps1
-CMD ["powershell.exe", "-Command", "&", ".\configure-tentacle.ps1", "-Verbose",";","&",".\run-tentacle.ps1", "-Verbose"]
+CMD ["powershell.exe", "-File", "run-tentacle.ps1", "-Verbose"]
 #ENTRYPOINT powershell -File ./configure-tentacle.ps1 -Verbose  && powershell -File ./run-tentacle.ps1 -Verbose
