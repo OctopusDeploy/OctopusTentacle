@@ -30,4 +30,4 @@ WORKDIR /Scripts
 COPY docker/windows/Scripts/*.ps1 /Scripts/
 
 HEALTHCHECK --interval=20s --timeout=20s --retries=6 CMD powershell -file ./healthcheck-tentacle.ps1
-CMD ["powershell.exe", "-File", "configure-and-run-tentacle-wrapper.ps1"]
+ENTRYPOINT ["powershell.exe", "-File", "configure-and-run-tentacle-wrapper.ps1"]
