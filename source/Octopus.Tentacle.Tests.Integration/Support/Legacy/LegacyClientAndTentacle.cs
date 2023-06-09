@@ -1,5 +1,5 @@
 ﻿using System;
-using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
+using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 {

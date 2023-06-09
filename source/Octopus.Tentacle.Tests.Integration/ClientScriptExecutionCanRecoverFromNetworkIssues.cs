@@ -13,7 +13,7 @@ using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
-using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
+using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Tests.Integration
 {

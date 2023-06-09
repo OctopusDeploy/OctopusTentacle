@@ -1,6 +1,6 @@
 using System;
 using Octopus.Tentacle.Tests.Integration.Support;
-using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
+using Octopus.TestPortForwarder;
 using Serilog;
 
 namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers

@@ -9,7 +9,7 @@ using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts.Legacy;
 using Octopus.Tentacle.Tests.Integration.Util;
-using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
+using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
@@ -97,7 +97,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             return portForwarderModifiers.Aggregate(
                     PortForwarderBuilder
-                        .ForwardingToLocalPort(localPort)
+                        .ForwardingToLocalPort(localPort, new SerilogLoggerBuilder().Build())
                         .ListenOnPort(listeningPort),
                     (current, portForwarderModifier) => portForwarderModifier(current))
                 .Build();
