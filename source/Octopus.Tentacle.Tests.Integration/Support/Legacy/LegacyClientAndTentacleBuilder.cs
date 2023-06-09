@@ -2,7 +2,8 @@
 using System.Threading.Tasks;
 using Halibut;
 using Octopus.Tentacle.Contracts.Legacy;
-using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
+using Octopus.Tentacle.Tests.Integration.Util;
+using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 {
@@ -48,7 +49,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
 
             if (tentacleType == TentacleType.Polling)
             {
-                portForwarder = PortForwarderBuilder.ForwardingToLocalPort(serverListeningPort).Build();
+                portForwarder = PortForwarderBuilder.ForwardingToLocalPort(serverListeningPort, new SerilogLoggerBuilder().Build()).Build();
 
                 runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Certificates.ServerPublicThumbprint)
                     .WithTentacleExe(tentacleExe)
@@ -62,7 +63,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
                     .WithTentacleExe(tentacleExe)
                     .Build(cancellationToken);
 
-                portForwarder = new PortForwarderBuilder(runningTentacle.ServiceUri).Build();
+                portForwarder = new PortForwarderBuilder(runningTentacle.ServiceUri, new SerilogLoggerBuilder().Build()).Build();
 
                 tentacleEndPoint = new ServiceEndPoint(portForwarder.PublicEndpoint, runningTentacle.Thumbprint);
             }

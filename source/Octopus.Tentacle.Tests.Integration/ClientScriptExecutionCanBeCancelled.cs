@@ -17,8 +17,8 @@ using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 using Octopus.Tentacle.Tests.Integration.Util.PendingRequestQueueHelpers;
 using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
-using Octopus.Tentacle.Tests.Integration.Util.TcpUtils;
 using Octopus.Tentacle.Util;
+using Octopus.TestPortForwarder;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
