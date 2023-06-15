@@ -244,8 +244,8 @@ partial class Build : NukeBuild
             .SetConfiguration(configuration)
             .SetFramework(framework)
             .SetRuntime(runtimeId)
-            .When(runtimeId != "win", x => x.EnableSelfContained())
-            .When(runtimeId == "win", x => x.DisableSelfContained())
+            // .When(runtimeId != "win", x => x.EnableSelfContained())
+            // .When(runtimeId == "win", x => x.DisableSelfContained())
             .EnableNoRestore()
             .SetVersion(OctoVersionInfo.FullSemVer));
     }
