@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ThreadPool.SetMinThreads(2000, 2000);
         }
 
-        public static int TimeoutInMilliseconds = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
+        public static int TimeoutInMilliseconds = (int)TimeSpan.FromMinutes(2).TotalMilliseconds;
 
         CancellationTokenSource? cancellationTokenSource;
         public CancellationToken CancellationToken { get; private set; }

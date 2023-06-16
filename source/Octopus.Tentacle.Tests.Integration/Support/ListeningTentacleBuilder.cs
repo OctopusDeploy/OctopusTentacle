@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 {
     public class ListeningTentacleBuilder : TentacleBuilder<ListeningTentacleBuilder>
     {
-        public ListeningTentacleBuilder(string serverThumbprint)
+        public ListeningTentacleBuilder(string serverThumbprint, TestCertificate tentacleCertificate) : base(tentacleCertificate)
         {
             ServerThumbprint = serverThumbprint;
         }
@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
 
             CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
-            AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
+            AddCertificateToTentacle(tentacleExe, instanceName, tentacleCertificate.PfxPath, tempDirectory, cancellationToken);
             ConfigureTentacleToListen(configFilePath);
 
             var runningTentacle = await StartTentacle(
@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tentacleExe,
                 instanceName,
                 tempDirectory,
-                TentacleThumbprint,
+                tentacleCertificate.Thumbprint,
                 cancellationToken);
 
             SetThePort(configFilePath, runningTentacle.ServiceUri.Port);

@@ -11,6 +11,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
     {
         private readonly TentacleType tentacleType;
         private string? tentacleVersion;
+        protected TestCertificate tentacleCertificate = Certificates.TentacleCertificate;
 
         public LegacyClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -51,7 +52,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             {
                 portForwarder = PortForwarderBuilder.ForwardingToLocalPort(serverListeningPort, new SerilogLoggerBuilder().Build()).Build();
 
-                runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Certificates.ServerPublicThumbprint)
+                runningTentacle = await new PollingTentacleBuilder(portForwarder.ListeningPort, Certificates.ServerPublicThumbprint, tentacleCertificate)
                     .WithTentacleExe(tentacleExe)
                     .Build(cancellationToken);
 
@@ -59,7 +60,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support.Legacy
             }
             else
             {
-                runningTentacle = await new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint)
+                runningTentacle = await new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint, tentacleCertificate)
                     .WithTentacleExe(tentacleExe)
                     .Build(cancellationToken);
 

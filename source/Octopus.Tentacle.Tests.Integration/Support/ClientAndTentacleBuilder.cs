@@ -24,6 +24,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         readonly List<Action<ServiceEndPoint>> serviceEndpointModifiers = new();
         private IPendingRequestQueueFactory? queueFactory = null;
         private Reference<PortForwarder>? portForwarderReference;
+        private TestCertificate tentacleCertificate = Certificates.TentacleCertificate;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -112,7 +113,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             if (queueFactory != null) serverHalibutRuntimeBuilder.WithPendingRequestQueueFactory(queueFactory);
             var serverHalibutRuntime = serverHalibutRuntimeBuilder.Build();
 
-            serverHalibutRuntime.Trust(Certificates.TentaclePublicThumbprint);
+            serverHalibutRuntime.Trust(tentacleCertificate.Thumbprint);
             var serverListeningPort = serverHalibutRuntime.Listen();
 
             var server = new Server(serverHalibutRuntime, serverListeningPort);
@@ -131,7 +132,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             {
                 portForwarder = BuildPortForwarder(serverListeningPort, null);
 
-                runningTentacle = await new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, Certificates.ServerPublicThumbprint)
+                runningTentacle = await new PollingTentacleBuilder(portForwarder?.ListeningPort ?? serverListeningPort, Certificates.ServerPublicThumbprint, tentacleCertificate)
                     .WithTentacleExe(tentacleExe)
                     .Build(cancellationToken);
 
@@ -139,7 +140,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             }
             else
             {
-                runningTentacle = await new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint)
+                runningTentacle = await new ListeningTentacleBuilder(Certificates.ServerPublicThumbprint, tentacleCertificate)
                     .WithTentacleExe(tentacleExe)
                     .Build(cancellationToken);
 
@@ -166,6 +167,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 retryDuration);
 
             return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
+        }
+
+        public ClientAndTentacleBuilder WithTentacleCertificate(TestCertificate badTestCertificate)
+        {
+            this.tentacleCertificate = badTestCertificate;
+            return this;
         }
     }
 }

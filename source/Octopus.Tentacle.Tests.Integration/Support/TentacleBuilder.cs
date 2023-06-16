@@ -15,17 +15,22 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         protected string? ServerThumbprint;
         protected string? TentacleExePath;
-        protected string CertificatePfxPath = Certificates.TentaclePfxPath;
-        protected string TentacleThumbprint = Certificates.TentaclePublicThumbprint;
+
+        protected TestCertificate tentacleCertificate;
         private readonly Regex listeningPortRegex = new Regex(@"^listen:\/\/.+:(\d+)\/");
 
-        public T WithCertificate(string certificatePfxPath, string tentacleThumbprint)
+        protected TentacleBuilder(TestCertificate tentacleCertificate)
+        {
+            this.tentacleCertificate = tentacleCertificate;
+        }
+
+        /*public T WithCertificate(string certificatePfxPath, string tentacleThumbprint)
         {
             CertificatePfxPath = certificatePfxPath;
             TentacleThumbprint = tentacleThumbprint;
 
             return (T)this;
-        }
+        }*/
 
         public T WithTentacleExe(string tentacleExe)
         {

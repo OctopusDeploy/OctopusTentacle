@@ -12,7 +12,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         readonly int pollingPort;
 
-        public PollingTentacleBuilder(int pollingPort, string serverThumbprint)
+        public PollingTentacleBuilder(int pollingPort, string serverThumbprint, TestCertificate tentacleCertificate) : base(tentacleCertificate)
         {
             this.pollingPort = pollingPort;
 
@@ -29,7 +29,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
             CreateInstance(tentacleExe, configFilePath, instanceName, tempDirectory, cancellationToken);
             ConfigureTentacleToPollOctopusServer(configFilePath, subscriptionId);
-            AddCertificateToTentacle(tentacleExe, instanceName, CertificatePfxPath, tempDirectory, cancellationToken);
+            AddCertificateToTentacle(tentacleExe, instanceName, tentacleCertificate.PfxPath, tempDirectory, cancellationToken);
             
 
             return await StartTentacle(
@@ -37,7 +37,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tentacleExe,
                 instanceName,
                 tempDirectory,
-                TentacleThumbprint,
+                tentacleCertificate.Thumbprint,
                 cancellationToken);
         }
 
