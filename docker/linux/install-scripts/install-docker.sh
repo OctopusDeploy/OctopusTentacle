@@ -56,9 +56,16 @@ dos2unix /usr/local/bin/dind
 chmod +x /usr/local/bin/dockerd-entrypoint.sh
 dos2unix /usr/local/bin/dockerd-entrypoint.sh
 
-# https://forums.docker.com/t/failing-to-start-dockerd-failed-to-create-nat-chain-docker/78269
-update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
-update-alternatives --set iptables /usr/sbin/iptables-legacy
+if [ iptables -nL > /dev/null 2>&1 ]; then
+  # https://forums.docker.com/t/failing-to-start-dockerd-failed-to-create-nat-chain-docker/78269
+  update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+  update-alternatives --set iptables /usr/sbin/iptables-legacy
+else
+  # There can be issues with some (newer) operating systems are moving away from iptables to nftables, like RHEL.
+  # See https://octopusdeploy.slack.com/archives/CNHBHV2BX/p1677028476905509 for more details
+  update-alternatives --set ip6tables /usr/sbin/ip6tables-nft
+  update-alternatives --set iptables /usr/sbin/iptables-nft
+fi
 
 # Remove the apt cache
 apt-get clean
