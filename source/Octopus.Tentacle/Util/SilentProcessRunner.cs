@@ -146,11 +146,11 @@ namespace Octopus.Tentacle.Util
 
                     using (cancel.Register(() =>
                     {
-                        if (running) DoOurBestToCleanUp(process, error);
+                        if (running) DoOurBestToCleanUp(process, debug, error);
                     }))
                     {
                         if (cancel.IsCancellationRequested)
-                            DoOurBestToCleanUp(process, error);
+                            DoOurBestToCleanUp(process, debug,  error);
 
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
@@ -218,11 +218,11 @@ namespace Octopus.Tentacle.Util
             }
         }
 
-        static void DoOurBestToCleanUp(Process process, Action<string> error)
+        static void DoOurBestToCleanUp(Process process, Action<string> debug, Action<string> error)
         {
             try
             {
-                Hitman.TryKillProcessAndChildrenRecursively(process);
+                Hitman.TryKillProcessAndChildrenRecursively(process, debug);
             }
             catch (Exception hitmanException)
             {
@@ -249,37 +249,47 @@ namespace Octopus.Tentacle.Util
 
         class Hitman
         {
-            public static void TryKillProcessAndChildrenRecursively(Process process)
+            public static void TryKillProcessAndChildrenRecursively(Process process, Action<string> debug)
             {
                 if (PlatformDetection.IsRunningOnNix)
-                    TryKillLinuxProcessAndChildrenRecursively(process);
+                    TryKillLinuxProcessAndChildrenRecursively(process, debug);
                 else if (PlatformDetection.IsRunningOnWindows)
-                    TryKillWindowsProcessAndChildrenRecursively(process.Id);
+                    TryKillWindowsProcessAndChildrenRecursively(process.Id, debug);
                 else
                     throw new Exception("Unknown platform, unable to kill process");
             }
 
-            static void TryKillLinuxProcessAndChildrenRecursively(Process process)
+            static void TryKillLinuxProcessAndChildrenRecursively(Process process, Action<string> debug)
             {
+                debug($"Attempting to kill Linux process and children recursively: {process.Id}");
                 var result = ExecuteCommand(new CommandLineInvocation("/bin/bash", $"-c \"kill -TERM {process.Id}\""));
                 result.Validate();
                 //process.Kill() doesnt seem to work in netcore 2.2 there have been some improvments in netcore 3.0 as well as also allowing to kill child processes
                 //https://github.com/dotnet/corefx/pull/34147
                 //In netcore 2.2 if the process is terminated we still get stuck on process.WaitForExit(); we need to manually check to see if the process has exited and then close it.
                 if (process.HasExited)
+                {
+                    debug($"Closing process to clean up resources: {process.Id}");
                     process.Close();
+                }
+                else
+                {
+                    debug($"Process hadn't exited for some reason: {process.Id}");
+                }
             }
 
-            static void TryKillWindowsProcessAndChildrenRecursively(int pid)
+            static void TryKillWindowsProcessAndChildrenRecursively(int pid, Action<string> debug)
             {
                 try
                 {
+                    debug($"Attempting to kill Windows process and children recursively via management objects: {pid}");
+
                     using (var searcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid))
                     {
                         using (var moc = searcher.Get())
                         {
                             foreach (var mo in moc.OfType<ManagementObject>())
-                                TryKillWindowsProcessAndChildrenRecursively(Convert.ToInt32(mo["ProcessID"]));
+                                TryKillWindowsProcessAndChildrenRecursively(Convert.ToInt32(mo["ProcessID"]), debug);
                         }
                     }
                 }
@@ -297,6 +307,8 @@ namespace Octopus.Tentacle.Util
 
                 try
                 {
+                    debug($"Attempting to kill Windows process via .Kill(): {pid}");
+
                     var proc = Process.GetProcessById(pid);
                     proc.Kill();
                 }
