@@ -267,14 +267,19 @@ namespace Octopus.Tentacle.Util
                 //process.Kill() doesnt seem to work in netcore 2.2 there have been some improvments in netcore 3.0 as well as also allowing to kill child processes
                 //https://github.com/dotnet/corefx/pull/34147
                 //In netcore 2.2 if the process is terminated we still get stuck on process.WaitForExit(); we need to manually check to see if the process has exited and then close it.
-                if (process.HasExited)
+                for (int i = 0; i < 5; i++)
                 {
-                    debug($"Closing process to clean up resources: {process.Id}");
-                    process.Close();
-                }
-                else
-                {
-                    debug($"Process hadn't exited for some reason: {process.Id}");
+                    if (process.HasExited)
+                    {
+                        debug($"Closing process to clean up resources: {process.Id}");
+                        process.Close();
+                        break;
+                    }
+                    else
+                    {
+                        debug($"Process hasn't exited yet, retrying {i+1} of 5 times with a small wait to see if it has exited: {process.Id}");
+                        Thread.Sleep(100);
+                    }
                 }
             }
 
