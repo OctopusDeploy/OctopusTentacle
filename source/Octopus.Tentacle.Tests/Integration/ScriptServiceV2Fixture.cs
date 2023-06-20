@@ -269,44 +269,47 @@ namespace Octopus.Tentacle.Tests.Integration
         [Test]
         public async Task CancelScriptShouldCancelAnExecutingScript()
         {
-            var bashScript = "sleep 60";
-            var windowsScript = "Start-Sleep -Seconds 60";
-
-            var startScriptCommand = new StartScriptCommandV2Builder()
-                .WithScriptBodyForCurrentOs(windowsScript, bashScript)
-                .Build();
-
-            var cancellationTimer = new Stopwatch();
-            var response = service.StartScript(startScriptCommand);
-            var logs = new List<ProcessOutput>(response.Logs);
-
-            while (response.State != ProcessState.Complete)
+            for (int i = 0; i < 100; i++)
             {
-                response = service.GetStatus(new ScriptStatusRequestV2(startScriptCommand.ScriptTicket, response.NextLogSequence));
-                logs.AddRange(response.Logs);
+                var bashScript = "sleep 60";
+                var windowsScript = "Start-Sleep -Seconds 60";
 
-                if (response.State == ProcessState.Running && !cancellationTimer.IsRunning)
+                var startScriptCommand = new StartScriptCommandV2Builder()
+                    .WithScriptBodyForCurrentOs(windowsScript, bashScript)
+                    .Build();
+
+                var cancellationTimer = new Stopwatch();
+                var response = service.StartScript(startScriptCommand);
+                var logs = new List<ProcessOutput>(response.Logs);
+
+                while (response.State != ProcessState.Complete)
                 {
-                    cancellationTimer.Start();
-                    response = service.CancelScript(new CancelScriptCommandV2(startScriptCommand.ScriptTicket, response.NextLogSequence));
+                    response = service.GetStatus(new ScriptStatusRequestV2(startScriptCommand.ScriptTicket, response.NextLogSequence));
                     logs.AddRange(response.Logs);
+
+                    if (response.State == ProcessState.Running && !cancellationTimer.IsRunning)
+                    {
+                        cancellationTimer.Start();
+                        response = service.CancelScript(new CancelScriptCommandV2(startScriptCommand.ScriptTicket, response.NextLogSequence));
+                        logs.AddRange(response.Logs);
+                    }
+
+                    if (response.State != ProcessState.Complete)
+                    {
+                        await Task.Delay(TimeSpan.FromMilliseconds(100));
+                    }
                 }
 
-                if (response.State != ProcessState.Complete)
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(100));
-                }
+                cancellationTimer.Stop();
+
+                service.CompleteScript(new CompleteScriptCommandV2(startScriptCommand.ScriptTicket));
+
+                WriteLogsToConsole(logs);
+
+                response.State.Should().Be(ProcessState.Complete);
+                response.ExitCode.Should().NotBe(0, "The exit code varies based on the OS and flakiness with killing the running script");
+                cancellationTimer.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(5));
             }
-
-            cancellationTimer.Stop();
-
-            service.CompleteScript(new CompleteScriptCommandV2(startScriptCommand.ScriptTicket));
-
-            WriteLogsToConsole(logs);
-
-            response.State.Should().Be(ProcessState.Complete);
-            response.ExitCode.Should().NotBe(0, "The exit code varies based on the OS and flakiness with killing the running script");
-            cancellationTimer.Elapsed.Should().BeLessOrEqualTo(TimeSpan.FromSeconds(5));
         }
 
         [Test]
