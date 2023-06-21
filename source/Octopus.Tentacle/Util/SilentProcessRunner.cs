@@ -251,7 +251,7 @@ namespace Octopus.Tentacle.Util
         {
             public static void TryKillProcessAndChildrenRecursively(Process process, Action<string> debug)
             {
-                if (PlatformDetection.IsRunningOnNix)
+                if (PlatformDetection.IsRunningOnNix || PlatformDetection.IsRunningOnMac)
                     TryKillLinuxProcessAndChildrenRecursively(process, debug);
                 else if (PlatformDetection.IsRunningOnWindows)
                     TryKillWindowsProcessAndChildrenRecursively(process.Id, debug);
@@ -261,31 +261,33 @@ namespace Octopus.Tentacle.Util
 
             static void TryKillLinuxProcessAndChildrenRecursively(Process process, Action<string> debug)
             {
-                debug($"Attempting to kill Linux process and children recursively: {process.Id}");
-                var result = ExecuteCommand(new CommandLineInvocation("/bin/bash", $"-c \"kill -TERM {process.Id}\""));
-                result.Validate();
-                //process.Kill() doesnt seem to work in netcore 2.2 there have been some improvments in netcore 3.0 as well as also allowing to kill child processes
-                //https://github.com/dotnet/corefx/pull/34147
-                //In netcore 2.2 if the process is terminated we still get stuck on process.WaitForExit(); we need to manually check to see if the process has exited and then close it.
-                //for (int i = 0; i < 5; i++)
-                //{
-                    if (process.HasExited)
-                    {
-                        debug($"Closing process to clean up resources: {process.Id}");
-                        process.Close();
-                        //break;
-                    }
-                    else
-                    {
-                        debug($"Process hasn't exited yet: {process.Id}");
-                        //debug($"Process hasn't exited yet, retrying {i+1} of 5 times with a small wait to see if it has exited: {process.Id}");
-                        //Thread.Sleep(100);
-                    }
-                //}
+                process.Kill(true);
+                //debug($"Attempting to kill Linux process and children recursively: {process.Id}");
+                //var result = ExecuteCommand(new CommandLineInvocation("/bin/bash", $"-c \"kill -TERM {process.Id}\""));
+                //result.Validate();
+                ////process.Kill() doesnt seem to work in netcore 2.2 there have been some improvments in netcore 3.0 as well as also allowing to kill child processes
+                ////https://github.com/dotnet/corefx/pull/34147
+                ////In netcore 2.2 if the process is terminated we still get stuck on process.WaitForExit(); we need to manually check to see if the process has exited and then close it.
+                ////for (int i = 0; i < 5; i++)
+                ////{
+                //    if (process.HasExited)
+                //    {
+                //        debug($"Closing process to clean up resources: {process.Id}");
+                //        process.Close();
+                //        //break;
+                //    }
+                //    else
+                //    {
+                //        debug($"Process hasn't exited yet: {process.Id}");
+                //        //debug($"Process hasn't exited yet, retrying {i+1} of 5 times with a small wait to see if it has exited: {process.Id}");
+                //        //Thread.Sleep(100);
+                //    }
+                ////}
             }
 
             static void TryKillWindowsProcessAndChildrenRecursively(int pid, Action<string> debug)
             {
+#if NETFRAMEWORK
                 try
                 {
                     debug($"Attempting to kill Windows process and children recursively via management objects: {pid}");
@@ -322,7 +324,22 @@ namespace Octopus.Tentacle.Util
                 {
                     // Process already exited.
                 }
+#endif
+#if !NETFRAMEWORK
+
+                try
+                {
+                    debug($"Attempting to kill Windows process via .Kill(): {pid}");
+
+                    var proc = Process.GetProcessById(pid);
+                    proc.Kill(true);
+                }
+                catch (ArgumentException)
+                {
+                    // Process already exited.
+                }
             }
+#endif
         }
 
         internal class EncodingDetector
