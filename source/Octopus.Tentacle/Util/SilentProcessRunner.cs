@@ -146,11 +146,11 @@ namespace Octopus.Tentacle.Util
 
                     using (cancel.Register(() =>
                     {
-                        if (running) DoOurBestToCleanUp(process, debug, error);
+                        if (running) DoOurBestToCleanUp(process, error);
                     }))
                     {
                         if (cancel.IsCancellationRequested)
-                            DoOurBestToCleanUp(process, debug,  error);
+                            DoOurBestToCleanUp(process,  error);
 
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
@@ -218,11 +218,11 @@ namespace Octopus.Tentacle.Util
             }
         }
 
-        static void DoOurBestToCleanUp(Process process, Action<string> debug, Action<string> error)
+        static void DoOurBestToCleanUp(Process process, Action<string> error)
         {
             try
             {
-                Hitman.TryKillProcessAndChildrenRecursively(process, debug);
+                Hitman.TryKillProcessAndChildrenRecursively(process);
             }
             catch (Exception hitmanException)
             {
@@ -249,29 +249,27 @@ namespace Octopus.Tentacle.Util
 
         class Hitman
         {
-            public static void TryKillProcessAndChildrenRecursively(Process process, Action<string> debug)
+            public static void TryKillProcessAndChildrenRecursively(Process process)
             {
 #if NETFRAMEWORK
-                TryKillWindowsProcessAndChildrenRecursively(process.Id, debug);
+                TryKillWindowsProcessAndChildrenRecursively(process.Id);
 #endif
-#if NET6_0_OR_GREATER
+#if !NETFRAMEWORK
                 // Since .NET Core 3.0 there is support for killing a process and it's children 
                 process.Kill(true);
 #endif
             }
 
-            static void TryKillWindowsProcessAndChildrenRecursively(int pid, Action<string> debug)
+            static void TryKillWindowsProcessAndChildrenRecursively(int pid)
             {
                 try
                 {
-                    debug($"Attempting to kill Windows process and children recursively via management objects: {pid}");
-
                     using (var searcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid))
                     {
                         using (var moc = searcher.Get())
                         {
                             foreach (var mo in moc.OfType<ManagementObject>())
-                                TryKillWindowsProcessAndChildrenRecursively(Convert.ToInt32(mo["ProcessID"]), debug);
+                                TryKillWindowsProcessAndChildrenRecursively(Convert.ToInt32(mo["ProcessID"]));
                         }
                     }
                 }
@@ -289,8 +287,6 @@ namespace Octopus.Tentacle.Util
 
                 try
                 {
-                    debug($"Attempting to kill Windows process via .Kill(): {pid}");
-
                     var proc = Process.GetProcessById(pid);
                     proc.Kill();
                 }
