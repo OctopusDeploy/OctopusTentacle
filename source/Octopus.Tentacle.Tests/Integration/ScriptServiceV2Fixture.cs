@@ -507,7 +507,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             foreach (var log in logs)
             {
-                TestContext.Out.WriteLine(log.Text);
+                TestContext.Out.WriteLine("{0:yyyy-MM-dd HH:mm:ss K}: {1}", log.Occurred.ToLocalTime(), log.Text);
             }
         }
 

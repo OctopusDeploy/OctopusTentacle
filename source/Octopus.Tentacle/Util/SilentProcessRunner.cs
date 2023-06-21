@@ -150,7 +150,7 @@ namespace Octopus.Tentacle.Util
                     }))
                     {
                         if (cancel.IsCancellationRequested)
-                            DoOurBestToCleanUp(process, error);
+                            DoOurBestToCleanUp(process,  error);
 
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
@@ -251,23 +251,13 @@ namespace Octopus.Tentacle.Util
         {
             public static void TryKillProcessAndChildrenRecursively(Process process)
             {
-                if (PlatformDetection.IsRunningOnNix)
-                    TryKillLinuxProcessAndChildrenRecursively(process);
-                else if (PlatformDetection.IsRunningOnWindows)
-                    TryKillWindowsProcessAndChildrenRecursively(process.Id);
-                else
-                    throw new Exception("Unknown platform, unable to kill process");
-            }
-
-            static void TryKillLinuxProcessAndChildrenRecursively(Process process)
-            {
-                var result = ExecuteCommand(new CommandLineInvocation("/bin/bash", $"-c \"kill -TERM {process.Id}\""));
-                result.Validate();
-                //process.Kill() doesnt seem to work in netcore 2.2 there have been some improvments in netcore 3.0 as well as also allowing to kill child processes
-                //https://github.com/dotnet/corefx/pull/34147
-                //In netcore 2.2 if the process is terminated we still get stuck on process.WaitForExit(); we need to manually check to see if the process has exited and then close it.
-                if (process.HasExited)
-                    process.Close();
+#if NETFRAMEWORK
+                TryKillWindowsProcessAndChildrenRecursively(process.Id);
+#endif
+#if !NETFRAMEWORK
+                // Since .NET Core 3.0 there is support for killing a process and it's children 
+                process.Kill(true);
+#endif
             }
 
             static void TryKillWindowsProcessAndChildrenRecursively(int pid)
