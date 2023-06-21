@@ -4,29 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Polly;
 using Polly.Timeout;
-using static Octopus.Tentacle.Client.Retries.RpcCallRetryHandler;
 
 namespace Octopus.Tentacle.Client.Retries
 {
-    internal interface IRpcCallRetryHandler
-    {
-        TimeSpan RetryTimeout { get; }
-
-        Task<T> ExecuteWithRetries<T>(
-            Func<CancellationToken, Task<T>> action,
-            OnRetyAction? onRetryAction,
-            OnTimeoutAction? onTimeoutAction,
-            CancellationToken cancellationToken);
-
-        Task<T> ExecuteWithRetries<T>(
-            Func<CancellationToken, Task<T>> action,
-            OnRetyAction? onRetryAction,
-            OnTimeoutAction? onTimeoutAction,
-            bool abandonActionOnCancellation,
-            TimeSpan abandonAfter,
-            CancellationToken cancellationToken);
-    }
-
     internal class RpcCallRetryHandler : IRpcCallRetryHandler
     {
         public delegate Task OnRetyAction(Exception lastException, TimeSpan retrySleepDuration, int retryCount, TimeSpan retryTimeout, CancellationToken cancellationToken);

@@ -8,10 +8,10 @@ using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Decorators;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
+using Octopus.Tentacle.Client.Scripts.Observability;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Polly.Timeout;
 using ILog = Octopus.Diagnostics.ILog;
 
 namespace Octopus.Tentacle.Client
@@ -19,17 +19,20 @@ namespace Octopus.Tentacle.Client
     public class TentacleClient : ITentacleClient
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
-        readonly RpcCallRetryHandler rpcCallRetryHandler;
+        readonly IRpcCallRetryHandler rpcCallRetryHandler;
         readonly IClientScriptService scriptServiceV1;
         readonly IClientScriptServiceV2 scriptServiceV2;
         readonly IClientFileTransferService fileTransferServiceV1;
         readonly IClientCapabilitiesServiceV2 capabilitiesServiceV2;
 
-        public TentacleClient(ServiceEndPoint serviceEndPoint,
+        public TentacleClient(
+            ServiceEndPoint serviceEndPoint,
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
+            TimeSpan retryDuration,
+            // TODO: Builder? Or even make them not null (who else but server uses this?)
             ITentacleServiceDecorator? tentacleServicesDecorator,
-            TimeSpan retryDuration)
+            IRpcCallObserver? rpcCallObserver = null)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
 
@@ -50,7 +53,7 @@ namespace Octopus.Tentacle.Client
                 capabilitiesServiceV2 = tentacleServicesDecorator.Decorate(capabilitiesServiceV2);
             }
 
-            rpcCallRetryHandler = new RpcCallRetryHandler(retryDuration, TimeoutStrategy.Pessimistic);
+            rpcCallRetryHandler = RpcCallRetryHandlerFactory.Create(retryDuration, rpcCallObserver);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);

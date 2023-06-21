@@ -6,12 +6,12 @@ namespace Octopus.Tentacle.Client.Scripts.Observability
 {
     public class RpcCallMetrics
     {
+        public string RpcCallName { get; }
         public DateTimeOffset Start { get; }
         public DateTimeOffset End { get; }
         public TimeSpan RetryTimeout { get; }
-        // An exception that was not raised while retrying.
-        //TODO: Is this going to contain cancellation exceptions.
-        public Exception? NonRpcException { get; }
+        public Exception? Exception { get; }
+        public bool WasCancelled { get; }
         public IReadOnlyList<TimedOperation> Attempts { get; }
 
         public TimeSpan Duration => End - Start;
@@ -41,21 +41,25 @@ namespace Octopus.Tentacle.Client.Scripts.Observability
         }
 
         public bool Succeeded => !HasException && AttemptsSucceeded;
-        public bool HasException => NonRpcException is not null;
+        public bool HasException => Exception is not null;
         public bool AttemptsSucceeded => Attempts.Any() && Attempts.Last().Succeeded;
 
 
         public RpcCallMetrics(
+            string rpcCallName,
             DateTimeOffset start,
             DateTimeOffset end,
             TimeSpan retryTimeout,
-            Exception? nonRpcException,
+            Exception? exception,
+            bool wasCancelled,
             IReadOnlyList<TimedOperation> attempts)
         {
+            RpcCallName = rpcCallName;
             Start = start;
             End = end;
             RetryTimeout = retryTimeout;
-            NonRpcException = nonRpcException;
+            Exception = exception;
+            WasCancelled = wasCancelled;
             Attempts = attempts;
         }
     }

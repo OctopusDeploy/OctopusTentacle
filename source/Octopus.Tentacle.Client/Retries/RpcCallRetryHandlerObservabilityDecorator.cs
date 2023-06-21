@@ -20,81 +20,18 @@ namespace Octopus.Tentacle.Client.Retries
 
         public async Task<T> ExecuteWithRetries<T>(
             Func<CancellationToken, Task<T>> action, 
-            RpcCallRetryHandler.OnRetyAction? onRetryAction, 
-            RpcCallRetryHandler.OnTimeoutAction? onTimeoutAction, 
-            CancellationToken cancellationToken)
-        {
-            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.Start(RetryTimeout);
-
-            try
-            {
-                var response = await inner.ExecuteWithRetries(
-                    async ct =>
-                    {
-                        rpcCallMetricsBuilder.StartAttempt();
-
-                        try
-                        {
-                            var response = await action(ct).ConfigureAwait(false);
-
-                            rpcCallMetricsBuilder.AttemptSuccessful();
-                            return response;
-                        }
-                        catch (Exception e)
-                        {
-                            rpcCallMetricsBuilder.AttemptFailed(e, ct);
-                            throw;
-                        }
-                    },
-                    onRetryAction,
-                    onTimeoutAction,
-                    cancellationToken)
-                    .ConfigureAwait(false);
-                
-                return response;
-            }
-            catch (Exception e)
-            {
-                rpcCallMetricsBuilder.Failure(e);
-                throw;
-            }
-            finally
-            {
-                var rpcCallMetrics = rpcCallMetricsBuilder.Build();
-                rpcCallObserver.RpcCallCompleted(rpcCallMetrics);
-            }
-        }
-
-        public async Task<T> ExecuteWithRetries<T>(
-            Func<CancellationToken, Task<T>> action, 
             RpcCallRetryHandler.OnRetyAction? onRetryAction,
             RpcCallRetryHandler.OnTimeoutAction? onTimeoutAction,
             bool abandonActionOnCancellation, 
             TimeSpan abandonAfter, 
             CancellationToken cancellationToken)
         {
-            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.Start(RetryTimeout);
+            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.Start("TODO", RetryTimeout);
 
             try
             {
                 var response = await inner.ExecuteWithRetries(
-                    async ct =>
-                    {
-                        rpcCallMetricsBuilder.StartAttempt();
-
-                        try
-                        {
-                            var response = await action(ct).ConfigureAwait(false);
-
-                            rpcCallMetricsBuilder.AttemptSuccessful();
-                            return response;
-                        }
-                        catch (Exception e)
-                        {
-                            rpcCallMetricsBuilder.AttemptFailed(e);
-                            throw;
-                        }
-                    },
+                    async ct => await CallActionWithMetricsGathering(ct),
                     onRetryAction,
                     onTimeoutAction,
                     abandonActionOnCancellation,
@@ -105,13 +42,31 @@ namespace Octopus.Tentacle.Client.Retries
             }
             catch (Exception e)
             {
-                rpcCallMetricsBuilder.Failure(e);
+                rpcCallMetricsBuilder.Failure(e, cancellationToken);
                 throw;
             }
             finally
             {
                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                 rpcCallObserver.RpcCallCompleted(rpcCallMetrics);
+            }
+
+            async Task<T> CallActionWithMetricsGathering(CancellationToken ct)
+            {
+                var start = DateTimeOffset.UtcNow;
+
+                try
+                {
+                    var response = await action(ct).ConfigureAwait(false);
+
+                    rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
+                    return response;
+                }
+                catch (Exception e)
+                {
+                    rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, ct));
+                    throw;
+                }
             }
         }
     }
