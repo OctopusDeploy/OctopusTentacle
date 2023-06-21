@@ -261,7 +261,10 @@ namespace Octopus.Tentacle.Util
 
             static void TryKillLinuxProcessAndChildrenRecursively(Process process, Action<string> debug)
             {
+#if !NETFRAMEWORK
                 process.Kill(true);
+#endif
+                // .NET framework doesn't run on Linux/OSX, so nothing else to do here
                 //debug($"Attempting to kill Linux process and children recursively: {process.Id}");
                 //var result = ExecuteCommand(new CommandLineInvocation("/bin/bash", $"-c \"kill -TERM {process.Id}\""));
                 //result.Validate();
@@ -338,8 +341,8 @@ namespace Octopus.Tentacle.Util
                 {
                     // Process already exited.
                 }
-            }
 #endif
+            }
         }
 
         internal class EncodingDetector
