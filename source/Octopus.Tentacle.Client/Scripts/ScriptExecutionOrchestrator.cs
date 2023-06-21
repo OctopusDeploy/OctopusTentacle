@@ -16,7 +16,7 @@ namespace Octopus.Tentacle.Client.Scripts
     internal class ScriptExecutionOrchestrator : IDisposable
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
-        readonly RpcCallRetryHandler rpcCallRetryHandler;
+        readonly IRpcCallRetryHandler rpcCallRetryHandler;
         readonly StartScriptCommandV2 startScriptCommand;
         readonly Action<ScriptStatusResponseV2> onScriptStatusResponseReceived;
         readonly Func<CancellationToken, Task> onScriptCompleted;
@@ -30,7 +30,7 @@ namespace Octopus.Tentacle.Client.Scripts
             IClientScriptServiceV2 scriptServiceV2,
             IClientCapabilitiesServiceV2 capabilitiesServiceV2,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
-            RpcCallRetryHandler rpcCallRetryHandler,
+            IRpcCallRetryHandler rpcCallRetryHandler,
             StartScriptCommandV2 startScriptCommand,
             Action<ScriptStatusResponseV2> onScriptStatusResponseReceived,
             Func<CancellationToken, Task> onScriptCompleted,
@@ -51,69 +51,69 @@ namespace Octopus.Tentacle.Client.Scripts
 
         public async Task<ScriptStatusResponseV2> ExecuteScript(CancellationToken scriptExecutionCancellationToken)
         {
-            ScriptStatusResponseV2 scriptStatusResponse;
-            ScriptServiceVersion scriptServiceVersionToUse;
-            var startScriptCallCount = 0;
-
-            try
-            {
-                scriptServiceVersionToUse = await DetermineScriptServiceVersionToUse(logger, scriptExecutionCancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (scriptExecutionCancellationToken.IsCancellationRequested)
-            {
-                throw new OperationCanceledException("Script execution was cancelled");
-            }
+            var scriptServiceVersionToUse = await DetermineScriptServiceVersionToUse(scriptExecutionCancellationToken).ConfigureAwait(false);
 
             if (scriptServiceVersionToUse == ScriptServiceVersion.Version2)
             {
-                try
-                {
-                    scriptStatusResponse = await rpcCallRetryHandler.ExecuteWithRetries(
-                        ct =>
-                        {
-                            ++startScriptCallCount;
-                            return scriptServiceV2.StartScript(startScriptCommand, new HalibutProxyRequestOptions(ct));
-                        },
-                        logger,
-                        scriptExecutionCancellationToken,
-                        // If we are cancelling script execution we can abandon a call to start script
-                        // If we manage to cancel the start script call we can walk away
-                        // If we do abandon the start script call we have to assume the script is running so need
-                        // to call CancelScript and CompleteScript
-                        abandonActionOnCancellation: true).ConfigureAwait(false);
-                }
-                catch (Exception e) when (e is OperationCanceledException && scriptExecutionCancellationToken.IsCancellationRequested)
-                {
-                    // If we are not retrying and we managed to cancel execution it means the request was never sent so we can safely walk away from it.
-                    if (e is not OperationAbandonedException && startScriptCallCount <= 1)
-                    {
-                        throw;
-                    }
-
-                    // Otherwise we have to assume the script started executing and call CancelScript and CompleteScript
-                    // We don't have a response so we need to create one to continue the execution flow
-                    scriptStatusResponse = new ScriptStatusResponseV2(
-                        startScriptCommand.ScriptTicket,
-                        ProcessState.Pending,
-                        ScriptExitCodes.RunningExitCode,
-                        new List<ProcessOutput>(),
-                        0);
-
-                    await ObserveUntilCompleteThenFinish(scriptServiceVersionToUse, scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
-
-                    // Throw an error so the caller knows that execution of the script was cancelled
-                    throw new OperationCanceledException("Script execution was cancelled");
-                }
+                return await StartScriptV2(scriptExecutionCancellationToken).ConfigureAwait(false);
             }
-            else
+
+            return await StartScriptV1(scriptExecutionCancellationToken).ConfigureAwait(false);
+        }
+
+        private async Task<ScriptStatusResponseV2> StartScriptV2(CancellationToken scriptExecutionCancellationToken)
+        {
+            var startScriptCallCount = 0;
+            try
             {
-                var startScriptCommandV1 = Map(startScriptCommand);
-                var scriptTicket = scriptServiceV1.StartScript(startScriptCommandV1, new HalibutProxyRequestOptions(scriptExecutionCancellationToken));
+                var scriptStatusResponse = await rpcCallRetryHandler.ExecuteWithRetries(
+                    ct =>
+                    {
+                        ++startScriptCallCount;
+                        return scriptServiceV2.StartScript(startScriptCommand, new HalibutProxyRequestOptions(ct));
+                    },
+                    logger,
+                    scriptExecutionCancellationToken,
+                    // If we are cancelling script execution we can abandon a call to start script
+                    // If we manage to cancel the start script call we can walk away
+                    // If we do abandon the start script call we have to assume the script is running so need
+                    // to call CancelScript and CompleteScript
+                    abandonActionOnCancellation: true).ConfigureAwait(false);
 
-                scriptStatusResponse = Map(scriptTicket);
+                return scriptStatusResponse;
             }
+            catch (Exception e) when (e is OperationCanceledException && scriptExecutionCancellationToken.IsCancellationRequested)
+            {
+                // If we are not retrying and we managed to cancel execution it means the request was never sent so we can safely walk away from it.
+                if (e is not OperationAbandonedException && startScriptCallCount <= 1)
+                {
+                    throw;
+                }
 
-            var response = await ObserveUntilCompleteThenFinish(scriptServiceVersionToUse, scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
+                // Otherwise we have to assume the script started executing and call CancelScript and CompleteScript
+                // We don't have a response so we need to create one to continue the execution flow
+                var scriptStatusResponse = new ScriptStatusResponseV2(
+                    startScriptCommand.ScriptTicket,
+                    ProcessState.Pending,
+                    ScriptExitCodes.RunningExitCode,
+                    new List<ProcessOutput>(),
+                    0);
+
+                await ObserveUntilCompleteThenFinish(ScriptServiceVersion.Version2, scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
+
+                // Throw an error so the caller knows that execution of the script was cancelled
+                throw new OperationCanceledException("Script execution was cancelled");
+            }
+        }
+
+        private async Task<ScriptStatusResponseV2> StartScriptV1(CancellationToken scriptExecutionCancellationToken)
+        {
+            var startScriptCommandV1 = Map(startScriptCommand);
+            var scriptTicket = scriptServiceV1.StartScript(startScriptCommandV1, new HalibutProxyRequestOptions(scriptExecutionCancellationToken));
+
+            var scriptStatusResponse = Map(scriptTicket);
+
+            var response = await ObserveUntilCompleteThenFinish(ScriptServiceVersion.Version1, scriptStatusResponse, scriptExecutionCancellationToken).ConfigureAwait(false);
 
             if (scriptExecutionCancellationToken.IsCancellationRequested)
             {
@@ -124,32 +124,36 @@ namespace Octopus.Tentacle.Client.Scripts
             return response;
         }
 
-        async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(ILog logger, CancellationToken cancellationToken)
+        async Task<ScriptServiceVersion> DetermineScriptServiceVersionToUse(CancellationToken cancellationToken)
         {
-            logger.Verbose("Determining ScriptService version to use");
-
-            var tentacleCapabilities = await rpcCallRetryHandler.ExecuteWithRetries(
-                ct =>
-                {
-                    return capabilitiesServiceV2.GetCapabilities(new HalibutProxyRequestOptions(ct));
-                },
-                logger,
-                cancellationToken,
-                // We can abandon a call to Get Capabilities and walk away as this is not running anything that needs to be cancelled on Tentacle
-                abandonActionOnCancellation: true).ConfigureAwait(false);
-
-            logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
-
-            if (tentacleCapabilities.HasScriptServiceV2())
+            try
             {
-                logger.Verbose("Using ScriptServiceV2");
-                logger.Verbose($"RPC call retries are enabled. Retry timeout {rpcCallRetryHandler.RetryTimeout.TotalSeconds} seconds");
-                return ScriptServiceVersion.Version2;
-            }
+                logger.Verbose("Determining ScriptService version to use");
 
-            logger.Verbose("RPC call retries are enabled but will not be used for Script Execution as a compatible ScriptService was not found. Please upgrade Tentacle to enable this feature.");
-            logger.Verbose("Using ScriptServiceV1");
-            return ScriptServiceVersion.Version1;
+                var tentacleCapabilities = await rpcCallRetryHandler.ExecuteWithRetries(
+                    ct => capabilitiesServiceV2.GetCapabilities(new HalibutProxyRequestOptions(ct)),
+                    logger,
+                    cancellationToken,
+                    // We can abandon a call to Get Capabilities and walk away as this is not running anything that needs to be cancelled on Tentacle
+                    abandonActionOnCancellation: true).ConfigureAwait(false);
+
+                logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
+
+                if (tentacleCapabilities.HasScriptServiceV2())
+                {
+                    logger.Verbose("Using ScriptServiceV2");
+                    logger.Verbose($"RPC call retries are enabled. Retry timeout {rpcCallRetryHandler.RetryTimeout.TotalSeconds} seconds");
+                    return ScriptServiceVersion.Version2;
+                }
+
+                logger.Verbose("RPC call retries are enabled but will not be used for Script Execution as a compatible ScriptService was not found. Please upgrade Tentacle to enable this feature.");
+                logger.Verbose("Using ScriptServiceV1");
+                return ScriptServiceVersion.Version1;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("Script execution was cancelled");
+            }
         }
 
         async Task<ScriptStatusResponseV2> ObserveUntilCompleteThenFinish(

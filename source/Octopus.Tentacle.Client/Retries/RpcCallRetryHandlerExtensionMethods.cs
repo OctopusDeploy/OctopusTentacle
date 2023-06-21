@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Client.Retries
     internal static class RpcCallRetryHandlerExtensionMethods
     {
         public static async Task<T> ExecuteWithRetries<T>(
-            this RpcCallRetryHandler rpcCallRetryHandler,
+            this IRpcCallRetryHandler rpcCallRetryHandler,
             Func<CancellationToken, T> action,
             ILog logger,
             CancellationToken cancellationToken,
