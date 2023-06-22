@@ -8,7 +8,8 @@ namespace Octopus.Tentacle.Client.Retries
     {
         TimeSpan RetryTimeout { get; }
         
-        Task<T> ExecuteWithRetries<T>(string rcpCallName,
+        Task<T> ExecuteWithRetries<T>(
+            string rcpCallName,
             Func<CancellationToken, Task<T>> action,
             RpcCallRetryHandler.OnRetyAction? onRetryAction,
             RpcCallRetryHandler.OnTimeoutAction? onTimeoutAction,

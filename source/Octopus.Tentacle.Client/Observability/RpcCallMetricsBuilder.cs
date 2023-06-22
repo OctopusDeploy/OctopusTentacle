@@ -33,6 +33,7 @@ namespace Octopus.Tentacle.Client.Observability
         public RpcCallMetricsBuilder WithAttempt(TimedOperation attempt)
         {
             attempts.Add(attempt);
+
             return this;
         }
 
@@ -40,12 +41,14 @@ namespace Octopus.Tentacle.Client.Observability
         {
             this.exception = exception;
             wasCancelled = cancellationToken.IsCancellationRequested;
+
             return this;
         }
 
         public RpcCallMetrics Build()
         {
             var end = DateTimeOffset.UtcNow;
+
             var rpcCallMetrics = new RpcCallMetrics(
                 rpcCallName,
                 start,

@@ -30,9 +30,8 @@ namespace Octopus.Tentacle.Client
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             TimeSpan retryDuration,
-            // TODO: Builder? Or even make them not null (who else but server uses this?)
             ITentacleServiceDecorator? tentacleServicesDecorator,
-            IRpcCallObserver? rpcCallObserver = null)
+            IRpcCallObserver? rpcCallObserver)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
 
