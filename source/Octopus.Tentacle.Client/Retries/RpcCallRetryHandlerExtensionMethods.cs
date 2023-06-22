@@ -9,12 +9,14 @@ namespace Octopus.Tentacle.Client.Retries
     {
         public static async Task<T> ExecuteWithRetries<T>(
             this IRpcCallRetryHandler rpcCallRetryHandler,
+            string rpcCallName,
             Func<CancellationToken, T> action,
             ILog logger,
             CancellationToken cancellationToken,
             bool abandonActionOnCancellation)
         {
             return await rpcCallRetryHandler.ExecuteWithRetries(
+                rpcCallName,
                 async ct =>
                 {
                     // Wrap the action in a task so it doesn't block on sync Halibut calls

@@ -61,6 +61,7 @@ namespace Octopus.Tentacle.Client
         public async Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ILog logger, CancellationToken cancellationToken)
         {
             return await rpcCallRetryHandler.ExecuteWithRetries(
+                nameof(fileTransferServiceV1.UploadFile),
                 ct =>
                 {
                     logger.Info($"Beginning upload of {fileName} to Tentacle");
@@ -76,6 +77,7 @@ namespace Octopus.Tentacle.Client
         public async Task<DataStream?> DownloadFile(string remotePath, ILog logger, CancellationToken cancellationToken)
         {
             var dataStream = await rpcCallRetryHandler.ExecuteWithRetries(
+                nameof(fileTransferServiceV1.DownloadFile),
                 ct =>
                 {
                     logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");

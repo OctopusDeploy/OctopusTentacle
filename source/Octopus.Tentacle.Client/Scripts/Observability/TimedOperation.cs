@@ -11,7 +11,7 @@ namespace Octopus.Tentacle.Client.Scripts.Observability
         public bool WasCancelled { get; }
         public TimeSpan Duration => End - Start;
 
-        public bool Succeeded => Exception is not null;
+        public bool Succeeded => Exception is null;
 
         private TimedOperation(DateTimeOffset start, DateTimeOffset end, Exception? exception, bool wasCancelled)
         {

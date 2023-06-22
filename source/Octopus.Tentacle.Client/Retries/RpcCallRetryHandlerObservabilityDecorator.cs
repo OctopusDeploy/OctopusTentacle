@@ -7,10 +7,10 @@ namespace Octopus.Tentacle.Client.Retries
 {
     internal class RpcCallRetryHandlerObservabilityDecorator : IRpcCallRetryHandler
     {
-        private readonly RpcCallRetryHandler inner;
+        private readonly IRpcCallRetryHandler inner;
         private readonly IRpcCallObserver rpcCallObserver;
 
-        internal RpcCallRetryHandlerObservabilityDecorator(RpcCallRetryHandler inner, IRpcCallObserver rpcCallObserver)
+        internal RpcCallRetryHandlerObservabilityDecorator(IRpcCallRetryHandler inner, IRpcCallObserver rpcCallObserver)
         {
             this.inner = inner;
             this.rpcCallObserver = rpcCallObserver;
@@ -19,6 +19,7 @@ namespace Octopus.Tentacle.Client.Retries
         public TimeSpan RetryTimeout => inner.RetryTimeout;
 
         public async Task<T> ExecuteWithRetries<T>(
+            string rcpCallName,
             Func<CancellationToken, Task<T>> action, 
             RpcCallRetryHandler.OnRetyAction? onRetryAction,
             RpcCallRetryHandler.OnTimeoutAction? onTimeoutAction,
@@ -26,11 +27,12 @@ namespace Octopus.Tentacle.Client.Retries
             TimeSpan abandonAfter, 
             CancellationToken cancellationToken)
         {
-            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.Start("TODO", RetryTimeout);
+            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.Start(rcpCallName, RetryTimeout);
 
             try
             {
                 var response = await inner.ExecuteWithRetries(
+                    rcpCallName,
                     async ct => await CallActionWithMetricsGathering(ct),
                     onRetryAction,
                     onTimeoutAction,
