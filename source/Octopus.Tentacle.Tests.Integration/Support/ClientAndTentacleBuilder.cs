@@ -7,8 +7,8 @@ using Halibut;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Scripts;
-using Octopus.Tentacle.Client.Scripts.Observability;
 using Octopus.Tentacle.Contracts.Legacy;
+using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.TestPortForwarder;
 

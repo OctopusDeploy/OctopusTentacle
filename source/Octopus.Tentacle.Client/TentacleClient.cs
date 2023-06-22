@@ -8,9 +8,9 @@ using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Decorators;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
-using Octopus.Tentacle.Client.Scripts.Observability;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
+using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using ILog = Octopus.Diagnostics.ILog;
 

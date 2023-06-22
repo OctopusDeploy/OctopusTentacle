@@ -1,5 +1,5 @@
 ﻿using System;
-using Octopus.Tentacle.Client.Scripts.Observability;
+using Octopus.Tentacle.Contracts.Observability;
 using Polly.Timeout;
 
 namespace Octopus.Tentacle.Client.Retries

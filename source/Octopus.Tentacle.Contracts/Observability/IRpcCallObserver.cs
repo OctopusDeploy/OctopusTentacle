@@ -1,4 +1,6 @@
-﻿namespace Octopus.Tentacle.Client.Scripts.Observability
+﻿using System;
+
+namespace Octopus.Tentacle.Contracts.Observability
 {
     public interface IRpcCallObserver
     {

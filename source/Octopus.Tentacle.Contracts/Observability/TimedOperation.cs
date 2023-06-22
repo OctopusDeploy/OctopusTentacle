@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace Octopus.Tentacle.Client.Scripts.Observability
+namespace Octopus.Tentacle.Contracts.Observability
 {
     public class TimedOperation
     {

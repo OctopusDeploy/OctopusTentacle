@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using Octopus.Tentacle.Contracts.Observability;
 
-namespace Octopus.Tentacle.Client.Scripts.Observability
+namespace Octopus.Tentacle.Client.Observability
 {
-    public class RpcCallMetricsBuilder
+    internal class RpcCallMetricsBuilder
     {
         private readonly string rpcCallName;
         private readonly DateTimeOffset start;
         private readonly TimeSpan retryTimeout;
         private readonly List<TimedOperation> attempts = new();
-        
+
         private Exception? exception;
         private bool wasCancelled;
 
@@ -48,10 +49,10 @@ namespace Octopus.Tentacle.Client.Scripts.Observability
             var rpcCallMetrics = new RpcCallMetrics(
                 rpcCallName,
                 start,
-                end, 
+                end,
                 retryTimeout,
-                exception, 
-                wasCancelled, 
+                exception,
+                wasCancelled,
                 attempts);
             return rpcCallMetrics;
         }

@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace Octopus.Tentacle.Client.Scripts.Observability
+namespace Octopus.Tentacle.Contracts.Observability
 {
     public class RpcCallMetrics
     {
@@ -21,7 +21,6 @@ namespace Octopus.Tentacle.Client.Scripts.Observability
             get
             {
                 if (Attempts.Count <= 1) return TimeSpan.Zero;
-                
                 
                 if (AttemptsSucceeded)
                 {
