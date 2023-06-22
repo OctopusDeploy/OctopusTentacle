@@ -9,6 +9,7 @@ namespace Octopus.Tentacle.Contracts.Observability
         public string RpcCallName { get; }
         public DateTimeOffset Start { get; }
         public DateTimeOffset End { get; }
+        public bool WithRetries { get; }
         public TimeSpan RetryTimeout { get; }
         public Exception? Exception { get; }
         public bool WasCancelled { get; }
@@ -48,6 +49,7 @@ namespace Octopus.Tentacle.Contracts.Observability
             string rpcCallName,
             DateTimeOffset start,
             DateTimeOffset end,
+            bool withRetries,
             TimeSpan retryTimeout,
             Exception? exception,
             bool wasCancelled,
@@ -56,6 +58,7 @@ namespace Octopus.Tentacle.Contracts.Observability
             RpcCallName = rpcCallName;
             Start = start;
             End = end;
+            WithRetries = withRetries;
             RetryTimeout = retryTimeout;
             Exception = exception;
             WasCancelled = wasCancelled;

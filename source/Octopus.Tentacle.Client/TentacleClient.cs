@@ -6,12 +6,14 @@ using Halibut;
 using Halibut.ServiceModel;
 using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Decorators;
+using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
+using Polly.Timeout;
 using ILog = Octopus.Diagnostics.ILog;
 
 namespace Octopus.Tentacle.Client
@@ -19,7 +21,7 @@ namespace Octopus.Tentacle.Client
     public class TentacleClient : ITentacleClient
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
-        readonly IRpcCallRetryHandler rpcCallRetryHandler;
+        readonly RpcCallExecutor rpcCallExecutor;
         readonly IClientScriptService scriptServiceV1;
         readonly IClientScriptServiceV2 scriptServiceV2;
         readonly IClientFileTransferService fileTransferServiceV1;
@@ -30,8 +32,8 @@ namespace Octopus.Tentacle.Client
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             TimeSpan retryDuration,
-            ITentacleServiceDecorator? tentacleServicesDecorator,
-            IRpcCallObserver? rpcCallObserver)
+            IRpcCallObserver rpcCallObserver,
+            ITentacleServiceDecorator? tentacleServicesDecorator)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
 
@@ -52,14 +54,15 @@ namespace Octopus.Tentacle.Client
                 capabilitiesServiceV2 = tentacleServicesDecorator.Decorate(capabilitiesServiceV2);
             }
 
-            rpcCallRetryHandler = RpcCallRetryHandlerFactory.Create(retryDuration, rpcCallObserver);
+            var rpcCallRetryHandler = new RpcCallRetryHandler(retryDuration, TimeoutStrategy.Pessimistic);
+            rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, rpcCallObserver);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
 
         public async Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ILog logger, CancellationToken cancellationToken)
         {
-            return await rpcCallRetryHandler.ExecuteWithRetries(
+            return await rpcCallExecutor.ExecuteWithRetries(
                 nameof(fileTransferServiceV1.UploadFile),
                 ct =>
                 {
@@ -69,13 +72,13 @@ namespace Octopus.Tentacle.Client
                     return result;
                 },
                 logger,
-                cancellationToken,
-                abandonActionOnCancellation: false).ConfigureAwait(false);
+                abandonActionOnCancellation: false, 
+                cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<DataStream?> DownloadFile(string remotePath, ILog logger, CancellationToken cancellationToken)
         {
-            var dataStream = await rpcCallRetryHandler.ExecuteWithRetries(
+            var dataStream = await rpcCallExecutor.ExecuteWithRetries(
                 nameof(fileTransferServiceV1.DownloadFile),
                 ct =>
                 {
@@ -85,8 +88,8 @@ namespace Octopus.Tentacle.Client
                     return result;
                 },
                 logger,
-                cancellationToken,
-                abandonActionOnCancellation: false).ConfigureAwait(false);
+                abandonActionOnCancellation: false, 
+                cancellationToken).ConfigureAwait(false);
 
             return (DataStream?)dataStream;
         }
@@ -103,7 +106,7 @@ namespace Octopus.Tentacle.Client
                 scriptServiceV2,
                 capabilitiesServiceV2,
                 scriptObserverBackOffStrategy,
-                rpcCallRetryHandler,
+                rpcCallExecutor,
                 startScriptCommand,
                 onScriptStatusResponseReceived,
                 onScriptCompleted,

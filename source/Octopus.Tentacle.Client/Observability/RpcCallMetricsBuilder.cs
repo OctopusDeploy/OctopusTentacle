@@ -10,23 +10,33 @@ namespace Octopus.Tentacle.Client.Observability
         private readonly string rpcCallName;
         private readonly DateTimeOffset start;
         private readonly TimeSpan retryTimeout;
+        private readonly bool withRetries;
         private readonly List<TimedOperation> attempts = new();
 
         private Exception? exception;
         private bool wasCancelled;
 
-        private RpcCallMetricsBuilder(string rpcCallName, DateTimeOffset start, TimeSpan retryTimeout)
+        private RpcCallMetricsBuilder(string rpcCallName, DateTimeOffset start, bool withRetries, TimeSpan retryTimeout)
         {
             this.rpcCallName = rpcCallName;
             this.start = start;
             this.retryTimeout = retryTimeout;
+            this.withRetries = withRetries;
         }
 
-        public static RpcCallMetricsBuilder Start(string rpcCallName, TimeSpan retryTimeout)
+        public static RpcCallMetricsBuilder StartWithRetries(string rpcCallName, TimeSpan retryTimeout)
         {
             var start = DateTimeOffset.UtcNow;
 
-            var builder = new RpcCallMetricsBuilder(rpcCallName, start, retryTimeout);
+            var builder = new RpcCallMetricsBuilder(rpcCallName, start, true, retryTimeout);
+            return builder;
+        }
+
+        public static RpcCallMetricsBuilder StartWithoutRetries(string rpcCallName)
+        {
+            var start = DateTimeOffset.UtcNow;
+
+            var builder = new RpcCallMetricsBuilder(rpcCallName, start, false, TimeSpan.Zero);
             return builder;
         }
 
@@ -53,6 +63,7 @@ namespace Octopus.Tentacle.Client.Observability
                 rpcCallName,
                 start,
                 end,
+                withRetries,
                 retryTimeout,
                 exception,
                 wasCancelled,

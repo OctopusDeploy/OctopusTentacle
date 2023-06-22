@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
+using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Observability;
@@ -170,7 +171,7 @@ namespace Octopus.Tentacle.Tests.Client
             TimeSpan retryDuration, 
             CancellationToken cancellationToken)
         {
-            var sut = RpcCallRetryHandlerFactory.Create(retryDuration, rpcCallObserver);
+            var sut = RpcCallExecutorFactory.Create(retryDuration, rpcCallObserver);
 
             await sut.ExecuteWithRetries(
                 RpcCallName,

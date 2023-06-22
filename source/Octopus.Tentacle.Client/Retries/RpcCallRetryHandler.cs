@@ -7,7 +7,7 @@ using Polly.Timeout;
 
 namespace Octopus.Tentacle.Client.Retries
 {
-    internal class RpcCallRetryHandler : IRpcCallRetryHandler
+    internal class RpcCallRetryHandler
     {
         public delegate Task OnRetyAction(Exception lastException, TimeSpan retrySleepDuration, int retryCount, TimeSpan retryTimeout, CancellationToken cancellationToken);
         public delegate Task OnTimeoutAction(TimeSpan retryTimeout, CancellationToken cancellationToken);
@@ -100,7 +100,6 @@ namespace Octopus.Tentacle.Client.Retries
         }
 
         public async Task<T> ExecuteWithRetries<T>(
-            string rcpCallName,
             Func<CancellationToken, Task<T>> action,
             OnRetyAction? onRetryAction,
             OnTimeoutAction? onTimeoutAction,

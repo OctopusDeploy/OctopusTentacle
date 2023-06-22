@@ -25,7 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         readonly List<Action<ServiceEndPoint>> serviceEndpointModifiers = new();
         private IPendingRequestQueueFactory? queueFactory = null;
         private Reference<PortForwarder>? portForwarderReference;
-        private IRpcCallObserver? rpcCallObserver;
+        private IRpcCallObserver rpcCallObserver = new NoRpcCallObserver();
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -171,8 +171,8 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 server.ServerHalibutRuntime,
                 scriptObserverBackoffStrategy,
                 retryDuration,
-                tentacleServiceDecorator,
-                rpcCallObserver);
+                rpcCallObserver,
+                tentacleServiceDecorator);
 
             return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
         }
