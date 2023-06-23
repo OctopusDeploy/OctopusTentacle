@@ -46,9 +46,9 @@ namespace Octopus.Tentacle.Tests.Client
             var exception = new HalibutClientException("An error has occurred.");
 
             // Act
-            await ExecuteWithRetries(rpcCallObserver, async ct =>
+            await ExecuteWithRetries(rpcCallObserver, ct =>
                 {
-                    var result = await DelayFor100MillisecondsAction(ct);
+                    var result = DelayFor100MillisecondsAction(ct);
                     if (callCount++ == 0) throw exception;
 
                     return result;
@@ -75,9 +75,9 @@ namespace Octopus.Tentacle.Tests.Client
 
             // Act
             await AssertionExtensions.Should(
-                    () => ExecuteWithRetries(rpcCallObserver, async ct =>
+                    () => ExecuteWithRetries(rpcCallObserver, ct =>
                         {
-                            await DelayFor100MillisecondsAction(ct);
+                            DelayFor100MillisecondsAction(ct);
                             throw exception;
                         },
                         RetryDuration,
@@ -104,9 +104,9 @@ namespace Octopus.Tentacle.Tests.Client
 
             // Act
             await AssertionExtensions.Should(
-                    () => ExecuteWithRetries(rpcCallObserver, async ct =>
+                    () => ExecuteWithRetries(rpcCallObserver, ct =>
                         {
-                            await DelayFor100MillisecondsAction(ct);
+                            DelayFor100MillisecondsAction(ct);
                             throw exception;
                         },
                         retryDuration,
@@ -135,9 +135,9 @@ namespace Octopus.Tentacle.Tests.Client
             
             // Act
             await AssertionExtensions.Should(
-                    () => ExecuteWithRetries(rpcCallObserver, async ct =>
+                    () => ExecuteWithRetries(rpcCallObserver, ct =>
                         {
-                            await DelayFor100MillisecondsAction(ct);
+                            DelayFor100MillisecondsAction(ct);
                             if (callCount++ > 0)
                             {
                                 cancellationTokenSource.Cancel();
@@ -168,7 +168,7 @@ namespace Octopus.Tentacle.Tests.Client
         
         private static async Task ExecuteWithRetries(
             IRpcCallObserver rpcCallObserver, 
-            Func<CancellationToken, Task<Guid>> action, 
+            Func<CancellationToken, Guid> action, 
             TimeSpan retryDuration, 
             CancellationToken cancellationToken)
         {
@@ -182,9 +182,9 @@ namespace Octopus.Tentacle.Tests.Client
                 cancellationToken);
         }
 
-        private static async Task<Guid> DelayFor100MillisecondsAction(CancellationToken cancellationToken)
+        private static Guid DelayFor100MillisecondsAction(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+            Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken).Wait(cancellationToken);
 
             return Guid.NewGuid();
         }
