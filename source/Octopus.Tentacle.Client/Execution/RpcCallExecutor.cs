@@ -95,11 +95,45 @@ namespace Octopus.Tentacle.Client.Execution
 
                 try
                 {
-                    // Wrap the action in a task so it doesn't block on sync Halibut calls
                     var response = action(cancellationToken);
 
                     rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
                     return response;
+                }
+                catch (Exception e)
+                {
+                    rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
+                    throw;
+                }
+            }
+            catch (Exception e)
+            {
+                rpcCallMetricsBuilder.Failure(e, cancellationToken);
+                throw;
+            }
+            finally
+            {
+                var rpcCallMetrics = rpcCallMetricsBuilder.Build();
+                rpcCallObserver.RpcCallCompleted(rpcCallMetrics);
+            }
+        }
+
+        public void Execute(
+            string rpcCallName,
+            Action<CancellationToken> action,
+            CancellationToken cancellationToken)
+        {
+            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCallName);
+
+            try
+            {
+                var start = DateTimeOffset.UtcNow;
+
+                try
+                {
+                    action(cancellationToken);
+
+                    rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
                 }
                 catch (Exception e)
                 {

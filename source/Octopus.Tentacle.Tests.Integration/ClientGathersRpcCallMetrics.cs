@@ -39,12 +39,12 @@ namespace Octopus.Tentacle.Tests.Integration
             // Assert
             finalResponse.State.Should().Be(ProcessState.Complete);
 
-            // Different calls are made for different tentacle versions.
-            // The thing they all have in common is that there should be at least 1 metric, and it should have succeeded.
             rpcCallObserver.Metrics.Should().NotBeEmpty();
-            //rpcCallObserver.Metrics.Should().ContainSingle(m => m.RpcCallName == "StartScript");
-            var metric = rpcCallObserver.Metrics[0];
-            metric.Succeeded.Should().BeTrue();
+            rpcCallObserver.Metrics.Should().ContainSingle(m => m.RpcCallName == nameof(IClientCapabilitiesServiceV2.GetCapabilities));
+            rpcCallObserver.Metrics.Should().ContainSingle(m => m.RpcCallName == nameof(IClientScriptServiceV2.StartScript));
+            rpcCallObserver.Metrics.Should().Contain(m => m.RpcCallName == nameof(IClientScriptServiceV2.GetStatus));
+            rpcCallObserver.Metrics.Should().ContainSingle(m => m.RpcCallName == nameof(IClientScriptServiceV2.CompleteScript));
+            rpcCallObserver.Metrics.Should().AllSatisfy(m => m.Succeeded.Should().BeTrue());
         }
 
         [Test]
@@ -58,7 +58,9 @@ namespace Octopus.Tentacle.Tests.Integration
                 .WithRpcCallObserver(rpcCallObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
-                    .DecorateScriptServiceV2With(b => b.BeforeStartScript(() => throw new HalibutClientException("Error"))).Build())
+                    .DecorateScriptServiceWith(new ScriptServiceDecoratorBuilder().BeforeStartScript(() => throw new HalibutClientException("Error")).Build())
+                    .DecorateScriptServiceV2With(b => b.BeforeStartScript(() => throw new HalibutClientException("Error")))
+                    .Build())
                 .Build(CancellationToken);
 
             var startScriptCommand = new StartScriptCommandV2Builder()

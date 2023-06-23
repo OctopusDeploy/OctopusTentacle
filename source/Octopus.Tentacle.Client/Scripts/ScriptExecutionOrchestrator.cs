@@ -306,7 +306,13 @@ namespace Octopus.Tentacle.Client.Scripts
                 // Best effort cleanup of Tentacle
                 try
                 {
-                    var actionTask = Task.Run(() => scriptServiceV2.CompleteScript(new CompleteScriptCommandV2(lastStatusResponse.Ticket), new HalibutProxyRequestOptions(scriptExecutionCancellationToken)), CancellationToken.None);
+                    var actionTask = Task.Run(() =>
+                    {
+                        rpcCallExecutor.Execute(
+                            nameof(scriptServiceV2.CompleteScript),
+                            _ => scriptServiceV2.CompleteScript(new CompleteScriptCommandV2(lastStatusResponse.Ticket), new HalibutProxyRequestOptions(scriptExecutionCancellationToken)),
+                            CancellationToken.None);
+                    }, CancellationToken.None);
 
                     var abandonCancellationTokenSource = new CancellationTokenSource();
 
@@ -340,7 +346,6 @@ namespace Octopus.Tentacle.Client.Scripts
                 var completeStatusV1 = rpcCallExecutor.Execute(
                     nameof(scriptServiceV1.CompleteScript),
                     ct => scriptServiceV1.CompleteScript(new CompleteScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
-                    //TODO Validate None is the right token...
                     CancellationToken.None);
                 
                 completeStatus = Map(completeStatusV1);
