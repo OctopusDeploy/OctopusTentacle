@@ -313,8 +313,7 @@ namespace Octopus.Tentacle.Tests.Client
             metric.AttemptsSucceeded.Should().BeTrue();
 
             metric.End.Should().BeAfter(metric.Start);
-            // Timing can be off (to the microsecond level). So verify with 99 instead of 100.
-            metric.Duration.Should().BeGreaterOrEqualTo(TimeSpan.FromMilliseconds(99));
+            metric.Duration.Should().Be(metric.End - metric.Start);
 
             metric.RetryTimeout.Should().Be(expectedRetryDuration);
             metric.RpcCallName.Should().Be(RpcCallName);
@@ -331,8 +330,7 @@ namespace Octopus.Tentacle.Tests.Client
             metric.AttemptsSucceeded.Should().BeFalse();
 
             metric.End.Should().BeAfter(metric.Start);
-            // Timing can be off (to the microsecond level). So verify with 99 instead of 100.
-            metric.Duration.Should().BeGreaterOrEqualTo(TimeSpan.FromMilliseconds(99));
+            metric.Duration.Should().Be(metric.End - metric.Start);
 
             metric.RetryTimeout.Should().Be(expectedRetryDuration);
             metric.RpcCallName.Should().Be(RpcCallName);
@@ -346,8 +344,7 @@ namespace Octopus.Tentacle.Tests.Client
             attempt.WasCancelled.Should().BeFalse();
 
             attempt.End.Should().BeAfter(attempt.Start);
-            // Timing can be off (to the microsecond level). So verify with 99 instead of 100.
-            attempt.Duration.Should().BeGreaterOrEqualTo(TimeSpan.FromMilliseconds(99));
+            attempt.Duration.Should().Be(attempt.End - attempt.Start);
         }
 
         private static void ThenAttemptShouldHaveFailed(TimedOperation attempt, Exception expectedException)
@@ -357,8 +354,7 @@ namespace Octopus.Tentacle.Tests.Client
             attempt.WasCancelled.Should().BeFalse();
 
             attempt.End.Should().BeAfter(attempt.Start);
-            // Timing can be off (to the microsecond level). So verify with 99 instead of 100.
-            attempt.Duration.Should().BeGreaterOrEqualTo(TimeSpan.FromMilliseconds(99));
+            attempt.Duration.Should().Be(attempt.End - attempt.Start);
         }
     }
 }
