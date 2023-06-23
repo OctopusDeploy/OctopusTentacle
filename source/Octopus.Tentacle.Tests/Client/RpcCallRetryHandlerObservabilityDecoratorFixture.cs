@@ -4,9 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
+using NSubstitute;
 using NUnit.Framework;
+using Octopus.Diagnostics;
 using Octopus.Tentacle.Client.Execution;
-using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Observability;
 
@@ -176,10 +177,8 @@ namespace Octopus.Tentacle.Tests.Client
             await sut.ExecuteWithRetries(
                 RpcCallName,
                 action,
-                onRetryAction: null,
-                onTimeoutAction: null,
+                Substitute.For<ILog>(),
                 false,
-                TimeSpan.FromMinutes(2),
                 cancellationToken);
         }
 
