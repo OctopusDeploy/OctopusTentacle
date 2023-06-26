@@ -93,7 +93,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        public ClientAndTentacleBuilder WithRpcCallObserver(ITentacleObserver tentacleObserver)
+        public ClientAndTentacleBuilder WithTentacleObserver(ITentacleObserver tentacleObserver)
         {
             this.tentacleObserver = tentacleObserver;
             return this;

@@ -33,13 +33,13 @@ namespace Octopus.Tentacle.Tests.Client
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
 
-            ThenMetricsShouldBeSuccessful(metric, RetryDuration, true);
+            ThenRpcCallMetricsShouldBeSuccessful(metric, RetryDuration, true);
 
             var attempt = metric.Attempts.Should().ContainSingle().Subject;
             ThenAttemptShouldBeSuccessful(attempt);
 
             var clientOperationMetrics = clientOperationMetricsBuilder.Build();
-            ThenClientOperationMetricsShouldContainMetric(clientOperationMetrics, metric);
+            ThenClientOperationMetricsShouldContainRpcCallMetrics(clientOperationMetrics, metric);
         }
 
         [Test]
@@ -64,14 +64,14 @@ namespace Octopus.Tentacle.Tests.Client
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
 
-            ThenMetricsShouldBeSuccessful(metric, RetryDuration, true);
+            ThenRpcCallMetricsShouldBeSuccessful(metric, RetryDuration, true);
 
             metric.Attempts.Should().HaveCount(2);
             ThenAttemptShouldHaveFailed(metric.Attempts[0], exception);
             ThenAttemptShouldBeSuccessful(metric.Attempts[1]);
 
             var clientOperationMetrics = clientOperationMetricsBuilder.Build();
-            ThenClientOperationMetricsShouldContainMetric(clientOperationMetrics, metric);
+            ThenClientOperationMetricsShouldContainRpcCallMetrics(clientOperationMetrics, metric);
         }
 
         [Test]
@@ -95,13 +95,13 @@ namespace Octopus.Tentacle.Tests.Client
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
 
-            ThenMetricsShouldBeFailed(metric, RetryDuration, exception, true);
+            ThenRpcCallMetricsShouldBeFailed(metric, RetryDuration, exception, true);
 
             var attempt = metric.Attempts.Should().ContainSingle().Subject;
             ThenAttemptShouldHaveFailed(attempt, exception);
 
             var clientOperationMetrics = clientOperationMetricsBuilder.Build();
-            ThenClientOperationMetricsShouldContainMetric(clientOperationMetrics, metric);
+            ThenClientOperationMetricsShouldContainRpcCallMetrics(clientOperationMetrics, metric);
         }
 
         [Test]
@@ -127,14 +127,14 @@ namespace Octopus.Tentacle.Tests.Client
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
 
-            ThenMetricsShouldBeFailed(metric, retryDuration, exception, true);
+            ThenRpcCallMetricsShouldBeFailed(metric, retryDuration, exception, true);
 
             metric.Attempts.Should().HaveCountGreaterThan(1);
             ThenAttemptShouldHaveFailed(metric.Attempts.First(), exception);
             ThenAttemptShouldHaveFailed(metric.Attempts.Last(), exception);
 
             var clientOperationMetrics = clientOperationMetricsBuilder.Build();
-            ThenClientOperationMetricsShouldContainMetric(clientOperationMetrics, metric);
+            ThenClientOperationMetricsShouldContainRpcCallMetrics(clientOperationMetrics, metric);
         }
 
         [Test]
@@ -180,7 +180,7 @@ namespace Octopus.Tentacle.Tests.Client
             attempt.WasCancelled.Should().BeTrue();
 
             var clientOperationMetrics = clientOperationMetricsBuilder.Build();
-            ThenClientOperationMetricsShouldContainMetric(clientOperationMetrics, metric);
+            ThenClientOperationMetricsShouldContainRpcCallMetrics(clientOperationMetrics, metric);
         }
 
         [Test]
@@ -196,13 +196,13 @@ namespace Octopus.Tentacle.Tests.Client
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
 
-            ThenMetricsShouldBeSuccessful(metric, TimeSpan.Zero, false);
+            ThenRpcCallMetricsShouldBeSuccessful(metric, TimeSpan.Zero, false);
 
             var attempt = metric.Attempts.Should().ContainSingle().Subject;
             ThenAttemptShouldBeSuccessful(attempt);
 
             var clientOperationMetrics = clientOperationMetricsBuilder.Build();
-            ThenClientOperationMetricsShouldContainMetric(clientOperationMetrics, metric);
+            ThenClientOperationMetricsShouldContainRpcCallMetrics(clientOperationMetrics, metric);
         }
 
         [Test]
@@ -224,13 +224,13 @@ namespace Octopus.Tentacle.Tests.Client
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
 
-            ThenMetricsShouldBeFailed(metric, TimeSpan.Zero, exception, false);
+            ThenRpcCallMetricsShouldBeFailed(metric, TimeSpan.Zero, exception, false);
 
             var attempt = metric.Attempts.Should().ContainSingle().Subject;
             ThenAttemptShouldHaveFailed(attempt, exception);
 
             var clientOperationMetrics = clientOperationMetricsBuilder.Build();
-            ThenClientOperationMetricsShouldContainMetric(clientOperationMetrics, metric);
+            ThenClientOperationMetricsShouldContainRpcCallMetrics(clientOperationMetrics, metric);
         }
 
         [Test]
@@ -246,13 +246,13 @@ namespace Octopus.Tentacle.Tests.Client
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
 
-            ThenMetricsShouldBeSuccessful(metric, TimeSpan.Zero, false);
+            ThenRpcCallMetricsShouldBeSuccessful(metric, TimeSpan.Zero, false);
 
             var attempt = metric.Attempts.Should().ContainSingle().Subject;
             ThenAttemptShouldBeSuccessful(attempt);
 
             var clientOperationMetrics = clientOperationMetricsBuilder.Build();
-            ThenClientOperationMetricsShouldContainMetric(clientOperationMetrics, metric);
+            ThenClientOperationMetricsShouldContainRpcCallMetrics(clientOperationMetrics, metric);
         }
 
         [Test]
@@ -274,13 +274,13 @@ namespace Octopus.Tentacle.Tests.Client
             // Assert
             var metric = rpcCallObserver.RpcCallMetrics.Should().ContainSingle().Subject;
 
-            ThenMetricsShouldBeFailed(metric, TimeSpan.Zero, exception, false);
+            ThenRpcCallMetricsShouldBeFailed(metric, TimeSpan.Zero, exception, false);
 
             var attempt = metric.Attempts.Should().ContainSingle().Subject;
             ThenAttemptShouldHaveFailed(attempt, exception);
 
             var clientOperationMetrics = clientOperationMetricsBuilder.Build();
-            ThenClientOperationMetricsShouldContainMetric(clientOperationMetrics, metric);
+            ThenClientOperationMetricsShouldContainRpcCallMetrics(clientOperationMetrics, metric);
         }
 
         private static async Task ExecuteWithRetries(
@@ -340,7 +340,7 @@ namespace Octopus.Tentacle.Tests.Client
             return Guid.NewGuid();
         }
         
-        private static void ThenMetricsShouldBeSuccessful(RpcCallMetrics metric, TimeSpan expectedRetryDuration, bool expectedWithRetries)
+        private static void ThenRpcCallMetricsShouldBeSuccessful(RpcCallMetrics metric, TimeSpan expectedRetryDuration, bool expectedWithRetries)
         {
             metric.Succeeded.Should().BeTrue();
             metric.Exception.Should().BeNull();
@@ -357,7 +357,7 @@ namespace Octopus.Tentacle.Tests.Client
             metric.WithRetries.Should().Be(expectedWithRetries);
         }
 
-        private static void ThenMetricsShouldBeFailed(RpcCallMetrics metric, TimeSpan expectedRetryDuration, Exception expectedException, bool expectedWithRetries)
+        private static void ThenRpcCallMetricsShouldBeFailed(RpcCallMetrics metric, TimeSpan expectedRetryDuration, Exception expectedException, bool expectedWithRetries)
         {
             metric.Succeeded.Should().BeFalse();
             metric.Exception.Should().BeEquivalentTo(expectedException);
@@ -394,10 +394,12 @@ namespace Octopus.Tentacle.Tests.Client
             attempt.Duration.Should().Be(attempt.End - attempt.Start);
         }
 
-        private static void ThenClientOperationMetricsShouldContainMetric(ClientOperationMetrics clientOperationMetrics, RpcCallMetrics metric)
+        private static void ThenClientOperationMetricsShouldContainRpcCallMetrics(
+            ClientOperationMetrics clientOperationMetrics, 
+            RpcCallMetrics expectedRpcCallMetrics)
         {
             var rpcCall = clientOperationMetrics.RpcCalls.Should().ContainSingle().Subject;
-            rpcCall.Should().BeEquivalentTo(metric);
+            rpcCall.Should().BeEquivalentTo(expectedRpcCallMetrics);
         }
     }
 }

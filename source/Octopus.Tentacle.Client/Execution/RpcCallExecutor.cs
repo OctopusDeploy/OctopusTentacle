@@ -54,13 +54,13 @@ namespace Octopus.Tentacle.Client.Execution
                                 throw;
                             }
                         },
-                        onRetryAction: async (lastException, sleepDuration, retryCount, totalRetryDuration, ct) =>
+                        onRetryAction: async (lastException, sleepDuration, retryCount, totalRetryDuration, _) =>
                         {
                             await Task.CompletedTask;
                             logger.Info($"An error occurred communicating with Tentacle. This action will be retried after {sleepDuration.TotalSeconds} seconds. Retry attempt {retryCount}. Retries will be performed for up to {totalRetryDuration.TotalSeconds} seconds.");
                             logger.Verbose(lastException);
                         },
-                        onTimeoutAction: async (timeoutDuration, ct) =>
+                        onTimeoutAction: async (timeoutDuration, _) =>
                         {
                             await Task.CompletedTask;
                             logger.Info($"Could not communicating with Tentacle after retrying for {timeoutDuration.TotalSeconds} seconds. No more retries will be attempted.");
@@ -90,30 +90,24 @@ namespace Octopus.Tentacle.Client.Execution
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
+
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCallName);
+            var start = DateTimeOffset.UtcNow;
 
             try
             {
-                var start = DateTimeOffset.UtcNow;
+                var response = action(cancellationToken);
 
-                try
-                {
-                    var response = action(cancellationToken);
-
-                    rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
-                    return response;
-                }
-                catch (Exception e)
-                {
-                    rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
-                    throw;
-                }
+                rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
+                return response;
             }
             catch (Exception e)
             {
+                rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
                 rpcCallMetricsBuilder.Failure(e, cancellationToken);
                 throw;
             }
+
             finally
             {
                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
@@ -129,25 +123,17 @@ namespace Octopus.Tentacle.Client.Execution
             CancellationToken cancellationToken)
         {
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCallName);
+            var start = DateTimeOffset.UtcNow;
 
             try
             {
-                var start = DateTimeOffset.UtcNow;
+                action(cancellationToken);
 
-                try
-                {
-                    action(cancellationToken);
-
-                    rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
-                }
-                catch (Exception e)
-                {
-                    rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
-                    throw;
-                }
+                rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
             }
             catch (Exception e)
             {
+                rpcCallMetricsBuilder.WithAttempt(TimedOperation.Failure(start, e, cancellationToken));
                 rpcCallMetricsBuilder.Failure(e, cancellationToken);
                 throw;
             }
