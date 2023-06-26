@@ -32,9 +32,9 @@
 
   <rules>
     <logger name="LogFileOnlyLogger" writeTo="octopus-log-file" final="true" />
-    <logger name="*" minlevel="Info" maxLevel="Warn" writeTo="stdout" />
+    <logger name="*" minlevel="Trace" maxLevel="Warn" writeTo="stdout" />
     <logger name="*" minlevel="Error" writeTo="stderr" />
-    <logger name="*" minlevel="Info" writeTo="octopus-log-file" />
+    <logger name="*" minlevel="Trace" writeTo="octopus-log-file" />
     <logger name="*" minlevel="Fatal" writeTo="eventlog" />
 </rules>
 </nlog>
