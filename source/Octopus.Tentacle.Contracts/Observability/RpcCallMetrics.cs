@@ -16,30 +16,7 @@ namespace Octopus.Tentacle.Contracts.Observability
         public IReadOnlyList<TimedOperation> Attempts { get; }
 
         public TimeSpan Duration => End - Start;
-
-        public TimeSpan AdditionalTimeFromRetries
-        {
-            get
-            {
-                if (Attempts.Count <= 1) return TimeSpan.Zero;
-                
-                if (AttemptsSucceeded)
-                {
-                    // The 'successful' attempt is the true duration, and everything before that is the additional time from retries.
-                    var successfulAdditionalTime = Attempts
-                        .Take(Attempts.Count - 1)
-                        .Sum(a => a.Duration.Ticks);
-                    return TimeSpan.FromTicks(successfulAdditionalTime);
-                }
-
-                // If we failed, then the first failure is the true duration, and everything afterwards is additional time due to retries
-                var failedAdditionalTime = Attempts
-                    .Skip(1)
-                    .Sum(a => a.Duration.Ticks);
-                return TimeSpan.FromTicks(failedAdditionalTime);
-            }
-        }
-
+        
         public bool Succeeded => !HasException && AttemptsSucceeded;
         public bool HasException => Exception is not null;
         public bool AttemptsSucceeded => Attempts.Any() && Attempts.Last().Succeeded;

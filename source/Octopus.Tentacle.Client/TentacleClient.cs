@@ -7,6 +7,7 @@ using Halibut.ServiceModel;
 using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Decorators;
 using Octopus.Tentacle.Client.Execution;
+using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
@@ -21,6 +22,7 @@ namespace Octopus.Tentacle.Client
     public class TentacleClient : ITentacleClient
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
+        private readonly ITentacleObserver tentacleObserver;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly IClientScriptService scriptServiceV1;
         readonly IClientScriptServiceV2 scriptServiceV2;
@@ -32,10 +34,11 @@ namespace Octopus.Tentacle.Client
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             TimeSpan retryDuration,
-            IRpcCallObserver rpcCallObserver,
+            ITentacleObserver tentacleObserver,
             ITentacleServiceDecorator? tentacleServicesDecorator)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
+            this.tentacleObserver = tentacleObserver;
 
             scriptServiceV1 = halibutRuntime.CreateClient<IScriptService, IClientScriptService>(serviceEndPoint);
             scriptServiceV2 = halibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(serviceEndPoint);
@@ -55,43 +58,75 @@ namespace Octopus.Tentacle.Client
             }
 
             var rpcCallRetryHandler = new RpcCallRetryHandler(retryDuration, TimeoutStrategy.Pessimistic);
-            rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, rpcCallObserver);
+            rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, tentacleObserver);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
 
         public async Task<UploadResult> UploadFile(string fileName, string path, DataStream package, ILog logger, CancellationToken cancellationToken)
         {
-            return await rpcCallExecutor.ExecuteWithRetries(
-                nameof(fileTransferServiceV1.UploadFile),
-                ct =>
-                {
-                    logger.Info($"Beginning upload of {fileName} to Tentacle");
-                    var result = fileTransferServiceV1.UploadFile(path, package, new HalibutProxyRequestOptions(ct));
-                    logger.Info("Upload complete");
-                    return result;
-                },
-                logger,
-                abandonActionOnCancellation: false, 
-                cancellationToken).ConfigureAwait(false);
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
+
+            try
+            {
+                return await rpcCallExecutor.ExecuteWithRetries(
+                    nameof(fileTransferServiceV1.UploadFile),
+                    ct =>
+                    {
+                        logger.Info($"Beginning upload of {fileName} to Tentacle");
+                        var result = fileTransferServiceV1.UploadFile(path, package, new HalibutProxyRequestOptions(ct));
+                        logger.Info("Upload complete");
+                        return result;
+                    },
+                    logger,
+                    abandonActionOnCancellation: false,
+                    operationMetricsBuilder,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                operationMetricsBuilder.Failure(e, cancellationToken);
+                throw;
+            }
+            finally
+            {
+                var operationMetrics = operationMetricsBuilder.Build();
+                tentacleObserver.UploadFileCompleted(operationMetrics);
+            }
         }
 
         public async Task<DataStream?> DownloadFile(string remotePath, ILog logger, CancellationToken cancellationToken)
         {
-            var dataStream = await rpcCallExecutor.ExecuteWithRetries(
-                nameof(fileTransferServiceV1.DownloadFile),
-                ct =>
-                {
-                    logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
-                    var result = fileTransferServiceV1.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct));
-                    logger.Info("Download complete");
-                    return result;
-                },
-                logger,
-                abandonActionOnCancellation: false, 
-                cancellationToken).ConfigureAwait(false);
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
-            return (DataStream?)dataStream;
+            try
+            {
+                var dataStream = await rpcCallExecutor.ExecuteWithRetries(
+                    nameof(fileTransferServiceV1.DownloadFile),
+                    ct =>
+                    {
+                        logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
+                        var result = fileTransferServiceV1.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct));
+                        logger.Info("Download complete");
+                        return result;
+                    },
+                    logger,
+                    abandonActionOnCancellation: false,
+                    operationMetricsBuilder,
+                    cancellationToken).ConfigureAwait(false);
+
+                return (DataStream?)dataStream;
+            }
+            catch (Exception e)
+            {
+                operationMetricsBuilder.Failure(e, cancellationToken);
+                throw;
+            }
+            finally
+            {
+                var operationMetrics = operationMetricsBuilder.Build();
+                tentacleObserver.DownloadFileCompleted(operationMetrics);
+            }
         }
 
         public async Task<ScriptExecutionResult> ExecuteScript(
@@ -101,20 +136,36 @@ namespace Octopus.Tentacle.Client
             ILog logger,
             CancellationToken scriptExecutionCancellationToken)
         {
-            using var orchestrator = new ScriptExecutionOrchestrator(
-                scriptServiceV1,
-                scriptServiceV2,
-                capabilitiesServiceV2,
-                scriptObserverBackOffStrategy,
-                rpcCallExecutor,
-                startScriptCommand,
-                onScriptStatusResponseReceived,
-                onScriptCompleted,
-                OnCancellationAbandonCompleteScriptAfter,
-                logger);
+            var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
-            var result = await orchestrator.ExecuteScript(scriptExecutionCancellationToken).ConfigureAwait(false);
-            return new ScriptExecutionResult(result.State, result.ExitCode);
+            try
+            {
+                using var orchestrator = new ScriptExecutionOrchestrator(
+                    scriptServiceV1,
+                    scriptServiceV2,
+                    capabilitiesServiceV2,
+                    scriptObserverBackOffStrategy,
+                    rpcCallExecutor,
+                    operationMetricsBuilder,
+                    startScriptCommand,
+                    onScriptStatusResponseReceived,
+                    onScriptCompleted,
+                    OnCancellationAbandonCompleteScriptAfter,
+                    logger);
+
+                var result = await orchestrator.ExecuteScript(scriptExecutionCancellationToken).ConfigureAwait(false);
+                return new ScriptExecutionResult(result.State, result.ExitCode);
+            }
+            catch (Exception e)
+            {
+                operationMetricsBuilder.Failure(e, scriptExecutionCancellationToken);
+                throw;
+            }
+            finally
+            {
+                var operationMetrics = operationMetricsBuilder.Build();
+                tentacleObserver.ExecuteScriptCompleted(operationMetrics);
+            }
         }
 
         public void Dispose()

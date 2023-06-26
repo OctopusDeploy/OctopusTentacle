@@ -11,12 +11,12 @@ namespace Octopus.Tentacle.Client.Execution
     internal class RpcCallExecutor
     {
         private readonly RpcCallRetryHandler rpcCallRetryHandler;
-        private readonly IRpcCallObserver rpcCallObserver;
+        private readonly ITentacleObserver tentacleObserver;
 
-        internal RpcCallExecutor(RpcCallRetryHandler rpcCallRetryHandler, IRpcCallObserver rpcCallObserver)
+        internal RpcCallExecutor(RpcCallRetryHandler rpcCallRetryHandler, ITentacleObserver tentacleObserver)
         {
             this.rpcCallRetryHandler = rpcCallRetryHandler;
-            this.rpcCallObserver = rpcCallObserver;
+            this.tentacleObserver = tentacleObserver;
         }
 
         public TimeSpan RetryTimeout => rpcCallRetryHandler.RetryTimeout;
@@ -26,6 +26,7 @@ namespace Octopus.Tentacle.Client.Execution
             Func<CancellationToken, T> action,
             ILog logger,
             bool abandonActionOnCancellation,
+            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithRetries(rpcCallName, rpcCallRetryHandler.RetryTimeout);
@@ -78,13 +79,15 @@ namespace Octopus.Tentacle.Client.Execution
             finally
             {
                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
-                rpcCallObserver.RpcCallCompleted(rpcCallMetrics);
+                clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
+                tentacleObserver.RpcCallCompleted(rpcCallMetrics);
             }
         }
 
         public T Execute<T>(
             string rpcCallName,
             Func<CancellationToken, T> action,
+            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCallName);
@@ -114,13 +117,15 @@ namespace Octopus.Tentacle.Client.Execution
             finally
             {
                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
-                rpcCallObserver.RpcCallCompleted(rpcCallMetrics);
+                clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
+                tentacleObserver.RpcCallCompleted(rpcCallMetrics);
             }
         }
 
         public void Execute(
             string rpcCallName,
             Action<CancellationToken> action,
+            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCallName);
@@ -149,7 +154,8 @@ namespace Octopus.Tentacle.Client.Execution
             finally
             {
                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
-                rpcCallObserver.RpcCallCompleted(rpcCallMetrics);
+                clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
+                tentacleObserver.RpcCallCompleted(rpcCallMetrics);
             }
         }
     }
