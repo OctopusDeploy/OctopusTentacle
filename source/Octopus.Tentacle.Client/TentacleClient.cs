@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Client
     public class TentacleClient : ITentacleClient
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
-        private readonly ITentacleClientObserver tentacleClientObserver;
+        readonly ITentacleClientObserver tentacleClientObserver;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly IClientScriptService scriptServiceV1;
         readonly IClientScriptServiceV2 scriptServiceV2;
