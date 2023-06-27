@@ -33,7 +33,8 @@ namespace Octopus.Tentacle.Client
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
 
-            halibutRuntime.OverrideErrorResponseMessageCaching += response =>
+            var innerHandler = halibutRuntime.OverrideErrorResponseMessageCaching;
+            halibutRuntime.OverrideErrorResponseMessageCaching = response =>
             {
                 if (BackwardsCompatibleCapabilitiesV2Helper.ExceptionTypeLooksLikeTheServiceWasNotFound(response.Error.HalibutErrorType) ||
                     BackwardsCompatibleCapabilitiesV2Helper.ExceptionMessageLooksLikeTheServiceWasNotFound(response.Error.Message))
@@ -41,7 +42,8 @@ namespace Octopus.Tentacle.Client
                     return true;
                 }
 
-                return false;
+                // TentacleClient doesn't own the HalibutRuntime so allow other handlers to be configured that override the error caching behaviour
+                return innerHandler?.Invoke(response) ?? false;
             };
 
             scriptServiceV1 = halibutRuntime.CreateClient<IScriptService, IClientScriptService>(serviceEndPoint);
@@ -96,19 +98,6 @@ namespace Octopus.Tentacle.Client
                 abandonActionOnCancellation: false).ConfigureAwait(false);
 
             return (DataStream?)dataStream;
-        }
-
-        internal async Task<CapabilitiesResponseV2> GetCapabilities(ILog logger, CancellationToken cancellationToken)
-        {
-            return await rpcCallRetryHandler.ExecuteWithRetries(
-                ct =>
-                {
-                    var result = capabilitiesServiceV2.GetCapabilities(new HalibutProxyRequestOptions(ct));
-                    return result;
-                },
-                logger,
-                cancellationToken,
-                abandonActionOnCancellation: true).ConfigureAwait(false);
         }
 
         public async Task<ScriptExecutionResult> ExecuteScript(

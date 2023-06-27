@@ -63,7 +63,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             return this;
         }
 
-        public ClientAndTentacleBuilder WithTentacleVersion(string tentacleVersion)
+        public ClientAndTentacleBuilder WithTentacleVersion(string? tentacleVersion)
         {
             this.tentacleVersion = tentacleVersion;
 
