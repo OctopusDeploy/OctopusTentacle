@@ -56,9 +56,8 @@ namespace Octopus.Tentacle.Client
                 fileTransferServiceV1 = tentacleServicesDecorator.Decorate(fileTransferServiceV1);
                 capabilitiesServiceV2 = tentacleServicesDecorator.Decorate(capabilitiesServiceV2);
             }
-
-            var rpcCallRetryHandler = new RpcCallRetryHandler(retryDuration, TimeoutStrategy.Pessimistic);
-            rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, tentacleClientObserver);
+            
+            rpcCallExecutor = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
