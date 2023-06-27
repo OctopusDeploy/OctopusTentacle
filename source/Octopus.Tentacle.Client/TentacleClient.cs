@@ -33,6 +33,19 @@ namespace Octopus.Tentacle.Client
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
 
+            var innerHandler = halibutRuntime.OverrideErrorResponseMessageCaching;
+            halibutRuntime.OverrideErrorResponseMessageCaching = response =>
+            {
+                if (BackwardsCompatibleCapabilitiesV2Helper.ExceptionTypeLooksLikeTheServiceWasNotFound(response.Error.HalibutErrorType) ||
+                    BackwardsCompatibleCapabilitiesV2Helper.ExceptionMessageLooksLikeTheServiceWasNotFound(response.Error.Message))
+                {
+                    return true;
+                }
+
+                // TentacleClient doesn't own the HalibutRuntime so allow other handlers to be configured that override the error caching behaviour
+                return innerHandler?.Invoke(response) ?? false;
+            };
+
             scriptServiceV1 = halibutRuntime.CreateClient<IScriptService, IClientScriptService>(serviceEndPoint);
             scriptServiceV2 = halibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(serviceEndPoint);
             fileTransferServiceV1 = halibutRuntime.CreateClient<IFileTransferService, IClientFileTransferService>(serviceEndPoint);

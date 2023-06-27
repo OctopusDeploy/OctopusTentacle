@@ -8,7 +8,7 @@ namespace Octopus.Tentacle.Contracts.Capabilities
         {
             return new BackwardsCompatibleCapabilitiesV2Decorator(capabilitiesService);
         }
-        
+
         public static IClientCapabilitiesServiceV2 WithBackwardsCompatability(this IClientCapabilitiesServiceV2 capabilitiesService)
         {
             return new BackwardsCompatibleClientCapabilitiesV2Decorator(capabilitiesService);

@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.CommonTestUtils.Builders;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -28,6 +30,8 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCase(TentacleType.Listening, RpcCallStage.Connecting)]
         public async Task WhenRpcRetriesTimeOut_DuringGetCapabilities_TheRpcCallIsCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage)
         {
+            IClientScriptServiceV2? scriptServiceV2 = null;
+
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 // Set a short retry duration so we cancel fairly quickly
                 .WithRetryDuration(TimeSpan.FromSeconds(15))
@@ -43,9 +47,9 @@ namespace Octopus.Tentacle.Tests.Integration
                     .DecorateCapabilitiesServiceV2With(d => d
                         .BeforeGetCapabilities((service) =>
                         {
-                            service.EnsureTentacleIsConnectedToServer(Logger);
+                            scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger);
 
-                            // Kill the first StartScript call to force the rpc call into retries
+                            // Kill the first GetCapabilities call to force the rpc call into retries
                             if (capabilitiesServiceV2Exception.GetCapabilitiesLatestException == null)
                             {
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
@@ -69,6 +73,8 @@ namespace Octopus.Tentacle.Tests.Integration
                         .Build())
                     .Build())
                 .Build(CancellationToken);
+
+            scriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint);
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(b => b

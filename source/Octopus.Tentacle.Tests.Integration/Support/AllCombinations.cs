@@ -14,7 +14,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         {
             return new AllCombinations().And(sequence);
         }
-        
+
         public static AllCombinations Of(IEnumerable sequence)
         {
             return new AllCombinations().And(sequence);
@@ -30,14 +30,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             sequences.Add(sequence);
             return this;
         }
-        
+
         public AllCombinations AndAllValuesOf(Type enumType)
         {
 
             return And(Enum.GetValues(enumType));
         }
 
-        public AllCombinations And(params string[] sequence)
+        public AllCombinations And(params string?[] sequence)
         {
             sequences.Add(sequence);
             return this;

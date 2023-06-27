@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils.Builders;
@@ -40,12 +41,13 @@ namespace Octopus.Tentacle.Tests.Integration
         public async Task DuringGetCapabilities_ScriptExecutionCanBeCancelled(TentacleType tentacleType, RpcCallStage rpcCallStage, RpcCall rpcCall)
         {
             // ARRANGE
+            IClientScriptServiceV2? scriptServiceV2 = null;
             var rpcCallHasStarted = new Reference<bool>(false);
             var hasPausedOrStoppedPortForwarder = false;
             SemaphoreSlim ensureCancellationOccursDuringAnRpcCall = new SemaphoreSlim(0, 1);
 
             using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue 
+                .WithPendingRequestQueueFactory(new CancellationObservingPendingRequestQueueFactory()) // Partially works around disconnected polling tentacles take work from the queue
                 .WithServiceEndpointModifier(point =>
                 {
                     if (rpcCall == RpcCall.FirstCall) KeepTryingToConnectToAListeningTentacleForever(point);
@@ -65,14 +67,14 @@ namespace Octopus.Tentacle.Tests.Integration
                             {
                                 if (rpcCall == RpcCall.RetryingCall && capabilityServiceV2Exceptions.GetCapabilitiesLatestException == null)
                                 {
-                                    service.EnsureTentacleIsConnectedToServer(Logger);
+                                    scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger);
                                     // Kill the first GetCapabilities call to force the rpc call into retries
                                     responseMessageTcpKiller.KillConnectionOnNextResponse();
                                 }
                                 else if (!hasPausedOrStoppedPortForwarder)
                                 {
                                     hasPausedOrStoppedPortForwarder = true;
-                                    service.EnsureTentacleIsConnectedToServer(Logger);
+                                    scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger);
                                     PauseOrStopPortForwarder(rpcCallStage, portForwarder.Value, responseMessageTcpKiller, rpcCallHasStarted);
                                     if (rpcCallStage == RpcCallStage.Connecting) service.EnsurePollingQueueWontSendMessageToDisconnectedTentacles(Logger);
                                 }
@@ -87,6 +89,8 @@ namespace Octopus.Tentacle.Tests.Integration
                         .Build())
                     .Build())
                 .Build(CancellationToken);
+
+            scriptServiceV2 = clientAndTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientAndTentacle.ServiceEndPoint);
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(b => b
@@ -381,7 +385,7 @@ namespace Octopus.Tentacle.Tests.Integration
             if (expectedFlow == ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript)
             {
                 // This last call includes the time it takes to cancel and hence is why I kept pushing it up
-                lastCallDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds((rpcCall == RpcCall.RetryingCall ? 6 : 12) + 2)); // + 2 seconds for some error of margin 
+                lastCallDuration.Should().BeLessOrEqualTo(TimeSpan.FromSeconds((rpcCall == RpcCall.RetryingCall ? 6 : 12) + 2)); // + 2 seconds for some error of margin
             }
 
             // Or if the rpc call could not be cancelled it cancelled fairly quickly e.g. we are not waiting for an rpc call to timeout

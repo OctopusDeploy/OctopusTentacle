@@ -1,10 +1,18 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Castle.Components.DictionaryAdapter;
 using FluentAssertions;
+using Halibut;
 using NUnit.Framework;
+using Octopus.Tentacle.CommonTestUtils.Builders;
+using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Support.Legacy;
+using Octopus.Tentacle.Tests.Integration.Util.Builders;
+using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
+using Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers;
 
 namespace Octopus.Tentacle.Tests.Integration
 {
@@ -23,7 +31,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
         }
     }
-    
+
     [IntegrationTestTimeout]
     public class CapabilitiesServiceV2Test : IntegrationTest
     {
@@ -50,6 +58,58 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 capabilities.Count.Should().Be(2);
             }
+        }
+
+        [Test]
+        [TestCaseSource(typeof(CapabilitiesServiceInterestingTentacles))]
+        public async Task CapabilitiesResponseShouldBeCached(TentacleType tentacleType, string? version)
+        {
+            var capabilitiesResponses = new List<CapabilitiesResponseV2>();
+            var resumePortForwarder = false;
+
+            using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithPortForwarder(out var portForwarder)
+                .WithTentacleVersion(version)
+                .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
+                    .DecorateCapabilitiesServiceV2With(d => d
+                        .AfterGetCapabilities((response) =>
+                        {
+                            capabilitiesResponses.Add(response);
+
+                            if (resumePortForwarder)
+                            {
+                                // (2) Once a get capabilities call has been made which uses the cached response then resume normal RPC calls
+                                // to allow script execution to continue
+                                portForwarder.Value.ReturnToNormalMode();
+                            }
+                        })
+                        .Build())
+                    .Build())
+                .Build(CancellationToken);
+
+            var startScriptCommand = new StartScriptCommandV2Builder()
+                .WithScriptBody(b => b
+                    .Print("Running..."))
+                .Build();
+
+            await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+
+            // (1) Kill new and existing connections to ensure no RPC calls can be made
+            clientAndTentacle.PortForwarder!.EnterKillNewAndExistingConnectionsMode();
+            resumePortForwarder = true;
+
+            try
+            {
+                await clientAndTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken);
+            }
+            catch (HalibutClientException) when (tentacleType == TentacleType.Polling && !string.IsNullOrWhiteSpace(version))
+            {
+                // For script execution on a tentacle without ScriptServiceV2 and retries a polling request can be de-queued into a broken TCP Connection
+                // By the time this happens we will have already called gt capabilities and got the cached response so we can safely ignore.
+            }
+
+            capabilitiesResponses.Should().HaveCount(2);
+            capabilitiesResponses[0].Should().BeEquivalentTo(capabilitiesResponses[1]);
         }
     }
 }

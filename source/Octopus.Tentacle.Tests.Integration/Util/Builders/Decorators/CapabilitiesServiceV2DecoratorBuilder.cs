@@ -25,6 +25,16 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             });
         }
 
+        public CapabilitiesServiceV2DecoratorBuilder AfterGetCapabilities(Action<CapabilitiesResponseV2> afterGetCapabilities)
+        {
+            return DecorateGetCapabilitiesWith((inner, options) =>
+            {
+                var response = inner.GetCapabilities(options);
+                afterGetCapabilities(response);
+                return response;
+            });
+        }
+
         public CapabilitiesServiceV2DecoratorBuilder DecorateGetCapabilitiesWith(GetCapabilitiesClientDecorator getCapabilitiesFunc)
         {
             this.getCapabilitiesFunc = getCapabilitiesFunc;

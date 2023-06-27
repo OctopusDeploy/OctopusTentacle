@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using Octopus.Tentacle.Client;
+using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
@@ -227,6 +229,8 @@ namespace Octopus.Tentacle.Tests.Integration
         [TestCaseSource(typeof(TentacleTypesToTest))]
         public async Task WhenANetworkFailureOccurs_DuringGetCapabilities_TheClientIsAbleToSuccessfullyCompleteTheScript(TentacleType tentacleType)
         {
+            IClientScriptServiceV2? scriptServiceV2 = null;
+
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
                 .WithPortForwarderDataLogging()
                 .WithResponseMessageTcpKiller(out var responseMessageTcpKiller)
@@ -239,13 +243,15 @@ namespace Octopus.Tentacle.Tests.Integration
                         {
                             if (capabilitiesServiceV2Exceptions.GetCapabilitiesLatestException == null)
                             {
-                                inner.EnsureTentacleIsConnectedToServer(Logger);
+                                scriptServiceV2.EnsureTentacleIsConnectedToServer(Logger);
                                 responseMessageTcpKiller.KillConnectionOnNextResponse();
                             }
                         })
                         .Build())
                     .Build())
                 .Build(CancellationToken);
+
+            scriptServiceV2 = clientTentacle.Server.ServerHalibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(clientTentacle.ServiceEndPoint);
 
             var startScriptCommand = new StartScriptCommandV2Builder()
                 .WithScriptBody(new ScriptBuilder().Print("hello"))

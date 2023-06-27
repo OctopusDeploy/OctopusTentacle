@@ -9,7 +9,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     public class ClientAndTentacle: IDisposable
     {
         private readonly IHalibutRuntime halibutRuntime;
-        private readonly ServiceEndPoint serviceEndPoint;
+        public ServiceEndPoint ServiceEndPoint { get; }
         public Server Server { get; }
         public PortForwarder? PortForwarder { get; }
         public RunningTentacle RunningTentacle { get; }
@@ -18,7 +18,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
         public LegacyTentacleClientBuilder LegacyTentacleClientBuilder()
         {
-            return new LegacyTentacleClientBuilder(halibutRuntime, serviceEndPoint);
+            return new LegacyTentacleClientBuilder(halibutRuntime, ServiceEndPoint);
         }
 
         public ClientAndTentacle(
@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             RunningTentacle = runningTentacle;
             TentacleClient = tentacleClient;
             TemporaryDirectory = temporaryDirectory;
-            this.serviceEndPoint = serviceEndPoint;
+            this.ServiceEndPoint = serviceEndPoint;
         }
 
         public void Dispose()
