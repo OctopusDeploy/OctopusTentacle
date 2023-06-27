@@ -22,7 +22,7 @@ namespace Octopus.Tentacle.Client
     public class TentacleClient : ITentacleClient
     {
         readonly IScriptObserverBackoffStrategy scriptObserverBackOffStrategy;
-        private readonly ITentacleObserver tentacleObserver;
+        private readonly ITentacleClientObserver tentacleClientObserver;
         readonly RpcCallExecutor rpcCallExecutor;
         readonly IClientScriptService scriptServiceV1;
         readonly IClientScriptServiceV2 scriptServiceV2;
@@ -34,11 +34,11 @@ namespace Octopus.Tentacle.Client
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             TimeSpan retryDuration,
-            ITentacleObserver tentacleObserver,
+            ITentacleClientObserver tentacleClientObserver,
             ITentacleServiceDecorator? tentacleServicesDecorator)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
-            this.tentacleObserver = tentacleObserver;
+            this.tentacleClientObserver = tentacleClientObserver;
 
             scriptServiceV1 = halibutRuntime.CreateClient<IScriptService, IClientScriptService>(serviceEndPoint);
             scriptServiceV2 = halibutRuntime.CreateClient<IScriptServiceV2, IClientScriptServiceV2>(serviceEndPoint);
@@ -58,7 +58,7 @@ namespace Octopus.Tentacle.Client
             }
 
             var rpcCallRetryHandler = new RpcCallRetryHandler(retryDuration, TimeoutStrategy.Pessimistic);
-            rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, tentacleObserver);
+            rpcCallExecutor = new RpcCallExecutor(rpcCallRetryHandler, tentacleClientObserver);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
@@ -91,7 +91,7 @@ namespace Octopus.Tentacle.Client
             finally
             {
                 var operationMetrics = operationMetricsBuilder.Build();
-                tentacleObserver.UploadFileCompleted(operationMetrics);
+                tentacleClientObserver.UploadFileCompleted(operationMetrics);
             }
         }
 
@@ -125,7 +125,7 @@ namespace Octopus.Tentacle.Client
             finally
             {
                 var operationMetrics = operationMetricsBuilder.Build();
-                tentacleObserver.DownloadFileCompleted(operationMetrics);
+                tentacleClientObserver.DownloadFileCompleted(operationMetrics);
             }
         }
 
@@ -164,7 +164,7 @@ namespace Octopus.Tentacle.Client
             finally
             {
                 var operationMetrics = operationMetricsBuilder.Build();
-                tentacleObserver.ExecuteScriptCompleted(operationMetrics);
+                tentacleClientObserver.ExecuteScriptCompleted(operationMetrics);
             }
         }
 

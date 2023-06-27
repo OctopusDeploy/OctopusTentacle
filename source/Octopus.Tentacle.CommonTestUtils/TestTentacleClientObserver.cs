@@ -4,7 +4,7 @@ using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.CommonTestUtils
 {
-    public class TestTentacleObserver : ITentacleObserver
+    public class TestTentacleClientObserver : ITentacleClientObserver
     {
         private readonly List<RpcCallMetrics> rpcCallMetrics = new();
         private readonly List<ClientOperationMetrics> uploadFileMetrics = new();

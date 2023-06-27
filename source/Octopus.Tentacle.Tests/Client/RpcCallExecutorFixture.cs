@@ -24,7 +24,7 @@ namespace Octopus.Tentacle.Tests.Client
         public async Task ExecuteWithRetries_MetricsShouldBeSuccessful_WhenNoRetries()
         {
             // Arrange
-            var rpcCallObserver = new TestTentacleObserver();
+            var rpcCallObserver = new TestTentacleClientObserver();
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
             // Act
@@ -47,7 +47,7 @@ namespace Octopus.Tentacle.Tests.Client
         {
             // Arrange
             var callCount = 0;
-            var rpcCallObserver = new TestTentacleObserver();
+            var rpcCallObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("An error has occurred.");
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
@@ -78,7 +78,7 @@ namespace Octopus.Tentacle.Tests.Client
         public async Task ExecuteWithRetries_MetricsShouldBeFailed_WithGenericExceptions()
         {
             // Arrange
-            var rpcCallObserver = new TestTentacleObserver();
+            var rpcCallObserver = new TestTentacleClientObserver();
             var exception = new Exception("An error has occurred.");
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
@@ -108,7 +108,7 @@ namespace Octopus.Tentacle.Tests.Client
         public async Task ExecuteWithRetries_MetricsShouldBeFailed_WhenRetryTimeoutIsReached()
         {
             // Arrange
-            var rpcCallObserver = new TestTentacleObserver();
+            var rpcCallObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("An error has occurred.");
             //Timeout for long enough that we get a few attempts.
             var retryDuration = TimeSpan.FromSeconds(3);
@@ -142,7 +142,7 @@ namespace Octopus.Tentacle.Tests.Client
         {
             // Arrange
             var callCount = 0;
-            var rpcCallObserver = new TestTentacleObserver();
+            var rpcCallObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("An error has occurred.");
             var cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
@@ -187,7 +187,7 @@ namespace Octopus.Tentacle.Tests.Client
         public void Execute_WithResult_MetricsShouldBeSuccessful_WhenNoRetries()
         {
             // Arrange
-            var rpcCallObserver = new TestTentacleObserver();
+            var rpcCallObserver = new TestTentacleClientObserver();
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
             // Act
@@ -209,7 +209,7 @@ namespace Octopus.Tentacle.Tests.Client
         public void Execute_WithResult_MetricsShouldBeFailed_WithExceptions()
         {
             // Arrange
-            var rpcCallObserver = new TestTentacleObserver();
+            var rpcCallObserver = new TestTentacleClientObserver();
             var exception = new Exception("An error has occurred.");
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
@@ -237,7 +237,7 @@ namespace Octopus.Tentacle.Tests.Client
         public void Execute_Void_MetricsShouldBeSuccessful_WhenNoRetries()
         {
             // Arrange
-            var rpcCallObserver = new TestTentacleObserver();
+            var rpcCallObserver = new TestTentacleClientObserver();
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
             // Act
@@ -259,7 +259,7 @@ namespace Octopus.Tentacle.Tests.Client
         public void Execute_Void_MetricsShouldBeFailed_WithExceptions()
         {
             // Arrange
-            var rpcCallObserver = new TestTentacleObserver();
+            var rpcCallObserver = new TestTentacleClientObserver();
             var exception = new Exception("An error has occurred.");
             var clientOperationMetricsBuilder = new ClientOperationMetricsBuilder(DateTimeOffset.UtcNow);
 
@@ -284,13 +284,13 @@ namespace Octopus.Tentacle.Tests.Client
         }
 
         private static async Task ExecuteWithRetries(
-            ITentacleObserver tentacleObserver, 
+            ITentacleClientObserver tentacleClientObserver, 
             Func<CancellationToken, Guid> action, 
             TimeSpan retryDuration,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
-            var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleObserver);
+            var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
 
             await sut.ExecuteWithRetries(
                 RpcCallName,
@@ -302,13 +302,13 @@ namespace Octopus.Tentacle.Tests.Client
         }
 
         private static Guid ExecuteResult(
-            ITentacleObserver tentacleObserver,
+            ITentacleClientObserver tentacleClientObserver,
             Func<CancellationToken, Guid> action,
             TimeSpan retryDuration,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
-            var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleObserver);
+            var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
 
             return sut.Execute(
                 RpcCallName,
@@ -318,13 +318,13 @@ namespace Octopus.Tentacle.Tests.Client
         }
 
         private static void ExecuteVoid(
-            ITentacleObserver tentacleObserver,
+            ITentacleClientObserver tentacleClientObserver,
             Action<CancellationToken> action,
             TimeSpan retryDuration, 
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
-            var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleObserver);
+            var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
 
             sut.Execute(
                 RpcCallName,

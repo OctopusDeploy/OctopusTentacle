@@ -1,6 +1,6 @@
 ﻿namespace Octopus.Tentacle.Contracts.Observability
 {
-    public class NoTentacleObserver : ITentacleObserver
+    public class NoTentacleClientObserver : ITentacleClientObserver
     {
         public void RpcCallCompleted(RpcCallMetrics rpcCallMetrics)
         {

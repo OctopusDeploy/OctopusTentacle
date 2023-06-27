@@ -2,7 +2,7 @@
 
 namespace Octopus.Tentacle.Contracts.Observability
 {
-    public interface ITentacleObserver
+    public interface ITentacleClientObserver
     {
         void RpcCallCompleted(RpcCallMetrics rpcCallMetrics);
         void UploadFileCompleted(ClientOperationMetrics clientOperationMetrics);

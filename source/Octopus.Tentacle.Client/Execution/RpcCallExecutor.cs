@@ -11,12 +11,12 @@ namespace Octopus.Tentacle.Client.Execution
     internal class RpcCallExecutor
     {
         private readonly RpcCallRetryHandler rpcCallRetryHandler;
-        private readonly ITentacleObserver tentacleObserver;
+        private readonly ITentacleClientObserver tentacleClientObserver;
 
-        internal RpcCallExecutor(RpcCallRetryHandler rpcCallRetryHandler, ITentacleObserver tentacleObserver)
+        internal RpcCallExecutor(RpcCallRetryHandler rpcCallRetryHandler, ITentacleClientObserver tentacleClientObserver)
         {
             this.rpcCallRetryHandler = rpcCallRetryHandler;
-            this.tentacleObserver = tentacleObserver;
+            this.tentacleClientObserver = tentacleClientObserver;
         }
 
         public TimeSpan RetryTimeout => rpcCallRetryHandler.RetryTimeout;
@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Client.Execution
             {
                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                tentacleObserver.RpcCallCompleted(rpcCallMetrics);
+                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
             }
         }
 
@@ -90,7 +90,6 @@ namespace Octopus.Tentacle.Client.Execution
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
-
             var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCallName);
             var start = DateTimeOffset.UtcNow;
 
@@ -107,12 +106,11 @@ namespace Octopus.Tentacle.Client.Execution
                 rpcCallMetricsBuilder.Failure(e, cancellationToken);
                 throw;
             }
-
             finally
             {
                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                tentacleObserver.RpcCallCompleted(rpcCallMetrics);
+                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
             }
         }
 
@@ -141,7 +139,7 @@ namespace Octopus.Tentacle.Client.Execution
             {
                 var rpcCallMetrics = rpcCallMetricsBuilder.Build();
                 clientOperationMetricsBuilder.WithRpcCall(rpcCallMetrics);
-                tentacleObserver.RpcCallCompleted(rpcCallMetrics);
+                tentacleClientObserver.RpcCallCompleted(rpcCallMetrics);
             }
         }
     }
