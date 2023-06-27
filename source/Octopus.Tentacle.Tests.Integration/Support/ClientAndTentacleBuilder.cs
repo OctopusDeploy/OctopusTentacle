@@ -8,6 +8,7 @@ using Halibut.ServiceModel;
 using Octopus.Tentacle.Client;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts.Legacy;
+using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Tests.Integration.Util;
 using Octopus.TestPortForwarder;
 
@@ -24,6 +25,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         readonly List<Action<ServiceEndPoint>> serviceEndpointModifiers = new();
         private IPendingRequestQueueFactory? queueFactory = null;
         private Reference<PortForwarder>? portForwarderReference;
+        private ITentacleClientObserver tentacleClientObserver = new NoTentacleClientObserver();
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -88,6 +90,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.portForwarderReference = new Reference<PortForwarder>();
             portForwarder = this.portForwarderReference;
 
+            return this;
+        }
+
+        public ClientAndTentacleBuilder WithTentacleClientObserver(ITentacleClientObserver tentacleClientObserver)
+        {
+            this.tentacleClientObserver = tentacleClientObserver;
             return this;
         }
 
@@ -162,8 +170,9 @@ namespace Octopus.Tentacle.Tests.Integration.Support
                 tentacleEndPoint,
                 server.ServerHalibutRuntime,
                 scriptObserverBackoffStrategy,
-                tentacleServiceDecorator,
-                retryDuration);
+                retryDuration,
+                tentacleClientObserver,
+                tentacleServiceDecorator);
 
             return new ClientAndTentacle(server.ServerHalibutRuntime, tentacleEndPoint, server, portForwarder, runningTentacle, tentacleClient, temporaryDirectory);
         }

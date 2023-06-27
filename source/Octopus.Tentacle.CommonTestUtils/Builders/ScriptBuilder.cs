@@ -41,7 +41,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
 touch '{file}'
 ");
             windowsScript.AppendLine($@"
-New-Item {file}
+New-Item '{file}'
 ");
             return this;
         }
@@ -56,7 +56,7 @@ do
 done
 ");
             windowsScript.AppendLine($@"
-while (!(Test-Path {fileToWaitFor}))" + @"
+while (!(Test-Path '{fileToWaitFor}'))" + @"
 {
     echo waiting
     Start-Sleep 1
