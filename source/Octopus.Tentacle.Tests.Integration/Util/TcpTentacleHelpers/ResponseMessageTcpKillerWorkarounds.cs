@@ -17,13 +17,6 @@ namespace Octopus.Tentacle.Tests.Integration.Util.TcpTentacleHelpers
             logger.ForContext(typeof(ResponseMessageTcpKillerWorkarounds)).Information("Finished GetStatus work around call");
         }
 
-        public static void EnsureTentacleIsConnectedToServer(this IClientCapabilitiesServiceV2 service, ILogger logger)
-        {
-            logger.ForContext(typeof(ResponseMessageTcpKillerWorkarounds)).Information("Call GetCapabilities to work around an issue where the tcp killer kills setup of new connections");
-            service.GetCapabilities(new HalibutProxyRequestOptions(CancellationToken.None));
-            logger.ForContext(typeof(ResponseMessageTcpKillerWorkarounds)).Information("Finished GetCapabilities work around call");
-        }
-
         public static void EnsureTentacleIsConnectedToServer(this IClientFileTransferService service, ILogger logger)
         {
             logger.ForContext(typeof(ResponseMessageTcpKillerWorkarounds)).Information("Call DownloadFile to work around an issue where the tcp killer kills setup of new connections");

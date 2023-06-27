@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -23,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build();
         }
     }
-    
+
     [IntegrationTestTimeout]
     public class CapabilitiesServiceV2Test : IntegrationTest
     {
@@ -50,6 +49,24 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 capabilities.Count.Should().Be(2);
             }
+        }
+
+        [Test]
+        [TestCaseSource(typeof(CapabilitiesServiceInterestingTentacles))]
+        public async Task CapabilitiesResponseShouldBeCached(TentacleType tentacleType, string? version)
+        {
+            using var clientAndTentacle = await new ClientAndTentacleBuilder(tentacleType)
+                .WithPortForwarder()
+                .WithTentacleVersion(version!)
+                .Build(CancellationToken);
+
+            var capabilitiesResponse1 = await clientAndTentacle.TentacleClient.GetCapabilities(Logger.ToILog(), CancellationToken);
+
+            clientAndTentacle.PortForwarder!.Dispose();
+
+            var capabilitiesResponse2 = await clientAndTentacle.TentacleClient.GetCapabilities(Logger.ToILog(), CancellationToken);
+
+            capabilitiesResponse1.Should().BeEquivalentTo(capabilitiesResponse2);
         }
     }
 }
