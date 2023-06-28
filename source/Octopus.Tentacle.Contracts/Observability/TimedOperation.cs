@@ -13,7 +13,7 @@ namespace Octopus.Tentacle.Contracts.Observability
 
         public bool Succeeded => Exception is null;
 
-        private TimedOperation(DateTimeOffset start, DateTimeOffset end, Exception? exception, bool wasCancelled)
+        public TimedOperation(DateTimeOffset start, DateTimeOffset end, Exception? exception, bool wasCancelled)
         {
             Start = start;
             End = end;
