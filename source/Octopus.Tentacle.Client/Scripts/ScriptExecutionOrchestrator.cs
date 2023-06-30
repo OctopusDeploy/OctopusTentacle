@@ -26,6 +26,7 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly Action<ScriptStatusResponseV2> onScriptStatusResponseReceived;
         readonly Func<CancellationToken, Task> onScriptCompleted;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
+        private readonly TentacleClientSettings settings;
         readonly ILog logger;
         readonly IClientScriptService scriptServiceV1;
         readonly IClientScriptServiceV2 scriptServiceV2;
@@ -42,6 +43,7 @@ namespace Octopus.Tentacle.Client.Scripts
             Action<ScriptStatusResponseV2> onScriptStatusResponseReceived,
             Func<CancellationToken, Task> onScriptCompleted,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
+            TentacleClientSettings settings,
             ILog logger)
         {
             this.scriptServiceV1 = scriptServiceV1;
@@ -54,6 +56,7 @@ namespace Octopus.Tentacle.Client.Scripts
             this.onScriptStatusResponseReceived = onScriptStatusResponseReceived;
             this.onScriptCompleted = onScriptCompleted;
             this.onCancellationAbandonCompleteScriptAfter = onCancellationAbandonCompleteScriptAfter;
+            this.settings = settings;
             this.logger = logger;
         }
 
@@ -76,21 +79,34 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 try
                 {
-                    scriptStatusResponse = await rpcCallExecutor.ExecuteWithRetries(
-                        RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.StartScript)),
-                        ct =>
-                        {
-                            ++startScriptCallCount;
-                            return scriptServiceV2.StartScript(startScriptCommand, new HalibutProxyRequestOptions(ct));
-                        },
-                        logger,
-                        // If we are cancelling script execution we can abandon a call to start script
-                        // If we manage to cancel the start script call we can walk away
-                        // If we do abandon the start script call we have to assume the script is running so need
-                        // to call CancelScript and CompleteScript
-                        abandonActionOnCancellation: true,
-                        clientOperationMetricsBuilder,
-                        scriptExecutionCancellationToken).ConfigureAwait(false);
+                    ScriptStatusResponseV2 StartScriptAction(CancellationToken ct)
+                    {
+                        ++startScriptCallCount;
+                        return scriptServiceV2.StartScript(startScriptCommand, new HalibutProxyRequestOptions(ct));
+                    }
+
+                    if (settings.AllowRetries)
+                    {
+                        scriptStatusResponse = await rpcCallExecutor.ExecuteWithRetries(
+                            RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.StartScript)),
+                            StartScriptAction,
+                            logger,
+                            // If we are cancelling script execution we can abandon a call to start script
+                            // If we manage to cancel the start script call we can walk away
+                            // If we do abandon the start script call we have to assume the script is running so need
+                            // to call CancelScript and CompleteScript
+                            abandonActionOnCancellation: true,
+                            clientOperationMetricsBuilder,
+                            scriptExecutionCancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        scriptStatusResponse = rpcCallExecutor.Execute(
+                            nameof(scriptServiceV2.StartScript),
+                            StartScriptAction,
+                            clientOperationMetricsBuilder,
+                            scriptExecutionCancellationToken);
+                    }
                 }
                 catch (Exception e) when (e is OperationCanceledException && scriptExecutionCancellationToken.IsCancellationRequested)
                 {
@@ -246,17 +262,30 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 try
                 {
-                    return await rpcCallExecutor.ExecuteWithRetries(
-                        RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
-                        ct =>
-                        {
-                            return scriptServiceV2.GetStatus(new ScriptStatusRequestV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct));
-                        },
-                        logger,
-                        // If cancelling script execution we can abandon a call to GetStatus and go straight into the CancelScript and CompleteScript flow
-                        abandonActionOnCancellation: true,
-                        clientOperationMetricsBuilder,
-                        cancellationToken).ConfigureAwait(false);
+                    ScriptStatusResponseV2 GetStatusAction(CancellationToken ct)
+                    {
+                        return scriptServiceV2.GetStatus(new ScriptStatusRequestV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct));
+                    }
+
+                    if (settings.AllowRetries)
+                    {
+                        return await rpcCallExecutor.ExecuteWithRetries(
+                            RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
+                            GetStatusAction,
+                            logger,
+                            // If cancelling script execution we can abandon a call to GetStatus and go straight into the CancelScript and CompleteScript flow
+                            abandonActionOnCancellation: true,
+                            clientOperationMetricsBuilder,
+                            cancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        return rpcCallExecutor.Execute(
+                            nameof(scriptServiceV2.GetStatus),
+                            GetStatusAction,
+                            clientOperationMetricsBuilder,
+                            cancellationToken);
+                    }
                 }
                 catch (Exception e) when (e is OperationCanceledException && cancellationToken.IsCancellationRequested)
                 {
@@ -271,7 +300,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     ct => scriptServiceV1.GetStatus(new ScriptStatusRequest(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
                     clientOperationMetricsBuilder,
                     cancellationToken);
-                
+
                 return Map(scriptStatusResponseV1);
             }
         }
@@ -284,17 +313,30 @@ namespace Octopus.Tentacle.Client.Scripts
             var cancellationToken = CancellationToken.None;
             if (scriptServiceVersionToUse == ScriptServiceVersion.Version2)
             {
-                return await rpcCallExecutor.ExecuteWithRetries(
-                    RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CancelScript)),
-                    ct =>
-                    {
-                        return scriptServiceV2.CancelScript(new CancelScriptCommandV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct));
-                    },
-                    logger,
-                    // We don't want to abandon this operation as it is responsible for stopping the script executing on the Tentacle
-                    abandonActionOnCancellation: false,
-                    clientOperationMetricsBuilder,
-                    cancellationToken).ConfigureAwait(false);
+                ScriptStatusResponseV2 CancelScriptAction(CancellationToken ct)
+                {
+                    return scriptServiceV2.CancelScript(new CancelScriptCommandV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct));
+                }
+
+                if (settings.AllowRetries)
+                {
+                    return await rpcCallExecutor.ExecuteWithRetries(
+                        RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CancelScript)),
+                        CancelScriptAction,
+                        logger,
+                        // We don't want to abandon this operation as it is responsible for stopping the script executing on the Tentacle
+                        abandonActionOnCancellation: false,
+                        clientOperationMetricsBuilder,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    return rpcCallExecutor.Execute(
+                        nameof(scriptServiceV2.CancelScript),
+                        CancelScriptAction,
+                        clientOperationMetricsBuilder,
+                        cancellationToken);
+                }
             }
             else
             {
@@ -303,7 +345,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     ct => scriptServiceV1.CancelScript(new CancelScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
                     clientOperationMetricsBuilder,
                     cancellationToken);
-                
+
                 return Map(scriptStatusResponseV1);
             }
         }
@@ -363,7 +405,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     ct => scriptServiceV1.CompleteScript(new CompleteScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct)),
                     clientOperationMetricsBuilder,
                     CancellationToken.None);
-                
+
                 completeStatus = Map(completeStatusV1);
                 onScriptStatusResponseReceived(completeStatus);
             }

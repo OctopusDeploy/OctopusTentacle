@@ -99,21 +99,34 @@ namespace Octopus.Tentacle.Client
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
+            UploadResult UploadFileAction(CancellationToken ct)
+            {
+                logger.Info($"Beginning upload of {fileName} to Tentacle");
+                var result = fileTransferServiceV1.UploadFile(path, package, new HalibutProxyRequestOptions(ct));
+                logger.Info("Upload complete");
+                return result;
+            }
+
             try
             {
-                return await rpcCallExecutor.ExecuteWithRetries(
-                    RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
-                    ct =>
-                    {
-                        logger.Info($"Beginning upload of {fileName} to Tentacle");
-                        var result = fileTransferServiceV1.UploadFile(path, package, new HalibutProxyRequestOptions(ct));
-                        logger.Info("Upload complete");
-                        return result;
-                    },
-                    logger,
-                    abandonActionOnCancellation: false,
-                    operationMetricsBuilder,
-                    cancellationToken).ConfigureAwait(false);
+                if (settings.AllowRetries)
+                {
+                    return await rpcCallExecutor.ExecuteWithRetries(
+                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
+                        UploadFileAction,
+                        logger,
+                        abandonActionOnCancellation: false,
+                        operationMetricsBuilder,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    return rpcCallExecutor.Execute(
+                        nameof(fileTransferServiceV1.UploadFile),
+                        UploadFileAction,
+                        operationMetricsBuilder,
+                        cancellationToken);
+                }
             }
             catch (Exception e)
             {
@@ -131,23 +144,34 @@ namespace Octopus.Tentacle.Client
         {
             var operationMetricsBuilder = ClientOperationMetricsBuilder.Start();
 
+            DataStream DownloadFileAction(CancellationToken ct)
+            {
+                logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
+                var result = fileTransferServiceV1.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct));
+                logger.Info("Download complete");
+                return result;
+            }
+
             try
             {
-                var dataStream = await rpcCallExecutor.ExecuteWithRetries(
-                    RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
-                    ct =>
-                    {
-                        logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
-                        var result = fileTransferServiceV1.DownloadFile(remotePath, new HalibutProxyRequestOptions(ct));
-                        logger.Info("Download complete");
-                        return result;
-                    },
-                    logger,
-                    abandonActionOnCancellation: false,
-                    operationMetricsBuilder,
-                    cancellationToken).ConfigureAwait(false);
-
-                return (DataStream?)dataStream;
+                if (settings.AllowRetries)
+                {
+                    return await rpcCallExecutor.ExecuteWithRetries(
+                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
+                        DownloadFileAction,
+                        logger,
+                        abandonActionOnCancellation: false,
+                        operationMetricsBuilder,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    return rpcCallExecutor.Execute(
+                        nameof(fileTransferServiceV1.DownloadFile),
+                        DownloadFileAction,
+                        operationMetricsBuilder,
+                        cancellationToken);
+                }
             }
             catch (Exception e)
             {
