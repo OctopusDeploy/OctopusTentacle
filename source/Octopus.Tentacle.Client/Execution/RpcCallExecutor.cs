@@ -22,14 +22,14 @@ namespace Octopus.Tentacle.Client.Execution
         public TimeSpan RetryTimeout => rpcCallRetryHandler.RetryTimeout;
 
         public async Task<T> ExecuteWithRetries<T>(
-            string rpcCallName,
+            RpcCall rpcCall,
             Func<CancellationToken, T> action,
             ILog logger,
             bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
-            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithRetries(rpcCallName, rpcCallRetryHandler.RetryTimeout);
+            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithRetries(rpcCall, rpcCallRetryHandler.RetryTimeout);
 
             try
             {
@@ -85,12 +85,12 @@ namespace Octopus.Tentacle.Client.Execution
         }
 
         public T Execute<T>(
-            string rpcCallName,
+            RpcCall rpcCall,
             Func<CancellationToken, T> action,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
-            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCallName);
+            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
             var start = DateTimeOffset.UtcNow;
 
             try
@@ -115,12 +115,12 @@ namespace Octopus.Tentacle.Client.Execution
         }
 
         public void Execute(
-            string rpcCallName,
+            RpcCall rpcCall,
             Action<CancellationToken> action,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
-            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCallName);
+            var rpcCallMetricsBuilder = RpcCallMetricsBuilder.StartWithoutRetries(rpcCall);
             var start = DateTimeOffset.UtcNow;
 
             try

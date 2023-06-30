@@ -7,7 +7,7 @@ namespace Octopus.Tentacle.Client.Observability
 {
     internal class RpcCallMetricsBuilder
     {
-        private readonly string rpcCallName;
+        private readonly RpcCall rpcCall;
         private readonly DateTimeOffset start;
         private readonly TimeSpan retryTimeout;
         private readonly bool withRetries;
@@ -16,27 +16,27 @@ namespace Octopus.Tentacle.Client.Observability
         private Exception? exception;
         private bool wasCancelled;
 
-        private RpcCallMetricsBuilder(string rpcCallName, DateTimeOffset start, bool withRetries, TimeSpan retryTimeout)
+        private RpcCallMetricsBuilder(RpcCall rpcCall, DateTimeOffset start, bool withRetries, TimeSpan retryTimeout)
         {
-            this.rpcCallName = rpcCallName;
+            this.rpcCall = rpcCall;
             this.start = start;
             this.retryTimeout = retryTimeout;
             this.withRetries = withRetries;
         }
 
-        public static RpcCallMetricsBuilder StartWithRetries(string rpcCallName, TimeSpan retryTimeout)
+        public static RpcCallMetricsBuilder StartWithRetries(RpcCall rpcCall, TimeSpan retryTimeout)
         {
             var start = DateTimeOffset.UtcNow;
 
-            var builder = new RpcCallMetricsBuilder(rpcCallName, start, true, retryTimeout);
+            var builder = new RpcCallMetricsBuilder(rpcCall, start, true, retryTimeout);
             return builder;
         }
 
-        public static RpcCallMetricsBuilder StartWithoutRetries(string rpcCallName)
+        public static RpcCallMetricsBuilder StartWithoutRetries(RpcCall rpcCall)
         {
             var start = DateTimeOffset.UtcNow;
 
-            var builder = new RpcCallMetricsBuilder(rpcCallName, start, false, TimeSpan.Zero);
+            var builder = new RpcCallMetricsBuilder(rpcCall, start, false, TimeSpan.Zero);
             return builder;
         }
 
@@ -60,7 +60,7 @@ namespace Octopus.Tentacle.Client.Observability
             var end = DateTimeOffset.UtcNow;
 
             var rpcCallMetrics = new RpcCallMetrics(
-                rpcCallName,
+                rpcCall,
                 start,
                 end,
                 withRetries,

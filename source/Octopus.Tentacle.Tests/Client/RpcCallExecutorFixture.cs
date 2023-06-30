@@ -18,6 +18,7 @@ namespace Octopus.Tentacle.Tests.Client
     public class RpcCallExecutorFixture
     {
         private const string RpcCallName = "GetStatus";
+        private const string RpcService = "ScriptService";
         private static readonly TimeSpan RetryDuration = TimeSpan.FromMinutes(1);
 
         [Test]
@@ -293,7 +294,7 @@ namespace Octopus.Tentacle.Tests.Client
             var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
 
             await sut.ExecuteWithRetries(
-                RpcCallName,
+                new RpcCall(RpcService, RpcCallName),
                 action,
                 Substitute.For<ILog>(),
                 false,
@@ -311,7 +312,7 @@ namespace Octopus.Tentacle.Tests.Client
             var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
 
             return sut.Execute(
-                RpcCallName,
+                new RpcCall(RpcService, RpcCallName),
                 action,
                 clientOperationMetricsBuilder,
                 cancellationToken);
@@ -327,7 +328,7 @@ namespace Octopus.Tentacle.Tests.Client
             var sut = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
 
             sut.Execute(
-                RpcCallName,
+                new RpcCall(RpcService, RpcCallName),
                 action,
                 clientOperationMetricsBuilder,
                 cancellationToken);
@@ -353,7 +354,8 @@ namespace Octopus.Tentacle.Tests.Client
             metric.Duration.Should().Be(metric.End - metric.Start);
 
             metric.RetryTimeout.Should().Be(expectedRetryDuration);
-            metric.RpcCallName.Should().Be(RpcCallName);
+            metric.RpcCall.Name.Should().Be(RpcCallName);
+            metric.RpcCall.Service.Should().Be(RpcService);
             metric.WithRetries.Should().Be(expectedWithRetries);
         }
 
@@ -370,7 +372,8 @@ namespace Octopus.Tentacle.Tests.Client
             metric.Duration.Should().Be(metric.End - metric.Start);
 
             metric.RetryTimeout.Should().Be(expectedRetryDuration);
-            metric.RpcCallName.Should().Be(RpcCallName);
+            metric.RpcCall.Name.Should().Be(RpcCallName);
+            metric.RpcCall.Service.Should().Be(RpcService);
             metric.WithRetries.Should().Be(expectedWithRetries);
         }
 

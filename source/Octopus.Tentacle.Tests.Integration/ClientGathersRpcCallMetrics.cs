@@ -44,10 +44,10 @@ namespace Octopus.Tentacle.Tests.Integration
             ThenClientOperationMetricsShouldBeSuccessful(executeScriptMetrics);
 
             tentacleClientObserver.RpcCallMetrics.Should().NotBeEmpty();
-            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCallName == nameof(IClientCapabilitiesServiceV2.GetCapabilities));
-            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCallName == nameof(IClientScriptServiceV2.StartScript));
-            tentacleClientObserver.RpcCallMetrics.Should().Contain(m => m.RpcCallName == nameof(IClientScriptServiceV2.GetStatus));
-            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCallName == nameof(IClientScriptServiceV2.CompleteScript));
+            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IClientCapabilitiesServiceV2.GetCapabilities));
+            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IClientScriptServiceV2.StartScript));
+            tentacleClientObserver.RpcCallMetrics.Should().Contain(m => m.RpcCall.Name == nameof(IClientScriptServiceV2.GetStatus));
+            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IClientScriptServiceV2.CompleteScript));
             tentacleClientObserver.RpcCallMetrics.Should().AllSatisfy(m => m.Succeeded.Should().BeTrue());
         }
 
@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Tests.Integration
             ThenClientOperationMetricsShouldBeFailed(executeScriptMetrics, exception);
 
             tentacleClientObserver.RpcCallMetrics.Should().NotBeEmpty();
-            var startScriptMetric = tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCallName == "StartScript").Subject;
+            var startScriptMetric = tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == "StartScript").Subject;
             startScriptMetric.Succeeded.Should().BeFalse();
         }
 
@@ -106,7 +106,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             tentacleClientObserver.RpcCallMetrics.Should().HaveCountGreaterThan(0);
             var metric = tentacleClientObserver.RpcCallMetrics.Last();
-            metric.RpcCallName.Should().Be(nameof(IClientFileTransferService.UploadFile));
+            metric.RpcCall.Name.Should().Be(nameof(IClientFileTransferService.UploadFile));
+            metric.RpcCall.Service.Should().Be(nameof(IClientFileTransferService));
             metric.Succeeded.Should().BeTrue();
         }
 
@@ -136,7 +137,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             tentacleClientObserver.RpcCallMetrics.Should().NotBeEmpty();
             var metric = tentacleClientObserver.RpcCallMetrics.Last();
-            metric.RpcCallName.Should().Be(nameof(IClientFileTransferService.UploadFile));
+            metric.RpcCall.Name.Should().Be(nameof(IClientFileTransferService.UploadFile));
+            metric.RpcCall.Service.Should().Be(nameof(IClientFileTransferService));
             metric.Succeeded.Should().BeFalse();
         }
 
@@ -163,7 +165,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             tentacleClientObserver.RpcCallMetrics.Should().HaveCountGreaterThan(1); // the first one will be the upload
             var metric = tentacleClientObserver.RpcCallMetrics.Last();
-            metric.RpcCallName.Should().Be(nameof(IClientFileTransferService.DownloadFile));
+            metric.RpcCall.Name.Should().Be(nameof(IClientFileTransferService.DownloadFile));
+            metric.RpcCall.Service.Should().Be(nameof(IClientFileTransferService));
             metric.Succeeded.Should().BeTrue();
         }
 
@@ -194,7 +197,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             tentacleClientObserver.RpcCallMetrics.Should().HaveCountGreaterThan(1); // the first one will be the upload
             var metric = tentacleClientObserver.RpcCallMetrics.Last();
-            metric.RpcCallName.Should().Be(nameof(IClientFileTransferService.DownloadFile));
+            metric.RpcCall.Name.Should().Be(nameof(IClientFileTransferService.DownloadFile));
+            metric.RpcCall.Service.Should().Be(nameof(IClientFileTransferService));
             metric.Succeeded.Should().BeFalse();
         }
 

@@ -8,13 +8,11 @@ using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Decorators;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
-using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.Observability;
 using Octopus.Tentacle.Contracts.ScriptServiceV2;
-using Polly.Timeout;
 using ILog = Octopus.Diagnostics.ILog;
 
 namespace Octopus.Tentacle.Client
@@ -82,7 +80,7 @@ namespace Octopus.Tentacle.Client
             try
             {
                 return await rpcCallExecutor.ExecuteWithRetries(
-                    nameof(fileTransferServiceV1.UploadFile),
+                    RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile)),
                     ct =>
                     {
                         logger.Info($"Beginning upload of {fileName} to Tentacle");
@@ -114,7 +112,7 @@ namespace Octopus.Tentacle.Client
             try
             {
                 var dataStream = await rpcCallExecutor.ExecuteWithRetries(
-                    nameof(fileTransferServiceV1.DownloadFile),
+                    RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.DownloadFile)),
                     ct =>
                     {
                         logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");

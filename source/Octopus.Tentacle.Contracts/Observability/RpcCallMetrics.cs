@@ -6,7 +6,7 @@ namespace Octopus.Tentacle.Contracts.Observability
 {
     public class RpcCallMetrics
     {
-        public string RpcCallName { get; }
+        public RpcCall RpcCall { get; }
         public DateTimeOffset Start { get; }
         public DateTimeOffset End { get; }
         public bool WithRetries { get; }
@@ -23,7 +23,7 @@ namespace Octopus.Tentacle.Contracts.Observability
 
 
         public RpcCallMetrics(
-            string rpcCallName,
+            RpcCall rpcCall,
             DateTimeOffset start,
             DateTimeOffset end,
             bool withRetries,
@@ -32,7 +32,7 @@ namespace Octopus.Tentacle.Contracts.Observability
             bool wasCancelled,
             IReadOnlyList<TimedOperation> attempts)
         {
-            RpcCallName = rpcCallName;
+            RpcCall = rpcCall;
             Start = start;
             End = end;
             WithRetries = withRetries;
