@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Client
         readonly IClientScriptServiceV2 scriptServiceV2;
         readonly IClientFileTransferService fileTransferServiceV1;
         readonly IClientCapabilitiesServiceV2 capabilitiesServiceV2;
-        readonly RpcRetrySettings settings;
+        readonly RpcRetrySettings rpcRetrySettings;
 
         public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
         {
@@ -50,11 +50,11 @@ namespace Octopus.Tentacle.Client
             TimeSpan retryDuration,
             ITentacleClientObserver tentacleClientObserver,
             ITentacleServiceDecorator? tentacleServicesDecorator,
-            RpcRetrySettings settings)
+            RpcRetrySettings rpcRetrySettings)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver;
-            this.settings = settings;
+            this.rpcRetrySettings = rpcRetrySettings;
 
             if (halibutRuntime.OverrideErrorResponseMessageCaching == null)
             {
@@ -99,7 +99,7 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                if (settings.AllowRetries)
+                if (rpcRetrySettings.AllowRetries)
                 {
                     return await rpcCallExecutor.ExecuteWithRetries(
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
@@ -144,7 +144,7 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                if (settings.AllowRetries)
+                if (rpcRetrySettings.AllowRetries)
                 {
                     return await rpcCallExecutor.ExecuteWithRetries(
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
@@ -197,7 +197,7 @@ namespace Octopus.Tentacle.Client
                     onScriptStatusResponseReceived,
                     onScriptCompleted,
                     OnCancellationAbandonCompleteScriptAfter,
-                    settings,
+                    rpcRetrySettings,
                     logger);
 
                 var result = await orchestrator.ExecuteScript(scriptExecutionCancellationToken).ConfigureAwait(false);
