@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Client
         readonly IClientScriptServiceV2 scriptServiceV2;
         readonly IClientFileTransferService fileTransferServiceV1;
         readonly IClientCapabilitiesServiceV2 capabilitiesServiceV2;
-        readonly TentacleClientSettings settings;
+        readonly RpcRetrySettings settings;
 
         public static void CacheServiceWasNotFoundResponseMessages(IHalibutRuntime halibutRuntime)
         {
@@ -48,23 +48,13 @@ namespace Octopus.Tentacle.Client
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             TimeSpan retryDuration,
-            ITentacleClientObserver tentacleClientObserver) :
-                this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, retryDuration, tentacleClientObserver, null)
-        {
-        }
-
-        internal TentacleClient(
-            ServiceEndPoint serviceEndPoint,
-            IHalibutRuntime halibutRuntime,
-            IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
-            TimeSpan retryDuration,
             ITentacleClientObserver tentacleClientObserver,
             ITentacleServiceDecorator? tentacleServicesDecorator,
-            TentacleClientSettings? settings = null)
+            RpcRetrySettings settings)
         {
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.tentacleClientObserver = tentacleClientObserver;
-            this.settings = settings ?? new TentacleClientSettings();
+            this.settings = settings;
 
             if (halibutRuntime.OverrideErrorResponseMessageCaching == null)
             {
@@ -229,8 +219,8 @@ namespace Octopus.Tentacle.Client
         {
         }
     }
-    
-    public record TentacleClientSettings
+
+    public record RpcRetrySettings
     {
         public bool AllowRetries = false;
     }

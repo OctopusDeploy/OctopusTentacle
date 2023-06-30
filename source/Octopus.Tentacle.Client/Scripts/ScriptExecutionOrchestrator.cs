@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Client.Scripts
         readonly Action<ScriptStatusResponseV2> onScriptStatusResponseReceived;
         readonly Func<CancellationToken, Task> onScriptCompleted;
         readonly TimeSpan onCancellationAbandonCompleteScriptAfter;
-        private readonly TentacleClientSettings settings;
+        readonly RpcRetrySettings settings;
         readonly ILog logger;
         readonly IClientScriptService scriptServiceV1;
         readonly IClientScriptServiceV2 scriptServiceV2;
@@ -43,7 +43,7 @@ namespace Octopus.Tentacle.Client.Scripts
             Action<ScriptStatusResponseV2> onScriptStatusResponseReceived,
             Func<CancellationToken, Task> onScriptCompleted,
             TimeSpan onCancellationAbandonCompleteScriptAfter,
-            TentacleClientSettings settings,
+            RpcRetrySettings settings,
             ILog logger)
         {
             this.scriptServiceV1 = scriptServiceV1;
