@@ -47,7 +47,6 @@ namespace Octopus.Tentacle.Client
             ServiceEndPoint serviceEndPoint,
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
-            TimeSpan retryDuration,
             ITentacleClientObserver tentacleClientObserver,
             ITentacleServiceDecorator? tentacleServicesDecorator,
             RpcRetrySettings rpcRetrySettings)
@@ -80,7 +79,7 @@ namespace Octopus.Tentacle.Client
                 capabilitiesServiceV2 = tentacleServicesDecorator.Decorate(capabilitiesServiceV2);
             }
 
-            rpcCallExecutor = RpcCallExecutorFactory.Create(retryDuration, tentacleClientObserver);
+            rpcCallExecutor = RpcCallExecutorFactory.Create(rpcRetrySettings.RetryDuration, tentacleClientObserver);
         }
 
         public TimeSpan OnCancellationAbandonCompleteScriptAfter { get; set; } = TimeSpan.FromMinutes(1);
@@ -99,7 +98,7 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                if (rpcRetrySettings.AllowRetries)
+                if (rpcRetrySettings.RetriesEnabled)
                 {
                     return await rpcCallExecutor.ExecuteWithRetries(
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
@@ -144,7 +143,7 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                if (rpcRetrySettings.AllowRetries)
+                if (rpcRetrySettings.RetriesEnabled)
                 {
                     return await rpcCallExecutor.ExecuteWithRetries(
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
@@ -218,10 +217,5 @@ namespace Octopus.Tentacle.Client
         public void Dispose()
         {
         }
-    }
-
-    public record RpcRetrySettings
-    {
-        public bool AllowRetries = false;
     }
 }

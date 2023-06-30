@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         return scriptServiceV2.StartScript(startScriptCommand, new HalibutProxyRequestOptions(ct));
                     }
 
-                    if (settings.AllowRetries)
+                    if (settings.RetriesEnabled)
                     {
                         scriptStatusResponse = await rpcCallExecutor.ExecuteWithRetries(
                             RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.StartScript)),
@@ -267,7 +267,7 @@ namespace Octopus.Tentacle.Client.Scripts
                         return scriptServiceV2.GetStatus(new ScriptStatusRequestV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct));
                     }
 
-                    if (settings.AllowRetries)
+                    if (settings.RetriesEnabled)
                     {
                         return await rpcCallExecutor.ExecuteWithRetries(
                             RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
@@ -318,7 +318,7 @@ namespace Octopus.Tentacle.Client.Scripts
                     return scriptServiceV2.CancelScript(new CancelScriptCommandV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence), new HalibutProxyRequestOptions(ct));
                 }
 
-                if (settings.AllowRetries)
+                if (settings.RetriesEnabled)
                 {
                     return await rpcCallExecutor.ExecuteWithRetries(
                         RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.CancelScript)),
