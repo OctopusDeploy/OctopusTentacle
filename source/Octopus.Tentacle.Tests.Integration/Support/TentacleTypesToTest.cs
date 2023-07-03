@@ -7,7 +7,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
     {
         public IEnumerator<TentacleType> GetEnumerator()
         {
-            yield return  TentacleType.Polling;
+            yield return TentacleType.Polling;
             yield return TentacleType.Listening;
         }
 

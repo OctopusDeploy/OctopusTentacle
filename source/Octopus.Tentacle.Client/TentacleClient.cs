@@ -8,6 +8,7 @@ using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.Client.Decorators;
 using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
+using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.Contracts;
 using Octopus.Tentacle.Contracts.Capabilities;
@@ -111,7 +112,7 @@ namespace Octopus.Tentacle.Client
                 else
                 {
                     return rpcCallExecutor.Execute(
-                        nameof(fileTransferServiceV1.UploadFile),
+                        RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile)),
                         UploadFileAction,
                         operationMetricsBuilder,
                         cancellationToken);
@@ -156,7 +157,7 @@ namespace Octopus.Tentacle.Client
                 else
                 {
                     return rpcCallExecutor.Execute(
-                        nameof(fileTransferServiceV1.DownloadFile),
+                        RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.DownloadFile)),
                         DownloadFileAction,
                         operationMetricsBuilder,
                         cancellationToken);

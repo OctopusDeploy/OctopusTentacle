@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using Octopus.Tentacle.Contracts;
 
 namespace Octopus.Tentacle.Tests.Integration.Support
 {
