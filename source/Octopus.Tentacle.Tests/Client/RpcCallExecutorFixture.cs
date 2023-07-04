@@ -11,14 +11,15 @@ using Octopus.Tentacle.Client.Execution;
 using Octopus.Tentacle.Client.Observability;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.Contracts.Observability;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Tests.Client
 {
     [TestFixture]
     public class RpcCallExecutorFixture
     {
-        private const string RpcCallName = "GetStatus";
-        private const string RpcService = "ScriptService";
+        private const string RpcCallName = nameof(IScriptServiceV2.GetStatus);
+        private const string RpcService = nameof(IScriptServiceV2);
         private static readonly TimeSpan RetryDuration = TimeSpan.FromMinutes(1);
 
         [Test]

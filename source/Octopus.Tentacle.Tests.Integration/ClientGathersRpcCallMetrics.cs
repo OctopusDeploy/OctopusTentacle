@@ -5,11 +5,12 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
-using Octopus.Tentacle.Client.ClientServices;
 using Octopus.Tentacle.CommonTestUtils;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
+using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Contracts.Observability;
+using Octopus.Tentacle.Contracts.ScriptServiceV2;
 using Octopus.Tentacle.Tests.Integration.Support;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
@@ -21,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration
     {
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task ExecuteScriptShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, string tentacleVersion)
+        public async Task ExecuteScriptShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, string? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
@@ -43,17 +44,18 @@ namespace Octopus.Tentacle.Tests.Integration
             var executeScriptMetrics = tentacleClientObserver.ExecuteScriptMetrics.Should().ContainSingle().Subject;
             ThenClientOperationMetricsShouldBeSuccessful(executeScriptMetrics);
 
+            var expectedScriptService = tentacleVersion == TentacleVersions.Current ? nameof(IScriptServiceV2) : nameof(IScriptService);
             tentacleClientObserver.RpcCallMetrics.Should().NotBeEmpty();
-            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IClientCapabilitiesServiceV2.GetCapabilities));
-            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IClientScriptServiceV2.StartScript));
-            tentacleClientObserver.RpcCallMetrics.Should().Contain(m => m.RpcCall.Name == nameof(IClientScriptServiceV2.GetStatus));
-            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IClientScriptServiceV2.CompleteScript));
+            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(ICapabilitiesServiceV2.GetCapabilities) && m.RpcCall.Service == nameof(ICapabilitiesServiceV2));
+            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IScriptServiceV2.StartScript) && m.RpcCall.Service == expectedScriptService);
+            tentacleClientObserver.RpcCallMetrics.Should().Contain(m => m.RpcCall.Name == nameof(IScriptServiceV2.GetStatus) && m.RpcCall.Service == expectedScriptService);
+            tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IScriptServiceV2.CompleteScript) && m.RpcCall.Service == expectedScriptService);
             tentacleClientObserver.RpcCallMetrics.Should().AllSatisfy(m => m.Succeeded.Should().BeTrue());
         }
-
+        
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task ExecuteScriptShouldGatherMetrics_WhenFails(TentacleType tentacleType, string tentacleVersion)
+        public async Task ExecuteScriptShouldGatherMetrics_WhenFails(TentacleType tentacleType, string? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
@@ -86,12 +88,12 @@ namespace Octopus.Tentacle.Tests.Integration
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task UploadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, string version)
+        public async Task UploadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, string? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithTentacleVersion(version)
+                .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 
@@ -106,20 +108,20 @@ namespace Octopus.Tentacle.Tests.Integration
 
             tentacleClientObserver.RpcCallMetrics.Should().HaveCountGreaterThan(0);
             var metric = tentacleClientObserver.RpcCallMetrics.Last();
-            metric.RpcCall.Name.Should().Be(nameof(IClientFileTransferService.UploadFile));
-            metric.RpcCall.Service.Should().Be(nameof(IClientFileTransferService));
+            metric.RpcCall.Name.Should().Be(nameof(IFileTransferService.UploadFile));
+            metric.RpcCall.Service.Should().Be(nameof(IFileTransferService));
             metric.Succeeded.Should().BeTrue();
         }
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task UploadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, string version)
+        public async Task UploadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, string? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("Error");
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithTentacleVersion(version)
+                .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -137,19 +139,19 @@ namespace Octopus.Tentacle.Tests.Integration
 
             tentacleClientObserver.RpcCallMetrics.Should().NotBeEmpty();
             var metric = tentacleClientObserver.RpcCallMetrics.Last();
-            metric.RpcCall.Name.Should().Be(nameof(IClientFileTransferService.UploadFile));
-            metric.RpcCall.Service.Should().Be(nameof(IClientFileTransferService));
+            metric.RpcCall.Name.Should().Be(nameof(IFileTransferService.UploadFile));
+            metric.RpcCall.Service.Should().Be(nameof(IFileTransferService));
             metric.Succeeded.Should().BeFalse();
         }
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task DownloadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, string version)
+        public async Task DownloadFileShouldGatherMetrics_WhenSucceeds(TentacleType tentacleType, string? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithTentacleVersion(version)
+                .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
 
@@ -165,20 +167,20 @@ namespace Octopus.Tentacle.Tests.Integration
 
             tentacleClientObserver.RpcCallMetrics.Should().HaveCountGreaterThan(1); // the first one will be the upload
             var metric = tentacleClientObserver.RpcCallMetrics.Last();
-            metric.RpcCall.Name.Should().Be(nameof(IClientFileTransferService.DownloadFile));
-            metric.RpcCall.Service.Should().Be(nameof(IClientFileTransferService));
+            metric.RpcCall.Name.Should().Be(nameof(IFileTransferService.DownloadFile));
+            metric.RpcCall.Service.Should().Be(nameof(IFileTransferService));
             metric.Succeeded.Should().BeTrue();
         }
 
         [Test]
         [TestCaseSource(typeof(TentacleTypesAndCommonVersionsToTest))]
-        public async Task DownloadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, string version)
+        public async Task DownloadFileShouldGatherMetrics_WhenFails(TentacleType tentacleType, string? tentacleVersion)
         {
             // Arrange
             var tentacleClientObserver = new TestTentacleClientObserver();
             var exception = new HalibutClientException("Error");
             using var clientTentacle = await new ClientAndTentacleBuilder(tentacleType)
-                .WithTentacleVersion(version)
+                .WithTentacleVersion(tentacleVersion)
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .WithRetryDuration(TimeSpan.FromSeconds(1))
                 .WithTentacleServiceDecorator(new TentacleServiceDecoratorBuilder()
@@ -197,8 +199,8 @@ namespace Octopus.Tentacle.Tests.Integration
 
             tentacleClientObserver.RpcCallMetrics.Should().HaveCountGreaterThan(1); // the first one will be the upload
             var metric = tentacleClientObserver.RpcCallMetrics.Last();
-            metric.RpcCall.Name.Should().Be(nameof(IClientFileTransferService.DownloadFile));
-            metric.RpcCall.Service.Should().Be(nameof(IClientFileTransferService));
+            metric.RpcCall.Name.Should().Be(nameof(IFileTransferService.DownloadFile));
+            metric.RpcCall.Service.Should().Be(nameof(IFileTransferService));
             metric.Succeeded.Should().BeFalse();
         }
 
