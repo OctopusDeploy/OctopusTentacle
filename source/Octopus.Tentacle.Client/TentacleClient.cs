@@ -80,7 +80,7 @@ namespace Octopus.Tentacle.Client
             try
             {
                 return await rpcCallExecutor.ExecuteWithRetries(
-                    RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.UploadFile)),
+                    RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
                     ct =>
                     {
                         logger.Info($"Beginning upload of {fileName} to Tentacle");
@@ -112,7 +112,7 @@ namespace Octopus.Tentacle.Client
             try
             {
                 var dataStream = await rpcCallExecutor.ExecuteWithRetries(
-                    RpcCall.Create<IClientFileTransferService>(nameof(IClientFileTransferService.DownloadFile)),
+                    RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
                     ct =>
                     {
                         logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
