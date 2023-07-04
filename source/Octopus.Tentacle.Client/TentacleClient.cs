@@ -32,6 +32,16 @@ namespace Octopus.Tentacle.Client
             IHalibutRuntime halibutRuntime,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             TimeSpan retryDuration,
+            ITentacleClientObserver tentacleClientObserver) : 
+                this(serviceEndPoint, halibutRuntime, scriptObserverBackOffStrategy, retryDuration, tentacleClientObserver, null)
+        {
+        }
+
+        internal TentacleClient(
+            ServiceEndPoint serviceEndPoint,
+            IHalibutRuntime halibutRuntime,
+            IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
+            TimeSpan retryDuration,
             ITentacleClientObserver tentacleClientObserver,
             ITentacleServiceDecorator? tentacleServicesDecorator)
         {

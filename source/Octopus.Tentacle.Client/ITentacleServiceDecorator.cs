@@ -5,7 +5,7 @@ using Octopus.Tentacle.Contracts.ScriptServiceV2;
 
 namespace Octopus.Tentacle.Client
 {
-    public interface ITentacleServiceDecorator
+    internal interface ITentacleServiceDecorator
     {
         public IClientScriptService Decorate(IClientScriptService scriptService);
 
