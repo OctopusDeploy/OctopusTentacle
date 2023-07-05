@@ -64,7 +64,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return this;
         }
 
-        public ITentacleServiceDecorator Build()
+        internal ITentacleServiceDecorator Build()
         {
             return new FooTentacleServiceDecorator(Combine(scriptServiceDecorator), Combine(scriptServiceV2Decorator), Combine(fileTransferServiceDecorator), Combine(capabilitiesServiceV2Decorator));
         }
